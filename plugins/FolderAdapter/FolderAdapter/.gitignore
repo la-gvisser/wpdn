@@ -10,3 +10,4 @@ FolderAdapterOE-*.deb
 FolderAdapterOE.so
 FolderAdapterOE-*.zip
 FolderAdapterOE-*.gz
+dob*.sh
