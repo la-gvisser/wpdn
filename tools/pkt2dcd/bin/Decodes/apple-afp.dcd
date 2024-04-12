@@ -1,0 +1,2193 @@
+
+* Apple File Protocol
+
+
+* ---------------------------------------------------------
+* Login Commands
+*
+
+void GetSrvrInfo;
+					MARK 1c e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	TNXT -AFP Req Data;
+
+void GetAuthMethods;
+					MARK 39 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	HWRD 0 0 90 c2 Flags:;
+	LABL 0 0 0 14 None Currently Defined;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void Login;
+					MARK 21 e 0 0 ASP Rsp Opt;
+	AFP::HF::Padding_Check;
+	LABL 0 0 0 c2 AFP version:;
+	AFP::HF::Do_PSTR_9;
+	LABL 0 0 0 c2 User Authen. Method:;
+	AFP::HF::Do_PSTR_9;
+	SGTE 0 10;
+	 SKIP 2;
+	 LABL 0 0 90 c2 User Authen Info:;
+	 AFP::HF::Do_PSTR_9;
+	TRTS;
+
+void LoginExt;
+					MARK 3e e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	HWRD 0 0 90 c2 Flags:;
+	LABL 0 0 0 c2 AFP version:;
+	AFP::HF::Do_PSTR_9;
+	LABL 0 0 0 c2 User Authen Method:;
+	AFP::HF::Do_PSTR_9;
+	LABL 0 0 0 c2 User Name Type:;
+	AFP::HF::Path_Type;
+	SEQU 3 7;
+	 SKIP 80000001;
+	 HBYT 0 0 90 c2 Alignment Byte:;
+	LABL 0 0 0 c2 User Name:;
+	AFP::HF::Path_Name;
+	AFP::HF::Padding_Check;
+	LABL 0 0 0 c2 Path Name Type:;
+	AFP::HF::Path_Type;
+	SEQU 3 7;
+	 SKIP 80000001;
+	 HBYT 0 0 90 c2 Alignment Byte:;
+	LABL 0 0 0 c2 Path Name:;
+	AFP::HF::Path_Name;
+	AFP::HF::Padding_Check;
+	SGTE 0 10;
+	 SKIP 1;
+	 DUMP 0 10 90 c2 User Authen Info:;
+	TRTS;
+
+void LoginCont;
+					MARK 22 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	HWRD 0 0 90 c2 ID Number:;
+	DUMP 0 10 90 c2 User Authen Info:;
+
+void GetSrvrParms;
+					MARK 1e e 0 0 ASP Rsp Opt;
+	AFP::HF::Padding_Check;
+	TNXT -AFP Req Data;
+
+void GetSessionToken;
+					MARK 3a e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 0 1 90 c2 Type:;
+	 CEQU 0 1 0 14 Supports earlier versions - no ID length or param;
+	 CEQU 1 1 0 14 Client sends ID length&param and wants old session to be disconnected;
+	 CEQU 2 1 0 14 Client had successfull reconnect;
+	DLNG 0 1 90 c2 ID Length:;
+	TIME 0 0 90 c2 TimeStamp:;
+	HEX# 0 1 90 c2 ID:;
+	TNXT -AFP Req Data;
+
+void DisconnectOldSession;
+					MARK 3b e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Type:;
+	DLNG 80000000 1 90 c2 Token Length:;
+	SEQU 0 1;
+	 SKIP 1;
+	 HEX# 0 1 90 c2 Token:;
+	TNXT -AFP Req Data;
+
+void AFP Logout;
+					MARK 23 e 0 0 ASP Rsp Opt;
+	AFP::HF::Padding_Check;
+	TNXT -AFP Req Data;
+
+void MapID;
+					MARK 24 e 0 0 ASP Rsp Opt;
+	DBYT 0 7 90 c2 Subfunction:;
+	 CEQU 1 7 0 14 User ID to Macintosh Roman User Name;
+	 CEQU 2 7 0 14 Group ID to Macintosh Roman Group Name;
+	 CEQU 3 7 0 14 User ID to Unicode User Name;
+	 CEQU 4 7 0 14 Group ID to Unicode Group Name;
+	DLNG 0 0 90 c2 User or Group ID:;
+	TNXT -AFP Req Data;
+
+void MapName;
+					MARK 25 e 0 0 ASP Rsp Opt;
+	DBYT 0 7 90 c2 Subfunction:;
+	 CEQU 1 7 0 14 Unicode User Name to User ID;
+	 CEQU 2 7 0 14 Unicode Group Name to Group ID;
+	 CEQU 3 7 0 14 Macintosh Roman User Name to User ID;
+	 CEQU 4 7 0 14 Macintosh Roman Group Name to Group ID;
+	LABL 0 0 0 c2 Name:;
+	AFP::HF::Do_PSTR_9;
+	TNXT -AFP Req Data;
+
+void ChangePassword;
+					MARK 6 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+
+	LABL 0 0 0 c2 User Access Methd:;
+	 AFP::HF::Do_PSTR_9;
+	 SBIT 0 9;						*odd number of bytes?
+	 SKIP 1;						*skip if not
+	  HBYT 0 0 90 c2 Alignment Byte:;
+	LABL 0 0 0 c2 User Name:;
+	 AFP::HF::Do_PSTR_9;			*odd number of bytes?
+	 SBIT 0 9;						*skip if not
+	 SKIP 1;
+	  HBYT 0 0 90 c2 Alignment Byte:;
+	LABL 0 0 0 c2 Old Password:;
+	 MOVE 8 7;
+	 DUMP 0 7 90;
+	LABL 0 0 0 c2 New Password:;
+	 MOVE 8 7;
+	 DUMP 0 7 90;
+	TNXT -AFP Req Data;
+
+void GetUserInfo;
+					MARK 1f e 0 0 ASP Rsp Opt;
+	HBYT 0 8 90 c2 Flags:;
+	 CBIT 0 8 0 14 This User (Ignore User ID);
+	 CLSE 0 0 0 14 Use Following User ID;
+	DLNG 0 0 90 c2 User ID:;
+	HWRD 0 8 90 c2 Bitmap:;
+	 CBIT 0 8 0 14 User ID;
+	 CBIT 1 8 0 14 Primary Group ID;
+	TNXT -AFP Req Data;
+
+void GetSrvrMsg;
+					MARK 1d e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 0 7 90 c2 Message Type:;
+	 CEQU 0 7 0 14 Login Message;
+	 CEQU 1 7 0 14 Server Message;
+	HWRD 0 7 90 c9 Message Bitmap:;
+	 CBIT 1 7 0 d4 .... ..1. Supports Unicode;
+	 CLSE 0 0 0 d4 .... ..0. Does Not Support Unicode;
+	 CBIT 0 7 0 d4 .... ...1 Requesting a Message;
+	 CLSE 0 0 0 d4 .... ...0 Not Requesting a Message;
+	 LABL 0 0 0 c8;
+	TNXT -AFP Req Data;
+
+
+* ---------------------------------------------------------
+* Volume Commands
+*
+
+void OpenVol;
+					MARK 2a e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::VolParm_Bitmap;
+	 LABL 0 0 0 c8;
+	LABL 0 0 0 c2 Volume Name:;
+	AFP::HF::Do_PSTR_9;
+	TEQU 0 10 0 0 AFP Req Data;		*xfer if nothing left
+*   odd number of bytes? (> 8)   		DUDE, this looks WACKED.........................CHECK
+*   skip if not   
+	SKIP 2;
+	HBYT 0 0 90 c2 Unused Alignment Byte:;
+	TGTE 7 10 0 0 AFP Req Data;		*xfer if 7 or less bytes left
+	HEX# 8 0 90 c2 Password:;
+	DECR 8;
+	CHR# 8 0 94 14 (;
+	LABL 0 0 0 4 );
+	TNXT -AFP Req Data;
+
+void CloseVol;
+					MARK a e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	TNXT -AFP Req Data;
+
+void GetVolParms;
+	MARK 20 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	BWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::VolParm_Bitmap;
+	 LABL 0 0 0 c8;
+	TNXT -AFP Req Data;
+
+void SetVolParms;
+	MARK 34 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::VolParm_Bitmap;
+	 LABL 0 0 0 c8;
+	TIME 1 0 90 c2 Backup Date:;
+	TNXT -AFP Req Data;
+
+void Flush;
+					MARK 14 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	TNXT -AFP Req Data;
+
+void CatSearch;
+					MARK 5 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Requested Matches:;
+	HLNG 0 0 90 c2 Reserved:;
+	HEX# 10 0 90 c2 Current Catalog Position:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	HWRD 0 7 90 c2 Search Condition:;
+	 CBIT f 7 0 14 Search On Partial Name;
+	 CLSE 0 0 0 14 Search On Full Name;
+	HWRD 0 7 90 c9 Request Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	DUMP 0 10 b0 c2 Search Specification Data:;
+	TRTS;
+
+void CatSearchExt;
+					MARK 3d e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Requested Matches:;
+	HLNG 0 0 90 c2 Reserved:;
+	HEX# 10 0 90 c2 Current Catalog Position:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	HWRD 0 7 90 c2 Search Condition:;
+	 CBIT f 7 0 14 Search On Partial Name;
+	 CLSE 0 0 0 14 Search On Full Name;
+	HWRD 0 7 90 c2 Request Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	DUMP 0 10 b0 c2 Search Specification Data:;
+	TRTS;
+
+
+* ---------------------------------------------------------
+* Directory Commands
+*
+
+void SetDirParms;
+					MARK 30 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	AFP::HF::Path_Parms;
+ 	AFP::HF::Padding_Zero;
+	*SBIT 0 9;		*odd number of bytes?
+	*SKIP 80000001;		*skip if not
+	*HBYT 0 0 90 c2 Unused Alignment Byte:;
+	MOVE 6 87;
+	AFP::HF::Directory_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void OpenDir;
+					MARK 27 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Type_Name;
+	TNXT -AFP Req Data;
+
+void CloseDir;
+					MARK 7 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	TNXT -AFP Req Data;
+
+
+void Enumerate;
+					MARK 12 e 0 0 ASP Rsp Opt;
+	AFP::Enumerate::Common;
+	DWRD 80000000 0 90 c2 Start Index:;
+	DWRD 80000000 0 90 c2 Max Reply Size:;
+	AFP::HF::Path_Parms;
+	
+	TNXT -AFP Rply Data;
+
+void EnumerateExt;
+					MARK 3c e 0 0 ASP Rsp Opt;
+	AFP::Enumerate::Common;
+	DWRD 80000000 0 90 c2 Start Index:;
+	DWRD 80000000 0 90 c2 Max Reply Size:;
+	AFP::HF::Path_Parms;
+
+	TNXT -AFP Rply Data;
+
+void EnumerateExt2;
+					MARK 3c e 0 0 ASP Rsp Opt;
+	AFP::Enumerate::Common;
+	DLNG 80000000 0 90 c2 Start Index:;
+	DLNG 80000000 0 90 c2 Max Reply Size:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Rply Data;
+
+void AFP::Enumerate::Common;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0  0 c8;
+	DWRD 80000000 0 90 c2 Max Strcts To Return:;
+	TRTS;
+
+void CreateDir;
+					MARK c e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+
+* ---------------------------------------------------------
+* File Commands
+*
+
+void SetFileParms;
+					MARK 32 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	MOVE 7 86;
+	AFP::HF::Path_Parms;
+	AFP::HF::Padding_Zero;
+	AFP::HF::File_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void CreateFile;
+					MARK d e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Flag:;
+	 CBIT 7 7 0 14 Hard Create;
+	 CLSE 0 7 0 14 Soft Create;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+
+void CopyFile;
+					MARK b e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Source Volume ID:;
+	DLNG 80000000 0 90 c2 Source Directory ID:;
+	DWRD 80000000 0 90 c2 Dest Volume ID:;
+	AFP::HF::Dir_Path_Name;
+
+	LABL 0 0 0 c2 New Type:;		*si: is this part really there? CHECK!!!!!!!!!!!!!!!!!!!!!!!!
+	AFP::HF::Path_Type;
+	LABL 0 0 0 c2 New Name:;
+	AFP::HF::Path_Name;
+
+	TNXT -AFP Req Data;
+
+void CreateID;
+					MARK e e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Type_Name;
+	TNXT -AFP Req Data;
+
+void DeleteID;
+					MARK 11 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 File ID:;
+	TNXT -AFP Req Data;
+
+void ResolveID;
+					MARK 2d e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 File ID:;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	TNXT -AFP Req Data;
+
+void ExchangeFiles;
+					MARK 13 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Source Directory ID:;
+	DLNG 80000000 0 90 c2 Dest Directory ID:;
+	AFP::HF::Src_Dest_Path;
+	TNXT -AFP Req Data;
+
+
+
+* ---------------------------------------------------------
+* Combined Directory and File Commands
+*
+
+void GetFileDirParms;
+					MARK 18 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0  0 c8;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void SetFileDirParms;
+					MARK 31 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	AFP::HF::Path_Parms;
+	SBIT 0 9;					*odd number of bytes?
+	SKIP 80000002;
+	HBYT 0 0 90 c2 Unused Alignment Byte:;
+	AFP::HF::File_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void Rename;
+					MARK 2c e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;		*old    how can i specify it!?!?!?!!?!?!?!?!?!?!!?
+	AFP::HF::Path_Parms;		*new
+	TNXT -AFP Req Data;
+
+void Delete;
+					MARK 10 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void MoveAndRename;
+					MARK 26 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Source Directory ID:;
+	DLNG 80000000 0 90 c2 Dest Directory ID:;
+	AFP::HF::Dir_Path_Name;
+	TNXT -AFP Req Data;
+
+
+
+* ---------------------------------------------------------
+* Fork Commands
+*
+
+void GetForkParms;
+						MARK 19 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	TNXT -AFP Req Data;
+
+void SetForkParms;
+	MARK 33 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	DLNG 80000000 0 90 c2 Fork Length:;
+	TNXT -AFP Req Data;
+
+void OpenFork;
+						MARK 29 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Flag:;
+	 CBIT 7 7 0 14 Resource Fork;
+	 CLSE 0 7 0 14 Data Fork;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	HWRD 0 7 90 c9 Access Mode:;
+	 CBIT 5 7 0 d4 ..1. .... Deny Write Enabled;
+	 CLSE 0 0 0 d4 ..0. .... Deny Write Disabled;
+	 CBIT 4 7 0 d4 ...1 .... Deny Read Enabled;
+	 CLSE 0 0 0 d4 ...0 .... Deny Read Disabled;
+	 CBIT 1 7 0 d4 .... ..1. Write Enabled;
+	 CLSE 0 0 0 d4 .... ..0. Write Disabled;
+	 CBIT 0 7 0 d4 .... ...1 Read Enabled;
+	 CLSE 0 0 0 d4 .... ...0 Read Disabled;
+	 LABL 0 0 0 c8;
+	AFP::HF::Path_Parms;
+	*AFP::HF::Path_Type_Name;
+	TNXT -AFP Req Data;
+
+void Read;
+						MARK 2b e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 0 0 90 c2 Offset:;
+	DLNG 0 0 90 c2 Bytes To Read:;
+	HBYT 0 0 90 c2 Newline Mask:;
+	HBYT 0 0 90 c2 Newline Char:;
+	TNXT -AFP Req Data;
+
+void ReadExt;
+						MARK 37 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 0 0 90 c2 Offset (hi):;
+	DLNG 0 0 90 c2 Offset (lo):;
+	DLNG 0 0 90 c2 Bytes To Read (hi):;
+	DLNG 0 0 90 c2 Bytes To Read (lo):;
+	TNXT -AFP Req Data;
+
+void Write;
+						MARK 35 e 0 0 ASP Rsp Opt;
+	HBYT 0 8 90 c2 Flags:;
+	 CBIT 7 8 0 14 Offset Relative To End;
+	 CLSE 0 0 0 14 Offset Relative To Start;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 0 0 90 c2 Offset:;
+	DLNG 0 7 90 c2 Number Of Bytes To Write:;
+	TNXT -AFP Req Data;
+
+void WriteExt;
+	MARK 38 e 0 0 ASP Rsp Opt;
+	HBYT 0 8 90 c2 Flags:;
+	 CBIT 7 8 0 14 Offset Relative To End;
+	 CLSE 0 0 0 14 Offset Relative To Start;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 0 0 90 c2 Offset (hi):;
+	DLNG 0 0 90 c2 Offset (lo):;
+	DLNG 0 7 90 c2 Num Bytes To Write (hi):;
+	DLNG 0 7 90 c2 Num Bytes To Write (lo):;
+	TNXT -AFP Req Data;
+
+void FlushFork;
+						MARK 15 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	TNXT -AFP Req Data;
+
+void ByteRangeLock;
+						MARK 4 e 0 0 ASP Rsp Opt;
+	HBYT 0 8 90 c9 Start-End-Lock Flags:;
+	 CBIT 7 8 0 d4 1... .... End Of Fork;
+	 CLSE 0 0 0 d4 0... .... Start Of Fork;
+	 CBIT 0 8 0 d4 .... ...1 Unlock Range;
+	 CLSE 0 0 0 d4 .... ...0 Lock Range;
+	 LABL 0 0 0 c8;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 80000000 0 90 c2 Offset To Range:;
+	DLNG 80000000 0 90 c2 Num bytes to Lock-Unlock:;
+	TNXT -AFP Req Data;
+
+void ByteRangeLockExt;
+						MARK 36 e 0 0 ASP Rsp Opt;
+	HBYT 0 8 90 c2 Start-End-Lock Flags:;
+	 CBIT 0 8 0 14 Unlock Range;
+	 CLSE 0 0 0 14 Lock Range;
+	 CBIT 7 8 0 14 End Of Fork;
+	 CLSE 0 0 0 14 Start Of Fork;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	DLNG 0 0 90 c2 Offset To Range:;
+	DLNG 0 0 90 c2 Num bytes to Lock-Unlock:;
+	DLNG 0 0 90 c2 Number Of Bytes (hi):;
+	DLNG 0 0 90 c2 Number Of Bytes (lo):;
+	TNXT -AFP Req Data;
+
+void CloseFork;
+						MARK 9 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	TNXT -AFP Req Data;
+
+
+* ---------------------------------------------------------
+* Desktop Database Commands
+*
+
+void OpenDT;
+						MARK 28 e 0 0 ASP Rsp Opt;
+	HBYT 0 7 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	TNXT -AFP Req Data;
+
+void CloseDT;
+						MARK 8 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	TNXT -AFP Req Data;
+
+void AddIcon;
+						MARK 3 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	CHR# 4 0 90 c2 File Creator:;
+	CHR# 4 0 90 c2 File Type:;
+	DBYT 0 0 90 c2 Icon Type:;
+	HBYT 0 0 90 c2 Padding:;
+	HLNG 0 0 90 c2 Icon Tag:;
+	DWRD 0 0 90 c2 Bitmap Size:;
+	TNXT -AFP Req Data;
+
+void GetIcon;
+						MARK 1a e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	CHR# 4 0 90 c2 File Creator:;
+	CHR# 4 0 90 c2 File Type:;
+	DBYT 0 0 90 c2 Icon Type:;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 0 0 90 c2 Size For Icon Bitmap:;
+	TNXT -AFP Req Data;
+
+void GetIconInfo;
+	MARK 1b e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	CHR# 4 0 90 c2 File Creator:;
+	DWRD 0 0 90 c2 Icon Index:;
+	TNXT -AFP Req Data;
+
+void AddAPPL;
+						MARK 1 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	CHR# 4 0 90 c2 File Creator:;
+	HLNG 0 0 90 c2 APPL Tag:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void RmvAPPL;
+	MARK 2e e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	CHR# 4 0 90 c2 File Creator:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void GetAPPL;
+						MARK 16 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	CHR# 4 0 90 c2 File Creator:;
+	DWRD 0 0 90 c2 APPL Index:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	TNXT -AFP Req Data;
+
+void AddComment;
+						MARK 2 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	AFP::HF::Padding_Zero;
+	LABL 0 0 0 c2 Comment:;
+	AFP::HF::Do_PSTR_9;
+	TNXT -AFP Req Data;
+
+void RmvComment;
+	MARK 2f e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+void GetComment;
+	MARK 17 e 0 0 ASP Rsp Opt;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 80000000 0 90 c2 Desktop DB Ref Num:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	AFP::HF::Path_Parms;
+	TNXT -AFP Req Data;
+
+
+
+* ---------------------------------------------------------
+* Helper Functions
+*
+
+void AFP::HF::Do_PSTR_9;
+	GBYT 0 9;
+	PSTR 0 0 90;
+	TRTS;
+
+void AFP::HF::Padding_Zero;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SNEQ 0 1;
+	SKIP 1;
+	 HBYT 0 1 90 c2 Alignment Byte:;
+	TRTS;
+
+void AFP::HF::Padding_Check;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SNEQ 0 1;
+	SKIP 1;
+	 HBYT 0 1 90 c2 Padding:;
+	TRTS;
+
+void AFP::HF::Padding_Check9;
+	MODG 2 9;
+	SEQU 0 9;
+	SKIP 1;
+	 HBYT 0 1 90 c2 Padding:;
+	TRTS;
+
+void AFP::HF::Padding_Check9_new;
+	ADDG 1 9;				*si: the length is one more to the dilly...
+	MODG 2 9;
+	SEQU 0 9;
+	SKIP 1;
+	 HBYT 0 1 90 c2 Padding:;
+	TRTS;
+	
+* ---------------------------------------------------------
+
+void AFP::HF::Path_Parms;
+	LABL 0 0 0 b2   ;
+	DBYT 0 7 90 2 Path Type:;
+	 CEQU 1 7 0 14 Short Name Form;
+	 CEQU 2 7 0 14 Long Name Form;
+	 CEQU 3 7 0 14 Unicode Name Form;
+	SEQU 3 7;
+	SKIP 80000002;
+	 HLNG 0 1 90 c2 Unicode Hint:;
+	 * DWRD 0 1 90 c2 Length:;
+	 INCR 1;			*si: to align i think... ?
+	LABL 0 0 0 c2 Pathname:       ;
+	AFP::HF::Path_Name;
+	TRTS;
+
+void AFP::HF::Path_Name;
+	AFP::HF::Do_PSTR_9;
+	CEQU 0 9 0 4 (empty);
+	TRTS;
+
+void AFP::HF::Dir_Path_Name;
+	AFP::HF::Src_Dest_Path;
+	LABL 0 0 0 c2 New Pathname Type:;
+	AFP::HF::Path_Type;
+	SNEQ 3 7;
+	SKIP 2;
+	 HLNG 0 1 90 c2 Unicode Hint:;
+	 INCR 1;
+	LABL 0 0 0 c2 New Pathname:;
+	AFP::HF::Path_Name;
+	TRTS;
+
+void AFP::HF::Path_Type;
+	DBYT 0 7 90;
+	 CEQU 1 7 0 14 Short Name Form;
+	 CEQU 2 7 0 14 Long Name Form;
+	 CEQU 3 7 0 14 Unicode Name Form;
+	TRTS;
+
+void AFP::HF::Path_Type_Name;
+	LABL 0 0 0 c2 Pathname Type:;
+	AFP::HF::Path_Type;
+	LABL 0 0 0 c2 Pathname:;
+	AFP::HF::Path_Name;
+	TRTS;
+
+void AFP::HF::Src_Dest_Path;
+	*DLNG 80000000 0 90 c2 Dest Dir ID:;
+	LABL 0 0 0 c2 Source Pathname Type:;
+	AFP::HF::Path_Type;
+	SNEQ 3 7;
+	SKIP 2;
+	 HLNG 0 1 90 c2 Unicode Hint:;
+	 INCR 1;
+	LABL 0 0 0 c2 Source Pathname:;
+	AFP::HF::Path_Name;
+	LABL 0 0 0 c2 Dest Pathname Type:;
+	AFP::HF::Path_Type;
+	SNEQ 3 7;
+	SKIP 2;
+	 HLNG 0 1 90 c2 Unicode Hint:;
+	 INCR 1;
+	LABL 0 0 0 c2 Dest Pathname:;
+	AFP::HF::Path_Name;
+	TRTS;
+
+* ---------------------------------------------------------
+
+void AFP::HF::File_Bitmap;
+	CBIT f 7 0 d4 1....... ........ UNIX Privileges;
+	CLSE 0 0 0 d4 0....... ........ No UNIX Privileges;
+	CBIT e 7 0 d4 .1...... ........ Current Length of File's Resource Fork;
+	CLSE 0 0 0 d4 .0...... ........ Current Length of File's Resource Fork Not Specified;
+	CBIT d 7 0 d4 ..1..... ........ Unicode; //ProDOS Info;
+	CLSE 0 0 0 d4 ..0..... ........ Not Unicode;
+	CBIT c 7 0 d4 ...1.... ........ Launch Limit Bit;
+	CLSE 0 0 0 d4 ...0.... ........ No Launch Limit Bit;
+	CBIT b 7 0 d4 ....1... ........ Current Length of the File's Data Fork;
+	CLSE 0 0 0 d4 ....0... ........ Current Length of the File's Data Fork Not Specified;
+	CBIT a 7 0 d4 .....1.. ........ Resource Fork Length;
+	CLSE 0 0 0 d4 .....0.. ........ No Resource Fork Length;
+	CBIT 9 7 0 d4 ......1. ........ Data Fork Length Not Specified;
+	CLSE 0 0 0 d4 ......0. ........ Data Fork Length Not Specified;
+	CBIT 8 7 0 d4 .......1 ........ File Number;
+	CLSE 0 0 0 d4 .......0 ........ No File Number;
+	CBIT 7 7 0 d4 ........ 1....... Short Name;
+	CLSE 0 0 0 d4 ........ 0....... No Short Name;
+	CBIT 6 7 0 d4 ........ .1...... Long Name;
+	CLSE 0 0 0 d4 ........ .0...... No Long Name;
+	CBIT 5 7 0 d4 ........ ..1..... Finder Info;
+	CLSE 0 0 0 d4 ........ ..0..... No Finder Info;
+	CBIT 4 7 0 d4 ........ ...1.... Backup Date;
+	CLSE 0 0 0 d4 ........ ...0.... No Backup Date;
+	CBIT 3 7 0 d4 ........ ....1... Modification Date;
+	CLSE 0 0 0 d4 ........ ....0... No Modification Date;
+	CBIT 2 7 0 d4 ........ .....1.. Creation Date;
+	CLSE 0 0 0 d4 ........ .....0.. No Creation Date;
+	CBIT 1 7 0 d4 ........ ......1. Parent Directory ID;
+	CLSE 0 0 0 d4 ........ ......0. No Parent Directory ID;
+	CBIT 0 7 0 d4 ........ .......1 Attributes;
+	CLSE 0 0 0 d4 ........ .......0 No Attributes;
+	TRTS;
+
+void AFP::HF::Directory_Bitmap;
+	CBIT f 7 0 d4 1....... ........ UNIX Privileges;
+	CLSE 0 0 0 d4 0....... ........ No UNIX Privileges;
+	CBIT d 7 0 d4 ..1..... ........ Unicode;
+	CLSE 0 0 0 d4 ..0..... ........ Not Unicode;	
+	CBIT c 7 0 d4 ...1.... ........ Access Rights;
+	CLSE 0 0 0 d4 ...0.... ........ No Access Rights;
+	CBIT b 7 0 d4 ....1... ........ Group ID;
+	CLSE 0 0 0 d4 ....0... ........ No Group ID;
+	CBIT a 7 0 d4 .....1.. ........ Owner ID;
+	CLSE 0 0 0 d4 .....0.. ........ No Owner ID;
+	CBIT 9 7 0 d4 ......1. ........ Offspring Count;
+	CLSE 0 0 0 d4 ......0. ........ No Offspring Count;
+	CBIT 8 7 0 d4 .......1 ........ Directory ID;
+	CLSE 0 0 0 d4 .......0 ........ No Directory ID;
+	CBIT 7 7 0 d4 ........ 1....... Short Name;
+	CLSE 0 0 0 d4 ........ 0....... No Short Name;
+	CBIT 6 7 0 d4 ........ .1...... Long Name;
+	CLSE 0 0 0 d4 ........ .0...... No Long Name;
+	CBIT 5 7 0 d4 ........ ..1..... Finder Info;
+	CLSE 0 0 0 d4 ........ ..0..... No Finder Info;
+	CBIT 4 7 0 d4 ........ ...1.... Backup Date;
+	CLSE 0 0 0 d4 ........ ...0.... No Backup Date;
+	CBIT 3 7 0 d4 ........ ....1... Modification Date;
+	CLSE 0 0 0 d4 ........ ....0... No Modification Date;
+	CBIT 2 7 0 d4 ........ .....1.. Creation Date;
+	CLSE 0 0 0 d4 ........ .....0.. No Creation Date;
+	CBIT 1 7 0 d4 ........ ......1. Parent Directory ID;
+	CLSE 0 0 0 d4 ........ ......0. No Parent Directory ID;
+	CBIT 0 7 0 d4 ........ .......1 Attributes;
+	CLSE 0 0 0 d4 ........ .......0 No Attributes;
+	TRTS; 
+
+void AFP::HF::VolParm_Bitmap;
+	CBIT b 7 0 d4 ....1... ........ Block Allocation Size;
+	CLSE 0 0 0 d4 ....0... ........ No Block Allocation Size;
+	CBIT a 7 0 d4 .....1.. ........ Extended Bytes Total;
+	CLSE 0 0 0 d4 .....0.. ........ No Extended Bytes Total;
+	CBIT 9 7 0 d4 ......1. ........ Extended Bytes Free;
+	CLSE 0 0 0 d4 ......0. ........ No Extended Bytes Free;
+	CBIT 8 7 0 d4 .......1 ........ Volume Name;
+	CLSE 0 0 0 d4 .......0 ........ No Volume Name;
+	CBIT 7 7 0 d4 ........ 1....... Bytes Total;
+	CLSE 0 0 0 d4 ........ 0....... No Bytes Total;
+	CBIT 6 7 0 d4 ........ .1...... Bytes Free;
+	CLSE 0 0 0 d4 ........ .0...... No Bytes Free;
+	CBIT 5 7 0 d4 ........ ..1..... Volume ID;
+	CLSE 0 0 0 d4 ........ ..0..... No Volume ID;
+	CBIT 4 7 0 d4 ........ ...1.... Backup Date;
+	CLSE 0 0 0 d4 ........ ...0.... No Backup Date;
+	CBIT 3 7 0 d4 ........ ....1... Modification Date;
+	CLSE 0 0 0 d4 ........ ....0... No Modification Date;
+	CBIT 2 7 0 d4 ........ .....1.. Creation Date;
+	CLSE 0 0 0 d4 ........ .....0.. No Creation Date;
+	CBIT 1 7 0 d4 ........ ......1. Signature;
+	CLSE 0 0 0 d4 ........ ......0. No Signature;
+	CBIT 0 7 0 d4 ........ .......1 Attributes;
+	CLSE 0 0 0 d4 ........ .......0 No Attributes;
+	TRTS;
+
+void AFP::HF::Rights_Bits;
+	CBIT 2 9 0 d4 .... .1.. Write;
+	CLSE 0 0 0 d4 .... .0.. No Write;
+	CBIT 1 9 0 d4 .... ..1. Read;
+	CLSE 0 0 0 d4 .... ..0. No Read;
+	CBIT 0 9 0 d4 .... ...1 Search;
+	CLSE 0 0 0 d4 .... ...0 No Search;
+	TRTS;
+
+void AFP::HF::File_Attrib_Bitmap;
+	CBIT f 9 0 d4 1....... ........ Set Attributes;
+	CLSE 0 0 0 d4 0....... ........ Clear Attributes;
+	CBIT a 9 0 d4 .....1.. ........ Copy Protect;
+	CLSE 0 0 0 d4 .....0.. ........ No Copy Protect;
+	CBIT 8 9 0 d4 .......1 ........ Delete Inhibit;
+	CLSE 0 0 0 d4 .......0 ........ Do Not Delete Inhibit;
+	CBIT 7 9 0 d4 ........ 1....... Rename Inhibit;
+	CLSE 0 0 0 d4 ........ 0....... Do Not Rename Inhibit;
+	CBIT 6 9 0 d4 ........ .1...... Backup Needed;
+	CLSE 0 0 0 d4 ........ .0...... Backup Not Needed;
+	CBIT 5 9 0 d4 ........ ..1..... ReadOnly-WriteInhibit;
+	CLSE 0 0 0 d4 ........ ..0..... Not ReadOnly-WriteInhibit;
+	CBIT 4 9 0 d4 ........ ...1.... RAlreadyOpen;
+	CLSE 0 0 0 d4 ........ ...0.... Not RAlreadyOpen;
+	CBIT 3 9 0 d4 ........ ....1... DAlreadyOpen;
+	CLSE 0 0 0 d4 ........ ....0... Not DAlreadyOpen;
+	CBIT 2 9 0 d4 ........ .....1.. System;
+	CLSE 0 0 0 d4 ........ .....0.. Not System;
+	CBIT 1 9 0 d4 ........ ......1. MultiUser;
+	CLSE 0 0 0 d4 ........ ......0. Not MultiUser;
+	CBIT 0 9 0 d4 ........ .......1 Invisible;
+	CLSE 0 0 0 d4 ........ .......0 Not Invisible; 
+	TRTS;
+
+void AFP::HF::Dir_Attrib_Bitmap;
+	CBIT f 9 0 d4 1....... ........ Set Attributes;
+	CLSE 0 0 0 d4 0....... ........ Clear Attributes;
+	CBIT 8 9 0 d4 .......1 ........ Delete Inhibit;
+	CLSE 0 0 0 d4 .......0 ........ Do Not Delete Inhibit;
+	CBIT 7 9 0 d4 ........ 1....... Rename Inhibit;
+	CLSE 0 0 0 d4 ........ 0....... Do Not Rename Inhibit;
+	CBIT 6 9 0 d4 ........ .1...... Backup Needed;
+	CLSE 0 0 0 d4 ........ .0...... Backup Not Needed;
+	CBIT 4 9 0 d4 ........ ...1.... InExpFolder;
+	CLSE 0 0 0 d4 ........ ...0.... Not InExpFolder;
+	CBIT 3 9 0 d4 ........ ....1... Mounted;
+	CLSE 0 0 0 d4 ........ ....0... Not Mounted;
+	CBIT 2 9 0 d4 ........ .....1.. System;
+	CLSE 0 0 0 d4 ........ .....0.. Not Sytem;
+	CBIT 1 9 0 d4 ........ ......1. Is ExpFolder;
+	CLSE 0 0 0 d4 ........ ......0. Not ExpFolder;
+	CBIT 0 9 0 d4 ........ .......1 Invisible;
+	CLSE 0 0 0 d4 ........ .......0 Visible;
+	TRTS;
+
+void ProDOS Bits;
+	SBIT d 6;
+	SKIP 80000003; 
+	MOVE 6 f;			*copy of "offset" place
+	DUMP 0 f 90 c2 ProDOS Info:;
+	TRTS;
+
+void Do Net Addr Loop;
+	LSTS 0 7 4 b7 Network Address #; 
+	DBYT 0 b 90 c2 Length:;
+	DBYT 0 c 90 c2 Tag:;
+	CST# ffffffff c 0 14 AFP Net Addr Types;
+	TSB# 0 c 0 0 AFP::Net_Addr::Functions;
+	SKIP 2;
+	 SUBG 2 b;
+	 DUMP 0 b 90 c2 Network Address:;
+	SUBG 1 7;
+	LABL 0 0 0 b8;
+	LSTZ 0 7;
+
+str# AFP::Net_Addr::Functions;
+	AFP::Net_Addr::IP_Address;
+	AFP::Net_Addr::IP_Address_And_Port;
+	AFP::Net_Addr::DDP_Address;
+	AFP::Net_Addr::DNS_Name;
+	AFP::Net_Addr::SSH_Name;
+
+void AFP::Net_Addr::IP_Address;
+	IPLG 0 0 90 c2 IP Address:;
+	TRTS;
+
+void AFP::Net_Addr::IP_Address_And_Port;
+	IPLG 0 0 90 c2 IP Address:;
+	DWRD 0 0 90 c2 Port Number:;
+	TRTS;
+
+void AFP::Net_Addr::DDP_Address;
+	AT03 0 0 90 c2 DDP Address:;
+	DBYT 0 0 90 c2 Socket Number:;
+	TRTS;
+
+void AFP::Net_Addr::DNS_Name;
+	SUBG 2 b;
+	CHR# 0 b 90 c2 DNS Name:;
+	TRTS;
+
+void AFP::Net_Addr::SSH_Name;
+	SUBG 2 b;
+	CHR# 0 b 90 c2 SSH Name:;
+	TRTS;
+
+* ---------------------------------------------------------
+
+void AFP::HF::Vol_Rply_Bitmap;
+	SNEQ 0 7;			*   any bits set?
+	 SKIP 1;
+	 TRTS;
+
+	LABL 0 0 0 b9 Volume Parameter Bitmap;
+	MOVE 10 8a;			*si: save for volume name
+	MOVE 0 1;
+
+	SBIT 0 7;
+	SKIP 8000000c;
+	 HWRD 0 6 90 c9 Attributes:;
+	  CBIT 4 6 0 d4 ...1 .... Supports Blank Access Privileges;
+	  CLSE 0 0 0 d4 ...0 .... Does Not Support Blank Access Privileges;
+	  CBIT 3 6 0 d4 .... 1... Supports Cat Search;
+	  CLSE 0 0 0 d4 .... 0... Does Not Support Cat Search;
+	  CBIT 2 6 0 d4 .... .1.. Supports File IDs;
+	  CLSE 0 0 0 d4 .... .0.. Does Not Support File IDs;
+	  CBIT 1 6 0 d4 .... ..1. Has Volume Passwords;
+	  CLSE 0 0 0 d4 .... ..0. Does Not Have Volume Passwords;
+	  CBIT 0 6 0 d4 .... ...1 Read Only Set;
+	  CLSE 0 0 0 d4 .... ...0 Read Only Not Set;
+	  LABL 0 0 0 c8;
+	SBIT 1 7;
+	 SKIP 80000001;
+	  HWRD 0 6 90 c2 Signature:;
+	SBIT 2 7;
+	 SKIP 80000001;
+	  TIME 1 6 90 c2 Creation Date:;
+	SBIT 3 7;
+	 SKIP 80000001;
+	  TIME 1 6 90 c2 Modification Date:;
+	SBIT 4 7;
+	 SKIP 80000001;
+	  TIME 1 6 90 c2 Backup Date:;
+	SBIT 5 7;
+	 SKIP 80000001;
+	  DWRD 80000000 0 90 c2 Volume ID:;
+	SBIT 6 7;
+	 SKIP 80000001;
+	  DLNG 0 6 90 c2 Bytes Free:;
+	SBIT 7 7;
+	 SKIP 80000001;
+	  DLNG 0 6 90 c2 Bytes Total:;
+	SBIT 8 7;				*si: up to 27 bytes
+	 SKIP 80000015;
+	  DWRD 0 6 90 c2 Volume Name (offset):;
+	  SNEQ 0 6;
+	  SKIP 1;
+	   PSTR 0 6 90 c2 Volume Name (string):;
+	  SEQU 0 6;
+	  SKIP f;
+	   SGTE 6 90;
+	   SKIP 80000005;
+	    LABL 0 0 0 14 Offset Too Large;		*si: means the data continues to next file... maybe we should just stop here?
+	    DUMP 0 10 90 c2 Fragmented Data:;
+	    LABL 0 0 0 c8;
+	    MOVE 0 6;
+	    SKIP 8;
+	     MOVE 10 8b;
+	     SUBG b 8a;
+	     SUBG a 86;
+	     INCR 0 6;			*si: remaining offset
+	     PSTR 0 1 90 c2 Volume Name (string):;
+	     ADDG 1 1;			*si: string length value
+	     DECR 0 1;			*si: actual string + string length
+	     DECR 0 6;			*si: offset
+	SBIT 9 7;
+	 SKIP 80000002;
+	  DLNG 0 0 90 c2 Ext Bytes Free (hi):;
+	  DLNG 0 0 90 c2 Ext Bytes Free (lo):;
+	SBIT a 7;
+	 SKIP 80000002;
+	  DLNG 0 0 90 c2 Ext Bytes Total (hi):;
+	  DLNG 0 0 90 c2 Ext Bytes Total (lo):;
+	SBIT b 7;
+	 SKIP 80000001;
+	  DLNG 0 0 90 c2 Block Alloc Size:;
+
+	*si: i'm goin on the assumption that most likely the volume id will appear at the end
+	*	so, we want to decr past it if it is... g1 & g6 are needed for this
+	SEQU 0 6;
+	SKIP 1;
+	 INCR 0 1;
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+void AFP::HF::Directory_Rply_Bitmap;
+	SNEQ 0 7;							*si: the bitmap must be in g[7]
+	SKIP 1;
+	TRTS;
+	LABL 0 0 0 b9 Dir Parameter Bitmap;
+	MOVE 10 8a;			*si: save for dir name
+	MOVE 0 1;
+	
+	SBIT 0 7;
+	SKIP 80000003;
+	HWRD 0 9 90 c9 Attributes:;
+	 AFP::HF::Dir_Attrib_Bitmap;
+	 LABL 0 0 0 c8;
+
+	MOVE 6 83;
+	MOVE 7 86;
+	AFP::HF::Bitmap_Bits;
+	MOVE 3 86;
+
+	SBIT 8 7;
+	SKIP 80000001;
+	 DLNG 80000000 0 90 c2 Directory ID:;
+	SBIT 9 7;
+	SKIP 80000002;
+	 DWRD 80000000 0 90 c2 Offspring Count:;
+	 LABL 0 0 0 14 Num files and dirs in directory;
+	SBIT a 7;
+	SKIP 80000001;
+	 DLNG 80000000 0 90 c2 Owner ID:;
+	SBIT b 7;
+	SKIP 80000001;
+	 DLNG 80000000 0 90 c2 Group ID:;
+	SBIT c 7;					*si: ??
+	SKIP 80000010;
+	 HBYT 0 9 90 c9 User Access Rights:;
+	  CBIT 7 9 0 d4 1... .... User is Owner;
+	  CLSE 0 0 0 d4 0... .... User is Not Owner;
+	  CBIT 4 9 0 d4 ...1 .... Blank Access Privileges;
+	  CLSE 0 0 0 d4 ...0 .... No Blank Access Privileges;
+	  AFP::HF::Rights_Bits;
+	  LABL 0 0 0 c8;
+	 HBYT 0 9 90 c9 World Access Rights:;
+	  AFP::HF::Rights_Bits;
+	  LABL 0 0 0 c8;
+	 HBYT 0 9 90 c9 Group Access Rights:;
+	  AFP::HF::Rights_Bits;
+	  LABL 0 0 0 c8;
+	 HBYT 0 9 90 c9 Owner Access Rights:;
+	  AFP::HF::Rights_Bits;
+	  LABL 0 0 0 c8;
+	SBIT d 7;
+	 SKIP 80000019;
+	  DWRD 0 2 90 c2 Unicode Name Offset:;
+	  SNEQ 0 2;
+	  SKIP 1;
+	   PSTR 0 9 90 c2 Unicode Name:;
+	  SEQU 0 2;
+	  SKIP 12;
+
+	   MOVE 10 8b;
+	   SUBG b 8a;
+	   SUBG a 82;
+
+	   SGTE 2 90;
+	   SKIP 80000005;
+	    LABL 0 0 0 14 Offset Too Large;		
+	    DUMP 0 10 90 c2 Fragmented Data:;
+	    LABL 0 0 0 c8;
+	    MOVE 0 2;
+	  SKIP 8;
+	   INCR 0 2;			
+	   INCR 1;
+	   HLNG 0 0 90 c2 Unicode Hint:;
+	   PSTR 0 9 90 c2 Unicode Name:;
+	   MOVE 9 81;
+	   ADDG 2 1;			
+	   DECR 0 1;			
+	   DECR 0 2;			
+	  HLNG 0 0 90 c2 Padding:;
+
+	SBIT f 7;
+	SKIP 80000006;
+	 LABL 0 0 0 c9 UNIX Privileges;
+	  DLNG 0 0 90 c2 User ID:;
+	  DLNG 0 0 90 c2 Group ID:;
+	  HLNG 0 0 90 c2 Permissions:;
+	  HLNG 0 0 90 c2 User Access Rights:;
+	  LABL 0 0 0 c8;
+
+	*si: i'm goin on the assumption that most likely the dir id will appear at the end
+	*	so, we want to decr past it if it is... g1 & g6 are needed for this
+	SEQU 0 2;
+	SKIP 1;
+	 INCR 0 1;
+
+	LABL 0 0 0 b8;
+	*ProDOS Bits;
+	TRTS;
+
+void AFP::HF::File_Rply_Bitmap;
+	SNEQ 0 6;					 *si: the bitmap has to be in g[6]
+	SKIP 1;
+	TRTS;
+	
+	LABL 0 0 0 b9 File Parameter Bitmap;
+	MOVE 10 8a;			*si: save for file name
+	MOVE 0 1;
+	
+	SBIT 0 6;
+	 SKIP 80000003;
+	  HWRD 0 9 90 c9 Attributes:;
+	  AFP::HF::File_Attrib_Bitmap;
+	  LABL 0 0 0 c8;
+
+	AFP::HF::Bitmap_Bits;
+
+	SBIT 8 6;
+	 SKIP 80000001;
+	  DLNG 0 0 90 c2 File Number:;
+	SBIT 9 6;
+	 SKIP 80000001;
+	  DLNG 0 0 90 c2 Data Fork Len:;
+	SBIT a 6;
+	 SKIP 80000001;
+	  DLNG 0 0 90 c2 Resource Fork Len:;
+	SBIT b 6;
+	 SKIP 80000001;
+	  D64B 0 0 90 c2 File Data Fork Len:;
+	SBIT c 6;
+	 SKIP 80000001;
+	  LABL 0 0 90 c2 Launch Limit Bit;
+	SBIT d 6;
+	 SKIP 80000019;
+	  DWRD 0 2 90 c2 Unicode Name Offset:;
+	  SNEQ 0 2;
+	  SKIP 1;
+	   PSTR 0 9 90 c2 Unicode Name:;
+	  SEQU 0 2;
+	  SKIP 12;
+
+* r10 is always num of bytes left in packet
+* r0a is that value at start of variable length data
+
+	   MOVE 10 8b;								* r0b = r10
+	   SUBG b 8a;								* r0a -= r0b, r0a becomes number of bytes consumed since start of variable length data
+	   SUBG a 82;								* r02 -= r0a, r02 becomes number of bytes to actually skip forward to get to name
+
+	   SGTE 2 90;								* are we skipping off the end?
+	   SKIP 80000005;
+	    LABL 0 0 0 14 Offset Too Large;		
+	    DUMP 0 10 90 c2 Fragmented Data:;
+	    LABL 0 0 0 c8;
+	    MOVE 0 2;
+	   SKIP 8;
+
+	   INCR 0 2;								* pc += r02
+	   HLNG 0 0 90 c2 Unicode Hint:;
+	   INCR 1;
+	   PSTR 0 9 90 c2 Unicode Name:;
+	   MOVE 9 81;								* set r01 to amount of space 
+	   ADDG 6 1;								* taken by name
+	   DECR 0 1;								* skip back that much
+	   DECR 0 2;								* skip back the offset
+	 HLNG 0 0 90 c2 Padding:;
+	  
+	SBIT e 6;
+	 SKIP 80000001;
+	  D64B 0 0 90 c2 File Resource Fork Len:;
+	SBIT f 6;
+	 SKIP 80000005;
+	  LABL 0 0 0 c9 UNIX Privileges;
+	   DLNG 0 0 90 c2 User ID:;
+	   DLNG 0 0 90 c2 Group ID:;
+	   HLNG 0 0 90 c2 Permissions:;
+	   HLNG 0 0 90 c2 User Access Rights:;
+	   LABL 0 0 0 c8;
+
+	*si: i'm goin on the assumption that most likely the dir id will appear at the end
+	*	so, we want to decr past it if it is... g1 & g6 are needed for this
+	*si: ok, this is for both the unicode name AND the long name... if both are set, we're screwed...
+	SEQU 0 2;
+	SKIP 1;
+	 INCR 0 1;	
+	
+	LABL 0 0 0 b8;
+	TRTS;
+
+void AFP::HF::Bitmap_Bits;
+	SBIT 1 6;
+	 SKIP 80000001;
+	 DLNG 80000000 0 90 c2 Parent Dir ID:;
+	SBIT 2 6;
+	 SKIP 80000001;
+	 TIME 1 0 90 c2 Creation Date:;
+	SBIT 3 6;
+	 SKIP 80000001;
+	 TIME 1 0 90 c2 Modification Date:;
+	SBIT 4 6;
+	 SKIP 80000001;
+	 TIME 1 0 90 c2 Backup Date:;
+	SBIT 5 6;
+	 SKIP 80000001;
+	 DUMP 20 0 90 c2 Finder Info:;
+	SBIT 6 6;				*si: careful here!
+	 SKIP 80000011;
+	 DWRD 80000000 2 90 c2 Long Name Offset:;
+	 SGTE 2 90;
+	 SKIP 80000005;
+	  LABL 0 0 0 14 Offset Too Large;				*si: means the data continues to next file... maybe we should just stop here?
+	  DUMP 0 10 90 c2 Fragmented Data:;
+	  LABL 0 0 0 c8;
+	  MOVE 0 2;
+	  SKIP 9;
+	   MOVE 10 8b;
+	   SUBG b 8a;
+	   SUBG a 82;
+	   INCR 0 2;
+	   PSTR 0 9 90 c2 Long Name:;
+	   MOVE 9 81;
+	   ADDG 1 1;				*si: long name length
+	   DECR 0 1;
+	   DECR 0 2;
+	SBIT 7 6;				*si: wrong - could be up to 12chars
+	 SKIP 80000001;
+	 DWRD 80000000 0 90 c2 Short Name Offset:;
+	TRTS;
+
+void AFP::HF::Srvr_Vol;
+	DGLB 0 8 1 b1 Volume #;
+	HBYT 0 6 90 c9 Configuration:;
+	 CBIT 7 6 0 d4 1... .... Password Protected;
+	 CLSE 0 0 0 d4 0... .... Not Password Protected;
+	 CBIT 0 6 0 d4 .... ...1 Has UNIX Privileges;
+	 CLSE 0 0 0 d4 .... ...0 Does Not have UNIX Privileges;
+	 LABL 0 0 0 c8;
+	LABL 0 0 0 c2 Volume Name:;
+	AFP::HF::Do_PSTR_9;
+	ADDG 1 8;
+	SUBG 1 7;
+	TLTE 1 7 0 0 AFP::HF::Srvr_Vol;
+	TNXT -AFP Rply Data;
+
+* ---------------------------------------------------------
+* ---------------------------------------------------------
+
+
+* ---------------------------------------------------------
+* Login Replies
+*
+
+
+void AFP GetSrvrInfo Reply;
+	LABL 0 0 0 b1 AFP - GetSrvrInfo Reply;
+	MOVE 10 8f;								*   copy of "offset" place
+	DWRD 0 4 b0 c2 Offset To Machine Type:;
+	DWRD 0 5 b0 c2 Offset To AFP Versions:;
+	DWRD 0 6 b0 c2 Offset To UAMs:;
+	DWRD 0 a b0 c2 Offset To Volume Icon & Mask:;
+	HWRD 0 d b0 c9 Flags:;
+	 CBIT f d 0 d4 1....... ........ Supports Super Client;
+	 CLSE 0 0 0 d4 0....... ........ Does Not Support Super Client;
+	 CBIT 9 d 0 d4 ......1. ........ Supports UTF8 Name;
+	 CLSE 0 0 0 d4 ......0. ........ Does Not Support UTF8 Name;
+	 CBIT 8 d 0 d4 .......1 ........ Supports Directory Services;
+	 CLSE 0 0 0 d4 .......0 ........ Does Not Support Directory Services;
+	 CBIT 7 d 0 d4 ........ 1....... Supports Reconnect;
+	 CLSE 0 0 0 d4 ........ 0....... Does Not Support Reconnect;
+	 CBIT 6 d 0 d4 ........ .1...... Supports Server Notifications;
+	 CLSE 0 0 0 d4 ........ .0...... Does Not Support Server Notifications;
+	 CBIT 5 d 0 d4 ........ ..1..... Supports TCP/IP;
+	 CLSE 0 0 0 d4 ........ ..0..... Does Not Support TCP/IP;
+	 CBIT 4 d 0 d4 ........ ...1.... Supports Server Signatures;
+	 CLSE 0 0 0 d4 ........ ...0.... Does Not Support Server Signatures;
+	 CBIT 3 d 0 d4 ........ ....1... Supports Server Messages;
+	 CLSE 0 0 0 d4 ........ ....0... Does Not Support Server Messages;
+	 CBIT 2 d 0 d4 ........ .....1.. Don't Allow Save Password;
+	 CLSE 0 0 0 d4 ........ .....0.. Allow Save Password;
+	 CBIT 1 d 0 d4 ........ ......1. Supports ChangePassword Call;
+	 CLSE 0 0 0 d4 ........ ......0. Does Not Support ChangePassword Call;
+	 CBIT 0 d 0 d4 ........ .......1 Supports CopyFile Call;
+	 CLSE 0 0 0 d4 ........ .......0 Does Not Support CopyFile Call;
+	 LABL 0 0 0 c8;
+	LABL 0 0 0 c2 Server Name:;
+	AFP::HF::Do_PSTR_9;
+	AFP::HF::Padding_Check;
+
+	SBIT 4 d;
+	SKIP 80000001;
+	DWRD 0 b b0 c2 Offset To Signature:;
+	
+	SBIT 5 d;
+	SKIP 80000001;
+	DWRD 0 c b0 c2 Offset To Network Addresses:;
+
+	MOVE f 87;
+	SUBG 10 87;
+	SUBG 4 87;
+	DECR 0 7;
+	LABL 0 0 0 c2 Machine Type:;
+	AFP::HF::Do_PSTR_9;
+	
+	MOVE f 87;
+	SUBG 10 87;
+	SUBG 5 87;
+	DECR 0 7;
+	*ADDG 7 90;
+	DBYT 0 7 b0 b7 Count of AFP Versions:;
+	 MOVE 0 8;
+	 Do PSTR Loop;
+	 LABL 0 0 0 b8;
+	
+	MOVE f 87;
+	SUBG 10 87;
+	SUBG 6 87;
+	DECR 0 7;
+	DBYT 0 7 b0 b7 Count of UAMs:;
+	MOVE 0 8;
+	Do PSTR Loop;
+	LABL 0 0 0 b8;
+
+	SBIT 4 d;
+	SKIP 80000005;
+	 MOVE f 87;
+	 SUBG 10 87;
+	 SUBG b 87;
+	 DECR 0 7;
+	 HEX# 10 0 b0 c2 Server Signature:;
+	
+	SBIT 5 d;
+	SKIP 80000007;
+	MOVE f 87;
+	SUBG 10 87;
+	SUBG c 87;
+	DECR 0 7;
+	DBYT 0 7 b0 c2 Count of Network Addresses:;
+	 MOVE 0 8;
+	 Do Net Addr Loop;
+	
+	SBIT 8 d;
+	SKIP 80000002;
+	 LABL 0 0 0 c2 Kerberos Principal Name:;
+	 AFP::HF::Do_PSTR_9;
+	
+	SBIT 9 d;
+	SKIP 80000002;
+	 LABL 0 0 0 c2 UTF8 Server Name:;
+	 AFP::HF::Do_PSTR_9;
+
+	DUMP 0 10 b0 c2 Volume Icon and Mask:;
+	TRTS;	
+
+void AFP GetAuthMethods Reply;						*si: ??? hasn't been checked
+	LABL 0 0 0 b1 AFP - GetAuthMethods Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HBYT 0 1 90 c2 Flags:;
+	DBYT 0 1 90 c2 Count:;
+	DUMP 0 10 90 c2 UAM Strings:;
+	TNXT -AFP Rply End;
+
+void AFP Login Reply;
+	LABL 0 0 0 b1 AFP - Login Reply;
+	DUMP 0 10 90 c2 User Authen Info:;
+	TRTS;
+
+void AFP LoginCont Reply;
+	LABL 0 0 0 b1 AFP - LoginCont Reply;
+	DUMP 0 10 90 c2 User Authen Info:;
+	TRTS;
+	
+void AFP LoginExt Reply;
+	LABL 0 0 0 b1 AFP - LoginExt Reply;
+	DUMP 0 10 90 c2 User Authen Info:;
+	TRTS;
+
+void AFP GetSrvrParms Reply;
+	LABL 0 0 0 b1 AFP - GetSrvrParms Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	TIME 1 0 90 c2 Server Time:;
+	DBYT 0 7 90 c2 Number Of Volumes:;
+	MOVE 1 8;
+	TLTE 1 7 0 0 AFP::HF::Srvr_Vol;
+	TNXT -AFP Rply Data;
+
+void AFP GetSessionToken Reply;
+	LABL 0 0 0 b1 AFP - GetSessionToken Reply;
+	DLNG 80000000 1 90 c2 Token Length:;
+	SEQU 8 1;
+	SKIP 80000002;
+	 DLNG 0 0 90 c2 Token Value (hi):;
+	 DLNG 0 0 90 c2 Token Value (lo):;
+	SEQU 0 1;
+	SKIP 80000001;
+	 DUMP 0 1 90 c2 Token:;
+	TNXT -AFP Rply End;
+
+void AFP DisconnectOldSession Reply;				*si: no reply
+	LABL 0 0 0 b1 AFP - DisconnectOldSession Reply;
+	TNXT -AFP Rply End;
+
+void AFP Logout Reply;								*si: no reply
+	LABL 0 0 0 b1 AFP - Logout Reply;
+	TNXT -AFP Rply End;
+
+void AFP MapID Reply;
+	LABL 0 0 0 b1 AFP - MapID Reply;
+	AFP::HF::Padding_Check;
+	TLTE 1 6 0 0 AFP Rply End;
+	LABL 0 0 0 c2 User Or Group Name:;
+	AFP::HF::Do_PSTR_9;
+	TNXT -AFP Rply Data;
+
+void AFP MapName Reply;								*si: need check
+	LABL 0 0 0 b1 AFP - MapName Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 0 0 90 c2 User Or Group ID:;
+	TNXT -AFP Rply Data;
+
+void AFP ChangePassword Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - ChangePassword Reply;
+	TNXT -AFP Rply End;
+
+void AFP GetUserInfo Reply;
+	LABL 0 0 0 b1 AFP - GetUserInfo Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 8 90 c2 Bitmap;
+	 CBIT 0 8 0 14 User ID;
+	 CBIT 1 8 0 14 Primary Group ID;
+	SBIT 0 8;
+	 SKIP 80000001;
+	 DLNG 80000000 0 90 c2 User ID:;
+	SBIT 1 8;
+	 SKIP 80000001;
+	 DLNG 80000000 0 90 c2 Primary Group ID:;
+	TNXT -AFP Rply Data;
+
+
+* ---------------------------------------------------------
+* Volume Replies
+*
+
+void AFP OpenVol Reply;
+	LABL 0 0 0 b1 AFP - OpenVol Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::VolParm_Bitmap;
+	 LABL 0 0 0 c8;
+	AFP::HF::Vol_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP CloseVol Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - CloseVol Reply;
+	TNXT -AFP Rply End;
+
+void AFP GetVolParms Reply;
+	LABL 0 0 0 b1 AFP - GetVolParms Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 Volume Bitmap:;
+	 AFP::HF::VolParm_Bitmap;
+	 LABL 0 0 0 c8;
+	AFP::HF::Vol_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP SetVolParms Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - SetVolParms Reply;
+	TNXT -AFP Rply End;
+
+void AFP Flush Reply;								*si: no reply
+	LABL 0 0 0 b1 AFP - Flush Reply;
+	TNXT -AFP Rply End;
+
+void AFP CatSearch Reply;							*si: this is WRONG
+	LABL 0 0 0 b1 AFP - CatSearch Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	
+	HEX# 10 0 90 c2 Current Catalog Position:;
+	
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0  0 c8;
+	
+	DLNG 80000000 0 90 c2 Matches Found:;
+	DUMP 0 10 b0 c2 Search Results Data:;
+
+void AFP CatSearchExt Reply;
+	LABL 0 0 0 b1 AFP - CatSearch Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HEX# 10 0 90 c2 Current Catalog Position:;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	HWRD 0 7 90 c2 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	DLNG 80000000 0 90 c2 Matches Found:;
+	DUMP 0 10 b0 c2 Search Results Data:;
+
+
+* ---------------------------------------------------------
+* Directory Replies
+*
+
+void AFP SetDirParms Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - SetDirParms Reply;
+	TNXT -AFP Rply End;
+
+void AFP OpenDir Reply;								*si: need check
+	LABL 0 0 0 b1 AFP - OpenDir Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	TNXT -AFP Rply Data;
+
+void AFP CloseDir Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - CloseDir Reply;
+	TNXT -AFP Rply End;
+
+void AFP Enumerate Reply;							*si: need check
+	LABL 0 0 0 b1 AFP - Enumerate Reply;
+	TLTE 1 6 0 0 AFP Rply End; 
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	DWRD 80000000 b 90 c2 Structs Returned:;
+
+	MOVE 1 c;
+	TLTE 1 a 0 0 AFP::HF::Enumerate_Structs;
+	TNXT -AFP Rply Data;
+
+void AFP::HF::Enumerate_Structs;
+	TGTE 0 a 0 0 AFP Rply End;
+	TGTE 0 10 0 0 RETURN;
+	DGLB 0 c 1 b7 Struct #;
+	DBYT 0 b 90 c2 Struct Length:;
+	DBIT 7 1 5 5;
+	DBIT 1 2 5 5;
+	DECR 1;
+	HBYT 0 8 90 c2 File-Dir Flag:;
+	 CBIT 7 8 0 14 Directory;
+	 CLSE 0 0 0 14 File;
+	SUBG 2 b;
+
+	SEQU 1 2;
+	SKIP 80000001;
+	 AFP::HF::Directory_Rply_Bitmap;
+	SEQU 0 2;
+	SKIP 80000001;
+	 AFP::HF::File_Rply_Bitmap; 
+	AFP::HF::Padding_Check9_new;
+	LABL 0 0  0 b8;
+	
+	SUBG 1 a;
+	ADDG 1 c;
+	TNXT -AFP::HF::Enumerate_Structs;
+
+
+void AFP EnumerateExt Reply;
+	LABL 0 0 0 b1 AFP - Enumerate Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	DWRD 80000000 a 90 c2 Structs Returned:;
+	
+	MOVE 1 c;
+	TLTE 1 a 0 0 AFP::HF::EnumerateExt_Structs;
+	TNXT -AFP Rply Data;
+
+
+void AFP::HF::EnumerateExt_Structs;
+	
+	TGTE 0 a 0 0 AFP Rply End;					* return if out of structs
+	TGTE 0 10 0 0 RETURN;
+	DGLB 0 c 1 b7 Struct #;
+	DWRD 0 b 90 c2 Struct Length:;
+	HBYT 0 8 90 c2 File-Dir Flag:;				* r8 = file/dir flag
+	CBIT 7 8 0 14 Directory;
+	CLSE 0 0 0 14 File;
+
+	AFP::HF::Padding_Check;
+	SUBG 4 b;
+
+	SBIT 7 8;									* test bit 7 of r8							
+	SKIP 3;										* if set, goto directory handling
+	 AFP::HF::File_Rply_Bitmap;
+	 SBIT 7 8;					
+	SKIP 80000001;
+	 AFP::HF::Directory_Rply_Bitmap;
+
+	AFP::HF::Padding_Check9;
+	LABL 0 0  0 b8;
+	
+	SUBG 1 a;									* decrement structs remaining
+	ADDG 1 c;									* increment struct number
+	TNXT -AFP::HF::EnumerateExt_Structs;
+
+	
+void AFP CreateDir Reply;
+	LABL 0 0 0 b1 AFP - CreateDir Reply;
+			TLTE 1 6 0 0 AFP Rply End;
+	DLNG 80000000 0 90 c2 New Directory ID:;
+	TNXT -AFP Rply Data;
+
+
+
+
+
+* ---------------------------------------------------------
+* File Replies
+*
+
+void AFP SetFileParms Reply;					*si: no reply
+	LABL 0 0 0 b1 AFP - SetFileParms Reply;
+	TNXT -AFP Rply End;
+
+void AFP CreateFile Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - CreateFile Reply;
+	TNXT -AFP Rply End;
+
+void AFP CopyFile Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - CopyFile Reply;
+	TNXT -AFP Rply End;
+
+void AFP CreateID Reply;						*si: not tested
+	LABL 0 0 0 b1 AFP - CreateID Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 80000000 0 90 c2 File ID:;
+	TNXT -AFP Rply Data;
+
+void AFP DeleteID Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - DeleteID Reply;
+	TNXT -AFP Rply End;
+
+void AFP ResolveID Reply;						*si: not tested
+	LABL 0 0 0 b1 AFP - ResolveID Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	AFP::HF::File_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP ExchangeFiles Reply;					*si: no reply
+	LABL 0 0 0 b1 AFP - ExchangeFiles Reply;
+	TNXT -AFP Rply End;
+
+
+* ---------------------------------------------------------
+* Combined Directory and File Replies
+*
+
+void AFP GetFileDirParms Reply;
+	LABL 0 0 0 b1 AFP - GetFileDirParms Reply;
+	MOVE 10 8a;									*si: save for use in dir bitmaps
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	MOVE 7 86;
+	HWRD 0 7 90 c9 Directory Bitmap:;
+	 AFP::HF::Directory_Bitmap;
+	 LABL 0 0 0 c8;
+	HBYT 0 8 90 c2 File-Dir Flag:;
+	SBIT 7 8;								* Directory? skip if so 
+	SKIP 5;
+	 LABL 0 0 0 14 File;
+	 AFP::HF::Padding_Zero;
+	 AFP::HF::File_Rply_Bitmap;
+	 SBIT 7 8;					* Directory? skip if not   
+	 SKIP 80000004;
+	  LABL 0 0 0 14 Directory;
+	  AFP::HF::Padding_Zero;
+	  MOVE 7 86;
+	  AFP::HF::Directory_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP SetFileDirParms Reply;					*si: no reply
+	LABL 0 0 0 b1 AFP - SetFileDirParms Reply;
+	TNXT -AFP Rply End;
+
+void AFP Rename Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - Rename Reply;
+	TNXT -AFP Rply End;
+
+void AFP Delete Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - Delete Reply;
+	TNXT -AFP Rply End;
+
+
+void AFP MoveAndRename Reply;					*si: no reply
+	LABL 0 0 0 b1 AFP - MoveAndRename Reply;
+	TNXT -AFP Rply End;
+
+* ---------------------------------------------------------
+* Fork Replies
+*
+
+void AFP GetForkParms Reply;
+	LABL 0 0 0 b1 AFP - GetForkParms Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0  0 c8;
+	MOVE 7 86;
+	AFP::HF::File_Rply_Bitmap;
+	File Long Short Names;
+	TNXT -AFP Rply Data;
+
+void AFP SetForkParms Reply;					*si: no reply
+	LABL 0 0 0 b1 AFP - SetForkParms Reply;
+	TNXT -AFP Rply End;
+
+void AFP OpenFork Reply;
+	LABL 0 0 0 b1 AFP - OpenFork Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	DWRD 80000000 0 90 c2 Open Fork Ref Num:;
+	MOVE 7 86;
+	AFP::HF::File_Rply_Bitmap;
+	*File Long Short Names;
+	TNXT -AFP Rply Data;
+
+void AFP Read Reply;
+	LABL 0 0 0 b1 AFP - Read Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DUMP 0 10 90 c2 Fork Read Data:;
+	TRTS;
+
+void AFP ReadExt Reply;
+	LABL 0 0 0 b1 AFP - Read Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DUMP 0 10 90 c2 Fork Read Data:;
+	TRTS;
+
+void AFP Write Reply;
+	LABL 0 0 0 b1 AFP - Write Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 0 0 90 c2 Offset of Byte Last Written:;
+	TNXT -AFP Rply Data;
+
+void AFP WriteExt Reply;
+	LABL 0 0 0 b1 AFP - Write Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 0 0 90 c2 Offset Of Byte Last Written (hi):;
+	DLNG 0 0 90 c2 Offset Of Byte Last Written (lo):;
+	TNXT -AFP Rply Data;
+
+void AFP FlushFork Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - FlushFork Reply;
+	TNXT -AFP Rply End;
+
+void AFP ByteRangeLock Reply;
+	LABL 0 0 0 b1 AFP - ByteRangeLock Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 80000000 0 90 c2 Range Start:;
+	TNXT -AFP Rply Data;
+
+void AFP ByteRangeLockExt Reply;
+	LABL 0 0 0 b1 AFP - ByteRangeLock Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DLNG 0 0 90 c2 Range Start (hi):;
+	DLNG 0 0 90 c2 Range Start (lo):;
+	TNXT -AFP Rply Data;
+
+void AFP CloseFork Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - CloseFork Reply;
+	TNXT -AFP Rply End;
+
+
+* ---------------------------------------------------------
+* Desktop Database Replies
+*
+
+void AFP OpenDT Reply;
+	LABL 0 0 0 b1 AFP - OpenDT Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DWRD 80000000 0 90 c2 DT Ref Num:;
+	TNXT -AFP Rply Data;
+
+void AFP CloseDT Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - CloseDT Reply;
+	TNXT -AFP Rply End;
+
+void AFP AddIcon Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - AddIcon Reply;
+	TNXT -AFP Rply End;
+
+void AFP GetIcon Reply;
+	LABL 0 0 0 b1 AFP - GetIcon Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	DUMP 0 10 90 c2 Icon Bitmap:;
+	TNXT -AFP Rply Data;
+
+void AFP GetIconInfo Reply;
+	LABL 0 0 0 b1 AFP - GetIconInfo Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HLNG 0 0 90 c2 Icon Tag:;
+	CHR# 4 0 90 c2 File Type:;
+	DBYT 0 0 90 c2 Icon Type:;
+	HBYT 0 0 90 c2 Padding:;
+	DWRD 0 0 90 c2 Size For Icon Bitmap:;
+	TNXT -AFP Rply Data;
+
+void AFP AddAPPL Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - AddAPPL Reply;
+	TNXT -AFP Rply End;
+	
+void AFP RmvAPPL Reply;							*si: no reply
+	LABL 0 0 0 b1 AFP - RmvAPPL Reply;
+	TNXT -AFP Rply End;
+
+void AFP GetAPPL Reply;
+	LABL 0 0 0 b1 AFP - GetAPPL Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	HWRD 0 7 90 c9 File Bitmap:;
+	 AFP::HF::File_Bitmap;
+	 LABL 0 0 0 c8;
+	HLNG 0 0 90 c2 APPL Tag:;
+	MOVE 7 86;
+	AFP::HF::File_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP AddComment Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - AddComment Reply;
+	TNXT -AFP Rply End;
+
+void AFP RmvComment Reply;						*si: no reply
+	LABL 0 0 0 b1 AFP - RmvComment Reply;
+	TNXT -AFP Rply End;
+
+void AFP GetComment Reply;
+	LABL 0 0 0 b1 AFP - GetComment Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	LABL 0 0 0 c2 Comment:;
+	AFP::HF::Do_PSTR_9;
+	TNXT -AFP Rply Data;
+
+
+* ---------------------------------------------------------
+* ---------------------------------------------------------
+* ---------------------------------------------------------
+* ---------------------------------------------------------
+
+void AFP LogInExt Reply;
+	LABL 0 0 0 b1 AFP - LogInExt Reply;
+	DUMP 0 10 90 c2 User Authen Info:;
+
+void AFP Sleep Reply;
+	LABL 0 0 0 b1 AFP - Sleep Reply;
+	TNXT -AFP Rply End;
+
+
+
+* ---------------------------------------------------------
+
+void AFP Request;
+	LABL 0 0 0 b1 AFP - AppleTalk Filing Protocol\AFP:;
+	DBYT 0 7 90 c2 AFP Function:;
+	CEQU c0 7 0 14 AddIcon;
+	TEQU c0 7 0 0 AddIcon;
+*   display indexed string   
+	CST# 0 7 0 14 AFP Req Types;
+	CLSE 0 0 0 14 Unrecognized Type;
+	TST# 0 7 0 0 AFP Req Types;
+	DUMP 0 10 90 c2 Remaining AFP Request Data:;
+
+void AFP GetSrvrMsg Reply;
+	LABL 0 0 0 b1 AFP - GetSrvrMsg Reply;
+	TLTE 1 6 0 0 AFP Rply End;
+	Msg Type Bitmap;
+	LABL 0 0 0 c2 Server Message:;
+	Do PSTR 9;
+	TNXT -AFP Rply Data;
+
+void AFP UserBytes;
+	LABL 0 0 0 b1 AFP - UserBytes;
+	BBIT 4 7 90 c2 Attention Code:;
+	CBIT 0 7 0 f4 Don't Reconnect;
+	CBIT 1 7 0 f4 Server Message;
+	CBIT 2 7 0 f4 Server Crash;
+	CBIT 3 7 0 f4 Shutdown-Disconnect User;
+	BBIT c 7 90 c2 Minutes or Ext Bit Map:;
+	HGLB 0 6 4 14 (;
+	LABL 0 0 0 4 );
+	DGLB 0 6 4 4 (;
+	LABL 0 0 0 4 );
+	TNXT -AFP Req Data;
+
+
+void AFP Req Data;
+	TGTE 0 10 0 0 AFP The End;
+	DUMP 0 10 90 c2 Remaining AFP Request Data:;
+
+void AFP Rply End;
+	TLTE 1 10 0 0 AFP Rply Data;
+	LABL 0 0 0 c4 AFP Packet Ends As Expected;
+
+void AFP Rply Data;
+	TGTE 0 10 0 0 AFP The End;
+	DUMP 0 10 90 c2 Remaining AFP Reply Data:;
+
+void AFP The End;
+
+void AFP Srvr Vol;
+	DGLB 0 8 1 b1 Volume #;
+	HBYT 0 6 90 c2 Configuration:;
+	CBIT 0 6 0 14 HasConfigInfo;
+	CBIT 7 6 0 14 Password Protected;
+	CLSE 0 0 0 14 Not Password Protected;
+	LABL 0 0 0 c2 Volume Name:;
+	Do PSTR 9;
+	ADDG 1 8;
+	SUBG 1 7;
+	TLTE 1 7 0 0 AFP Srvr Vol;
+	TNXT -AFP Rply Data;
+
+void Do PSTR 9;
+	GBYT 0 9;
+	PSTR 0 0 90;
+	TRTS;
+
+void Path Parms;
+	LABL 0 0 0 b2   ;
+	AFP Path Type;
+	if (g[7] == 3)
+	{
+	 HLNG 0 1 90 c2 Unicode Hint:;
+	// DWRD 0 1 90 c2 Length:;
+	 INCR 1;
+	}
+	LABL 0 0 0 c2 Pathname:       ;
+	AFP Path Name;
+	TRTS;
+
+void AFP Path Type;
+	DBYT 0 7 90 2 Path Type:;
+	CEQU 1 7 0 14 Short Name Form;
+	CEQU 2 7 0 14 Long Name Form;
+	CEQU 3 7 0 14 Unicode Name Form;
+	TRTS;
+
+void AFP Path Name;
+	Do PSTR 9;
+	CEQU 0 9 0 4       (empty);
+	TRTS;
+
+void AFP Vol Dir;
+	Vol Dir ID;
+	Path Type Name;
+	TRTS;
+
+void Do PSTR Loop;
+*   all done?   
+	SNEQ 0 7 0 4;
+	SKIP 1;
+	TRTS;
+	ADDG 1 8;
+	DGLB 0 8 0 c2 String #;
+	LABL 0 0 0 2 :;
+	Do PSTR 9;
+	SUBG 1 7;
+	TNXT -Do PSTR Loop;
+
+
+void Vol Dir ID;
+	HBYT 0 7 90 c2 Always Zero:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	TRTS;
+
+void Path Type Name;
+	LABL 0 0 0 b2   ;
+	AFP Path Type;
+	LABL 0 0 0 c2 Pathname:       ;
+	AFP Path Name;
+	TRTS;
+
+void Dir Path Name;
+	Src Dest Path;
+	LABL 0 0 0 c2 New ;
+	AFP Path Type;
+	LABL 0 0 0 c2 New Pathname:   ;
+	AFP Path Name;
+	TRTS;
+
+void AFP SFDP;
+	Vol Dir ID;
+	HWRD 0 7 90 c9 File Bitmap:;
+	AFP::HF::File_Bitmap;
+	LABL 0 0  0 c8;
+	MOVE 7 86;
+	Path Parms;
+*   odd number of bytes?   
+	SBIT 0 9;
+	SKIP 80000002;
+	HBYT 0 0 90 c2 Unused Alignment Byte:;
+	AFP::HF::File_Rply_Bitmap;
+	TNXT -AFP Rply Data;
+
+void AFP Comment;
+	HBYT 0 0 90 c2 Always Zero:;
+	DWRD 80000000 0 90 c2 Desktop Database Refnum:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	Path Parms;
+	TNXT -AFP Req Data;
+
+void Msg Type Bitmap;
+	DWRD 0 7 90 c2 Message Type:;
+	CEQU 0 7 0 14 Login Message;
+	CEQU 1 7 0 14 Server Message;
+	HWRD 0 7 90 c2 Message Bitmap:;
+	CBIT 0 7 0 14 Message;
+	TRTS;
+
+void Vol File ID;
+	HBYT 0 7 90 c2 Always Zero:;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 File ID:;
+	TRTS;
+
+void Src Dest Path;
+	DLNG 80000000 0 90 c2 Dest. Directory ID:;
+	LABL 0 0 0 c2 Source ;
+	AFP Path Type;
+	LABL 0 0 0 c2 Source Pathname:;
+	AFP Path Name;
+	LABL 0 0 0 c2 Dest. ;
+	AFP Path Type;
+	LABL 0 0 0 c2 Dest. Pathname: ;
+	AFP Path Name;
+	TRTS;
+
+void File Long Short Names;
+	SBIT 6 6;
+	SKIP 80000002;
+	LABL 0 0 0 c2 Long Name (string):;
+	Do PSTR 9;
+	SBIT 7 6;
+	SKIP 80000002;
+	LABL 0 0 0 c2 Short Name (string):;
+	Do PSTR 9;
+	TRTS;
+
+void No Vol Dir ID;
+	DWRD 80000000 0 90 c2 Volume ID:;
+	DLNG 80000000 0 90 c2 Directory ID:;
+	TRTS;

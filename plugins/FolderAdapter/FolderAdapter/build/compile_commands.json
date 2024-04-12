@@ -1,0 +1,207 @@
+[
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/AdapterOptions.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/AdapterOptions.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/AdapterOptions.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/OmniAdapter.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/OmniAdapter.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/OmniAdapter.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/OmniEngineContext.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/OmniEngineContext.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/OmniEngineContext.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/OmniPlugin.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/OmniPlugin.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/OmniPlugin.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/Options.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/Options.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/Options.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/PluginMessages.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/PluginMessages.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/PluginMessages.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/StdAfx.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/StdAfx.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/StdAfx.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Plugin/XmlUtil.cpp.o -c /home/gary/temp/FolderAdapter-master/Plugin/XmlUtil.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Plugin/XmlUtil.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/ByteVectRef.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/ByteVectRef.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/ByteVectRef.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/CaptureFile.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/CaptureFile.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/CaptureFile.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/ContextManager.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/ContextManager.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/ContextManager.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/FileCaptureBuffer.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/FileCaptureBuffer.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/FileCaptureBuffer.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/FileEx.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/FileEx.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/FileEx.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/GPSInfo.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/GPSInfo.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/GPSInfo.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/IpHeaders.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/IpHeaders.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/IpHeaders.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/Layers.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/Layers.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/Layers.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/NotifyService.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/NotifyService.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/NotifyService.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PCapCaptureFile.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PCapCaptureFile.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PCapCaptureFile.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PCapNgCaptureFile.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PCapNgCaptureFile.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PCapNgCaptureFile.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/Packet.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/Packet.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/Packet.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PacketArray.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PacketArray.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PacketArray.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekAdapter.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekAdapter.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekAdapter.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekCaptureFile.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekCaptureFile.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekCaptureFile.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekContext.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekContext.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekContext.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekContextProxy.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekContextProxy.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekContextProxy.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekDataModeler.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekDataModeler.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekDataModeler.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekMessage.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekMessage.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekMessage.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekPlugin.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekPlugin.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekPlugin.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekProxy.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekProxy.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekProxy.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekStrings.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekStrings.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekStrings.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekTime.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekTime.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekTime.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekUnits.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekUnits.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekUnits.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PeekXml.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PeekXml.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PeekXml.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PluginManager.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PluginManager.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PluginManager.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/PluginModule.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/PluginModule.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/PluginModule.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/RefreshFile.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/RefreshFile.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/RefreshFile.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/RemoteAdapter.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/RemoteAdapter.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/RemoteAdapter.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/RemotePlugin.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/RemotePlugin.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/RemotePlugin.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/RemoteStatsPlugin.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/RemoteStatsPlugin.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/RemoteStatsPlugin.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/Snapshot.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/Snapshot.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/Snapshot.cpp"
+},
+{
+  "directory": "/home/gary/temp/FolderAdapter-master/build",
+  "command": "g++ -DFolderAdapterOE_EXPORTS -I/home/gary/temp/FolderAdapter-master/Plugin -I/home/gary/temp/FolderAdapter-master/Framework -I/home/gary/temp/FolderAdapter-master/Helium -g -fPIC -o CMakeFiles/FolderAdapterOE.dir/Framework/Version.cpp.o -c /home/gary/temp/FolderAdapter-master/Framework/Version.cpp",
+  "file": "/home/gary/temp/FolderAdapter-master/Framework/Version.cpp"
+}
+]

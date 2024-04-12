@@ -1,0 +1,1150 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CRefreshFile Class</title>
+</head>
+<body>
+    <h1>CRefreshFile Class</h1>
+
+    <!-- Description -->
+    <p class="onlyG">
+        The CRefreshFile class offers the methods concerned with
+        <a href="PacketBuffers.html#PacketBuffers::RefreshConcept">refreshing a file</a>.
+        This class does not function in a standalone context (it has some virtual functions),
+        but is used in the inheritance hierarchy for such classes as
+        <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> to
+        give it robust packet file naming and managing capability.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px; margin-bottom:0px">class CRefreshFile</p>
+
+    <!-- CRefreshFile Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Constructors</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="180px"><a href="#CRefreshFile::CRefreshFile1">CRefreshFile</a></td>
+            <td>Constructs a CRefreshFile object (default constructor).</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::CRefreshFile2">CRefreshFile</a></td>
+            <td>Constructs a CRefreshFile object based on a set of input arguments.</td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">CRefreshFile Public Member Functions</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="180px"><a href="#CRefreshFile::Activate">Activate</a></td>
+            <td>
+                Triggers a class that derives from CRefreshFile to begin buffering packets and
+                periodically flushing them to a disk file.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::Copy">Copy</a></td>
+            <td>Copies the CRefreshFile internal data from one CRefreshFile-derived object to another.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::CreateNextSaveName">CreateNextSaveName</a></td>
+            <td>
+                Creates an unique file name to be used by the next file save operation of
+                a deriving class.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::Deactivate">Deactivate</a></td>
+            <td>
+                Terminates the buffering of packets and the periodic flushing of the buffer to a
+                disk file for a class that derives from CRefreshFile.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::IsTimeExpired">IsTimeExpired</a></td>
+            <td>Returns true if the specified expiration time limit has been exceeded.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRefreshFileBaseName">GetRefreshFileBaseName</a></td>
+            <td>Returns the base name that can be used in creating a refresh file name.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRefreshFilePath">GetRefreshFilePath</a></td>
+            <td>Returns the path that a refresh file will be saved into.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRefreshFileType">GetRefreshFileType</a></td>
+            <td>Returns the refresh file name type that is associated with the CRefreshFile object.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRefreshSize">GetRefreshSize</a></td>
+            <td>Returns the buffer size limit that will trigger a refresh.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRefreshTimeInterval">GetRefreshTimeInterval</a></td>
+            <td>Returns the time elapsed value in milliseconds that will trigger a refresh.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetTimeRemainingUntilRefresh">GetTimeRemainingUntilRefresh</a></td>
+            <td>Returns the amount of time in milliseconds that is remaining until the next time-based refresh.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetTimeSinceActivated">GetTimeSinceActivated</a></td>
+            <td>
+                Returns the amount of time in milliseconds that has elapsed since the
+                <a href="#CRefreshFile::Activate">Activate</a> function was invoked.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::Reset">Reset</a></td>
+            <td>Resets the CRefreshFile object: zeroes all values.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::SetRefreshFileBaseName">SetRefreshFileBaseName</a></td>
+            <td>Sets the optional base name for building an unique refresh file name.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::SetRefreshFilePath">SetRefreshFilePath</a></td>
+            <td>Sets the path for building a fully qualified refresh file name.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::SetRefreshFileType">SetRefreshFileType</a></td>
+            <td>Sets the refresh file name type that is associated with the CRefreshFile object.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::SetRefreshTimeInterval1">SetRefreshTimeInterval</a></td>
+            <td>Sets the time value for establishing when the next time-based refresh will occur.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::SetRefreshTimeInterval2">SetRefreshTimeInterval</a></td>
+            <td>
+                Sets the time value for establishing when the next time-based refresh will occur,
+                expressed in milliseconds.
+            </td>
+        </tr>
+    </table>
+
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">CRefreshFile Static Helper Functions</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="180px"><a href="#CRefreshFile::DirectoryExists">DirectoryExists</a></td>
+            <td>Returns true if a directory exists.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetRandomizedMilliSec">GetRandomizedMilliSec</a></td>
+            <td>Returns a randomized value that can be used as the milliseconds part of a formatted time string.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::GetTimeStringFileName">GetTimeStringFileName</a></td>
+            <td>Returns a formatted timestring that can be used to create a file name that is unique.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::IsPathValid">IsPathValid</a></td>
+            <td>Returns true if a path name is valid.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::MakePath">MakePath</a></td>
+            <td>Creates a full directory path, including all subdirectories.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::Now">Now</a></td>
+            <td>
+                Returns the number of milliseconds that have elapsed since the system was started,
+                which can be used as a relative indicator of the "current time".
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CRefreshFile::ToMilliseconds">ToMilliseconds</a></td>
+            <td>Converts a time interval value and a time units value to a milliseconds value.</td>
+        </tr>
+    </table>
+
+    <!-- CRefreshFile Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CRefreshFile Public Member Functions</h2>
+
+    <!-- CRefreshFile1 constructor details -->
+    <a name="CRefreshFile::CRefreshFile1"></a>
+    <h3 style="margin-top:12px;"><hr style="color:#4d92a8" />CRefreshFile::CRefreshFile</h3>
+    <p class="onlyG">Constructs a CRefreshFile object (default constructor).</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CRefreshFile();</td>
+        </tr>
+    </table>
+
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This constructs a CRefreshFile object. Before meaningful use, methods should be called to
+        set the file path, file base name, and other attributes as well.
+    </p>
+
+    <!-- CRefreshFile2 constructor details -->
+    <a name="CRefreshFile::CRefreshFile2"></a>
+    <h3 style="margin-top:12px;"><hr style="color:#4d92a8" />CRefreshFile::CRefreshFile</h3>
+    <p class="onlyG">Constructs a CRefreshFile object based on a set of input arguments.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CRefreshFile(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>strFilePath,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>strFileBaseName = _T(""),</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nRefreshFileType = kRefreshFileTypeNone,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>bAppendTimestring = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>strFilePath</em></dt>
+        <dd>The file path that the file will be saved into.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>strFileBaseName</em></dt>
+        <dd>
+            An optional base name to build a file name from (could be appended to with a formatted
+            timestamp, for example).
+        </dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>nRefreshFileType</em></dt>
+        <dd>
+            An optional parameter specifying refresh file name type. Possible values are
+            enumerated <a href="#CRefreshFile::RefreshFileTypes">here</a>.
+        </dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>bAppendTimestring</em></dt>
+        <dd>True causes a formatted time string to be appended to the file name.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This constructs a CRefreshFile object. The parameters specify file path, a base file name,
+        the type of refresh, and whether or not to append a formatted time string value to the file
+        base name. As an example if strFilePath = "C:\MyPath", strFileBaseName = "TestFile",
+        nRefreshFileType = kRefreshFileTypeTimeStamp, and bAppendTimestring = true, then the
+        resulting file name might be "C\MyPath\TestFile2010-04-12T15.42.48.752Z.pkt".
+    </p>
+
+    <!-- Activate details -->
+    <a name="CRefreshFile::Activate"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::Activate</h3>
+    <p class="onlyG">
+        Triggers a class that derives from CRefreshFile to begin buffering packets and
+        periodically flushing them to a disk file.</td>
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool Activate();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns true unless the refresh file type has been set to kRefreshFileTypeNone, in which case
+        returns false.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method activates (triggers) the buffering and refreshing process for a class such as
+        <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> that derives from
+        CRefreshFile. The derived class will not buffer packets or save them to disk file until
+        the Activate method has been called.
+    </p>
+
+    <!-- Copy details -->
+    <a name="CRefreshFile::Copy"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::Copy</h3>
+    <p class="onlyG">Copies the CRefreshFile internal data from one CRefreshFile-derived object to another.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool Copy(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CRefreshFile&</td>
+            <td><em>inRefreshFile</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRefreshFile</em></dt>
+        <dd>Reference to the CRefreshFile-derived object being copied from.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Always returns true.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method copies the internal CRefreshFile data from object to another. Since the
+        CRefreshFile class is always used as a base class for another class such as the
+        <a href="CFileCaptureBuffer.html#CRefreshFile::CRefreshFile2">CFileCaptureBuffer</a>
+        class, the copy operation for CRefreshFile will be tied to the copy operation for
+        the derived class.
+    </p>
+
+    <!-- CreateNextSaveName details -->
+    <a name="CRefreshFile::CreateNextSaveName"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::CreateNextSaveName</h3>
+    <p class="onlyG">
+        Creates a unique file name to be used by the next file save operation of
+        a deriving class.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CString CreateNextSaveName();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A CString containing the new fully qualified file save name.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method creates a new file path/name to be used for the next file save
+        operation by a class that derives from CRefreshFile. The new name is composed
+        from member variables in CRefreshFile that had prior been set, including file
+        path, base file name, and <a href="#CRefreshFile::RefreshFileTypes">
+            file name
+            type indicator
+        </a>.
+    </p>
+
+    <!-- Deactivate details -->
+    <a name="CRefreshFile::Deactivate"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::Deactivate</h3>
+    <p class="onlyG">
+        Terminates the buffering of packets and the periodic flushing of the buffer to a
+        disk file for a class that derives from CRefreshFile.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void Deactivate();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method deactivates the process of buffering packets and periodically flushing
+        them to disk by a deriving class such as
+        <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a>. The Deactivate
+        method will cause those actions to immediately cease.
+    </p>
+
+    <!-- IsTimeExpired details -->
+    <a name="CRefreshFile::IsTimeExpired"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::IsTimeExpired</h3>
+    <p class="onlyG">Returns true if the specified expiration time limit has been exceeded.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsTimeExpired();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the expiration time limit value is exceeded, false if not.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method checks the internal data values for start time and elapased
+        time limit and compares this against the current time. If the elapsed time
+        limit has been exceeded the function returns true, otherwise false.
+    </p>
+
+    <!-- GetRefreshFileBaseName details -->
+    <a name="CRefreshFile::GetRefreshFileBaseName"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRefreshFileBaseName</h3>
+    <p class="onlyG">Returns the base name that can be used in creating a refresh file name.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CString GetRefreshFileBaseName();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The refresh file base name.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the refresh file base name. The base name is an optional string
+        value that can be used in creating a unique refresh file name. For example, a
+        base name of "MyFile" could be used with a formatted timestamp value to create a
+        file name of "MyFile2010-04-16T22.01.51.220Z.pkt".
+    </p>
+
+    <!-- GetRefreshFilePath details -->
+    <a name="CRefreshFile::GetRefreshFilePath"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRefreshFilePath</h3>
+    <p class="onlyG">Returns the path that a refresh file will be saved into.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CString GetRefreshFilePath();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The refresh file path.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the refresh file path. This is the path the files will
+        be periodically saved into based on the file save name criteria that are
+        established in the CRefreshFile object.
+    </p>
+
+    <!-- GetRefreshFileType details -->
+    <a name="CRefreshFile::GetRefreshFileType"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRefreshFileType</h3>
+    <p class="onlyG">Returns the refresh file name type that is associated with the CRefreshFile object.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetRefreshFileType();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The <a href="#CRefreshFile::RefreshFileTypes">refresh file name type</a> associated with this object.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the <a href="#CRefreshFile::RefreshFileTypes">refresh file name type</a>
+        indicator. The refresh file name type is used to determine how to build the refresh file name.
+    </p>
+
+    <!-- GetRefreshSize details -->
+    <a name="CRefreshFile::GetRefreshSize"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRefreshSize</h3>
+    <p class="onlyG">Returns the buffer size limit that will trigger a refresh.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetRefreshSize();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The refresh size in bytes that has been set to signal a refresh.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the refresh size limit that is used to trigger a refresh
+        (i.e. flush buffer to disk in a new file).
+    </p>
+
+    <!-- GetRefreshTimeInterval details -->
+    <a name="CRefreshFile::GetRefreshTimeInterval"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRefreshTimeInterval</h3>
+    <p class="onlyG">Returns the time elapsed value in milliseconds that will trigger a refresh.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetRefreshTimeInterval();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The time elapsed value in milliseconds that will trigger a refresh.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the time elapsed value that has been specified to signal
+        that a file refresh (flush buffer to disk file) should be performed.
+    </p>
+
+    <!-- GetTimeRemainingUntilRefresh details -->
+    <a name="CRefreshFile::GetTimeRemainingUntilRefresh"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetTimeRemainingUntilRefresh</h3>
+    <p class="onlyG">
+        Returns the amount of time in milliseconds that is remaining until the next time
+        elapsed-based refresh.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetTimeRemainingUntilRefresh();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The number of milliseconds remaining until the next time elapsed-based refresh.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the time that is remaining until the next time elapsed-based
+        refresh is triggered. Note that a refresh trigger can be based on elapsed time
+        limit exceeded, on size limit exceeded, or on both (whichever comes first).
+    </p>
+
+    <!-- GetTimeSinceActivated details -->
+    <a name="CRefreshFile::GetTimeSinceActivated"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetTimeSinceActivated</h3>
+    <p class="onlyG">
+        Returns the amount of time in milliseconds that has elapsed since the
+        <a href="#CRefreshFile::Activate">Activate</a> function was invoked.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetTimeSinceActivated();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The number of milliseconds since <a href="#CRefreshFile::Activate">activation</a>.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the amount of time in milliseconds that has elapsed since the
+        <a href="#CRefreshFile::Activate">Activate</a> function was called. It is the
+        <a href="#CRefreshFile::Activate">Activate</a> function that causes the time elapsed
+        counting process to begin.
+    </p>
+
+    <!-- Reset details -->
+    <a name="CRefreshFile::Reset"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::Reset</h3>
+    <p class="onlyG">Resets the CRefreshFile object: zeroes all values.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">virtual void Reset();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method re-initializes the CRefreshFile object. Note that a Reset is called on
+        the class that derives from CRefreshFile such as
+        <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a>. The
+        <a href="CFileCaptureBuffer.html#CFileCaptureBuffer::Reset">CFileCaptureBuffer::Reset</a>
+        function invokes both a
+        <a href="CCaptureBuffer.html#CCaptureBuffer::Reset">CCaptureBuffer::Reset</a> and a
+        CRefreshFile::Reset.
+    </p>
+
+    <!-- SetRefreshFileBaseName details -->
+    <a name="CRefreshFile::SetRefreshFileBaseName"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::SetRefreshFileBaseName</h3>
+    <p class="onlyG">Sets the optional base name for building an unique refresh file name.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetRefreshFileBaseName(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CString&</td>
+            <td><em>strFileBaseName</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>strFileBaseName</em></dt>
+        <dd>A CString containing the base name to set.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method establishes the base name to be used for creating a refresh
+        file name. The base name is an optional string value that can be added on to
+        in various ways to build the complete refresh file name.
+        For example, a base name of "MyFile" could be used
+        with a formatted timestamp value to create a file name of
+        "MyFile2010-04-16T22.01.51.220Z.pkt". Because the base name is optional it can
+        be left unset to just allow the refresh file name, for example, to be just the
+        timestamp without any base name.
+    </p>
+
+    <!-- SetRefreshFilePath details -->
+    <a name="CRefreshFile::SetRefreshFilePath"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::SetRefreshFilePath</h3>
+    <p class="onlyG">Sets the path for building a fully qualified refresh file name.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool SetRefreshFilePath(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CString&</td>
+            <td><em>inFilePath,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em> inAppendTimestring = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inFilePath</em></dt>
+        <dd>A CString containing the file path to set.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inAppendTimestring</em></dt>
+        <dd>True causes an unique formatted timestamp value to be added to the path string.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method creates a path string that the refresh file name will be appended
+        to when a file refresh is to be done. Note that this method internally calls
+        the <a href="#CRefreshFile::MakePath">MakePath</a> function to create the specified
+        directory if is does not already
+        exist.
+    </p>
+
+    <!-- SetRefreshFileType details -->
+    <a name="CRefreshFile::SetRefreshFileType"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::SetRefreshFileType</h3>
+    <p class="onlyG">Sets the refresh file name type that is associated with the CRefreshFile object.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetRefreshFileType(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inRefreshFileType</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRefreshFileType</em></dt>
+        <dd>
+            The <a href="#CRefreshFile::RefreshFileTypes">refresh file type indicator</a> to use
+            when creating the refresh file name.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the <a href="#CRefreshFile::RefreshFileTypes">refresh file name type</a>
+        indicator. The refresh file name type identifies which algorithm to use when creating
+        a new refresh file name.
+    </p>
+
+    <!-- SetRefreshTimeInterval1 details -->
+    <a name="CRefreshFile::SetRefreshTimeInterval1"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::SetRefreshTimeInterval</h3>
+    <p class="onlyG">
+        Sets the time value for establishing when the next time-based
+        refresh will occur.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool SetRefreshTimeInterval(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inTimeInterval,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em> inTimeUnits</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inTimeInterval</em></dt>
+        <dd>
+            The number of time units (seconds, minutes, etc.) to used to signal the
+            next refresh.
+        </dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inTimeUnits</em></dt>
+        <dd>The <a href="#CRefreshFile::CRefreshTimeUnits">type of units</a> to be converted.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True unless time values are out of bounds (see Remarks).
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the time interval that controls time-based file
+        <a href="PacketBuffers.html#PacketBuffers::RefreshConcept">refreshes</a>. Once
+        time elapsed since the last refresh exceeds this value a refresh is triggered.
+        Note that refreshes may be triggered by time elapsed, file size exceeded, or
+        by either (whichever comes first). This means that setting a time expiration
+        value is optional. The minima and maxima for the refresh time interval are:
+        minimum of 30 seconds and maximum of 30 days.
+    </p>
+
+    <!-- SetRefreshTimeInterval2 details -->
+    <a name="CRefreshFile::SetRefreshTimeInterval2"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::SetRefreshTimeInterval</h3>
+    <p class="onlyG">
+        Sets the time value for establishing when the next time-based
+        refresh will occur, expressed in milliseconds.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool SetRefreshTimeInterval(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inRefreshTimeIntervalMS</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRefreshTimeIntervalMS</em></dt>
+        <dd>Number of milliseconds to set the time interval to.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True unless time values are out of bounds (see Remarks).
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the time interval, expressed in milliseconds,  that controls
+        time-based file
+        <a href="PacketBuffers.html#PacketBuffers::RefreshConcept">refreshes</a>. Once
+        time elapsed since the last refresh exceeds this value a refresh is triggered.
+        The minima and maxima for the refresh time interval are:
+        minimum of 30 seconds and maximum of 30 days (both expressed as milliseconds).
+    </p>
+
+    <!-- CRefreshFile Static Helper Function Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CRefreshFile Static Helper Functions</h2>
+
+    <!-- DirectoryExists details -->
+    <a name="CRefreshFile::DirectoryExists"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::DirectoryExists</h3>
+    <p class="onlyG">Returns true if a directory exists.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static bool DirectoryExists(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CString&</td>
+            <td><em>inDirectory</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inDirectory</em></dt>
+        <dd>A CString containing a fully qualified path/file name to test for existence.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the directory indicated by the inDirectory parameter exists, otherwise false.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method is a static "helper" function that indicates whether or not the directory indicated
+        by the inDirectory parameter exists or not.
+    </p>
+
+    <!-- GetRandomizedMilliSec details -->
+    <a name="CRefreshFile::GetRandomizedMilliSec"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetRandomizedMilliSec</h3>
+    <p class="onlyG">
+        Returns a randomized value that can be used as the milliseconds part of a formatted time string.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static WORD GetRandomizedMilliSec(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>inSeed = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inSeed</em></dt>
+        <dd>
+            True indicates that the randomizing algorithm use an extra initial
+            seed value based on the GetTickCount function.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A randomized WORD value between 0 and 999.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This static "helper" method creates a randomized value between 0 and 999
+        that is considered "milliseconds". This means that the generated value
+        can be used as the milliseconds portion of a formatted time string. This
+        in turn will help guarantee that two files whose names are based on the
+        current time (via the GetTickCount function), and which are triggered to
+        flush to disk simultaneously, will still have differing names.
+    </p>
+
+    <!-- GetTimeStringFileName details -->
+    <a name="CRefreshFile::GetTimeStringFileName"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::GetTimeStringFileName</h3>
+    <p class="onlyG">
+        Returns a formatted timestring that can be used to create a file name that is unique.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static CString GetTimeStringFileName(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>inRandomizeMilliseconds</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRandomizeMilliseconds</em></dt>
+        <dd>
+            True indicates that the milliseconds potion of the formatted time string
+            will be generated by the <a href="#CRefreshFile::GetRandomizedMilliSec">
+                GetRandomizedMilliSec
+            </a> function.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A CString containing the formatted time string value.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This static "helper" method creates a formatted time string based
+        on the current time as of when the method is called. This string
+        can then be used to build a file name that is guaranteed to be
+        unique.
+    </p>
+
+    <!-- IsPathValid details -->
+    <a name="CRefreshFile::IsPathValid"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::IsPathValid</h3>
+    <p class="onlyG">Returns true if a path name is valid.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static bool IsPathValid(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inPath</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPath</em></dt>
+        <dd>A CString containing a path (a fully qualified directory name) to test for validity.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the file path indicated by the inPath parameter is a valid path name, otherwise false.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method is a static "helper" function that indicates whether or not the file path
+        indicated by the inPath parameter is or is not formatted as a valid path.
+    </p>
+
+    <!-- MakePath details -->
+    <a name="CRefreshFile::MakePath"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::MakePath</h3>
+    <p class="onlyG">Creates a full directory path, including all subdirectories.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static bool MakePath(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inPath</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPath</em></dt>
+        <dd>A CString containing a path (a fully qualified directory name) to be created.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the file path indicated by the inPath parameter is successfully created or
+        already exists, otherwise false.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method is a static "helper" function that creates a full directory path. This
+        means that all subdirectories in the path will be created if they don't exist. If
+        the inPath parameter is not formatted as a valid path, or if for some reason the
+        path creation is unsuccessful the function returns false. If the path is successfully
+        created of if it already exists the function returns true.
+    </p>
+
+    <!-- Now details -->
+    <a name="CRefreshFile::Now"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::Now</h3>
+    <p class="onlyG">
+        Returns the number of milliseconds that have elapsed since the system was started,
+        which can be used as a relative indicator of the "current time".
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static UInt64 Now();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        the number of milliseconds that have elapsed since the system was started.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method is a static "helper" function that can be used to retrieve a
+        relative indicator of the "current time". This UInt64 value can in turn
+        be used for determining such things as the elapsed time for a capture session.
+    </p>
+
+    <!-- ToMilliseconds details -->
+    <a name="CRefreshFile::ToMilliseconds"></a>
+    <h3 style="margin-top:12px;"><hr style="color: #4d92a8" />CRefreshFile::ToMilliseconds</h3>
+    <p class="onlyG">
+        Converts a time interval value and a time units value to a milliseconds value.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">static UInt64 ToMilliseconds(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nTime</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nUnits</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) throw( ... );</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>nTime</em></dt>
+        <dd>The number of units (seconds, minutes, etc.) to be converted to milliseconds.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>nUnits</em></dt>
+        <dd>The type of units to be converted.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A UInt64 value containing the number of milliseconds resulting from the conversion.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method is a static "helper" function that converts a value and its conversion
+        type into milliseconds. The conversion types are enumerated
+        <a href="#CRefreshFile::CRefreshTimeUnits">here</a>.
+    </p>
+
+    <!-- Supplemental Information -->
+    <br>
+    <h2>Supplemental Information</h2>
+
+    <!-- Refresh File Types details -->
+    <h3 class="breakBeforeL">
+        <a name="CRefreshFile::RefreshFileTypes">Refresh File Name Type Indicators</a>
+        <p class="breakNone" style="onlyG;">
+            The following types identify which algorithm will be used to create a new file name.
+        </p>
+
+        <table class="codeG" cellspacing="1" cellpadding="0" style="margin-top:7px; margin-bottom:10px;">
+            <tr>
+                <td colspan="3">enum {</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeNone = 0,</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeOverwriteExisting,</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeFileNumber,</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeTimeStampWithNumber,</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeTimeStamp,</td>
+            </tr>
+            <tr>
+                <td style="width: 27px;">&nbsp;</td>
+                <td>kRefreshFileTypeDefault = kRefreshFileTypeTimeStamp</td>
+            </tr>
+            <tr>
+                <td colspan="3">};</td>
+            </tr>
+        </table>
+
+        <dl class="onlyG" style="margin-left:25px; margin-bottom:7px">
+            <dt><em>kRefreshFileTypeNone</em></dt>
+            <dd>No file name will be created.</dd>
+        </dl>
+        <dl class="onlyG" style="margin-left:25px; margin-bottom:7px">
+            <dt><em>kRefreshFileTypeOverwriteExisting</em></dt>
+            <dd>
+                Uses only the file path and the base file name. Thus
+                the new file, having an identical name to the prior one used, will
+                overwrite any existing file that was already created with this
+                algorithm.
+            </dd>
+        </dl>
+        <dl class="onlyG" style="margin-left:25px; margin-bottom:7px">
+            <dt><em>kRefreshFileTypeFileNumber</em></dt>
+            <dd>
+                Creates a file name based on file path and base file name
+                plus an integer value that is incremented by one each time
+                a new name is created.
+            </dd>
+        </dl>
+        <dl class="onlyG" style="margin-left:25px; margin-bottom:7px">
+            <dt><em>kRefreshFileTypeTimeStamp</em></dt>
+            <dd>
+                Creates a file name based on file path and base file name plus an unique
+                formatted timestamp value.
+            </dd>
+        </dl>
+        <dl class="onlyG" style="margin-left:25px; margin-bottom:7px">
+            <dt><em>kRefreshFileTypeTimeStampWithNumber</em></dt>
+            <dd>
+                Creates a file name based on file path and base file name, plus an unique
+                formatted timestamp value, plus an additional integer value that is
+                incremented by one for each new name created.
+            </dd>
+        </dl>
+
+        <!-- Time Conversion Types details -->
+        <a name="CRefreshFile::CRefreshTimeUnits"></a>
+
+        <h3 class="breakBeforeL">
+            <a name="CRefreshFile::RefreshFileTimeUnits">Refresh File Time Units</a>
+            <p class="breakNone" style="onlyG;">
+                Following are the time unit types for conversion to milliseconds:
+            </p>
+
+            <table class="codeG" cellspacing="1" cellpadding="0" style="margin-top:7px; margin-bottom:10px;">
+                <tr>
+                    <td colspan="3">enum {</td>
+                </tr>
+                <tr>
+                    <td style="width: 27px;">&nbsp;</td>
+                    <td>kTimeUnitMilliseconds = 0,</td>
+                </tr>
+                <tr>
+                    <td style="width: 27px;">&nbsp;</td>
+                    <td>kTimeUnitMinutes,</td>
+                </tr>
+                <tr>
+                    <td style="width: 27px;">&nbsp;</td>
+                    <td>kTimeUnitHours,</td>
+                </tr>
+                <tr>
+                    <td style="width: 27px;">&nbsp;</td>
+                    <td>kTimeUnitDays,</td>
+                </tr>
+                <tr>
+                    <td colspan="3">};</td>
+                </tr>
+            </table>
+
+
+
+            <!-- Padding so following last method's link its details appears at top of page.-->
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+        </h3>
+    </h3>
+</body>
+</html>

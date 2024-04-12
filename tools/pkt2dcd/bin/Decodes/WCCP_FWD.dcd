@@ -1,0 +1,39 @@
+//based on Internet-Draft WCCP V2 Rev 1 August 2012
+
+
+str# Ether::Branching_3_Str;
+0x883E	|	WCCP_GRE_Forwarding;
+
+void WCCP_GRE_Forwarding()
+{
+	LABL 0 0 0 b7 WCCP GRE Forwarding\WCCP V2 GRE:;
+		BBIT 1 43 90 c2 Type of Service:;
+			CEQU 0 43 00 14 Standard (well known) service;
+			CEQU 1 43 00 14 Dynamic service;
+		BBIT 1 43 90 c2 Alternative bucket used:;
+			CEQU 0 43 00 14 Primary bucket used;
+			CEQU 1 43 00 14 Alternative bucket use;
+		BBIT 1 43 90 c2 Unavailable:;
+			CEQU 0 43 00 14 Redirect Header contents are valid;
+			CEQU 1 43 00 14 Redirect Header is present but its contents (other than this bit) should be ignored;
+		BBIT 5 0 90 c2 Reserved:;
+		DBYT 0 0 90 c2 Service ID:;
+		DBYT 0 0 90 c2 Alt Bucket:;
+		DBYT 0 0 90 c2 Primary Bucket:;
+	LABL 0 0 0 b8;
+	l[3] = pb[0];
+	l[3] &= 0xF0;
+	SHFR( 4, l[3] );
+	if (l[3] == 0x4)
+	{
+		IP;
+	}
+	if (l[3] == 0x6)
+	{
+		IPv6;
+	}
+	if ( (l[3] != 0x6) || (l[3] != 0x4) )
+	{
+		TRTS;
+	}
+}

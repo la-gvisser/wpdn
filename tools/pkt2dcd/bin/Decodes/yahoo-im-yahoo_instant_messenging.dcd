@@ -1,0 +1,202 @@
+* Yahoo Messenger
+
+* notes:
+*	detected through use of tcp_udp ports num 5050
+
+*global var usage:
+*	[although i'm not actually using these...i thought i should write it out anyways
+*	g1 - random ... can be used by any and all functions ... don't save anything here
+*	g5 - total length left in yahoo decode
+*	g6 - command type
+
+void Yahoo-IM;
+	l[1] = pl[0];
+	if( l[1] != 0x594D5347 )
+	{
+		g[9] = 2;
+		TRTS;
+	}
+
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0  0 b1 Yahoo Messenger;
+	GLNG 0 1;
+	CHR# 4 0 90 c2 Yahoo Identification:;
+	SEQU 594d5347 1;
+	SKIP 1;
+	 LABL 0 0 0 14 Not a Yahoo Messenger ID;
+	DLNG 40000000 1 90 c2 Version Num:;
+	*HLNG 0 1 90 c2 Reserved:;
+	DWRD 0 5 90 c2 Total Length:;	*si: save - total length of pkt
+	Yahoo-IM-Command_Type;			*si: save - command type
+	HLNG 0 1 90 c2 Unknown:;
+	HLNG 0 1 90 c2 Message ID:;		*si: not sure ... 
+
+	TGTE 0 10 0 0 RETURN;			*si: so tom won't complain about a blank label!
+
+	TNXT -Yahoo-IM-Command_Default;
+	TRTS;
+	
+void Yahoo-IM-Command_Type;
+	GWRD 0 6;
+	SLTE 41 6;				*si: if it's under 0x41, that means it's a dec which means we just display
+	SKIP 3;
+	 DWRD 0 6 90 c2 Command:;
+	 CST# 0 6 0 14 Yahoo-IM-Command_String_Dec;
+	 TRTS;
+	MOVE 6 81;
+	SUBG 40 1;
+	INCR 1;				*si: the first char is useless
+	CHR# 1 0 90 c2 Command:;
+	CST# 0 1 0 14 Yahoo-IM-Command_String_Alpha;
+	TRTS;
+
+str# Yahoo-IM-Command_String_Alpha;
+	; *0x41 A
+	; *0x42 B
+	; *0x43 C
+	; *0x44 D
+	; *0x45 E
+	; *0x46 F
+	; *0x47 G
+	; *0x48 H
+	; *0x49 I
+	; *0x4a J
+	User Status;		*0x4b K			si:!?!?!
+	Login Command;		*0x4c L
+	Message Status;		*0x4d M			si:!?!?!
+	; *0x4e N
+	Server Message;		*0x4f O			si:!?!?!
+	; *0x50 P
+	; *0x51 Q
+	; *0x52 R
+	; *0x53 S
+	; *0x54 T
+	User Information;	*0x55 U
+	; *0x56 V
+	Login Ack;			*0x57 W
+	; *0x58 X
+	; *0x59 Y
+	; *0x5a Z
+
+str# Yahoo-IM-Command_String_Dec;
+	;
+	;
+	;
+	;
+	;		*5
+	Send Message;
+	;
+	;
+	;
+	;		*a
+	;
+	;
+	;
+	;
+	;
+	;		*10
+	;
+	;
+	;
+	;
+	;		*15
+	;
+	;
+	;
+	;
+	;
+	;
+	
+void Yahoo-IM-Command_Default;
+	LABL 0 0 0 b7 Messenger Data;
+	Yahoo-IM-Print_2_Until_EOP;
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+str# Yahoo-IM-String_Commands;		*si: these are done for numerical ... not hex ... not used yet
+	Screen Name;
+	;
+	;
+	Sender Screen Name;
+	Receiver Screen Name;			*5
+	;
+	;
+	;
+	;
+	;		*10
+	;
+	;
+	;
+	;
+	Text Message;
+	;		*15
+
+
+
+void Yahoo-IM-Print_2_Until_EOP;
+	TGTE 0 10 0 0 RETURN;
+
+	GBYT 0 1;			*si: signifies end of current message
+	SNEQ 0 1;
+	SKIP 4;
+	 HBYT 0 1 90 c2 End Message ID:;
+	 LABL 0 0 0 b8;
+	 TGTE 0 10 0 0 RETURN;
+	 TNXT -Yahoo-IM;
+
+	GWRD 0 1;
+	SNEQ c080 1;						*si: check for arg separator
+	SKIP 3;
+	 HWRD 0 1 90 c2 End of Message:;
+	 LABL 0 0  0 b8;
+	 TRTS;
+	SNEQ 594d 1;
+	SKIP 2;
+	 LABL 0 0 0 b8;
+	 TNXT -Yahoo-IM;
+
+	Yahoo-IM-Print_2;
+	TNXT -Yahoo-IM-Print_2_Until_EOP;
+
+void Yahoo-IM-Print_2;
+	CHR# 1 0 90 c9 String Type:;		*si: takes care of type
+	Yahoo-IM-Print_Value_Helper;
+	Yahoo-IM-Print_Value;				*si: should take care of value
+	LABL 0 0 0 c8;
+	TRTS;
+
+void Yahoo-IM-Print_Value;				*si: purpose of this is to print until you hit a c080
+	GWRD 0 1;
+	SNEQ c080 1;						*si: check for arg separator
+	SKIP 2;
+	 HWRD 0 1 94 c4 0xC080:;
+	 TRTS;
+	CHR# 1 0 90 c2 Value:;				*si: darn it... this is bad
+	Yahoo-IM-Print_Value_Helper;
+
+void Yahoo-IM-Print_Value_Helper;
+	TGTE 0 10 0 0 RETURN;
+	
+	GBYT 0 1;
+	SNEQ 3B 1;							*si: check for ; ... if it is, then do a carriage return
+	SKIP 2;
+	 CHR# 1 0 0 14;
+	 TNXT -Yahoo-IM-Print_Value;
+
+	GWRD 0 1;
+	SNEQ c080 1;						*si: check for arg separator
+	SKIP 2;
+	 HWRD 0 1 94 c4 0xC080:;
+	 TRTS;
+	
+	CHR# 1 0 0 14;
+	TNXT -Yahoo-IM-Print_Value_Helper;
+
+void Yahoo-IM-Arg_Separator_Check;
+	GWRD 0 1;
+	SNEQ c080 1;						*si: check for arg separator
+	SKIP 1;
+	 HWRD 0 1 94 c4 0xC080:;
+	TRTS;
+	

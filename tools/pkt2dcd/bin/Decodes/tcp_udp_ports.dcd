@@ -1,0 +1,367 @@
+// -----------------------------------------------------------------------------------------------
+//	TCP/UDP PORTS
+//
+//	globals used:
+//		g[2] = the port we are testing
+//		g[9] = used to tell whether we called a void or not
+// -----------------------------------------------------------------------------------------------
+void SIP::GSTRMatch()
+{
+	GSTR( 0, l[1], 0, 0, "SIP" );
+	SKIP 80000001;
+	SIP;
+	GSTR( 0, l[1], 0, 0, "sip" );
+	SKIP 80000001;
+	SIP;
+	GSTR 20000000 0 0 0 sip;
+	SKIP 80000001;
+	SIP;
+	TRTS;
+}
+
+void SIP::NMatch2()
+{
+	//TT33066 Portcheck Bugfix for DNS Names with "SIP" or "sip"
+	if (g[1] == 53)
+	{
+		TRTS;
+	}
+	if (g[2] == 53)
+	{
+		TRTS;
+	}
+	//_______________________________________________
+	l[1] = g[16];
+	l[1] -= 5;
+	l[1] /= 8;
+	l[2] = 0;
+	l[3] = 1;
+	l[4] = 2;
+	while (l[1] != 0)
+	{
+		GBYT( l[2], l[10]);					//Test for Ss
+		GBYT( l[3], l[11]);					//Test for Ii
+		GBYT( l[4], l[12]);					//Test for Pp
+		if (l[10] == 0x53)
+		{
+			l[20] = l[2];
+			if (l[20] >=  0)
+			{
+				if (l[11] == 0x49)
+				{
+					l[21] = l[3];
+				}
+				if (l[11] == 0x69)
+				{
+					l[21] = l[3];
+				}
+				if (l[21] != 0x0)
+				{
+					if (l[12] == 0x50)
+					{
+						l[22] = l[4];
+						l[22] -= l[21];
+						l[21] -= l[20];
+						//DGLB( 0, l[21], 0x90, 0xc2, "l[21]:" );
+						if (l[21] == 1)
+						{
+							SIP;
+						}
+					}
+					if (l[12] == 0x70)
+					{
+						l[22] = l[4];
+						l[22] -= l[21];
+						l[21] -= l[20];
+						//DGLB( 0, l[21], 0x90, 0xc2, "l[21]:" );
+						if (l[21] == 1)
+						{
+							SIP;
+						}
+					}
+				}
+			}
+		}
+		if (l[10] == 0x73)
+		{
+			l[20] = l[2];
+			if (l[20] >=  0)
+			{
+				if (l[11] == 0x49)
+				{
+					l[21] = l[3];
+					
+				}
+				if (l[11] == 0x69)
+				{
+					l[21] = l[3];
+				}
+				if (l[21] != 0x0)
+				{
+					if (l[12] == 0x50)
+					{
+						l[22] = l[4];
+						l[22] -= l[21];
+						l[21] -= l[20];
+						//DGLB( 0, l[21], 0x90, 0xc2, "l[21]:" );
+						if (l[21] == 1)
+						{
+							SIP;
+						}
+					}
+					if (l[12] == 0x70)
+					{
+						l[22] = l[4];
+						l[22] -= l[21];
+						l[21] -= l[20];
+						//DGLB( 0, l[21], 0x90, 0xc2, "l[21]:" );
+						if (l[21] == 1)
+						{
+							SIP;
+						}
+					}
+				}
+			}
+		}
+		l[1] -= 1;
+		l[2] += 1;
+		l[3] += 1;
+		l[4] += 1;
+	} 
+}
+
+void TCP::Ports()
+{
+	MOVE  0 9;
+	Multicast::Protocol::Detection;
+	WHOA  0 2 0 0 Alternate Decoders;
+	WHOA  0 2 0 0 H323_Decoders;
+	WHOA  0 2 0 0 MegacoText::Str;
+	WHOA  0 2 0 0 SIP::MW_List;
+	WHOA  0 2 0 0 PROFINET::List;
+	WHOA  0 1 0 0 PROFINET::List;
+	SIP::NMatch2;
+	WHOA  0	2 0 0 TNS::Redirect::Ports;
+	WHOA  0 2 0 0 SDP::RTP_Port;
+	MSRP::Detect;
+	MOVE  1 9;
+	g[42] = g[20];
+	Test_TDS;
+	g[20] = g[42];
+	if( g[20] == 0x5544504c ) 
+	{
+		// UDP first.
+		TSB# 0 2 -UDP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		
+		TCP::Swap_1_And_2;
+		TSB# 0 2 -UDP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		TCP::Swap_1_And_2;
+	}
+	if( g[20] == 0x554450 ) 
+	{
+		// UDP first.
+		TSB# 0 2 -UDP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		
+		TCP::Swap_1_And_2;
+		TSB# 0 2 -UDP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		TCP::Swap_1_And_2;
+	}
+	
+	if( g[20] != 0x554450 ) 
+	{
+		// TCP first.
+		TSB# 0 2 -TCP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		
+		TCP::Swap_1_And_2;
+		TSB# 0 2 -TCP::Ports_Str;
+		SKIP 80000001;
+		TRTS;
+		TCP::Swap_1_And_2;
+	}	
+	
+	TSB#  0 2 -IP::Ports_Str;
+	SKIP 80000001;
+	TRTS;
+	
+	TCP::Swap_1_And_2;
+	TSB#  0 2 -IP::Ports_Str;
+	SKIP 80000001;
+	TRTS;
+	
+	MOVE 2 9;	  // g[9]==2 means we did not find a match
+}
+
+str# TCP::Ports_Str;
+	20	| FTP-Data;
+	21	| FTP;
+	23	| Telnet;
+	25	| SMTP;
+	79	| Finger;	
+	80	| HTTP;
+	109	| POP;
+	110	| POP;
+	119	| NNTP;
+	135	| DCE;	
+	143	| IMAP;
+	179	| BGP;	
+	514	| TCP RSH;
+	515	| LPD;
+	546 | DHCPv6;
+	547 | DHCPv6;
+	636	| SSL;		//LDAPS uses SSL so use the SSL decoder
+	910	| IPTalk;
+	993	| SSL;
+	1414 | MQSeries;
+	1433 | TDS;	
+	1521 | TNS;
+	1998 | XOT;
+	2000 | Skinny;
+	2638 | TDS;	
+	2775 | SMPP;
+	3225 | FCIP;
+	3260 | iSCSI;
+	3689 | DAAP;
+	4500 | FIX;
+	6346 | Gnutella;
+	6347 | Gnutella;
+	6367 | EPR;
+
+str# UDP::Ports_Str;
+	69 | Trivial File Transfer;
+	123 | NTP;
+	161 | SNMP;
+	162 | SNMP;
+	514 | Syslog;
+	520 | IP RIP;
+	521 | IP RIP;
+	546 | DHCPv6;
+	547 | DHCPv6;	
+	1812 | Radius Auth;
+	1813 | Radius Acc;
+	1900 | SSDP;
+	3702 | WS-Discovery;
+	
+str# IP::Ports_Str;
+	7	| Echo;
+	22	| SSH;
+	46	| RSVP;
+	49	| TACACS;
+	53	| DNS;
+	67	| BOOTP;
+	68	| BOOTP;
+	69	| Trivial File Transfer;
+	88	| Kerberos;
+	99	| TestTrack;
+	102	| ISO_Transport_Service;
+	111	| RPC;
+	118	| SQL;
+	137	| NetBIOS Name Svc;
+	138	| NetBIOS Dgram Svc;
+	139	| NetBIOS Sess Svc;
+	164	| SNMP;
+	200	| ATIP;
+	213	| IPX Top;
+	281	| FIX;
+	//350  | MATIP;
+	387	| ATIP;
+	389	| LDAP;
+	427	| SLP;
+	434	| Mobile_IP_Agent;
+	443	| SSL;
+	445	| NetBIOS Sess Svc;
+	464	| Kerberos;
+	497	| Retrospect;
+	500	| ISAKMP;
+	502	| Modbus;
+	513	| TCP RLOGIN;
+	524	| NCP NetWare 5;
+	548	| TCP AFP;
+	554	| RTSP;
+	631	| CUPS;
+	646	| LDP;
+	701	| LMP;
+	712	| TBRPF;
+	720	| SMQP;
+	721	| SMQP;
+	1026 | DCE;
+//	1153 | HTTP;
+//	1214 | FastTrack;
+	1352 | Lotus_Notes;
+	1417 | Timbuktu;
+	1418 | Timbuktu;
+	1419 | Timbuktu;
+	1420 | Timbuktu;
+	1525 | TNS;				//si: could be prospero
+	1645 | Radius Auth;
+	1646 | Radius Acc;
+	1701 | L2TP/L2F;	
+	1718 | h323gatedisc;
+	1719 | h323gatestat;
+	1720 | h323hostcall_with_tpkt;
+	1723 | PPTP;	
+	1745 | MS_Proxy;
+	1863 | MSN_Messenger;
+	2049 | RPC;
+	2123 | GTP;
+	2152 | GTP;
+	2157 | SSL;
+	2190 | Tivo;
+	2427 | MGCP;
+	2598 | CGP;
+	2727 | MGCP;
+	2944 | MegacoText;
+	//2945 | MegacoBinary;
+	3000 | Cisco::Netflow;
+	3205 | iSNS;
+	3386 | GTP;
+	5003 | FileMaker;
+	5050 | Yahoo-IM;
+	//5060 | SIP;
+	5061 | SIP-TLS;
+	5101 | Yahoo-IM;
+	5353 | DNS;
+	5355 | LLMNR::LLMNR;
+	5190 | AOLIM;
+	//5500 | Ether::Branching;	//not sure why this is here but took it out to fix TT# 20520, if someone complains we will know what it is for.
+	5634 | Gnutella;			//linux
+	//6000 | X.11;
+	//6001 | X.11;
+	//6002 | X.11;
+	6660 | IRC;
+	6661 | IRC;
+	6662 | IRC;
+	6663 | IRC;
+	6664 | IRC;
+	6665 | IRC;
+	6666 | IRC;
+	6667 | IRC;
+	6668 | IRC;
+	6669 | IRC;
+	6881 | BitTorrent;
+	6882 | BitTorrent;
+	6883 | BitTorrent;
+	7777 | Napster;
+	8080 | HTTP;
+	8190 | WatchPoint;
+	8888 | HTTP;
+	9200 | WSP;
+	9201 | WTP;
+	9875 | SAP;
+	9999 | Napster;
+	12222 | LWAPP;
+	12223 | LWAPP;
+	26000 | Quake;
+	37008 | TZSP::Test;
+	44033 | Autocol;
+	47808 | BACnet;
+

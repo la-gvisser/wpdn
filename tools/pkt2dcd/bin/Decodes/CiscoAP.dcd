@@ -1,0 +1,291 @@
+//
+// Cisco Sniffer Protocol Decoder
+//
+//     By configuring a Cisco AP, it can tunnel 802.11 packets through LAN.
+//     The tunneling packets will be sent to port 5000 of a specfied IP.
+//     If these packets are captured by Ethernet card, this decoder will look
+//     into the encapsulated 802.11 packet and show the detail.
+//
+//
+
+
+str# UDP::Ports_Str;
+5000	| CiscoAP::Main;
+
+
+void CiscoAP::Main()
+{
+	l[2] = g[2];      // udp dst port
+	l[1] = g[1];      // udp src port
+	if (l[2] == 5000)
+	{
+		if (l[1] == 5555)
+	{
+		l[1] = pl[0];
+		if (l[1] == 0x00ffabcd)
+		{
+			CiscoAP::11n();
+		}
+		if (l[1] != 0x00ffabcd)
+		{
+			CiscoAP::11abg();
+		}
+		802_11::Main2();
+	}
+	}
+	if (l[2] == 5000)
+	{
+		if (l[1] == 5000)
+		{
+			UNIStim::MAIN;
+		}
+	}
+}
+
+void CiscoAP::11n()
+{
+	LABL( 0, 0, 0, 0xb1, "Cisco AP 802.11n");
+	 // magic_value
+	
+	HLNG( 0, 0, 0x90, 0xc2, "Magic value:");
+	
+	// header version	
+	DBYT( 0, l[2], 0x90, 0xc2, "Header version:");
+		CEQU( 2, l[2], 0, 0x14, "Version 2");
+		CLSE( 0, l[2], 0, 0x14, "Not a current version");
+	
+	 // nSize
+	DLNG( 0, l[3], 0x90, 0xc2, "Header size:");
+		CEQU( 55, l[3], 0, 0x14, "correct Header Size");
+		CLSE( 0, l[3], 0, 0x14, "Not a correct Header Size");
+	
+	// nType
+	DLNG( 0, l[4], 0x90, 0xc2, "Type:");
+		CEQU( 6, l[4], 0, 0x14, "kMediaSpecificHdrType_Wireless3");
+		CLSE( 0, l[4], 0, 0x14, "Not a correct Type");
+	
+	// DataRate
+	DWRD( 0, l[5], 0x90, 0xc2, "Data rate:");
+		CST# 0 45 0 14 CiscoAP::11n::DataRate;
+
+	// Channel
+	DWRD( 0, l[6], 0x90, 0xc2, "Channel:");
+	
+	// Frequency
+	DLNG( 0, l[7], 0x90, 0xc2, "Frequency:");
+		LABL( 0, 0, 0, 0x14, "MHz");
+		
+	 // Band
+	DLNG( 0, l[8], 0x90, 0xc2, "Band:");
+
+	 // FlagsN
+	BLNG( 0, l[9], 0x90, 0xc2, "FlagsN:");
+			BST# 0 49 0 d4 CiscoAP::11n::FlagsN;
+		
+	// SignalPercent
+	DBYT( 0, l[10], 0x90, 0xc2, "SignalPercent:");
+		LABL( 0, 0, 0, 0x14, "%");
+	// NoisePercent
+	DBYT( 0, l[11], 0x90, 0xc2, "NoisePercent:");
+		LABL( 0, 0, 0, 0x14, "%");
+	// signal_dBm
+	DBYT( 0, l[1], 0x05, 0xc2, "Signal/Noise dBm:");	
+	if (l[1] > 127)
+	{
+		//the dBm field is a signed octet but is read in as an unsigned octet
+		//if the value is > 127 it should be a negative number
+		//convert it to the equivalent negative value before printing
+		l[2] = 256;
+		l[2] -= l[1];
+		LABL( 0, l[2], 0, 0x20, " -");
+		DGLB( 0, l[2], 0x00, 0 );
+		LABL( 0, l[2], 0, 0x00, " dBm");
+	}
+	if (l[1] <= 127)
+	{
+		DGLB( 0, l[1], 0x20, 0 );
+		LABL( 0, l[1], 0, 0x00, " dBm");
+	}
+	
+	// noise_dBm
+	DBYT( 0, l[1], 0x05, 0xc2, "Noise dBm:");
+	if (l[1] > 127)
+	{
+		//same as the signal dbm above
+		l[2] = 256;
+		l[2] -= l[1];
+		LABL( 0, l[2], 0, 0x50, "-");
+		DGLB( 0, l[2], 0x00, 0 );
+		LABL( 0, l[2], 0, 0x00, " dBm");
+	}
+	if (l[1] <= 127)
+	{
+		DGLB( 0, l[1], 0x20, 0 );
+		LABL( 0, l[1], 0, 0x00, " dBm");
+	}
+	// Signal dBm1
+	DBYT( 0, l[14], 0x90, 0xc2, "Signal dBm1:");
+
+	// Signal dBm2
+	DBYT( 0, l[15], 0x90, 0xc2, "Signal dBm2:");
+
+	// Signal dBm3
+	DBYT( 0, l[16], 0x90, 0xc2, "Signal dBm3:");
+
+	// Signal dBm4
+	DBYT( 0, l[17], 0x90, 0xc2, "Signal dBm4:");
+
+	// Noise dBm1
+	DBYT( 0, l[18], 0x90, 0xc2, "Noise dBm1:");
+
+	// Noise dBm2
+	DBYT( 0, l[19], 0x90, 0xc2, "Noise dBm2:");
+
+	// Noise dBm3
+	DBYT( 0, l[20], 0x90, 0xc2, "Noise dBm3:");
+
+	// Noise dBm4
+	DBYT( 0, l[21], 0x90, 0xc2, "Noise dBm4:");
+
+	// packet_length
+	DWRD( 0, l[22], 0x90, 0xc2, "Packet length:");
+
+	// slice_length
+	DWRD( 0, l[23], 0x90, 0xc2, "Slice length:");
+
+	// flags
+	BBYT( 0, l[24], 0x90, 0xc2, "Flags:");
+
+	// status
+	BBYT( 0, l[25], 0x90, 0xc2, "Status:");
+
+	 // time secs
+	DLNG( 0, l[26], 0x90, 0xc2, "Time secs:");
+
+	 // time usecs
+	DLNG( 0, l[27], 0x90, 0xc2, "Time usecs:");
+}
+//N-1
+str# CiscoAP::11n::FlagsN;
+	8 | ........ ........ .......1 ........  Peek flag set;
+		........ ........ .......0 ........  Peek flag not set;
+	// 6 | ........ ........ ........ .1......  set;
+		// ........ ........ ........ .0......  not set;
+	// 5 | ........ ........ ........ ..1.....  set;
+	    // ........ ........ ........ ..0.....  not set;
+	// 4 | ........ ........ ........ ...1....  set;
+	    // ........ ........ ........ ...0....  not set;
+	// 3 | ........ ........ ........ ....1...  set;
+		// ........ ........ ........ ....0...  not set;
+	// 2 | ........ ........ ........ .....1..  set;
+		// ........ ........ ........ .....0..  not set;
+	// 1 | ........ ........ ........ ......1.  set;
+		// ........ ........ ........ ......0.  not set;
+	// 0 | ........ ........ ........ .......1  set;
+		// ........ ........ ........ .......0  not set;
+
+str# CiscoAP::11n::DataRate;
+0 | Spatial streams: 1, Modulation type: BPSK, Codingrate: 1/2;
+1 | Spatial streams: 1, Modulation type: QPSK, Codingrate: 1/2;
+2 | Spatial streams: 1, Modulation type: QPSK, Codingrate: 3/4;
+3 | Spatial streams: 1, Modulation type: 16-QAM, Codingrate: 1/2;
+4 | Spatial streams: 1, Modulation type: 16-QAM, Codingrate: 3/4;
+5 | Spatial streams: 1, Modulation type: 64-QAM, Codingrate: 2/3;
+6 | Spatial streams: 1, Modulation type: 64-QAM, Codingrate: 3/4;
+7 | Spatial streams: 1, Modulation type: 64-QAM, Codingrate: 5/6;
+8 | Spatial streams: 2, Modulation type: BPSK, Codingrate: 1/2;
+9 | Spatial streams: 2, Modulation type: QPSK, Codingrate: 1/2;
+10 | Spatial streams: 2, Modulation type: QPSK, Codingrate: 3/4;
+11 | Spatial streams: 2, Modulation type: 16-QAM, Codingrate: 1/2;
+12 | Spatial streams: 2, Modulation type: 16-QAM, Codingrate: 3/4;
+13 | Spatial streams: 2, Modulation type: 64-QAM, Codingrate: 2/3;
+14 | Spatial streams: 2, Modulation type: 64-QAM, Codingrate: 3/4;
+15 | Spatial streams: 2, Modulation type: 64-QAM, Codingrate: 5/6;
+16 | Spatial streams: 3, Modulation type: BPSK, Codingrate: 1/2;
+17 | Spatial streams: 3, Modulation type: QPSK, Codingrate: 1/2;
+18 | Spatial streams: 3, Modulation type: QPSK, Codingrate: 3/4;
+19 | Spatial streams: 3, Modulation type: 16-QAM, Codingrate: 1/2;
+20 | Spatial streams: 3, Modulation type: 16-QAM, Codingrate: 3/4;
+21 | Spatial streams: 3, Modulation type: 64-QAM, Codingrate: 2/3;
+22 | Spatial streams: 3, Modulation type: 64-QAM, Codingrate: 3/4;
+23 | Spatial streams: 3, Modulation type: 64-QAM, Codingrate: 5/6;
+24 | Spatial streams: 4, Modulation type: BPSK, Codingrate: 1/2;
+25 | Spatial streams: 4, Modulation type: QPSK, Codingrate: 1/2;
+26 | Spatial streams: 4, Modulation type: QPSK, Codingrate: 3/4;
+27 | Spatial streams: 4, Modulation type: 16-QAM, Codingrate: 1/2;
+28 | Spatial streams: 4, Modulation type: 16-QAM, Codingrate: 3/4;
+29 | Spatial streams: 4, Modulation type: 64-QAM, Codingrate: 2/3;
+30 | Spatial streams: 4, Modulation type: 64-QAM, Codingrate: 3/4;
+31 | Spatial streams: 4, Modulation type: 64-QAM, Codingrate: 5/6;
+
+
+void CiscoAP::11abg()
+{
+	LABL(0, 0, 0, 0xb1, "Cisco AP 802.11a/b/g");
+
+	// signal_dBm
+	DBYT( 0, l[1], 0x05, 0xc2, "Signal/Noise dBm:");
+	if (l[1] > 127)
+	{
+		//the dBm field is a signed octet but is read in as an unsigned octet
+		//if the value is > 127 it should be a negative number
+		//convert it to the equivalent negative value before printing
+		l[2] = 256;
+		l[2] -= l[1];
+		LABL( 0, l[2], 0, 0x20, " -");
+		DGLB( 0, l[2], 0x00, 0 );
+		LABL( 0, l[2], 0, 0x00, " dBm");
+	}
+	if (l[1] <= 127)
+	{
+		DGLB( 0, l[1], 0x20, 0 );
+		LABL( 0, l[1], 0, 0x00, " dBm");
+	}
+	
+	// noise_dBm
+	DBYT( 0, l[1], 0x05, 0xc2, "Noise dBm:");
+	 if (l[1] > 127)
+	{
+		//same calculation used by signal dbm up above
+		l[2] = 256;
+		l[2] -= l[1];
+		LABL( 0, l[2], 0, 0x50, "-");
+		DGLB( 0, l[2], 0x00, 0 );
+		LABL( 0, l[2], 0, 0x00, " dBm");
+	}
+	if (l[1] <= 127)
+	{
+		DGLB( 0, l[1], 0x20, 0 );
+		LABL( 0, l[1], 0, 0x00, " dBm");
+	} 
+
+	// packet_length
+	DWRD( 0, l[3], 0x90, 0xc2, "Packet length:");
+
+	// slice_length
+	DWRD( 0, l[4], 0x90, 0xc2, "Slice length:");
+
+	// flags
+	BBYT( 0, l[5], 0x90, 0xc2, "Flags:");
+
+	// status
+	BBYT( 0, l[6], 0x90, 0xc2, "Status:");
+
+	 // time secs
+	DLNG( 0, l[7], 0x90, 0xc2, "Time secs:");
+	
+	// time usecs
+	DLNG( 0, l[8], 0x90, 0xc2, "Time usecs:");
+
+	// data_rate
+	DBYT( 0, l[9], 0x90, 0xc2, "Data rate:");
+	
+	// channel
+	DBYT( 0, l[10], 0x90, 0xc2, "Channel:");
+	
+	// signal_strength
+	DBYT( 0, l[11], 0x90, 0xc2, "Signal strength:");
+
+	// noise_strength
+	DBYT( 0, l[12], 0x90, 0xc2, "Noise strength:");
+}

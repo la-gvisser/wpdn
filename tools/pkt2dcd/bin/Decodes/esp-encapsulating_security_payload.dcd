@@ -1,0 +1,16 @@
+* ESP - Encapsulating Security Payload
+
+str# UDP::Ports_Str;
+	4500  | ESP;	// UDP port 4500 is generally used for UDP encapsulation of ESP
+	
+void ESP;
+	LABL 0  0  0 b1 ESP - Encapsulating Security Payload\ESP:;
+	HLNG 0  1 90 c2 Security Param Index:\SPI:;
+	DGLB 0 1 4 14 " ";
+	if( g[1] == 0 ) // Non-ESP Marker, see rfc 3948
+	{
+		ISAKMP();
+		RETURN;
+	}
+	DLNG 0  2 90 c2 Sequence Number:\Seq#:;
+	DUMP 0 10 90 c2 Payload data:\Data:;

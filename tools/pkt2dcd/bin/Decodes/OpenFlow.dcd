@@ -1,0 +1,2708 @@
+//Open Network Foundation Openflow 
+//Versions 1,2,3,4,5 exist
+//this file supports V.1.3 and links to all other Openflow Versions
+//
+//
+//
+
+str# TCP::Ports_Str;
+	976  | OpenFlow;			//old, should be discontinued
+	6633  | OpenFlow;			//old, should be discontinued
+	6634  | OpenFlow;			//old, should be discontinued
+	6653  | OpenFlow;			//new
+
+void OpenFlow()
+{
+	LABL 0 0 00 b1 OpenFlow ;
+	GBYT 0 7;
+	CST#( 0, g[7], 0, 0x01, OpenFlow::Versions );
+	CLSE( 0, 0, 0, 0x01, "Not Supported");
+	DBYT 0 41 90 c2 Version:;
+		CEQU 01 41 0 14 Version 1.0;
+		CEQU 02 41 0 14 Version 1.1;
+		CEQU 03 41 0 14 Version 1.2;
+		CEQU 04 41 0 14 Version 1.3;
+		CEQU 05 41 0 14 Version 1.4;
+		CEQU 06 41 0 14 Version 1.5;
+		if (l[1] >= 7)
+		{
+			LABL 0 0 0 54 Not Supported;
+		}
+	TSB#( 0, g[7], 0, 0, OpenFlow::Versions::Ldr );
+		XLSE( 0, 0, 0, 0, OpenFlow::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# OpenFlow::Versions;
+01	|	1.0;
+02	|	1.1;
+03	|	1.2;
+04	|	1.3;
+05	|	1.4;
+06	|	1.5;
+
+void OpenFlow::DUMP()
+{
+	DUMP 0 10 90 c2 Not decoded Flow:;
+}
+
+str# OpenFlow::Versions::Ldr;
+04	|	OpenFlow::V3;
+
+//----------------------------------------------------------------------------
+//Version 1.3.0
+void OpenFlow::V3()
+{	
+	DBYT 0 7 90 c2 Type:;
+		CST# 0 7 0 14 OpenFlow::V3::Type;
+	DWRD 0 8 90 c2 Length(with Header):;
+	DLNG 0 9 90 c2 xid:;
+		CST#( 0, g[7], 0, 0xb7, OpenFlow::V3::Type );
+		TSB#( 0, g[7], 0, 0, OpenFlow::V3::Type::Ldr );
+		XLSE( 0, 0, 0, 0, OpenFlow::V3::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::DUMP()
+{
+	DUMP 0 8 90 c2 Data:;
+	TRTS;
+}
+
+void OpenFlow::V3::DUMP2()
+{
+	HEX# 0 2a 90 c2 Value:;
+}
+
+str# OpenFlow::V3::Type;
+0	|	OFPT_HELLO;								//Immutablemessages
+1	|	OFPT_ERROR;								//Immutablemessages
+2	|	OFPT_ECHO_REQUEST;						//Immutablemessages
+3	|	OFPT_ECHO_REPLY;						//Immutablemessages
+4	|	OFPT_EXPERIMENTER;						//Immutablemessages
+5	|	OFPT_FEATURES_REQUEST;					//Switchconfigurationmessages.
+6	|	OFPT_FEATURES_REPLY;					//Switchconfigurationmessages.
+7	|	OFPT_GET_CONFIG_REQUEST;				//Switchconfigurationmessages.
+8	|	OFPT_GET_CONFIG_REPLY;					//Switchconfigurationmessages.
+9	|	OFPT_SET_CONFIG;						//Switchconfigurationmessages.
+10	|	OFPT_PACKET_IN;							//Asynchronousmessages.
+11	|	OFPT_FLOW_REMOVED;						//Asynchronousmessages.
+12	|	OFPT_PORT_STATUS;						//Asynchronousmessages.
+13	|	OFPT_PACKET_OUT;						//Controllercommandmessages.
+14	|	OFPT_FLOW_MOD;							//Controllercommandmessages.
+15	|	OFPT_GROUP_MOD;							//Controllercommandmessages.
+16	|	OFPT_PORT_MOD;							//Controllercommandmessages.
+17	|	OFPT_TABLE_MOD;							//Controllercommandmessages.
+18	|	OFPT_MULTIPART_REQUEST;					//Statisticsmessages.
+19	|	OFPT_MULTIPART_REPLY;					//Statisticsmessages.
+20	|	OFPT_BARRIER_REQUEST;					//Barriermessages.
+21	|	OFPT_BARRIER_REPLY;						//Barriermessages.
+22	|	OFPT_QUEUE_GET_CONFIG_REQUEST;			//QueueConfigurationmessages.
+23	|	OFPT_QUEUE_GET_CONFIG_REPLY;			//QueueConfigurationmessages.
+24	|	OFPT_ROLE_REQUEST;						//Controllerrolechangerequestmessages.
+25	|	OFPT_ROLE_REPLY;						//Controllerrolechangerequestmessages.
+26	|	OFPT_GET_ASYNC_REQUEST;					//Asynchronousmessageconfiguration
+27	|	OFPT_GET_ASYNC_REPLY;					//Asynchronousmessageconfiguration
+28	|	OFPT_SET_ASYNC;							//Asynchronousmessageconfiguration
+29	|	OFPT_METER_MOD;							//Metersandratelimitersconfigurationmessages.
+
+str# OpenFlow::V3::Type::Ldr;
+//0	|	OpenFlow::V3::Type::OFPT_HELLO;
+1	|	OpenFlow::V3::Type::OFPT_ERROR;						 //Immutablemessages
+//2	|	OpenFlow::V3::Type::OFPT_ECHO_REQUEST;				 //Immutablemessages -> is empty
+//3	|	OpenFlow::V3::Type::OFPT_ECHO_REPLY;				 //Immutablemessages -> is empty
+//4	|	OpenFlow::V3::Type::OFPT_EXPERIMENTER;				 //Immutablemessages	
+//5	|	OpenFlow::V3::Type::OFPT_FEATURES_REQUEST;			 //Switchconfigurationmessages.
+6	|	OpenFlow::V3::Type::OFPT_FEATURES_REPLY;			 //Switchconfigurationmessages.
+//7	|	OpenFlow::V3::Type::OFPT_GET_CONFIG_REQUEST;		 //Switchconfigurationmessages. -> is empty
+//8	|	OpenFlow::V3::Type::OFPT_GET_CONFIG_REPLY;			 //Switchconfigurationmessages.
+9	|	OpenFlow::V3::Type::OFPT_SET_CONFIG;				 //Switchconfigurationmessages.
+10	|	OpenFlow::V3::Type::OFPT_PACKET_IN;					 //Asynchronousmessages.
+11	|	OpenFlow::V3::Type::OFPT_FLOW_REMOVED;				 //Asynchronousmessages.
+12	|	OpenFlow::V3::Type::OFPT_PORT_STATUS;				 //Asynchronousmessages.
+13	|	OpenFlow::V3::Type::OFPT_PACKET_OUT;				 //Controllercommandmessages.
+14	|	OpenFlow::V3::Type::OFPT_FLOW_MOD;					 //Controllercommandmessages.
+15	|	OpenFlow::V3::Type::OFPT_GROUP_MOD;					 //Controllercommandmessages.
+16	|	OpenFlow::V3::Type::OFPT_PORT_MOD;				 //Controllercommandmessages.
+17	|	OpenFlow::V3::Type::OFPT_TABLE_MOD;					 //Controllercommandmessages.
+18	|	OpenFlow::V3::Type::OFPT_MULTIPART_REQUEST;			 //Statisticsmessages.
+19	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY;			 //Statisticsmessages.
+//20	|	OpenFlow::V3::Type::OFPT_BARRIER_REQUEST;		 //Barriermessages. -> not in Ver1.3.4
+//21	|	OpenFlow::V3::Type::OFPT_BARRIER_REPLY;			 //Barriermessages. -> not in Ver1.3.4
+//22	|	OpenFlow::V3::Type::OFPT_QUEUE_GET_CONFIG_REQUEST; //QueueConfigurationmessages. -> not in Ver1.3.4
+//23	|	OpenFlow::V3::Type::OFPT_QUEUE_GET_CONFIG_REPLY; //QueueConfigurationmessages. -> not in Ver1.3.4
+24	|	OpenFlow::V3::Type::OFPT_ROLE_REQUEST;				 //Controllerrolechangerequestmessages.
+25	|	OpenFlow::V3::Type::OFPT_ROLE_REPLY;				 //Controllerrolechangerequestmessages.
+//26	|	OpenFlow::V3::Type::OFPT_GET_ASYNC_REQUEST;		 //Asynchronousmessageconfiguration ->transports no data
+27	|	OpenFlow::V3::Type::OFPT_GET_ASYNC_REPLY;		 //Asynchronousmessageconfiguration
+28	|	OpenFlow::V3::Type::OFPT_SET_ASYNC;					 //Asynchronousmessageconfiguration
+29	|	OpenFlow::V3::Type::OFPT_METER_MOD;				 //Metersandratelimitersconfigurationmessages
+
+void OpenFlow::V3::Type::OFPT_METER_MOD()
+{
+	BWRD( 0, l[9], 0x90, 0xc2, "Flags:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "Meter ID:" );
+	
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Meter band:;
+		DWRD( 0, l[7], 0x90, 0xc2, "Type:" );
+			CEQU( 1, l[7], 0, 0x14, "OFPMBT_DROP" );
+			CEQU( 2, l[7], 0, 0x14, "OFPMBT_DSCP_REMARK" );
+			CEQU( 0xffff, l[7], 0, 0x14, "OFPMBT_EXPERIMENTER" );
+		DWRD( 0, l[8], 0x90, 0xc2, "Length:" );
+		DLNG( 0, l[9], 0x90, 0xc2, "Rate:" );
+		DLNG( 0, l[10], 0x90, 0xc2, "Burst Size:" );
+		if (l[7] == 1)
+		{
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			l[8] -= 4;
+		}
+		if (l[7] == 2)
+		{
+			DBYT( 0, l[12], 0x90, 0xc2, "Precedence Level:" );
+			HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+			l[8] -= 4;
+		}
+		if (l[7] == 0xffff)
+		{
+			DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+		}
+		if (l[8] > 0)
+		{
+			DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::Type::OFPT_GET_ASYNC_REPLY()
+{
+	OpenFlow::V3::Type::OFPT_SET_ASYNC;
+}
+
+void OpenFlow::V3::Type::OFPT_PORT_MOD()
+{
+	while (g[16] > 4)
+	{
+		LABL 0 0 0 b7 Port - ;
+		GLNG( 0, l[5] );
+		DGLB( 0, l[5], 0x07, 0x07 );
+			HLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+				ANDG( 0xffff, l[5]);
+				CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			ETHR( 0, 0, 0x90, 0xc2, "HW Adress:" );
+			HEX#( 2, 0, 0x90, 0xc2, "Padding:" );
+			CHR#( 0, 16, 0x90, 0xc2, "Name:" );
+			BLNG( 0, l[8], 0x90, 0xc9, "Config:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[8], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );				
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx x..xx.x. reserved" );
+				CBIT( 0, l[8], 0, 0xd4, "........ ........ ........ .......1 OFPPC_PORT_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPC_PORT_DOWN: False");
+				CBIT( 2, l[8], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_NO_RECV: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_NO_RECV: False");
+				CBIT( 5, l[8], 0, 0xd4, "........ ........ ........ ..1..... OFPPC_NO_FWD: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ..0..... OFPPC_NO_FWD: False");
+				CBIT( 6, l[8], 0, 0xd4, "........ ........ ........ .1...... OFPPC_NO_PACKET_IN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .0...... OFPPC_NO_PACKET_IN: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[9], 0x90, 0xc9, "State:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[9], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+				CBIT( 0, l[9], 0, 0xd4, "........ ........ ........ .......1 OFPPS_LINK_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPS_LINK_DOWN: False");
+				CBIT( 1, l[9], 0, 0xd4, "........ ........ ........ ......1. OFPPS_BLOCKED: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPPS_BLOCKED: False");
+				CBIT( 2, l[9], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_LIVE: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_LIVE: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Current:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Adverstised:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );			
+			BLNG( 0, l[10], 0x90, 0xc9, "Supported:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Peer:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			DLNG( 0, 0, 0x90, 0xc2, "Current Speed:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Maximal  Speed:" );
+		LABL( 0, 0, 0, 0xb8 );				
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_TABLE_MOD()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Table ID:" );
+		CEQU( 0xff, l[1], 0, 0x14, "OFPTT_ALL" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+	HLNG( 0, l[2],0x90, 0xc2, "Config:" );
+}
+
+void OpenFlow::V3::Type::OFPT_SET_CONFIG()
+{
+	BWRD( 0, l[2],0x90, 0xc2, "Flags:" );
+	DWRD( 0, l[2],0x90, 0xc2, "miss-send-len:" );
+}
+
+void OpenFlow::V3::Type::OFPT_GET_CONFIG_REPLY()
+{
+	BWRD( 0, l[2],0x90, 0xc2, "Flags:" );
+	DWRD( 0, l[2],0x90, 0xc2, "miss-send-len:" );
+}
+
+void OpenFlow::V3::Type::OFPT_PORT_STATUS()
+{
+	HBYT( 0, 0, 0x90, 0xc2, "Reason:" );			
+	HEX#( 0, 7, 0x90, 0xc2, "Padding:" );
+	while (g[16] > 4)
+	{
+		LABL 0 0 0 b7 Port - ;
+		GLNG( 0, l[5] );
+		DGLB( 0, l[5], 0x07, 0x07 );
+			HLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+				ANDG( 0xffff, l[5]);
+				CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			ETHR( 0, 0, 0x90, 0xc2, "HW Adress:" );
+			HEX#( 2, 0, 0x90, 0xc2, "Padding:" );
+			CHR#( 0, 16, 0x90, 0xc2, "Name:" );
+			BLNG( 0, l[8], 0x90, 0xc9, "Config:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[8], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx x..xx.x. reserved" );
+				CBIT( 0, l[8], 0, 0xd4, "........ ........ ........ .......1 OFPPC_PORT_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPC_PORT_DOWN: False");
+				CBIT( 2, l[8], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_NO_RECV: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_NO_RECV: False");
+				CBIT( 5, l[8], 0, 0xd4, "........ ........ ........ ..1..... OFPPC_NO_FWD: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ..0..... OFPPC_NO_FWD: False");
+				CBIT( 6, l[8], 0, 0xd4, "........ ........ ........ .1...... OFPPC_NO_PACKET_IN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .0...... OFPPC_NO_PACKET_IN: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[9], 0x90, 0xc9, "State:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[9], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+				CBIT( 0, l[9], 0, 0xd4, "........ ........ ........ .......1 OFPPS_LINK_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPS_LINK_DOWN: False");
+				CBIT( 1, l[9], 0, 0xd4, "........ ........ ........ ......1. OFPPS_BLOCKED: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPPS_BLOCKED: False");
+				CBIT( 2, l[9], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_LIVE: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_LIVE: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Current:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Adverstised:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );
+			
+			BLNG( 0, l[10], 0x90, 0xc9, "Supported:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Peer:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			DLNG( 0, 0, 0x90, 0xc2, "Current Speed:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Maximal  Speed:" );
+		LABL( 0, 0, 0, 0xb8 );
+				
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_PACKET_IN()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "Buffer ID:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Total length:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Reason:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Table ID:" );
+	D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+	LABL 0 0 00 b1 Match:;
+	DWRD( 0, l[1], 0x90, 0xc2, "match-type:" );
+		CEQU( 0, l[1], 0, 0x14, "OFPMT_STANDARD" );
+		CEQU( 1, l[1], 0, 0x14, "OFPMT_OXM" );
+	DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+		g[9] = l[2];		
+		g[12] = g[9];
+		g[9] -= 4;
+		while (g[9] > 4)
+		{
+			GBYT( 2, l[2]);
+			SHFR( 1, l[2]);
+			GWRD( 0, l[1]);
+			if (l[1] == 0x8000)
+			{
+			CST#( 0, l[2], 0, 0xb7, OpenFlow::V3::Match::OXM::field );
+			HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+				CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+				
+			DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+				CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+			DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+				CEQU( 0, g[43], 0, 0x14, "no" );
+				CEQU( 1, g[43], 0, 0x14, "yes" );
+			DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+			g[42] = l[4];
+			
+			//TSB#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field::Ldr );
+			//XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+			OpenFlow::V3::DUMP2;
+			g[9] -= 4;
+			g[9] -= g[42];
+			//DGLB 0 9 90 c2 g9:;
+			//DGLB 0 c 90 c2 g12:;
+			LABL( 0, 0, 0, 0xb8 );
+			}
+		}
+		if (g[9] != 0)
+		{
+			HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		}
+		if (g[12] < 16)
+		{
+			l[30] = 16;
+			l[30] -= g[12];
+			HEX#( 0, l[30], 0x90, 0xc2, "Padding:" );
+		}
+		if (g[12] > 16)
+		{
+			MODG( 8, g[12] );
+			HEX#( 0, g[12], 0x90, 0xc2, "Padding:" );
+		}
+	LABL( 0, 0, 0, 0xb8 );
+	
+	if (g[16] > 0)
+		{
+			LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+			ETHR 0 0 90 c2 Destination:\D:;
+			ETHR 0 0 90 c2 Source:\S:;
+			g[1] = pw[0];
+			if (g[1] <= 0x5dc)
+			{
+				802_2();				//SI: so this used to tsub into 802_2 but now if you go to 802_2, you are it
+				TRTS;					//		because it would go into ether::Branching_2 ... which would show a protocol type... and that's no good!
+			}
+			if (g[1] == 0x8808)			//ethernet PAUSE frame - for gig
+			{
+				802.3::MAC_Control;
+				TRTS;
+			}
+			TGTE 0 10 0 0 RETURN;	 //si: stop if there's no data left!!!!
+			if (g[1] == 0x886F)			
+			{
+				TRTS;
+			}
+			Ether::Branching_2();
+		}
+}
+
+void OpenFlow::V3::Type::OFPT_PACKET_OUT()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "Buffer ID:" );
+	DLNG( 0, 0, 0x90, 0xc2, "In Port:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Actions length:" );
+	HEX#( 0, 6, 0x90, 0xc2, "Padding:" );
+	while (l[5] > 0)
+	{
+		DGLB 0 45 90 c2 l5:;
+		GWRD( 0, l[6]);
+		LABL( 0, 0, 0, 0xb7, "Action - " );
+		CST#( 0, l[6], 0, 0x07, OpenFlow::V3::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		//l[9] -= 4;
+		
+		g[42] = l[9];
+		g[42] -= 4;
+		g[9] -= 4;
+		l[11]  = g[16];
+		//DGLB( 0, g[42], 0x90, 0xc2, " g42:" );
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field::ldr );
+		//XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= g[42];
+		l[5] -= l[9];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );	
+		}
+		
+		LABL( 0, 0, 0, 0xb8 );
+	}	
+		if (g[16] > 0)
+		{
+			LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+			ETHR 0 0 90 c2 Destination:\D:;
+			ETHR 0 0 90 c2 Source:\S:;
+			g[1] = pw[0];
+			if (g[1] <= 0x5dc)
+			{
+				802_2();				//SI: so this used to tsub into 802_2 but now if you go to 802_2, you are it
+				TRTS;					//		because it would go into ether::Branching_2 ... which would show a protocol type... and that's no good!
+			}
+			if (g[1] == 0x8808)			//ethernet PAUSE frame - for gig
+			{
+				802.3::MAC_Control;
+				TRTS;
+			}
+			TGTE 0 10 0 0 RETURN;	 //si: stop if there's no data left!!!!
+			if (g[1] == 0x886F)			
+			{
+				TRTS;
+			}
+			Ether::Branching_2();
+		}
+}
+
+void OpenFlow::V3::Type::OFPT_SET_ASYNC()
+{
+	g[8] -= 8;
+	while ( g[8] > 0)
+	{
+		GLNG( 0, l[1] );
+		CST#( 0, l[1], 0x90, 0xc9, OpenFlow::V3::Type::OFPT_SET_ASYNC::PROP );
+		CLSE( 0, 0, 0x90, 0xc9, Unknown );
+		LABL( 0, 0, 0, 0x09, ": ");
+		BLNG( 0, 0, 0, 0x09 );	
+			CBIT 0 41 00 d4 ........ ........ ........ .......1 OFPR_NO_MATCH: set;
+			CLSE 0 0 00 d4 ........ ........ ........ .......0 OFPR_NO_MATCH: not set;
+			CBIT 1 41 00 d4 ........ ........ ........ ......1. OFPR_ACTION: set;
+			CLSE 0 0 00 d4 ........ ........ ........ ......0. OFPR_ACTION: not set;
+			CBIT 2 41 00 d4 ........ ........ ........ .....1.. OFPR_INVALID: set;
+			CLSE 0 0 00 d4 ........ ........ ........ .....0.. OFPR_INVALID: not set;
+		LABL( 0, 0, 0, 0xb8 );
+		g[8] -= 4;
+	}
+}
+str# OpenFlow::V3::Type::OFPT_SET_ASYNC::PROP;
+0	|	OFPACPT_PACKET_IN_SLAVE;
+1	|	OFPACPT_PACKET_IN_MASTER;
+2	|	OFPACPT_PORT_STATUS_SLAVE;
+3	|	OFPACPT_PORT_STATUS_MASTER;
+4	|	OFPACPT_FLOW_REMOVED_SLAVE;
+5	|	OFPACPT_FLOW_REMOVED_MASTER;
+6	|	OFPACPT_ROLE_STATUS_SLAVE;
+7	|	OFPACPT_ROLE_STATUS_MASTER;
+8	|	OFPACPT_TABLE_STATUS_SLAVE;
+9	|	OFPACPT_TABLE_STATUS_MASTER;
+10	|	OFPACPT_REQUESTFORWARD_SLAVE;
+11	|	OFPACPT_REQUESTFORWARD_MASTER;
+0xfffe	|	OFPTFPT_EXPERIMENTER_SLAVE;
+0xffff	|	OFPTFPT_EXPERIMENTER_MASTER;
+
+void OpenFlow::V3::Type::OFPT_FLOW_REMOVED()
+{
+	D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "Priority:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Reason:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Table ID:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Duration sec:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "Duration nsec:" );
+	DWRD( 0, 0, 0x90, 0xc2, "idle_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "hard_timeout:" );
+	D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+	D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+	OpenFlow::V3::Match;
+}
+
+void OpenFlow::V3::Type::OFPT_FEATURES_REPLY()
+{
+	D64B( 0, l[1], 0x90, 0xc2, "datapath_id:" );
+	DLNG( 0, l[2],0x90, 0xc2, "n_buffers:" );
+	DBYT( 0, l[3],0x90, 0xc2, "n_tables:" );
+	DBYT( 0, l[4],0x90, 0xc2, "auxiliary_id:" );
+	DWRD( 0, l[5],0x90, 0xc2, "Padding[2]:" );
+	BLNG( 0, l[6],0x90, 0xc9, "Capabilities:" );
+		CBIT 0 46 00 d4 ........ ........ ........ .......1 OFPC_FLOW_STATS: set;
+		CLSE 0 0 00 d4 ........ ........ ........ .......0 OFPC_FLOW_STATS: not set;
+		CBIT 1 46 00 d4 ........ ........ ........ ......1. OFPC_TABLE_STATS: set;
+		CLSE 0 0 00 d4 ........ ........ ........ ......0. OFPC_TABLE_STATS: not set;
+		CBIT 2 46 00 d4 ........ ........ ........ .....1.. OFPC_PORT_STATS: set;
+		CLSE 0 0 00 d4 ........ ........ ........ .....0.. OFPC_PORT_STATS: not set;
+		CBIT 3 46 00 d4 ........ ........ ........ ....1... OFPC_GROUP_STATS: set;
+		CLSE 0 0 00 d4 ........ ........ ........ ....0... OFPC_GROUP_STATS: not set;
+		CBIT 4 46 00 d4 ........ ........ ........ ...1.... OFPC_IP_REASM: set;
+		CLSE 0 0 00 d4 ........ ........ ........ ...0.... OFPC_IP_REASM: not set;
+		CBIT 5 46 00 d4 ........ ........ ........ ..1..... OFPC_QUEUE_STATS: set;
+		CLSE 0 0 00 d4 ........ ........ ........ ..0..... OFPC_QUEUE_STATS: not set;
+		CBIT 6 46 00 d4 ........ ........ ........ .1...... OFPC_PORT_BLOCKED: set;
+		CLSE 0 0 00 d4 ........ ........ ........ .0...... OFPC_PORT_BLOCKED: not set;
+	LABL 0 0 00 c8;
+	HLNG( 0, l[7],0x90, 0xc2, "Reserved:" );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REQUEST()
+{
+	HWRD( 0, l[1],0x90, 0xc2, "Type:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Type::OFPT_MULTIPART_REQUEST::Type );
+	BWRD( 0, l[2],0x90, 0xc2, "Flags:" );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	
+	if (l[1] == 1)
+	{
+		DBYT( 0, l[4], 0x90, 0xc2, "Table ID:" );
+			CEQU( 0xff, l[4], 0, 0x14, "OFPTT_ALL" );
+		HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+		HLNG( 0, l[4], 0x90, 0xc2, "out_port:" );
+			ANDG( 0xffff, l[4]);
+			CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HLNG( 0, l[5], 0x90, 0xc2, "out_group:" );
+			ANDG( 0xffff, l[5]);
+			CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+		D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+		D64B( 0, 0, 0x90, 0xc2, "cookie_mask:" );
+		OpenFlow::V3::Match;
+	}
+	if (l[1] == 2)
+	{
+		DBYT( 0, l[4], 0x90, 0xc2, "Table ID:" );
+			CEQU( 0xff, l[4], 0, 0x14, "OFPTT_ALL" );
+		HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+		HLNG( 0, l[4], 0x90, 0xc2, "out_port:" );
+			ANDG( 0xffff, l[4]);
+			CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HLNG( 0, l[5], 0x90, 0xc2, "out_group:" );
+			ANDG( 0xffff, l[5]);
+			CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+		D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+		D64B( 0, 0, 0x90, 0xc2, "cookie_mask:" );
+		OpenFlow::V3::Match;
+	}
+	if (l[1] == 3)
+	{
+	
+	}
+	if (l[1] == 4)
+	{
+		HLNG( 0, l[4], 0x90, 0xc2, "Port Number:" );
+			ANDG( 0xffff, l[4]);
+			CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	}
+	if (l[1] == 5)
+	{
+		HLNG( 0, l[4], 0x90, 0xc2, "Port Number:" );
+			ANDG( 0xffff, l[4]);
+			CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HLNG( 0, l[5], 0x90, 0xc2, "Queue ID:" );
+			ANDG( 0xffff, l[5]);
+			CEQU( 0xffff, l[5], 0, 0x14, "OFPQ_ALL (all queues)" );
+	}
+	if (l[1] == 10)
+	{
+		HLNG( 0, l[4], 0x90, 0xc2, "Meter ID:" );
+			ANDG( 0xffff, l[4]);
+			CEQU( 0xffff, l[4], 0, 0x14, "OFPM_ALL" );
+		HLNG( 0, l[5], 0x90, 0xc2, "Padding:" );
+			
+	}
+	if (l[1] == 11)
+	{
+					
+	}
+	if (l[1] == 13)
+	{
+	
+	}
+	
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY()
+{
+	HWRD( 0, g[40],0x90, 0xc2, "Type:" );
+		CST#( 0, g[40], 0, 0x14, OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::Type );
+	BWRD( 0, l[2],0x90, 0xc2, "Flags:" );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+		TSB#( 0, g[40], 0, 0x14, OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::Type::Ldr );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_DESC()
+{
+	LABL 0 0 0 b7 Flow stats:;
+	CHR#( 256, 0, 0x90, 0xc2, "Manufacturer desc.:" );
+	CHR#( 256, 0, 0x90, 0xc2, "Hardware description:" );
+	CHR#( 256, 0, 0x90, 0xc2, "Software description:" );
+	CHR#( 32, 0, 0x90, 0xc2, "Serial#:" );
+	CHR#( 256, 0, 0x90, 0xc2, "Datapath description:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_FLOW()
+{
+	LABL 0 0 0 b7 Flow stats:;
+	DWRD( 0, l[5], 0x90, 0xc2, "Length:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Table ID:" );
+		CEQU( 0xff, l[6], 0, 0x14, "OFPTT_ALL" );
+	HEX#( 0, 1, 0x90, 0xc2, "Padding:" );
+	DLNG( 0, l[10], 0x90, 0xc2, "Duration sec:" );
+	DLNG( 0, l[11], 0x90, 0xc2, "Duration nsec:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Priority:" );
+	DWRD( 0, 0, 0x90, 0xc2, "idle_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "hard_timeout:" );
+	BWRD( 0, 0, 0x90, 0xc2, "Flags:" );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+	D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+	D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+	OpenFlow::V3::Match;
+	OpenFlow::V3::Instruction;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_AGGREGATE()
+{
+	while (g[16] > 0)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+		D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+		DLNG( 0, 0, 0x90, 0xc2, "Flow Count:" );
+		HEX#( 0, 4, 0x90, 0xc2, "Pad:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE()
+{
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Table Features of ID ;
+			GBYT( 0, l[5]);
+			DGLB( 0, l[5], 0x07, 0 );
+			LABL( 0, 0, 0, 0x07, ":" );
+			DBYT( 0, l[6], 0x90, 0xc2, "Table ID:" );
+				CEQU( 0xff, l[6], 0, 0x14, "OFPTT_ALL" );
+			HEX#( 3, 0, 0x90, 0xc2, "Padding:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Active count:" );
+			D64B( 0, 0, 0x90, 0xc2, "Lookup count:" );
+			D64B( 0, 0, 0x90, 0xc2, "Match count:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_PORT_STATS()
+{
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Port stats:;
+		DLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+			ANDG( 0xffff, l[5]);
+			CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+		//DLNG( 0, l[10], 0x90, 0xc2, "Duration sec:" );
+		//DLNG( 0, l[11], 0x90, 0xc2, "Duration nsec:" );
+		D64B( 0, l[8], 0x90, 0xc2, "Rx packets:" );
+		D64B( 0, l[8], 0x90, 0xc2, "Tx packets:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx bytes:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Tx bytes:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx dropped:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Tx dropped:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx errors:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Tx errors:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx frame error:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx over error:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Rx crc error:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Collisions:" );
+		DLNG( 0, l[10], 0x90, 0xc2, "Duration sec:" );
+		DLNG( 0, l[11], 0x90, 0xc2, "Duration nsec:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_QUEUE_STATS()
+{
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Queue stats: ;
+		GLNG( 0, l[5]);
+		GLNG( 4, l[4]);
+		DGLB( 0, l[5], 0x07, 0 );
+		LABL( 0, , 0x07, 0x07, "-" );
+		DGLB( 0, l[4], 0x07, 0 );
+		DLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+			ANDG( 0xffff, l[5]);
+			CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+		DLNG( 0, l[6], 0x90, 0xc2, "Queue ID:" );
+		D64B( 0, l[7], 0x90, 0xc2, "Tx bytes:" );
+		D64B( 0, l[8], 0x90, 0xc2, "Tx packets:" );
+		D64B( 0, l[9], 0x90, 0xc2, "Tx errors:" );
+		DLNG( 0, l[10], 0x90, 0xc2, "Duration sec:" );
+		DLNG( 0, l[11], 0x90, 0xc2, "Duration nsec:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP()
+{
+	
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP_DESC()
+{
+	
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP_FEATURES()
+{
+	
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER()
+{
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Meter stats - ID ;
+		GLNG( 0, l[5]);
+		DGLB( 0, l[5], 0x07, 0 );
+		LABL 0 0 0 07 :;
+			DLNG( 0, l[5], 0x90, 0xc2, "Meter ID:" );
+			DWRD( 0, l[6], 0x90, 0xc2, "Length:" );
+			HEX#( 0, 6, 0x90, 0xc2, "Padding:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Flow Count:" );
+			D64B( 0, 0, 0x90, 0xc2, "Packet in count:" );
+			D64B( 0, 0, 0x90, 0xc2, "Byte in Count:" );
+			DLNG( 0, l[10], 0x90, 0xc2, "Duration sec:" );
+			DLNG( 0, l[11], 0x90, 0xc2, "Duration nsec:" );
+			l[6] -= 40;
+			while (l[6] > 0)
+			{
+				LABL 0 0 0 b7 Meter band stats:;
+				D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+				D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+				LABL( 0, 0, 0, 0xb8 );
+				l[6] -= 16;
+			}
+			LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER_CONFIG()
+{
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Meter config:;
+			DWRD( 0, l[6], 0x90, 0xc2, "Length:" );
+			BWRD( 0, l[9], 0x90, 0xc2, "Flags:" );
+			DLNG( 0, l[5], 0x90, 0xc2, "Meter ID:" );
+			l[6] -= 8;
+			while (l[6] > 0)
+			{
+				LABL 0 0 0 b7 Meter band:;
+				DWRD( 0, l[7], 0x90, 0xc2, "Type:" );
+					CEQU( 1, l[7], 0, 0x14, "OFPMBT_DROP" );
+					CEQU( 2, l[7], 0, 0x14, "OFPMBT_DSCP_REMARK" );
+					CEQU( 0xffff, l[7], 0, 0x14, "OFPMBT_EXPERIMENTER" );
+				DWRD( 0, l[8], 0x90, 0xc2, "Length:" );
+				l[20] = l[8];
+				DLNG( 0, l[9], 0x90, 0xc2, "Rate:" );
+				DLNG( 0, l[10], 0x90, 0xc2, "Burst Size:" );
+				l[8] -= 12;
+				if (l[7] == 1)
+				{
+					HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+					l[8] -= 4;
+				}
+				if (l[7] == 2)
+				{
+					DBYT( 0, l[12], 0x90, 0xc2, "Precedence Level:" );
+					HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+					l[8] -= 4;
+				}
+				if (l[7] == 0xffff)
+				{
+					DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+				}
+				if (l[8] > 0)
+				{
+					DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+				}
+				LABL( 0, 0, 0, 0xb8 );
+				l[6] -= l[20];
+			}
+			LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER_FEATURES()
+{
+	while(g[16] > 0)
+	{
+		DLNG( 0, l[5], 0x90, 0xc2, "Max Meters:" );
+		BLNG( 0, l[6], 0x90, 0xc2, "Band Types:" );
+		BLNG( 0, l[7], 0x90, 0xc2, "Capabilities:" );
+		DBYT( 0, l[8], 0x90, 0xc2, "Max Bands:" );
+		DBYT( 0, l[9], 0x90, 0xc2, "Max Colors:" );
+		HWRD( 0, l[10], 0x90, 0xc2, "Padding:" );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_FEATURES()
+{
+	while(g[16] > 0)
+	{
+		LABL 0 0 0 b7 Table Features:;
+			DWRD( 0, l[5], 0x90, 0xc2, "Length:" );
+			DBYT( 0, l[6], 0x90, 0xc2, "Table ID:" );
+				CEQU( 0xff, l[6], 0, 0x14, "OFPTT_ALL" );
+			HEX#( 0, 5, 0x90, 0xc2, "Padding:" );
+			CHR#( 32, 0, 0x90, 0xc2, "Name:" );
+			D64B( 0, l[9], 0x90, 0xc2, "Metadata match:" );
+			D64B( 0, l[10], 0x90, 0xc2, "Metadata write:" );
+			DLNG( 0, l[11], 0x90, 0xc2, "Config:" );
+			DLNG( 0, l[11], 0x90, 0xc2, "Max Entries:" );
+			l[5] -=  64;
+			while (l[5] > 0)
+			{
+				LABL 0 0 0 b7 Table Feature Property:;
+				DWRD( 0, l[12], 0x90, 0xc2, "Type:" );
+					CST#( 0, l[12], 0, 0x14, OpenFlow::V3::TableFeatures::Type );
+				DWRD( 0, l[13], 0x90, 0xc2, "Length:" );
+				l[14] = l[13];
+				l[13] -= 4;
+				if (l[12] <=15)
+				{
+					while(l[13] > 0)
+					{
+						if (l[12] == 0)
+						{
+							LABL 0 0 00 b7 Instruction ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "Type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instructions );
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+							}
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 1)
+						{
+							LABL 0 0 00 b7 Instruction ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instructions );
+							DWRD( 0, l[16], 0x90, 0xc2, "length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+								l[16] += 4;
+								l[13] -= l[16];
+							}
+							l[13] -= l[16];
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 2)
+						{
+							DBYT( 0, l[15], 0x90, 0xc2, "Next Table ID:" );
+							l[13] -= 1;
+						}
+						if (l[12] == 3)
+						{
+							DBYT( 0, l[15], 0x90, 0xc2, "Next Table ID:" );
+							l[13] -= 1;
+						}
+						if (l[12] == 4)
+						{
+							LABL 0 0 00 b7 Action ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "Type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instruction::field );
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+							}
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 5)
+						{
+							LABL 0 0 00 b7 Action ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "Type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instruction::field );
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+							}
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 6)
+						{
+							LABL 0 0 00 b7 Action ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "Type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instruction::field );
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+							}
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 7)
+						{
+							LABL 0 0 00 b7 Action ID;
+							DWRD( 0, l[15], 0x90, 0xc2, "Type:" );
+								CST#( 0, l[15], 0, 0x14, OpenFlow::V3::Instruction::field );
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							if (l[16] > 4)
+							{
+								l[16] -= 4;
+								DUMP( 0, l[16], 0x90, 0xc2, "Content:" );
+							}
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 8)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 10)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 12)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 13)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 14)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+						if (l[12] == 15)
+						{
+							LABL 0 0 00 b7 QXM ID - ;
+							GBYT( 2, l[20]);
+							SHFR( 1, l[20]);
+							CST#( 0, l[20], 0, 0x07, OpenFlow::V3::Match::OXM::field );
+							HWRD( 0, l[21], 0x90, 0xc2, "class:" );
+								CST#( 0, l[21], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+							DBIT( 7, l[22], 0x90, 0xc2, "field:" );
+								CST#( 0, l[22], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+							DBIT( 1, l[23], 0x90, 0xc2, "has mask:" );
+								CEQU( 0, l[23], 0, 0x14, "no" );
+								CEQU( 1, l[23], 0, 0x14, "yes" );
+							DBYT( 0, l[24], 0x90, 0xc2, "length:" );
+							l[13] -= 4;
+							LABL( 0, 0, 0, 0xb8 );
+						}
+					}
+				}	
+					if (l[13] > 0)
+					{
+						DUMP( 0, l[13], 0x90, 0xc2, "Content:" );
+					}
+				LABL( 0, 0, 0, 0xb8 );
+				
+				l[5] -= l[14];
+				if (l[5] > 0)
+				{
+					HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+					l[5] -= 4;
+				}
+			}
+			if (l[5] != 0 )
+			{
+				DUMP( 0, l[5], 0x90, 0xc2, "Content:" );
+			}
+			LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_PORT_DESC()
+{
+	 while (g[16] > 0)
+	 {
+		LABL 0 0 0 b7 Port - ;
+		GLNG( 0, l[5] );
+		DGLB( 0, l[5], 0x07, 0x07 );
+			HLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+				ANDG( 0xffff, l[5]);
+				CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+			DWRD( 0, l[6], 0x90, 0xc2, "Length:" );
+			DWRD( 0, l[7], 0x90, 0xc2, "Padding:" );
+			ETHR( 0, 0, 0x90, 0xc2, "HW Adress:" );
+			HEX#( 2, 0, 0x90, 0xc2, "Padding:" );
+			CHR#( 0, 16, 0x90, 0xc2, "Name:" );
+			BLNG( 0, l[8], 0x90, 0xc9, "Config:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[8], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx x..xx.x. reserved" );
+				CBIT( 0, l[8], 0, 0xd4, "........ ........ ........ .......1 OFPPC_PORT_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPC_PORT_DOWN: False");
+				CBIT( 2, l[8], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_NO_RECV: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_NO_RECV: False");
+				CBIT( 5, l[8], 0, 0xd4, "........ ........ ........ ..1..... OFPPC_NO_FWD: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ..0..... OFPPC_NO_FWD: False");
+				CBIT( 6, l[8], 0, 0xd4, "........ ........ ........ .1...... OFPPC_NO_PACKET_IN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .0...... OFPPC_NO_PACKET_IN: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[9], 0x90, 0xc9, "State:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[9], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+				CBIT( 0, l[9], 0, 0xd4, "........ ........ ........ .......1 OFPPS_LINK_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPS_LINK_DOWN: False");
+				CBIT( 1, l[9], 0, 0xd4, "........ ........ ........ ......1. OFPPS_BLOCKED: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPPS_BLOCKED: False");
+				CBIT( 2, l[9], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_LIVE: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_LIVE: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Current:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Adverstised:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+				LABL( 0, 0, 0, 0xb8 );
+			
+			BLNG( 0, l[10], 0x90, 0xc9, "Supported:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[10], 0x90, 0xc9, "Peer:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[10], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+				CBIT( 0, l[10], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+				CBIT( 1, l[10], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+				CBIT( 2, l[10], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+				CBIT( 3, l[10], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+				CBIT( 4, l[10], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");						
+				CBIT( 5, l[10], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+				CBIT( 6, l[10], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+				CBIT( 7, l[10], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+				CBIT( 8, l[10], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+				CBIT( 9, l[10], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+				CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+				CBIT( 10, l[10], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+				CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+				CBIT( 11, l[10], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+				CBIT( 12, l[10], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");						
+				CBIT( 13, l[10], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+				CBIT( 14, l[10], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+				CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+			LABL( 0, 0, 0, 0xb8 );
+			DLNG( 0, 0, 0x90, 0xc2, "Current Speed:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Maximal  Speed:" );
+		LABL( 0, 0, 0, 0xb8 );
+ }
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC()
+{
+	while(g[16] > 0)
+	{
+		LABL 0 0 0 b7 Table Features:;
+			DWRD( 0, l[5], 0x90, 0xc2, "Length:" );
+			DBYT( 0, l[6], 0x90, 0xc2, "Table ID:" );
+				CEQU( 0xff, l[6], 0, 0x14, "OFPTT_ALL" );
+			HEX#( 0, 1, 0x90, 0xc2, "Padding:" );		
+			DLNG( 0, l[7], 0x90, 0xc2, "Config:" );
+		while (l[5] > 0)
+		{
+			DWRD( 0, l[8], 0x90, 0xc2, "Type:" );
+				CST#( 0, l[8], 0, 0x14, OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::Type );
+				CLSE( 0, l[8], 0, 0x14, "reserved" );
+			DWRD( 0, l[9], 0x90, 0xc2, "Length:" );
+			TSB#( 0, l[8], 0, 0x14, OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::Type::Ldr );
+		}
+	
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_EVICTION()
+{
+	BLNG( 0, l[1], 0x90, 0xc2, "Flags:" );
+		CBIT( 0, l[1], 0, 0xd4, "........ ........ ........ .......1 OFPTMPEF_OTHER: True" );
+		CLSE( 0, l[1], 0, 0xd4, "........ ........ ........ .......0 OFPTMPEF_OTHER: False" );
+		CBIT( 1, l[1], 0, 0xd4, "........ ........ ........ ......1. OFPTMPEF_IMPORTANCE: True" );
+		CLSE( 0, l[1], 0, 0xd4, "........ ........ ........ ......0. OFPTMPEF_IMPORTANCE: False" );
+		CBIT( 2, l[1], 0, 0xd4, "........ ........ ........ .....1.. OFPTMPEF_LIFETIME: True" );
+		CLSE( 0, l[1], 0, 0xd4, "........ ........ ........ .....0.. OFPTMPEF_LIFETIME: False" );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_VACANCY()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Vacancy_down:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Vacancy_up:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Vacancy:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Padding:" );
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_EXPERIMENTER()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Experimenter:" );
+	DLNG( 0, l[1], 0x90, 0xc2, "Experimenter Type:" );	
+}
+
+str# OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::Type::Ldr;
+0x02	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_EVICTION;
+0x03	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_VACANCY;
+0xffff	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::OFPTMPT_EXPERIMENTER;
+
+str# OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC::Type;
+0x02	|	OFPTMPT_EVICTION;
+0x03	|	OFPTMPT_VACANCY;
+0xffff	|	OFPTMPT_EXPERIMENTER;
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_QUEUE_DESC()
+{
+	
+}
+
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_FLOW_MONITOR()
+{
+	
+}
+void OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_EXPERIMENTER()
+{
+	
+}
+
+str# OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::Type::Ldr;
+0	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_DESC;
+1	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_FLOW;
+2	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_AGGREGATE;
+3	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE;
+4	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_PORT_STATS;
+5	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_QUEUE_STATS;
+//6	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP;
+//7	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP_DESC;
+//8	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_GROUP_FEATURES;
+9	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER;
+10	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER_CONFIG;
+11	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_METER_FEATURES;
+12	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_FEATURES;
+13	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_PORT_DESC;
+14	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_TABLE_DESC;
+//15	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_QUEUE_DESC;
+//16	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_FLOW_MONITOR;
+//0xffff	|	OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::OFPMP_EXPERIMENTER;
+
+str# OpenFlow::V3::Type::OFPT_MULTIPART_REPLY::Type;
+0	|	OFPMP_DESC;
+1	|	OFPMP_FLOW;
+2	|	OFPMP_AGGREGATE;
+3	|	OFPMP_TABLE;
+4	|	OFPMP_PORT_STATS;
+5	|	OFPMP_QUEUE_STATS;
+6	|	OFPMP_GROUP;
+7	|	OFPMP_GROUP_DESC;
+8	|	OFPMP_GROUP_FEATURES;
+9	|	OFPMP_METER;
+10	|	OFPMP_METER_CONFIG;
+11	|	OFPMP_METER_FEATURES;
+12	|	OFPMP_TABLE_FEATURES;
+13	|	OFPMP_PORT_DESC;
+14	|	OFPMP_TABLE_DESC;
+15	|	OFPMP_QUEUE_DESC;
+16	|	OFPMP_FLOW_MONITOR;
+//0xffff	|	OFPMP_EXPERIMENTER;
+
+str# OpenFlow::V3::Type::OFPT_MULTIPART_REQUEST::Type;
+0	|	OFPMP_DESC;
+1	|	OFPMP_FLOW;
+2	|	OFPMP_AGGREGATE;
+3	|	OFPMP_TABLE;
+4	|	OFPMP_PORT_STATS;
+5	|	OFPMP_QUEUE_STATS;
+6	|	OFPMP_GROUP;
+7	|	OFPMP_GROUP_DESC;
+8	|	OFPMP_GROUP_FEATURES;
+9	|	OFPMP_METER;
+10	|	OFPMP_METER_CONFIG;
+11	|	OFPMP_METER_FEATURES;
+12	|	OFPMP_TABLE_FEATURES;
+13	|	OFPMP_PORT_DESC;
+14	|	OFPMP_TABLE_DESC;
+15	|	OFPMP_QUEUE_DESC;
+16	|	OFPMP_FLOW_MONITOR;
+//0xffff	|	OFPMP_EXPERIMENTER;
+
+str# OpenFlow::V3::TableFeatures::Type;
+0	|	OFPTFPT_INSTRUCTIONS;
+1	|	OFPTFPT_INSTRUCTIONS_MISS;
+2	|	OFPTFPT_NEXT_TABLES;
+3	|	OFPTFPT_NEXT_TABLES_MISS;
+4	|	OFPTFPT_WRITE_ACTIONS;
+5	|	OFPTFPT_WRITE_ACTIONS_MISS;
+6	|	OFPTFPT_APPLY_ACTIONS;
+7	|	OFPTFPT_APPLY_ACTIONS_MISS;
+8	|	OFPTFPT_MATCH;
+10	|	OFPTFPT_WILDCARDS;
+12	|	OFPTFPT_WRITE_SETFIELD;
+13	|	OFPTFPT_WRITE_SETFIELD_MISS;
+14	|	OFPTFPT_APPLY_SETFIELD;
+15	|	OFPTFPT_APPLY_SETFIELD_MISS;
+16	|	OFPTFPT_TABLE_SYNC_FROM;
+0xfffe	|	OFPMP_EXPERIMENTER;
+0xffff	|	OFPMP_EXPERIMENTER_MISS;
+
+
+
+void OpenFlow::V3::Type::OFPT_ROLE_REPLY()
+{
+	HLNG( 0, l[1],0x90, 0xc2, "Role:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Type::OFPT_ROLE_REPLY::Role );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	HEX#( 0, 8, 0x90, 0xc2, "Generation ID:" );
+}
+str# OpenFlow::V3::Type::OFPT_ROLE_REPLY::Role;
+0	|	OFPCR_ROLE_NOCHANGE;
+1	|	OFPCR_ROLE_EQUAL;
+2	|	OFPCR_ROLE_MASTER;
+3	|	OFPCR_ROLE_SLAVE;
+
+void OpenFlow::V3::Type::OFPT_ROLE_REQUEST()
+{
+	HLNG( 0, l[1],0x90, 0xc2, "Role:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Type::OFPT_ROLE_REPLY::Role );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	HEX#( 0, 8, 0x90, 0xc2, "Generation ID:" );
+}
+
+void OpenFlow::V3::Type::OFPT_GROUP_MOD()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "command:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::commands );
+	DBYT( 0, l[2], 0x90, 0xc2, "type:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_GROUP_MOD::Type );
+	DBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "group_id:" );
+	while( g[16] > 0)
+	{
+		LABL 0 0 0 b7 Bucket:;
+		OpenFlow::V3::Bucket;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+str# OpenFlow::V3::Portresvalues;
+0xff00	|	OFPP_MAX;
+0xfff8	|	OFPP_IN_PORT;
+0xfff9	|	OFPP_TABLE;
+0xfffa	|	OFPP_NORMAL;
+0xfffb	|	OFPP_FLOOD;
+0xfffc	|	OFPP_ALL;
+0xfffd	|	OFPP_CONTROLLER;
+0xfffe	|	OFPP_LOCAL;
+0xffff	|	OFPP_ANY;
+
+str# OpenFlow::V3::Type::OFPT_GROUP_MOD::Type;
+0	|	OFPGT_ALL;
+1	|	OFPGT_SELECT;
+2	|	OFPGT_INDIRECT;
+3	|	OFPGT_FF;
+
+void OpenFlow::V3::Bucket()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Weight:" );
+	HLNG( 0, l[4], 0x90, 0xc2, "watch_port:" );
+		ANDG( 0xffff, l[4]);
+		CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );		
+	HLNG( 0, l[5], 0x90, 0xc2, "watch_group:" );
+		ANDG( 0xffff, l[5]);
+		CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+	
+	HEX# ( 0, 4, 0x90, 0xc2, "Padding:" );
+	l[1] -= 16;
+	while( l[1] != 0)
+	{
+		GWRD( 0, l[6]);
+		CST#( 0, l[6], 0, 0xb7, OpenFlow::V3::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		l[9] -= 4;
+		
+		g[42] = l[9];
+		g[9] -= 4;
+		l[11]  = g[16];
+		//DGLB( 0, g[42], 0x90, 0xc2, " g42:" );
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field::ldr );
+		//XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= g[42];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );	
+		}
+		l[1] -= l[9]; l[1] -= 4;
+		//DGLB( 0, l[1], 0x90, 0xc2, " l1:" );
+		//DGLB( 0, l[2], 0x90, 0xc2, " l2:" );
+	
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void OpenFlow::V3::Instruction::OFPAT_OUTPUT()
+{
+	HLNG( 0, l[1], 0x90, 0xc2, "Output Port:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Max. length:" );
+	HEX#( 0, 6, 0x90, 0xc2, "Padding:" );	
+}
+void OpenFlow::V3::Instruction::OFPAT_COPY_TTL_OUT()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_COPY_TTL_IN()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_SET_MPLS_TTL()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "TTL:" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_DEC_MPLS_TTL()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_PUSH_VLAN()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_POP_VLAN()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_PUSH_MPLS()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_POP_MPLS()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_SET_QUEUE()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Group ID:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_GROUP()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Group ID:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_SET_NW_TTL()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "TTL:" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_DEC_NW_TTL()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_SET_FIELD()
+{
+	GBYT( 2, l[2]);
+	SHFR( 1, l[2]);
+	CST#( 0, l[2], 0, 0xb7, OpenFlow::V3::Match::OXM::field );
+	HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+	DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+	DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+		CEQU( 0, g[43], 0, 0x14, "no" );
+		CEQU( 1, g[43], 0, 0x14, "yes" );
+	DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+	g[42] = l[4];
+	g[9] -= 4;
+	TSB#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field::Ldr );
+	XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+	g[9] -= l[4];
+	//DGLB( 0, g[9], 0x90, 0xc2, "g[9]:" );
+	LABL( 0, 0, 0, 0xb8 );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_PUSH_PBB()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_POP_PBB()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V3::Instruction::OFPAT_EXPERIMENTER()
+{
+	//HLNG( 0, l[1], 0x90, 0xc2, "Experimeter:" );
+}
+
+
+void OpenFlow::V3::Type::OFPT_FLOW_MOD()
+{
+	//header
+	D64B( 0, 0, 0x90, 0xc2, "cookie:" );
+	D64B( 0, 0, 0x90, 0xc2, "cookie_mask:" );
+	//flow actions
+	DBYT( 0, 0, 0x90, 0xc2, "table_id:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "command:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::commands );
+	DWRD( 0, 0, 0x90, 0xc2, "idle_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "hard_timeout:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "priority:" );
+	HLNG( 0, l[3], 0x90, 0xc2, "buffer_id:" );
+		CEQU( 0xffffffff, l[3], 0, 0x14, "OFP_NO_BUFFER" );
+	HLNG( 0, l[4], 0x90, 0xc2, "out_port:" );
+		ANDG( 0xffff, l[4]);
+		CST#( 0, l[4], 0, 0x14, OpenFlow::V3::Portresvalues );
+	HLNG( 0, l[5], 0x90, 0xc2, "out_group:" );
+		ANDG( 0xffff, l[5]);
+		CST#( 0, l[5], 0, 0x14, OpenFlow::V3::Portresvalues );
+	BWRD( 0, l[6], 0x90, 0xc9, "flags:" );
+		CBIT( 0, l[6], 0, 0xd4, "........ .......1 Send flow removed: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ .......0 Send flow removed: no" );
+		CBIT( 1, l[6], 0, 0xd4, "........ ......1. Check overlap: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ......0. Check overlap: no" );
+		CBIT( 2, l[6], 0, 0xd4, "........ .....1.. Reset counts: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ .....0.. Reset counts: no" );
+		CBIT( 3, l[6], 0, 0xd4, "........ ....1... Don't keep track of packet count: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ....0... Don't keep track of packet count: no" );
+		CBIT( 4, l[6], 0, 0xd4, "........ ...1.... Don't keep track of byte count: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ...0.... Don't keep track of byte count: no" );		
+	LABL( 0, 0, 0, 0xb8 );
+	//DWRD( 0, 0, 0x90, 0xc2, "importance:" );
+	HEX#( 0, 0x2, 0x90, 0xc2, "Padding:" );
+	OpenFlow::V3::Match;
+	while ( g[16] > 4 )
+	{
+		OpenFlow::V3::Instruction;
+	}
+	//OpenFlow::V3::Instruction;
+}
+
+
+void OpenFlow::V3::Match()
+{
+	//DGLB( 0, g[9], 0x90, 0xc2, "g9:" );
+	LABL 0 0 00 b1 Match;
+	DWRD( 0, l[1], 0x90, 0xc2, "match-type:" );
+		CEQU( 0, l[1], 0, 0x14, "OFPMT_STANDARD(not valid anymore)" );
+		CEQU( 1, l[1], 0, 0x14, "OFPMT_OXM" );
+	DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+		g[9] = l[2];
+		l[20] = l[2];
+		MODG ( 8, l[20] );
+		l[21] = 8;
+		l[21] -= l[20];
+		g[25] =  l[21];
+		g[12] = g[9];
+		g[12] += 4;
+	TSB#( 0, l[1], 0, 0, OpenFlow::V3::Matchtypes::LDR );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::Match::OXM()
+{
+	//DGLB( 0, g[9], 0x90, 0xc2, "g9:" );
+	while (g[9] > 4)
+	{
+		GBYT( 2, l[2]);
+		SHFR( 1, l[2]);
+		CST#( 0, l[2], 0, 0xb7, OpenFlow::V3::Match::OXM::field );
+		HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+			CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Match::OXM::class );
+		DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+			CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field );
+		DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+			CEQU( 0, g[43], 0, 0x14, "no" );
+			CEQU( 1, g[43], 0, 0x14, "yes" );
+		DBYT( 0, l[4], 0x90, 0xc2, "length:" );		
+		g[42] = l[4];		
+		g[9] -= 4;
+		TSB#( 0, l[2], 0, 0x14, OpenFlow::V3::Match::OXM::field::Ldr );
+		XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= l[4];		
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if g[25] != 0)
+	{
+		HEX#( 0, g[25], 0x90, 0xc2, "Padding:" );
+		g[9] -=  g[25];
+		g[9] = 0;
+	}
+	if (g[9] != 0)
+	{
+		HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		g[9] -=  g[9];
+	}
+	if (g[9] != 0)
+	{
+		if (g[12] < 16)
+		{
+			l[30] = 16;
+			l[30] -= g[12];
+			HEX#( 0, l[30], 0x90, 0xc2, "Padding:" );
+		}
+		if (g[12] > 16)
+		{
+			MODG( 2, g[12] );
+			HEX#( 0, g[12], 0x90, 0xc2, "Padding:" );
+		}
+	}
+	if (g[9] == 0)
+	{
+		TRTS;
+	}
+}
+
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IN_PORT()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Port:" );
+		ANDG( 0xffff, l[1]);
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Portresvalues );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IN_PHY_PORT()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Port:" );
+		ANDG( 0xffff, l[1]);
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Portresvalues );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_METADATA()
+{
+	HEX#( 0, 0x8, 0x90, 0xc2, "Value:" );
+	HEX#( 0, 0x8, 0x90, 0xc2, "Mask:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_DST()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Destination:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_SRC()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Source:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_TYPE()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertpye:" );
+		CST#( 0, l[1], 0, 0x14, Ether::Branching_3_Str );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_VLAN_VID()
+{	
+	DECR 4;
+	GWRD( 0, l[1]);
+	INCR 4;
+	if (l[1] == 0xffff)
+	{
+		HLNG( 0, l[2], 0x90, 0xc2, "Experimeter:" );
+		HLNG( 0, l[3], 0x90, 0xc2, "Reserved:" );
+	}
+	if (l[1] != 0xffff)
+	{
+		BWRD( 0, l[1], 0x90, 0xc2, "Flags:" );
+	}
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_VLAN_PCP()
+{
+	BBIT( 3, 0, 0x90, 0xc2, "VLAN-PCP from 802.1Q:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_DSCP()
+{
+	BBIT( 6, 0, 0x90, 0xc2, "Diff Serv Code Point :" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_ECN()
+{
+	BBIT( 2, 0, 0x90, 0xc2, "VLAN-PCP from 802.1Q:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_PROTO()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Protocol:" );
+	
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV4_SRC()
+{
+	IPLG( 0, l[1], 0x90, 0xc2, "Source:" );
+	if (g[43] == 1)
+	{
+		IPLG( 0, l[1], 0x90, 0xc2, "Mask:" );
+	}
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV4_DST()
+{
+	IPLG( 0, l[1], 0x90, 0xc2, "Destination:" );
+	if (g[43] == 1)
+	{
+		IPLG( 0, l[1], 0x90, 0xc2, "Mask:" );
+	}
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TCP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "TCP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TCP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "TCP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_UDP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "UDP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_UDP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "UDP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_SCTP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "SCTP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_SCTP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "SCTP Port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV4_TYPE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Type:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV4_CODE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Code:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_OP()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "ARP opcode:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_SPA()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "ARP Source IPv4:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_TPA()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "ARP Target IPv4:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_SHA()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "ARP Source Ethernet addres:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_THA()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "ARP Target Ethernet addres:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_SRC()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "ARP Source IPv6:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_DST()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "ARP Target IPv6:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_FLABEL()
+{
+	BBIT( 20, 0, 0x90, 0xc2, "IPv6 Flow label:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV6_TYPE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Type:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV6_CODE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Code:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TARGET()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 Neighbor Discovery Target:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_SLL()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Source link-layer address:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TLL()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Target link-layer address:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_MPLS_LABEL()
+{
+	BBIT( 20, 0, 0x90, 0xc2, "First MPLS shim header Label:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_MPLS_TC()
+{
+	BBIT( 3, 0, 0x90, 0xc2, "First MPLS shim header TC:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFP_MPLS_BOS()
+{
+	BBIT( 1, 0, 0x90, 0xc2, "First MPLS shim header BoS bit:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_PBB_ISID()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "I-SID:" );
+	DBYT( 0, 0, 0x90, 0xc2, "I-SID:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TUNNEL_ID()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Metadata associated with a logical port:" );
+}
+void OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_EXTHDR()
+{
+	BBIT( 9, 0, 0x90, 0xc2, "IPv6 Extension Header pseudo-field:" );
+}
+void OpenFlow::V3::Match::OXM::field::OXM_OF_PBB_UCA()
+{
+	BBIT( 1, 0, 0x90, 0xc2, "UCA Field in the First PBB service instance tag:" );
+}
+void OpenFlow::V3::Match::Standard;
+{
+	
+}
+
+void OpenFlow::V3::Instruction()
+{
+	if (g[16] > 4)
+	{
+		LABL 0 0 00 b7 Instruction;
+		DWRD( 0, l[1], 0x90, 0xc2, "type:" );
+			CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Instructions );
+		DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+			l[2] -= 4;
+			g[9] = l[2];
+		if (l[1] == 1)
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "Table ID:" );
+			g[9] -= 1;
+		}
+		if (l[1] == 2)
+		{
+			HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+			HEX#( 0, 0x8, 0x90, 0xc2, "Value:" );
+			HEX#( 0, 0x8, 0x90, 0xc2, "Mask:" );
+			g[9] -= 20;
+		}
+		if (l[1] == 3)
+		{
+			HEX#( 0, 4, 0x90, 0xc2, "Padding:" );g[9] -= 4;
+			OpenFlow::V3::Instruction::Loop;
+		}
+		if (l[1] == 4)
+		{
+			HEX#( 0, 4, 0x90, 0xc2, "Padding:" );g[9] -= 4;
+			OpenFlow::V3::Instruction::Loop;
+		}
+		if (l[1] == 5)
+		{
+			HEX#( 0, 4, 0x90, 0xc2, "Meter ID:" );g[9] -= 4;
+			OpenFlow::V3::Instruction::Loop;
+		}
+		if (l[1] == 6)
+		{
+			DLNG( 0, 4, 0x90, 0xc2, "Experimeter ID:" );g[9] -= 4;
+			OpenFlow::V3::Instruction::Loop;
+		}
+		if (g[9] != 0)
+		{
+			HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );		
+	}
+	if (g[16] <= 4)
+	{
+		TRTS;
+	}
+}
+
+str# OpenFlow::V3::Instructions;
+0x0001	|	OFPIT_GOTO_TABLE;
+0x0002	|	OFPIT_WRITE_METADATA;
+0x0003	|	OFPIT_WRITE_ACTIONS;
+0x0004	|	OFPIT_APPLY_ACTIONS;
+0x0005	|	OFPIT_CLEAR_ACTIONS;
+0x0006	|	OFPIT_METER;
+0xffff	|	OFPIT_EXPERIMENTER = 0xFFFF;
+
+
+void OpenFlow::V3::Instruction::Loop()
+{
+	//DGLB( 0, g[9], 0x90, 0xc2, "g[9]:" );
+	while (g[9] > 4)
+	{	
+		GWRD( 0, l[6]);
+		CST#( 0, l[6], 0, 0xb7, OpenFlow::V3::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		l[9] -= 4;
+		g[42] = l[9];
+		g[9] -= 4;
+		l[11]  = g[16];
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V3::Instruction::field::ldr );
+		XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= g[42];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );	
+		}
+		l[1] -= l[9]; l[1] -= 4;
+		//DGLB( 0, l[1], 0x90, 0xc2, " l1:" );
+		//DGLB( 0, l[2], 0x90, 0xc2, " l2:" );
+	
+		LABL( 0, 0, 0, 0xb8 );
+		
+	}
+	//DGLB( 0, g[9], 0x90, 0xc2, " g9:" );
+	if (g[9] != 0)
+	{
+		HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		g[9] -= g[9];
+	}
+}
+
+void OpenFlow::V3::Type::OFPT_ERROR()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::type );
+	DWRD( 0, l[2], 0x90, 0xc2, "Code:" );
+	if (l[1] == 0)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::HELLO_FAILED::code );
+		CHR#( 0,g[9], 0x90, 0xc2, "Data:" );
+		g[9] -= g[9];
+	}
+	if (l[1] == 1)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::BAD_REQUEST::code );
+	}
+	if (l[1] == 2)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::BAD_ACTION::code );
+	}
+	if (l[1] == 3)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::BAD_INSTRUCTION::code );
+	}
+	if (l[1] == 4)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::BAD_MATCH::code );
+	}
+	if (l[1] == 5)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::FLOW_MOD_FAILED::code );
+	}
+	if (l[1] == 6)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::GROUP_MOD_FAILED::code );
+	}
+	if (l[1] == 7)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_PORT_MOD_FAILED::code );
+	}
+	if (l[1] == 8)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_TABLE_MOD_FAILED::code );
+	}
+	if (l[1] == 9)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_QUEUE_OP_FAILED::code );
+	}
+	if (l[1] == 10)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_SWITCH_CONFIG_FAILED::code );
+	}
+	if (l[1] == 11)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_ROLE_REQUEST_FAILED::code );
+	}
+	if (l[1] == 12)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_METER_MOD_FAILED::code );
+	}
+	if (l[1] == 13)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V3::Type::OFPT_ERROR::OFPET_TABLE_FEATURES_FAILED::code );
+	}
+	LABL( 0, 0, 0x90, 0xc9, "Data:" );
+	if (g[9] != 0)
+	{	
+		OpenFlow::V3;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V3::Type::OFPT_HELLO()
+{
+	GWRD( 0 , l[1] );
+	if ( l[1] == 1 )
+	{
+		DWRD( 0, l[1], 0x90, 0xc2, "type:" );
+			CEQU( 1, l[1], 0, 0x14, OOFPHET_VERSIONBITMAP );
+		DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+		if (l[2] == 8)
+		{
+			BLNG( 0, l[2], 0x90, 0xc2, "Version Supported:" );
+				//CBIT( 0, l[2], 0, 0xd4, "........ ........ ........ .......0 Version 0" );
+				CBIT( 0, l[2], 0, 0xd4, "........ ........ ........ .......1 Version 1 supported" );
+				CBIT( 1, l[2], 0, 0xd4, "........ ........ ........ ......1. Version 2 supported" );
+				CBIT( 2, l[2], 0, 0xd4, "........ ........ ........ .....1.. Version 3 supported" );
+				CBIT( 3, l[2], 0, 0xd4, "........ ........ ........ ....1... Version 4 supported" );
+				CBIT( 4, l[2], 0, 0xd4, "........ ........ ........ ...1.... Version 5 supported" );
+				CBIT( 5, l[2], 0, 0xd4, "........ ........ ........ ..1..... Version 6 supported" );
+				CBIT( 6, l[2], 0, 0xd4, "........ ........ ........ .1...... Version 7 supported" );
+				CBIT( 7, l[2], 0, 0xd4, "........ ........ ........ 1....... Version 8 supported" );
+		}
+	}
+}
+
+str# OpenFlow::V3::Type::OFPT_ERROR::type;
+0	|	OFPET_HELLO_FAILED;
+1	|	OFPET_BAD_REQUEST;
+2	|	OFPET_BAD_ACTION;
+3	|	OFPET_BAD_INSTRUCTION;
+4	|	OFPET_BAD_MATCH;
+5	|	OFPET_FLOW_MOD_FAILED;
+6	|	OFPET_GROUP_MOD_FAILED;
+7	|	OFPET_PORT_MOD_FAILED;
+8	|	OFPET_TABLE_MOD_FAILED;
+9	|	OFPET_QUEUE_OP_FAILED;
+10	|	OFPET_SWITCH_CONFIG_FAILED;
+11	|	OFPET_ROLE_REQUEST_FAILED;
+12	|	OFPET_METER_MOD_FAILED;
+13	|	OFPET_TABLE_FEATURES_FAILED;
+0xffff	|	OFPET_EXPERIMENTER;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::HELLO_FAILED::code;
+0	|	OFPHFC_INCOMPATIBLE;
+1	|	OFPHFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::BAD_REQUEST::code;
+0	|	OFPBRC_BAD_VERSION;
+1	|	OFPBRC_BAD_TYPE;
+2	|	OFPBRC_BAD_MULTIPART;
+3	|	OFPBRC_BAD_EXPERIMENTER;
+4	|	OFPBRC_BAD_EXP_TYPE;
+5	|	OFPBRC_EPERM;
+6	|	OFPBRC_BAD_LEN;
+7	|	OFPBRC_BUFFER_EMPTY;
+8	|	OFPBRC_BUFFER_UNKNOWN;
+9	|	OFPBRC_BAD_TABLE_ID;
+10	|	OFPBRC_IS_SLAVE;
+11	|	OFPBRC_BAD_PORT;
+12	|	OFPBRC_BAD_PACKET;
+13	|	OFPBRC_MULTIPART_BUFFER_OVERFLOW;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::BAD_ACTION::code;
+0	|	OFPBAC_BAD_TYPE;
+1	|	OFPBAC_BAD_LEN;
+2	|	OFPBAC_BAD_EXPERIMENTER;
+3	|	OFPBAC_BAD_EXP_TYPE;
+4	|	OFPBAC_BAD_OUT_PORT;
+5	|	OFPBAC_BAD_ARGUMENT;
+6	|	OFPBAC_EPERM;
+7	|	OFPBAC_TOO_MANY;
+8	|	OFPBAC_BAD_QUEUE;
+9	|	OFPBAC_BAD_OUT_GROUP;
+10	|	OFPBAC_MATCH_INCONSISTENT;
+11	|	OFPBAC_UNSUPPORTED_ORDER;
+12	|	OFPBAC_BAD_TAG;
+13	|	OFPBAC_BAD_SET_TYPE;
+14	|	OFPBAC_BAD_SET_LEN;
+15	|	OFPBAC_BAD_SET_ARGUMENT;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::BAD_INSTRUCTION::code;
+0	|	OFPBIC_UNKNOWN_INST;
+1	|	OFPBIC_UNSUP_INST;
+2	|	OFPBIC_BAD_TABLE_ID;
+3	|	OFPBIC_UNSUP_METADATA;
+4	|	OFPBIC_UNSUP_METADATA_MASK;
+5	|	OFPBIC_BAD_EXPERIMENTER;
+6	|	OFPBIC_BAD_EXP_TYPE;
+7	|	OFPBIC_BAD_LEN;
+8	|	OFPBIC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::BAD_MATCH::code;
+0	|	OFPBMC_BAD_TYPE;
+1	|	OFPBMC_BAD_LEN;
+2	|	OFPBMC_BAD_TAG;
+3	|	OFPBMC_BAD_DL_ADDR_MASK;
+4	|	OFPBMC_BAD_NW_ADDR_MASK;
+5	|	OFPBMC_BAD_WILDCARDS;
+6	|	OFPBMC_BAD_FIELD;
+7	|	OFPBMC_BAD_VALUE;
+8	|	OFPBMC_BAD_MASK;
+9	|	OFPBMC_BAD_PREREQ;
+10	|	OFPBMC_DUP_FIELD;
+11	|	OFPBMC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::FLOW_MOD_FAILED::code;
+0	|	OFPFMFC_UNKNOWN;
+1	|	OFPFMFC_TABLE_FULL;
+2	|	OFPFMFC_BAD_TABLE_ID;
+3	|	OFPFMFC_OVERLAP;
+4	|	OFPFMFC_EPERM;
+5	|	OFPFMFC_BAD_TIMEOUT;
+6	|	OFPFMFC_BAD_COMMAND;
+7	|	OFPFMFC_BAD_FLAGS;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::GROUP_MOD_FAILED::code;
+0	|	OFPGMFC_GROUP_EXISTS;
+1	|	OFPGMFC_INVALID_GROUP;
+2	|	OFPGMFC_WEIGHT_UNSUPPORTED;
+3	|	OFPGMFC_OUT_OF_GROUPS;
+4	|	OFPGMFC_OUT_OF_BUCKETS;
+5	|	OFPGMFC_CHAINING_UNSUPPORTED;
+6	|	OFPGMFC_WATCH_UNSUPPORTED;
+7	|	OFPGMFC_LOOP;
+8	|	OFPGMFC_UNKNOWN_GROUP;
+9	|	OFPGMFC_CHAINED_GROUP;
+10	|	OFPGMFC_BAD_TYPE;
+11	|	OFPGMFC_BAD_COMMAND;
+12	|	OFPGMFC_BAD_BUCKET;
+13	|	OFPGMFC_BAD_WATCH;
+14	|	OFPGMFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_PORT_MOD_FAILED::code;
+0	|	OFPPMFC_BAD_PORT;
+1	|	OFPPMFC_BAD_HW_ADDR;
+2	|	OFPPMFC_BAD_CONFIG;
+3	|	OFPPMFC_BAD_ADVERTISE;
+4	|	OFPPMFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_TABLE_MOD_FAILED::code;
+0	|	OFPTMFC_BAD_TABLE;
+1	|	OFPTMFC_BAD_CONFIG;
+2	|	OFPTMFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_QUEUE_OP_FAILED::code;
+0	|	OFPQOFC_BAD_PORT;
+1	|	OFPQOFC_BAD_QUEUE;
+2	|	OFPQOFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_SWITCH_CONFIG_FAILED::code;
+0	|	OFPSCFC_BAD_FLAGS;
+1	|	OFPSCFC_BAD_LEN;
+2	|	OFPQCFC_EPERM;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_ROLE_REQUEST_FAILED::code;
+0	|	OFPRRFC_STALE;
+1	|	OFPRRFC_UNSUP;
+2	|	OFPRRFC_BAD_ROLE;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_METER_MOD_FAILED::code;
+0	|	OFPMMFC_UNKNOWN;
+1	|	OFPMMFC_METER_EXISTS;
+2	|	OFPMMFC_INVALID_METER;
+3	|	OFPMMFC_UNKNOWN_METER;
+4	|	OFPMMFC_BAD_COMMAND;
+5	|	OFPMMFC_BAD_FLAGS;
+6	|	OFPMMFC_BAD_RATE;
+7	|	OFPMMFC_BAD_BURST;
+8	|	OFPMMFC_BAD_BAND;
+9	|	OFPMMFC_BAD_BAND_VALUE;
+10	|	OFPMMFC_OUT_OF_METERS;
+11	|	OFPMMFC_OUT_OF_BANDS;
+
+str# OpenFlow::V3::Type::OFPT_ERROR::OFPET_TABLE_FEATURES_FAILED::code;
+0	|	OFPTFFC_BAD_TABLE;
+1	|	OFPTFFC_BAD_METADATA;
+2	|	OFPTFFC_BAD_TYPE;
+3	|	OFPTFFC_BAD_LEN;
+4	|	OFPTFFC_BAD_ARGUMENT;
+5	|	OFPTFFC_EPERM;
+
+str# OpenFlow::V3::Instruction::field;
+0	|	OFPAT_OUTPUT;
+11	|	OFPAT_COPY_TTL_OUT;
+12	|	OFPAT_COPY_TTL_IN;
+15	|	OFPAT_SET_MPLS_TTL;
+16	|	OFPAT_DEC_MPLS_TTL;
+17	|	OFPAT_PUSH_VLAN;
+18	|	OFPAT_POP_VLAN;
+19	|	OFPAT_PUSH_MPLS;
+20	|	OFPAT_POP_MPLS;
+21	|	OFPAT_SET_QUEUE;
+22	|	OFPAT_GROUP;
+23	|	OFPAT_SET_NW_TTL;
+24	|	OFPAT_DEC_NW_TTL;
+25	|	OFPAT_SET_FIELD;
+26	|	OFPAT_PUSH_PBB;
+27	|	OFPAT_POP_PBB;
+0xffff	|	OFPAT_EXPERIMENTER;
+
+str# OpenFlow::V3::Instruction::field::ldr;
+0	|	OpenFlow::V3::Instruction::OFPAT_OUTPUT;
+11	|	OpenFlow::V3::Instruction::OFPAT_COPY_TTL_OUT;
+12	|	OpenFlow::V3::Instruction::OFPAT_COPY_TTL_IN;
+15	|	OpenFlow::V3::Instruction::OFPAT_SET_MPLS_TTL;
+16	|	OpenFlow::V3::Instruction::OFPAT_DEC_MPLS_TTL;
+17	|	OpenFlow::V3::Instruction::OFPAT_PUSH_VLAN;
+18	|	OpenFlow::V3::Instruction::OFPAT_POP_VLAN;
+19	|	OpenFlow::V3::Instruction::OFPAT_PUSH_MPLS;
+20	|	OpenFlow::V3::Instruction::OFPAT_POP_MPLS;
+21	|	OpenFlow::V3::Instruction::OFPAT_SET_QUEUE;
+22	|	OpenFlow::V3::Instruction::OFPAT_GROUP;
+23	|	OpenFlow::V3::Instruction::OFPAT_SET_NW_TTL;
+24	|	OpenFlow::V3::Instruction::OFPAT_DEC_NW_TTL;
+25	|	OpenFlow::V3::Instruction::OFPAT_SET_FIELD;
+26	|	OpenFlow::V3::Instruction::OFPAT_PUSH_PBB;
+27	|	OpenFlow::V3::Instruction::OFPAT_POP_PBB;
+0xffff	|	OpenFlow::V3::Instruction::OFPAT_EXPERIMENTER;
+
+str# OpenFlow::V3::Match::OXM::class;
+0x0000	|	OFPXMC_NMX_0;
+0x0001	|	OFPXMC_NXM_1;
+0x8000	|	OFPXMC_OPENFLOW_BASIC;
+0xFFFF	|	OFPXMC_EXPERIMENTER;
+
+str# OpenFlow::V3::Match::OXM::field;
+0	|	OFPXMT_OFB_IN_PORT;
+1	|	OFPXMT_OFB_IN_PHY_PORT;
+2	|	OFPXMT_OFB_METADATA;
+3	|	OFPXMT_OFB_ETH_DST;
+4	|	OFPXMT_OFB_ETH_SRC;
+5	|	OFPXMT_OFB_ETH_TYPE;
+6	|	OFPXMT_OFB_VLAN_VID;
+7	|	OFPXMT_OFB_VLAN_PCP;
+8	|	OFPXMT_OFB_IP_DSCP;
+9	|	OFPXMT_OFB_IP_ECN;
+10	|	OFPXMT_OFB_IP_PROTO;
+11	|	OFPXMT_OFB_IPV4_SRC;
+12	|	OFPXMT_OFB_IPV4_DST;
+13	|	OFPXMT_OFB_TCP_SRC;
+14	|	OFPXMT_OFB_TCP_DST;
+15	|	OFPXMT_OFB_UDP_SRC;
+16	|	OFPXMT_OFB_UDP_DST;
+17	|	OFPXMT_OFB_SCTP_SRC;
+18	|	OFPXMT_OFB_SCTP_DST;
+19	|	OFPXMT_OFB_ICMPV4_TYPE;
+20	|	OFPXMT_OFB_ICMPV4_CODE;
+21	|	OFPXMT_OFB_ARP_OP;
+22	|	OFPXMT_OFB_ARP_SPA;
+23	|	OFPXMT_OFB_ARP_TPA;
+24	|	OFPXMT_OFB_ARP_SHA;
+25	|	OFPXMT_OFB_ARP_THA;
+26	|	OFPXMT_OFB_IPV6_SRC;
+27	|	OFPXMT_OFB_IPV6_DST;
+28	|	OFPXMT_OFB_IPV6_FLABEL;
+29	|	OFPXMT_OFB_ICMPV6_TYPE;
+30	|	OFPXMT_OFB_ICMPV6_CODE;
+31	|	OFPXMT_OFB_IPV6_ND_TARGET;
+32	|	OFPXMT_OFB_IPV6_ND_SLL;
+33	|	OFPXMT_OFB_IPV6_ND_TLL;
+34	|	OFPXMT_OFB_MPLS_LABEL;
+35	|	OFPXMT_OFB_MPLS_TC;
+36	|	OFPXMT_OFP_MPLS_BOS;
+37	|	OFPXMT_OFB_PBB_ISID;
+38	|	OFPXMT_OFB_TUNNEL_ID;
+39	|	OFPXMT_OFB_IPV6_EXTHDR;
+ 
+str# OpenFlow::V3::Match::OXM::field::Ldr;
+0	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IN_PORT;
+1	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IN_PHY_PORT;
+2	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_METADATA;
+3	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_DST;
+4	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_SRC;
+5	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ETH_TYPE;
+6	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_VLAN_VID;
+7	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_VLAN_PCP;
+8	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_DSCP;
+9	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_ECN;
+10	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IP_PROTO;
+11	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV4_SRC;
+12	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV4_DST;
+13	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TCP_SRC;
+14	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TCP_DST;
+15	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_UDP_SRC;
+16	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_UDP_DST;
+17	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_SCTP_SRC;
+18	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_SCTP_DST;
+19	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV4_TYPE;
+20	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV4_CODE;
+21	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_OP;
+22	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_SPA;
+23	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_TPA;
+24	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_SHA;
+25	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ARP_THA;
+26	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_SRC;
+27	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_DST;
+28	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_FLABEL;
+29	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV6_TYPE;
+30	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_ICMPV6_CODE;
+31	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TARGET;
+32	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_SLL;
+33	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TLL;
+34	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_MPLS_LABEL;
+35	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_MPLS_TC;
+36	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFP_MPLS_BOS;
+37	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_PBB_ISID;
+38	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_TUNNEL_ID;
+39	|	OpenFlow::V3::Match::OXM::field::OFPXMT_OFB_IPV6_EXTHDR;
+ 
+str# OpenFlow::V3::Matchtypes::LDR;
+0	|	OpenFlow::V3::Match::Standard;
+1	|	OpenFlow::V3::Match::OXM;
+
+str# OpenFlow::V3::commands;
+0	|	OFPFC_ADD;
+1	|	OFPFC_MODIFY;
+2	|	OFPFC_MODIFY_STRICT;
+3	|	OFPFC_DELETE;
+4	|	OFPFC_DELETE_STRICT;

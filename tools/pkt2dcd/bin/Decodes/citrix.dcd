@@ -1,0 +1,2742 @@
+// -----------------------------------------------------------------------------------------------
+// Citrix ICA Packet and Basic Encrypted Packet
+// use s[6],s[7]
+// modify g[1]~g[8], g[19]~g[25], g[41]
+// 9/20/2007
+// -----------------------------------------------------------------------------------------------
+
+str# IP::Ports_Str;
+	1494  |  Citrix_ICA;
+	1604  |  ICA::Browser;
+
+void Citrix_ICA;
+	GWRD 40000000 1;
+	if (g[1] > 0x4000)
+	{
+			ANDG 3FFF 1; 
+	}
+	BREM 0 3;
+	SUBG 1 83;
+	if (g[3] == 6)  // 4byte crc + 2 byte Length
+	{	
+			GLNG 40000000 1;
+			if (g[1] == 0x4)
+			{
+				CitrixICA::Header;
+			}
+			if (g[1] != 0x4)
+			{
+			TNXT -CitrixICA::Data::Header;
+			}
+	}
+	GLNG 40000000 1;
+	if (g[1] == 0x00040003)
+	{
+			TNXT -CitrixICA::Data::Header;
+			g[3] = 6;
+	}
+	if (g[1] == 0x00020002)
+	{
+			TNXT -CitrixICA::Data::Header;
+			g[3] = 6;
+	}
+	if (g[3] != 6)
+	{
+			CitrixICA::Header;
+	}
+}
+
+void CitrixICA::Header;
+	LABL 0 0 00 b1 Citrix ICA (Independent Computing Architechture);
+	g[21] = pw[0];
+	if (g[21] == 0x7F7F) 
+	{
+		HEX# 6 0 90 c2 ICA Detect String:;
+		LABL 0 0 0 14 ICA;
+		TRTS;
+	}
+
+	// check remain byte first here
+	g[21] = pb[0];
+	if (g[21] < 0x46) 
+	{
+		DBYT (0, g[21], 0xb0, 0xc2, "ICA Packet Type:");
+		CST# (0, g[21], 0 , 0x14, CitrixICA::PacketType_Str);
+		TSB#(0,g[21], 0, 0,CitrixICA::PacketType);
+	}
+	if (g[21] > 0x46)
+	{
+		DUMP 1 0 b0 c2 Compressed and/or Encrypted ICA:;
+	}
+
+	//  BREM 0 41 0 0;
+	//  if l[1] > 4
+	//  {
+	//  	CitrixICA::Header;
+	//  }
+
+	TRTS;
+
+str# CitrixICA::PacketType_Str;
+	0x00 | Packet Init Request;
+	0x01 | Packet Init Response;
+	0x02 | Packet Init Connect;
+	0x03 | Packet Callback;
+	0x04 | Packet Init Connect Response;
+	0x05 | Packet Terminate;
+	0x06 | Packet Redraw;
+	0x07 | Packet Stop Request;
+	0x08 | Packet Stop OK;
+	0x09 | Packet Redisplay;
+	0x0A | PACKET_KEYBOARD0;
+	0x0B | PACKET_KEYBOARD1;
+	0x0C | PACKET_KEYBOARD2;
+	0x0D | PACKET_MOUSE0;
+	0x0E | PACKET_MOUSE1;
+	0x0F | PACKET_MOUSE2;
+	0x10 | PACKET_CLEAR_SCREEN;
+	0x12 | PACKET_CLEAR_EOL;
+	0x14 | PACKET_RAW_WRITE0;
+	0x15 | PACKET_RAW_WRITE1;
+	0x16 | PACKET_RAW_WRITE2;
+	0x17 | PACKET_WRTCHARSTRATTR1;
+	0x18 | PACKET_WRTCHARSTRATTR2;
+	0x19 | PACKET_WRTNCELL1;
+	0x1A | PACKET_WRTNCELL2;
+	0x1B | PACKET_BEEP;
+	0x1C | PACKET_SETMOU_POSITION;
+	0x1D | PACKET_SETMOU_ATTR;
+	0x1E | PACKET_SETCUR_POSITION;
+	0x1F | PACKET_SETCUR_ROW;
+	0x20 | PACKET_SETCUR_COLUMN;
+	0x21 | PACKET_SETCUR_SIZE;
+	0x22 | PACKET_SCROLL_SCREEN;
+	0x23 | PACKET_SCROLLUP;
+	0x24 | PACKET_SCROLLDN;
+	0x25 | PACKET_SCROLLLF;
+	0x26 | PACKET_SCROLLRT;
+	0x27 | PACKET_SCROLLUP1;
+	0x28 | PACKET_SCROLLDN1;
+	0x29 | PACKET_SCROLLLF1;
+	0x2A | PACKET_SCROLLRT1;
+	0x2B | PACKET_SCROLLUP2;
+	0x2C | PACKET_SCROLLDN2;
+	0x2D | PACKET_SCROLLLF2;
+	0x2E | PACKET_SCROLLRT2;
+	0x2F | PACKET_VIRTUAL_WRITE0;
+	0x30 | PACKET_VIRTUAL_WRITE1;
+	0x31 | PACKET_VIRTUAL_WRITE2;
+	0x32 | PACKET_VIRTUAL_ACK;
+	0x33 | PACKET_SET_GRAPHICS;
+	0x34 | PACKET_SET_TEXT;
+	0x35 | PACKET_SET_GLOBAL_ATTR;
+	0x36 | PACKET_SET_VIDEO_MODE;
+	0x37 | PACKET_SET_LED;
+	0x38 | PACKET_VIRTUAL_FLUSH;
+	0x39 | PACKET_SOFT_KEYBOARD;
+	0x3A | PACKET_COMMAND_CACHE;
+	0x3B | PACKET_SET_CLIENT_DATA;
+	0x3C | PACKET_ALT_KEYBOARD2;
+	0x3D | PACKET_MOUSE_EXTENDED1;
+	0x3E | PACKET_MOUSE_EXTENDED2;
+	0x3F | PACKET_CHANNEL_MONITORING;
+	0x40 | PACKET_REDRAW_EXTENDED;
+	0x41 | PACKET_COOKIE;
+	0x42 | PACKET_KEYBOARD_XKEYSYM;
+	0x43 | PACKET_RESUME_VIRTUAL_WRITE;
+	0x44 | PACKET_WDCREDENTIALS;
+	0x45 | PACKET_MAXIMUM;
+
+str# CitrixICA::PacketType;
+	0x00 | CitrixICA::PACKET_INIT_REQUEST;
+	0x01 | CitrixICA::PACKET_INIT_RESPONSE;
+	0x02 | CitrixICA::PACKET_INIT_CONNECT;
+	0x03 | CitrixICA::PACKET_CALLBACK;
+	0x04 | CitrixICA::PACKET_INIT_CONNECT_RESPONSE;
+	0x05 | CitrixICA::PACKET_TERMINATE;
+	0x06 | CitrixICA::PACKET_REDRAW;
+	0x07 | CitrixICA::PACKET_STOP_REQUEST;
+	0x08 | CitrixICA::PACKET_STOP_OK;
+	0x09 | CitrixICA::PACKET_REDISPLAY;
+	0x0A | CitrixICA::PACKET_KEYBOARD0;
+	0x0B | CitrixICA::PACKET_KEYBOARD1;
+	0x0C | CitrixICA::PACKET_KEYBOARD2;
+	0x0D | CitrixICA::PACKET_MOUSE0;
+	0x0E | CitrixICA::PACKET_MOUSE1;
+	0x0F | CitrixICA::PACKET_MOUSE2;
+	0x10 | CitrixICA::PACKET_CLEAR_SCREEN;
+	0x12 | CitrixICA::PACKET_CLEAR_EOL;
+	0x14 | CitrixICA::PACKET_RAW_WRITE0;
+	0x15 | CitrixICA::PACKET_RAW_WRITE1;
+	0x16 | CitrixICA::PACKET_RAW_WRITE2;
+	0x17 | CitrixICA::PACKET_WRTCHARSTRATTR1;
+	0x18 | CitrixICA::PACKET_WRTCHARSTRATTR2;
+	0x19 | CitrixICA::PACKET_WRTNCELL1;
+	0x1A | CitrixICA::PACKET_WRTNCELL2;
+	0x1B | CitrixICA::PACKET_BEEP;
+	0x1C | CitrixICA::PACKET_SETMOU_POSITION;
+	0x1D | CitrixICA::PACKET_SETMOU_ATTR;
+	0x1E | CitrixICA::PACKET_SETCUR_POSITION;
+	0x1F | CitrixICA::PACKET_SETCUR_ROW;
+	0x20 | CitrixICA::PACKET_SETCUR_COLUMN;
+	0x21 | CitrixICA::PACKET_SETCUR_SIZE;
+	0x22 | CitrixICA::PACKET_SCROLL_SCREEN;
+	0x23 | CitrixICA::PACKET_SCROLLUP;
+	0x24 | CitrixICA::PACKET_SCROLLDN;
+	0x25 | CitrixICA::PACKET_SCROLLLF;
+	0x26 | CitrixICA::PACKET_SCROLLRT;
+	0x27 | CitrixICA::PACKET_SCROLLUP1;
+	0x28 | CitrixICA::PACKET_SCROLLDN1;
+	0x29 | CitrixICA::PACKET_SCROLLLF1;
+	0x2A | CitrixICA::PACKET_SCROLLRT1;
+	0x2B | CitrixICA::PACKET_SCROLLUP2;
+	0x2C | CitrixICA::PACKET_SCROLLDN2;
+	0x2D | CitrixICA::PACKET_SCROLLLF2;
+	0x2E | CitrixICA::PACKET_SCROLLRT2;
+	0x2F | CitrixICA::PACKET_VIRTUAL_WRITE0;
+	0x30 | CitrixICA::PACKET_VIRTUAL_WRITE1;
+	0x31 | CitrixICA::PACKET_VIRTUAL_WRITE2;
+	0x32 | CitrixICA::PACKET_VIRTUAL_ACK;
+	0x33 | CitrixICA::PACKET_SET_GRAPHICS;
+	0x34 | CitrixICA::PACKET_SET_TEXT;
+	0x35 | CitrixICA::PACKET_SET_GLOBAL_ATTR;
+	0x36 | CitrixICA::PACKET_SET_VIDEO_MODE;
+	0x37 | CitrixICA::PACKET_SET_LED;
+	0x38 | CitrixICA::PACKET_VIRTUAL_FLUSH;
+	0x39 | CitrixICA::PACKET_SOFT_KEYBOARD;
+	0x3A | CitrixICA::PACKET_COMMAND_CACHE;
+	0x3B | CitrixICA::PACKET_SET_CLIENT_DATA;
+	0x3C | CitrixICA::PACKET_ALT_KEYBOARD2;
+	0x3D | CitrixICA::PACKET_MOUSE_EXTENDED1;
+	0x3E | CitrixICA::PACKET_MOUSE_EXTENDED2;
+	0x3F | CitrixICA::PACKET_CHANNEL_MONITORING;
+	0x40 | CitrixICA::PACKET_REDRAW_EXTENDED;
+	0x41 | CitrixICA::PACKET_COOKIE;
+	0x42 | CitrixICA::PACKET_KEYBOARD_XKEYSYM;
+	0x43 | CitrixICA::PACKET_RESUME_VIRTUAL_WRITE;
+	0x44 | CitrixICA::PACKET_WDCREDENTIALS;
+	0x45 | CitrixICA::PACKET_MAXIMUM;
+
+//=====================================================
+// PACKET INIT REQUEST
+//=====================================================
+void CitrixICA::PACKET_INIT_REQUEST;
+	DWRD 40000000 0 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 41 b0 c2 Server Version Level:;
+	CST# 0 41 0 14 CitrixICA::PACKET_INIT_REQUEST::ServerLevel_Str;
+	if (l[1] > 6)
+	{
+		CitrixICA::CapabilityList;
+	}
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_REQUEST::ServerLevel_Str;
+	0 | SouthBeach (does not support encryption of UI_C2H structure);
+	1 | winframe 1.5;
+	2 | winframe 1.6;
+	3 | winframe 2.0;
+	4 | winframe 1.7;
+	5 | winframe/metaframe supporting WD-style compression;
+	6 | win/metaframe supporting Wd-style compression and Unicode;
+	7 | Supports a host capability list;
+
+//=====================================================
+// PACKET INIT RESPONSE
+//=====================================================
+void CitrixICA::PACKET_INIT_RESPONSE;
+	DWRD 40000000 0 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	BYTO 0 19;
+	LABL 0 0 0 c7 Packet Init Response;
+	DWRD 40000000 0 b0 c2 Module Length:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 17 b0 c2 Module Headers Left:;
+	DBYT 0 18 b0 c2 Module Class:;
+	//The g[0x18] will be used in 10 lines later
+	CST# 0 18 0 14 CitrixICA::ModuleClass_Str;
+	DBYT 0 16 b0 c2 Lowest Supported Version:;
+	DBYT 0 29 b0 c2 Highest Supported Version:;
+	if (g[0x18] == 3)
+	{
+		//Hack, use 3rd~5th char in file name to index type for VD
+		g[0x19] = pl[2];
+		g[0x19] >>= 8;
+	}
+	CHR# D 0 b0 c2 Module File Name:;
+	CHR# 9 0 b0 c2 Host Name:;
+	DWRD 0 0 b0 c2 Module Date:;
+	DWRD 0 0 b0 c2 Module Time:;
+	DLNG 40000000 0 b0 c2 Module File Size:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c8;
+	//From here to above 10 code lines, DO NOT modify g[0x18]
+	CST# 0 18 c0 c7 CitrixICA::ModuleClass_Str;
+	TSB# 0 18 0 0 CitrixICA::PACKET_INIT_RESPONSE::ModuleClass;
+	LABL 0 0 0 c8;
+	TRTS;
+
+
+void CitrixICA::PACKET_INIT_RESPONSE::UI;
+	LABL 0 0 0 c4 User Interface (Client To Host);
+	HLNG 40000000 41 b0 c9 Parameters:\Param:;
+	BST# 0 41 0 f4 CitrixICA::PACKET_INIT_RESPONSE::UI_Parameters_Str;
+	LABL 0 0 0 c8;
+
+	DLNG 40000000 0 b0 c2 Keyboard Layout:\Kbrd Layout:;
+	DBYT 0 41 b0 c2 Encryption Level:;
+	CEQU 1 41 0  14 Light Encryption;
+	HBYT 0 14 b0 c2 Encryption Seed\:Encryption Seed;
+
+	// prepare g[5] for 1st encryption byte
+	g[5] = g[20];
+	g[5] |= 0x43;
+	CitrixICA::XOR5_20;
+
+	DWRD 40000000 6 b0 c2 Domain Offset:;
+	LABL 0 0 b0 c2 Domain (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 6 b0 c2 User Name Offset:;
+	LABL 0 0 b0 c2 UserName (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 6 b0 c2 Password Offset:;
+	LABL 0 0 b0 c2 Password (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 6 b0 c2 Client Directory Offset:;
+	LABL 0 0 b0 c2 Client Directory (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 6 b0 c2 Working Directory Offset:;
+	LABL 0 0 b0 c2 Working Directory (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 6 b0 c2 Initial Program Offset:;
+	LABL 0 0 b0 c2 Initial Program (Decrypt):;
+	CitrixICA::Decrypt;
+	DBYT 0 0 b0 c2 Host LPT1:;
+	DBYT 0 0 b0 c2 Client Port1:;
+	DBYT 0 0 b0 c2 Host LPT2:;
+	DBYT 0 0 b0 c2 Client Port2:;
+	DBYT 0 0 b0 c2 Host LPT3:;
+	DBYT 0 0 b0 c2 Client Port3:;
+	DWRD 40000000 6 b0 c2 Cloud Name Offset:;
+	LABL 0 0 0 c2 Cloud Name (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 0 b0 c2 Client Build Number:;
+	DWRD 40000000 6 b0 c2 Client Name Offset:;
+	LABL 0 0 0 c2 Client Name (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 0 b0 c2 Fixed Length:;
+	LABL 0 0 0 14 Length of this structure (for encryption);
+	DWRD 40000000 16 b0 c2 Offset Length:;
+	LABL 0 0 0 14 Length of any offset bytes (for encryption);
+	DWRD 40000000 6 b0 c2 Client License Offset:;
+	LABL 0 0 b0 c2 Client License (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 40000000 0 b0 c2 Encoding Type:;
+	DWRD 40000000 0 b0 c2 Encoding Data:;
+	DWRD 40000000 0 b0 c2 Keyboard Type:;
+	DBYT 0 0 b0 c2 Keyboard SubType:;
+	DBYT 0 0 b0 c2 Num. of Func Keys:;
+	DWRD 4000000 6 b0 c2 IME File name offset:;
+	LABL 0 0 b0 c2 IME File name (Decrypt):;
+	CitrixICA::Decrypt;
+	DWRD 4000000 0 b0 c2 Keyboard SubType2;
+	DUMP 1 0 b0 c2 Block of Encrypted Data:;
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::ModuleClass;
+	0 | CitrixICA::PACKET_INIT_RESPONSE::UI;
+	1 | CitrixICA::PACKET_INIT_RESPONSE::UIX;
+	2 | CitrixICA::PACKET_INIT_RESPONSE::WD;
+	3 | CitrixICA::PACKET_INIT_RESPONSE::VD;
+	4 | CitrixICA::PACKET_INIT_RESPONSE::PD;
+	5 | CitrixICA::PACKET_INIT_RESPONSE::TD;
+	6 | CitrixICA::PACKET_INIT_RESPONSE::NR;
+	7 | CitrixICA::PACKET_INIT_RESPONSE::NE;
+	8 | CitrixICA::PACKET_INIT_RESPONSE::SC;
+	9 | CitrixICA::PACKET_INIT_RESPONSE::SD;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::UI_Parameters_Str;
+	6 | ........ ........ ........ .1......  Client can send flying windows keys through;
+		........ ........ ........ .0......  Client can not send flying windows keys through;
+	5 | ........ ........ ........ ..1.....  Client can send flying windows keys through;
+	    ........ ........ ........ ..0.....  Client can not send flying windows keys through;
+	4 | ........ ........ ........ ...1....  Client full seamless is enabled;
+	    ........ ........ ........ ...0....  Client full seamless is disabled;
+	3 | ........ ........ ........ ....1...  Force server to prompt for password;
+		........ ........ ........ ....0...  Don't force server to prompt for password;
+	2 | ........ ........ ........ .....1..  Disable ctrl-alt-del on host for this client;
+		........ ........ ........ .....0..  Enable ctrl-alt-del on host for this client;
+	1 | ........ ........ ........ ......1.  Request to reconnect to existing session;
+		........ ........ ........ ......0.  Don't request to reconnect to existing session;
+	0 | ........ ........ ........ .......1  Don't send sound to client;
+		........ ........ ........ .......0  Send sound to client;
+	
+void CitrixICA::PACKET_INIT_RESPONSE::UIX;
+	LABL 0 0 0 c4 User Interface Extention (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::WD;
+	LABL 0 0 0 c4 WinStation Driver (Client To Host);
+	DLNG 40000000 0 e0 c2 Serial Number:;
+	//DUMP 6 0 e0 c2 Current Date:;
+	LABL 0 0 0 c9 Current Date:\Current Date;
+	DBYT 0 0 e0 c2 Day:;
+	DBYT 0 0 e0 c2 Month:;
+	DLNG 40000000 0 e0 c2 Year:;
+	LABL 0 0 0 c8;
+	//DLNG 40000000 0 e0 c2 Current Time:;
+	LABL 0 0 0 c9 Current Time:\Current Time;
+	DBYT 0 0 e0 c2 Hour:;
+	DBYT 0 0 e0 c2 Minute:;
+	DBYT 0 0 e0 c2 Second:;
+	DBYT 0 0 e0 c2 Hsedond:;
+	LABL 0 0 0 c8;
+	BWRD 40000000 41 e0 c9 Parameters:;
+	BST# 0 41 0 f4 CitrixICA::PACKET_INIT_RESPONSE::WDPara_Str;
+	LABL 0 0 0 c8;
+	DWRD 40000000 18 e0 c2 Number of Supported Text Modes:;
+	DWRD 40000000 0 e0 c2 Text Mode Structure Array Offset:;
+	DWRD 40000000 0 e0 c2 Maximum Size of One ICA Packet:;
+	DWRD 40000000 0 e0 c2 Number of Output Buffers on Host:;
+	DWRD 40000000 0 e0 c2 Number of Output Buffers on Client:;
+	DWRD 40000000 0 e0 c2 Host Output Buffer Write Delay:;
+	LABL 0 0 0 14 ms;
+	DWRD 40000000 0 e0 c2 Client Output Buffer Write Delay:;
+	LABL 0 0 0 14 ms;
+	DWRD 40000000 0 e0 c2 Client Software Product Identification:;
+	DLNG 40000000 0 e0 c2 Client Software Serial Number:;
+	DWRD 40000000 17 e0 c2 Number of WDVCBIND Structures in Array:;
+	DWRD 40000000 0 e0 c2 VCBind Structure Array Offset:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 0 e0 c2 Reduction Buffer Size Requested:;
+	DBYT 0 0 e0 c2 Expansion Buffer Size Requested:;
+	DWRD 40000000 0 e0 c2 Maximum Host to Client Expanded Packet Size:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 e0 c2 Reducer Version:;
+	DWRD 40000000 0 e0 c2 Length of the Capability List:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 e0 c2 Capability List Offset:;
+	LABL 0 0 0 14 bytes;
+
+	LABL 0 0 0 c7 WD Text Modes;
+	while (g[24] > 0)
+	{
+		DBYT 0 0 b0 c9 Text Mode:;
+		DBYT 0 0 b0 c2 Flag:;
+		DWRD 40000000 0 b0 c2 Columns:;
+		DWRD 40000000 0 b0 c2 Rows:;
+		DWRD 40000000 0 b0 c2 X Resolution:;
+		DWRD 40000000 0 b0 c2 Y Resolution:;
+		DBYT 40000000 0 b0 c2 X Font Size:;
+		DBYT 40000000 0 b0 c2 Y Font Size:;
+		g[24] -= 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+
+	LABL 0 0 0 c7 Virtual Channel Bind Sturcture Array;
+	g[22] = 0;
+	while (g[23] > 0)
+	{
+		g[22] += 1;
+		DGLB 0 16 b0 c9 VC Bind Structure:;
+		CHR# 8 0 b0 c2 Virtual Name:;
+		DWRD 40000000 18 b0 c2 Virtual Class:;
+		CST# 0 18 0 14 CitrixICA::PACKET_INIT_RESPONSE::VirtualClass_Str;
+		g[23] -= 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	//Display Capability List Header;
+	CitrixICA::CapabilityList;
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::WDPara_Str;
+	5 | ........ ........ ........ ..1..... This is a pass-through session;
+		........ ........ ........ ..0..... This is not a pass-through session;
+	4 | ........ ........ ........ ...1.... This is an auto reconnect attempt;
+		........ ........ ........ ...0.... This is not an auto reconnect attempt;
+	3 | ........ ........ ........ ....1... Windows key supported by server;
+		........ ........ ........ ....0... No windows key supported by server;
+	2 | ........ ........ ........ .....1.. Client will detect double clicks (ver 6);
+		........ ........ ........ .....0.. Client will not detect double clicks (ver 6);
+	1 | ........ ........ ........ ......1. Mouse is available;
+		........ ........ ........ ......0. Mouse is not available;
+	0 | ........ ........ ........ .......1 Graphics are supported;
+		........ ........ ........ .......0 Graphics are not supported;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::VirtualClass_Str;
+	1  | Printer Mapping;
+	2  | Printer Mapping;
+	3  | Printer Mapping;
+	4  | Printer Mapping - Spooling;
+	5  | Printer Mapping;
+	6  | Printer Mapping;
+	7  | Printer Mapping;
+	8  | Client COM Mapping;
+	9  | Remote Window Data - Thinwire;
+	10 | Client Drive Mapping;
+	12 | Client Management - Auto Client Update;
+	13 | License Management;
+	15 | Seamless Windows Interface - Thinwire;
+	17 | Clipboard;
+	18 | Speed Screen 3 (SS3) Font and Keybard layout;
+	19 | Smart Card;
+	20 | Speed Screen 3 (SS3) Control Channel;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VD;
+	LABL 0 0 0 c4 Virtual Driver (Client To Host);
+	HLNG 0 41 b0 c9 Channel Mask:;
+	LABL 0 0 0 c9 Channels:;
+	//LABL 0 0 0 14 Virtual Channel(s):;
+	MOVE 0 42;
+	MOVE 0 44;
+	while (l[4] < 32)
+	{
+		l[3] = l[1];
+		l[3] &= l[2];
+		if (l[3] > 0)
+		{
+			LABL 0 0 b0 c2 Channel ;
+			SUBG 1 44;
+			DGLB 0 44 2 22;
+			ADDG 1 44;
+			LABL 0 0  2 2:;
+			BGLB 0 43 a0 20;
+		}
+		SHFL 1 42;
+		if (l[2] == 0)
+		{
+			l[2] = 1;
+		}
+		ADDG 1 44;
+	}
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c8;
+	//BST# 0 41 0 14 CitrixICA::PACKET_INIT_RESPONSE::ChannelMask_Str;
+	DBYT 0 0 b0 c2 Bandwidth Quota:;
+	LABL 0 0 0 14 % of Total Bandwidth;
+	DBYT 0 18 b0 c2 Type of Flow Control;
+	CST# 0 18 0 14 CitrixICA::PACKET_INIT_RESPONSE::VirtualFlow_Str;
+	DWRD 0 0 b0 c2 Padding Data:;
+	if (g[24] == 0) //None
+	{
+		DLNG 40000000 0 b0 c2 Padding Data:;
+	}
+	if (g[24] == 1) //Ack
+	{
+		DWRD 40000000 0 b0 c2 Maximum Window Size:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 b0 c2 Window Size;
+		LABL 0 0 0 14 bytes;
+	}
+	if (g[24] == 2) //Delay
+	{
+		DLNG 40000000 0 b0 c2 Delay Time:;
+		LABL 0 0 0 14 ms;
+	}
+	if (g[24] == 3) //Cdm
+	{
+		DWRD 40000000 0 b0 c2 Maximum Window Size:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 b0 c2 Maximum Byte Count;
+		LABL 0 0 0 14 bytes;
+	}
+	LABL 0 0 0 c8;
+	//use g[0x19] to parse VD deeper
+	TSB# 0 19 0 14 CitrixICA::PACKET_INIT_RESPONSE::VirtualStruct_Entries;
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::ChannelMask_Str;
+	0  | 0;
+	1  | 1;
+	2  | 2;
+	3  | 3;
+	4  | 4;
+	5  | 5;
+	6  | 6;
+	7  | 7;
+	8  | 8;
+	9  | 9;
+	10 | 10;
+	11 | 11;
+	12 | 12;
+	13 | 13;
+	14 | 14;
+	15 | 15;
+	16 | 16;
+	17 | 17;
+	18 | 18;
+	19 | 19;
+	20 | 20;
+	21 | 21;
+	22 | 22;
+	23 | 23;
+	24 | 24;
+	25 | 25;
+	26 | 26;
+	27 | 27;
+	28 | 28;
+	29 | 29;
+	30 | 30;
+	31 | 31;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::VirtualFlow_Str;
+	0 | Virtual Flow None;
+	1 | Virtual Flow Ack;
+	2 | Virtual Flow Delay;
+	3 | Virtual Flow Cdm;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::VirtualStruct_Entries;
+	0x545733 | CitrixICA::PACKET_INIT_RESPONSE::VDTW_C2H;
+	0x747733 | CitrixICA::PACKET_INIT_RESPONSE::VDTW_C2H;
+	0x43444d | CitrixICA::PACKET_INIT_RESPONSE::VDCDM_C2H;
+	0x63646d | CitrixICA::PACKET_INIT_RESPONSE::VDCDM_C2H;
+	0x43504d | CitrixICA::PACKET_INIT_RESPONSE::VDCPM_C2H;
+	0x63706d | CitrixICA::PACKET_INIT_RESPONSE::VDCPM_C2H;
+	0x53504c | CitrixICA::PACKET_INIT_RESPONSE::VDSPL_C2H;
+	0x73706c | CitrixICA::PACKET_INIT_RESPONSE::VDSPL_C2H;
+	0x434c49 | CitrixICA::PACKET_INIT_RESPONSE::VDCLIP_C2H;
+	0x636c69 | CitrixICA::PACKET_INIT_RESPONSE::VDCLIP_C2H;
+	0x434f4d | CitrixICA::PACKET_INIT_RESPONSE::VDCOM_C2H;
+	0x636f6d | CitrixICA::PACKET_INIT_RESPONSE::VDCOM_C2H;
+	0x434d4e | CitrixICA::PACKET_INIT_RESPONSE::VDCMN_C2H;
+	0x636d6e | CitrixICA::PACKET_INIT_RESPONSE::VDCMN_C2H;
+	0x4c4943 | CitrixICA::PACKET_INIT_RESPONSE::VDLICN_C2H;
+	0x6c6963 | CitrixICA::PACKET_INIT_RESPONSE::VDLICN_C2H;
+	0x545749 | CitrixICA::PACKET_INIT_RESPONSE::VDTWIN_C2H;
+	0x747769 | CitrixICA::PACKET_INIT_RESPONSE::VDTWIN_C2H;
+	0x464f4e | CitrixICA::PACKET_INIT_RESPONSE::VDFON_C2H;
+	0x666f6e | CitrixICA::PACKET_INIT_RESPONSE::VDFON_C2H;
+	0x534341 | CitrixICA::PACKET_INIT_RESPONSE::VDSCARDN_C2H;
+	0x736361 | CitrixICA::PACKET_INIT_RESPONSE::VDSCARDN_C2H;
+	0x43544c | CitrixICA::PACKET_INIT_RESPONSE::VDCTLN_C2H;
+	0x63746c | CitrixICA::PACKET_INIT_RESPONSE::VDCTLN_C2H;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDTW_C2H;
+	LABL 0 0 0 c7 VDTW_C2H;
+	LABL 0 0 0 c4 Virtual Driver Thinwirel Virtual Channel (Client To Host);
+	LABL 0 0 0 c9 Thin Wire Pref;
+	CitrixICA::PACKET_INIT_RESPONSE::THINWIRECAPS;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Thin Wire Caps;
+	CitrixICA::PACKET_INIT_RESPONSE::THINWIRECAPS;
+	LABL 0 0 0 c8;
+	MOVE 1 41;
+	while (l[1] < 10)
+	{
+		LABL 0 0 0 c9 ScreenRes ;
+		DGLB 0 41 02 0;
+		DWRD 40000000 0 b0 c2 HRes:;
+		DWRD 40000000 0 b0 c2 VRes:;
+		LABL 0 0 0 c8;
+		ADDG 1 41;
+	}
+	HLNG 40000000 0 b0 c2 Cache Tiny:;
+	HLNG 40000000 0 b0 c2 Cache Low Memory:;
+	HLNG 40000000 0 b0 c2 Cache Xms:;
+	HLNG 40000000 0 b0 c2 Cache DASD:;
+	DLNG 40000000 0 b0 c2 Dim Cache Size:;
+	DLNG 40000000 0 b0 c2 Dim Bitmap Min:;
+	DLNG 40000000 0 b0 c2 Dim Signature Level:;
+	DLNG 40000000 0 b0 c2 Dim File Sys Overhead:;
+	DBYT 0 0 b0 c2 TW2 Cache Power:;
+	DBYT 0 0 b0 c2 Padding Data:;
+	DBYT 0 0 b0 c2 TW2 Cache Handle Power:;
+	DBYT 0 0 b0 c2 Padding Data:;
+	DLNG 40000000 0 b0 c2 TW2 Max CacheObj Size:;
+	DLNG 40000000 0 b0 c2 TW2 Min Disk CacheObj Size:;
+	DWRD 40000000 0 b0 c2 Capability List Length:;
+	DWRD 40000000 0 b0 c2 Capability List:;
+	//Display Capability List Header;
+	CitrixICA::CapabilityList;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::THINWIRECAPS;
+	DBYT 0 0 b0 c2 Version:;
+	LABL 0 0 0 14 connect version used by host;
+	DBYT 0 0 b0 c2 Padding Data:;
+	HWRD 40000000 0 b0 c2 Small Cache:;
+	LABL 0 0 0 14 must be divisible by 32 (32K max);
+	HLNG 40000000 0 b0 c2 Large Cache:;
+	LABL 0 0 0 14 must be divisible by 2K (8M max);
+	HLNG 40000000 41 b0 c9 Graphics Caps:;
+	BST# 0 41 0 f4 CitrixICA::PACKET_INIT_RESPONSE::GraphicsCapsFlag_Str;
+	LABL 0 0 0 c8;
+	HWRD 40000000 41 b0 c9 Color Caps:;
+	BST# 0 41 0 f4 CitrixICA::PACKET_INIT_RESPONSE::ColorCapsFlag_Str;
+	LABL 0 0 0 c8;
+	DWRD 40000000 0 b0 c2 Padding Data:;
+	DWRD 40000000 0 b0 c2 Res Caps Off:;
+	DWRD 40000000 0 b0 c2 Res Caps Cnts:;
+	LABL 0 0 0 c9 ScreenRes;
+	DWRD 40000000 0 b0 c2 HRes:;
+	DWRD 40000000 0 b0 c2 VRes:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::GraphicsCapsFlag_Str;
+	9  | ........ ........ ......1. ........ Save screen 1 byte per pixel supported;
+		 ........ ........ ......0. ........ Save screen 1 byte per pixel not supported;
+	8  | ........ ........ .......1 ........ Resolution variable supported;
+	     ........ ........ .......0 ........ Resolution variable not supported;
+	7  | ........ ........ ........ 1....... ROP4 Bitblt supported;
+	     ........ ........ ........ 0....... ROP4 Bitblt not supported;
+	6  | ........ ........ ........ .1...... BMPs precached supported;
+	     ........ ........ ........ .0...... BMPs precached not supported;
+	5  | ........ ........ ........ ..1..... SS BMP file supported;
+	     ........ ........ ........ ..0..... SS BMP file not supported;
+	4  | ........ ........ ........ ...1.... Brush GT 8x8 supported;
+	     ........ ........ ........ ...0.... Brush GT 8x8 not supported;
+	3  | ........ ........ ........ ....1... PTRS GT 32x32 supported;
+	     ........ ........ ........ ....0... PTRS GT 32x32 not supported;
+	2  | ........ ........ ........ .....1.. PTRS animated supported;
+	     ........ ........ ........ .....0.. PTRS animated not supported;
+	1  | ........ ........ ........ ......1. Complex curves fill supported;
+	     ........ ........ ........ ......0. Complex curves fill not supported;
+	0  | ........ ........ ........ .......1 Complex curves supported;
+	     ........ ........ ........ .......0 Complex curves not supported;
+	
+str# CitrixICA::PACKET_INIT_RESPONSE::ColorCapsFlag_Str;
+	3  | ........ ....1... 16M colors (24-bit) supported;
+	     ........ ....0... 16M colors (24-bit) not supported;
+	2  | ........ .....1.. 64K colors (16-bit) supported;
+	     ........ .....0.. 64K colors (16-bit) not supported;
+	1  | ........ ......1. 256 colors (8-bit) supported;
+		 ........ ......0. 256 colors (8-bit) not supported;
+	0  | ........ .......1 16 colors (4-bit) supported;
+		 ........ .......0 16 colors (4-bit) not supported;	
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCDM_C2H;
+	LABL 0 0 0 c7 VDCDM_C2H;
+	LABL 0 0 0 c4 Virtual Driver Client Dirvers Management (Client To Host);
+	DWRD 40000000 0 b0 c2 Client Drive Count:;
+	DWRD 40000000 0 b0 c2 Offset of Client Drives:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 b0 c2 Cache Flags:;
+	DWRD 40000000 0 b0 c2 Cache Timeout0:;
+	DWRD 40000000 0 b0 c2 Cache Timeout1:;
+	DWRD 40000000 0 b0 c2 Cache Transfer Size:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 b0 c2 Offset of Client Drives2:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 b0 c2 Encoding Type:;
+	DWRD 40000000 0 b0 c2 Encoding Data:;
+	LABL 0 0 0 C9 Client Driver 1;
+	CitrixICA::PACKET_INIT_RESPONSE::VDClientDrives;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 C9 Client Driver 2;
+	CitrixICA::PACKET_INIT_RESPONSE::VDClientDrives;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDClientDrives;
+	HBYT 0 41 5 5;
+	//LABL 0 0 0 c2 Driver Letter:;
+	CST# 0 41 0 70 CitrixICA::ASCII;
+	DBYT 0 0 b0 c2 Padding Data:;
+	DWRD 40000000 41 b0 c9 Flags:;
+	BST# 0 41 0 f4 CitrixICA::PACKET_INIT_RESPONSE::VDClientDrivesFlag_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::VDClientDrivesFlag_Str;
+	5  | ........ ..1..... Autoconnect;
+	     ........ ..0..... Not autoconnect;
+	4  | ........ ...1.... RAM Disk;
+	     ........ ...0.... Not RAM Disk;
+	3  | ........ ....1... CD-ROM;
+	     ........ ....0... Not CD-ROM;
+	2  | ........ .....1.. Remote;
+	     ........ .....0.. Local;
+	1  | ........ ......1. Fixed;
+	     ........ ......0. Not fixed;
+	0  | ........ .......1 Removeable;
+	     ........ .......0 Not removeable;	
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCPM_C2H;
+	LABL 0 0 0 c7 VDCPM_C2H;
+	LABL 0 0 0 c4 Virtual Driver Client Ports Management (Client To Host);
+	HBYT 0 0 b0 c2 LPT Mask:;
+	HBYT 0 0 b0 c2 COM Mask:;
+	if (g[41] >= 2)
+	{
+		DWRD 40000000 0 b0 c2 Encoding Type:;
+		DWRD 40000000 0 b0 c2 Encoding Data:;
+		if (g[41] >= 3)
+		{
+			DWRD 40000000 0 b0 c2 Capabilities;
+		}
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDSPL_C2H;
+	LABL 0 0 0 c7 VDCPM_C2H;
+	LABL 0 0 0 c4 Virtual Driver Queue-Based Printer (Client To Host);
+	HBYT 0 0 b0 c2 LPT Mask:;
+	HBYT 0 0 b0 c2 COM Mask:;
+	if (g[41] >= 2)
+	{
+		DWRD 40000000 0 b0 c2 Encoding Type:;
+		DWRD 40000000 0 b0 c2 Encoding Data:;
+		if (g[41] >= 3)
+		{
+			DWRD 40000000 0 b0 c2 Capabilities;
+		}
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCLIP_C2H;
+	LABL 0 0 0 c7 VDCLIP_C2H;
+	LABL 0 0 0 c4 Virtual Driver Client Clipboard Mapping Virtual Channel (Client To Host);
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCOM_C2H;
+	LABL 0 0 0 c7 VDCPM_C2H;
+	LABL 0 0 0 c4 Virtual Driver Client COM Virtual Channel (Client To Host);
+	HBYT 0 0 b0 c2 LPT Mask:;
+	HBYT 0 0 b0 c2 COM Mask:;
+	if (g[41] >= 2)
+	{
+		DWRD 40000000 0 b0 c2 Encoding Type:;
+		DWRD 40000000 0 b0 c2 Encoding Data:;
+		if (g[41] >= 3)
+		{
+			DWRD 40000000 0 b0 c2 Capabilities;
+		}
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCMN_C2H;
+	LABL 0 0 0 c7 VDCMN_C2H;
+	LABL 0 0 0 c4 Virtual Driver Client Mnanagement Virtual Channel (Client To Host);
+	DWRD 40000000 0 b0 c2 Maximum Data Size:;
+	LABL 0 0 0 14 bytes;
+	DWRD 40000000 0 b0 c2 Offset of Classes:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 41 b0 c2 Class Counter:;
+	if (l[1] > 0)
+	{
+		LABL 0 0 0 c9 Supported Classes:;
+		while (l[1] > 0)
+		{
+			DBYT 0 42 b0 c2 Class Value:;
+			l[1] -= 1;
+		}
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDLICN_C2H;
+	LABL 0 0 0 c7 VDLICN_C2H;
+	LABL 0 0 0 c4 Virtual Driver LICN (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDTWIN_C2H;
+	LABL 0 0 0 c7 VDTWIN_C2H;
+	LABL 0 0 0 c4 Virtual Driver TWIN (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDFON_C2H;
+	LABL 0 0 0 c7 VDFON_C2H;
+	LABL 0 0 0 c4 Virtual Driver VDFON (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDSCARDN_C2H;
+	LABL 0 0 0 c7 VDSCARDN_C2H;
+	LABL 0 0 0 c4 Virtual Driver Smart Card (SC) Virtual Channel (Client To Host);
+	DWRD 40000000 0 b0 c2 Maximum Data Size:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::VDCTLN_C2H;
+	LABL 0 0 0 c7 VDCTLN_C2H;
+	LABL 0 0 0 c4 Virtual Driver Control Channel (Client To Host);
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::PD;
+	LABL 0 0 0 c4 Protocol Driver (Client To Host);
+	DBYT 0 41 b0 c2 PDClass:;
+	CST# 0 41 0 14 CitrixICA::PACKET_INIT_RESPONSE::PDClass_Str;
+	DUMP 3 0 b0 c2 Padding Data:;
+	LABL 0 0 0 c8;
+	if (l[1] == 7)
+	{
+		LABL 0 0 0 c7 PDMODEM_C2H;
+		LABL 0 0 0 c4 Protocol Driver Modem (Client To Host);
+		DWRD 40000000 0 b0 c2 oModemName:;
+		LABL 0 0 0 c8;
+	}
+	if (l[1] == 9)
+	{
+	LABL 0 0 0 c7 PDFRAME_C2H;
+	LABL 0 0 0 c4 Protocol Driver Frame (Client To Host);
+	LABL 0 0 0 c8;
+	}
+	if (l[1] == 10)
+	{
+		LABL 0 0 0 c7 PDRELIABLE_C2H;
+		LABL 0 0 0 c4 Protocol Driver Reliable (Client To Host);
+		DLNG 40000000 0 b0 c2 Maximum Retry Time:;
+		LABL 0 0 0 14 ms;
+		DLNG 40000000 0 b0 c2 Retransmit Time Delta;
+		LABL 0 0 0 14 ms;
+		DLNG 40000000 0 b0 c2 Delayed Ack Time;
+		LABL 0 0 0 14 ms;
+		LABL 0 0 0 c8;
+	}
+	if (l[1] == 11)
+	{
+		LABL 0 0 0 c7 PDCRYPT1_C2H;
+		LABL 0 0 0 c4 Protocol Driver Encryption (Client To Host);
+		DBYT 40000000 0 b0 c2 Encryption Level:;
+		LABL 0 0 0 c8;
+	}
+	if (l[1] == 12)
+	{
+		LABL 0 0 0 c7 PDCOMPRESS_C2H;
+		LABL 0 0 0 c4 Protocol Driver Compress (Client To Host);
+		DWRD 40000000 0 b0 c2 Maximum Compress Disable:;
+		DWRD 40000000 0 b0 c2 Padding Data:;
+		LABL 0 0 0 c8;
+	}
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::PDClass_Str;
+	0  | PdNone;
+	1  | PdConsole;
+	2  | PdNetwork;
+	3  | PdAsync;
+	4  | PdOemTransport;
+	5  | PdISDN;
+	6  | PdX25;
+	7  | PdModem;
+	8  | PdOemConnect;
+	9  | PdFrame;
+	10 | PdReliable;
+	11 | PdEncrypt;
+	12 | PdCompress;
+	13 | PdTelnet;
+	14 | PdOemFilter;
+	15 | PdNasi;
+	16 | PdTapi;
+	17 | PdReserved1;
+	18 | PdReserved2;
+	19 | PdReserved3;
+	20 | PdClass_Maximum;
+
+void CitrixICA::PACKET_INIT_RESPONSE::TD;
+	LABL 0 0 0 c4 Transport Driver (Client To Host);
+	DWRD 40000000 0 b0 c2 Length of Output Buffers:;
+	DWRD 40000000 2 b0 c2 Client Address Famility:;
+	CST# 0 2 0 14 CitrixICA::PACKET_INIT_RESPONSE::ClientAddressFamility_Str;
+	INCR 2;
+	if (g[2] == 2)
+	{
+		g[1] = pb[1];
+		IPLG 0 1 b0 c2 Client Address:;
+		DUMP e 0 b0 c2 Client Address Padding:;
+	}
+	if (g[2] != 2)
+	{
+		DUMP 14 0 b0 c2 Client Address:;
+	}
+	TRTS;
+
+str# CitrixICA::PACKET_INIT_RESPONSE::ClientAddressFamility_Str;
+	0  | Unspecified;
+	1  | Local to host (pipes, portals);
+	2  | Internetwork: UDP, TCP, etc.;
+	3  | Arpanet imp addresses;
+	4  | PUP protocols: e.g. BSP;
+	5  | MIT CHAOS protocols;
+	6  | IPX and SPX or XEROX NS protocols;
+	7  | ISO protocols;
+	8  | European computer manufacturers;
+	9  | Datakit protocols;
+	10 | CCITT protocols, X.25 etc;
+	11 | IBM SNA;
+	12 | DECnet;
+	13 | Direct data link interface;
+	14 | LAT;
+	15 | NSC Hyperchannel;
+	16 | AppleTalk;
+	17 | NetBios-style addresses;
+
+void CitrixICA::PACKET_INIT_RESPONSE::NR;
+	LABL 0 0 0 c4 Name Resolver (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::NE;
+	LABL 0 0 0 c4 Scripting (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::SC;
+	LABL 0 0 0 c4 Name Enumerator (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_RESPONSE::SD;
+	LABL 0 0 0 c4 Sub Driver (Client To Host);
+	DUMP 1 0 b0 c2 Block Data:;
+	TRTS;
+
+//=====================================================
+// PACKET INIT CONNECT
+//=====================================================
+void CitrixICA::PACKET_INIT_CONNECT;
+	DWRD 40000000 0 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	BYTO 0 19;
+	LABL 0 0 b0 c7 Packet Init Connect;
+	DWRD 40000000 0 b0 c2 Module Length:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 17 b0 c2 Module Headers Left:;
+	DBYT 0 18 b0 c2 Module Class:;
+	// The g[0x18] will be used in 10 lines later
+	CST# 0 18 0 14 CitrixICA::ModuleClass_Str;
+	DBYT 0 16 b0 c2 Lowest Supported Version:;
+	DBYT 0 29 b0 c2 Highest Supported Version:;
+	DBYT 0 0 b0 c2 Connect Version Level:;
+	DBYT 0 0 b0 c2 Padding Data:;
+	LABL 0 0 0 c8;
+	// From here to above 10 code lines, DO NOT modify g[0x18]
+	CST# 0 18 c0 c7 CitrixICA::ModuleClass_Str;
+	if (g[24] == 2) //Winstation Driver
+	{
+		DWRD 40000000 0 e0 c2 ICA Buffer Length:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 e0 c2 Number of Output Buffers on Host:;
+		DWRD 40000000 0 e0 c2 Number of Output Buffers on Client:;
+		DWRD 40000000 0 e0 c2 Host Output Buffer Write Delay:;
+		LABL 0 0 0 14 ms;
+		DWRD 40000000 0 e0 c2 Client Output Buffer Write Delay:;
+		LABL 0 0 0 14 ms;
+		DWRD 40000000 0 e0 c2 Application Server Name Offset:;
+		DLNG 40000000 0 e0 c2 OEM Identification;
+		DWRD 40000000 16 e0 c2 ICA Winstation Driver Flags:;
+		if (g[22] == 1)
+		{
+			LABL 0 0 0 14 The Server has been secured;
+		}
+		DBYT 0 0 e0 c2 Client to Host Power of 2 agreed:;
+		DBYT 0 0 e0 c2 Host to Client Power of 2 agreed:;
+		DWRD 40000000 0 e0 c2 Maximum Expanded Packet Size:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 41 e0 c2 Reducer Version:;
+		s[7] = l[1]; //reducer
+		DWRD 40000000 0 e0 c2 Capability List Length:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 e0 c2 Capability List Offset:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 e0 c2 CodePage:;
+		//Display Capability Header;
+		CitrixICA::CapabilityList;
+		LABL 0 0 0 c8;
+	}
+	DUMP 1 0 b0 c2 Block Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+//=====================================================
+// OTHER PACKET
+//=====================================================
+
+void CitrixICA::PACKET_CALLBACK;
+	DBYT 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	if (l[1] > 0)
+	{
+		LABL 0 0 0 c7 Packet CallBack;
+		DUMP 0 41 b0 c2 Block Data:;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_INIT_CONNECT_RESPONSE;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	if (l[1] > 0)
+	{
+		LABL 0 0 0 c7 Packet Init Connect Response;
+		DUMP 0 41 b0 c2 Block Data:;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_TERMINATE;
+	DBYT 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Terminate;
+	DBYT 0 42 b0 c2 Command Byte:;
+	CST# 0 42 0 14 CitrixICA::PACKET_TERMINATE::Command_Str;
+	l[1] -= 1;
+	if (l[1] > 0)
+	{
+		DUMP 0 41 b0 c2 Block Data:;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_TERMINATE::Command_Str;
+	0 | TERMINATE_DISCONNECT;
+	1 | TERMINATE_LOGOFF;
+	2 | TERMINATE_ACK;
+
+void CitrixICA::PACKET_REDRAW;
+  DWRD 40000000 41 b0 c2 Length:;
+  LABL 0 0 0 14 bytes;
+  LABL 0 0 0 c7 Packet Redraw;
+  l[2] = 1;
+  if (l[1] > 0)
+  {
+    LABL 0 0 0 c9 Array of Screen Rectangles:;
+    while (l[1] > 0)
+    {
+      DGLB 0 42 02 c9 Screen Rectangle ;
+      CitrixICA::PACKET_REDRAW::PositionXY;
+      DGLB 0 1 b0 c2 X of upper left:;
+      DGLB 0 2 b0 c2 Y of upper left:;
+      l[1] -= 3;
+      CitrixICA::PACKET_REDRAW::PositionXY;
+      DGLB 0 1 b0 c2 X of lower right:;
+      DGLB 0 2 b0 c2 Y of lower right:;
+      l[1] -= 3;
+      l[2] += 1;
+      LABL 0 0 0 c8;
+    }
+    LABL 0 0 0 c8;
+  }
+  LABL 0 0 0 c8;
+  TRTS;
+
+void CitrixICA::PACKET_REDRAW::PositionXY;
+	//g[1] = x
+	//g[2] = y
+	DWRD 40000000 1 5 5;
+	DBYT 0 2 5 5;
+	l[3] = g[1];
+	g[1] &= 0x0fff;
+	l[3] >>= 12;
+	g[2] <<= 8;
+	g[2] |= l[3];
+	TRTS;
+
+void CitrixICA::PACKET_STOP_REQUEST;
+	//no data
+	LABL 0 0 0 c7 Packet Stop Request;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_STOP_OK;
+	//no data
+	LABL 0 0 0 c7 Packet Stop Ok;
+	LABL 0 0 0 c4 No Data;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_REDISPLAY;
+	//no data
+	LABL 0 0 0 c7 Packet Redisplay;
+	LABL 0 0 0 c4 No Data;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_KEYBOARD0;
+	LABL 0 0 0 c7 Packet Single Key Scan Code;
+	DBYT 0 0 b0 c2 Scan Code:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_KEYBOARD1;
+	DBYT 0 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Multiple Key Scan Codes;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Scan Code ;
+		DBYT 0 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+	TRTS;
+
+void CitrixICA::PACKET_KEYBOARD2;
+	DWRD 40000000 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Multiple Key Scan Codes;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Scan Code ;
+		DBYT 0 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_MOUSE0;
+	LABL 0 0 0 c7 Packet Single Mouse Event;
+	DWRD 40000000 0 b0 c2 X Screen Coordinate:;
+	DWRD 40000000 0 b0 c2 Y Screen Coordinate:;
+	DBYT 0 41 b0 c2 Mouse Button State:;
+	CST# 0 41 0 14 CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+	0x01 | Mouse moved;
+	0x02 | Mouse button one down;
+	0x04 | Mouse button one up;
+	0x08 | Mouse button two down;
+	0x10 | Mouse button two up;
+	0x20 | Mouse button three down;
+	0x40 | Mouse button three up;
+	0x80 | Mouse Double click;
+
+void CitrixICA::PACKET_MOUSE1;
+	DBYT 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Multiple Mouse Events;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c9 Mouse Event ;
+		DWRD 40000000 0 b0 c2 X Screen Coordinate:;
+		DWRD 40000000 0 b0 c2 Y Screen Coordinate:;
+		DBYT 0 41 b0 c2 Mouse Button State:;
+		CST# 0 41 0 14 CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+		l[1] -= 5;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_MOUSE2;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet reports multiple mouse events;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c9 Mouse Event ;
+		DWRD 40000000 0 b0 c2 X Screen Coordinate:;
+		DWRD 40000000 0 b0 c2 Y Screen Coordinate:;
+		DBYT 0 41 b0 c2 Mouse Button State:;
+		CST# 0 41 0 14 CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+		l[1] -= 5;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_CLEAR_SCREEN;
+	LABL 0 0 0 c7 Packet Clear Screen;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_CLEAR_EOL;
+	LABL 0 0 0 c7 Packet Clear EOL;
+	DBYT 0 0 b0 c2 Row Index:;
+	DBYT 0 0 b0 c2 Column Index:;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_RAW_WRITE0;
+	LABL 0 0 0 c7 Packet Raw Write Single Character;
+	CHR# 0 41 b0 c2 Character:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_RAW_WRITE1;
+	DBYT 0 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Raw Write Multiple Characters;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Character ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_RAW_WRITE2;
+	DWRD 40000000 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Raw Write Multiple Characters;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Character ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_WRTCHARSTRATTR1;
+	DBYT 0 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Write Characters with Attributes;
+	DBYT 0 0 b0 c2 Row:;
+	DBYT 0 0 b0 c2 Column:;
+	DBYT 0 0 b0 c2 Attribute:;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Character ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_WRTCHARSTRATTR2;
+	DWRD 40000000 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Write Characters with Attributes;
+	DBYT 0 0 b0 c2 Row:;
+	DBYT 0 0 b0 c2 Column:;
+	DBYT 0 0 b0 c2 Attribute:;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Character ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_WRTNCELL1;
+	DBYT 0 0 b0 c2 Repeat Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Write Cell;
+	DBYT 0 0 b0 c2 Row:;
+	DBYT 0 0 b0 c2 Column:;
+	CHR# 1 0 b0 c2 Character:;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_WRTNCELL2;
+	DWRD 40000000 0 b0 c2 Repeat Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Write Cell;
+	DBYT 0 0 b0 c2 Row Index:;
+	DBYT 0 0 b0 c2 Column Index:;
+	CHR# 1 0 b0 c2 Character:;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_BEEP;
+	LABL 0 0 0 c7 Packet Beep;
+	DWRD 40000000 0 b0 c2 Frequency:;
+	DWRD 40000000 0 b0 c2 Duration:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SETMOU_POSITION;
+	LABL 0 0 0 c7 Packet Set Mouse Position;
+	DWRD 40000000 0 b0 c2 X Coordinate:;
+	DWRD 40000000 0 b0 c2 Y Coordinate:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SETMOU_ATTR;
+	LABL 0 0 0 c7 Packet Set Mouse Attribute;
+	DBYT 0 41 b0 c2 Mouse Attribute:;
+	CST# 0 41 0 14 CitrixICA::PACKET_SETMOU_ATTR::MouseAttribute_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_SETMOU_ATTR::MouseAttribute_Str;
+	0 | Mouse pointer OFF;
+	1 | Mouse pointer ON;
+
+void CitrixICA::PACKET_SETCUR_POSITION;
+	LABL 0 0 0 c7 Packet Set Cursor Position;
+	DBYT 0 0 b0 c2 Row Index:;
+	DBYT 0 0 b0 c2 Column Index:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SETCUR_ROW;
+	LABL 0 0 0 c7 Packet Set Cursor Row;
+	DBYT 0 0 b0 c2 Row:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SETCUR_COLUMN;
+	LABL 0 0 0 c7 Packet Set Cursor Column;
+	DBYT 0 0 b0 c2 Column:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SETCUR_SIZE;
+	LABL 0 0 0 c7 Packet Set Cursor Size;
+	DBYT 0 0 b0 c2 Percent (0-100):;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLL_SCREEN;
+	LABL 0 0 0 c7 Packet Set Scroll Screen;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLL;
+	DBYT 0 0 b0 c2 Top Row:;
+	DBYT 0 0 b0 c2 Left Column:;
+	DBYT 0 0 b0 c2 Bottom Row:;
+	DBYT 0 0 b0 c2 Right Column:;
+	CHR# 1 0 b0 c2 Character:;
+	DBYT 0 0 b0 c2 Attribute:;
+	DBYT 0 0 b0 c2 Number of lines:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLUP;
+	LABL 0 0 0 c7 Packet Set Scroll UP;
+	CitrixICA::PACKET_SCROLL;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLDN;
+	LABL 0 0 0 c7 Packet Set Scroll Down;
+	CitrixICA::PACKET_SCROLL;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLLF;
+	LABL 0 0 0 c7 Packet Set Scroll Left;
+	CitrixICA::PACKET_SCROLL;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLRT;
+	LABL 0 0 0 c7 Packet Set Scroll Right;
+	CitrixICA::PACKET_SCROLL;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLUP1;
+	LABL 0 0 0 c7 Packet Set Scroll UP;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLDN1;
+	LABL 0 0 0 c7 Packet Set Scroll Down;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLLF1;
+	LABL 0 0 0 c7 Packet Set Scroll Left;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLRT1;
+	LABL 0 0 0 c7 Packet Set Scroll Right;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLUP2;
+	LABL 0 0 0 c7 Packet Set Scroll UP;
+	DBYT 0 0 b0 c2 Number of lines:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLDN2;
+	LABL 0 0 0 c7 Packet Set Scroll Down;
+	DBYT 0 0 b0 c2 Number of Lines:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLLF2;
+	LABL 0 0 0 c7 Packet Set Scroll Left;
+	DBYT 0 0 b0 c2 Number of Lines:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SCROLLRT2;
+	LABL 0 0 0 c7 Packet Set Scroll Right;
+	DBYT 0 0 b0 c2 Number of Lines:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_VIRTUAL_WRITE0;
+	LABL 0 0 0 c7 Packet Virtual Write Single Byte;
+	DBYT 0 0 b0 c2 Channel:;
+	DBYT 0 0 b0 c2 Byte 1:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_VIRTUAL_WRITE1;
+	DBYT 0 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Virtual Write Multiple Bytes;
+	DBYT 0 0 b0 c2 Channel:;
+	l[1] -= 1;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Byte ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_VIRTUAL_WRITE2;
+	DWRD 40000000 41 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Virtual Write Multiple Bytes;
+	DBYT 0 0 b0 c2 Channel:;
+	l[1] -= 1;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Byte ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_VIRTUAL_ACK;
+	LABL 0 0 0 c7 Packet Virtual Ack;
+	DBYT 0 0 b0 c2 Channel:;
+	DWRD 40000000 0 b0 c2 Window Size:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SET_GRAPHICS;
+	DBYT 0 0 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Set Graphics;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SET_TEXT;
+	DBYT 0 0 b0 c2 Byte Count:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Set Test;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SET_GLOBAL_ATTR;
+	LABL 0 0 0 c7 Packet Set Global Attribute;
+	DBYT 0 0 b0 c2 Attribute:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SET_VIDEO_MODE;
+	LABL 0 0 0 c7 Packet Set Vidoe Mode;
+	DBYT 0 0 b0 c2 Index:;
+	DWRD 40000000 0 b0 c2 Code Page:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_SET_LED;
+	LABL 0 0 0 c7 Packet Set Led;
+	HBYT 0 41 b0 c9 LED Bit Mask:;
+	BST# 0 41 0 c4 CitrixICA::PACKET_SET_LED::LED_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_SET_LED::LED_Str;
+	7 | 1... .... Reserved;
+		0... .... Reserved;
+	6 | .1.. .... Caps Lock On;
+		.0.. .... Caps Lock Off;
+	5 | ..1. .... Num Lock On;
+		..0. .... Num Lock Off;
+	4 | ...1 .... Scroll Lock On;
+		...0 .... Scroll Lock Off;
+
+void CitrixICA::PACKET_VIRTUAL_FLUSH;
+	LABL 0 0 0 c7 Packet Virtual Flush;
+	DBYT 0 0 b0 c2 Channle:;
+	DBYT 0 41 b0 c9 Flush Flag:;
+	BST# 0 41 0 c4 CitrixICA::PACKET_VIRTUAL_FLUSH::Flag_Str;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_VIRTUAL_FLUSH::Flag_Str;
+	1 | .... ..1. Flush output;
+		.... ..0. Not flush output;
+	0 | .... ...1 Flush input;
+		.... ...0 Not flush input;
+
+void CitrixICA::PACKET_SOFT_KEYBOARD;
+	LABL 0 0 0 c7 Packet Soft Keyboard;
+	DBYT 0 41 b0 c9 Flag:;
+	BST# 0 41 0 c4 CitrixICA::PACKET_SOFT_KEYBOARD::Flag_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_SOFT_KEYBOARD::Flag_Str;
+	0 | .... ...1 Raise keyboard;
+		.... ...0 Lower keyboard;
+
+void CitrixICA::PACKET_COMMAND_CACHE;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Command Cache;
+	DBYT 0 42 b0 c2 Command:;
+
+	l[2] =4;
+
+	CST# 0 42 0 14 CitrixICA::PACKET_COMMAND_CACHE::Command_Str;
+	if (l[2] == 1) //Cache_Error
+	{
+		CHR# 8 0 b0 c2 Cache File Handle:;
+	}
+	if (l[2] == 2) //Cache_Resize
+	{
+		DLNG 40000000 0 b0 c2 Cache Size:;
+		LABL 0 0 0 14 bytes;
+	}
+	if (l[2] == 3) //Cache_Delete
+	{
+		CHR# 8 0 b0 c2 Cache File Handle:;
+	}
+	if (l[2] == 4) //Cache_Stream
+	{
+		DBYT 0 43 b0 c2 Number of Array:;
+		l[4] = 1;
+		while (l[3] > 0)
+		{
+			DGLB 0 44 02 c9 Cache File Context ;
+			CHR# 8 0 b0 c2 Cache File Handle:;
+			DLNG 40000000 0 b0 c2 Cache Size:;
+			LABL 0 0 0 14 bytes;
+			DBYT 0 45 b0 c2 Flags:;
+			if (l[5] == 1)
+			{
+				LABL 0 0 0 14 Cache File Is Readonly;
+			}
+			l[3] -= 1;
+			l[4] += 1;
+			LABL 0 0 0 c8;
+		}
+	}
+	if (l[2] == 5) //Cache_Disable
+	{
+		//no data
+	}
+	if (l[2] == 6) //Cache_Enable
+	{
+		//no data
+	}
+	if (l[2] == 7) //Cache_Flush
+	{
+		//no data
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_COMMAND_CACHE::Command_Str;
+	1 | Cache error;
+	2 | Cache resize;
+	3 | Cache delete;
+	4 | Cache stream;
+	5 | Cache disable;
+	6 | Cache enable;
+	7 | Cache flush;
+
+void CitrixICA::PACKET_SET_CLIENT_DATA;
+	DWRD 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Set Client Data;
+	DBYT 0 0 b0 c2 OEM ID:;
+	DBYT 0 0 b0 c2 OEM ID:;
+	DBYT 0 0 b0 c2 OEM ID:;
+	DBYT 0 0 b0 c2 Token ID:;
+	DBYT 0 0 b0 c2 Token ID:;
+	DBYT 0 0 b0 c2 Token ID:;
+	DBYT 0 0 b0 c2 Token ID:;
+	DBYT 0 0 b0 c2 0 (Zero):;
+	while (l[1] >= 1)
+	{
+		DBYT 0 0 b0 c2 Data Associated ID:;
+		l[1] -= 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_ALT_KEYBOARD2;
+	DWRD 0 41 b0 c9 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Alt Keyboard;
+	l[2] = 1;
+	while (l[1] >= 2)
+	{
+		DGLB 0 42 02 c9 Keyboard data ;
+		DBYT 0 43 b0 c2 Data Type:;
+		CST# 0 43 0 14 CitrixICA::PACKET_ALT_KEYBOARD2::DataType_Str;
+		DBYT 0 0 b0 c2 Key:;
+		l[1] -= 1;
+		DBYT 0 0 b0 c2 Key:;
+		l[1] -= 1;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_ALT_KEYBOARD2::DataType_Str;
+	0x0 | Text key down;
+	0x1 | Text key up;
+	0x2 | Special key down;
+	0x3 | Special key up;
+	0x4 | Tells not to convert to scan code, but use Unicode Injection;
+
+void CitrixICA::PACKET_MOUSE_EXTENDED1;
+	DBYT 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Mouse Exteneded;
+	l[1] -= 1;
+	l[2] = 1;
+	while (l[1] >= 5)
+	{
+		DGLB 0 42 02 c9 Extended Mouse Event ;
+		DBYT 0 43 b0 c2 Event Length:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 b0 c2 X Screen Coordinate:;
+		DWRD 40000000 0 b0 c2 Y Screen Coordinate:;
+		DBYT 0 41 b0 c2 Mouse Button State:;
+		CST# 0 41 0 14 CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+		l[1] -= 5;
+		l[2] += 1;
+		l[3] -= 5;
+		if (l[3] > 0)
+		{
+			DUMP 0 43 b0 c2 Block Data:;
+		}
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_MOUSE_EXTENDED::MouseButtonState_Str;
+	0x01 | Mouse moved;
+	0x02 | Mouse button X down;
+	0x04 | Mouse button X up;
+	0x08 | Mouse button Y down;
+	0x10 | Mouse button Y up;
+
+void CitrixICA::PACKET_MOUSE_EXTENDED2;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Mouse Exteneded;
+	l[1] -= 2;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c9 Extended Mouse Event ;
+		DBYT 0 43 b0 c2 Event Length:;
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 0 b0 c2 X Screen Coordinate:;
+		DWRD 40000000 0 b0 c2 Y Screen Coordinate:;
+		DBYT 0 41 b0 c2 Mouse Button State:;
+		CST# 0 41 0 14 CitrixICA::PACKET_MOUSE::MouseButtonState_Str;
+		l[1] -= 5;
+		l[2] += 1;
+		l[3] -= 5;
+		if (l[3] > 0)
+		{
+			DUMP 0 43 b0 c2 Block Data:;
+		}
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_CHANNEL_MONITORING;
+	DBYT 0 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Channel Monitoring;
+	DBYT 0 42 b0 c2 Command (Information type):;
+	CST# 0 42 0 14 CitrixICA::PACKET_CHANNEL_MONITORING::Command_Str;
+	if (l[2] == 1)
+	{
+		DLNG 40000000 0 b0 c2 Last Latency:;
+		LABL 0 0 0 14 msec;
+		DLNG 40000000 0 b0 c2 Average Latency:;
+		LABL 0 0 0 14 msec;
+	}
+	if (l[2] == 2)
+	{
+		//no data
+	}
+	if (l[2] == 3)
+	{
+		DWRD 40000000 0 b0 c2 Recommended Monitoring Repeat Delay:;
+		LABL 0 0 0 14 second;
+		DWRD 40000000 43 b0 c9 Flags:;
+		BST# 0 43 0 c4 CitrixICA::PACKET_CHANNEL_MONITORING::Flag_Str;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_CHANNEL_MONITORING::Command_Str;
+	0x1 | ICM_PING_REQUEST (server->client and client->server);
+	0x2 | ICM_PING_RESPONSE (server->client and client->server);
+	0x3 | ICM_PING_SET_MODE (server ->client);
+
+str# CitrixICA::PACKET_CHANNEL_MONITORING::Flag_Str;
+	0x3 | .... ..1. Enable background channel monitoring;
+		  .... ..0. Disable background channel monitoring;
+
+void CitrixICA::PACKET_REDRAW_EXTENDED;
+	BREM 0 4a 0 0;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	if (l[1] > l[10])
+	{
+		DGLB 0 4a 0 14 (only ;
+		LABL 0 0 0 04 " bytes in this packet)";
+		l[1]= l[10];
+	}
+	LABL 0 0 0 c7 Packet Redraw Extended;
+	l[2] = 1;
+	if (l[1] > 8)
+	{
+		LABL 0 0 0 c9 Array of Screen Rectangles:;
+		while (l[1] >= 8)
+		{
+			DGLB 0 42 02 c9 Screen Rectangle ;
+			DWRD 40000000 0 b0 c2 X of upper left:;
+			DWRD 40000000 0 b0 c2 Y of upper left:;
+			l[1] -= 4;
+			DWRD 40000000 0 b0 c2 X of lower right:;
+			DWRD 40000000 0 b0 c2 Y of lower right:;
+			l[1] -= 4;
+			DGLB 0 41 90 c2 L[1]:;
+			l[2] += 1;
+			LABL 0 0 0 c8;
+		}
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_COOKIE;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Redraw Extended;
+	DBYT 0 42 b0 c2 Command:;
+	l[1] -= 1;
+	if (l[2] == 1)
+	{
+		LABL 0 0 0 14 cookie;
+		DUMP 0 41 b0 c2 Cookie Data:;
+	}
+	if (l[2] == 2)
+	{
+		LABL 0 0 0 14 request cookie;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_KEYBOARD_XKEYSYM;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Keyboard X Keysym;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c9 Keyboard Data ;
+		DBYT 0 43 b0 c2 Data type:;
+		DWRD 40000000 0 b0 c2 Y of upper left:;
+		CST# 0 43 0 14 CitrixICA::PACKET_KEYBOARD_XKEYSYM::DataType_Str;
+		DLNG 0 0 b0 c2 X keysym:;
+		l[1] -= 5;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::PACKET_KEYBOARD_XKEYSYM::DataType_Str;
+	0x00 | X Keysym down;
+	0x01 | X Keysym up;
+
+void CitrixICA::PACKET_RESUME_VIRTUAL_WRITE;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Resume Virtual Write;
+	DBYT 0 0 b0 c2 Channel:;
+	l[2] = 1;
+	while (l[1] > 0)
+	{
+		DGLB 0 42 02 c2 Byte ;
+		CHR# 1 0 b0 02 ":";
+		l[1] -= 1;
+		l[2] += 1;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_WDCREDENTIALS;
+	DWRD 40000000 41 b0 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 c7 Packet Keyboard X Keysym;
+	DBYT 0 41 b0 c2 Command:;
+	if (l[1] == 1)
+	{
+		LABL 0 0 0 14 query credentials;
+	}
+	if (l[2] == 2)
+	{
+		LABL 0 0 0 14 credentials data;
+	}
+	DBYT 0 42 b0 c2 Credentials format:;
+	if (l[2] == 0)
+	{
+		LABL 0 0 0 14 NO_ENCRYPTION;
+	}
+	DBYT 0 43 b0 c2 Offset to User Name (LB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	DBYT 0 44 b0 c2 Offset to User Name (HB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	l[4] <<= 8;
+	l[4] |= l[3];
+	DGLB 0 44 b0 c2 Offset to User Name:;
+	DBYT 0 43 b0 c2 Offset to Domain Name (LB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	DBYT 0 44 b0 c2 Offset to Domain Name (HB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	l[4] <<= 8;
+	l[4] |= l[3];
+	DGLB 0 44 b0 c2 Offset to Domain Name:;
+	DBYT 0 43 b0 c2 Offset to Password (LB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	DBYT 0 44 b0 c2 Offset to Password (HB):;
+	DBYT 0 0 b0 c2 Reserved:;
+	l[4] <<= 8;
+	l[4] |= l[3];
+	DGLB 0 44 b0 c2 Offset to Password:;
+	DUMP 1 0 b0 c2 Credentials Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void CitrixICA::PACKET_MAXIMUM;
+	TRTS;
+
+//=====================================================
+// Capability List
+//=====================================================
+void CitrixICA::CapabilityList;
+	//g[1] use to record how many capability list blocks
+	//g[2] will be used to branch the capability blocks
+	// Capability List Header
+	LABL 0 0 b0 c7 Capability List Header;
+	DBYT 0 0 b0 c2 More Data Indicator:;
+	DBYT 0 1 b0 c2 Capability Block Count:;
+	DWRD 40000000 0 b0 c2 Offset to First Capability Block:;
+	LABL 0 0 0 c8;
+	LABL 0 0 b0 c7 Capability Block List (CBL);
+	l[2] = 1;
+	while (g[1] > 0)
+	{
+		GWRD 40000002 41;
+		LABL 0 0 0 c9 Capability Block ;
+		DGLB 0 42 9 0;
+		CST# 0 41 40 70 CitrixICA::CapabilityList::CapabilitiesStr;
+		BYTO 0 44;
+		DWRD 40000000 3 b0 c2 Length:; //g[3]=Length
+		LABL 0 0 0 14 bytes;
+		DWRD 40000000 2 b0 c2 Signature:;
+		CST# 0 2 0 14 CitrixICA::CapabilityList::CapabilitiesStr;
+		if (g[3] > 4)
+		{
+			TSB# 0 2 0 0 CitrixICA::CapabilityList::CapabilitiesFunc;
+		}
+		BYTO 0 45;
+		l[5] -= l[4];
+		if (g[3] > l[5])
+		{
+			g[3] -= l[5];
+			DUMP 0 3 b0 c2 Block Data:;
+		}
+		g[1] -=1 ;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::CapabilityList::CapabilitiesStr;
+	1 | Maximum Transition Unit;
+	2 | Reducers Supported;
+	3 | Seamless;
+	4 | Intelligent Mouse;
+	5 | Packet Priority;
+	6 | Channel Monitoring;
+	7 | Redraw;
+	8 | TimeZone;
+	9 | Long Unicode Username Support;
+	10| Cookie;
+	11| Printer Bandwidth Control Support;
+	12| ThinWire 2 Persistent Cache Deadlock Bug fix;
+	13| Server Version;
+	14| XKEYSYM;
+	15| CGP Packet Overhead;
+	16| High Throughput;
+	17| SSL Packet Overhead;
+	18| WD Credential Passing;
+	19| MaxVideo;
+	20| EUK;
+	21| Mouse Button Swap;
+	22| TS License Info;
+	23| FARM Name;
+
+str#  CitrixICA::CapabilityList::CapabilitiesFunc;
+	1 | CitrixICA::CapabilityList::Capabilities::Maximum Transition Unit;
+	2 | CitrixICA::CapabilityList::Capabilities::Reducers Supported;
+	3 | CitrixICA::CapabilityList::Capabilities::Seamless;
+	4 | CitrixICA::CapabilityList::Capabilities::Intellimouse;
+	5 | CitrixICA::CapabilityList::Capabilities::Packet Priority;
+	6 | CitrixICA::CapabilityList::Capabilities::Channel Monitoring;
+	7 | CitrixICA::CapabilityList::Capabilities::Redraw;
+	8 | CitrixICA::CapabilityList::Capabilities::TimeZone;
+	9 | CitrixICA::CapabilityList::Capabilities::Long Unicode Username Support;
+	10| CitrixICA::CapabilityList::Capabilities::Cookie;
+	11| CitrixICA::CapabilityList::Capabilities::Printer Bandwidth Control Support;
+	12| CitrixICA::CapabilityList::Capabilities::ThinWire 2 Persistent Cache Deadlock Bug fix;
+	13| CitrixICA::CapabilityList::Capabilities::Server Version;
+	14| CitrixICA::CapabilityList::Capabilities::XKEYSYM;
+	15| CitrixICA::CapabilityList::Capabilities::CGP Packet Overhead;
+	16| CitrixICA::CapabilityList::Capabilities::High Throughput;
+	17| CitrixICA::CapabilityList::Capabilities::SSL Packet Overhead;
+	18| CitrixICA::CapabilityList::Capabilities::WDCredentialPassing;
+	19| CitrixICA::CapabilityList::Capabilities::MaxVideo;
+	20| CitrixICA::CapabilityList::Capabilities::EUK;
+	21| CitrixICA::CapabilityList::Capabilities::Mouse Button Swap;
+	22| CitrixICA::CapabilityList::Capabilities::TS License Info;
+	23| CitrixICA::CapabilityList::Capabilities::FARM Name;
+
+void CitrixICA::CapabilityList::Capabilities::Maximum Transition Unit;
+	// nothing to do
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Reducers Supported;
+	BWRD 40000000 42 b0 c2 Reducers Supported Mask:;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Seamless;
+	BLNG 40000000 42 b0 c2 Seamless Features Mask:;
+	BST# 0 42 b0 c0 CitrixICA::CapabilityList::Capabilities::Seamless::Parameter_Str;
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::Seamless::Parameter_Str;
+	15 | 1....... ........  CAP_ZERO_LATENCY1 is set;
+		 0....... ........  CAP_ZERO_LATENCY1 not set;
+	7  | ........ 1.......  CAP_NC_PREDICTION is set;
+		 ........ 0.......  CAP_NC_PREDICTION is not set;
+	3  | ........ ....1...  CAP_BALANCE_NC is set;
+		 ........ ....0...  CAP_BALANCE_NC is not set;
+	1  | ........ ......1.  CAP_DEFERRED_UPDATE is set;
+		 ........ ......0.  CAP_DEFERRED_UPDATE is not set;
+	0  | ........ .......1  CAP_SLOGIN is set;
+		 ........ .......0  CAP_SLOGIN is not set;
+
+void CitrixICA::CapabilityList::Capabilities::Intellimouse;
+	BWRD 40000000 42 b0 c9 Intellimouse Feature Mask:;
+	BST# 0 42 0 f4 CitrixICA::CapabilityList::Capabilities::Intellimouse::Parameter_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+	
+str# CitrixICA::CapabilityList::Capabilities::Intellimouse::Parameter_Str;
+	3 |	........ .....1.. CAP_X2 is set;
+		........ .....0.. CAP_X2 is not set;
+	1 |	........ ......1. CAP_X1 is set;
+		........ ......0. CAP_X1 is not set;
+	0 |	........ .......1 CAP_WHEEL is set;
+		........ .......0 CAP_WHEEL not set;	
+
+void CitrixICA::CapabilityList::Capabilities::Packet Priority;
+	DWRD 40000000 43 b0 c2 Array Length:;
+	DBYT 0 0 b0 c2 Use Lowest Priority:;
+	l[1] = 0;
+	l[4] = g[3];  //get block length;
+	l[4] -= 3;
+	if (l[4] < l[3])       // get Min(Array Length, Block Length -3 )
+	{
+		l[3] = l[4];
+	}
+	while (l[1] < l[3])
+	{
+		DGLB 0 41 02 c2 VC ;
+		DBYT 0 0 b0 12 priority:;
+		l[1] += 1;
+	}
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Channel Monitoring;
+	DWRD 40000000 0 b0 c2 Support Version:;
+	DWRD 40000000 0 b0 c2 Repeat Delay:;
+	LABL 0 0 0 14 seconds;
+	HLNG 40000000 42 b0 c9 Flags:;
+	BST# 0 42 0 f4 CitrixICA::CapabilityList::Capabilities::Channel Monitoring::Parameter_Str;
+	LABL 0 0 0 c8;
+	DWRD 40000000 0 b0 c2 Mouse Threshold Upper Limit:;
+	DWRD 40000000 0 b0 c2 Mouse Threshold Lower Limit:;
+	TRTS;
+       
+str# CitrixICA::CapabilityList::Capabilities::Channel Monitoring::Parameter_Str;
+	4 | ........ ........ ........ ....1...  Show mouse feedback;
+		........ ........ ........ ....0...  Do not show mouse feedback;
+	1 | ........ ........ ........ ......1.  Enable Background Channel Monitoring;
+		........ ........ ........ ......0.  Disable Background Channel Monitoring;
+
+void CitrixICA::CapabilityList::Capabilities::Redraw;
+	BWRD 40000000 41 b0 c9 Redraw Caps Mask:;
+	BST# 0 41 0 f4 CitrixICA::CapabilityList::Capabilities::Redraw::Flags_Str;
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::Redraw::Flags_Str;
+	1 |	........ ......1.   Complex Region is set;
+		........ ......0.   Complex Region is not set;
+	0 |	........ .......1   Extended Redraw is set;
+		........ .......0   Extended Redraw is not set;
+
+void CitrixICA::CapabilityList::Capabilities::TimeZone;
+	DLNG 40000000 0 b0 c2 Time zone support version:;
+	DLNG 40000000 41 b0 c2 Operating mode:;
+	CST# 0 41 0 14 CitrixICA::CapabilityList::Capabilities::TimeZone_Str;
+	DLNG 40000000 0 b0 c2 Bias:;
+	DWRD 40000000 0 b0 c2 oStandard Name:;
+	LABL 0 0 b0 c7 Standard DateTime;
+	CitrixICA::DisplayDateTime;
+	LABL 0 0 0 c8;
+	DLNG 40000000 0 b0 c2 Standard Bias:;
+	DWRD 40000000 0 b0 c2 oDaylight Name:;
+	LABL 0 0 b0 c7 Daylight DateTime;
+	CitrixICA::DisplayDateTime;
+	LABL 0 0 0 c8;
+	DLNG 40000000 0 b0 c2 Daylight Bias:;
+	DWRD 40000000 0 b0 c2 Encoding Type:;
+	DWRD 40000000 0 b0 c2 Encoding Data:;
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::TimeZone_Str;
+	0 | Undefined;
+	1 | Time Zone Mode Standard;
+	2 | Time Zone Mode Daylight;
+
+void CitrixICA::CapabilityList::Capabilities::Long Unicode Username Support;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Cookie;
+	DBYT 0 0 b0 c2 Cookie Version:;
+	DWRD 40000000 0 b0 c2 Max Size:;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Printer Bandwidth Control Support;
+	TRTS;
+	
+void CitrixICA::CapabilityList::Capabilities::ThinWire 2 Persistent Cache Deadlock Bug fix;
+	TRTS;
+	
+void CitrixICA::CapabilityList::Capabilities::Server Version;
+	DWRD 40000000 41 b0 c2 Server Family:;
+	CST# 0 41 0 14 CitrixICA::CapabilityList::Capabilities::ServerFamily_Str;
+	DWRD 40000000 42 b0 c2 Server Version:;
+	l[1] <<= 16;
+	l[1] |= l[2];
+	CST# 0 41 0 14 CitrixICA::CapabilityList::Capabilities::ServerVersion_Str;
+	DWRD 40000000 41 b0 c2 Server Variant:;
+	CST# 0 41 0 14 CitrixICA::CapabilityList::Capabilities::Server Version::Variant_Str;
+	SKIP 1;
+	LABL 0 0 0 14 Unknown;
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::ServerFamily_Str;
+	1 | Windows;
+	2 | Unix;
+
+str# CitrixICA::CapabilityList::Capabilities::ServerVersion_Str;
+	0x10001 | MetaFrame XP for Windows 1.0 FR1;
+	0x10002 | MetaFrame XP for Windows 1.0 FR2;
+	0x20001 | MetaFrame for Unix 1.1 FR1;
+
+str# CitrixICA::CapabilityList::Capabilities::Server Version::Variant_Str;
+	0x0001| TSE;
+	0x0002| Windows 2000;
+	// 0x0003| Windows 2003;
+	0x8001| Solaris Intel;
+	0x8002| Solaris Sparc;
+	0x8003| AIX;
+	0x8004| HP/UX;
+	0x8005| Linux;
+
+void CitrixICA::CapabilityList::Capabilities::XKEYSYM;
+	DBYT 0 0 b0 c2 Keyboard KXEYSYM Version:;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::CGP Packet Overhead;
+	DWRD 40000000 41 b0 c2 CGP Overhead Version:;
+	DLNG 40000000 41 b0 c2 CGP Packet Overhead:;
+	DLNG 40000000 41 b0 c2 CGP Session Token:;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::High Throughput;
+	HLNG 40000000 41 b0 c9 Support Mask:;
+	BST# 0 41 0 f4 CitrixICA::CapabilityList::Capabilities::HighThroughput_Str;
+	LABL 0 0 0 c8;
+	DLNG 40000000 41 b0 c2 Versioning Mask:;
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::HighThroughput_Str;
+	1 | ........ ........ ........ ......1.  Channel can support high sizes for CPM;
+	    ........ ........ ........ ......0.  Channel can not support high sizes for CPM;
+	0 | ........ ........ ........ .......1  Channel can support high sizes for CDM;
+	    ........ ........ ........ .......0  Channel can not support high sizes for CDM;
+
+void CitrixICA::CapabilityList::Capabilities::SSL Packet Overhead;
+	DWRD 40000000 41 b0 c2 SSLPacketOverhead:;
+	if (l[1] == 0)
+	{
+		LABL 0 0 0 14 SSL not used;
+	}
+	if (l[1] != 0)
+	{
+		LABL 0 0 0 14 bytes;
+	}
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::WDCredentialPassing;
+	DBYT 0 0 b0 c2 WD Creditial Passing Version:;
+	TRTS;
+	
+void CitrixICA::CapabilityList::Capabilities::MaxVideo;
+	DLNG 40000000 41 b0 c2 Max Server LVB memory:;
+	LABL 0 0 0 14 bytes;
+	if (g[3] > 8)
+	{
+		DBYT 0 41 b0 c2 Degrade Color First:;
+		CST# 0 41 0 14 CitrixICA::CapabilityList::Capabilities::WDCredentialPassing_Str;
+	}
+	TRTS;
+
+str# CitrixICA::CapabilityList::Capabilities::WDCredentialPassing_Str;
+	0 | Degrade resolution first;
+	1 | Degrade color first;
+    
+void CitrixICA::CapabilityList::Capabilities::EUK;
+	DWRD 40000000 41 b0 c2 Version:;
+	if (l[1] == 1)
+	{
+		LABL 0 0 0 14 Amazon/FR3;
+	}
+	DWRD 40000000 41 b0 c2 Mode:;
+	l[1] &= 1;
+	if (l[1] == 1)
+	{
+		LABL 0 0 0 14 Enabled;
+	}
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::Mouse Button Swap;
+	DBYT 0 41 b0 c2 MouseButtonSwapped:;
+	if (l[1] == 0)
+	{
+		LABL 0 0 0 14 Not Swapped;
+	}
+	if (l[1] == 1)
+	{
+		LABL 0 0 0 14 Swapped;
+	}
+	TRTS;
+     
+void CitrixICA::CapabilityList::Capabilities::TS License Info;
+	DLNG 40000000 0 b0 c2 TS License buffer 0:;
+	DLNG 40000000 0 b0 c2 TS License buffer 1:;
+	TRTS;
+
+void CitrixICA::CapabilityList::Capabilities::FARM Name;
+	DWRD 40000000 41 b0 c2 Farm Name Size:;
+	DWRD 40000000 42 b0 c2 Farm Name Offset:;
+	SUBG 6 42;
+	SLTX 0 20000042;
+	SKIP 1;
+	INCR 0 42;
+	CHR# 0 41 b0 c2 Farm Name:;
+	TRTS;
+
+//=====================================================
+// DATA
+//=====================================================
+
+void CitrixICA::Data::Header;
+	LABL    0 0 00 b1 Citrix ICA (Independent Computing Architechture);
+	g[20] = 0;
+	GWRD 40000000 1;
+	ANDG 3FFF 1;
+	DGLB 0 1 90 c2 ICA Byte Count: ;
+	INCR 1;
+	DBIT 2 1 90 c2 ICA Priority Tag: ;
+	CST# 0 1 0 14 CitrixICA::PriorityStr;
+	DBIT 6 0 5 5;
+	DBYT 0 1 90 c2 Encryption Header:;
+	CST# 0 1 0 14 CitrixICA::EncryptionFlag_Str;
+	SKIP 1;
+	LABL 0 0 0 14 Unknown;
+
+	if (g[1] == 4)   //Session Key
+	{
+		DBYT 0 0 90 c2 Version Level:;
+		DBYT 0 2 90 c2 Key Seed:;
+		MARK 1 2 -CitrixICA::Session KeySeed;
+		s[6] = g[2];
+	}
+
+	//Encryption data
+	if (g[1] !=0)
+	{
+		if (g[1] == 1)
+		{
+			// WHOA 0 2 -CitrixICA::Session KeySeed;
+			g[20] = s[6];
+			//g[20] possibilty will be 0, but the dump decrypt hex has a guess mode;
+			g[2] = 0;
+			CitrixICA::DUMPDecryptHex;
+		}
+	DUMP 1 0 90 c2 Encrypted/Compressed Data:;
+	TRTS;
+	}
+
+	//Compressed data
+	g[1] = pw[1];
+	SBIT 1f 1;
+	SKIP 2 0;
+	CitrixICA::Data::Compressed;
+	TRTS;
+			 	
+	//Uncompressed data
+	CitrixICA::Data::Uncompressed;
+	TRTS;
+
+void CitrixICA::Data::Compressed;
+	g[1] = s[7];
+	DGLB 0 1 2 c9 Compressed Data (Reducer ;
+	LABL 0 0 0 2 ")";
+	DUMP 1 0 90 c2 Compressed Data:;
+	LABL 0 0 0 c8;
+	TRTS;
+		 
+void CitrixICA::Data::Uncompressed;
+	DUMP 1 0 90 c2 Uncompressed Data:;
+	TRTS;
+		 
+str# CitrixICA::EncryptionFlag_Str;
+	0 | Unencrypted;
+	1 | Encrypted;
+	2 | Reset;
+	4 | Session Key;
+	6 | Encryption Off;
+	7 | Encryption Permanent;
+	
+str# CitrixICA::PriorityStr;
+	0 | Highest Priority;
+	1 | Medium Priority;
+	2 | Low Priority;
+	3 | Background Priority;
+			
+//=====================================================
+// COMMON PART
+//=====================================================
+void CitrixICA::Decrypt;
+// g[1] stores the offset to encrypted data from current location
+// g[20] stores the encryption seed;
+// g[6] stores the field offset;
+// g[4] stores current byte;
+// g[5] precedence byte;
+// g[0x19] stores the module start offset;
+// g[3] stores the current pointer from packet head;
+// Vader: it is only to decrypt light encryption level
+		
+	if (g[6] == 0)
+	{
+	LABL 0 0 40 74 (Not specified);
+	}
+	if (g[6] != 0)
+	{
+	MOVE 0 1;
+	ADDG 6 81;  // get relative offset from current location
+	ADDG 19 81;
+	BYTO 0 3;  //g[3]
+	SUBG 3 81;
+	//	SUBG 1 1 ;  // to get the 2nd seed   no nono, previously is wrong
+
+	CitrixICA::DUMPDecryptASCII;
+	}
+	TRTS;
+
+void CitrixICA::DUMPDecryptASCII;
+// Entrance g[1] hold the offset, default should be zero;
+//          g[20] hold the key seed;
+//          g[4], g[5], g[1] value will be changed after the procedure finished.
+//          The ASCII string is supposed be null terminated (CSTR)
+	//CST# 0 4 0 70 ;    *Vader: to adjust the column is quite difficult, so I take code here to put here to control column position, however it makes the code look stupid
+														 
+	LABL 0 0 0 70;		*dw added for eleminating decode errors											 
+	g[4] = 1; //Fake to run while()
+	while(g[4]!= 0)
+	{			
+		//Data[i-1] XOR Seed
+		CitrixICA::XOR5_20;
+		//Load and XOR Data[i]
+		GBYT 1 84;
+		CitrixICA::XOR45;
+		//Output decryption byte
+	 	CST# 0 4 0 0 CitrixICA::ASCII; 
+		//Load Data[i-1] again
+		GBYT 1 85;
+		//Move forward
+		ADDG 1 1;
+	}
+	TRTS;
+
+void CitrixICA::DUMPDecryptHex;
+// Entrance g[2] hold the offset, default should be zero;
+//          g[20] hold the key seed;
+// 	 	    g[6] control the length 
+//         
+//          g[4], g[5], g[6], g[7], g[8] value will be changed after the procedure finished.
+// Only display first 20 bytes;
+
+	g[8] = 0;  // Guess Flag;
+	if (g[20] == 0)
+	{
+	   g[4] = pb[2];
+	   g[5] = pb[1];
+	   CitrixICA::XOR45;
+	   g[6] = g[4];
+	   g[5] = pb[0];
+	   g[4] = pb[1];
+	   CitrixICA::XOR45;
+	   g[5] = g[6];
+	   CitrixICA::XOR45;
+	   if (g[4] < 0x40)
+	   {
+	      g[20] = g[6];
+	      g[8] = 1;
+	   }
+	}
+	
+	if (g[20] != 0)
+	{
+		LABL 0 0 90 c2 "Encryption Session Key: ";
+		LABL 0 0 0 0 "0x";
+		g[7] = g[20];
+		SHFR 4 7;
+		CST# 0 7 0 0 CitrixICA::HEX;
+		g[7] = g[20];
+		ANDG F 7;
+		CST# 0 7 0 0 CitrixICA::HEX;
+		if (g[8] == 1)
+		{
+			LABL 0 0 0 14 "Guessed by Peek";
+		}
+	}
+	TRTS;
+
+str# CitrixICA::ModuleClass_Str;
+	0 | User Interface (UI);
+	1 | User Interface Extention;
+	2 | WinStation Driver (WD);
+	3 | Virtual Driver (VD);
+	4 | Protocol Driver (PD);
+	5 | Transport Driver (TD);
+	6 | Name Resolver (NR);
+	7 | Name Enumerator (NE);
+	8 | Scripting (SC);
+	9 | Sub Driver (SD);
+
+void CitrixICA::DisplayDateTime;
+	DWRD 40000000 0 b0 c2 Year:;
+	DWRD 40000000 0 b0 c2 Month:;
+	DWRD 40000000 0 b0 c2 Day of Week:;
+	DWRD 40000000 0 b0 c2 Day:;
+	DWRD 40000000 0 b0 c2 Hour:;
+	DWRD 40000000 0 b0 c2 Minute:;
+	DWRD 40000000 0 b0 c2 Seconds:;
+	DWRD 40000000 0 b0 c2 MilliSeconds:;
+	TRTS;
+
+str# CitrixICA::HEX;
+	0 | 0;
+	1 | 1;
+	2 | 2;
+	3 | 3;
+	4 | 4;
+	5 | 5;
+	6 | 6;
+	7 | 7;
+	8 | 8;
+	9 | 9;
+	10 | A;
+	11 | B;
+	12 | C;
+	13 | D;
+	14 | E;
+	15 | F;
+
+str# CitrixICA::ASCII;
+	32	|	_;
+	33	|	!;
+	35	|	#;
+	36	|	$;
+	37	|	%;
+	38	|	&;
+	39	|	';
+	40	|	(;
+	41	|	);
+	42	|	Asterisk;
+	43	|	+;
+	44	|	,;
+	45	|	"-";
+	46	|	.;
+	47	|	/;
+	48	|	0;
+	49	|	1;
+	50	|	2;
+	51	|	3;
+	52	|	4;
+	53	|	5;
+	54	|	6;
+	55	|	7;
+	56	|	8;
+	57	|	9;
+	58	|	":";
+	59	|	";";
+	60	|	<;
+	61	|	=;
+	62	|	>;
+	63	|	?;
+	64	|	@;
+	65	|	A;
+	66	|	B;
+	67	|	C;
+	68	|	D;
+	69	|	E;
+	70	|	F;
+	71	|	G;
+	72	|	H;
+	73	|	I;
+	74	|	J;
+	75	|	K;
+	76	|	L;
+	77	|	M;
+	78	|	N;
+	79	|	O;
+	80	|	P;
+	81	|	Q;
+	82	|	R;
+	83	|	S;
+	84	|	T;
+	85	|	U;
+	86	|	V;
+	87	|	W;
+	88	|	X;
+	89	|	Y;
+	90	|	Z;
+	91	|	[;
+	92	|	\;
+	93	|	];
+	94	|	^;
+	95	|	_;
+	96	|	`;
+	97	|	a;
+	98	|	b;
+	99	|	c;
+	100	|	d;
+	101	|	e;
+	102	|	f;
+	103	|	g;
+	104	|	h;
+	105	|	i;
+	106	|	j;
+	107	|	k;
+	108	|	l;
+	109	|	m;
+	110	|	n;
+	111	|	o;
+	112	|	p;
+	113	|	q;
+	114	|	r;
+	115	|	s;
+	116	|	t;
+	117	|	u;
+	118	|	v;
+	119	|	w;
+	120	|	x;
+	121	|	y;
+	122	|	z;
+	123	|	{;
+	126 |   ~;
+
+void CitrixICA::XOR45;
+// Xor g4 and g5, result in g4;
+// use g[21] g[22] as temp
+	MOVE 4 95;
+	NOTG 0 15;
+	ANDG FF 15;
+	ANDG 5 95;
+
+	MOVE 5 96;
+	NOTG 0 16;
+	ANDG FF 16;
+	ANDG 4  96;
+
+	ORRG 15 96;
+	ANDG FF 16;
+	MOVE 16 84;
+	TRTS;
+		
+void CitrixICA::XOR5_20;
+// use g[23] as temp		
+	MOVE 4 97;
+	MOVE 14 84;
+	CitrixICA::XOR45;
+	MOVE 4 85;
+	MOVE 17 84;
+	TRTS;
+			
+str# CitrixICA::Response_Str;
+	0x0  | ICA Client-side Control Channels;
+	0x1  | Smartcard support;
+	0x2  | Client Font System (for ZLC);
+	0x3  | Client Seamless Module;
+	0x4  | License Handler;
+	0x5  | Client Management;
+	0x6  | Client Communication;
+	0x7  | Clipboard;
+	0x8  | ClientPrinterPort;
+	0x9  | ClientPrinterQueue Module;
+	0xA  | ClientDrive Module;
+	0xB  | Thinwire3.0 Module;
+	0xC  | Reducer Module;
+	0xD  | ICA 3.0 Module;
+	0xE  | Compress Module;
+	0xF  | Encrypt Module;
+	0x10 | RFrame Module;
+	0x11 | TCP Driver Info;
+	0x12 | UI Info;
+
+str# CitrixICA::Session KeySeed;
+    SessionKeySeed;
+
+// define type length description
+//-------------------------------------------------------------------------
+//PACKET_INIT_REQUEST 0x00			// nn host->client init packet
+//PACKET_INIT_RESPONSE 0x01			// nn client->host init packet
+//PACKET_INIT_CONNECT 0x02			// nn host->client connect packet
+//PACKET_CALLBACK 0x03				// n callback (enter auto-answer)
+//PACKET_INIT_CONNECT_RESPONSE 0x04	// n client->host connect packet
+//PACKET_TERMINATE 0x05				// n terminate request
+//PACKET_REDRAW 0x06 				// nn redraw rectangles
+//PACKET_STOP_REQUEST 0x07 			// 0 c->h stop sending screen data
+//PACKET_STOP_OK 0x08 				// 0 h->c stop accepted
+//PACKET_REDISPLAY 0x09 			// 0 c->h start sending and redisplay
+//PACKET_KEYBOARD0 0x0A 			// 1 keyboard data (1 scan code)
+//PACKET_KEYBOARD1 0x0B 			// n keyboard data (short)
+//PACKET_KEYBOARD2 0x0C 			// nn keyboard data (long)
+//PACKET_MOUSE0 0x0D 				// 5 mouse data (1 mouse structure)
+//PACKET_MOUSE1 0x0E 				// n mouse data (short)
+//PACKET_MOUSE2 0x0F 				// nn mouse data (long)
+//PACKET_CLEAR_SCREEN 0x10 			// 1 clear screen
+//PACKET_CLEAR_EOL 0x12 			// 3 clear to end of line
+//PACKET_RAW_WRITE0 0x14 			// 1 write 1 bytes of raw data
+//PACKET_RAW_WRITE1 0x15 			// n write n bytes of raw data (short)
+//PACKET_RAW_WRITE2 0x16 			// nn write n bytes of raw data (long)
+//PACKET_WRTCHARSTRATTR1 0x17 		// n VioWrtCharStrAttr (short)
+//PACKET_WRTCHARSTRATTR2 0x18		// nn VioWrtCharStrAttr (long)
+//PACKET_WRTNCELL1 0x19 			// 5 VioWrtNCell (short)
+//PACKET_WRTNCELL2 0x1A 			// 6 VioWrtNCell (long)
+//PACKET_BEEP 0x1B					// 4 DosBeep
+//PACKET_SETMOU_POSITION 0x1C 		// 4 set mouse position (x,y)
+//PACKET_SETMOU_ATTR 0x1D			// 1 set mouse attributes
+//PACKET_SETCUR_POSITION 0x1E 		// 2 set cursor position (row,column)
+//PACKET_SETCUR_ROW 0x1F			// 1 set cursor row
+//PACKET_SETCUR_COLUMN 0x20			// 1 set cursor column
+//PACKET_SETCUR_SIZE 0x21			// 1 set cursor size
+//PACKET_SCROLL_SCREEN 0x22			// 1 scroll screen up 1 line
+//PACKET_SCROLLUP 0x23 				// 7 VioScrollUp
+//PACKET_SCROLLDN 0x24 				// 7 VioScrollDn
+//PACKET_SCROLLLF 0x25 				// 7 VioScrollLf
+//PACKET_SCROLLRT 0x26 				// 7 VioScrollRt
+//PACKET_SCROLLUP1 0x27 			// 0 VioScrollUp - 1 line using previous
+//PACKET_SCROLLDN1 0x28 			// 0 VioScrollDn - 1 line using previous
+//PACKET_SCROLLLF1 0x29 			// 0 VioScrollLf - 1 line using previous
+//PACKET_SCROLLRT1 0x2A 			// 0 VioScrollRt - 1 line using previous
+//PACKET_SCROLLUP2 0x2B 			// 1 VioScrollUp - n lines using previous
+//PACKET_SCROLLDN2 0x2C 			// 1 VioScrollDn - n lines using previous
+//PACKET_SCROLLLF2 0x2D 			// 1 VioScrollLf - n lines using previous
+//PACKET_SCROLLRT2 0x2E 			// 1 VioScrollRt - n lines using previous
+//PACKET_VIRTUAL_WRITE0 0x2F		// 2 write 2 byte of virtual data
+//PACKET_VIRTUAL_WRITE1 0x30		// n write n bytes of virtual data(short)
+//PACKET_VIRTUAL_WRITE2 0x31		// nn write n bytes of virtual data (long)
+//PACKET_VIRTUAL_ACK 0x32			// 3 ack virtual channel (slide window)
+//PACKET_SET_GRAPHICS 0x33			// n set graphics mode
+//PACKET_SET_TEXT 0x34				// n set text mode
+//PACKET_SET_GLOBAL_ATTR 0x35 		// 1 set attribute for raw packets
+//PACKET_SET_VIDEO_MODE 0x36		// 1 set video mode
+//PACKET_SET_LED 0x37				// 1 set keyboard LEDs
+//PACKET_VIRTUAL_FLUSH 0x38			// 2 flush specified virtual channel
+//PACKET_SOFT_KEYBOARD 0x39			// 1 raise or lower soft keyboard
+//PACKET_COMMAND_CACHE 0x3A			// nn write n bytes of caching data
+//PACKET_SET_CLIENT_DATA 0x3B 		// set n bytes of a data type
+//PACKET_ALT_KEYBOARD2 0x3C			// support non-scan coding for keyboard
+//PACKET_MOUSE_EXTENDED1 0x3D		// Extended mouse packet
+//PACKET_MOUSE_EXTENDED2 0x3E		// Extended mouse packet
+//PACKET_CHANNEL_MONITORING 0x3F	// n Communication channel
+//
+//// monitoring support
+//PACKET_REDRAW_EXTENDED 0x40		// supports resolution up to 64k x 64k
+//PACKET_COOKIE 0x41				// get/set session context data
+//PACKET_KEYBOARD_XKEYSYM 0x42		// X windows XKeysym keyboard packet
+//PACKET_RESUME_VIRTUAL_WRITE 0x43	// resume interrupted virtual write
+//PACKET_WDCREDENTIALS 0x44			// get/set credentials from wd
+//PACKET_MAXIMUM 0x45				// last packet type 
+
+// -----------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------
+
+

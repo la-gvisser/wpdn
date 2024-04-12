@@ -1,0 +1,115 @@
+// -----------------------------------------------------------------------------------------------
+// DVMRP - Distance Vector Multicast Routing Protocol
+//	globals i use:
+//		g[4] = code
+//
+//	last edited:	si 09.22.2004 [http://www.ietf.org/internet-drafts/draft-ietf-idmr-dvmrp-v3-11.txt]
+// -----------------------------------------------------------------------------------------------
+
+void DVMRP;
+	LABL 0 0 0 b1 DVMRP - Distance Vector Multicast Routing Protocol\DVMRP:;
+	DBIT 4 0 90 c2 Version:;
+	DBIT 4 0 90 c2 Type:;
+	DBYT 0 4 90 c2 Code:;
+	CST# 0 4 00 14 DVMRP::Commands::List;
+	HWRD 0 0 90 c2 Checksum:;
+	CKSM 3 0 24 14 Checksum invalid. Should be: ;
+	DBYT 0 1 90 c2 Reserved:;
+	BBYT 0 1 90 c9 Capabilities:;
+		CBIT 7 1 0 d4 1... .... Reserved;
+		CLSE 0 0 0 d4 0... .... Reserved;
+		CBIT 6 1 0 d4 .1.. .... Reserved;
+		CLSE 0 0 0 d4 .0.. .... Reserved;
+		CBIT 5 1  0 d4 ..1. .... Netmask capable;
+		CLSE 0 0  0 d4 ..0. .... Not Netmask capable;
+		CBIT 4 1  0 d4 ...1 .... SNMP capable;
+		CLSE 0 0  0 d4 ...0 .... Not SNMP capable;
+		CBIT 3 1  0 d4 .... 1... Multcast traceroute capable;
+		CLSE 0 0  0 d4 .... 0... Not Multcast traceroute capable;
+		CBIT 2 1  0 d4 .... .1.. Genid capable;
+		CLSE 0 0  0 d4 .... .0.. Not Genid capable;
+		CBIT 1 1  0 d4 .... ..1. Prune capable;
+		CLSE 0 0  0 d4 .... ..0. Not Prune capable;
+		CBIT 0 1  0 d4 .... ...1 Leaf;
+		CLSE 0 0  0 d4 .... ...0 Not Leaf;	
+		LABL 0 0  0 c8;
+	DBYT 0 1 90 c2 Minor:;
+	DBYT 0 1 90 c2 Major:;
+	TST# 0 4 00 00 DVMRP::Commands::Func;
+
+str# DVMRP::Commands::List;
+	1 | Probe; 
+	2 | Report;
+	7 | Prune; 
+	8 | Graft;
+	9 | Graft Ack;
+
+str# DVMRP::Commands::Func;
+	1 | DVMRP::Commands::Probe;
+	2 | DVMRP::Commands::Report;
+	7 | DVMRP::Commands::Prune;
+	8 | DVMRP::Commands::Graft;
+	9 | DVMRP::Commands::GraftAck;
+
+// ------------------------------------------------ 
+void DVMRP::Commands::Probe;	
+	DLNG 0 1 90 c2 Generation ID:;
+	while (g[16] > 0)
+	{
+		IPLG 0 0 90 c2 Neighbor IP:;
+	}
+	TRTS;
+
+// ------------------------------------------------ 
+void DVMRP::Commands::Report;
+	g[6] = 1;
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Route;
+		if (g[6] == 1)
+		{
+			g[1] = 255;
+			DGLB 0 1 90 c2 Subnet Mask:;
+			DBYT 0 2 0 0 .;
+			DBYT 0 3 0 0 .;
+			DBYT 0 4 0 0 .;
+		}
+		if (g[6] != 1)
+		{
+			DGLB 0 1 90 c2 Subnet Mask:;
+			DGLB 0 2 0 0 .;
+			DGLB 0 3 0 0 .;
+			DGLB 0 4 0 0 .;
+		}
+		DBYT 0 0 90 c2 Src Network:;
+		DBYT 0 0 0 0 .;
+		DBYT 0 0 0 0 .;
+		LABL 0 0 0 0 .0;
+		DBIT 1 6 05 05;  * invisible
+		DBIT 7 0 90 c2 Metric:;
+		LABL 0 0 0 b8;
+	}
+	TRTS;
+
+// ------------------------------------------------ 
+void DVMRP::Commands::Prune;
+	IPLG 0 1 90 c2 Source Host Address:;
+	IPLG 0 1 90 c2 Group Address:;
+	DLNG 0 1 90 c2 Prune Lifetime:;
+	LABL 0 0  0 24 in seconds;
+	IPLG 0 1 90 c2 Source Network Mask:;
+	TRTS;
+
+// ------------------------------------------------ 
+void DVMRP::Commands::Graft;
+	IPLG 0 1 90 c2 Source Host Address:;
+	IPLG 0 1 90 c2 Group Address:;
+	IPLG 0 1 90 c2 Source Network Mask:;
+	TRTS;
+
+// ------------------------------------------------ 
+void DVMRP::Commands::GraftAck;
+	IPLG 0 1 90 c2 Source Host Address:;
+	IPLG 0 1 90 c2 Group Address:;
+	IPLG 0 1 90 c2 Source Network Mask:;
+	TRTS;

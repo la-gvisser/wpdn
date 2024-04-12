@@ -1,0 +1,39 @@
+// Cisco Systems - Router-port Group Management Protocol (RGMP)
+//	rfc3488
+
+//notes:
+//  g[0xa] = type
+
+void RGMP()
+{
+	LABL(0, 0,    0, 0xb1, "RGMP - Router-port Group Management Protocol\RGMP:");
+	HBYT(0, g[0xa], 0x90, 0xc2, "Type:");
+	CST#(0, g[0xa], 0x00, 0x14, "RGMP::Type::List");
+	HBYT(0, g[1], 0x90, 0xc2, "Reserved:");
+	HWRD(0, g[1], 0x90, 0xc2, "Checksum:");
+	IPLG(0, g[1], 0x90, 0xc2, "Group Address:");
+	//TST#(0, g[0xa], 0x00, 0x14, "RGMP::Type_List");
+}
+
+str# RGMP::Type::List;
+	0xFF | Hello;
+	0xFE | Bye;
+	0xFD | Join a group;
+	0xFC | Leave a group;
+
+/*
+str# RGMP::Type::Func;
+	0xFF | RGMP::Hello;
+	0xFE | RGMP::Bye;
+	0xFD | RGMP::Join_Group;
+	0xFC | RGMP::Leave_Group;
+
+void RGMP::Hello;
+
+void RGMP::Bye;
+
+void RGMP::Join_Group;
+
+void RGMP::Leave_Group;
+*/
+

@@ -1,0 +1,2509 @@
+*********************************************************************
+* Protocol: ISO_IEC 14496
+*
+*           Information technology ¡ª Generic coding
+*           of moving pictures and associated audio
+*           information: Systems
+*  RFC 3160
+*  ISO 14496-2
+*********************************************************************
+
+void MPEG4::Video()
+{
+    l[1] = pw[0];
+    l[2] = pb[2];
+    if (l[1] == 0x0000)
+    {
+       if (l[2] == 1)
+       {
+            LABL 0 0  0 b1 MPEG4 Video Transportation (MP4V):;
+            HWRD 0 0 90 c2 Start Code Prefix:;
+            HBYT 80000000 0 0 0;
+            HBYT  0 4 90 c2 Start Code Value:;
+            CST#  0 4 0 24 MPEG4::StartCode_str;
+            SKIP 1;
+            LABL  0 0 0 24 Reserved;
+            DECR 4;
+            TSB#  0 4 0 0 MPEG4::StreamFunc;
+       }
+    }
+    TRTS;
+}
+
+void MPEG4::video_object_start_code()
+{
+	LABL 0 0 90 c7 Video Object;
+	DUMP 1 0 90 c2 Payload:;
+	LABL 0 0 0 c8;
+}
+
+//this is very long and uses a lot of global registers
+//used registers:
+//g[1] = newpred_enable
+//g[2] = video_object_layer_shape
+//g[3] = aux_comp_count
+//g[4] = reduced_resolution_vop_enable
+//g[5] = scalability
+//g[6] = sprite_enable
+//g[7] = low_latency_sprite_enable
+//g[8] = interlaced
+//g[9] = num_of_sprite_warping_points
+//g[10] = sprite_brightness_change
+//g[11] = sprite_transmit_mode
+//g[12] = enhancement_type
+//g[13] = vop_time_increment_resolution
+//g[14] = complexity_estimation_disable
+//g[17] = quanitser_precision
+void MPEG4::video_object_layer_start_code()
+{
+	LABL 0 0 90 c7 Video Object Layer;
+	l[1] = pw[0];
+	l[2] = pw[2];
+	l[1] &= 0xff0;
+	
+	if( l[1] == 0x0000 )
+	{
+		if( l[2] == 0x0120 )
+		{
+			//initialize the globals we will be using
+			g[1] = 0;
+			g[2] = 0;
+			g[3] = 0;
+			g[4] = 0;
+			g[5] = 0;
+			g[6] = 0;
+			g[7] = 0;
+			g[8] = 0;
+			g[9] = 0;
+			g[10] = 0;
+			g[11] = 0;
+			g[12] = 0;
+			g[13] = 0;
+			g[14] = 0;
+			
+			INCR 4;
+			DBIT 1 42 90 c2 Random Accessible:;
+			CEQU 0 42 0 14	False;
+			CEQU 1 42 0 14	True;
+			DBIT 8 42 90 c2 Type Indication:;
+			CST# 0 42 0 14 MPEG4::VOLTypeIndicator_str;
+			SKIP 1;
+			LABL	0	0	0	14	Reserved;
+			BBIT 1 42 5 5;	// is_object_layer_identifier
+			
+			if( l[2] == 1 )
+			{
+				//we need to save the version id for later
+				DBIT 4 1 90 c2 Version Number:;
+				CEQU 0 1 0 14 Reserved;
+				CEQU 1 1 0 14 Version 1;
+				CEQU 2 1 0 14 Version 2;
+				CLTE 3 1 0 14 Reserved;
+				
+				DBIT 3 42 90 c2 Priority:;
+				CEQU 1 42 0 14	Highest;
+				CEQU 7 42 0 14	Lowest; 
+			}
+			
+			DBIT 4 41 90 c2 Aspect Ratio:;
+			CST# 0 41 0 14 MPEG4::VOL_AspectRatio_str;
+			SKIP 1;
+			LABL	0	0	0	14 Reserved;
+			
+			if( l[1] == 0xf )
+			{
+				DBIT 8 42 90 c2 Aspect Ratio Width:;
+				DBIT 8 42 90 c2 Aspect Ratio Height:;
+			}
+			
+			BBIT 1 41 5 5;	//VOL control parameters
+			
+			if( l[1] == 1 )
+			{
+				MPEG4::vol_control_parameters;
+			}
+			
+			//we need to store the shape for later
+			DBIT 2 2 90 c2 Shape:;
+			CEQU 0 2 0 14 Rectangular;
+			CEQU 1 2 0 14 Binary;
+			CEQU 2 2 0 14 Binary Only;
+			CEQU 3 2 0 14 Grayscale;
+			
+			//video_object_layer_shape == grayscale
+			if( g[2] == 3 )
+			{
+				//video_object_layer_verid != 1
+				if( g[1] != 1 )
+				{
+					DBIT 4 41 90 c2 Shape Extension:;
+					
+					//get the aux_comp_count
+					//the aux_comp_count is returned in g[3]
+					TSB# 0 41 0 0 MPEG4::VOL_ShapeExt_AuxCompCount;
+				}
+			}
+			
+			BBIT 1 41 5 5;	// marker bit
+			DBIT 10 d 90 c2 Time Increment Resolution:;	// save this in g[13] we might need it for the fixed rate
+			BBIT 1 41 5 5;	// marker bit
+			DBIT 1 41 90 c2 Fixed Rate:;
+			CEQU 0 41 0 14	False;
+			CEQU 1 41 0 14	True;
+			
+			if( l[1] == 1 )
+			{
+				//the fixed_vop_time_increment uses the minimum number of bits
+				//needed to represent a value in the range
+				//[0, time_increment_resolution]
+				//we do this by reading one bit at a time and shifting the time_incr_res
+				//right one bit until the value hits 0
+				l[3] = 0;
+				l[2] = g[13];
+				while( l[2] > 0 )
+				{
+					SHFL 1 43;
+					BBIT 1 44 5 5;
+					l[3] |= l[4]; 
+					SHFR 1 42;
+				}
+				
+				DGLB 0 43 90 c2 Fixed Time Increment:;
+			}
+			
+			//g[1] should have the video_object_layer_verid
+			//g[2] should have the video_object_layer_shape
+			//g[3] should have the aux_comp_count
+			//g[6] will have sprite_enable on return
+			//g[7] will have low_latency_sprite_enable on return
+			MPEG4::vol_shape;
+			
+			MPEG4::next_start_code;
+			
+			MPEG4::user_data_start_code_loop;
+			
+			//sprite_enable == static
+			if( g[6] == 1 )
+			{
+				//low_latency_sprite_enable == false
+				if( g[7] == 0 )
+				{
+					MPEG4::video_object_plane;
+				}
+			}
+			
+			MPEG4::group_of_video_object_plane;
+			
+			MPEG4::vop_start_code;
+				
+			LABL 0 0 0 c8;
+			TRTS;
+		}
+     }
+	
+	//if we make it here this is a short header
+	//save that in g[1]
+	g[1] = 1;
+	MPEG4::video_plane_short_header_loop;
+	
+	LABL 0 0 0 c8;
+}
+
+void MPEG4::vol_control_parameters()
+{
+	DBIT 2 41 90 c2 Chroma Format:;
+	CEQU 0 41 0 14 Reserved;
+	CEQU 1 41 0 14 4:2:0;
+	CLTE 2 41 0 14 Reserved;
+	DBIT 1 41 90 c2 Low Delay:;
+	CEQU 1 41 0 14 No B-VOP;
+	BBIT 1 41 5 5;	// vbv_parameters
+	
+	if( l[1] == 1 )
+	{
+		DBIT f 41 5 5; // First Half Bitrate
+		BBIT 1 41 5 5;	// marker bit
+		DBIT f 42 5 5; // Latter Half Bitrate:;
+		SHFL f 41;
+		l[1] &= l[2];
+		DGLB 0 41 90 c2 Bit Rate:;
+		LABL 0 0 0 14 in units of 400 bps;
+		
+		BBIT 1 41 5 5;	// marker bit
+		DBIT f 41 5 5; // First Half VBV Buffer Size:;
+		BBIT 1 41 5 5;	// marker bit
+		DBIT 3 42 5 5;  // Latter Half VBV Buffer Size:;
+		SHFL 3 41;
+		l[1] &= l[2];
+		DGLB 0 41 90 c2 VBV Buffer Size:;
+		LABL 0 0 0 14 in units of 16384 bits;
+		
+		DBIT b 41 5 5; // First Half VBV Occupancy:;
+		BBIT 1 41 5 5;	// marker bit
+		DBIT f 42 5 5; // Latter Half VBV Occupancy:;
+		BBIT 1 41 5 5;	// marker bit
+		SHFL f 41;
+		l[1] &= l[2];
+		DGLB 0 41 90 c2 VBV Occupancy:;
+		LABL 0 0 0 14 in units of 64 bits;
+	}
+	
+	TRTS;
+}
+
+// inputs:
+// g[2] = video_object_layer_shape
+// g[20] = video_object_layer_verid 
+// 
+// outputs:
+// g[1] = newpred_enable
+// g[4] = reduced_resolution_vop_enable
+// g[5] = scalability
+// g[6] = sprite_enable
+// g[7] = low_latency_sprite_enable 
+// g[8] = interlaced
+// g[9] = num_of_sprite_warping_points
+// g[10] = sprite_brightness_change
+// g[12] = enhancement_type
+// g[17] = quantiser_precision
+void MPEG4::vol_shape()
+{
+	if (g[2] == 2 )
+	{
+		if( g[1] == 2 )
+		{
+			DBIT 1 5 90 c2 Scalability:;
+			
+			if( l[1] == 1 )
+			{
+				DBIT 4 41 90 c2 Ref Layer ID:;
+				MPEG4::vol_shape_sampling_factor;
+			}
+		}
+		
+		DBIT 1 41 90 c2 Resync Marker:;
+		CEQU 0 41 0 14 Enable;
+		CEQU 1 41 0 14 Disable;
+		
+		TRTS;
+	}
+	
+	if( g[2] == 0 )
+	{
+		//rectangular shape
+		BBIT 1 41 5 5;	// marker bit
+		DBIT d 41 90 c2 VOL Width:;
+		BBIT 1 41 5 5;	// marker bit
+		DBIT d 41 90 c2 VOL Height:;
+		BBIT 1 41 5 5;	// marker bit
+	}
+	
+	DBIT 1 8 90 c2 Interlaced:;
+	CEQU 0 8 0 14	False;
+	CEQU 1 8 0 14	True;
+	
+	DBIT 1 41 90 c2 obmc Disable:;
+	CEQU 0 41 0 14	False;
+	CEQU 1 41 0 14	True;
+	
+	l[2] = 0;
+	g[6] = 0;
+	//we save the sprite_enable value in g[6]
+	if( g[20] == 1 )
+	{
+		DBIT 1 6 90 c2 Sprite Enable:;		
+	}
+	
+	if( g[20] == 2 )
+	{
+		DBIT 2 6 90 c2 Sprite Enable:;
+	}	
+	CEQU 0 6 0 14	sprite not used;
+	CEQU 1 6 0 14	static sprite coding;
+	CEQU 2 6 0 14	global motion compensation;
+	CEQU 3 6 0 14	reserved;	
+	
+	g[7] = 0;
+	TSB# 0 42 0 0 MPEG4::VOL_SpriteEnableFunc;
+	
+	if( g[20] == 2 )
+	{
+		if( g[2] > 0 )
+		{
+			DBIT 1 41 90 c2 sadct Disable:;
+		}
+	}
+	
+	DBIT 1 41 90 c2 Not 8 Bit:;
+	
+	g[17] = 5;	//the quantiser_precision is 5 by default
+	if( l[1] == 1 )
+	{
+		DBIT 4 11 90 c2 Quantiser Precision:;
+		DBIT 4 41 90 c2 Bits Per Pixel:;
+	}
+	
+	if( g[2] == 3 )
+	{
+		//if this is a grayscale shape
+		DBIT 1 41 90 c2 No Gray Quantiser Update:;
+		CEQU 0 41 0 14 updated every macroblock;
+		CEQU 1 41 0 14 fixed quantiser;
+		DBIT 1 41 90 c2 Composition Method:;
+		CEQU 0 41 0 14 cross fading;
+		CEQU 1 41 0 14 additive mixing;
+		DBIT 1 41 90 c2 Linear Composition:;
+		CEQU 0 41 0 14 uses video signal format;
+		CEQU 1 41 0 14 uses linear signals;
+	}
+	
+	MPEG4::vol_shape_quant_type;
+	
+	if( g[20] == 2 )
+	{
+		DBIT 1 41 90 c2 Quarter Sample:;
+	}
+	
+	DBIT 1 e 90 c2 Complexity Estimation:;
+	CEQU 0 e 0 14 Enable;
+	CEQU 1 e 0 14 Disable;
+	
+	if( g[14] == 0 )
+	{
+		MPEG4::vop_complexity_estimation_header;
+	}
+	
+	DBIT 1 41 90 c2 Resync Marker:;
+	CEQU 0 41 0 14 Enable;
+	CEQU 1 41 0 14 Disable;
+	
+	DBIT 1 41 90 c2 Data Partitioned:;
+	
+	if( l[1] == 1 )
+	{
+		DBIT 1 41 90 c2 Reversible VLC:;
+		CEQU 0 41 0 14 False;
+		CEQU 1 41 0 14 True;
+	}
+	
+	if( g[20] == 2 )
+	{
+		//we replace g[1] with the newpred_enable value
+		DBIT 1 1 90 c2 Newpred Enable:;
+		
+		if( g[1] == 1 )
+		{
+			DBIT 2 41 90 c2 Requested Upstream Message Type:;
+			DBIT 1 41 90 c2 Newpred Segment Type:;
+		}
+		
+		DBIT 1 4 90 c2 Reduced Resolution VOP Enable:;
+	}
+	
+	DBIT 1 5 90 c2 Scalability:;
+	
+	if( g[5] == 1 )
+	{
+		MPEG4::vol_shape_scalability;
+	}
+}
+
+// outputs:
+// g[7] = low_latency_sprite_enable   
+void MPEG4::vol_sprite_enable_static()
+{
+	DBIT d 41 90 c2 Sprite Width:;
+	BBIT 1 41 5 5;	// marker bit
+	DBIT d 41 90 c2 Sprite Height:;
+	BBIT 1 41 5 5;	// marker bit
+	DBIT d 41 90 c2 Sprite Left Coord:;
+	BBIT 1 41 5 5;	// marker bit
+	DBIT d 41 90 c2 Sprite Top Coord:;
+	BBIT 1 41 5 5;	// marker bit
+	
+	MPEG4::vol_sprite_enable_gmc;
+	
+	DBIT 1 7 90 c2 Low Latency Sprite:;
+	CEQU 0 7 0 14	Disable;
+	CEQU 1 7 0 14	Enable;
+}
+
+//outputs:
+// g[9] = num_of_sprite_warp_points
+// g[10] = sprite_brightness_change
+void MPEG4::vol_sprite_enable_gmc()
+{
+	DBIT 6 9 90 c2 Number of Sprite Warp Points:;
+	DBIT 2 41 90 c2 Sprite Warp Accuracy:;
+	DBIT 1 a 90 c2 Sprite Brightness Change:;
+	
+	TRTS;
+}
+
+// inputs:
+// g[2] = video_object_layer
+// outputs:
+// g[12] = enhancement_type
+void MPEG4::vol_shape_scalability()
+{
+	DBIT 1 41 90 c2 Hierarchy Type:;
+	DBIT 4 42 90 c2 Ref Layer ID:;
+	DBIT 1 42 90 c2 Ref Layer Sampling Direc:;
+	DBIT 5 42 90 c2 Horizontal Sampling Factor N:;
+	DBIT 5 42 90 c2 Horizontal Sampling Factor M:;
+	DBIT 5 42 90 c2 Vertical Sampling Factor N:;
+	DBIT 5 42 90 c2 Vertical Sampling Factor M:;
+	DBIT 1 c 90 c2 Enhancement Type:;
+	
+	if( g[2] == 1 )
+	{
+		if( l[1] == 0 )
+		{
+			DBIT 1 42 90 c2 Use Ref Shape:;
+			DBIT 1 42 90 c2 Use Ref Texture:;
+			MPEG4::vol_shape_sampling_factor;
+		}
+	}
+}
+
+void MPEG4::vol_shape_sampling_factor()
+{
+	DBIT 5 41 90 c2 Shape Horizontal Sampling Factor N:;
+	DBIT 5 41 90 c2 Shape Horizontal Sampling Factor M:;
+	DBIT 5 41 90 c2 Shape Vertical Sampling Factor N:;
+	DBIT 5 41 90 c2 Shape Vertical Sampling Factor M:;	
+}
+
+// outputs:
+// g[3] = 0
+void MPEG4::vol_shapeext_auxcomp_0()
+{
+	g[3] = 0;
+}
+
+// outputs:
+// g[3] = 1
+void MPEG4::vol_shapeext_auxcomp_1()
+{
+	g[3] = 1;
+}
+
+// outputs:
+// g[3] = 2
+void MPEG4::vol_shapeext_auxcomp_2()
+{
+	g[3] = 2;
+}
+
+// outputs:
+// g[3] = 3
+void MPEG4::vol_shapeext_auxcomp_3()
+{
+	g[3] = 3;
+}
+
+// inputs:
+// g[2] = video_object_layer_shape
+// g[3] = aux_comp_count
+void MPEG4::vol_shape_quant_type()
+{
+	BBIT 1 41 5 5;	//quantiser type
+	
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	DBIT 1 41 90 c2 Intra Quantiser Matrix:;
+	CEQU 0 41 0 14	use default;
+	CEQU 1 41 0 14	use specified matrix;
+	
+	if( l[1] == 1 )
+	{
+		LABL 0 0 0 b7 Intra Quantiser Matrix;
+		MPEG4::vol_shape_quant_matrix;
+		LABL 0 0 0 b8;
+	}
+	
+	DBIT 1 41 90 c2 NonIntra Quantiser Matrix:;
+	CEQU 0 41 0 14	use default;
+	CEQU 1 41 0 14	use specified matrix;
+	
+	if( l[1] == 1 )
+	{
+		LABL 0 0 0 b7 NonIntra Quantiser Matrix;
+		MPEG4::vol_shape_quant_matrix;
+		LABL 0 0 0 b8;
+	}
+	
+	if( g[2] == 3 )
+	{
+		//grayscale shape
+		l[1] = g[3];
+		
+		while( l[1] > 0 )
+		{
+			DBIT 1 42 90 c2 GrayScale Intra Quantiser Matrix:;
+			CEQU 0 42 0 14	use default;
+			CEQU 1 42 0 14	use specified matrix;
+			
+			if( l[2] == 1 )
+			{
+				LABL 0 0 0 b7 GrayScale Intra Quantiser Matrix;
+				MPEG4::vol_shape_quant_matrix;
+				LABL 0 0 0 b8;
+			}
+			
+			DBIT 1 42 90 c2 GrayScale NonIntra Quantiser Matrix:;
+			CEQU 0 42 0 14	use default;
+			CEQU 1 42 0 14	use specified matrix;
+			
+			if( l[2] == 1 )
+			{
+				LABL 0 0 0 b7 GrayScale NonIntra Quantiser Matrix;
+				MPEG4::vol_shape_quant_matrix;
+				LABL 0 0 0 b8;
+			}
+		}
+	}
+}
+
+void MPEG4::vol_shape_quant_matrix()
+{
+	//finally something we can skip over
+	//the matrix is a series of 2-64 8 bit values
+	//a 0 value indicates end of the series
+	//if there are 64 values is there still a zero at the end?
+	l[1] = 2;
+	l[2] = 1;
+	l[3] = 0;
+	while( l[2] == 1 )
+	{
+		DBYT 0 43 5 5;
+		
+		if( l[3] == 0 )
+		{
+			l[2] = 0;
+		}
+		
+		l[1] += 1;
+		
+		if( l[1] == 64 )
+		{
+			l[2] = 0;
+		}
+	}
+	
+	HEX# 0 41 90 c2 Quantiser Matrix:;
+	
+	TRTS;
+}
+
+void MPEG4::vop_complexity_estimation_header()
+{
+	DBIT 2 41 90 c2 Estimation Method:;
+	CEQU 0 41 0 14 Version 1;
+	CEQU 1 41 0 14 Version 2;
+	
+	if( l[1] < 2 )
+	{
+		DBIT 1 42 90 c2 Shape Complexity Estimation:;
+		CEQU 0 42 0 14	Enable;
+		CEQU 1 42 0 14	Disable;
+		
+		if( l[2] == 0 )
+		{
+			BBIT 6 42 90 c2 Shape Complexity Estimation:;
+			BST# 0 42 0 14 MPEG4::Shape_complexity_estimation_str; 
+		}
+		
+		LABL 0 0 0 c7 Texture Complexity Estimation;
+		
+		DBIT 1 42 90 c2 Set 1:;
+		CEQU 0 42 0 14 Enable;
+		CEQU 1 42 0 14 Disable;
+		
+		if( l[2] == 0 )
+		{
+			BBIT 4 42 90 c2 Set 1 Estimation:;
+			BST# 0 42 0 0 MPEG4::Texture_complexity_estimation_set1_str;
+		}
+		
+		BBIT 1 42 5 5;	//marker bit
+		
+		DBIT 1 42 90 c2 Set 2:;
+		CEQU 0 42 0 14 Enable;
+		CEQU 1 42 0 14 Disable;
+		
+		if( l[2] == 0 )
+		{
+			DBIT 4 42 90 c2 Set 2 Estimation:;
+			BST# 0 42 0 0 MPEG4::Texture_complexity_estimation_set2_str;
+		}
+		
+		LABL 0 0 0 c8;
+		
+		DBIT 1 42 90 c2 Motion Compensation Complexity:;
+		CEQU 0 42 0 14 Enable;
+		CEQU 1 42 0 14 Disable;
+		
+		if( l[2] == 0 )
+		{
+			DBIT 6 42 90 c2 Motion Compensation Complexity:;
+			BST# 0 42 0 0 MPEG4::Motion_compensation_complexity_str;
+		}
+		
+		BBIT 1 42 5 5;	//marker bit
+		
+		if( l[1] == 1 )
+		{
+			DBIT 1 42 90 c2 Version2 Complexity Estimation:;
+			CEQU 0 42 0 14 Enable;
+			CEQU 1 42 0 14 Disable;
+			
+			if( l[2] == 0 )
+			{
+				BBIT 2 42 90 c2 Version2 Complexity Estimation:;
+				BST# 0 42 0 0 MPEG4::Version2_complexity_estimation_str;
+			}
+		} 
+	}
+}
+
+void MPEG4::visual_object_sequence_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001B0 )
+	{
+		TRTS;
+	}
+	
+	INCR 4;	//skip past the start code
+	
+	LABL 0 0 90 c7 Visual Object Sequence;
+	HBYT 0 42 90 c2 Profile/Level Indication;
+	CST# 0 42 0 24 MPEG4::ProfileAndLevelIndication;
+	MPEG4::next_object_start_code;
+}
+
+void MPEG4::visual_object_sequence_end_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001B1 )
+	{
+		TRTS;
+	}
+	
+	INCR 4;	//skip past start code
+	
+	LABL 0 0 90 c7 visual_object_sequence end;
+	DUMP 1 0 90 c2 Payload:;
+	LABL 0 0 0 c8;
+}
+    
+void MPEG4::user_data_start_code()
+{
+	l[1] = pl[0];
+
+	if( l[1] == 0x000001b2 )
+	{
+		INCR 4;
+		LABL 0 0 90 c7 User Data;
+		l[1] = 0;
+		l[2] = 1;
+		
+		while( l[2] == 1 )
+		{
+			l[3] = pw[0];
+			l[4] = pb[2];
+			
+			if( l[3] == 0x0000 )
+			{
+				if( l[4] == 0x01 )
+				{
+					l[2] = 0;
+					//this marks the start of the next start code
+					//don't include it in the user data dump
+				}
+			}
+			
+			if( l[2] == 1 )
+			{
+				l[1] += 1;
+				INCR 1;
+			}
+		}
+
+		DECR 0 41;
+		DUMP 0 41 90 c2 Data:;
+		LABL 0 0 0 c8;
+    }
+}
+
+void MPEG4::user_data_start_code_loop()
+{
+	l[1] = pl[0];
+
+	if( l[1] == 0x000001b2 )
+	{
+		MPEG4::user_data_start_code;
+		
+		MPEG4::user_data_start_code_loop;
+    }
+    
+    TRTS;
+}
+     
+void MPEG4::group_of_video_object_plane()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001b3 )
+	{
+		TRTS;
+    }
+    
+    DLNG 0 41 5 5;
+    
+	LABL 0 0 0 c7 Group of VOP;
+	LABL 0 0 0 c7 Time Code;
+	MPEG4::time_code;
+	LABL 0 0 0 c8;
+	DBIT 1 41 90 c2 Closed Gov:;
+	DBIT 1 41 90 c2 Broken Link:;
+	
+	MPEG4::next_start_code;
+	
+	MPEG4::user_data_start_code_loop;
+	LABL 0 0 0 c8;
+}
+
+void MPEG4::time_code()
+{
+	DBIT 5 41 90 c2 Hours:;
+	DBIT 6 41 90 c2 Minutes:;
+	DBIT 1 41 5 5;	//marker bit
+	DBIT 6 41 90 c2 Seconds:;
+}
+     
+void MPEG4::video_session_error_code()
+{
+     LABL 0 0 90 c7 Video Session Error;
+     DUMP 1 0 90 c2 Payload:;
+     LABL 0 0 0 c8;
+}
+ 
+//outputs:
+//g[20] = visual_object_verid
+void MPEG4::visual_object_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001B5 )
+	{
+		TRTS;
+	}
+	
+	INCR 4;	//skip past start code
+	
+	LABL 0 0 90 c7 Visual Object;
+	DBIT 1 42 90 c2 Is Visual Object ID;
+	if( l[2] == 1 )
+	{
+	HBIT 4 14 90 c2 Visual Object VerID;
+	HBIT 3 42 90 c2 Visual Object Priority;
+	}
+	HBIT 4 42 90 c2 Visual Object Type;
+	CST# 0 42 0 24 MPEG4::VisualObjectType;
+	if( l[2] <= 2 )
+	{
+	// Video ID;
+	MPEG4::video_signal_type;
+	}
+
+	//aligns to the next byte
+	MPEG4::next_start_code;
+
+	MPEG4::user_data_start_code_loop;
+  
+	if( l[2] == 1 )
+	{
+	//if this is a videoid object type
+	//read the video object start code
+	BBIT 1b 41 5 5;
+	HBIT 5 41 90 c2 Video Object Start Code:;
+	}
+
+	TSB# 0 42 0 0 MPEG4::VisualObjectTypeFunc;
+
+	GBIT 18 41 5 5;
+	if( l[1] != 1 )
+	{
+		MPEG4::next_start_code;
+	}
+}
+
+void MPEG4::video_signal_type()
+{
+    BBIT 1 42 90 c2 Video Signal Type Present:;
+	CEQU 0 42 0 14 False;
+	CEQU 1 42 0 14 True;
+	
+	if( l[2] == 1 )
+	{
+		HBIT 3 42 90 c2 Video Format;
+		HBIT 1 42 90 c2 Video Range;
+		BBIT 1 42 90 c2 Color Desc Present;
+		if( l[2] == 1 )
+		{
+			DBIT 8 42 90 c2 Color Primaries;
+			DBIT 8 42 90 c2 Transfer Characteristics;
+			DBIT 8 42 90 c2 Matrix Coefficients;
+		}
+	}
+}
+
+//inputs:    
+//g[1] = newpred_enable
+//g[2] = video_object_layer_shape
+//g[3] = aux_comp_count
+//g[4] = reduced_resolution_vop_enable
+//g[5] = scalability
+//g[6] = sprite_enable
+//g[7] = low_latency_sprite_enable
+//g[8] = interlaced
+//g[9] = num_of_sprite_warping_points
+//g[10] = sprite_brightness_change
+//g[11] = sprite_transmit_mode
+//g[12] = enhancement_type
+//g[13] = vop_time_increment_resolution
+//g[14] = complexity_estimation_disable
+void MPEG4::vop_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001b6 )
+	{
+		TRTS;
+	}
+	
+	//set the sprite_transmit_mode to piece
+	g[11] = 1;
+	
+	INCR 4;	//skip past the start code
+	
+	LABL 0 0 90 c7 Video Object Plane:;
+	DBIT 2 41 90 c2 Coding Type: ;	//save the coding type in l[1], we need it later
+	CST# 0 41 0 24 MPEG4::FrameType_str;
+	g[15] = l[41];
+	LABL 0 0 90 c2 Module Time Base:;
+	l[2] = 0;
+	DBIT 1 43 5 5;
+	while (l[3] !=0 )
+	{
+		l[2]+=1;
+		DBIT 1 43 5 5;
+	}
+	
+	DGLB 0 42 40 22 " ";
+	LABL 0 0 0 24 second(s);
+	BBIT 1 42 5 5; //marker bit;
+	
+	l[2] = g[13];
+	l[3] = 0;
+	l[4] = 0;	//track the number of bits
+	
+	if( l[2] == 0 )
+	{
+		//if we get here then we didn't get any config headers, the only option is to bail out
+		DUMP 1 0 90 c2 MPEG4 Data:;
+		TRTS;
+	}
+	
+	while( l[2] > 0 )
+	{
+		SHFL 1 43;
+		BBIT 1 45 5 5;
+		l[3] |= l[5]; 
+		SHFR 1 42;
+		l[4] += 1;
+	}
+	
+	DGLB 0 43 90 c2 Time Increment:;
+	BBIT 1 42 5 5; //marker bit;
+	DBIT 1 42 90 c2 Coded:;
+	CEQU 0 42 0 14 False;
+	CEQU 1 42 0 14 True;
+	
+	if( l[2] == 0 )
+	{
+		MPEG4::next_start_code();
+		TRTS;
+	}
+	
+	//is newpred_enable true
+	if (g[1] == 1 )
+	{
+		l[4] += 3;
+		
+		if( l[4] > 15 )
+		{
+			l[4] = 15;
+		}
+		
+		l[2] = 0;
+		l[5] = l[4];
+		while ( l[5] > 0 )
+		{
+			SHFL 1 42;
+			BBIT 1 43 5 5;
+			l[2] |= l[3];
+			l[5] -= 1;
+		}
+		
+		DGLB 0 42 90 c2 ID:;
+		DBIT 1 42 90 c2 ID For Prediction:;
+		CEQU 0 42 0 14 Not Present;
+		CEQU 1 42 0 14 Present;
+		
+		if( l[2] == 1 )
+		{
+			l[2] = 0;
+			l[5] = l[4];
+			while ( l[5] > 0 )
+			{
+				SHFL 1 42;
+				BBIT 1 43 5 5;
+				l[2] |= l[3];
+				l[5] -= 1;
+			}
+			
+			DGLB 0 42 90 c2 Prediction ID:;
+			DBIT 1 42 5 5;	//marker bit			
+		}
+	}
+	
+	//video_object_layer_shape != binary
+	if( g[2] != 1 )
+	{
+		//vop_coding_type == P
+		if( l[1] == 1 )
+		{
+			DBIT 1 42 90 c2 Rounding Type:;
+		}
+		
+		//vop_coding_type == S
+		if( l[1] == 3 )
+		{
+			//sprite_enable == GMC
+			if( g[6] == 2 )
+			{
+				DBIT 1 42 90 c2 Rounding Type:;
+			}
+		}
+	}
+	
+	//reduced_resolution_vop_enable == true
+	if( g[4] == 1 )
+	{
+		//video_object_layer_shape == rectangle
+		if( g[2] == 0 )
+		{
+			//vop_coding_type == I || P
+			if( l[1] < 2 )
+			{
+				DBIT 1 42 90 c2 Reduced Resolution:;
+			}
+		}
+	}
+	
+	//video_object_layer_shape != rectangle
+	if( g[2] != 0 )
+	{
+		//sprite_enable != static
+		if( g[6] != 1 )
+		{
+			//vop_coding_type != I
+			if( l[1] != 0 )
+			{
+				DBIT d 42 90 c2 VOP Width:;
+				DBIT 1 42 5 5; //marker bit
+				DBIT d 42 90 c2 VOP Height:;
+				DBIT 1 42 5 5; //marker bit
+				DBIT d 42 90 c2 Horizontal Spatial Ref:;
+				DBIT 1 42 5 5; //marker bit
+				DBIT d 42 90 c2 Vertical Spatial Ref:;
+				DBIT 1 42 5 5; //marker bit
+			}
+		}
+		
+		//video_object_layer_shape != binary only
+		if( g[2] != 2 )
+		{
+			//scalability == true
+			if( g[5] == 1 )
+			{
+				//enhancement_type == true
+				if( g[12] == 1 )
+				{
+					DBIT 1 42 90 c2 Background Composition:;
+				}
+			}
+		}
+		
+		DBIT 1 42 90 c2 Change Conv. Ratio:;
+		CEQU 0 42 0 14 Enable;
+		CEQU 1 42 0 14 Disable;
+		
+		DBIT 1 42 5 5;	//vop_constant_alpha
+		if( l[2] == 1 )
+		{
+			DBIT 8 42 90 c2 Constant Alpha Value:;
+		}
+	}
+		
+	//video_object_layer_shape != binary_only
+	if( g[2] != 2 )
+	{
+		//complexity_estimation_disable == false
+		if( g[14] == 0 )
+		{
+			MPEG4::read_vop_complexity_estimation_header;
+		}
+		
+		DBIT 3 42 90 c2 Intra DC VLC Theshold:;
+		CST#  0 42 0 24 MPEG4::Intra_dc_str;
+		
+		//interlaced == true
+		if( g[8] == 1 )
+		{
+			DBIT 1 42 90 c2 Top Field First:;
+			CEQU 0 42 0 14 False;
+			CEQU 1 42 0 14 True;
+			
+			DBIT 1 42 90 c2 Alernate Vertical Scan Flag:;
+		}
+	}
+		
+	//sprite_enable is enabled
+	if( g[6] > 0 )
+	{
+		//sprite_enable == static || GMC
+		if( g[6] < 3 )
+		{
+			//vop_coding_type == S
+			if( l[1] == 3 )
+			{
+				//num_of_sprite_warping_points > 0
+				if( g[9] > 0 )
+				{
+					
+					MPEG4::sprite_trajectory;
+				}
+				
+				//sprite_brightness_change == true
+				if( g[10] == 1 )
+				{
+					DBIT 4 0 90 c2 brightness_change_factor_size:;
+					DBIT 6 0 90 c2 brightness_change_factor_code:;
+				}
+				
+				//sprite_enable == static
+				if( g[6] == 1 )
+				{
+					//sprite_transmit_mode != stop
+					if( g[11] != 0 )
+					{
+						//low_latency_sprite_enable == true
+						if( g[7] == 1 )
+						{
+							l[2] = 1;
+							while( l[2] == 1 )
+							{
+								DBIT 2 b 5 5;	//sprite_transmit_mode
+								
+								l[2] = 0;	//stop the loop by default
+								
+								if( g[11] == 1 )
+								{
+									MPEG4::decode_sprite_piece;
+									l[2] = 1;
+								}
+								
+								if( g[11] == 2 )
+								{
+									MPEG4::decode_sprite_piece;
+									l[2] = 1;
+								}
+							}
+						}
+					}
+					
+					MPEG4::next_start_code;
+					TRTS;
+				}
+			}
+		}
+	}
+
+	//video_object_layer_shape != binary_only
+	if( g[2] != 2 )
+	{
+		l[2] = g[17];
+		l[3] = 0;
+		while( l[2] > 0 )
+		{
+			BBIT 1 44 5 5;
+			SHFL 1 43 5 5;
+			l[3] |= l[4];
+			l[2] -= 1;
+		}
+		
+		DGLB 0 43 90 c2 Quantiser:;
+		
+		//video_object_layer_shape == grayscale
+		if( g[2] == 3 )
+		{
+			l[2] = g[3];
+			l[3] = 0;
+			
+			while( l[2] > 0 )
+			{
+				DBIT 6 44 90 c2 Alpha Quantiser:;
+				l[2] -= 1;
+			}
+		}
+		
+		//vop_coding_type != I
+		if( l[1] != 0 )
+		{
+			DBIT 3 42 90 c2 Fcode Forward:;
+		}
+		
+		//vop_coding_type == B
+		if( l[1] == 2 )
+		{
+			DBIT 3 42 90 c2 Fcode Backward:;
+		}
+		
+		//scalability == false
+		if( g[5] == 0 )
+		{
+			//video_object_layer_shape != rectangle
+			if( g[2] != 0 )
+			{
+				//vop_coding_type != I
+				if( l[1] != 0 )
+				{
+					DBIT 1 42 90 c2 Shape Coding Type:;
+				}
+			}
+			
+			MPEG4::motion_shape_texture;
+		}
+		
+		//scalability == true
+		if( g[5] == 1 )
+		{
+			//enhancement_type == true
+			if( g[12] == 1 )
+			{
+				DBIT 1 42 5 5;
+				
+				if( l[2] == 1 )
+				{
+					LABL 0 0 0 c7 Backward Shape;
+					DBIT d 42 90 c2 Width:;
+					DBIT 1 44 5 5;	//marker bit
+					DBIT d 43 90 c2 Height:;
+					DBIT 1 44 5 5;	//marker bit
+					DBIT d 44 90 c2 Horizontal MC Spatial Ref:;
+					DBIT 1 44 5 5;	//marker bit
+					DBIT d 44 90 c2 Vertical MC Spatial Ref:;
+					
+					DUMP 1 0 90 c2 MPEG4 Data:;
+					
+					LABL 0 0 0 c8;
+					
+					TRTS;	//remove this if we replace the dump above with backward_shape()
+					
+					DBIT 1 42 5 5;
+					
+					if( l[2] == 1 )
+					{
+						LABL 0 0 0 c7 Forward Shape;
+						DBIT d 42 90 c2 Width:;
+						DBIT 1 44 5 5;	//marker bit
+						DBIT d 43 90 c2 Height:;
+						DBIT 1 44 5 5;	//marker bit
+						DBIT d 44 90 c2 Horizontal MC Spatial Ref:;
+						DBIT 1 44 5 5;	//marker bit
+						DBIT d 44 90 c2 Vertical MC Spatial Ref:;
+						
+						DUMP 1 0 90 c2 MPEG4 Data:;
+												
+						LABL 0 0 0 c8;
+						
+						TRTS;	//remove this if we replace the dump above with forward_shape()
+					}
+				}
+			}
+			
+			DBIT 2 42 90 c2 Ref Select Code:;
+			MPEG4::combined_motion_shape_texture;
+		}
+	}
+
+	if( g[2] == 2 )
+	{
+		MPEG4::combined_motion_shape_texture;
+	}
+	
+	MPEG4::next_start_code;
+		
+	DUMP 1 0 90 c2 Continuous MPEG4 Payload:;
+	LABL 0 0 0 c8;
+}
+
+void MPEG4::sprite_trajectory()
+{
+	l[9] = g[9];
+	while (g[9] != 0)
+	{
+		DBIT 1 41 90 c2 marker_bit:; 
+		DBIT b 42 90 c2 dmv_length:;
+		DBIT d 42 90 c2 dmv_code:;
+		DUMP 1 0 90 c2 Continuous MPEG4 Payload:;
+		g[9] -= 1;
+	}
+	g[9] = l[9];
+}
+
+void MPEG4::read_vop_complexity_estimation_header()
+{
+	//vop_coding_type==“I”
+	if (g[15] == 0)
+	{
+		DBIT 8 0 90 c2 dcecs_opaque:;
+		DBIT 8 0 90 c2 dcecs_transparent:;
+		DBIT 8 0 90 c2 dcecs_intra_cae:;
+		DBIT 8 0 90 c2 dcecs_inter_cae:;
+		DBIT 8 0 90 c2 dcecs_no_update:;
+		DBIT 8 0 90 c2 dcecs_upsampling:;
+		DBIT 8 0 90 c2 dcecs_intra_block:;
+		DBIT 8 0 90 c2 dcecs_not_coded_blocks:;
+		DBIT 8 0 90 c2 dcecs_dct_coefs:;
+		DBIT 8 0 90 c2 dcecs_dct_lines:;
+		DBIT 8 0 90 c2 dcecs_vlc_symbols:;
+		DBIT 4 0 90 c2 dcecs_vlc_bits:;
+		DBIT 8 0 90 c2 dcecs_sadct:;
+	}
+	//vop_coding_type==“P"
+	if (g[15] == 1)
+	{
+		DBIT 8 0 90 c2 dcecs_opaque:;
+		DBIT 8 0 90 c2 dcecs_transparent:;
+		DBIT 8 0 90 c2 dcecs_intra_cae:;
+		DBIT 8 0 90 c2 dcecs_inter_cae:;
+		DBIT 8 0 90 c2 dcecs_no_update:;
+		DBIT 8 0 90 c2 dcecs_upsampling:;
+		DBIT 8 0 90 c2 dcecs_intra_block:;
+		DBIT 8 0 90 c2 dcecs_not_coded_blocks:;
+		DBIT 8 0 90 c2 dcecs_dct_coefs:;
+		DBIT 8 0 90 c2 dcecs_dct_lines:;
+		DBIT 8 0 90 c2 dcecs_vlc_symbols:;
+		DBIT 4 0 90 c2 dcecs_vlc_bits:;
+		DBIT 8 0 90 c2 dcecs_inter_blocks:;
+		DBIT 8 0 90 c2 dcecs_inter4v_blocks :;
+		DBIT 8 0 90 c2 dcecs_apm:;
+		DBIT 8 0 90 c2 dcecs_npm:;
+		DBIT 8 0 90 c2 dcecs_forw_back_mc_q:;
+		DBIT 8 0 90 c2 dcecs_halfpel2:;
+		DBIT 8 0 90 c2 dcecs_halfpel4:;
+		DBIT 8 0 90 c2 dcecs_sadct:;
+		DBIT 8 0 90 c2 dcecs_quarterpel:;
+	}
+	//vop_coding_type==“B"
+	if (g[15] == 2)
+	{
+		DBIT 8 0 90 c2 dcecs_opaque:;
+		DBIT 8 0 90 c2 dcecs_transparent:;
+		DBIT 8 0 90 c2 dcecs_intra_cae:;
+		DBIT 8 0 90 c2 dcecs_inter_cae:;
+		DBIT 8 0 90 c2 dcecs_no_update:;
+		DBIT 8 0 90 c2 dcecs_upsampling:;
+		DBIT 8 0 90 c2 dcecs_intra_block:;
+		DBIT 8 0 90 c2 dcecs_not_coded_blocks:;
+		DBIT 8 0 90 c2 dcecs_dct_coefs:;
+		DBIT 8 0 90 c2 dcecs_dct_lines:;
+		DBIT 8 0 90 c2 dcecs_vlc_symbols:;
+		DBIT 4 0 90 c2 dcecs_vlc_bits:;
+		DBIT 8 0 90 c2 dcecs_inter_blocks:;
+		DBIT 8 0 90 c2 dcecs_inter4v_blocks :;
+		DBIT 8 0 90 c2 dcecs_apm:;
+		DBIT 8 0 90 c2 dcecs_npm:;
+		DBIT 8 0 90 c2 dcecs_forw_back_mc_q:;
+		DBIT 8 0 90 c2 dcecs_halfpel2:;
+		DBIT 8 0 90 c2 dcecs_halfpel4:;
+		DBIT 8 0 90 c2 dcecs_interpolate_mc_q:;
+		DBIT 8 0 90 c2 dcecs_sadct:;
+		DBIT 8 0 90 c2 dcecs_quarterpel:;
+	}
+	//vop_coding_type==‘S’&& sprite_enable == “static”
+	if (g[15] == 3)
+	{	
+		DBIT 8 0 90 c2 dcecs_intra_block:;
+		DBIT 8 0 90 c2 dcecs_not_coded_blocks:;
+		DBIT 8 0 90 c2 dcecs_dct_coefs:;
+		DBIT 8 0 90 c2 dcecs_dct_lines:;
+		DBIT 8 0 90 c2 dcecs_vlc_symbols:;
+		DBIT 4 0 90 c2 dcecs_vlc_bits:;
+		DBIT 8 0 90 c2 dcecs_inter_blocks:;
+		DBIT 8 0 90 c2 dcecs_inter4v_blocks :;
+		DBIT 8 0 90 c2 dcecs_apm:;
+		DBIT 8 0 90 c2 dcecs_npm:;
+		DBIT 8 0 90 c2 dcecs_forw_back_mc_q:;
+		DBIT 8 0 90 c2 dcecs_halfpel2:;
+		DBIT 8 0 90 c2 dcecs_halfpel4:;
+		DBIT 8 0 90 c2 dcecs_interpolate_mc_q:;
+	}	
+}
+
+void MPEG4::video_object_plane()
+{
+	MPEG4::video_plane_short_header_loop;
+}
+
+void MPEG4::video_plane_short_header_loop()
+{
+	MPEG4::video_plane_short_header;
+	
+	l[1] = pw[0];
+	l[2] = pw[2];
+	l[2] &= 0xfc;
+	
+	if( l[1] == 0x0000 )
+	{
+		if( l[2] == 0x80 )
+		{
+			MPEG4::video_plane_short_header_loop;
+		}
+	}
+}
+
+void MPEG4::video_plane_short_header()
+{
+	l[1] = pw[0];
+	l[2] = pw[2];
+	l[2] &= 0xfc;
+	
+	if( l[1] > 0x0000 )
+	{
+		TRTS;
+	}
+	
+	if( l[2] != 0x80 )
+	{
+		TRTS;
+	}
+	 
+	LABL 0 0 0 b7 Video Plane Short Header;
+	BBIT 16 41 5 5;	//short video start marker
+	HBYT 0 41 90 c2 Temporal Marker:;
+	BBIT 1 41 5 5;	//marker
+	BBIT 1 41 5 5;	//zero bit
+	
+	DBIT 1 41 90 c2 Split Screen Indicator:;
+	CEQU 0 41 0 14	False;
+	CEQU 1 41 0 14	True;
+	
+	DBIT 1 41 90 c2 Document Camera Indicator:;
+	CEQU 0 41 0 14	False;
+	CEQU 1 41 0 14	True;
+	
+	DBIT 1 41 90 c2 Full Picture Freeze Release:;
+	CEQU 0 41 0 14	False;
+	CEQU 1 41 0 14	True;
+	
+	//MPEG4::VOPSH_SourceFormat_Funcs stores a value in g[1] and g[2]
+	l[10] = g[1];
+	l[11] = g[2];
+	DBIT 3 41 90 c2 Source Format:;
+	TSB# 0 41 0 0 MPEG4::VOPSH_SourceFormat_Funcs;
+	//g[1] contains the num_gobs_in_vop, we need that later
+	//g[2] contains num_macroblocks_in_gob, we need that later too
+	l[4] = g[1];
+	
+	DBIT 1 41 90 c2 Picture Coding Type:;
+	CEQU 0 41 0 14 I;
+	CEQU 1 41 0 14 P;
+	
+	BBIT 4 41 90 c2 Reserved:;
+	
+	DBIT 5 41 90 c2 Quantizer:;
+	
+	BBIT 1 41 5 5;	//zero bit
+	
+	DBIT 1 41 5 5; //pei
+	
+	while( l[1] == 1 )
+	{
+		HBYT 0 42 90 c2 PSupp:;
+		BBIT 1 41 5 5;	//pei
+	}
+	
+	//l[4] holds num_gobs_in_vop which we got from the source format above
+	g[1] = 0;	//gob_number
+	//g[2] = num_macroblocks_in_gob
+	while( l[4] > 0 )
+	{
+		MPEG4::gob_layer;
+	}
+	
+	//restore globals
+	g[1] = l[10];
+	g[2]= l[11];	
+	LABL 0 0 0 b8;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_reserved()
+{
+	LABL 0 0 0 14 Reserved;
+	g[1] = 0;
+	g[2] = 0;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_subqcif()
+{
+	LABL 0 0 0 14 sub-QCIF;
+	g[1] = 6;
+	g[2] = 8;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_qcif()
+{
+	LABL 0 0 0 14 QCIF;
+	g[1] = 9;
+	g[2] = 11;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_cif()
+{
+	LABL 0 0 0 14 CIF;
+	g[1] = 18;
+	g[2] = 22;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_4cif()
+{
+	LABL 0 0 0 14 4CIF;
+	g[1] = 18;
+	g[2] = 88;
+}
+
+// outputs:
+//	g[1] = num_gobs_in_vop
+//	g[2] = num_macroblocks_in_gob
+void MPEG4::vopsh_sourceformat_16cif()
+{
+	LABL 0 0 0 14 16CIF;
+	g[1] = 18;
+	g[2] = 352;
+}
+
+//inputs
+// g[1] = gob_number
+// g[2] = num_macroblocks_in_gob
+void MPEG4::gob_layer()
+{
+	if( g[1] > 0 )
+	{
+		l[1] = pb[0];
+	}
+	
+	l[1] = g[2];
+	
+	while( l[1] > 0 )
+	{
+		MPEG4::macroblock;
+		l[1] -= 1;
+	}
+}
+
+void MPEG4::macroblock()
+{
+	BREM 0 41 5 5;
+	if ( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	LABL 0 0 0 c7 Macroblock;
+	DUMP 1 0 90 c2 MPEG4 Data:;
+	LABL 0 0 0 c8;
+}
+
+str# MPEG4::Intra_dc_str;
+	0	| Use Intra DC VLC for entire VOP;
+	1	| Switch to Intra AC VLC at running Qp >=13 ;
+	2	| Switch to Intra AC VLC at running Qp >=15 ;
+	3	| Switch to Intra AC VLC at running Qp >=17 ;
+	4	| Switch to Intra AC VLC at running Qp >=19 ;
+	5	| Switch to Intra AC VLC at running Qp >=21 ;
+	6	| Switch to Intra AC VLC at running Qp >=23 ;
+	7	| Use Intra AC VLC for entire VOP;
+
+void MPEG4::fba_object_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001BA )
+	{
+		TRTS;
+	}
+	
+	//read the fba start code
+	DLNG 0 41 5 5;
+	
+	l[1] = 1;
+	
+	LABL 0 0 90 c7 FBA Object;
+	
+	while ( l[1] == 1 )
+	{
+		LABL 0 0 0 c7 FBA Object Plane;
+		MPEG4::fba_object_plane;
+		LABL 0 0 0 c8;
+		
+		l[2] = pl[1];
+		
+		if( l[2] != 0x000001BB )
+		{
+			l[1] = 0;
+		}
+	}
+
+    LABL 0 0 0 c8;
+}
+    
+void MPEG4::fba_object_plane()
+{ 
+    LABL 0 0 0 c7 FBA Object Plane Header;
+    MPEG4::fba_object_plane_header;
+    LABL 0 0 0 c8;
+    
+    LABL 0 0 0 c7 FBA Object Plane Data;
+    DUMP 1 0 90 c2 Data:;
+    LABL 0 0 0 c8;
+}
+
+void MPEG4::fba_object_plane_header()
+{
+	l[1] = pl[1];
+	
+	if( l[1] == 0x000001BB )
+	{
+		MPEG4::next_start_code;
+		HLNG 0 41 5 5;	//fba_object_plane_start_code
+	}
+	
+	DBIT 1 41 90 c2 Is Intra:;
+	DBIT 2 42 90 c2 FBA Object Mask:;
+	CEQU 0 42 0 14 unused;
+	CEQU 1 42 0 14 FAP present;
+	CEQU 2 42 0 14 BAP present;
+	CEQU 3 42 0 14 both FAP and BAP present;
+	
+	l[3] = g[1];
+	g[1] = l[1];
+	MPEG4::temporal_header;
+	g[1] = l[3];
+}
+
+//inputs:
+// g[20] = visual_object_verid    
+void MPEG4::still_texture_object_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001BE )
+	{
+		TRTS;
+	}
+	
+	DLNG 20 41 5 5;
+	
+    LABL 0 0 90 c7 Still Texture Object;
+    
+	//l[1] = scratch data
+	//l[2] = tiling_disable
+	//l[3] = texture_error_resilience_disable
+	//l[4] = wavelet_filter_type
+	//l[5] = wavelet_download
+	//l[6] = wavelet_decomp_levels
+	//l[7] = texture_object_layer_shape
+	//l[8] = spatial_scalability_levels
+	
+	l[2] = 1;	//we set tiling_disable to true by default
+	
+	if( g[20] != 1 )
+	{
+		DBIT 1 42 90 c2 Tiling:;
+		CEQU 0 42 0 14 Enable;
+		CEQU 1 42 0 14 Disable;
+		
+		DBIT 1 43 90 c2 Texture Error Resilience:;
+		CEQU 0 43 0 14 Enable;
+		CEQU 1 43 0 14 Disable;
+	}
+	
+	DBIT 10 41 90 c2 Texture Object ID:;
+	DBIT 1 41 5 5;	//marker bit
+	DBIT 1 44 90 c2 Wavelet Filter Type:;
+	CEQU 0 44 0 14 integer precision;
+	CEQU 1 44 0 14 double float precision;
+	
+	DBIT 1 45 90 c2 Wavelet Download:;
+	CEQU 0 45 0 14 use default filters;
+	CEQU 1 45 0 14 filters specified in bitstream;
+	
+	DBIT 4 46 90 c2 Wavelet Decomposition Levels:;
+	DBIT 1 41 90 c2 Scan Direction:;
+	DBIT 1 41 90 c2 Start Code:;
+	CEQU 0 41 0 14 Disable;
+	CEQU 1 41 0 14 Enable;
+	
+	DBIT 2 47 90 c2 Texture Object Layer Shape:;
+	CEQU 0 47 0 14 rectangular;
+	CEQU 1 47 0 14 binary;
+	CEQU 2 47 0 14 reserved;
+	CEQU 3 47 0 14 reserved;
+	
+	DBIT 2 41 90 c2 Quantisation Type:;
+	CEQU 0 41 0 14 reserved;
+	CEQU 1 41 0 14 single quantiser;
+	CEQU 2 41 0 14 multi quantiser;
+	CEQU 3 41 0 14 bi-level quantiser;	
+	
+	if( l[1] == 2 )
+	{
+		DBIT 4 48 90 c2 Spatial Scalability Levels:;
+		
+		//if spatial_levels != wavelet_decomp_levels
+		if( l[8] != l[6] )
+		{
+			DBIT 1 41 90 c2 Spatial Scalability:;
+			CEQU 1 41 0 14 Use Default;
+			
+			if( l[1] == 0 )
+			{
+				l[20] = l[1];
+				l[20] -= 1;
+				
+				while( l[20] > 0 )
+				{
+					DBIT 4 41 90 c2 Wavelet Layer Index:;
+				}
+			}
+		}
+	}
+	
+	//wavelet_download == 1
+	if( l[5] == 1 )
+	{
+		DBIT 1 41 90 c2 Uniform Wavelet Filter:;
+		CEQU 0 41 0 14 False;
+		CEQU 1 41 0 14 True;
+		
+		l[20] = 1;
+		
+		if( l[1] == 0 )
+		{
+			l[20] = l[6];
+		}
+		
+		l[21] = g[1];
+		g[1] = l[4];	//store the wavelet_filter_type in g[1]
+		while( l[20] > 0 )
+		{
+			MPEG4::download_wavelet_filters;
+			l[20] -= 1;
+		}
+		g[1] = l[21];
+	}
+	
+	DBIT 3 41 90 c2 Wavelet Stuffing:;
+	
+	if( g[20] != 1 )
+	{
+		//texture_error_resilience_disable == false
+		if( l[3] == 0 )
+		{
+			DBIT 10 41 90 c2 Target Segment Length:;
+			DBIT 1 41 5 5;	//marker bit
+		}
+	}
+	
+	//texture_object_layer_shape == 0
+	if( l[7] == 0 )
+	{
+		DBIT f 41 90 c2 TOL Width:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT f 41 90 c2 TOL Height:;
+		DBIT 1 41 5 5;	//marker bit	
+	}
+	
+	l[1] = l[7];
+	
+	//we dont get the object dimensions if the version_id != 1 and texture_object_layer_shape != 1
+	if( g[20] != 1 )
+	{
+		if( l[7] != 1 )
+		{
+			l[1] = 0;
+		}
+	}
+	
+	//texture_object_layer_shape == 1
+	if( l[1] > 0 )
+	{
+		DBIT f 41 90 c2 Left Point:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT f 41 90 c2 Top Point:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT f 41 90 c2 Object Width:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT f 41 90 c2 Object Height:;
+		DBIT 1 41 5 5;	//marker bit
+		
+		//tiling_disable == true
+		if( l[2] == 1 )
+		{
+			//we have finished parsing the texture header, this is the texture data
+			DUMP 1 0 90 c2 Texture Data:;
+			LABL 0 0 0 c8;
+			TRTS;
+		}
+	}
+	
+	//tiling_disable == false
+	if( l[2] == 0 )
+	{
+		DBIT f 41 90 c2 Tile Width:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT f 41 90 c2 Tile Height:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT 10 41 90 c2 Tile Count:;
+		DBIT 1 41 5 5;	//marker bit
+		DBIT 1 4a 90 c2 Tiling Jump Table:;
+		CEQU 0 4a 0 14 Disable;
+		CEQU 1 4a 0 14 Enable;
+		
+		if( l[10] == 1 )
+		{
+			LABL 0 0 0 c7 Tiling Jump Table;
+			
+			l[20] = l[1];
+			while( l[20] > 0 )
+			{
+				LABL 0 0 0 c7 Jump Table Entry;
+				
+				DBIT 10 4b 5 5; //Tile Size High:;
+				DBIT 1 41 5 5;	//marker bit
+				DBIT 10 4c 5 5; //Tile Size Low:;
+				DBIT 1 41 5 5;	//marker bit
+				
+				SHFL 10 4b 5 5;
+				l[11] |= l[12];
+				
+				DGLB 0 4b 90 c2 Tile Size:;
+				LABL 0 0 0 14 bytes;
+				
+				LABL 0 0 0 c8;
+				
+				l[20] -= 1;
+			}
+			LABL 0 0 0 c8;
+		}
+		
+		MPEG4::next_start_code;
+	}
+	
+	//tiling_disable == false;
+	if( l[2] == 0 )
+	{
+		DLNG 0 41 5 5;	//read the texture_tile_start_code
+		DBIT 10 41 90 c2 Tile ID:;
+		
+		//texture_object_layer_shape == 1
+		if( l[7] == 1 )
+		{
+			DBIT 1 41 5 5;	//marker bit
+			DBIT 2 41 90 c2 Tile Type:;
+			CEQU 0 41 0 14 Forbidden;
+			CEQU 1 41 0 14 Opaque;
+			CEQU 2 41 0 14 Boundary;
+			CEQU 3 41 0 14 Transparent;
+			DBIT 1 41 5 5;	//marker bit
+		}
+	}
+	
+	//we have finished processing the header at this point, everything else is data
+	DUMP 1 0 90 c2 Texture Data:;
+
+    LABL 0 0 0 c8;
+}
+   
+//inputs:
+//g[1] = wavelet_filter_type
+void MPEG4::download_wavelet_filters()
+{
+	LABL 0 0 0 c7 Wavelet Filters;
+	
+	DBIT 4 41 90 c2 Lowpass Filter Len:;
+	DBIT 4 42 90 c2 Highpass Filter Len:;
+	
+	if( l[1] == 0 )
+	{
+		l[1] = 1;
+	}
+	
+	while( l[1] > 0 )
+	{
+		LABL 0 0 0 c7 Lowpass Filter:;
+		
+		if( g[1] == 0 )
+		{
+			DBIT 10 43 90 c2 Filter Tap:;
+			DBIT 1 43 5 5;	//marker bit
+		}
+		
+		if( g[1] != 0 )
+		{
+			DBIT 10 43 90 c2 Filter Tap Float High:;
+			DBIT 1 43 5 5;	//marker bit
+			DBIT 10 43 90 c2 Filter Tap Float Low:;
+			DBIT 1 43 5 5;	//marker bit
+		}
+		
+		LABL 0 0 0 c8;
+		
+		l[1] -= 1;
+	}
+	
+	if( l[2] == 0 )
+	{
+		l[2] = 1;
+	}
+
+	while( l[2] > 0 )
+	{
+		LABL 0 0 0 c7 Highpass Filter:;
+		
+		if( g[1] == 0 )
+		{
+			DBIT 10 43 90 c2 Filter Tap:;
+			DBIT 1 43 5 5;	//marker bit
+		}
+		
+		if( g[1] != 0 )
+		{
+			DBIT 10 43 90 c2 Filter Tap Float High:;
+			DBIT 1 43 5 5;	//marker bit
+			DBIT 10 43 90 c2 Filter Tap Float Low:;
+			DBIT 1 43 5 5;	//marker bit
+		}
+		
+		LABL 0 0 0 c8;
+		
+		l[2] -= 1;
+	}
+	
+	if( g[1] == 0 )
+	{
+		DBIT 10 43 90 c2 Integer Scale:;
+		DBIT 1 43 5 5;	//marker bit
+	}
+		
+	LABL 0 0 0 c8;
+}
+ 
+void MPEG4::texture_spatial_layer_start_code;
+    LABL 0 0 90 c7 Texture Spatial Layer;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+    
+void MPEG4::texture_snr_layer_start_code;
+    LABL 0 0 90 c7 Texture SNR Layer;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+    
+void MPEG4::texture_tile_start_code;
+    LABL 0 0 90 c7 Texture Tile;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+    
+void MPEG4::texture_shape_layer_start_code;
+    LABL 0 0 90 c7 Texture Shape Layer;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+    
+void MPEG4::stuffing_start_code;
+    LABL 0 0 90 c7 Stuffing Object;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+    
+void MPEG4::mesh_object_start_code()
+{
+	l[1] = pl[0];
+	
+	if( l[1] != 0x000001BC )
+	{
+		TRTS;
+	}
+	
+	INCR 4;
+	
+	l[1] = 1;
+	
+	LABL 0 0 90 c7 Mesh Object;
+	
+	while( l[1] == 1 )
+	{
+		MPEG4::mesh_object_plane;
+		
+		l[2] = pl[1];
+		
+		if( l[2] != 0x000001BD )
+		{
+			//this is a bit odd, we want to check if the 24 msb == 1
+			//since we read 32 bits we shift right 8 bits to drop the 8 lsb
+			SHFR 8 42 5 5;
+			
+			if( l[2] == 1 )
+			{
+				l[1] = 0;
+			}
+		}
+	}
+
+    LABL 0 0 0 c8;
+}
+
+void MPEG4::mesh_object_plane()
+{
+	MPEG4::mesh_object_plane_header;
+	
+	LABL 0 0 0 c7 Mesh Object Plane Data;
+	DUMP 1 0 90 c2 Mesh:;
+	LABL 0 0 0 c8;
+}
+
+void MPEG4::mesh_object_plane_header()
+{
+	l[1] = pl[1];
+	
+	SHFR 8 41 5 5;
+	
+	if( l[1] == 1 )
+	{
+		MPEG4::next_start_code;
+		
+		HLNG 0 41 5 5;	//mesh_object_plane_start_code
+	}
+	
+	DBIT 1 41 90 c2 Is Intra:;
+	DBIT 1 42 90 c2 Mesh Mask:;
+	
+	l[3] = g[1];
+	
+	g[1] = l[1];
+	
+	MPEG4::temporal_header;
+	
+	g[1] = l[3];
+}
+
+//inputs:
+// g[1] = is_intra
+void MPEG4::temporal_header()
+{
+	if( g[1] == 1 )
+	{
+		DBIT 1 41 5 5;	//is_frame_rate
+		
+		if( l[1] == 1 )
+		{
+			LABL 0 0 0 c7 Frame Rate;
+			MPEG4::decode_frame_rate;
+			LABL 0 0 0 c8;
+		}
+		
+		DBIT 1 41 5 5;	//is_time_code
+		
+		if( l[1] == 1 )
+		{
+			LABL 0 0 0 c7 Time Code;
+			MPEG4::time_code;
+			LABL 0 0 0 c8;
+		}
+	}
+	
+	DBIT 1 41 5 5;	//skip_frames
+	
+	if( l[1] == 1 )
+	{
+		MPEG4::decode_skip_frames;
+	}
+}
+
+void MPEG4::decode_frame_rate()
+{
+	DBIT 8 41 90 c2 Frame Rate:;
+	DBIT 4 41 90 c2 Seconds:;
+	DBIT 1 41 90 c2 Frequency Offset:;
+}
+
+void MPEG4::decode_skip_frames()
+{
+	l[1] = 0xf;	
+	while( l[1] == 0xf )
+	{
+		DBIT 4 41 5 5;	//number_of_frames_to_skip
+	}
+}
+
+void MPEG4::3d_mesh_object_start_code()
+{
+    LABL 0 0 90 c7 3D Mesh Object;
+    DUMP 1 0 90 c2 Payload:;
+    LABL 0 0 0 c8;
+}
+
+void MPEG4::decode_sprite_piece()
+{
+	DBIT 5 41 90 c2 Piece Quantiser:;
+	DBIT 9 41 90 c2 Piece Width:;
+	DBIT 9 41 90 c2 Piece Height:;
+	DBIT 1 41 5 5;	//marker bit
+	DBIT 9 41 90 c2 Piece X Offset:;
+	DBIT 9 41 90 c2 Piece Y Offset:;
+	
+	MPEG4::sprite_shape_texture();
+}
+
+void MPEG4::sprite_shape_texture()
+{
+	LABL 0 0 0 c7 Sprite Shape Texture;
+	DUMP 1 0 90 c2 MPEG4 Data:;
+	LABL 0 0 0 c8;
+}
+
+//inputs:
+// g[15] = data_partitioned
+void MPEG4::motion_shape_texture()
+{
+	if( g[15] == 1 )
+	{
+		MPEG4::data_partitioned_motion_shape_texture;
+		TRTS;
+	}
+	
+	MPEG4::combined_motion_shape_texture;
+}
+
+void MPEG4::data_partitioned_motion_shape_texture()
+{
+	DUMP 1 0 90 c2 MPEG4 Data:;
+}
+
+void MPEG4::combined_motion_shape_texture()
+{
+	MPEG4::macroblock;
+	
+	MPEG4::byte_align;
+	
+	GBIT 10 41 5 5;
+	
+	//this needs to be finished
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	MPEG4::combined_motion_shape_texture;
+}
+
+void MPEG4::next_start_code()
+{
+    //read 0 bit
+    BBIT 1 41 5 5;
+    
+	BITO 0 41 0 0;
+    
+	if( l[1] > 0 )
+	{
+		INCR 1;
+	}
+    
+    TRTS;
+}
+
+void MPEG4::next_object_start_code()
+{
+    l[1] = pw[0];
+    l[2] = pb[2];
+    if (l[1] == 0x0000)
+    {
+       if (l[2] == 1)
+       {
+            HWRD 0 0 90 c2 Start Code Prefix:;
+            HBYT 80000000 0 0 0;
+            HBYT  0 4 90 c2 Start Code Value:;
+            CST#  0 4 0 24 MPEG4::StartCode_str;
+            SKIP 1;
+            LABL  0 0 0 24 Reserved;
+            DECR 4;
+            TSB#  0 4 0 0 MPEG4::StreamFunc;
+       }
+    }
+    TRTS;
+}
+
+void MPEG4::byte_align()
+{
+	BITO 0 41 5 5;
+	
+	if( l[1] > 0 )
+	{
+		INCR 1;
+		TRTS;
+	}
+	
+	l[2] = pb[0];
+	
+	if( l[2] == 0x7f )
+	{
+		INCR 1;
+	}
+	
+	TRTS;
+}
+
+str# MPEG4::StreamFunc;
+	0	| MPEG4::video_object_start_code;
+	1	| MPEG4::video_object_start_code;
+	2	| MPEG4::video_object_start_code;
+	3	| MPEG4::video_object_start_code;
+	4	| MPEG4::video_object_start_code;
+	5	| MPEG4::video_object_start_code;
+	6	| MPEG4::video_object_start_code;
+	7	| MPEG4::video_object_start_code;
+	8	| MPEG4::video_object_start_code;
+	9	| MPEG4::video_object_start_code;
+	10  | MPEG4::video_object_start_code;
+	11  | MPEG4::video_object_start_code;
+	12  | MPEG4::video_object_start_code;
+	13  | MPEG4::video_object_start_code;
+	14  | MPEG4::video_object_start_code;
+	15  | MPEG4::video_object_start_code;
+	16  | MPEG4::video_object_start_code;
+	17  | MPEG4::video_object_start_code;
+	18  | MPEG4::video_object_start_code;
+	19  | MPEG4::video_object_start_code;
+	20  | MPEG4::video_object_start_code;
+	21  | MPEG4::video_object_start_code;
+	22  | MPEG4::video_object_start_code;
+	23  | MPEG4::video_object_start_code;
+	24  | MPEG4::video_object_start_code;
+	25  | MPEG4::video_object_start_code;
+	26  | MPEG4::video_object_start_code;
+	27  | MPEG4::video_object_start_code;
+	28  | MPEG4::video_object_start_code;
+	29  | MPEG4::video_object_start_code;
+	30  | MPEG4::video_object_start_code;
+	31  | MPEG4::video_object_start_code;
+	32  | MPEG4::video_object_layer_start_code;
+	33  | MPEG4::video_object_layer_start_code;
+	34  | MPEG4::video_object_layer_start_code;
+	35  | MPEG4::video_object_layer_start_code;
+	36  | MPEG4::video_object_layer_start_code;
+	37  | MPEG4::video_object_layer_start_code;
+	38	| MPEG4::video_object_layer_start_code;
+	39	| MPEG4::video_object_layer_start_code;
+	40	| MPEG4::video_object_layer_start_code;
+	41	| MPEG4::video_object_layer_start_code;
+	42	| MPEG4::video_object_layer_start_code;
+	43	| MPEG4::video_object_layer_start_code;
+	44	| MPEG4::video_object_layer_start_code;
+	45	| MPEG4::video_object_layer_start_code;
+	46	| MPEG4::video_object_layer_start_code;
+	47	| MPEG4::video_object_layer_start_code;
+	176	| MPEG4::visual_object_sequence_start_code;
+	177	| MPEG4::visual_object_sequence_end_code;
+	178	| MPEG4::user_data_start_code;
+	179	| MPEG4::group_of_vop_start_code;
+	180	| MPEG4::video_session_error_code;
+	181	| MPEG4::visual_object_start_code;
+	182	| MPEG4::vop_start_code;
+	186	| MPEG4::fba_object_start_code;
+	187	| MPEG4::fba_object_plane_start_code;
+	188	| MPEG4::still_texture_object_start_code;
+	189	| MPEG4::texture_spatial_layer_start_code;
+	190	| MPEG4::texture_snr_layer_start_code;
+	191	| MPEG4::texture_tile_start_code;
+	192	| MPEG4::texture_shape_layer_start_code;
+	193	| MPEG4::stuffing_start_code;
+	
+str# MPEG4::StartCode_str;
+	0   | video_object_start_code;
+	1   | video_object_start_code;
+	2   | video_object_start_code;
+	3   | video_object_start_code;
+	4   | video_object_start_code;
+	5   | video_object_start_code;
+	6   | video_object_start_code;
+	7   | video_object_start_code;
+	8   | video_object_start_code;
+	9   | video_object_start_code;
+	10  | video_object_start_code;
+	11  | video_object_start_code;
+	12  | video_object_start_code;
+	13  | video_object_start_code;
+	14  | video_object_start_code;
+	15  | video_object_start_code;
+	16  | video_object_start_code;
+	17  | video_object_start_code;
+	18  | video_object_start_code;
+	19  | video_object_start_code;
+	20  | video_object_start_code;
+	21  | video_object_start_code;
+	22  | video_object_start_code;
+	23  | video_object_start_code;
+	24  | video_object_start_code;
+	25  | video_object_start_code;
+	26  | video_object_start_code;
+	27  | video_object_start_code;
+	28  | video_object_start_code;
+	29  | video_object_start_code;
+	30  | video_object_start_code;
+	31  | video_object_start_code;
+	32  | video_object_layer_start_code;
+	33  | video_object_layer_start_code;
+	34  | video_object_layer_start_code;
+	35  | video_object_layer_start_code;
+	36  | video_object_layer_start_code;
+	37  | video_object_layer_start_code;
+	38  | video_object_layer_start_code;
+	39  | video_object_layer_start_code;
+	40  | video_object_layer_start_code;
+	41  | video_object_layer_start_code;
+	42	| video_object_layer_start_code;
+	43	| video_object_layer_start_code;
+	44	| video_object_layer_start_code;
+	45	| video_object_layer_start_code;
+	46	| video_object_layer_start_code;
+	47	| video_object_layer_start_code;
+	176	| visual_object_sequence_start_code;
+	177	| visual_object_sequence_end_code;
+	178	| user_data_start_code;
+	179	| group_of_vop_start_code;
+	180	| video_session_error_code;
+	181	| visual_object_start_code;
+	182	| vop_start_code;
+	186	| fba_object_start_code;
+	187	| fba_object_plane_start_code;
+	188	| still_texture_object_start_code;
+	189	| texture_spatial_layer_start_code;
+	190	| texture_snr_layer_start_code;
+	191	| texture_tile_start_code;
+	192	| texture_shape_layer_start_code;
+	193	| stuffing_start_code;
+
+str# MPEG4::FrameType_str;
+	0 | I-Frame;
+	1 | P-Frame;
+	2 | B-Frame;
+	3 | S-Frame;
+	
+str# MPEG4::ProfileAndLevelIndication;
+	0x01 | Simple Profile/Level 1;
+	0x02 | Simple Profile/Level 2;
+	0x03 | Simple Profile/Level 3;
+	0x11 | Simple Scalable Profile/Level 1;
+	0x12 | Simple Scalable Profile/Level 2;
+	0x21 | Core Profile/Level 1;
+	0x22 | Core Profile/Level 2;
+	0x32 | Main Profile/Level 2;
+	0x33 | Main Profile/Level 3;
+	0x34 | Main Profile/Level 4;
+	0x42 | N-bit Profile/Level 2;
+	0x51 | Scalable Texture Profile/Level 1;
+	0x61 | Simple Face Animation Profile/Level 1;
+	0x62 | Simple Face Animation Profile/Level 2;
+	0x63 | Simple FBA Profile/Level 1;
+	0x64 | Simple FBA Profile/Level 2;
+	0x71 | Basic Animated Texture Profile/Level 1;
+	0x72 | Basic Animated Texture Profile/Level 2;
+	0x81 | Hybrid Profile/Level 1;
+	0x82 | Hybrid Profile/Level 2;
+	0x91 | Advanced Real Time Simple Profile/Level 1;
+	0x92 | Advanced Real Time Simple Profile/Level 2;
+	0x93 | Advanced Real Time Simple Profile/Level 3;
+	0x94 | Advanced Real Time Simple Profile/Level 4;
+	0xA1 | Core Scalable Profile/Level 1;
+	0xA2 | Core Scalable Profile/Level 2;
+	0xA3 | Core Scalable Profile/Level 3;
+	0xB1 | Advanced Coding Efficiency Profile/Level 1;
+	0xB2 | Advanced Coding Efficiency Profile/Level 2;
+	0xB3 | Advanced Coding Efficiency Profile/Level 3;
+	0xB4 | Advanced Coding Efficiency Profile/Level 4;
+	0xC1 | Advanced Core Profile/Level 1;
+	0xC2 | Advanced Core Profile/Level 2;
+	0xD1 | Advanced Scalable Texture/Level 1;
+	0xD2 | Advanced Scalable Texture/Level 2;
+	0xD3 | Advanced Scalable Texture/Level 3;
+	
+str# MPEG4::VisualObjectType;
+	0x00 | reserved;
+	0x01 | video ID;
+	0x02 | still texture ID;
+	0x03 | mesh ID;
+	0x04 | FBA ID;
+	0x05 | 3D mesh ID;
+	
+str# MPEG4::VisualObjectTypeFunc;
+	0x1	| MPEG4::video_object_layer_start_code;
+	0x2 | MPEG4::still_texture_object_start_code;
+	0x3 | MPEG4::mesh_object_start_code;
+	0x4 | MPEG4::fba_object_start_code;
+	0x5 | MPEG4::3d_mesh_object_start_code;
+
+str# MPEG4::VOLTypeIndicator_str;
+	0x00 | Reserved;
+	0x01 | Simple Object;
+	0x02 | Simple Scalable Object;
+	0x03 | Core Object;
+	0x04 | Main Object;
+	0x05 | N-bit Object;
+	0x06 | Basic Anim. 2D Texture;
+	0x07 | Animated 2D Mesh;
+	0x08 | Simple Face;
+	0x09 | Still Scalable Texture;
+	0x0A | Advanced Real Time Simple;
+	0x0B | Core Scalable;
+	0x0C | Advanced Coding Efficiency;
+	0x0D | Advanced Scalable Texture;
+	0x0E | Simple FBA;
+	
+str# MPEG4::VOL_AspectRatio_str;
+	0x0 | Forbidden;
+	0x1 | 1:1 (Square);
+	0x2 | 12:11 (625-type for 4:3 picture);
+	0x3 | 10:11 (525-type for 4:3 picture);
+	0x4 | 16:11 (625-type stretched for 16:9 picture);
+	0x5 | 40:33 (525-type stretched for 16:9 picture);
+	0xF | extended PAR;
+	
+str# MPEG4::VOL_SpriteEnableFunc;
+	0x1 | MPEG4::vol_sprite_enable_static;
+	0x2 | MPEG4::vol_sprite_enable_gmc;
+
+str# MPEG4::Shape_complexity_estimation_str;
+	6 | ..1. .... Opaque Coding Mode Enabled;
+		..0. .... Opaque Coding Mode Disabled;
+	5 | ...1 .... Transparent Coding Mode Enabled;
+		...0 .... Transparent Coding Mode Disabled;
+	4 | .... 1... IntraCAE Coding Mode Enabled;
+		.... 0... IntraCAE Coding Mode Disabled;
+	3 | .... .1.. InterCAE Coding Mode Enabled;
+		.... .0.. InterCAE Coding Mode Disabled;
+	2 | .... ..1. No Update Coding Mode Enabled;
+		.... ..0. No Update Coding Mode Disabled;
+	1 | .... ...1 Upsampling Enabled;
+		.... ...0 Upsampling Disabled;
+	
+str# MPEG4::Texture_complexity_estimation_set1_str;
+	4 | 1... Intra or Intra-Q Coding Enabled;
+		0... Intra or Intra-Q Coding Disabled;
+	3 | .1.. Inter and Inter-Q Coding Enabled;
+		.0.. Inter and Inter-Q Coding Disabled;
+	2 | ..1. Inter4V Coding Enabled;
+		..0. Inter4V Coding Disabled;
+	1 | ...1 Non Coded Blocks Enabled;
+		...0 Non Coded Blocks Disabled;
+		
+str# MPEG4::Texture_complexity_estimation_set2_str;
+	4 | 1... DCT Coefficients Transmitted;
+		0... DCT Coefficients Not Transmitted;
+	3 | .1.. DCT 8x1 Transmitted;
+		.0.. DCT 8x1 Not Transmitted;
+	2 | ..1. Average VLC Symbols Transmitted;
+		..0. Average VLC Symbols Not Transmitted;
+	1 | ...1 Average Bits Per Symbol Transmitted;
+		...0 Average Bits Per Symbol Not Transmitted;
+	
+str# MPEG4::Motion_compensation_complexity_str;
+	6 | ..1. .... Advanced Prediction Mode Enabled;
+		..0. .... Advanced Prediction Mode Disabled;
+	5 | ...1 .... Normal Prediction Mode Enabled;
+		...0 .... Normal Prediction Mode Disabled;
+	4 | .... 1... Interpolated Blocks Transmitted;
+		.... 0... Interpolated Blocks Not Transmitted;
+	3 | .... .1.. Predicted Blocks Transmitted;
+		.... .0.. Predicted Blocks Not Transmitted;
+	2 | .... ..1. One Dimension Half-pel Vector Predicted Block Transmitted;
+		.... ..0. One Dimension Half-pel Vector Predicted Block Not Transmitted;
+	1 | .... ...1 Two Dimension Half-pel Vector Predicted Block Transmitted;
+		.... ...0 Two Dimension Half-pel Vector Predicted Block Not Transmitted;
+
+str# MPEG4::Version2_complexity_estimation_str;
+	2 | .... ..1. SADCT Coding Mode Enabled;
+		.... ..0. SADCT Coding Mode Disabled;
+	1 | .... ...1 Quarter-pel Vector Predicted Block Transmitted;
+		.... ...0 Quarter-pel Vector Predicted Block Not Transmitted;
+				
+str# MPEG4::VOL_ShapeExt_AuxCompCount;
+	0x0 |	MPEG4::vol_shapeext_auxcomp_1;
+	0x1 |	MPEG4::vol_shapeext_auxcomp_1;
+	0x2 |	MPEG4::vol_shapeext_auxcomp_2;
+	0x3 |	MPEG4::vol_shapeext_auxcomp_2;
+	0x4 |	MPEG4::vol_shapeext_auxcomp_3;
+	0x5 |	MPEG4::vol_shapeext_auxcomp_1;
+	0x6 |	MPEG4::vol_shapeext_auxcomp_2;
+	0x7 |	MPEG4::vol_shapeext_auxcomp_1;
+	0x8 |	MPEG4::vol_shapeext_auxcomp_1;
+	0x9 |	MPEG4::vol_shapeext_auxcomp_2;
+	0xA |	MPEG4::vol_shapeext_auxcomp_3;
+	0xB |	MPEG4::vol_shapeext_auxcomp_2;
+	0xC |	MPEG4::vol_shapeext_auxcomp_3;
+	0xD |	MPEG4::vol_shapeext_auxcomp_0;
+	0xE	|	MPEG4::vol_shapeext_auxcomp_0;
+	0xF |	MPEG4::vol_shapeext_auxcomp_0;
+	
+str# MPEG4::VOPSH_SourceFormat_Funcs;
+	0x0	|	MPEG4::vopsh_sourceformat_reserved;
+	0x1	|	MPEG4::vopsh_sourceformat_subqcif;
+	0x2 |	MPEG4::vopsh_sourceformat_qcif;
+	0x3 |	MPEG4::vopsh_sourceformat_cif;
+	0x4 |	MPEG4::vopsh_sourceformat_4cif;
+	0x5 |	MPEG4::vopsh_sourceformat_16cif;
+	0x6 |	MPEG4::vopsh_sourceformat_reserved;
+	0x7 |	MPEG4::vopsh_sourceformat_reserved;

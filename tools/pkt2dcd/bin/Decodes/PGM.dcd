@@ -1,0 +1,309 @@
+// PGM Decoder - Version 0.3
+// Date: 4/16/2007
+
+str# IP::Common_Str;
+	113  | PGM;
+	
+void PGM()
+{
+	LABL( 0,     0,    0, 0xb1, "PGM - Pragmatic General Multicast\PGM:");
+	DWRD( 0,  g[1], 0x90, 0xc2, "Source Port:\Src:");
+	DWRD( 0,  g[2], 0x90, 0xc2, "Destination Port:\Dst:");
+	DBIT( 2,     0, 0x90, 0xc2, "Version:\V:");
+	DBIT( 2,     0, 0x5, 0x5 );
+	DBIT( 4,  g[3], 0x90, 0xc2, "Type:\T:");
+	CST#( 0,  g[3], 0x0, 0x14, "PGM::Types_str" );
+ 	DBYT( 0,  g[4], 0x90, 0xc2, "Options:\O:" );
+ 	BST#( 0,  g[4],	   0, 0xd4, "PGM::Options_bits" );
+ 	HWRD( 0,  g[4], 0x90, 0xc2, "Checksum:\CS:" );
+ 	HEX#( 6,     0, 0x90, 0xc2, "Global Source ID:\ID:" );
+ 	DWRD( 0,  g[5], 0x90, 0xc2, "Data Unit Length:\Len:" );
+ 	TSB#( 0,  g[3],    0,    0, "PGM::Types_fnc" );
+}
+
+str# PGM::Options_bits;
+	7 | 1... .... Options Extensions are present;
+	    0... .... Options Extensions are NOT present;
+	6 | .1.. .... Options are network-significant;
+		.0.. .... Options are NOT network-significant;
+	1 | .... ..1. Packet is a parity packet for a transmission group of variable sized packets;
+		.... ..0. Packet is NOT a parity packet for a transmission group of variable sized packets;
+	0 | .... ...1 Packet is a parity packet;
+		.... ...0 Packet is NOT a parity packet;
+									    
+str# PGM::Types_str;
+	0x0 | SPM;
+	0x1 | POLL;
+	0x2 | POLR;
+	0x4 | ODATA;
+	0x5 | RDATA;
+	0x8 | NAK;
+	0x9 | NNAK;
+	0xa | NCF;
+	
+str# PGM::Types_fnc;
+	0x0 | PGM::SPM;
+	0x1 | PGM::POLL;
+	0x2 | PGM::POLR;
+	0x4 | PGM::ODATA;
+	0x5	| PGM::RDATA;
+	0x8 | PGM::NAK;
+	0x9 | PGM::NNAK;		 
+	0xa | PGM::NCF;
+	0xd	| PGM::ACK;
+		
+void PGM::SPM()
+{
+	LABL( 0, 0, 0x0, 0xb7, "SPM - Source Path Message\SPM" );
+	HLNG( 0, 0, 0x90, 0xc2, "Sequence #:\Seq:" );
+	HLNG( 0, 0, 0x90, 0xc2, "Trailing Seq #:\Trailer:" );
+	HLNG( 0, 0, 0x90, 0xc2, "Leading Seq #:\Leader:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Path NLA AFI:\Path:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Reserved:\Res:" );
+ 	DUMP( 0,     0, 0x90, 0xc2, "Remaining Data:" );
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::ODATA()
+{
+	LABL( 0, 0, 0x0, 0xb7, "ODATA - Original Data Packet\ODATA" );
+	HLNG( 0, 0, 0x90, 0xc2, "Sequence Number:\Seq:" );
+	HLNG( 0, 0, 0x90, 0xc2, "Trailing Seq #:\Trailer:" );
+	PGM::Options();
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::RDATA()
+{
+	LABL( 0, 0, 0x0, 0xb7, "RDATA\RDATA" );
+	HLNG( 0, 0, 0x90, 0xc2, "Sequence Number:\Seq:" );
+	HLNG( 0, 0, 0x90, 0xc2, "Trailing Seq #:\Trailer:" );
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::NAK()
+{
+	LABL( 0, 0, 0x0, 0xb7, "NAK - Negative Acknowledgment\NAK" );
+	PGM::NAKCommon();
+}
+
+void PGM::NNAK()
+{
+	LABL( 0, 0, 0x0, 0xb7, "NNAK - Null Negative Acknowledgment\NNAK" );
+	PGM::NAKCommon();
+}
+
+void PGM::NCF()
+{
+	LABL( 0, 0, 0x0, 0xb7, "NCF - NAK Confirmation\NCF" );
+	PGM::NAKCommon();
+}
+
+void PGM::NAKCommon()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "Requested Sequence Number:\Seq:" );
+	DWRD( 0, 0, 0x90, 0xc2, "NLA AFI:" );
+	HWRD( 0, 0, 0x90, 0xc2, "Reserved:\");
+	HLNG( 0, 0, 0x90, 0xc2, "Source NLA:\Src NLA:" );
+	DWRD( 0, 0, 0x90, 0xc2, "NLA AFI:" );
+	HWRD( 0, 0, 0x90, 0xc2, "Reserved:\");
+	HLNG( 0, 0, 0x90, 0xc2, "Multicast Group NLA:\Src NLA:" );
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::POLL()
+{
+	LABL( 0, 0, 0x0, 0xb7, "POLL - POLL Request\POLL" );
+	HLNG( 0, 0, 0x90, 0xc2, "Sequence Number:\Seq:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Round:\Rnd:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Subtype:\Sub:" );
+	DWRD( 0, 0, 0x90, 0xc2, "NLA AFI:" );
+	INCR( 2 );
+	IPLG( 0, 0, 0x90, 0xc2, "Path NLA:\Path:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Back-off Interval:\BOI:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Random String:\RS:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Mathcing Bit-Mask:\MBS:" );
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::POLR()
+{
+	LABL( 0, 0, 0x0, 0xb7, "POLR - POLL Response\POLR" );
+	HLNG( 0, 0, 0x90, 0xc2, "Sequence Number:\Seq:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Round:\Rnd:" );
+	INCR( 2 );
+	LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::ACK()
+{
+	LABL( 0, 0, 0x0, 0xb7, "ACK Packet\ACK" ); 
+    HLNG( 0, 0, 0x90 ,0xc2, "RX_MAX Sequence Num:\" );
+    HLNG( 0, 0, 0x90 ,0xc2, "Received Packet Bitmap:\" );
+    LABL( 0, 0, 0x0, 0xb8 );
+}
+
+void PGM::Options()
+{
+	LABL( 0, 0, 0x0, 0xc9, "ODATA Options\Opt" ); 
+	HBYT( 0, l[1], 0x90, 0xc2, "Type:\" );
+	  CST#( 0, l[1], 0x0, 0x14, PGM::ODATA_Option_Type_Str);
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:\" );
+	DWRD( 0, l[1], 0x90, 0xc2, "Total Length:\" );
+	while (g[16] > 4)
+	{
+		g[1] = pb[0];
+		CST#( 0, g[1], 0x90, 0xc9, PGM::Option_Types_Str);
+		HBYT( 0, l[1], 0x90, 0xc2, "Type:\" );
+		HBYT( 0, g[2], 0x90, 0xc2, "Length:\" );
+		HBYT( 0, l[1], 0x90, 0xc2, "OPX:\" );
+		  CST#( 0, l[1], 0x0, 0x14, PGM::Options_List_Str);
+		TSB#( 0, g[1], 0, 0, PGM::Option_Types);
+		LABL( 0, 0, 0x0, 0xc8 );
+	}
+	LABL( 0, 0, 0x0, 0xc8 );
+}
+
+str# PGM::Option_Types;
+	0x01	|	PGM::Fragment;
+	0x02	|	PGM::NAK_List;
+	0x03	|	PGM::Joining;
+	0x04	|	PGM::NAK_BO_IVL;
+	0x05	|	PGM::NAK_BO_RNG;
+	0x07	|	PGM::Redirect;
+	0x08	|	PGM::Parity_PRM;
+	0x09	|	PGM::Group;
+	0x0a	|	PGM::Current_Tagsize;
+	0x0d	|	PGM::SYN;
+	0x0e	|	PGM::FIN;
+	0x0f	|	PGM::RESET;
+	0x12	|	PGM::PGMCC_Data;
+	0x13	|	PGM::PGMCC_Feedback;
+	0x8e	|	PGM::FIN;
+	0x8f	|	PGM::RESET;
+	
+str# PGM::Option_Types_Str;
+	0x01	|	Fragment;
+	0x02	|	NAK_List;
+	0x03	|	Joining;
+	0x04	|	NAK_BO_IVL;
+	0x05	|	NAK_BO_RNG;
+	0x07	|	Redirect;
+	0x08	|	Parity_PRM;
+	0x09	|	Group;
+	0x0a	|	Current_Tagsize;
+	0x0d	|	SYN;
+	0x0e	|	FIN;
+	0x0f	|	RESET;
+	0x12	|	PGMCC_Data;
+	0x13	|	PGMCC_Feedback;
+	0x8e	|	FIN;
+	0x8f	|	RESET;
+	
+str# PGM::ODATA_Option_Type_Str;
+	0x00	|	Length;
+	
+void PGM::Fragment()
+{
+	HBYT( 0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG( 0 ,l[1], 0x90, 0xc2, "1st Sequence Number:\" );
+	HLNG( 0 ,l[1], 0x90, 0xc2, "Offset:\" );
+	HLNG( 0 ,l[1], 0x90, 0xc2, "Total Length:\" );
+}
+
+void PGM::NAK_List()
+{
+	HBYT( 0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	g[2] -= 4;
+	while (g[2]!= 0)
+	{
+		HLNG( 0, l[1], 0x90, 0xc2, "Sequence Number:\");
+		g[2] -= 4; 
+	}
+}
+
+void PGM::Joining()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "Min Sequence Number:\" );
+}
+
+void PGM::NAK_BO_IVL()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "Min_BO_IVL:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "Max_BO_IVL_SQN:\");
+}
+
+void PGM::NAK_BO_RNG()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "BO_IVL:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "BO_IVL_SQN:\");
+}
+
+void PGM::Redirect()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HWRD (0 ,l[1], 0x90, 0xc2, "NLA AFI:\");
+	HWRD (0 ,l[1], 0x90, 0xc2, "Reserved2:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "DLR's NLA:\");
+}
+
+void PGM::Parity_PRM()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "PO:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "Prm_Tgsz:\" );
+}
+
+void PGM::Group()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "Prm_GRP:\" );
+}
+
+void PGM::Current_Tagsize()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+	HLNG (0 ,l[1], 0x90, 0xc2, "Prm_atgsz:\" );
+}
+
+void PGM::SYN()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+}
+
+void PGM::FIN()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\" );
+}
+
+void PGM::RESET()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Error Code:\" );
+}
+
+void PGM::PGMCC_Data()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "Tsp:\");
+	HWRD (0 ,l[1], 0x90, 0xc2, "Acker_Afi:\");
+	HWRD (0 ,l[1], 0x90, 0xc2, "Reserved2:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "Acker:\");
+}
+
+void PGM::PGMCC_Feedback()
+{
+	HBYT (0 ,l[1], 0x90, 0xc2, "Reserved:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "Tsp:\");
+	HWRD (0 ,l[1], 0x90, 0xc2, "Acker_Afi:\");
+	HWRD (0 ,l[1], 0x90, 0xc2, "Loss Rate:\");
+	HLNG (0 ,l[1], 0x90, 0xc2, "Acker:\");
+}
+
+str# PGM::Options_List_Str;
+	0x00	|	Ignore;
+	0x01	|	Invalid;
+	0x10	|	Discard;
+	
+	

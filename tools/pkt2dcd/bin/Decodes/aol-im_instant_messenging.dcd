@@ -1,0 +1,2233 @@
+//  AOL Instant Messenging
+//  detected by port checking on port 5190
+
+//  notes on this decode:
+//   g2 used for subtype ids
+//   g4 used for data field length
+
+//  decode is in transition since when i started it, i did it quick and dirty...
+//  trying to move towards more logical usage...ie, getting rid of all of the tequ's
+//  and getting rid of the headers...right now a bunch of them are doing it themselves and 
+//  repeating a lot of code...no use for that...use headers!
+
+void AOL-IM;									// si: ok, so ryan wanted me to change the alternate decoder name to AOL-IM so 
+	TNXT -AOLIM;								// instead of changing all instances of AOLIM, i will just create this...that lazy bum!!!
+
+void AOLIM;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0  0 b1 AOL Instant Messenger\AOL IM:;
+	HBYT 0 1 90 c2 Command Start:;
+	TEQU 64 1 0  0 AOLIM::Command_64;			// si: if it's a 64 command branch...all others are 2a
+	CNEQ 2a 1 0 14 Unknown Command;
+	HBYT 0 3 90 c2 Channel ID:;					// si: save for use at bottom of func
+	 CEQU 1 3 0 14 New Connection Negotiation;
+	 CEQU 2 3 0 14 SNAC Data (non-connection-oriented data);
+	 CEQU 3 3 0 14 FLAP-level Error;
+	 CEQU 4 3 0 14 Close Connection Negotiation;
+	DWRD 0 1 90 c2 Sequence Num:;
+	DWRD 0 4 90 c2 Data Field Length:;			// si: save
+	
+	GWRD  0 1;
+	TEQU  1 1 0 0 AOLIM::Type01;				// si: ?
+	TEQU  2 1 0 0 AOLIM::Type02;				// si: get member info
+	TEQU  3 1 0 0 AOLIM::Type03;				// si: buddy list stuff
+	TEQU  4 1 0 0 AOLIM::Type04;				// si: send / receive aims
+	TEQU  9 1 0 0 AOLIM::Type09;				// si: ?
+	// TEQU  b 1 0 0 AOLIM::Type0b;
+	TEQU  f 1 0 0 AOLIM::Type0f;
+	TEQU 13 1 0 0 AOLIM::Type13;				// si: dunno what the heck this is either!
+	TEQU 17 1 0 0 AOLIM::Type17;				// server query info
+	TEQU 18 1 0 0 AOLIM::Type18;
+	
+	TGTE 0 10 0 0 RETURN;
+	TEQU 1  3 0 0 AOLIM::Channel_1;
+	TNXT -AOLIM::Default;
+
+// -------------------------------------------------------------------------------
+//  random or diff command types are here... 
+
+void AOLIM::Channel_1;
+	HLNG 0 0 90 c2 Authentication Cookie:;
+	TGTE 0 10 00 00 RETURN; 
+	LABL 0 0 00 b7 Authorization Cookie;
+	HWRD 0 1 90 c2 Type:;
+	CEQU 1 1 00 14 Authorization Cookie;
+	DWRD 0 1 90 c2 Length:;
+	g[4] -= 8;
+	DUMP 0 1 90 c2 New Connection Data:;
+	g[4] -= g[1];
+	LABL 0 0 00 b8;
+	if (g[4] > 0)
+	{
+		DUMP 0 4 90 c2 Connection Data:;
+	}
+	TNXT -AOLIM;
+
+void AOLIM::Default;
+	SUBG 1 4;									// si: subtract 1 for the == case
+	SGTE 4 90;
+	SKIP 4;										// si: use this case if aol length is legit
+	 ADDG 1 4;
+	 DUMP 0 4 90 c2 Unknown AOL Data:;		
+	 TGTE 0 10 0 0 RETURN;
+	 TNXT -AOLIM;
+	DUMP 0 10 90 c2 Unknown AOL Data:;			// si: use this case if aol length is bogus
+	TGTE 0 10 0 0 RETURN;
+	TNXT -AOLIM;
+
+void AOLIM::Command_64;
+	HBYT 0 1 90 c2 Type:;
+	CHR# 5 0 90 c2 Type Description:;
+	TNXT -AOLIM::Command_64_Helper;
+
+void AOLIM::Command_64_Helper;
+	HWRD 0 1 90 c2 Type:;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Description:;
+	TGTE 0 10 0 0 RETURN;
+	TNXT -AOLIM::Command_64_Helper;
+
+str# AOLIM::FamilyIDList;
+	0x01 | AIM Generic;
+	0x02 | AIM Location;
+	0x03 | AIM Buddylist;
+	0x04 | AIM Messaging;
+	0x09 | AIM BOS;
+	0x0f | AIM Directory;
+	0x13 | AIM SSI;
+	0x17 | AIM SignOn;
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+//		Family Types
+// -------------------------------------------------------------------------------
+
+// -------------------------------------------------------------------------------
+//	Type 1
+// -------------------------------------------------------------------------------
+void AOLIM::Type01
+	LABL 0 0  0 b7 AOL Data;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type01::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 ID:;
+	g[4] -= 10;
+	TST# 0 2 00 00 AOLIM::Type01::FuncList;
+	LABL 0 0 00 b8;
+	TNXT -AOLIM;
+
+str# AOLIM::Type01::SubTypeList;
+	0x01 | Error;
+	0x02 | Client Ready;
+	0x03 | Server Ready;
+	0x04 | Service Request;
+	0x05 | Redirect;
+	0x06 | Rate Info Request;
+	0x07 | Rate Info;
+	0x08 | Rate Info Ack;
+	0x0a | Rate Change;
+	0x0b | Server Pause;
+	0x0c | Client Pause Ack;
+	0x0d | Server Resume;
+	0x0e | Self Info Request;
+	0x0f | Self Info Reply;
+	0x10 | Evil;
+	0x11 | Set Idle;
+	0x12 | Migration Request;
+	0x13 | Message Of The Day;
+	0x14 | Set Privilege Flags;
+	0x15 | Well Known URL;
+	0x16 | noop;
+	0x17 | Capabilities;
+	0x18 | Capabilities Ack;
+	0x1e | Set Extended Status Request;
+	0x1f | Client Verification Request;
+	0x20 | Client Verification Reply;
+	0x21 | Set Extended Status Reply;
+
+str# AOLIM::Type01::FuncList;
+	0x02 | AOLIM::Type01::02;
+	0x03 | AOLIM::Type01::03;
+	0x04 | AOLIM::Type01::04;
+	0x05 | AOLIM::Type01::05;
+	0x07 | AOLIM::Type01::07;
+	0x08 | AOLIM::Type01::08;
+	0x0a | AOLIM::Type01::0a;
+	0x0e | AOLIM::Type01::0e;
+	0x0f | AOLIM::Type01::0f;
+	0x10 | AOLIM::Type01::10;
+	0x11 | AOLIM::Type01::11;
+	0x13 | AOLIM::Type01::13;
+	0x17 | AOLIM::Type01::17;
+	0x18 | AOLIM::Type01::18;
+	0x1e | AOLIM::Type01::1e;
+	0x21 | AOLIM::Type01::21;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::02;
+	while (g[4] > 0)
+	{
+		HWRD 0 1 90 c9 Family:;
+		CST# 0 1 00 14 AOLIM::Type01::03::SupportedServiceList;
+		HWRD 0 1 90 c2 Version:;
+		HLNG 0 1 90 c2 Data:;
+		LABL 0 0 0 b8;
+		g[4] -= 8;
+	}
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::03;
+	LABL 0 0 0 b7 Supported Services;	 
+	while (g[16] > 1)
+	{
+		HWRD 0 1 90 c2 Service:;
+		CST# 0 1 00 14 AOLIM::Type01::03::SupportedServiceList;
+		CLSE 0 0 00 14 Unknown;
+	}
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# AOLIM::Type01::03::SupportedServiceList;
+	0x01 | AIM Generic;
+	0x02 | AIM Location;
+	0x03 | AIM Buddylist;
+	0x04 | AIM Messaging;
+	0x06 | AIM Invitation;
+	0x08 | AIM Popup;
+	0x09 | AIM BOS;
+	0x0a | AIM User Lookup;
+	0x0b | AIM Stats;
+	0x0c | AIM Translate;
+	0x0f | AIM Directory;
+	0x13 | AIM SSI;
+	0x15 | AIM ICQ;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::04;
+	HWRD 0 1 90 c2 Unknown:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::05;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::07;	
+	DWRD 0 2 90 c2 Num of Groups:;
+	AOLIM::Type01::07_Groups;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void AOLIM::Type01::07_Groups;
+	DWRD 0 3 90 c9 Group Num:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	DLNG 0 1 90 c2 Rate:;
+	LABL 0 0  0 b8;
+	HBYT 0 1 90 c2 Padding:;
+	SNEQ 2 83;
+	TTST 0 0  0  0 AOLIM::Type01::07_Groups;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::08;
+	SLTE 1 10;
+	SKIP 2;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	DWRD 0  1 90 c2 Group Ack:;
+	TNXT -AOLIM::Type01::08;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::0a;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::0e;
+	// si: no expected info
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::0f;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	AOLIM::Warning_Level;
+	DWRD 0 2 90 c2 TLV Count:;
+	AOLIM::TLV;
+	LABL 0 00 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::10;	
+	DWRD 0 1 90 c2 Following Bytes:;			// si: ugh...this one's a risk!
+	CHR# 0 1 90 c2 Data:;
+	// HLNG 0 1 90 c2 Unknown Data:;
+	// HLNG 0 1 90 c2 Unknown Data:;
+	
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Sent Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+	
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+	DWRD 0 2 90 c2 TLV Count:;
+	AOLIM::TLV;
+		
+	// SUBG a 4;
+	// DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::11;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::13;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::17;
+	LABL 0 0 00 b7 Supported Capabilities;
+	while (g[4] > 0)
+	{
+		HWRD 0 1 90 c9 Family:;
+		CST# 0 1 00 14 AOLIM::Type01::03::SupportedServiceList;
+		HWRD 0 1 90 c2 Version:;
+		LABL 0 0  0 b8;
+		g[4] -= 4;
+	}
+	LABL 0 0 00 b8;
+	LABL 0 0 00 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::18;
+	LABL 0 0 00 b7 Supported Capabilities;
+	while (g[4] > 0)
+	{
+		HWRD 0 1 90 c9 Family:;
+		CST# 0 1 00 14 AOLIM::Type01::03::SupportedServiceList;
+		HWRD 0 1 90 c2 Version:;
+		LABL 0 0  0 b8;
+		g[4] -= 4;
+	}
+	LABL 0 0 00 b8;
+	LABL 0 0 00 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::1e;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type01::21;
+	DWRD 0 1 90 c2 Extended Status Type:;
+	CEQU 0 1 00 14 Request to Send Buddy Icon;
+	CEQU 1 1 00 14 Request to Send Buddy Icon;
+	CEQU 2 1 00 14 Extended Status Update;
+	HWRD 0 0 90 c2 Extended Status Flags:;
+	DWRD 0 1 90 c2 Extended Status Len:;
+	HEX# 0 1 90 c2 Extended Status Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+
+// -------------------------------------------------------------------------------
+//	Type 2
+// -------------------------------------------------------------------------------
+void AOLIM::Type02;
+	LABL 0 0 0 b7 AOL Information;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2  0 14 AOLIM::Type02::SubtypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Request ID:;
+	g[4] -= 10;
+	
+	TST# 0 2 0 0 AOLIM::Type02::SubtypeFunc;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+str# AOLIM::Type02::SubtypeFunc;
+	0x02 | AOLIM::Type02::02;
+	0x03 | AOLIM::Type02::03;
+	0x04 | AOLIM::Type02::04;
+	0x05 | AOLIM::Type02::05;
+	0x06 | AOLIM::Type02::06;
+	0x09 | AOLIM::Type02::09;
+	0x0a | AOLIM::Type02::0a;
+	0x0b | AOLIM::Type02::0b;
+	0x0c | AOLIM::Type02::0c;
+	0x0f | AOLIM::Type02::0f;
+	0x10 | AOLIM::Type02::10;
+
+str# AOLIM::Type02::SubtypeList;
+	0x01 | Client or Server Error;
+	0x02 | Client Request Rights Information;
+	0x03 | Server Rights Information;
+	0x04 | Client Set User Information;
+	0x05 | Client Request User Information;
+	0x06 | Server User Information;
+	0x07 | Client Watcher sub Request;
+	0x08 | Server Watcher Notification;
+	0x0b | Client Screen Name;
+	0x15 | User Info Query;
+	
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::02;
+	// si: no info expected
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+	
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::03;
+	MOVE 4 2;						// si: this tells AOLIM::tlv how many there are...but i'm not sure how many there are
+	AOLIM::TLV;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::04;
+	g[5] = g[4];
+	AOLIM::Type02::TLV;
+	LABL 0 00 00 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::05;
+	HWRD 0 1 90 c2 Requested Info:;
+	 CEQU 1 1  0 14 User's profile requested;
+	 CEQU 3 1  0 14 User's away message requested;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	LABL 0 0  0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::06;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	DWRD 0 0 90 c2 Warning Level:;
+	DWRD 0 2 90 c2 TLV Count:;
+	if (g[2] > 0)
+	{
+		AOLIM::TLV;
+	}
+	LABL 0 0  0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::09;
+	while (g[4] > 0)
+	{
+		l[2] = g[16];
+		g[1] = pw[0];
+		l[1] = g[16];
+		TSB# 0 1 00 00 AOLIM::Type02::09::TLV::Func;
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			HWRD 0 1 90 c2 Type:;
+			DWRD 0 1 90 c2 Length:;
+			DUMP 0 1 90 c2 Value:;
+			LABL 0 0 00 b8;
+		}
+		l[2] -= g[16];
+		g[4] -= l[2];
+	}
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+str# AOLIM::Type02::09::TLV::List;
+	0x01 | First Name;
+	0x02 | Last Name;
+	0x0c | Nick Name;
+	0x1c | Message Type;
+
+str# AOLIM::Type02::09::TLV::Func;
+	0x01 | AOLIM::Type02::09::TLV::GenericChar;
+	0x02 | AOLIM::Type02::09::TLV::GenericChar;
+	0x0c | AOLIM::Type02::09::TLV::GenericChar;
+	0x1c | AOLIM::Type02::09::TLV::GenericChar;
+
+void AOLIM::Type02::09::TLV::GenericChar;
+	CST# 0 1 00 b7 AOLIM::Type02::09::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type02::09::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::0a;
+	HWRD 0 1 90 c2 Unknown:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::0b;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::0c;
+	HLNG 0 1 90 c2 Unknown:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::0f;
+	SEQU 0 4;
+	SKIP 1;
+	DUMP 0 4 90 c2 data:;
+	LABL 0 0  0 b8;
+	TEQU 0 10 0 0 RETURN;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::10;
+	HWRD 0 1 90 c2 Unknown:;
+	LABL 0 0 0 b8;
+	TEQU 0 10 0 0 RETURN;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type02::TLV;
+	while (g[5] > 0)
+	{
+		l[2] = g[16];
+		g[1] = pw[0];
+		l[1] = g[16];
+		TSB# 0 1 00 00 AOLIM::Type02::TLV::Func;
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			HWRD 0 1 90 c2 Type:;
+			DWRD 0 1 90 c2 Length:;
+			DUMP 0 1 90 c2 Value:;
+			LABL 0 0 00 b8;
+		}
+		l[2] -= g[16];
+		g[5] -= l[2];
+	}
+	TRTS;
+
+str# AOLIM::Type02::TLV::List;
+	0x01 | Mime Type;
+	0x05 | Client Capabilities;
+
+str# AOLIM::Type02::TLV::Func;
+	0x01 | AOLIM::Type02::TLV::01;
+	0x05 | AOLIM::Type02::TLV::05;
+
+void AOLIM::Type02::TLV::01;
+	CST# 0 1 00 b7 AOLIM::Type02::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type02::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Mime Type:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+void AOLIM::Type02::TLV::05;
+	CST# 0 1 00 b7 AOLIM::Type02::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type02::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	LABL 0 0 00 b9 Capability List;
+	while (g[3] > 0)
+	{
+		g[1] = pl[0];
+		HEX# 10 0 5 5;
+		CST# 0 1 00 d4 AOLIM::TLV::CapabilityInfo::List;
+		CLSE 0 0 00 d4 Unknown Capability;
+		g[3] -= 16;
+	}
+	LABL 0 0 00 b8;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// -------------------------------------------------------------------------------
+//	Type 3
+// -------------------------------------------------------------------------------
+void AOLIM::Type03;
+	LABL 0 0  0 b7 Buddy List Management;
+	HWRD 0 1 90 c2 Family ID:;
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2  0 14 AOLIM::Type03::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Request ID:;
+	g[4] -= 10;
+	TST# 0 2 0 0 AOLIM::Type03::SubTypeFunc;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# AOLIM::Type03::SubTypeList;
+	Client or Server Error;
+	Client Request rights information;
+	Server Rights information;
+	Client Add buddy to buddy list;
+	Client Remove buddy from buddy list;
+	Client Watcher list query;
+	Server Watcher list response;
+	Client Watcher sub request;
+	Server Watcher notification;
+	Server Reject notification;
+	Server Oncoming buddy;
+	Server Offgoing buddy;
+
+str# AOLIM::Type03::SubTypeFunc;
+	0x02 | AOLIM::Type03::02;
+	0x03 | AOLIM::Type03::03;
+	0x0b | AOLIM::Type03::0b;
+	0x0c | AOLIM::Type03::0c;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type03::02;
+	// si: no info expected
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type03::03;
+	g[5] = g[4];
+	AOLIM::Type03::TLV;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type03::0b;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+	DWRD 0 2 90 c2 TLV Count:;
+	AOLIM::TLV;
+	
+	// AOLIM::Buddy_User_Online_Helper;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type03::0c;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+	DWRD 0 1 90 c2 TLV Count:;
+	AOLIM::TLV;
+	LABL 0 0  0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type03::TLV;
+	// si: expect length to be in g[5]
+	while (g[5] > 0)
+	{
+		l[1] = g[16];
+		l[2] = g[16];
+		g[1] = pw[0];
+		TSB# 0 1 00 00 AOLIM::Type03::TLV::Func;
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			HWRD 0 0 90 c2 Type:;
+			DWRD 0 1 90 c2 Length:;
+			HEX# 0 1 90 c2 Value:;
+			LABL 0 0 00 b8;
+		}
+		l[2] -= g[16];
+		g[5] -= l[2];
+	}
+
+str# AOLIM::Type03::TLV::List;
+	0x01 | Max Num of Contact List Entries;
+	0x02 | Max Num of Watcher List Entries;
+	0x03 | Max Online Notifications;
+
+str# AOLIM::Type03::TLV::Func;
+	0x01 | AOLIM::Type03::TLV::01;
+	0x02 | AOLIM::Type03::TLV::02;
+	0x03 | AOLIM::Type03::TLV::03;
+
+void AOLIM::Type03::TLV::01;
+	CST# 0 1 00 b7 AOLIM::Type03::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type03::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Max Watchers:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 0 90 c2 Max Watchers:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type03::TLV::02;
+	CST# 0 1 00 b7 AOLIM::Type03::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type03::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Max Contacts:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 0 90 c2 Max Contacts:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type03::TLV::03;
+	CST# 0 1 00 b7 AOLIM::Type03::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type03::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// -------------------------------------------------------------------------------
+//	Type 4
+// -------------------------------------------------------------------------------
+void AOLIM::Type04;
+	LABL 0 0 00 b7 Send/Receive IM;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type04::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Request ID:;
+	g[4] -= 10;
+	TST# 0 2 00 00 AOLIM::Type04::SubTypeFunc;
+	TRTS;
+	
+str# AOLIM::Type04::SubTypeFunc;
+	0x01 | AOLIM::Type04::01;
+	0x02 | AOLIM::Type04::02;
+	0x04 | AOLIM::Type04::04;
+	0x05 | AOLIM::Type04::05;
+	0x06 | AOLIM::Type04::06;
+	0x07 | AOLIM::Type04::07;
+	0x08 | AOLIM::Type04::08;
+	0x09 | AOLIM::Type04::09;
+	0x0c | AOLIM::Type04::0c;
+	0x14 | AOLIM::Type04::14;
+
+str# AOLIM::Type04::SubTypeList;
+	Client or Server Error;
+	Client Add ICBM parameter;
+	Client Remove ICBM parameter;
+	Client Request parameter information;
+	Server Parameter information;		// 5
+	Client Message from the client;
+	Server Message to the client;
+	Client Evil request;
+	Server Evil reply;
+	Server Missed calls;				// a
+	Client or Server Client error;
+	Server Host ack;
+	;
+	;
+	;
+	;									// 10
+	;
+	;
+	;
+	Send Name;
+	;
+	;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::01;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::02;
+	DUMP 0 4 90 c2 AOL Data:;	
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::04;
+	// si: no data expected
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::05;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::06;
+	HEX# 8 0 90 c2 Message Cookie:;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 text message;
+	 CEQU 2 2 0 14 advanced message;
+	 CEQU 4 2 0 14 auth / url message;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:; 
+	LABL 0 0 00 c7 Message TLV;
+	HWRD 0 1 90 c2 Type:;
+	LABL 0 0 00 14 Message;
+	DWRD 0 1 90 c2 Length:;
+		LABL 0 0 00 c7 Feature TLV;
+		HWRD 0 1 90 c2 Type:;
+		DWRD 0 1 90 c2 Length:;
+		HEX# 0 1 90 c2 Value:; 
+		LABL 0 0  0 c8;
+	HWRD 0 1 90 c2 Message ID:;
+	DWRD 0 2 90 c2 Message Length:;
+	HLNG 0 1 90 c2 Message Header:;
+	
+	SUBG  4  2;		// si: subtract for message header info
+	MOVE 10 81;
+	SUBG  2 81;
+	MOVE  1 82;
+	ADDG 1 2;
+		
+	LABL 0 0 90 c9 Message:;
+	AOLIM::Data_Loop;
+	LABL 0 0  0 c8;
+	LABL 0 0  0 c8;
+	
+	if (g[16] > 0)
+	{
+		g[2] = 1;								// si:  ??????
+		AOLIM::TLV;
+	}
+	LABL 0 0  0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::07;
+	HEX# 8 0 90 c2 Message Cookie:;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 text message;
+	 CEQU 2 2 0 14 advanced message;
+	 CEQU 4 2 0 14 auth / url message;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+
+	DWRD 0 2 90 c2 TLV Count:;
+	AOLIM::TLV;
+	LABL 0 0 00 c7 Message TLV;
+	HWRD 0 2 90 c2 Type:;
+	LABL 0 0 00 14 Message;
+	DWRD 0 1 90 c2 Length:;
+		LABL 0 0 00 c7 Features TLV:;
+		HWRD 0 1 90 c2 Type:;
+		LABL 0 0 00 14 Features;
+		DWRD 0 1 90 c2 Length:;
+		HEX# 0 1 90 c2 Value:;
+		LABL 0 0  0 c8;
+	HWRD 0 1 90 c2 Message ID:;
+	DWRD 0 2 90 c2 Message Length:;
+	HLNG 0 1 90 c2 Message Header:;
+	
+	SUBG  4  2;		// si: subtract for message header info
+	MOVE 10 81;
+	SUBG  2 81;
+	MOVE  1 82;
+	ADDG 1 2;
+	
+	LABL 0 0 90 c9 Message:;
+	 AOLIM::Data_Loop;
+	 LABL 0 0  0 c8;
+	LABL 0 0 00 c8;
+	
+	SGTE 0 10;
+	SKIP 1;
+	DUMP 0 10 90 c2 Data:;
+	LABL 0 0  0 b8;
+	TRTS;
+
+void AOLIM::Data_Loop;
+	TGTE 0 10 0 0 RETURN;
+	SGTE 10 82;
+	 SKIP 1;
+	 TRTS;
+	 
+	GBYT 0 1;
+	
+	TEQU 3c 1 0 0 AOLIM::Data_LB;		//  < 3c
+	TEQU 3e 1 0 0 AOLIM::Data_RB;		//  > 3e
+	
+	CHR# 1 0 0 14;
+	TNXT -AOLIM::Data_Loop;
+
+void AOLIM::Data_LB;
+	DECR 1;
+	GBYT 0 1;
+	INCR 1;
+	SEQU 3e 1;
+	SKIP 1;
+	LABL 0 0 0 c2; 
+	CHR# 1 0 0 14;
+	TNXT -AOLIM::Data_Loop;
+
+void AOLIM::Data_RB;
+	CHR# 1 0 0 14;
+	LABL 0 0 0 c2;
+	TNXT -AOLIM::Data_Loop;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::08;
+	HWRD 0 2 90 c2 Unknown:;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::09;
+	HWRD 0 1 90 c2 Unknown:;
+	AOLIM::Warning_Level;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::0c;
+	HEX# 8 0 90 c2 Message Cookie:;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 text message;
+	 CEQU 2 2 0 14 advanced message;
+	 CEQU 4 2 0 14 auth / url message;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type04::14;
+	HEX# 8 0 90 c2 Message Cookie:;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 text message;
+	 CEQU 2 2 0 14 advanced message;
+	 CEQU 4 2 0 14 auth / url message;
+	DBYT 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	DWRD 0 1 90 c2 Notification Type:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+
+// -------------------------------------------------------------------------------
+//	Type 9
+// -------------------------------------------------------------------------------
+void AOLIM::Type09;
+	LABL 0 0  0 b7 AOL Data;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type09::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 ID:;
+	g[4] -= 10;
+	TEQU 2 2  0  0 AOLIM::Type09::02;
+	TEQU 3 2  0  0 AOLIM::Type09::03;
+	LABL 0 0  0 b8;
+	TRTS;
+
+str# AOLIM::Type09::SubTypeList;
+	0x01 | Error;
+	0x02 | Rights Query;
+	0x03 | Rights;
+	0x04 | Set Group Permissions Mask;
+	0x05 | Add To Visible List;
+	0x06 | Delete From Visible List;
+	0x07 | Add To Invisible List;
+	0x08 | Delete From Invisible List;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type09::02;
+	// si: no data expected
+	LABL 0 0 0 b8;
+	TGTE 0 10 0 0 RETURN;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type09::03;
+	AOLIM::Type09::TLV;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type09::TLV;
+	while (g[4] > 0)
+	{
+		l[2] = g[16];
+		g[1] = pw[0];
+		l[1] = g[16];
+		TSB# 0 1 00 00 AOLIM::Type09::TLV::Func;
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			HWRD 0 1 90 c2 Type:;
+			DWRD 0 1 90 c2 Length:;
+			DUMP 0 1 90 c2 Value:;
+			LABL 0 0 00 b8;
+		}
+		l[2] -= g[16];
+		g[4] -= l[2];
+	}
+	TRTS;
+
+str# AOLIM::Type09::TLV::List;
+	1 | Max Visible List Size;
+	2 | Max Invisible List Size;
+
+str# AOLIM::Type09::TLV::Func;
+	1 | AOLIM::Type09::TLV::01;
+	2 | AOLIM::Type09::TLV::02;
+
+void AOLIM::Type09::TLV::01;
+	LABL 0 0 00 b7 Max Visible List Size TLV;
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type09::TLV::List;
+	DWRD 0 0 90 c2 Length:;
+	DWRD 0 0 90 c2 Max Visible Size:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+void AOLIM::Type09::TLV::02;
+	LABL 0 0 00 b7 Max Invisible List Size TLV;
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type09::TLV::List;
+	DWRD 0 0 90 c2 Length:;
+	DWRD 0 0 90 c2 Max Invisible Size:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+//	Type 0x0b
+// -------------------------------------------------------------------------------
+// void AOLIM::Type0b;
+	// LABL 0 0  0 b7 AOL Data;
+	// HWRD 0 1 90 c2 Family ID:; 
+	// HWRD 0 2 90 c2 Subtype ID:;
+	// HWRD 0 1 90 c2 Flags:;
+	// HLNG 0 1 90 c2 ID:;
+
+// void AOLIM::Type0b::02;								//  TYPE b-2
+	// HWRD 0 1 90 c2 Unknown Data:;
+	// TGTE 0 10 0  0 RETURN;
+	// TNXT -AOLIM;
+
+
+// void AOLIM::Type0b::03;								//  TYPE b-3
+	// INCR 1c;
+	// DBYT 0 1 90 c2 Screen Name Length:;
+	// CHR# 0 1 90 c2 Screen Name:;
+	// HWRD 0 1 90 c2 Type:;
+	// DWRD 0 1 90 c2 Length:;
+	// CHR# 0 1 90 c2 Operating Sys:;
+	// DWRD 0 1 90 c2 Length:;
+	// CHR# 0 1 90 c2 Build Num:;
+	// DWRD 0 1 90 c2 Length:;
+	// CHR# 0 1 90 c2 Computer Type:;
+	// DWRD 0 1 90 c2 Length:;
+	// CHR# 0 1 90 c2 Info:;
+	// DWRD 0 1 90 c2 Length:;
+	// CHR# 0 1 90 c2 Info:;
+
+// -------------------------------------------------------------------------------
+//	Type 0x0f
+// -------------------------------------------------------------------------------
+void AOLIM::Type0f;
+	LABL 0 0 0 b7 AOL Data;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type0f::SubtypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 ID:;
+	g[4] -= 10;
+	TEQU 5 2 00 00 AOLIM::Type0f::05;
+	LABL 0 0 00 b8;
+
+str# AOLIM::Type0f::SubtypeList;
+	0x01 | Error;
+	0x02 | Client search for user request;
+	0x03 | Server reply for search request (found users);
+	0x04 | Request interests list from server;
+	0x05 | Interests list;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type0f::05;
+	HLNG 0 1 90 c2 Unknown:;
+	g[5] = 0;
+	LABL 0 0 00 b7 Interest List; 
+	while (g[4] > 0)
+	{
+		HWRD 0 1 90 c9 Type:;
+		DWRD 0 1 90 c2 Length:;
+		if (g[16] > g[1])
+		{
+			CHR# 0 1 90 c2 Description:;
+		}
+		if (g[1] > g[16])
+		{
+			CHR# 0 10 90 c2 Description:;
+			g[4] = 0;
+			g[5] = 123;
+		}
+		LABL 0 0 00 c8;
+		g[4] -= 4;
+		g[4] -= g[1];
+	}
+	if (g[5] == 123)
+	{
+		LABL 0 0 0 d4 Data Continued on Following Packet;
+	}
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+
+// -------------------------------------------------------------------------------
+//	Type 13
+// -------------------------------------------------------------------------------
+void AOLIM::Type13;
+	LABL 0 0  0 b7 AOL Data;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type13::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 ID:;
+	g[4] -= 10;
+	TST# 0 2 00 00 AOLIM::Type13::SubTypeFunc;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# AOLIM::Type13::SubTypeList;
+	0x01 | Error;
+	0x02 | Request Rights;
+	0x03 | Rights Info;
+	0x04 | Request List (first time);
+	0x05 | Request List;
+	0x06 | List;
+	0x07 | Activate;
+	0x08 | Add Buddy;
+	0x09 | Modify Buddy;
+	0x0a | Delete Buddy;
+	0x0e | Server Ack;
+	0x0f | No List;
+	0x11 | Edit Start;
+	0x12 | Edit Stop;
+	0x14 | Grant Future Authorization to Buddy;
+	0x15 | Future Authorization Granted;
+	0x18 | Send Authentication Request;
+	0x19 | Authentication Request;
+	0x1a | Send Authentication Reply;
+	0x1b | Authentication Reply;
+	0x1c | Remote User Added Client To List;
+
+str# AOLIM::Type13::SubTypeFunc;
+	0x02 | AOLIM::Type13::02;
+	0x03 | AOLIM::Type13::03;
+	0x05 | AOLIM::Type13::05;
+	0x06 | AOLIM::Type13::06;
+	0x07 | AOLIM::Type13::07;
+	0x08 | AOLIM::Type13::08;
+	0x09 | AOLIM::Type13::09;
+	0x0e | AOLIM::Type13::0e;
+	0x0f | AOLIM::Type13::0f;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::02;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::03;
+	SGTE 10 84;
+	SKIP 3;
+	 DUMP 0 10 90 c2 Not Enough Data Remaining:;
+	 LABL 0  0  0 b8;
+	 TRTS;
+
+	MOVE 10 81;
+	SUBG 4 81;
+	MOVE 1 84;
+
+	ADDG 1 4;					// si: add 1 just in case they are equal!
+	AOLIM::Type13::03_Helper;
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+void AOLIM::Type13::03_Helper;
+	MOVE 1 2;
+	AOLIM::TLV;
+	SGTE 10 84;
+	SKIP 1;
+	TRTS;
+	TNXT -AOLIM::Type13::03_Helper;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::05;
+	TIME 0 1 90 c2 Last Server Mod:;
+	DWRD 0 1 90 c2 Size:;
+	LABL 0 0 00 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::06;
+	DUMP 0 4 90 c2 AOL Data:;
+	LABL 0 0 00 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::07;
+	// si: no data expected
+	LABL 0 0 0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::08;
+	DWRD 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	HWRD 0 1 90 c2 Tag:;
+	HWRD 0 1 90 c2 ID:;
+	HWRD 0 1 90 c2 Type:;
+	 CEQU  0 1 0 14 A normal contact list entry;
+	 CEQU  1 1 0 14 A Larger Group header;
+	 CEQU  4 1 0 14 Unknown;
+	 CEQU  e 1 0 14 A contact on the Ignore List;
+	 CEQU 13 1 0 14 This group's TLV contains the time(NULL) - Import Time;
+	DWRD 0 1 90 c2 Byte Length:;
+	SEQU 0 1;
+	SKIP 1;
+	 DUMP 0 1 90 c2 AOL Data:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::09;			// !?!?!
+	DWRD 0 1 90 c2 SSI Buddy Name Len:;
+	g[4] -= 2;
+	CHR# 0 1 90 c2 Buddy Name:;
+	g[4] -= g[1];
+	HWRD 0 1 90 c2 SSI Group ID:;
+	HWRD 0 1 90 c2 SSI Buddy ID:;
+	HWRD 0 1 90 c2 SSI Buddy Type:;
+	CST# 0 1 00 14 AOLIM::Type13::09::BuddyType;
+	DWRD 0 3 90 c2 SSI TLV Length:;
+	g[4] -= 8;
+	g[4] -= g[3];
+	while (g[3] > 0)
+	{
+		HWRD 0 1 90 c9 Type:;
+		DWRD 0 1 90 c2 Length:;
+		DUMP 0 1 90 c2 Value:;
+		LABL 0 0 00 c8;
+		g[3] -= 4;
+		g[3] -= g[1];
+	}
+	if (g[4] > 0)
+	{
+		DUMP 0 4 90 c2 Unknown Data:;
+	}
+	LABL 0 0  0 b8;
+	TNXT - AOLIM;
+
+str# AOLIM::Type13::09::BuddyType;
+	0x00 | Buddy;
+	0x01 | Group;
+	0x02 | Permit;
+	0x03 | Deny;
+	0x04 | PD Info;
+	0x05 | Presence Preferences;
+	0x14 | Icon Info;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::0e;
+	DWRD 0 1 90 c2 TLV Length:;
+	g[2] = pw[0];
+	if (g[2] == 1)
+	{
+		LABL 0 0 00 c7 Family Version TLV;
+		DWRD 0 1 90 c2 Type:;
+		LABL 0 0 00 14 Family Version;
+		DWRD 0 1 90 c2 Length:;
+		DWRD 0 1 90 c2 Version:;
+		LABL 0 0 00 c8;
+	}
+	if (g[2] != 1)
+	{
+		LABL 0 0 00 c9 Unknown TLV;
+		DWRD 0 1 90 c2 Type:;
+		DWRD 0 1 90 c2 Length:;
+		DWRD 0 1 90 c2 Value:;
+		LABL 0 0  0 c8;
+	}
+	
+	HWRD 0 1 90 c2 Error Code:;
+	LABL 0 0  0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type13::0f;
+	TIME 0 1 90 c2 Time:;
+	DWRD 0 1 90 c2 Size:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+
+// -------------------------------------------------------------------------------
+//	Type 17
+// -------------------------------------------------------------------------------
+void AOLIM::Type17;
+	LABL 0 0 00 b7 AIM Server Query;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	CST# 0 2 00 14 AOLIM::Type17::SubTypeList;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Message Cookie:;
+	g[4] -= 10;
+	
+	TST# 0 2 00 00 AOLIM::Type17::SubTypeFunc;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# AOLIM::Type17::SubTypeList;
+	0x01 | Error;
+	0x02 | Logon;
+	0x03 | Logon Reply;
+	0x04 | Request UIN;
+	0x05 | New UIN Response;
+	0x06 | Sign-on;
+	0x07 | Sign-on Reply;
+	0x0a | Server SecureID Request;
+	0x0b | Client SecureID Reply;
+
+str# AOLIM::Type17::SubTypeFunc;
+	0x02 | AOLIM::Type17::02;
+	0x03 | AOLIM::Type17::03;
+	0x06 | AOLIM::Type17::06;
+	0x07 | AOLIM::Type17::07;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type17::02;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 Text Message;
+	 CEQU 2 2 0 14 Advanced Message;
+	 CEQU 4 2 0 14 Auth / URL Message;
+	DWRD 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	g[4] -= 4;
+	g[4] -= g[1];
+	g[5] = g[4];
+	AOLIM::Type17::TLV;
+	LABL 0 0 0 c8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type17::03;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 Text Message;
+	 CEQU 2 2 0 14 Advanced Message;
+	 CEQU 4 2 0 14 Auth / URL Message;
+	DWRD 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	g[4] -= 4;
+	g[4] -= g[1];
+	g[5] = g[4];
+	AOLIM::Type17::TLV;
+	LABL 0 0 0 c8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type17::06;					//  TYPE 17-6 RP-almost done
+	LABL 0 0  0 b7 AOLIM Login Request;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 1 90 c2 Subtype ID:;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Message Cookie:;
+	DWRD 0 2 90 c2 Message Format:;
+	 CEQU 1 2 0 14 text message;
+	 CEQU 2 2 0 14 advanced message;
+	 CEQU 4 2 0 14 auth / url message;
+	DWRD 0 1 90 c2 Screen Name Length:;
+	CHR# 0 1 90 c2 Screen Name:;
+	SEQU 0 10;
+	SKIP 1;
+	HLNG 0 1 90 c2 Unknown:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type17::07;					//  TYPE 17-7 RP-almost done
+	LABL 0 0  0 b7 AOLIM Login Response;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 1 90 c2 Subtype ID:;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 Message Cookie:;
+	DWRD 0 1 90 c2 Value Length:;
+	CHR# 0 1 90 c2 Value:;
+	LABL 0 0  0 b8;
+	TNXT -AOLIM;
+
+
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type17::TLV;
+	// si: expect length to be in g[5]
+	while (g[5] > 0)
+	{
+		l[1] = g[16];
+		l[2] = g[16];
+		g[1] = pw[0];
+		TSB# 0 1 00 00 AOLIM::Type17::TLV::Func;
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			HWRD 0 0 90 c2 Type:;
+			DWRD 0 1 90 c2 Length:;
+			HEX# 0 1 90 c2 Value:;
+			LABL 0 0 00 b8;
+		}
+		l[2] -= g[16];
+		g[5] -= l[2];
+	}
+	TRTS;
+
+str# AOLIM::Type17::TLV::List;
+	0x03 | Aim Identification;
+	0x05 | Aim Server IP/Port;
+	0x06 | Authorization Cookie;
+	0x0e | Client Country;
+	0x0f | Client Language;
+	0x11 | Email Address;
+	0x13 | Registration Status;
+	0x14 | Client Distribution Number;
+	0x16 | Client ID Number;
+	0x17 | Client Major Version;
+	0x18 | Client Minor Version;
+	0x19 | Client Lesser Version;
+	0x1a | Client Build Number;
+	0x25 | Password Hash;
+	0x4a | Use SSI;
+	0x54 | Change Password URL;
+
+str# AOLIM::Type17::TLV::Func;
+	0x03 | AOLIM::Type17::TLV::03;
+	0x05 | AOLIM::Type17::TLV::05;
+	0x06 | AOLIM::Type17::TLV::06;
+	0x0e | AOLIM::Type17::TLV::0e;
+	0x0f | AOLIM::Type17::TLV::0f;
+	0x11 | AOLIM::Type17::TLV::11;
+	0x13 | AOLIM::Type17::TLV::13;
+	0x14 | AOLIM::Type17::TLV::14;
+	0x16 | AOLIM::Type17::TLV::16;
+	0x17 | AOLIM::Type17::TLV::17;
+	0x18 | AOLIM::Type17::TLV::18;
+	0x19 | AOLIM::Type17::TLV::19;
+	0x1a | AOLIM::Type17::TLV::1a;
+	0x25 | AOLIM::Type17::TLV::25;
+	0x4a | AOLIM::Type17::TLV::4a;
+	0x54 | AOLIM::Type17::TLV::54;
+
+void AOLIM::Type17::TLV::03;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Client:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::05;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Address/Port:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::06;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Cookie:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::11;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Address:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::13;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Status:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 0 90 c2 Status:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::0e;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Country:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::0f;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Language:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::14;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Distribution Num:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::16;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Client ID:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 1 90 c2 Client ID:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::17;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Major Vers:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 1 90 c2 Major Vers:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::18;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Minor Vers:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 1 90 c2 Minor Vers:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::19;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Lesser Vers:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 1 90 c2 Lesser Vers:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::1a;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 2)
+	{
+		DWRD 0 0 90 c2 Build Num:;
+	}
+	if (g[1] != 2)
+	{
+		HEX# 0 1 90 c2 Build Num:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::25;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Hash:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::4a;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void AOLIM::Type17::TLV::54;
+	CST# 0 1 00 b7 AOLIM::Type17::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::Type17::TLV::List;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 URL:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// -------------------------------------------------------------------------------
+//  Type 18
+// -------------------------------------------------------------------------------
+void AOLIM::Type18;
+	LABL 0 0  0 b7 AOLIM Email Acct Info;
+	HWRD 0 1 90 c2 Family ID:; 
+	CST# 0 1 00 14 AOLIM::FamilyIDList;
+	HWRD 0 2 90 c2 Subtype ID:;
+	HWRD 0 1 90 c2 Flags:;
+	HLNG 0 1 90 c2 ID:;
+	g[4] -= 10;
+	TEQU 7 2 0 0 AOLIM::Type18::07;
+
+	DUMP 0 4 90 c2 Unknown Data:;
+	LABL 0 0  0 b8;
+	TGTE  0 10 0  0 RETURN;
+	TNXT -AOLIM;
+
+// -------------------------------------------------------------------------------
+void AOLIM::Type18::07;
+	DUMP 18 0 90 c2 Unknown Data:;
+	DWRD  0 2 90 c2 TLV Count:;
+	AOLIM::TLV;
+	LABL  0 0 0 b8;
+	TGTE  0 10 0  0 RETURN;
+	TNXT -AOLIM;
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+void AOLIM::Warning_Level;
+	GWRD 0 1;
+	DIVG a 1;
+	DGLB 0 1 90 c2 Warning Level:;
+	DWRD 0 1 5 0;
+	LABL 0 0 0 4 %;
+	TRTS;
+
+
+// -------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------
+void AOLIM::TLV;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 2 0 0 RETURN;				// si: holds the num of tlv's we have
+	g[2] -= 1;
+	
+	g[1] = pw[0];
+	//CST# 0 1 00 b7 AOLIM::TLV::List;
+	//CLSE 0 0 00 b7 Unknown;
+	//LABL 0 0 00 07 " TLV";
+	//HWRD 0 1 90 c2 Type:;
+	//CST# 0 1 00 14 AOLIM::TLV::List;
+	//DWRD 0 3 90 c2 Length:;
+	g[1] = pw[0];
+	l[1] = g[16];
+	TSB# 0 1 00 00 AOLIM::TLV::Func;
+	if (l[1] == g[16])
+	{
+		LABL 0 0 00 b7 Unknown TLV;
+		HWRD 0 1 90 c2 Type:;
+		DWRD 0 3 90 c2 Length:;
+		HEX# 0 3 90 c2 Value:;
+		LABL 0 0 00 b8;
+	}
+	
+	//LABL 0 0  0 c8;
+	TNXT -AOLIM::TLV;
+	
+str# AOLIM::TLV::List;
+	0x01	| User Class;
+	0x03	| Online Since;
+	0x04	| Idle Time;
+	0x05	| Member Since;
+	0x06	| Online Status;
+	0x08	| Icon Present;
+	0x0a	| User IP Address;
+	0x0c	| DC Info;
+	0x0d	| Capability Info;
+	0x0e	| Unknown;
+	0x0f	| Session Length;
+	0x10	| ICQ Session Length;
+	0x11	| Time Update;
+	0x1d	| Available Message;
+
+str# AOLIM::TLV::Func;
+	0x01	| AOLIM::TLV::UserClass;
+	0x03	| AOLIM::TLV::OnlineSince;
+	0x04	| AOLIM::TLV::IdleTime;
+	0x05	| AOLIM::TLV::MemberSince;
+	0x06	| AOLIM::TLV::OnlineStatus;
+	0x08	| AOLIM::TLV::IconPresent;
+	0x0a	| AOLIM::TLV::UserIPAddress;
+	0x0c	| AOLIM::TLV::DCInfo;
+	0x0d	| AOLIM::TLV::CapabilityInfo;
+	0x0e	| AOLIM::TLV::Unknown;
+	0x0f	| AOLIM::TLV::SessionLength;
+	0x10	| AOLIM::TLV::ICQSessionLength;
+	0x11	| AOLIM::TLV::TimeUpdate;
+	0x1d	| AOLIM::TLV::AvailableMessage;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::UserClass;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	if (g[3] == 2)
+	{
+		BWRD 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxxxxxx xxxxxxxx ........ ........ Reserved;
+		CBIT 7 1 00 d4 ........ ........ ........ 1....... AOL Wireless User;
+		CLSE 0 0 00 d4 ........ ........ ........ 0....... Not an AOL Wireless User;
+		CBIT 6 1 00 d4 ........ ........ ........ .1...... ICQ User Sign;
+		CLSE 0 0 00 d4 ........ ........ ........ .0...... Not an ICQ User Sign;
+		CBIT 5 1 00 d4 ........ ........ ........ ..1..... AOL Away Status;
+		CLSE 0 0 00 d4 ........ ........ ........ ..0..... Not an AOL Away Status;
+		CBIT 4 1 00 d4 ........ ........ ........ ...1.... ICQ Non-Commercial Account;
+		CLSE 0 0 00 d4 ........ ........ ........ ...0.... Not an ICQ Non-Commercial Account;
+		CBIT 3 1 00 d4 ........ ........ ........ ....1... AOL Commercial Account;
+		CLSE 0 0 00 d4 ........ ........ ........ ....0... Not an AOL Commercial Account;
+		CBIT 2 1 00 d4 ........ ........ ........ .....1.. AOL Staff User;
+		CLSE 0 0 00 d4 ........ ........ ........ .....0.. Not an AOL Staff User;
+		CBIT 1 1 00 d4 ........ ........ ........ ......1. AOL Administrator;
+		CLSE 0 0 00 d4 ........ ........ ........ ......0. Not an AOL Administrator;
+		CBIT 0 1 00 d4 ........ ........ ........ .......1 AOL Unconfirmed User;
+		CLSE 0 0 00 d4 ........ ........ ........ .......0 Not an AOL Unconfirmed User;
+		LABL 0 0 00 c8;
+	}
+	if (g[3] != 2)
+	{
+		HEX# 0 3 90 c2 Value:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::OnlineSince;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	if (g[3] == 4)
+	{
+		DLNG 0 0 90 c2 Value:;
+	}
+	if (g[3] != 4)
+	{
+		HEX# 0 3 90 c2 Value:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::IdleTime;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	if (g[3] == 2)
+	{
+		DWRD 0 0 90 c2 Idle Time:;
+		LABL 0 0 00 14 Seconds;
+	}
+	if (g[3] != 2)
+	{
+		HEX# 0 3 90 c2 Value:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::MemberSince;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	HEX# 0 3 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::OnlineStatus;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::IconPresent;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	HEX# 0 3 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::UserIPAddress;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	IPLG 0 0 90 c2 IP Address:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::DCInfo;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::CapabilityInfo;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	LABL 0 0 00 b9 Capability List;
+	while (g[3] > 0)
+	{
+		g[1] = pl[0];
+		HEX# 10 0 5 5;
+		CST# 0 1 00 d4 AOLIM::TLV::CapabilityInfo::List;
+		CLSE 0 0 00 d4 Unknown Capability;
+		g[3] -= 16;
+	}
+	LABL 0 0 00 b8;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# AOLIM::TLV::CapabilityInfo::List;
+	0x09460000	| iChat;
+	0x09460001	| Security;
+	0x09460100	| Video Chat;
+	0x09460101	| Live Video;
+	0x09460102	| Camera;
+	0x09460105	| iChatAV info;
+	0x09461323	| Hiptop;
+	0x09461341	| Voice Chat;
+	0x09461343	| Send File;
+	0x09461344	| Direct ICQ Communication;
+	0x09461345	| Direct Instant Messaging;
+	0x09461346	| Buddy Icon;
+	0x09461347	| Add-Ins;
+	0x09461348	| Recv File;
+	0x09461349	| ICQ Server Relaying;
+	0x0946134a	| Games;
+	0x0946134b	| Send Buddy List;
+	0x0946134d	| AIM-ICQ Interoperability;
+	0x0946134e	| ICQ UTF8 Support;
+	0x2e7a6475	| Old ICQ UTF8 Support;
+	0x748f2420	| Chat;
+	0x97b12751	| ICQ Rich Text Format Messages;
+	0xaa4a32b5	| AP User;
+	0xf2e7c7f4	| Trillian Encryption;
+
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::Unknown;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::SessionLength;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	if (g[3] == 4)
+	{
+		DLNG 0 0 90 c2 Session Len:;
+		LABL 0 0 00 14 seconds;
+	}
+	if (g[3] != 4)
+	{
+		HEX# 0 3 90 c2 Session Len:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::ICQSessionLength;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::TimeUpdate;
+
+// -------------------------------------------------------------------------------
+void AOLIM::TLV::AvailableMessage;
+	CST# 0 1 00 b7 AOLIM::TLV::List;
+	LABL 0 0 00 07 " TLV";
+	HWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 AOLIM::TLV::List;
+	DWRD 0 3 90 c2 Length:;
+	HEX# 0 3 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+
+
+
+
+
+
+
+
+// --------------------234234234234---------------------234234234234
+// si: could prolly get rid of this now....
+
+	
+void AOLIM::TLV_NC;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SNEQ 2a 1;
+	SKIP 2;
+	 LABL 0 0 0 b8;		// si: due to the fact that whatever calls into this is indenting
+	 TNXT -AOLIM;
+	HWRD 0 1 90 c9 Type:;
+	CST# 0 1  0 14 AOLIM::TLV_17;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Value:;
+	LABL 0 0  0 c8;
+	TNXT -AOLIM::TLV_NC;
+
+str# AOLIM::TLV_17;
+	;							//  si: i need this here to make the list numbering correct
+	;
+	aim identification;
+	;
+	aim server ip / port;		// 5
+	;
+	;
+	;
+	;
+	;		// a
+	;
+	;
+	;
+	country;
+	language;
+	;		// 10
+	email address;
+	;
+	;
+	;
+	;		// 15
+	;
+	;
+	;
+	;
+	;		// 1a
+	;
+	;
+	;
+	;
+	;
+	;		// 20
+	;
+	;
+	;
+	;
+	;		// 25
+	;
+	;
+	;
+	;
+	;		// 2a
+	;
+	;
+	;
+	;
+	;
+	;		// 30
+	;
+	;
+	;
+	;
+	;		// 35
+	;
+	;
+	;
+	;
+	;		// 3a
+	;
+	;
+	;
+	;
+	;
+	;		// 40
+	aim new vers installer url;
+	aim info url;
+	aim version;
+	;
+	aim current installer url;		// 45
+	aim info url;
+	aim version num;
+	;
+	;
+	;		// 4a
+	;
+	;
+	;
+	;
+	;
+	;		// 50
+	;
+	;
+	;
+	change password url;
+
+
+void AOLIM::Buddy_User_Online_Helper;
+	SNEQ 0 2;							// SI: needs g2 to be TLV Count
+	 SKIP 1;
+	 TRTS;
+	SUBG 1 2;
+	GWRD 0 1;
+	
+	SNEQ 1 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_01;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ c 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_0C;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ a 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_0A;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ 6 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_06;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ d 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_0D;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ f 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_0F;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ 2 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_02;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ 3 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_02;	// SI: same as 2
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ 4 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_04;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	SNEQ 11 1;
+	 SKIP 2;
+	 AOLIM::Buddy_User_Online_TLV_11;
+	 TNXT -AOLIM::Buddy_User_Online_Helper;
+	
+	TNXT -AOLIM::Buddy_User_Online_Helper;
+	
+void AOLIM::Buddy_User_Online_TLV_01;	
+	HLNG 0 1 90 c9 TLV01 Data:;
+	HWRD 0 1 90 c2 User State:;
+	 CEQU 50 1 0 14 Online;
+	 CEQU 70 1 0 14 Away;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void AOLIM::Buddy_User_Online_TLV_0C;
+	HLNG 0 1 90 c9 TLV0C Data:;
+	IPLG 0 1 90 c2 Internal IP:;
+	DLNG 0 1 90 c2 Port:;
+	DBYT 0 1 90 c2 TCP Flag:;
+	 CEQU 1 1 0 14 Firewall (or HTTPS proxy);
+	 CEQU 2 1 0 14 SOCKS4/5 proxy;
+	 CEQU 4 1 0 14 normal connection;
+	DWRD 0 1 90 c2 TCP Version:;
+	HLNG 0 1 90 c2 Cookie:;
+	HLNG 0 1 90 c2 Unknown:;
+	HLNG 0 1 90 c2 Unknown:;
+	TIME 0 1 90 c2 Time:;
+	TIME 0 1 90 c2 Time:;
+	TIME 0 1 90 c2 Time:;
+	HWRD 0 1 90 c2 Unknown:;
+	LABL 0 0  0 c8;
+	TRTS;
+	
+void AOLIM::Buddy_User_Online_TLV_0A;
+	HLNG 0 1 90 c9 TLV0A Data:;
+	IPLG 0 1 90 c2 External IP:;
+	LABL 0 0  0 c8;
+	TRTS;
+
+void AOLIM::Buddy_User_Online_TLV_06;
+	HLNG 0 1 90 c9 TLV06 Data:;
+	HLNG 0 1 90 c2 Status:;
+	LABL 0 0  0 c8;
+	TRTS;
+
+void AOLIM::Buddy_User_Online_TLV_0D;
+	HWRD 0 1 90 c9 TLV0D Data:;
+	HWRD 0 1 90 c2 Capabilites:;
+	LABL 0 0  0 c8;
+	TRTS;
+
+void AOLIM::Buddy_User_Online_TLV_0F;
+	HLNG 0 1 90 c9 TLV0F Data:;
+	HLNG 0 1 90 c2 Unknown:;
+	LABL 0 0  0 c8;
+	TRTS;
+	
+void AOLIM::Buddy_User_Online_TLV_02;
+	HLNG 0 1 90 c9 TLV02 Data:;
+	TIME 0 1 90 c2 Time:;
+	LABL 0 0  0 c8;
+	TRTS;
+	
+void AOLIM::Buddy_User_Online_TLV_04;
+	HLNG 0 1 90 c9 TLV04 Data:;
+	HWRD 0 1 90 c2 Unknown:;
+	LABL 0 0  0 c8;
+	TRTS;
+
+void AOLIM::Buddy_User_Online_TLV_11;
+	HLNG 0 1 90 c9 TLV11 Data:;
+	HWRD 0 1 90 c2 Security Settings:;
+	LABL 0 0  0 c8;
+	TRTS;
+
+

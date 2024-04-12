@@ -1,0 +1,62 @@
+// ISO - Connectionless Network Protocol 
+// information from ITU-T Rec. X.233 (1994 E) - 8473-1 pdf
+
+
+void ISO_CLNP;
+	LABL 0 0 0 b1 ISO-Connectionless Mode Network Service;
+	l[2] = g[16];
+	ISO_CLNP::Header;
+	l[1] = g[4];				//si: you get this from the header!
+	ISO_CLNP::Address;
+	ISO_CLNP::Segmentation;
+	l[3] = g[16];
+	l[2] -= l[3];
+	if (l[1] > l[2])
+	{
+		l[1] -= l[2];
+		DUMP 0 41 90 c2 Padding:;
+	}
+	TRTS;
+
+void ISO_CLNP::Header;
+	HBYT 0 1 90 c2 NLPID:;
+	CEQU 81 1 0 14 Network Layer Protocol;
+	CEQU 00 1 0 14 Inactive Network Layer Protocol Subset;
+	DBYT 0 4 90 c2 Length Indicator:;								//si: header length... save!
+	DBYT 0 1 90 c2 Version:;
+	DBYT 0 1 90 c2 Lifetime:;
+	BBYT 1 1 90 c9 Flags:;
+		CBIT 7 1 00 d4 1... .... Segmentation Permitted;
+		CLSE 0 0 00 d4 0... .... Segmentation Not Permitted;
+		CBIT 6 1 00 d4 .1.. .... More Segments;
+		CLSE 0 0 00 d4 .0.. .... No More Segments;
+		CBIT 5 1 00 d4 ..1. .... May Generate Error Report;
+		CLSE 0 0 00 d4 ..0. .... No Error Report;
+		g[1] &= 0x1f;
+		CEQU 1c 1 0 d4 ...1 1100 Type Code: DT PDU;
+		CEQU  1 1 0 d4 ...0 0001 Type Code: ER PDU;
+		CEQU 1e 1 0 d4 ...1 1110 Type Code: ERQ PDU;
+		CEQU 1f 1 0 d4 ...1 1111 Type Code: ERP PDU;
+	LABL 0 0 0 c8;
+	DWRD 0 1 90 c2 Segment Length:;
+	HWRD 0 5 90 c2 Checksum:;
+	CKSM 3 5 24 14 Checksum invalid. Should be: \;					//si: not sure if this is right!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	TRTS;
+
+void ISO_CLNP::Address;
+	LABL 0 0 0 b7 Address Part;
+	DBYT 0 1 90 c2 Dest Addr Length:;
+	DUMP 0 1 90 c2 Dest Addr:;
+	DBYT 0 1 90 c2 Src Addr Length:;
+	DUMP 0 1 90 c2 Src Addr:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void ISO_CLNP::Segmentation;
+	LABL 0 0 0 b7 Segmentation Part;
+	HWRD 0 1 90 c2 Data Unit Identifier:;
+	DWRD 0 1 90 c2 Segment Offset:;
+	DWRD 0 1 90 c2 Total Length:;
+	LABL 0 0 0 b8;
+	TRTS;
+

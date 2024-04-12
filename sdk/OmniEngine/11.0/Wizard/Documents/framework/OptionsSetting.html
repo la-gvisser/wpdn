@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>Options Setting with OmniEngine Plugins</title>
+</head>
+<body>
+
+    <h1>Options Setting  with OmniEngine Plugins</h1><br>
+
+    <h6 class="breakAfterS" style="margin-top:1px">Introduction</h6>
+
+    <h3 class="breakNone">What are Options?</h3>
+    <p class="breakAfterL">
+        Options are the expression of user preferences which are used by a plugin and which
+        may be specified by a plugin user via dialogs. Typically options are
+        configured using the COptions class and any subordinate classes. COptions as 
+        delivered is a shell into which data members, and if necessary additional methods, 
+        are added by the developer. There is existing example code that is generated from the 
+        wizard which serves to demonstrate how the needed items are added to the class.
+    </p>
+
+    <h3 class="breakNone">Options Implementation in the OmniEngine Plugins</h3>
+    <p class="breakAfterL">
+        Options configuration is really a collaboration between the engine-side
+        (OmniEngine) instance of the plugin and the console-side (OmniPeek) instance. 
+        Thus a basic requirement is that the plugin be installed on both sides. 
+        The dialog(s) used for options specification are created by the plugin under
+        OmniPeek, then, when the user accepts any changes (i.e. presses OK), the options
+        are sent across the network to the engine side plugin instance. It is on
+        the engine side that the options are stored and utilized.
+    </p>
+</body>
+</html>

@@ -1,0 +1,79 @@
+//---------RFC2833
+//--------------------------------------------------------
+str# Alternate Decoders;
+RFC2833::RTP_Event;
+
+void RFC2833::RTP_Event()
+{
+	LABL( 0x00, 0x00, 0x00, 0xb1, "RFC2833 - RTP Event\RFC2833:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Event ID:" );
+		CST#( 0, l[1], 0, 0x14, RFC2833::RTP_Event_ID );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:" );
+	DECR 1;
+	BBIT( 1, l[2], 0x90, 0xc2, "End of Event:\EoE:" );
+		CEQU( 0, l[2], 0x0, 0x14, "false" );
+		CEQU( 1, l[2], 0x0, 0x14, "true" );
+	BBIT( 1, l[3], 0x90, 0xc2, "Reserved:\Res:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "Volume:\Vol:" );
+	LABL( 0x00, 0x00, 0x00, 0xb8 );
+	DWRD( 0, l[5], 0x90, 0xc2, "Event Duration:\Ev-Dur:" );
+	if (g[16] != 0)
+	{
+		RFC2833::RTP_Event;
+	}
+	if (g[16] == 0)
+	{
+		TRTS;
+	}
+}
+
+str# RFC2833::RTP_Event_ID;
+0	|	DTMF 0;
+1	|	DTMF 1;
+2	|	DTMF 2;
+3	|	DTMF 3;
+4	|	DTMF 4;
+5	|	DTMF 5;
+6	|	DTMF 6;
+7	|	DTMF 7;
+8	|	DTMF 8;
+9	|	DTMF 9;
+10	|	DTMF Star;
+11	|	DTMF #;
+12	|	DTMF A;
+13	|	DTMF B;
+14	|	DTMF C;
+15	|	DTMF D;
+16	|	DTMF Flash;
+
+//--------------------------------------------------------
+
+void RFC2833 DTMF;
+	LABL 0 0 0 b1 RTP - Real-time Transport Protocol\RTP:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 )
+	{
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 1 5 90 c2 Extension:;
+	DBIT 4 3 90 c2 CSRC Count:;
+	DBIT 1 0 90 c2 Marker:;
+	DBIT 7 4 90 c2 Payload Type:;
+	//override Payload Type
+	LABL 0 0 0 14 Dynamic - RFC2833 DTMF;
+	g[4] = 100;
+	DWRD  0  0 90 c2 Sequence:;
+	DLNG  0  0 90 c2 Time Stamp:;
+	LABL 0 0 0 c2 Sync Src ID:;
+	RTP::PrintSSRCInHexandDec;
+	TGTE  0 10  0  0 RETURN;			//si: tt6163
+	TEQU  1  5  0  0 RTP Ext Hdr;
+	TLTE  1  3  0  0 RTP CSRC ID;
+	TGTE  0 10  0  0 NFS::The_End;
+	RFC2833::RTP_Event;
+	Dump Data;
+	TGTE  0 10  0  0 NFS::The_End;
+	Dump Data;
+
+//--------------------------------------------------------

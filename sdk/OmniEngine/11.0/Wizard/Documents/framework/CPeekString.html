@@ -1,0 +1,706 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CPeekString Class</title>
+</head>
+<body>
+    <h1>CPeekString Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        CPeekString contains a Peek String. A Peek String encapsulates a Standard Template
+        Library wstring. CPeekString has the same semantics as MFC/ATL CString.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CPeekString
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekString::CPeekString">CPeekString</a>
+            </td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>OOperators</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekString::operator_UInt64">operator const wchar_t*</a>
+            </td>
+            <td valign="top">
+                Returns a pointer to the first character of the string. Equivilent
+                to std::wstring::get().
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekString::operator_FILETIME">operator ==</a>
+            </td>
+            <td valign="top">Returns true if this object is equal to the &#39;other&#39; string.</td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekString::Append">Append</a>
+            </td>
+            <td valign="top">
+                Appends the input to the end of this object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::AppendFormat">AppendFormat</a></td>
+            <td valign="top">Formats the input and appends it to the end of this object.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::Compare">Compare</a></td>
+            <td valign="top">
+                Returns true if the other string is equal to this object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::FormatDate">CompareNoCase</a></td>
+            <td valign="top">
+                Returns true if this other strng is equal to this object regardless of case.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::Empty">Empty</a></td>
+            <td valign="top">Returns true if this object is empty. If the string has a length of zero.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::Find">Find</a></td>
+            <td valign="top">Finds the first instance of the other string in this object.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::FindOneOf">FindOneOf</a></td>
+            <td valign="top">Finds the first instance of one of the other characters in the other string.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::Parse">Format</a></td>
+            <td valign="top">Sets the Peek time to the string in the format: YYYY-MM-DDTHH.MM.SS.mmmZ.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::Reset">GetAt</a></td>
+            <td valign="top">
+                Sets the Peek time to Jan 1, 1601 (the integer value 0).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::SetLocal">GetLength</a></td>
+            <td valign="top">Sets the Peek to to the value specifed and adjust it to local time.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::SetNow">GetLength32</a></td>
+            <td valign="top">Sets the Peek time to the current system time.</td>
+        </tr>
+        <tr>
+            <td valign="top">GetString</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Insert</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">IsEmpty</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Left</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">LoadString</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">MakeLower</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">MakeUpper</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Mid</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Preallocate</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Remove</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Replace</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Right</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Tokenize</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">Trim</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">TrimLeft</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top">TrimRight</td>
+            <td valign="top">&nbsp;</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::ModeledDataGet">ModeledDataGet</a></td>
+            <td valign="top">Used by COmniDataModel to export a CPeekString.</td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPeekString::ModeledDataSet">ModeledDataSet</a></td>
+            <td valign="top">Used by COmniDataMode to import a CPeekString.</td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CPeekString Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPeekString::CPeekString"></a>CPeekString::CPeekString</h3>
+    <p class="onlyP">
+        Constructs a CPeekString object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPeekString(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const wchar_t*</td>
+            <td><em>in</em>Other</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">CPeekString(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const wchar_t*</td>
+            <td><em>inTime,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>size_t</td>
+            <td><em>inLength</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parametersb></b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inTime</em></dt>
+        <dd>The time value as either a Peek time or FILETIME.</dd>
+    </dl>
+
+    <!-- operator UInt64 details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::operator_UInt64"></a>CPeekString::operator UInt64
+    </h3>
+    <p class="onlyP">
+        Cast the Peek time to a 64-bit value.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type operator UInt64() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of nanoseconds since January 1, 1601.
+    </p>
+
+    <!-- operator FILETIME details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::operator_FILETIME"></a>CPeekString::operator FILETIME
+    </h3>
+    <p class="onlyP">
+        Casts the Peek time to FILETIME.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                FILETIME operator FILETIME() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Peek time as FILETIME.
+    </p>
+
+    <!-- GetSystemTime details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::GetSystemTime"></a>CPeekString::GetSystemTime
+    </h3>
+    <p class="onlyP">
+        Utility method to convert a FILETIME to a SYSTEMTIME.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                SYSTEMTIME GetSystemTime(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inTime</em></dt>
+        <dd>
+            The FILETIME to convert to SYSTEMTIME.
+        </dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The provided time in SYSTEMTIME format.
+    </p>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        This method uses FileTimeToSystemTime to make the conversion.
+    </p>
+
+    <!-- Format details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::Format"></a>CPeekString::Format
+    </h3>
+    <p class="onlyP">
+        A utiltiy function to convert a date and time into a displayable and parseable format.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CString Format(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">CString Format() const;</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inTime</em></dt>
+        <dd>The date and time value to format.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A displayable and parsable form of the date and time.
+    </p>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        The results of this method is suitable to be passed into the Parse method.
+    </p>
+
+    <!-- FormatDate details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::FormatDate"></a>CPeekString::FormatDate
+    </h3>
+    <p class="onlyP">
+        A utiltiy function to convert just the date portion of a date
+        and time value into a displayable and parseable format.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CString FormatDate(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">CString FormatDate() const;</td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inTime</em></dt>
+        <dd>
+            The date and time value to format.
+        </dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The date of the date and time value in a displayable form.
+    </p>
+
+    <!-- FormatTime details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::FormatTime"></a>CPeekString::FormatTime
+    </h3>
+    <p class="onlyP">
+        A utiltiy function to convert just the time portion of a date
+        and time value into a displayable and parseable format.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CString FormatTime(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">CString FormatTime() const;</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inTime</em></dt>
+        <dd>The date and time value to format.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The time of the date and time value in a displayable form.
+    </p>
+
+    <!-- Now details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::Now"></a>CPeekString::Now
+    </h3>
+    <p class="onlyP">
+        Get the current system time as a CPeekString.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CPeekString Now();
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The current system time.
+    </p>
+
+    <!-- GetLocalTimeDate details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::GetLocalTimeDate"></a>CPeekString::GetLocalTimeDate
+    </h3>
+    <p class="onlyP">
+        Get the date and time in local time.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type GetLocalTimeDate(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME&</td>
+            <td><em>outDate</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME&</td>
+            <td><em>outTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>outDate</em></dt>
+        <dd>The date portion of the Peek time in local time.</dd>
+        <dt><em>outTime</em></dt>
+        <dd>The time portion of the Peek time in local time.</dd>
+    </dl>
+
+    <!-- Parse details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::Parse"></a>CPeekString::Parse
+    </h3>
+    <p class="onlyP">
+        Set the Peek time to the value of the string provided.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                void Parse(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inTime</em></dt>
+        <dd>A display version of the time.</dd>
+    </dl>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        The Format method produces a displayable format of the time suitable for this method.
+    </p>
+
+    <!-- Reset details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::Reset"></a>CPeekString::Reset
+    </h3>
+    <p class="onlyP">
+        Set the Peek time to zero (0), which is January 1, 1601.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                void Reset();
+            </td>
+        </tr>
+    </table>
+
+    <!-- SetLocal details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::SetLocal"></a>CPeekString::SetLocal
+    </h3>
+    <p class="onlyP">
+        SetLocal description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type SetLocal(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inDate</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>FILETIME</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inDate</em></dt>
+        <dd>The date in local time.</dd>
+        <dt><em>inTime</em></dt>
+        <dd>The time in local time.</dd>
+    </dl>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        Any time of day value is removed from <em>inDate</em>, and any day of the year
+        value is removed from <em>inTime</em> before the two are combined.
+    </p>
+
+    <!-- SetNow details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::SetNow"></a>CPeekString::SetNow
+    </h3>
+    <p class="onlyP">
+        Sets the Peek time to the current system time.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                void SetNow();
+            </td>
+        </tr>
+    </table>
+
+    <!-- ModeledDataGet details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::ModeledDataGet"></a>CPeekString::ModeledDataGet
+    </h3>
+    <p class="onlyP">
+        Get the value of the object as a CString for Data Modeling.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CString ModeledDataGet() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The time and date in a format suitable for Data Modeling.
+    </p>
+
+    <!-- ModeledDataSet details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekString::ModeledDataSet"></a>CPeekString::ModeledDataSet
+    </h3>
+    <p class="onlyP">
+        Set the value of this object from Data Modeling.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                void ModeledDataSet(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CString&</td>
+            <td><em>inValue</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inValue</em></dt>
+        <dd>The new value of the object in the Data Modeling format.</dd>
+    </dl>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

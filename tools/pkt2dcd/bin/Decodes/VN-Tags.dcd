@@ -1,0 +1,54 @@
+//------------------------VN-Tags------------------------
+//
+//
+//no globals used, links directly to Ether::Branching_2;	
+//-------------------------------------------------------
+
+
+str# Ether::Branching_3_Str;
+	0x8926 | VN-Tag;
+
+str# EProto::Names_Str;
+	0x8926 | VN-Tag;
+
+void VN-Tag()
+{
+	LABL 0 0 0 b1 VN-Tag Information;
+	BWRD( 0, l[2], 0x90, 0xc2, "Dvif_id: \Dvif_id:" );
+	BWRD( 0, l[3], 0x90, 0xc2, "Svif_id: \Svif_id:" );
+	DECR 4;
+		BBIT( 1, l[4], 0x90, 0xc2, "Direction: \d:" );
+			CEQU( 0, l[4], 0, 0x24, "Frame is traveling from a IV-Card to the Bridge" );
+			CEQU( 1, l[4], 0, 0x24, "Frame is traveling from a Bridge to the IV-Card" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Pointer: \p:" );
+			CEQU( 0, l[5], 0, 0x24, "Dvif_id is included" );
+			CEQU( 1, l[5], 0, 0x24, "vif_list_id is included" );
+				
+		if (l[5] == 1)
+		{
+			DBIT( 14, l[51], 0x90, 0xc2, "Vif List Pointer: \vif_list_id:" );
+		}
+		if (l[5] == 0)
+		{
+			BBIT( 2, 0, 0x90, 0xc2, "Reserved: \res:" );
+			DBIT( 12, l[6], 0x90, 0xc2, "Dvif_id: \Dvif_id:" );
+		}
+		BBIT( 1, l[7], 0x90, 0xc2, "Looped: \l:" );
+			CEQU( 0, l[4], 0, 0x24, "Frame is not a multicast frame" );
+			CEQU( 1, l[4], 0, 0x24, "Frame is a multicast frame " );
+		
+		BBIT( 1, l[8], 0x90, 0xc2, "Reserved: \r:" );
+		BBIT( 2, l[9], 0x90, 0xc2, "Version: \ver:" );
+			CEQU( 0, l[4], 0, 0x24, "0 Supported" );
+			CLSE( 1, l[4], 0, 0x24, "Should be 0 " );
+		
+		DBIT( 12, l[10], 0x90, 0xc2, "Svif_id: \Svif_id:" );
+		if l[4] == 1
+		{
+			if l[7] == 0
+			{
+				LABL( 0, 0, 0, 0x24, "reserved" );
+			}
+		}
+	Ether::Branching_2;	
+}

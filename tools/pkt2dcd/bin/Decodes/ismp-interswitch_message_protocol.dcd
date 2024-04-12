@@ -1,0 +1,230 @@
+// -------------------------------------------------------------------------------------
+//	ISMP - InterSwitch Message Protocol
+//		protocol type: 0x81fd
+//		rfc 2641, 2643
+//
+//	globals:
+//		g[5] = msg type
+//		g[6] = msg type2
+// -------------------------------------------------------------------------------------
+
+
+void ISMP;
+	LABL 0 0 00 b1 ISMP - InterSwitch Message Protocol\ISMP:;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 5 90 c2 Message Type:;
+	CST# 0 5 00 14 ISMP::MsgType::List;
+	if (g[5] == 4)
+	{
+		// si: get the opcode
+		l[1] = pb[2];
+		l[1] += 5;
+		INCR 0 41;
+		g[6] = pw[0];
+		DECR 0 41;
+		CEQU 1 5 0 14 BPDU Message;
+		CEQU 2 5 0 14 Remote Blocking Message;
+		CEQU 3 5 0 14 Remote Blocking Message;
+	}
+	DWRD 0 0 90 c2 Sequence Num:;
+	DBYT 0 1 90 c2 Auth Code Len:;
+	HEX# 0 1 90 c2 Auth Code:;
+	TST# 0 5 00 00 ISMP::MsgType::Func;
+
+str# ISMP::MsgType::List;
+	2 | KeepAlive Message;
+	3 | Link State Message;
+	//5 | Resolve Message;				si: WTF?!?!!?!?!?!!?!?
+	//5 | New User Message;
+	7 | Tag-Based Flood Message;
+	8 | Tap/Untap Message;
+
+str# ISMP::MsgType::Func;
+	2 | ISMP::Type02;
+	4 | ISMP::Type04;
+	7 | ISMP::Type07;
+	8 | ISMP::Type08;
+
+// -------------------------------------------------------------------------------------
+
+void ISMP::Type02;
+	LABL 0 0 00 b7 Keep Alive Message;
+	DWRD 0 0 90 c2 Version:;
+	IPLG 0 0 90 c2 Switch IP Addr:;
+	ETHR 0 0 90 c2 Switch ID:;
+	DLNG 0 0 90 c2 Logical Port Num:;
+	ETHR 0 0 90 c2 Chassis MAC Addr:;
+	IPLG 0 0 90 c2 Chassis IP Addr:;
+	DWRD 0 1 90 c2 Switch Type:;
+	CST# 0 1 00 14 ISMP::Type02::SwitchTypeList;
+	HEX# 80000001 0 90 C2 Functional Level:;
+	HEX# 80000001 0 00 00 .;
+	HEX# 80000001 0 00 00 .;
+	HEX# 80000001 0 00 00 .;
+	HLNG 0 1 90 c9 Options:;
+	CBIT 6 1 00 d4 ........ ........ ........ .1...... Level 1 Functionality;
+	CLSE 0 0 00 d4 ........ ........ ........ .0...... No Level 1 Functionality;
+	CBIT 5 1 00 d4 ........ ........ ........ ..1..... Transparent Bridging;
+	CLSE 0 0 00 d4 ........ ........ ........ ..0..... No Transparent Bridging;
+	CBIT 4 1 00 d4 ........ ........ ........ ...1.... Route Bridging;
+	CLSE 0 0 00 d4 ........ ........ ........ ...0.... No Route Bridging;
+	CBIT 3 1 00 d4 ........ ........ ........ ....1... IGMP Snooping Support;
+	CLSE 0 0 00 d4 ........ ........ ........ ....0... No IGMP Snooping Support;
+	CBIT 2 1 00 d4 ........ ........ ........ .....1.. GMRP Support;
+	CLSE 0 0 00 d4 ........ ........ ........ .....0.. No GMRP Support;
+	CBIT 1 1 00 d4 ........ ........ ........ ......1. GVRP Support;
+	CLSE 0 0 00 d4 ........ ........ ........ ......0. No GVRP Support;
+	CBIT 0 1 00 d4 ........ ........ ........ .......1 802.1Q Support;
+	CLSE 0 0 00 d4 ........ ........ ........ .......0 No 802.1Q Support;
+	LABL 0 0 00 c8;
+	DWRD 0 1 90 c2 Base MAC Count:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 Base MAC Entries:;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# ISMP::Type02::SwitchTypeList;
+	 1 | SFS17;
+	 2 | SFS18;
+	 3 | Router;
+	 4 | Bridge;
+	 5 | VLANMAN;
+	 6 | NT Server;
+	 7 | NT Client;
+	 8 | WIN95;
+	 9 | WIN98;
+	10 | UNIX Server;
+	11 | UNIX Client;
+	12 | Access Point;
+
+// ----------------------------------------------------
+
+void ISMP::Type04;
+	CEQU 1 6 00 b7 BPDU Message;
+	CEQU 2 6 00 b7 Remote Blocking Message;
+	CEQU 3 6 00 b7 Remote Blocking Message;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 6 90 c2 Opcode:;
+	CEQU 1 6 00 14 BPDU Message;
+	CEQU 2 6 00 14 Enable/Disable Remote Blocking;
+	CEQU 3 6 00 14 Acknowledge previously received Remote Blocking Message;
+	HWRD 0 0 90 c2 Message Flags:;
+	if (g[6] == 1)
+	{
+		DUMP 0 10 90 c2 BPDU Pkt:;					// si: supposed to be 802.2 bridge pdu
+	}
+	if (g[6] != 1)
+	{
+		DLNG 0 1 90 c2 Blocking Flag:;
+		CEQU 0 1 00 14 Remote Blocking OFF;
+		CEQU 1 1 00 14 Remote Blocking ON - No undirected ISMP msgs should be sent over the link;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// ----------------------------------------------------
+
+// si: prior to version 1.8
+void ISMP::Type05;
+	LABL 0 0 00 b7 Resolve Message;
+	// WTF	NEW USER MSG????
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// ----------------------------------------------------
+
+void ISMP::Type07;
+	LABL 0 0 00 b7 Tag-Based Flood Message;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 1 90 c2 Opcode:;
+	CEQU 1 1 00 14 Flood Request;
+	CEQU 2 1 00 14 Fragmented Flood Request - 1st portion;
+	CEQU 3 1 00 14 Fragmented Flood Request - 2nd portion;
+	DWRD 0 0 90 c2 Status:;
+	DWRD 0 0 90 c2 Call Tag:;
+	ETHR 0 0 90 c2 Source MAC:;
+	ETHR 0 0 90 c2 Originating Switch MAC:;
+	DBYT 0 1 90 c2 Count:;
+	while (g[1] > 0)
+	{
+		DBYT 0 2 90 c2 Value Length:;
+		DUMP 0 2 90 c2 VLAN Identifier Val:;
+		g[1] -= 1;
+	}
+	DUMP 0 10 90 c2 Original Packet:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// ----------------------------------------------------
+
+void ISMP::Type08;
+	LABL 0 0 00 b7 Tap/Untap Message;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 1 90 c2 Opcode:;
+	CST# 0 1 00 14 ISMP::Type08::OpcodeList;
+	DWRD 0 1 90 c2 Status:;
+	CST# 0 1 00 14 ISMP::Type08::StatusList;
+	DWRD 0 1 90 c2 Error Code:;
+	CST# 0 1 00 14 ISMP::Type08::ErrorCodeList;
+	DWRD 0 1 90 c2 Header Type:;
+	CST# 0 1 00 14 ISMP::Type08::HeaderTypeList;
+	DWRD 0 2 90 c2 Header Length:;
+	DWRD 0 1 90 c2 Direction:;
+	CST# 0 1 00 14 ISMP::Type08::DirectionList;
+	ETHR 0 0 90 c2 Probe Switch MAC:;
+	DLNG 0 0 90 c2 Probe Port:;
+	DUMP c 0 90 c2 Reserved:;
+	if (g[2] == 12)
+	{
+		LABL 0 0 0 b7 Header;
+		ETHR 0 0 90 c2 Dest MAC Addr:;
+		ETHR 0 0 90 c2 Source MAC Addr:;
+		LABL 0 0 0 b8;
+	}
+	if (g[2] != 12)
+	{
+		DUMP 0 2 90 c2 Header:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# ISMP::Type08::OpcodeList;
+	1 | Tap Request;
+	2 | Tap Response;
+	3 | Untap Request;
+	4 | Untap Response;
+
+str# ISMP::Type08::StatusList;
+	1 | Switch must disable outport on untap (DisableOutport);
+	2 | Switch must keep outports on untap (KeepOutport);
+	3 | Probe not found this leg of spanning tree (ProbeNotFound);
+	4 | Still searching for probe switch (OutportDecisionUnknown);
+	5 | Status Unassigned;
+	6 | Reserved;
+	7 | Reserved;
+	8 | Reserved;
+	9 | Reserved;
+
+str# ISMP::Type08::ErrorCodeList;
+	1 | Operation successful (NoError);
+	2 | No response heard from downstream neighbor (Timeout);
+	3 | Port does not exist on probe switch (BadPort);
+	4 | Message invalid (InvalidMessage);
+	5 | Version number invalid (IncompatibleVersions);
+
+str# ISMP::Type08::HeaderTypeList;
+	1 | Reserved;
+	2 | Header contains dest and src endstation MAC addrs;
+
+str# ISMP::Type08::DirectionList;
+	1 | Reserved;
+	2 | Tap is bi-directional and data should be captured flowing in either direction over the connection;
+	3 | Tap is uni-directional and data should be captured only when it flows from the source to the destination;
+
+
+
+

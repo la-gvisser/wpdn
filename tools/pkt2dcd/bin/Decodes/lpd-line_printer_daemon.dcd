@@ -1,0 +1,233 @@
+* LPD - Line Printer Daemon Protocol
+* Version 2.2
+* RFC 1179
+* 6/7/2007
+
+void LPD()
+{
+	LABL 0 0 0 b1 LPD - Line Printer Daemon Protocol\LPD:;
+	g[3] = pb[0];
+	CST# 0 3 0 b7 LPD::CommandCode_Str;
+	TSB# 0 3 0 00 LPD::CommandCode;
+	TLSE 0 0 0 00 Display Fields And Lines;
+	LABL 0 0 0 b8;
+}
+
+void LPD::Response()
+{
+	DBYT 0 1 90 c2 Success:;
+	CST# 0 1 00 14 LPD::SubCommands_Str;
+}
+
+void LPD::Print_Any_Waiting_Jobs()
+{
+	DBYT 0 1 90 c2 Job Command:;
+	CST# 0 1 00 14 LPD::SubCommands_Str;
+}
+
+void LPD::Transfer_Printer_Job()
+{
+	DBYT 0 1 90 c2 Job Command1:;
+	CST# 0 1 00 14 LPD::SubCommands_Str;
+	l[3] = pb[2];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	l[3] = pb[3];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	l[3] = pb[4];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	LPD::Printer_Queue_Name();
+}
+
+void LPD::20_Delimiter()
+{
+	LPD::Parse_Value1();
+	INCR 0 4;
+	l[1] = pw[1];
+	DECR 0 4;
+	if (l[1] == 0x6366)			// cfa
+	{
+		LPD::Number_of_Bytes;
+		LPD::Data_File;
+		TRTS;
+	}
+	if (l[1] == 0x6466)			// dfa
+	{
+		LPD::Number_of_Bytes;
+		LPD::Data_File;
+		TRTS;
+	}
+}
+
+void LPD::Control_File;
+	CHR# 3 0 90 c2 Control File:;
+	LABL 0 0 0  14 Control File Transfer;
+	CHR# 3 0 90 c2 Job Number:;
+	LPD::Host_Name;
+	LABL 0 0 0  b8;
+	TRTS;
+
+void LPD::Print_Short_Form()
+{
+	DBYT 0 1 90 c2 Job Command:;
+	CST# 0 1 00 14 LPD::SubCommands_Str;
+	l[3] = pb[2];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	l[3] = pb[3];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	l[3] = pb[4];
+	if (l[3] == 0x20)
+	{
+		LPD::20_Delimiter();
+		TRTS;
+	}
+	LPD::Printer_Queue_Name();
+}
+
+void LPD::Print_Long_Form()
+{
+	DBYT 0 1 90 c2 Job Command:;
+	CST# 0 1 00 14 LPD::SubCommands_Str;
+	LPD::Number_of_Bytes;
+	LPD::Data_File;
+}
+
+void LPD::Data_File;
+	CHR# 3 0 90 c2 Control File:;
+	LABL 0 0 0  14 data file transfer;
+	CHR# 3 0 90 c2 Job Number:;
+	LPD::Host_Name;
+	LABL 0 0 0  b8;
+	TRTS;
+
+void LPD::Abort_Job;
+	LABL 0 0 0 c2 Abort Job;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void LPD::Control_File_Lines;
+	LABL 0 0 0 b7 Control File Lines;
+	LPD::CFL_Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void LPD::Control_File_Lines_Check;
+	GBYT 0 1;
+	 CEQU 43 1 90 c2 Class Name on Banner:;
+	 CEQU 48 1 90 c2 Host Name:;
+	 CEQU 49 1 90 c2 Indent Printing:;
+	 CEQU 4A 1 90 c2 Job Name:;
+	 CEQU 4C 1 90 c2 Print banner Page:;
+	 CEQU 4D 1 90 c2 Mail When Printed;
+	 CEQU 4E 1 90 c2 Name of Source File:;
+	 CEQU 50 1 90 c2 User Identification:;
+	 CEQU 53 1 90 c2 Symbolic Link Data:;
+	 CEQU 54 1 90 c2 Title for 'pr':;
+	 CEQU 55 1 90 c2 Unlink data File:;
+	 CEQU 57 1 90 c2 Width of output:;
+	 CEQU 66 1 90 c2 Print formatted File:;
+	 CEQU 6c 1 90 c2 Print File:;
+	 CEQU 6e 1 90 c2 Print ditroff output file:;
+	 CEQU 6f 1 90 c2 Print Postscript output file:;
+	 CEQU 70 1 90 c2 Print File with 'pr':;
+	 CEQU 72 1 90 c2 Print with FORTRAN carriage control:;
+	 CEQU 74 1 90 c2 Print troff output file:;
+	 CEQU 76 1 90 c2 Print raster file:;
+	TRTS;
+
+void LPD::Printer_Options;
+	LPD::Parse_Value;
+	CHR# 0 1e 90 c2 Printer Options:;
+	INCR 1;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void LPD::Printer_Queue_Name()
+{
+	LPD::Parse_Value;
+	CHR# 0 1e 90 c2 Printer Queue Name:;
+	INCR 1;
+}
+
+void LPD::CFL_Loop;
+	LPD::Control_File_Lines_Check;
+	INCR 1;
+	TGTE 0 10 0 0 RETURN;
+	LPD::Parse_Value;
+	CHR# 0 1e 90 0;
+	INCR 1;
+	TNXT -LPD::CFL_Loop;
+
+void LPD::Number_of_Bytes;
+	LPD::Parse_Value1;
+	CHR# 0 4 90 c2 Print Job Size:;
+	LABL 0 0 0 14 (bytes);
+	INCR 1;
+	TRTS;
+
+void LPD::Host_Name;
+	LPD::Parse_Value;
+	CHR# 0 1e 90 c2 Host Name:;
+	INCR 1;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void LPD::Parse_Value;
+	MOVE 0  1e;
+	GSTR 2000000A  1e;
+	TRTS;
+
+void LPD::Parse_Value1;
+	MOVE 0  4;
+	GSTR 20000020  4;
+	TRTS;
+
+void LPD::EOF;
+	INCR 1;
+	LABL 0 0 0  b8;
+	TRTS;
+
+// Daemon commands
+str# LPD::CommandCode_Str;
+	0	| Response;
+	1	| Print Any Waiting Jobs;
+	2	| LPR - Transfer A Printer Job;
+	3	| LPQ - Print Short Form of Queue Status;
+	4	| LPQ - Print Long Form of Queue Status;
+	5	| Remove Jobs;
+
+str# LPD::CommandCode;
+	0	| LPD::Response;
+	1	| LPD::Print_Any_Waiting_Jobs;
+	2	| LPD::Transfer_Printer_Job;
+	3	| LPD::Print_Short_Form;
+	4	| LPD::Print_Long_Form;
+	0x48 | LPD::Control_File_Lines;
+
+// Receive job subcommands
+str# LPD::SubCommands_Str;
+	0	| Accepted, Proceed;
+	1	| Abort Job;
+	2	| Receive Control File;
+	3	| Receive Data File;
+
+*end

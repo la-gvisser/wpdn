@@ -1,0 +1,38 @@
+//EtherIP: Tunneling Ethernet Frames in IP Datagrams
+//Based upon
+//http://tools.ietf.org/html/rfc3378
+//http://tools.ietf.org/html/draft-housley-etherip-03
+
+
+str# IP::Common_Str;
+	0x61 | EtherIP;
+
+	
+void EtherIP()
+{
+	LABL( 0, 0, 0, 0xb1, "Ethernet in IP Encapsulation\EtherIP");
+	DBIT( 4, l[1], 0x90, 0xc2, "Version:\Ver" );
+		CEQU( 3, l[1], 0, 0x14, "Version 3" );
+		CEQU( 4, l[1], 0, 0x14, "Version 4(Draft)" );
+		CLSE( 4, l[1], 0, 0x14, "reserved" );
+	DBIT( 12, l[2], 0x90, 0xc2, "Reserved:" );	
+	LABL( 0, 0, 0, 0xb8);
+	LABL( 0, 0, 0, 0xb8);
+	LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+	ETHR 0 0 90 c2 Destination:\D:;
+	ETHR 0 0 90 c2 Source:\S:;	
+	g[1] = pw[0];
+	if (g[1] <= 0x5dc)
+	{
+		802_2();				
+		TRTS;					
+	}
+	if (g[1] == 0x8808)			
+	{
+		802.3::MAC_Control;
+		TRTS;
+	}
+	TGTE 0 10 0 0 RETURN;		
+	
+	Ether::Branching_2();
+}

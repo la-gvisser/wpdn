@@ -1,0 +1,20 @@
+//SLPP
+//08.11.2013
+
+
+str# Ether::Branching_3_Str;
+0x8102	|	SLPP;
+0x8104	|	SLPP;
+
+str# EProto::Names_Str;
+0x8102	| 	Simple Loop Prevention Protocol;
+0x8104	| 	Simple Loop Prevention Protocol;
+
+void SLPP()
+{
+	LABL( 0, 0, 0, 0xb1, "SLPP PDU" );
+	DBYT( 0, l[1], 0x90, 0xc2, "SLPP protocol Version:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Reserved:");
+	DWRD( 0, l[3], 0x90, 0xc2, "VLAN ID:");
+	LABL( 0, 0, 0, 0xb8 );
+}

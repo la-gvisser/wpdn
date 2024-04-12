@@ -1,0 +1,1039 @@
+// iFCP & FCIP - Fibre Channel
+// travels on port 3225
+
+// notes:
+// g[1] = random
+// g[a] = protocol num		- not really used
+// g[b] = length			- not really used
+// g[c] = dest_id			- not really used
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void FCIP;
+	LABL 0 0 0 b1 Fibre Channel\FCIP;
+	FCIP::EHF::Header;
+	FCIP::SOF;
+	FCIP::FC_Content;
+	if (g[16] > 4)
+	{
+		if (g[16] <= 8)
+		{
+			HLNG 0 1 90 c2 CRC:;
+		}
+		if (g[16] > 8)
+		{
+			if (g[0xc] == 0xffff)
+			{
+				FC::Switch_Fabric;
+			}
+			if (g[0xc] == 0xfffc)
+			{
+				FC::Common_Transport;
+			}
+			l[2] = g[16];
+			l[2] -= 4;
+			if (l[2] > 0)
+			{
+				if (l[2] > 4)
+				{
+					l[2] -= 4;
+					DUMP 0 42 90 c2 FC Information:;
+				}
+				HLNG 0 1 90 c2 CRC:;
+			}
+		}
+	}
+	FCIP::EOF;
+	TRTS;
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void FC::Header;
+	DBIT 4 a 90 c2 Protocol Num:; 
+	 CEQU 1 a 0 14 FCIP;
+	 CEQU 10 a 0 14 iFCP;
+	DBIT 4 1 90 c2 Version Num:;
+	HBYT 0 2 90 c9 Flags:;
+	 CBIT 0 2 0 d4 .... ...1 Extended Header Present;
+	 CBIT 0 0 0 d4 .... ...0 Extended Header Not Present;
+	 LABL 0 0 0 c8;
+	DWRD 0 b 90 c2 Frame Length:;
+	TIME 0 1 90 c2 Time Stamp (High):;
+	TIME 0 1 90 c2 Time Stamp (Low):;
+	HLNG 0 1 90 c2 Header CRC:;
+	if (g[2] != 0)
+	{
+		FC::Header::EH;
+	}
+	TRTS;
+
+void FC::Header::EH;
+	HBYT 0 1 90 c2 Type:;
+	HBYT 0 2 90 c9 Flags:;
+	 CBIT 0 2 0 d4 .... ...1 Extended Header Present;
+	 CBIT 0 0 0 d4 .... ...0 Extended Header Not Present;
+	 LABL 0 0 0 c8;
+	DWRD 0 1 90 c2 EH Length:;
+	//EH Content:;
+	// if the flag is set then there are more EH's along the way... sux! loop cities... 
+
+
+// encapsulation header format
+void FCIP::EHF::Header;
+	DBYT 0 1 90 c2 Protocol Num:\Proto:;
+	DBYT 0 1 90 c2 Version Num:\Vers:;
+	HBYT 0 1 90 c2 -Protocol Num:\;
+	HBYT 0 1 90 c2 -Version Num:\;
+	HLNG 0 1 90 c2 Reserved:\;
+	//LABL 0 0 0 14 Must be Zero;
+	HBYT 0 1 90 c2 LS_Command_ACC:;
+	HBYT 0 1 90 c9 iFCP Flags:\Flags:;
+	 LABL 0 0 0 d4 xxxx x... Reserved;
+	 CBIT 2 1 0 d4 .... .1.. Part of a Link Service Message;
+	 CLSE 0 0 0 d4 .... .0.. Not Part of a Link Service Message;
+	 CBIT 1 1 0 d4 .... ..1. Address Transparent Mode Enabled;
+	 CLSE 0 0 0 d4 .... ..0. Address Translation Mode Enabled;
+	 CBIT 0 1 0 d4 .... ...1 Session Control Frame;
+	 CLSE 0 0 0 d4 .... ...0 Not Session Control Frame;
+	 LABL 0 0 0 c8;
+	HBYT 0 1 90 c2 SOF:;
+	HBYT 0 1 90 c2 EOF:;
+	HBYT 0 1 90 c2 Flags:;
+	DBYT 0 1 90 c2 Frame Length:\F_Len:;
+	HBYT 0 1 90 c2 -Flags:\;
+	DBYT 0 1 90 c2 -Frame Length:\;
+	DLNG 0 1 90 c2 Time (integer):\T[int]:;
+	DLNG 0 1 90 c2 Time (fraction):\T[frac]:;
+	HLNG 0 1 90 c2 CRC:;
+	TRTS;
+
+void FCIP::SOF;
+	LABL 0 0 0 b7 Fibre Channel - Start of Frame\FC-SOF:;
+	HBYT 0 1 90 c2 SOF:;
+	CST# 0 1  0 14 FCIP::SOF::List;
+	HBYT 0 1 90 c2 SOF:;
+	CST# 0 1  0 14 FCIP::SOF::List;
+	HBYT 0 1 90 c2 -SOF:\;
+	HBYT 0 1 90 c2 -SOF:\;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void FCIP::EOF;
+	LABL 0 0 0 b7 Fibre Channel - End of Frame\FC-EOF:;
+	HBYT 0 1 90 c2 EOF:;
+	CST# 0 1  0 14 FCIP::EOF::List;
+	HBYT 0 1 90 c2 EOF:;
+	CST# 0 1  0 14 FCIP::EOF::List;
+	HBYT 0 1 90 c2 -EOF:\;
+	HBYT 0 1 90 c2 -EOF:\;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------
+
+str# FCIP::SOF::List;
+	0x28 | SOFf;
+	0x29 | SOFi4;
+	0x2d | SOFi2;
+	0x2e | SOFi3;
+	0x2F | SOFi1;
+	0x30 | SOFnf;
+	0x31 | SOFn4;
+	0x35 | SOFn2;
+	0x36 | SOFn3;
+	0x37 | SOFn1;
+	0x38 | SOFcf;
+	0x39 | SOFc4;
+	0x3D | SOFc2;
+	0x3E | SOFc3;
+	0x3F | SOFc1;
+
+str# FCIP::EOF::List;
+	0x41 | EOFn;
+	0x42 | EOFt;
+	0x44 | EOFrt;
+	0x46 | EOFdt;
+	0x49 | EOFni;
+	0x4E | EOFdti;
+	0x4F | EOFrti;
+	0x50 | EOFa;
+
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void FCIP::FC_Content::Padding_Check::ffff;			// si: this is to find the 0xffff
+	l[1] = pw[1];
+	g[1] = 0;
+	if (l[1] != 0xffff)
+	{
+		l[1] = pw[5];
+		g[1] = 1;
+		if (l[1] != 0xffff)
+		{
+			l[1] = pw[9];
+			g[1] = 2;
+			if (l[1] != 0xffff)
+			{
+				g[1] = 3;
+			}
+		}
+	}
+	if (g[1] < 3)
+	{
+		g[1] *= 4;
+		if (g[1] > 0)
+		{
+			DUMP 0 1 90 c2 Padding:\;
+		}
+	}
+	TRTS;
+
+void FCIP::FC_Content::Padding_Check::fffc;
+	l[1] = pw[1];
+	g[1] = 0;
+	if (l[1] != 0xfffc)
+	{
+		l[1] = pw[5];
+		g[1] = 1;
+		if (l[1] != 0xfffc)
+		{
+			l[1] = pw[9];
+			g[1] = 2;
+			if (l[1] != 0xfffc)
+			{
+				g[1] = 3;
+			}
+		}
+	}
+	if (g[1] < 3)
+	{
+		g[1] *= 4;
+		if (g[1] > 0)
+		{
+			DUMP 0 1 90 c2 Padding:\;
+		}
+	}
+	TRTS;
+
+void FCIP::FC_Content;
+	LABL 0 0  0 b7 Fibre Channel - Content\FC-C:;
+	FCIP::FC_Content::Padding_Check::ffff;
+	FCIP::FC_Content::Padding_Check::fffc;
+	HBYT 0 1 90 c2 Routing Control:\R_CTL:;
+	l[1] = g[1];
+	ANDG F0 41;
+	CST# 0 41 0 14 FCIP::FC_Content::R_CTL_List::Upper;
+	LABL 0 00 0 14 /;
+	l[1] = g[1];
+	ANDG F 41;
+	CST# 0 41 0 14 FCIP::FC_Content::R_CTL_List::Lower;
+	
+	g[0xc] = pw[0];
+	if (g[0xc] == 0xffff)	{
+		g[2] = pb[2];
+	}
+	HBYT 80000000 0 90 c2 Dest ID:\D_ID:;
+	HBYT 80000000 0 00 00 .;
+	HBYT 80000000 0 00 00 .;
+	if (g[0xc] == 0xffff)	{
+		CST#  0 2  0 14  FCIP::FC_Content::ID_List;
+	}
+	
+	HBYT  0 1 90 c2 Class Specific Ctrl:\;
+	
+	g[1] = pw[0];
+	if (g[1] == 0xffff)	{
+		g[2] = pb[2];
+	}
+	HBYT 80000000 0 90 c2 Source ID:\S_ID:;
+	HBYT 80000000 0 00 00 .;
+	HBYT 80000000 0 00 00 .;
+	if (g[1] == 0xffff)	{
+		CST#  0 2  0 14  FCIP::FC_Content::ID_List;
+	}
+	HBYT 0 1 90 c2 Data Structure Type:\;
+	CEQU 8 1 00 14 FCP;
+	g[1] = 3;
+	g[1] = pw[0];
+	g[1] *= 256;
+	l[2] = pb[2];
+	g[1] += l[2];
+	HEX#  3 0 90 c9 Frame Control:\FC:;
+	 CBIT 17 1 00 d4 1....... ........ ........ Exchange Responder;
+	 CLSE  0 0 00 d4 0....... ........ ........ Exchange Originator;
+	 CBIT 16 1 00 d4 .1...... ........ ........ Sequence Recipient;
+	 CLSE  0 0 00 d4 .0...... ........ ........ Sequence Initiator;
+	 CBIT 15 1 00 d4 ..1..... ........ ........ Exchange First;
+	 CLSE  0 0 00 d4 ..0..... ........ ........ Not Exchange First;
+	 CBIT 14 1 00 d4 ...1.... ........ ........ Exchange Last;
+	 CLSE  0 0 00 d4 ...0.... ........ ........ Not Exchange Last;
+	 CBIT 13 1 00 d4 ....1... ........ ........ Sequence Last;
+	 CLSE  0 0 00 d4 ....0... ........ ........ Not Sequence Last;
+	 CBIT 12 1 00 d4 .....1.. ........ ........ Reserved;
+	 CLSE  0 0 00 d4 .....0.. ........ ........ Reserved;
+	 CBIT 11 1 00 d4 ......1. ........ ........ Priority;
+	 CLSE  0 0 00 d4 ......0. ........ ........ CS_CTL;
+	 CBIT 10 1 00 d4 .......1 ........ ........ Transfer Sequence Initiative;
+	 CLSE  0 0 00 d4 .......0 ........ ........ Transfer Sequence Initiative;
+	 l[1] = g[1];
+	 ANDG c000 41;
+	 if (l[1] == 0)
+	 {
+		LABL 0 0 0 d4 ........ 00...... ........ Last Data Frame: No Info;
+	 }
+	 if (l[1] == 1)
+	 {
+		LABL 0 0 0 d4 ........ 01...... ........ Last Data Frame: Seq Immediate;
+	 }
+	 if (l[1] == 2)
+	 {
+		LABL 0 0 0 d4 ........ 10...... ........ Last Data Frame: Seq Soon;
+	 }
+	 if (l[1] == 3)
+	 {
+		LABL 0 0 0 d4 ........ 11...... ........ Last Data Frame: Seq Delayed;
+	 }
+	 l[1] = g[1];
+	 ANDG 3000 41;
+	 if (l[1] == 0)
+	 {
+		LABL 0 0 0 d4 ........ ..00.... ........ No ACK Required;
+	 }
+	 if (l[1] == 1)
+	 {
+		LABL 0 0 0 d4 ........ ..01.... ........ ACK1 Required;
+	 }
+	 if (l[1] == 2)
+	 {
+		LABL 0 0 0 d4 ........ ..10.... ........ ACK0 Required;
+	 }
+	 if (l[1] == 3)
+	 {
+		LABL 0 0 0 d4 ........ ..11.... ........ ACK0 Required;
+	 }
+	 CBIT 9 1 00 d4 ........ ......1. ........ Retransmitted Sequence;
+	 CLSE 0 0 00 d4 ........ ......0. ........ Not Retransmitted Sequence;
+	 l[1] = g[1];
+	 ANDG 30 41;
+	 if (l[1] == 0)
+	 {
+		LABL 0 0 0 d4 ........ ........ ..00.... ABTS: Abort-MS;
+	 }
+	 if (l[1] == 1)
+	 {
+		LABL 0 0 0 d4 ........ ........ ..01.... ABTS: Abort-SS;
+	 }
+	 if (l[1] == 2)
+	 {
+		LABL 0 0 0 d4 ........ ........ ..10.... ABTS: Process-IB;
+	 }
+	 if (l[1] == 3)
+	 {
+		LABL 0 0 0 d4 ........ ........ ..11.... ABTS: Discard-MS-Imm Retx;
+	 }
+	 CBIT 3 1 00 d4 ........ ........ ....1... Rel Offset Set;
+	 CLSE 0 0 00 d4 ........ ........ ....0... Rel Offset Not Set;
+	 LABL 0 0 00 c8;
+	HBYT  0 1 90 c2 Sequence ID:\;
+	HBYT  0 1 90 c2 Data Field Control:\;
+	DWRD  0 1 90 c2 Sequence Count:\;
+	HWRD  0 1 90 c2 Originator Exchange:\;
+	HWRD  0 1 90 c2 Responder Exchange:\;
+	HLNG  0 1 90 c2 Parameter:\;
+	//HLNG  0 1 90 c2 LS_COMMAND:;
+	LABL  0 0  0 b8;
+	TRTS;
+
+// --------------------------------------------
+
+str# FCIP::FC_Content::R_CTL_List::Upper;
+	 0 | Device Data frames;
+	 2 | Extended Link Services;
+	 3 | FC-4 Link Data;
+	 4 | Video Data;
+	 8 | Basic Link Services;
+	12 | Link Control Frame;
+	15 | Extended Routing;
+	34 | Request;
+	35 | Response;
+
+str# FCIP::FC_Content::R_CTL_List::Lower;
+	0 | Uncategorized Data;
+	1 | Solicited Data;
+	2 | Unsolicited Control;
+	3 | Solicited Control;
+	4 | Solicited Data;
+	5 | Data Descriptor;
+	6 | Unsolicited Command;
+	7 | Command Status;
+
+str# FCIP::FC_Content::ID_List;
+	0xF5 | Multicast Server;
+	0xF6 | Clock Synchronization Server;
+	0xF7 | Security Key Distribution Server;
+	0xF8 | Alias Server;
+	0xF9 | Quality of Service Facilitator - Class 4 (QoSF);
+	0xFA | Management Server;
+	0xFB | Time Server;
+	0xFC | Directory Server;
+	0xFD | Fabric Controller;
+	0xFE | F_Port;
+	0xFF | Broadcast Alias_ID;
+
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void FC::Switch_Fabric;
+	LABL 0 0 0 b7 Switch Fabric\SW-F:;
+	g[1] = pb[0];
+	if (g[1] > 0x30)
+	{
+		g[1] = 0;
+	}
+	HLNG 0 0 90 c2 Command Code:\CC:;
+	CST# 0 1 00 14 FC::Switch_Fabric::Command_Codes::List;
+	TSB# 0 1 00 14 FC::Switch_Fabric::Command_Codes::Func;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# FC::Switch_Fabric::Command_Codes::List;
+	0x00 | Unknown Command;											// let's use this as the default cmd_code
+	0x01 | Switch Fabric Internal Link Service Reject;				// sw_rjt
+	0x02 | Switch Fabric Internal Link Service Accept;				// sw_acc
+	0x10 | Exchange Link Parameters;								// elp
+	0x11 | Exchange Fabric Parameters;								// efp
+	0x12 | Announce Address Identifier;								// aai
+	0x13 | Request Domain_ID;										// rdi
+	0x14 | HLO;														// taken from ethereal - ??????????
+	0x15 | Link State Update;										// taken from ethereal - ??????????
+	0x16 | Link State Acknowledgement;								// taken from ethereal - ??????????
+	0x17 | Build Fabric;											// bf
+	0x18 | Reconfigure Fabric;										// rcf
+	0x20 | Disconnect Class 1 Connection;							// dscn
+	0x21 | Detect Queued Class 1 Connection Request Deadlock;		// loopd
+	0x22 | MR;														// taken from ethereal - ??????????
+	0x30 | ESC;														// taken from ethereal - ??????????
+
+str# FC::Switch_Fabric::Command_Codes::Func;
+	0x01 | FC::Switch_Fabric::SW_RJT;
+	0x02 | FC::Switch_Fabric::SW_ACC;
+	0x10 | FC::Switch_Fabric::ELP;
+	0x11 | FC::Switch_Fabric::EFP;
+	0x12 | FC::Switch_Fabric::AAI;
+	0x13 | FC::Switch_Fabric::RDI;
+	0x14 | FC::Switch_Fabric::HLO;
+	0x15 | FC::Switch_Fabric::LSU;
+	0x16 | FC::Switch_Fabric::LSA;
+	0x17 | FC::Switch_Fabric::BF;
+	0x18 | FC::Switch_Fabric::RCF;
+	0x20 | FC::Switch_Fabric::DSCN;
+	0x21 | FC::Switch_Fabric::LOOPD;
+	0x22 | FC::Switch_Fabric::MR;
+	0x30 | FC::Switch_Fabric::ESC;
+
+// -------------------------------------
+void FC::Switch_Fabric::SW_RJT;										// 0x01
+	HBYT 0 1 90 c2 Reserved:;
+	HBYT 0 1 90 c2 Reason Code:;
+	CST# 0 1  0 14 FC::Switch_Fabric::SW_RJT::Reason_Codes;
+	HBYT 0 1 90 c2 Reason Code Explanation:;
+	CST# 0 1  0 14 FC::Switch_Fabric::SW_RJT::Reason_Code_Explanations;
+	HBYT 0 1 90 c2 Vendor Unique:;
+	TRTS;
+
+str# FC::Switch_Fabric::SW_RJT::Reason_Codes;
+	  1 | Invalid SW_ILS command code;
+	  2 | Invalid revision level;
+	  3 | Logical error;
+	  4 | Invalid payload size;
+	  5 | Logical busy;
+	  7 | Protocol error;
+	  9 | Unable to perform command request;
+	 11 | Command not supported;
+	255 | Vendor Unique error;
+
+str# FC::Switch_Fabric::SW_RJT::Reason_Code_Explanations;
+	0x00 | No additional explanation;
+	0x01 | Class F Service Parameter error;
+	0x03 | Class N Service Parameter error;
+	0x04 | Unknown Flow Control code;
+	0x05 | Invalid Flow Control Parameters;
+	0x0d | Invalid Port_Name;
+	0x0e | Invalid Switch_Name;
+	0x0f | R_A_TOV or E_D_TOV mismatch;
+	0x10 | Invalid Domain_ID_List;
+	0x19 | Command already in progress;
+	0x29 | Insufficient resources available;
+	0x2a | Domain_ID not available;
+	0x2b | Invalid Domain_ID;
+	0x2c | Request not supported;
+	0x2d | Link Parameters not yet established;
+	0x2e | Contiguous Domain_IDs not available;
+	0x2f | E_Port is Isolated;
+
+// -------------------------------------
+void FC::Switch_Fabric::SW_ACC;										// 0x02
+	DECR 2;
+	g[1] = pw[0];
+	INCR 2;
+	
+	if (g[1] == 0)
+	{
+		if (g[16] <= 14)
+		{
+			HBYT 0 1 90 c2 Reserved:;
+			HBYT 0 1 90 c2 Zone Cmd Status Code:;
+			HBYT 0 1 90 c2 Zone Cmd Reason Code:;
+			CST# 0 1  0 14 FC::Switch_Fabric::SW_RJT::Reason_Codes;
+			HBYT 0 1 90 c2 Vendor Unique:;
+			TRTS;
+		}
+				
+		g[1] = pb[0];
+		if (g[1] < 10)
+		{
+			TNXT -FC::Switch_Fabric::ELP;
+		}
+		HEX# 8 0 90 c2 Switch Vendor ID:\V_ID:;
+		while (g[16] >= 20)
+		{
+			LABL 0 0 0 b9 Accepted Protocol Descriptor;
+			CHR# 8 0 90 c2 Vendor ID:\V_ID:;
+			HWRD 0 1 90 c2 Padding:\;
+			HWRD 0 1 90 c2 Protocol ID:\P_ID:;
+			LABL 0 0 0 b8;
+		}
+		TRTS;
+	}
+	
+	DGLB 0 1 90 c2 Payload Length:\P_Len:;
+	HEX# 3 0 90 c2 Reserved:\;
+	DBYT 0 1 90 c2 Prncpl Swtch Priority:\SW_P:;
+	CST# 0 1 00 14 FC::Switch_Fabric::EFP::P_SW_Priorities;
+	HEX# 8 0 90 c2 Prncpl Swtch Name:\SW_Nam:;
+
+	// 24 = 8 [crc + eof] + 16 [d_id_list]
+	while (g[16] >= 24)	
+	{
+		FC::Switch_Fabric::EFP::D_ID_List;
+	}
+
+	TRTS;
+
+// -------------------------------------
+void FC::Switch_Fabric::ELP;										// 0x10
+	DBYT 0 1 90 c2 Revision:\Rev:;
+	HEX# 3 0 90 c2 Reserved:\;
+	DLNG 0 1 90 c2 R_A_TOV:;
+	LABL 0 0  0 14 msecs;
+	DLNG 0 1 90 c2 E_D_TOV:;
+	LABL 0 0  0 14 msecs;
+	HEX# 8 0 90 c2 Req E_Port_Name:;
+	HEX# 8 0 90 c2 Req Switch_Name:;
+	LABL 0 0 00 c9 Class F Srvc Params;
+	 BWRD 0 1 90 c9 Word 0:;
+	  CBIT f 1 0 d4 1....... ........ Class Valid;
+	  CLSE 0 0 0 d4 0....... ........ Class Not Valid;
+	  LABL 0 0 0 d4 .xxxxxxx xxxxxxxx Reserved;
+ 	  LABL 0 0 0 c8;
+	 HWRD 0 1 90 c2 Reserved:;
+	 BWRD 0 1 90 c9 Word 1:;
+	  LABL 0 0 0 d4 xx...... ........ Reserved;
+	  CBIT d 1 0 d4 ..1..... ........ Requires X_ID Interlock;
+	  CLSE 0 0 0 d4 ..0..... ........ Does Not Require X_ID Interlock;
+	  LABL 0 0 0 d4 ...xxxxx xxxxxxxx Reserved:;
+	  LABL 0 0 0 c8;
+	 DWRD 0 1 90 c2 Rcv Data Field Size:;
+	 DWRD 0 1 90 c2 Concurrent Sequences:;
+	 DWRD 0 1 90 c2 End-to-End Credit:;
+	 DWRD 0 1 90 c2 Open Seq / Exchange:;
+	 HWRD 0 1 90 c2 Reserved:;
+	 LABL 0 0  0 c8;
+	LABL 0 0 0 c9 Class 1 E_Port Params;
+	 BWRD 0 1 90 c9 Flags:;
+	  CBIT f 1 0 d4 1....... ........ Class 1 Valid;
+	  CLSE 0 0 0 d4 0....... ........ Class 1 Not Valid;
+	  CBIT e 1 0 d4 .1...... ........ Intermix Supported;
+	  CLSE 0 0 0 d4 .0...... ........ Intermix Not Supported;
+	  CBIT d 1 0 d4 ..1..... ........ Transparent Mode Stacked Connect Requests Supported;
+	  CLSE 0 0 0 d4 ..0..... ........ Transparent Mode Stacked Connect Requests Not Supported;
+	  CBIT c 1 0 d4 ...1.... ........ Lock-down Mode Stacked Connect Requests Supported;
+	  CLSE 0 0 0 d4 ...0.... ........ Lock-down Mode Stacked Connect Requests Not Supported;
+	  LABL 0 0 0 d4 ....xxxx xxxxxxxx Reserved;
+ 	  LABL 0 0 0 c8;
+	 DWRD 0 1 90 c2 Rcv Data Field Size:;
+	 LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Class 2 E_Port Params;
+	 BWRD 0 1 90 c9 Flags:;
+	  CBIT f 1 0 d4 1....... ........ Class 2 Valid;
+	  CLSE 0 0 0 d4 0....... ........ Class 2 Not Valid;
+	  LABL 0 0 0 d4 .xxx.... ........ Reserved;
+	  CBIT b 1 0 d4 ....1... ........ Sequential Delivery Guaranteed;
+	  CLSE 0 0 0 d4 ....0... ........ Sequential Delivery Not Guaranteed;
+	  LABL 0 0 0 d4 .....xxx xxxxxxxx Reserved;
+ 	  LABL 0 0 0 c8;
+	 DWRD 0 1 90 c2 Rcv Data Field Size:;
+	 LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Class 3 E_Port Params;
+	 BWRD 0 1 90 c9 Flags:;
+	  CBIT f 1 0 d4 1....... ........ Class 3 Valid;
+	  CLSE 0 0 0 d4 0....... ........ Class 3 Not Valid;
+	  LABL 0 0 0 d4 .xxx.... ........ Reserved;
+	  CBIT b 1 0 d4 ....1... ........ Sequential Delivery Guaranteed;
+	  CLSE 0 0 0 d4 ....0... ........ Sequential Delivery Not Guaranteed;
+	  LABL 0 0 0 d4 .....xxx xxxxxxxx Reserved;
+ 	  LABL 0 0 0 c8;
+	 DWRD 0 1 90 c2 Rcv Data Field Size:;
+	 LABL 0 0 0 c8;
+	DUMP 14 0 90 c2 Reserved:;
+	HWRD 0 1 90 c2 ISL Flow Cntrl Mode:;
+	DWRD 0 1 90 c2 Flow Cntrl Param Len:;
+	HEX# 0 1 90 c2 Flow Cntrl Params:;
+	TRTS;
+
+// -------------------------------------
+void FC::Switch_Fabric::EFP;										// 0x11
+	DECR 2;
+	DWRD 0 2 90 c2 Payload Length:\P_Len:;
+	HEX# 3 0 90 c2 Reserved:\;
+	DBYT 0 1 90 c2 Prncpl Swtch Priority:\PSW_Prior:;
+	CST# 0 1 00 14 FC::Switch_Fabric::EFP::P_SW_Priorities;
+	HEX# 8 0 90 c2 Prncpl Swtch Name:\PSW_Name:;
+	if (g[2] <= 16)
+	{
+		TRTS;
+	}
+	
+	// 24 = 8 [crc + eof] + 16 [d_id_list]
+	while (g[16] >= 24)	
+	{
+		FC::Switch_Fabric::EFP::D_ID_List;
+	}
+	TRTS;
+
+void FC::Switch_Fabric::EFP::D_ID_List;
+	LABL 0 0 00 c9 Domain ID List\D_ID:;
+	 DBYT 0 1 90 c2 Record Type:\Type:;
+	  CEQU 0 1 00 14 Reserved;
+	  CEQU 1 1 00 14 Domain ID List Record;
+	 HBYT 0 1 90 c2 Domain ID:\D_ID:;
+	 HWRD 0 1 90 c2 Reserved:\;
+	 HLNG 0 1 90 c2 Reserved:\;
+	 HEX# 8 0 90 c2 Switch Name:\SW_Name:;
+	 LABL 0 0 00 c8;
+	TRTS;
+
+str# FC::Switch_Fabric::EFP::P_SW_Priorities;
+	0x00 | Reserved;
+	0x01 | Highest priority value;
+	0x02 | Switch was the Principal Switch prior to sending or receiving BF;
+	0xff | Switch is not capable of acting as a Principal Switch;
+
+// -------------------------------------
+void FC::Switch_Fabric::AAI;										// 0x12
+	HEX# 8 0 90 c2 Switch Name:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Address Identifier:;
+
+// -------------------------------------
+void FC::Switch_Fabric::RDI;										// 0x13
+	DECR 2;
+	DWRD 0 2 90 c2 Payload Length:;
+	HEX# 8 0 90 c2 Requesting Switch Name:;
+	g[2] -= 12;
+	g[1] = 0;
+	while (g[2] >= 4)
+	{
+		g[1] += 1;
+ 		HEX# 3 0 90 c2 Reserved:;
+		LABL 0 0 00 c2 "Requested Domain_ID ";
+		DGLB 0 1 02 02;
+		LABL 0 0 00 02 :;
+		DBYT 0 0 90 00;
+		g[2] -= 4;
+	}
+	TRTS;
+
+// -------------------------------------
+void FC::Switch_Fabric::HLO;										// 0x14
+	FC::Switch_Fabric::FSPF_Header;
+	HLNG 0 1 90 c2 Options:;
+	DLNG 0 1 90 c2 Hello Interval:;
+	LABL 0 0 00 14 (seconds);
+	DLNG 0 1 90 c2 Dead Interval:;
+	LABL 0 0 00 14 (seconds);
+	HLNG 0 1 90 c2 Recipient Domain ID:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Originating Port Indx:;
+	TRTS;
+
+void FC::Switch_Fabric::FSPF_Header;
+	LABL 0 0 00 c7 FSPF Header;
+	DBYT 0 1 90 c2 Version:;
+	HBYT 0 1 90 c2 AR Number:;
+	HBYT 0 1 90 c2 Authentication Type:;
+	HBYT 0 1 90 c2 Reserved:;
+	HLNG 0 1 90 c2 Originating Domain ID:;
+	CHR# 8 0 90 c2 Authentication:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+// -------------------------------------
+void FC::Switch_Fabric::LSU;										// 0x15
+	FC::Switch_Fabric::FSPF_Header;
+	HEX# 3 0 90 c2 Reserved:;
+	HBYT 0 1 90 c2 Flags:;
+	DLNG 0 1 90 c2 Num of LSRs:;
+	
+	HBYT 0 1 90 c2 LSR Type:;
+	HBYT 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 LSR Age:;
+	HLNG 0 1 90 c2 Options:;
+	HLNG 0 1 90 c2 Link State Identifier:;
+	HLNG 0 1 90 c2 Advertising Domain ID:;
+	HLNG 0 1 90 c2 Link State Incarn Num:;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 LSR Length:;
+	HWRD 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Num of Links:;
+	HLNG 0 1 90 c2 Link ID:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Output Port Index:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Neighbor Port Index:;		// could be 1 or 3 bytes
+	HBYT 0 1 90 c2 Link Type:;
+	HBYT 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Link Cost:;
+	TRTS;
+
+// -------------------------------------
+void FC::Switch_Fabric::LSA;										// 0x16
+	FC::Switch_Fabric::FSPF_Header;
+	HEX# 3 0 90 c2 Reserved:;
+	HBYT 0 1 90 c2 Flags:;
+	DLNG 0 1 90 c2 Num of LSRs:;
+	if (g[1] == 0)
+	{
+		TRTS;
+	}
+	HBYT 0 1 90 c2 LSR Type:;
+	HBYT 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 LSR Age:;
+	HLNG 0 1 90 c2 Options:;
+	HLNG 0 1 90 c2 Link State Identifier:;
+	HLNG 0 1 90 c2 Advertising Domain ID:;
+	HLNG 0 1 90 c2 Link State Incarnation Num:;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 LSR Length:;
+	if (g[16] <= 12)
+	{
+		TRTS;
+	}
+	HWRD 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Num of Links:;
+	HLNG 0 1 90 c2 Link ID:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Output Port Index:;
+	HBYT 0 1 90 c2 Reserved:;
+	HEX# 3 0 90 c2 Neighbor Port Index:;
+	HBYT 0 1 90 c2 Link Type:;
+	HBYT 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Link Cost:;
+	DWRD 0 1 90 c2 LSR Length:;
+	HWRD 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Num of Links:;
+	TRTS;
+	
+
+// -------------------------------------
+void FC::Switch_Fabric::BF;											// 0x17 
+void FC::Switch_Fabric::RCF;										// 0x18 
+void FC::Switch_Fabric::DSCN;										// 0x20 
+void FC::Switch_Fabric::LOOPD;										// 0x21 
+
+// -------------------------------------
+void FC::Switch_Fabric::MR;											// 0x22
+	DECR 2;
+	DWRD 0 1 90 c2 Active Zone Set Len:;
+	if (g[1] > 0)
+	{
+		FC::Switch_Fabric::MR::Active_Zone;
+	}
+	DLNG 0 1 90 c2 Full Zone Set Len:;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Full Zone Data:;
+		//FC::Switch_Fabric::MR::Full_Zone;
+	}
+	TRTS;
+
+
+void FC::Switch_Fabric::MR::Active_Zone;
+	DBYT 0 1 90 c2 Active Zone Set Name Len:;
+	HEX# 3 0 90 c2 Reserved:;
+	CHR# 0 1 90 c2 Active Zoneset Name:;
+	DLNG 0 43 90 c2 Num of Zoning Objs:;
+	l[1] = 0;
+	while (l[3] > 0)
+	{
+		l[1] += 1;
+		LABL 0 0 0 c9 "Zone Object ";
+		DGLB 0 41 02 2;
+		FC::Switch_Fabric::MR::Active_Zone::Zone_Object;
+		LABL 0 0 0 c8;
+		l[3] -= 1;
+	}
+	TRTS;
+
+void FC::Switch_Fabric::MR::Active_Zone::Zone_Object;
+	HBYT 0 1 90 c2 Zone Object Type:;
+	HBYT 0 1 90 c2 Zone Protocol:;
+	HWRD 0 1 90 c2 Reserved:;
+	DBYT 0 1 90 c2 Zone Obj Name Len:;
+	HEX# 3 0 90 c2 Reserved:;
+	CHR# 0 1 90 c2 Zone Obj Name:;
+	DLNG 0 2 90 c2 Num of Zone Members:;
+	l[1] = 0;
+	while (g[2] > 0)
+	{
+		l[1] += 1;
+		LABL 0 0 00 c9 "Zone Member ";
+		DGLB 0 41 02 02;
+		HBYT 0 1 90 c2 Member Type:;
+		HBYT 0 1 90 c2 Reserved:;
+		HBYT 0 1 90 c2 Flags:;
+		DBYT 0 1 90 c2 Identifier Length:;
+		HEX# 0 1 90 c2 Member Identifier:;
+		LABL 0 0 00 c8;
+		g[2] -= 1;
+	}
+	TRTS;
+
+void FC::Switch_Fabric::MR::Full_Zone;
+		// !??!?!?
+
+// -------------------------------------
+void FC::Switch_Fabric::ESC;										// 0x30
+	DECR 2;
+	DWRD 0 1 90 c2 Payload Length:;
+	//DUMP 0 1 90 c2 ESC Data:;
+	g[1] = pb[0];
+	if (g[1] < 10)
+	{
+		TNXT -FC::Switch_Fabric::ELP;
+	}
+	if (g[1] > 10)
+	{
+		CHR# 8 0 90 c2 Switch Vendor ID:;
+		while (g[16] > 8)
+		{
+			LABL 0 0 0 b9 Accepted Protocol Descriptor;
+			CHR# 8 0 90 c2 Vendor ID:;
+			HWRD 0 1 90 c2 Padding:;
+			HWRD 0 1 90 c2 Protocol ID:;
+			LABL 0 0 0 b8;
+		}
+	}
+	TRTS;
+
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void FC::Common_Transport;
+	LABL 0 0 00 b7 Common Transport\CT:;
+	DBYT 0 1 90 c2 Revision:\;
+	HEX# 3 0 90 c2 IN_ID:\;
+	HBYT 0 1 90 c2 FCS Type:\Type:;
+	CST# 0 1 00 14 FC::Common_Transport::FCS_Types;
+	HBYT 0 1 90 c9 FCS SubType:\SubType:;
+	 CBIT 7 1 0 d4 1... .... Multiple Exchanges;
+	 CLSE 0 0 0 d4 0... .... Single Bidirectional Exchange;
+	 LABL 0 0 0 d4 .xxx xxxx Reserved;
+	 LABL 0 0 0 c8;
+	HBYT 0 1 90 c2 Options:\;
+	HBYT 0 1 90 c2 Reserved:\;
+	HWRD 0 2 90 c2 Cmd_Rsp Code:\Code:;
+	 CEQU 0 2 0 14 Non-FS_IU;
+	 CEQU 8001 2 0 14 FS_RJT IU;
+	 CEQU 8002 2 0 14 FS_ACC IU;
+	 if (g[2] >= 1)
+	 {
+		if (g[2] <= 0x7fff)
+		{
+			LABL 0 0 0 14 FS_REQ IU;
+			g[2] = 1;
+		}
+	}
+	DWRD 0 1 90 c2 Max/Residual Size:\;
+	// FS_REQ IU
+	if (g[2] == 1)
+	{
+		CEQU    0 1 0 14 No Max Size Indicated;
+		CEQU ffff 1 0 14 Reserved Value;
+		if (g[1] != 0) {
+			if (g[1] != 0xffff) {
+				LABL 0 0 0 14 Max size in words;
+		}	}
+	}
+	// FS_ACC IU
+	if (g[2] == 0x8002)
+	{
+		CEQU    0 1 0 14 All avail info was returned in the FS_ACC IU;
+		CEQU ffff 1 0 14 Greater than 65534 avail words of info were not sent in FS_ACC IU;
+		if (g[1] != 0) {
+			if (g[1] != 0xffff) {
+				LABL 0 0 0 14 Num of avail words of info that were not sent in FS_ACC IU;
+		}	}
+	}
+	// any other IU
+	if (g[2] != 1) {
+		if (g[2] != 0x8002)
+		{
+			LABL 0 0 0 14 Field is Reserved;
+	}	}
+
+	HBYT 0 1 90 c2 Reserved:\;
+	HBYT 0 1 90 c2 Reason Code:\;
+	if (g[2] == 0x8001)	{
+		CST# 0 1 0 14 FC::Common_Transport::RS_RJT::Reason_Codes;
+	}
+	HBYT 0 1 90 c2 Reason Code Explan.:\;
+	HBYT 0 1 90 c2 Vendor Unique:\;
+	if (g[16] > 8)
+	{
+		FC::Common_Transport::App_Data;
+	}
+	LABL 0 0 00 b8; 
+	TRTS;
+
+void FC::Common_Transport::App_Data;
+	LABL 0 0 0 b7 Application Data;
+	g[1] = g[16];
+	g[1] -= 8;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Application Data:;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+str# FC::Common_Transport::FCS_Types;
+	0xf8 | Alias Server Application;
+	0xf9 | Reserved for Future Services;
+	0xfa | Management Service Application;
+	0xfb | Time Service Application;
+	0xfc | Directory Service Application;
+	0xfd | Reserved - Fabric Controller Service;
+	0xfe | Reserved;
+	0xff | Reserved;
+
+str# FC::Common_Transport::RS_RJT::Reason_Codes;
+	0x01 | Invalid command code;
+	0x02 | Invalid version level;
+	0x03 | Logical error;
+	0x04 | Invalid IU Size;
+	0x05 | Logical busy;
+	0x07 | Protocol error;
+	0x09 | Unable to perform command request;
+	0x0b | Command not supported;
+	0xff | Vendor Unique Error;
+
+
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+//	Boardwalk 
+//		[ FC Encapsulation ]
+// ----------------------------------------------------------------------------------------
+// ----------------------------------------------------------------------------------------
+
+void Boardwalk;
+	LABL 0 0 00 b1 Boardwalk;
+	g[1] = pw[0];
+	ANDG f0 1;
+	g[2] = pb[0];
+	SHFR 4 2;
+	LABL 0 0 00 c2 SOF:;
+	BBIT 4 0 90 00;
+	LABL 0 0 90 00 " .... = ";
+	DGLB 0 2 90 00;
+	CST# 0 2 00 14 Boardwalk::SOF;
+	LABL 0 0 00 c2 VSAN:;
+	LABL 0 0 00 50 "....";
+	BBIT c 0 90 00;
+	//LABL 0 0 00 14 ....xxxx xxxxxxxx;
+	FCIP::FC_Content;
+	if (g[16] > 4)
+	{
+		if (g[16] <= 8)
+		{
+			HLNG 0 1 90 c2 CRC:;
+		}
+		if (g[16] > 8)
+		{
+			if (g[0xc] == 0xffff)
+			{
+				FC::Switch_Fabric;
+			}
+			if (g[0xc] == 0xfffc)
+			{
+				FC::Common_Transport;
+			}
+			l[2] = g[16];
+			l[2] -= 4;
+			if (l[2] > 0)
+			{
+				if (l[2] > 4)
+				{
+					l[2] -= 4;
+					DUMP 0 42 90 c2 FC Information:;
+				}
+				HLNG 0 1 90 c2 CRC:;
+			}
+		}
+	}
+	//FCIP::EOF;
+	LABL 0 0 00 b7 -Boardwalk;
+	DWRD 0 0 90 c2 Packet Count:;
+	BBYT 0 1 90 c9 Error:;
+	 CBIT 7 1 00 d4 1... .... Ctrl Char Inside Frame;
+	 CLSE 0 0 00 d4 0... .... Ctrl Char Not Inside Frame;
+	 CBIT 6 1 00 d4 .1.. .... Jumbo FC Frame;
+	 CLSE 0 0 00 d4 .0.. .... Not Jumbo FC Frame;
+	 CBIT 5 1 00 d4 ..1. .... Fifo Full;
+	 CLSE 0 0 00 d4 ..0. .... Fifo Not Full;
+	 CBIT 4 1 00 d4 ...1 .... Bad FC CRC;
+	 CLSE 0 0 00 d4 ...0 .... FC CRC OK;
+	 CBIT 3 1 00 d4 .... 1... Truncated;
+	 CLSE 0 0 00 d4 .... 0... Not Truncated;
+	 CBIT 2 1 00 d4 .... .1.. No Data;
+	 CLSE 0 0 00 d4 .... .0.. Data Present;
+	 CBIT 1 1 00 d4 .... ..1. Empty Frame;
+	 CLSE 0 0 00 d4 .... ..0. Frame Not Empty;
+	 CBIT 0 1 00 d4 .... ...1 Packet Length Present;
+	 CLSE 0 0 00 d4 .... ...0 Packet Length Not Present;
+	 LABL 0 0 00 c8;
+	HBYT 0 1 90 c2 EOF:;
+	CST# 0 1 00 14 Boardwalk::EOF;	
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# Boardwalk::SOF;
+	2	| SOFi1;
+	3	| SOFn1;
+	4	| SOFi2;
+	5	| SOFn2;
+	6	| SOFi3;
+	7	| SOFn3;
+	8	| SOFf;
+
+str# Boardwalk::EOF;
+	1	| EOFt;
+	2	| EOFdt;
+	3	| EOFn;
+	4	| EOFa;

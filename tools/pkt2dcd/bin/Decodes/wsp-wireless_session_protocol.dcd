@@ -1,0 +1,1577 @@
+void WSP()
+{
+	LABL( 0, 0, 0, 0xb1, "Wireless Session Protocol Header\WSP:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Transaction ID:\TID:");
+	WSP::PDU_Type_Check();
+}
+
+void WSP:Label()
+{
+	LABL( 0, 0, 0, 0xb8);
+	LABL( 0, 0, 0, 0xb1, "Wireless Session Protocol Header\WSP:");
+	WSP::PDU_Type_Check();
+}
+
+void WSP::PDU_Type()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "PDU Type:\Type:");
+	CST#( 0, l[1], 0, 0x14, WSP::PDU_Type_Str);
+}
+
+void WSP::Status_Code()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:");
+	CST#( 0, l[1], 0, 0x14, WSP::Status_Code_Str);
+}
+
+void WSP::Content_Type()
+{
+	l[1] = pb[0];
+	if (l[1] == 0x61)
+	{
+		WSP::Parse_Value();
+		CHR# 0 1e 90 c2 Content Type:\;
+		INCR 1;
+		*g[8] = pb[-0x0C];
+		DECR C;
+		g[8] = pw[0];
+		INCR C;
+		TRTS;
+	}
+/*	if (g[7] == 2)
+	{
+		WSP::Parse_Value();
+		CHR# 0 1e 90 c2 Content Type:\;
+		INCR 1;
+		TRTS;
+	}
+*/
+	if (l[1] < 10)
+	{
+		if (l[1] == 0)
+		{
+			HBYT( 0, l[1], 0x90, 0xc2, "Content Type:\");
+			LABL( 0, 0, 0, 0x14, "<No Media Type Has Been Specified>");
+			TRTS;
+		}
+		INCR 1;
+	}
+	HBYT( 0, l[4], 0x90, 0xc9, "Content Type:\");
+	CST#( 0, l[4], 0, 0x14, WSP::Content_Type_Str);
+	l[1] = pb[0];
+	if (l[1] == 0x83)
+	{
+		HBYT( 0, l[1], 0x90, 0xc9, "Type:\");
+		l[1] = pb[0];
+		if (l[2] < 5)
+		{
+			DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+			HEX#( 0, l[1], 0x90, 0xc2, "Value:\");
+			LABL( 0, 0, 0, 0xc8);
+		}
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x81)
+	{
+		INCR 1;
+		HBYT( 0, l[1], 0x90, 0xc2, "Charset:\");
+		CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Accept_Charset_Str);
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Header()
+{
+	if (g[5] == 0)
+	{
+		if (g[8] == 0x6d6d)
+		{
+			MMSE();
+		}
+		TRTS;
+	}
+	LABL( 0, 0, 0, 0xb7, "Headers");
+	while (g[5] > 0)
+	{
+		l[1] = g[16];
+		l[3] = pb[0];
+		if (l[3] == 0)
+		{
+			DUMP( 1, 0, 0, 0xc2);
+		}
+		TSB#( 0, l[3], 0, 0, WSP::Field_Type_Check);
+		l[2] = g[16];
+		
+		if (l[1] == l[2])
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "Unknown Header Type:" );
+			
+		}
+		
+		l[1] -= l[2];
+		g[6] = l[1];
+		g[5] -= g[6];
+	}
+	LABL( 0, 0, 0, 0xb8);
+	if (g[8] == 0x6d6d)
+	{
+		MMSE();
+	}
+	if (l[4] == 0xA1)
+	{
+		LABL( 0, 0, 0, 0xc9, "Media Type: image/vnd.wap.wbmp");
+		DUMP( 1, 0, 0x10, 0x10);
+		LABL( 0, 0, 0, 0xc8);
+		LABL( 0, 0, 0, 0xb8);
+	}
+}
+
+void WSP::Capabilities()
+{
+	LABL( 0, 0, 0, 0xb7, "Capabilites");
+	while (g[9] > 0)
+	{
+		l[1] = g[16];
+		l[3] = pb[0];
+		WSP::Capabilites_Type();
+		l[2] = g[16];
+		l[1] -= l[2];
+		g[6] = l[1];
+		g[9] -= g[6];	
+	}
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Connect()
+{
+	WSP::PDU_Type();
+	BBIT( 4, l[1], 0x90 0xc2, "Version (Major):\");
+	BBIT( 4, l[1], 0x90 0xc2, "Version (Minor):\");
+	DBYT( 0, g[9], 0x90, 0xc2, "Capability Length:\");
+	WSP::Add_Length_Test();
+	DGLB 0 5 90 c2 Header Length:\;
+	INCR 1;
+	WSP::Capabilities();
+	WSP::Header();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Connect_Reply()
+{
+	WSP::PDU_Type();
+	WSP::Server_Session_ID();
+	DBYT( 0, g[9], 0x90, 0xc2, "Capability Length:\");
+	WSP::Add_Length_Test();
+	DGLB 0 5 90 c2 Header Length:\;
+	INCR 1;
+	WSP::Capabilities();
+	WSP::Header();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Reply()
+{
+	WSP::PDU_Type();
+	WSP::Status_Code();
+	WSP::Add_Length_Test();
+	DGLB 0 5 90 c2 Header Length:\;
+	INCR 1;
+	l[6] = g[16];
+	WSP::Content_Type();
+	l[7] = g[16];
+	l[6] -= l[7];
+	g[6] = l[6];
+	g[5] -= g[6];
+	WSP::Header();
+	l[1] = pb[0];
+	if (l[1] == 0x8E)
+	{
+		WAP::00_Byte_Loop();
+		DECR 0 4;
+		CHR#( 0, g[4], 0x90, 0xc2, "Unsupported Header:\");
+		INCR 1;
+	}
+	l[1] = pb[0];
+	if (l[1] == 1)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		WAP::Binary_XML();
+	}
+	if (l[1] == 3)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		WAP::Binary_XML();
+	}
+	if (l[1] == 0x47)
+	{
+		WAP::Compuserve_GIF();
+	}
+	if (l[1] == 0x3C)
+	{
+		LABL( 0, 0, 0, 0xb1, "Line Based Text Data");
+		Display Text Lines Only;
+	}
+	LABL( 0, 0, 0, 0xb8);	
+}
+
+void WSP::Redirect()
+{
+	WSP::PDU_Type();
+	BBIT 8 2 90 c9 Flags:;
+	DECR 1;
+	BBIT 1 3 5 c9;
+	 CEQU 1 3 0 54 1... .... Permenant Redirct: Yes;
+	 CEQU 0 3 0 54 0... .... Permenant Redirct: No;
+	BBIT 1 3 5 c9;
+	 CEQU 1 3 0 54 .1.. .... Reuse Security Session: Yes;
+	 CEQU 0 3 0 54 .0.. .... Reuse Security Session: No;
+	BBIT 6 3 5 0;
+	LABL( 0, 0, 0, 0xc8);
+	BBIT 8 2 90 c9 Flags Length:;
+	DECR 1;
+	BBIT 1 3 5 c9;
+	 CEQU 1 3 0 54 1... .... Bearer Type Included: Yes;
+	 CEQU 0 3 0 54 0... .... Bearer Type Included: No;
+	BBIT 1 3 5 c9;
+	 CEQU 1 3 0 54 .1.. .... Port Number Included: Yes;
+	 CEQU 0 3 0 54 .0.. .... Port Number Included: No;
+	BBIT 6 3 5 c9;
+	 CEQU 6 3 0 54 ..00 0110 Address Length: 6;
+	 CEQU 4 3 0 54 ..00 0100 Address Length: 4;
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, l[1], 0x90, 0xc2, "Bearer Type:\");
+	 CEQU( 0, l[1], 0, 0x14, "IPv4");
+	DWRD( 0, l[1], 0x90, 0xc2, "Port Number:\Port:");
+	IPLG( 0, l[1], 0x90, 0xc2, "IP:");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Disconnect()
+{
+	WSP::PDU_Type();
+	WSP::Server_Session_ID();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Push()
+{
+	WSP::PDU_Type();
+	WSP::Add_Length_Test();
+	DGLB 0 5 90 c2 Header Length:\;
+	INCR 1;
+	l[1] = g[16];
+	WSP::Content_Type();
+	l[2] = g[16];
+	l[1] -= l[2];
+	g[6] = l[1];
+	g[5] -= g[6];
+	WSP::Header();
+	LABL( 0, 0, 0, 0xb8);
+	TEQU 0 10 0 0 RETURN;
+	WAP::Data();
+}
+
+void WSP::Confirm_Push()
+{
+	WSP::PDU_Type();
+	WSP::Add_Length_Test();
+	DGLB 0 5 90 c2 Header Length:\;
+	INCR 1;
+	l[1] = g[16];
+	WSP::Content_Type();
+	l[2] = g[16];
+	l[1] -= l[2];
+	g[6] = l[1];
+	g[5] -= g[6];
+	WSP::Header();
+	LABL( 0, 0, 0, 0xb8);
+	TEQU 0 10 0 0 RETURN;
+	WAP::Data();
+}
+
+void WSP::Suspend()
+{
+	WSP::PDU_Type();
+	DBYT( 0, l[1], 0x90, 0xc2, "Session ID:\SID");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Resume()
+{
+	WSP::PDU_Type();
+	DBYT( 0, l[1], 0x90, 0xc2, "Session ID:\SID");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Get()
+{
+	WSP::PDU_Type();
+	WSP::Add_Length_Test();
+	DGLB( 0, g[5], 0x90, 0xc2, "URI Length:\");
+	DBYT( 0, 0, 5, 5);  //incr 1
+	CHR#( 0, g[5], 0x90, 0xc2, "URI:");
+	l[1] = pb[0];
+	if (l[1] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "Headers");
+		while (l[1] != 0)
+		{
+			BYTO( 0, l[2], 0, 0);
+			TSB#( 0, l[1], 0, 0, WSP::Field_Type_Check);
+			BYTO( 0, l[3], 0, 0);
+			if (l[2] == l[3])
+			{
+				LABL( 0, 0, 0, 0xb8);
+				TRTS;
+			}
+			l[1] = pb[0];
+		}
+		LABL( 0, 0, 0, 0xb8);
+	}
+}
+
+void WSP::Post()
+{
+	WSP::PDU_Type();
+	WSP::Add_Length_Test();
+	DGLB( 0, g[5], 0x90, 0xc2, "URI Length:\");
+	l[1] = g[5];
+	INCR 1;
+	DBYT( 0, g[5], 0x90, 0xc2, "Header Length:\";
+	CHR#( 0, l[1], 0x90, 0xc2, "URI:");
+	l[6] = g[16];
+	WSP::Content_Type();
+	l[7] = g[16];
+	l[6] -= l[7];
+	g[6] = l[6];
+	g[5] -= g[6];
+	WSP::Header();
+	LABL( 0, 0, 0, 0xb8);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WAP::Compuserve_GIF()
+{
+	LABL( 0, 0, 0, 0xb1, "Compuserve GIF");
+	CHR#( 6, 0, 0x90, 0xc2, "Version:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Screen Width:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Screen Height:");
+	BBIT 8 2 90 c9 Global Settings:;
+	DECR 1;
+	BBIT 1 3 5 c9;
+	 CEQU 1 3 0 54 1... .... Global Color Map is Present;
+	 CEQU 0 3 0 54 0... .... Global Color Map is not Present;
+	BBIT 3 2 5 c9;
+	 CEQU 4 2 0 54 .100 .... Bits per Color Minus 1: (4);
+	 CEQU 3 2 0 54 .011 .... (3);
+	 CEQU 2 2 0 54 .010 .... (2);
+	 CEQU 1 2 0 54 .001 .... (1);
+	 CEQU 0 2 0 54 .000 .... (0);
+	BBIT 1 2 5 c9;
+	 CEQU 1 2 0 54 .... 1... Global Color Map is Ordered;
+	 CEQU 0 2 0 54 .... 0... Global Color Map is not Ordered;
+	BBIT 3 2 5 c9;
+	 CEQU 4 2 0 54 .... .100 Image bits per Pixal Minus 1: (4);
+	 CEQU 3 2 0 54 .... .011 (3);
+	 CEQU 2 2 0 54 .... .010 (2);
+	 CEQU 1 2 0 54 .... .001 (1);
+	 CEQU 0 2 0 54 .... .000 (0);
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, l[1], 0x90, 0xc2, "Background Color Index:");
+	LABL( 0, 0, 0, 0xb8);	
+}
+
+void WSP::Server_Session_ID()
+{
+	l[1] = pb[0];
+	if (l[1] == 0x81)
+	{
+		DLNG( 0, l[1], 0x90, 0xc2, "Server Session ID:\SID");
+		TRTS;
+	}
+	if (l[1] == 0x82)
+	{
+		HEX#( 5, 0, 0x90, 0xc2, "Server Session ID:\SID");
+		TRTS;
+	}
+	if (l[1] == 0x85)
+	{
+		HEX#( 3, 0, 0x90, 0xc2, "Server Session ID:\SID");
+		TRTS;
+	}
+	if (l[1] > 0x85)
+	{
+		DWRD( 0, l[1], 0x90, 0xc2, "Server Session ID:\SID");
+		TRTS;
+	}
+	DBYT( 0, l[1], 0x90, 0xc2, "Server Session ID:\SID");
+}
+
+void WSP::Shift_Code()
+{
+	WSP::Field_Type();
+	l[1] = pb[0];
+	while (l[1] != 1)
+	{
+		BYTO( 0, l[2], 0, 0);
+		TSB# ( 0, l[1], 0, 0, WSP::Shift_Code_Check);
+		BYTO( 0, l[3], 0, 0);
+		if (l[2] == l[3])
+		{
+			TRTS;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0)
+		{
+			TRTS;
+		}
+		if (l[1] == 0x10)
+		{
+			HBYT( 0, l[2], 0x90, 0xc2, "Shift Code:\");
+		}
+		l[1] = pb[0];
+	}
+}
+
+void WSP::Shift_Code_Type()
+{
+	HBYT( 0, l[1], 0x15, 5);
+	CST#( 0, l[1], 0x90, 2, WSP::Shift_Code_Str);
+	l[1] = pb[0];
+	if (l[1] < 0x16)
+	{
+		DBYT( 0, l[1], 5, 5);
+		HEX#( 0, l[1], 0x90, 0);
+		TRTS;
+	}
+	HBYT( 0, l[1], 0x90, 0);
+}
+
+void WSP::Shift_Code_Type1()
+{
+	HBYT( 0, l[1], 0x15, 5);
+	CST#( 0, l[1], 0x90, 2, WSP::Shift_Code_Str);
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0);
+	INCR 1;
+}
+
+void WSP::Field_Type()
+{
+	l[1] = pb[0];
+	CST#( 0, l[1], 0x90, 0xc2, WSP::Field_Type_Str);
+	HBYT( 0, l[1], 0x90, 0);
+}
+
+void WSP::Field_Type1()
+{
+	l[1] = pb[0];
+	CST#( 0, l[1], 0x90, 0xc9, WSP::Field_Type_Str);
+	HBYT( 0, l[1], 0x90, 0);
+}
+
+void WSP::Field_Type_80()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] == 0x61)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 User Agent:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	if (l[1] == 0x69)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 Accept:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	if (l[1] == 0x74)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 Value:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	if (l[1] == 0x1F)
+	{
+		WAP::00_Byte_Loop();
+		DECR 0 4;
+		CHR#( 0, g[4], 0x90, 0xc2, "Data:\");
+		INCR 1;
+	}
+	if (l[1] < 0x10)
+	{
+		WSP::Check_Length();
+		DGLB( 0, g[1], 0x90, 0xc2, "Length:\");
+		INCR 1;
+		HEX#( 0, g[1], 0x90, 0xc2, "Value:\");
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x83)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+		CST#( 0, l[1], 0, 0x14, WSP::Content_Type_Str);
+		l[1] = pb[0];
+		if (l[1] < 10)
+		{
+			WSP::Check_Length();
+			DGLB( 0, g[1], 0x90, 0xc2, "Length:\");
+			INCR 1;
+			HEX#( 0, g[1], 0x90, 0xc2, "Data:\");
+		}
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Content_Type_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_81()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	TST#( 0, l[1], 0, 0, WSP::Charset_Check);
+	DBYT( 0, l[2], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	if (l[2] == 4)
+	{
+		DBYT( 0, l[1], 0x5, 0x0);
+		HWRD( 0, l[4], 0x90, 0xc2, "Charset:\");
+		CST#( 0, l[4], 0, 0x14, WSP::Field_Type_Accept_Charset_Str);
+		WSP::Q-Value();
+	}
+	if (l[2] == 2)
+	{
+		HBYT( 0, l[4], 0x90, 0xc2, "Charset:\");
+		CST#( 0, l[4], 0, 0x14, WSP::Field_Type_Accept_Charset_Str);
+		WSP::Q-Value();
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Q-Value()
+{
+	DBYT( 0, l[5], 0x5, 0x0);			//q-value
+	if (l[5] <= 100)
+	{
+		l[5] -= 1;						//subtract by 1
+//		l[5] *= 10;						//multiply by 10
+ 	}
+ 	if (l[5] > 100)
+ 	{
+		l[5] -= 100;					//subtract 100
+	}
+//	l[5] /= 1000;						//divide by 100
+	LABL( 0, 0, 0x90, 0xc2, "Q: 0.");
+	DGLB( 0, l[5], 0x02, 0x0);
+}
+
+void WSP::Field_Type_83()
+{
+	WSP::Field_Type1();
+	l[1] = pb[5];
+	if (l[1] == 0)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 Accept-Language:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;		
+	}
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Language);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Accept Ranges()
+{
+	WSP::Field_Type1();
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CEQU( 0x81, l[1], 0, 0x14, "bytes");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Age()
+{
+	WSP::Field_Type1();
+	DBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_86()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Field Type:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_87()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Field Type:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_88()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] == 0x74)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 Value:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	if (l[1] < 7)
+	{
+		WSP::Check_Length();
+		DGLB( 0, g[1], 0x90, 0xc2, "Length:\");
+		INCR 1;
+		HEX#( 0, g[1], 0x90, 0xc2, "Value:\");
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Cache_Control_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_89()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] > 79)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Option:\");
+		CST#( 0, l[1], 0, 0x14, WSP::Connection_Str);
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Value:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Undecoded_Openwave_Header()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] < 7)
+	{
+		WSP::Check_Length();
+		DGLB( 0, g[1], 0x90, 0xc2, "Length:\");
+		INCR 1;
+		HEX#( 0, g[1], 0x90, 0xc2, "Data:\");
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Language);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_8D()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] < 5)
+	{
+		WSP::Check_Length();
+		DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+		HEX#( 0, l[1], 0x90, 0xc2, "Value:\");
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	l[1] -= 0x80;
+	DGLB( 0, l[1], 0x90, 0xc2, "Length:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_8E()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Content Location:\");
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Value:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Content Range()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Field Type:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Str);
+	WSP::Check_Length();
+	DGLB( 0, g[1], 0x90, 0xc2, "Length:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	HEX#( 0, g[1], 0x90, 0xc2, "Data:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Date()
+{
+	WSP::Field_Type1();
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	TIME 80000001 1 90 c2 Date:\;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Etag()
+{
+	WSP::Field_Type1();
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Data:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Expires()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] > 5)
+	{
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	if (l[1] != 0)
+	{
+		TIME 1 1 90 c2 Date:\;
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_95()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Field Type:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Str);
+	DBYT( 0, g[1], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	HEX#( 0, g[1], 0x90, 0xc2, "Data:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Location()
+{
+	WSP::Field_Type1();
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Value:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);	
+}
+
+void WSP::Last_Modified()
+{
+	WSP::Field_Type1();
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	TIME 80000001 1 90 c2 Date:;
+	LABL( 0, 0, 0, 0xc8);	
+}
+
+void WSP::Field_Type_9F()
+{
+	WSP::Field_Type1();
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Cache_Control_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_A1()
+{
+	WSP::Field_Type();
+}
+
+void WSP::Field_Type_A6()
+{
+	WSP::Field_Type1();
+	WSP::Parse_Value;
+	CHR# 0 1e 90 c2 Type:\;
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_A9()
+{
+	WSP::Field_Type1();
+	WSP::Parse_Value;
+	CHR# 0 1e 90 c2 User Agent:\;
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_AA()
+{
+	WSP::Field_Type1();
+	WSP::Parse_Value;
+	CHR# 0 1e 90 c2 Vary:\;
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_AB()
+{
+	WSP::Field_Type1();
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Via:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_AC()
+{
+	LABL( 0, 0, 0, 0xb7, "Warning");
+	HLNG( 0, l[1], 0x90, 0xc2, "Warning Value:\");
+	DECR 1;
+	HBYT( 0, l[1], 0x90, 0xc2, "Warning Code:\");
+	 CST#( 0, l[1], 0, 0x14, WSP::Warning_Code_Str);
+	WSP::Parse_Value();
+	CHR# 0 1e 90 c2 Warning Agent:\;
+	INCR 1;
+	WSP::Parse_Value();
+	CHR# 0 1e 90 c2 Warning Text:\;
+	INCR 1;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WSP::Field_Type_B2()
+{
+	WSP::Field_Type1();
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Bearer_Indication()
+{
+	WSP::Field_Type1();
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CEQU( 0x80, l[1], 0, 0x14, "IPv4");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_B5()
+{
+	WSP::Field_Type1();
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x90, 0xc2, "Value:\");
+	INCR 1;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Profile_Warning()
+{
+	WSP::Field_Type1();
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Expect()
+{
+	WSP::Field_Type1();
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:\");
+	LABL( 0, 0, 0, 0x14, "(bytes)");
+	HEX#( 0, l[1], 0x90, 0xc2, "Data:\");	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Field_Type_BD()
+{
+	WSP::Field_Type1();
+	l[1] = pb[0];
+	if (l[1] == 0x74)
+	{
+		WSP::Parse_Value;
+		CHR# 0 1e 90 c2 Value:\;
+		INCR 1;
+		LABL( 0, 0, 0, 0xc8);
+		TRTS;
+	}
+	HBYT( 0, l[1], 0x90, 0xc2, "Value:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Cache_Control_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::PDU_Type_Check()
+{
+	l[1] = pb[0];
+	TST#( 0, l[1], 0, 0, WSP::PDU_Type_Check_Str);
+}
+
+void WSP::Capabilites_Type()
+{
+	l[5] = pb[0];
+	INCR 1;
+	l[6] = pb[0];
+	CST#( 0, l[6], 0x90, 0xc2, WSP::Capabilities_Str);
+	INCR 1;
+	l[5] -= 1;
+	HEX#( 0, l[5], 0x90, 0);
+	if (l[6] == 0x82)
+	{
+		DECR 1;
+		BBIT( 1, l[6], 5, 0xc9);
+		 CEQU( 0, l[6], 0, 0x14, "0... .... Confirmed Push Facility: False");
+		 CEQU( 1, l[6], 0, 0x14, "1... .... Confirmed Push Facility: True");
+		BBIT( 1, l[6], 5, 0xc9);
+		 CEQU( 0, l[6], 0, 0x14, ".0.. .... Push Facility: False");
+		 CEQU( 1, l[6], 0, 0x14, ".1.. .... Push Facility: True");
+		BBIT( 1, l[6], 5, 0xc9);
+		 CEQU( 0, l[6], 0, 0x14, "..0. .... Session Resume Facility: False");
+		 CEQU( 1, l[6], 0, 0x14, "..1. .... Session Resume Facility: True");
+		BBIT( 1, l[6], 5, 0xc9);
+		 CEQU( 0, l[6], 0, 0x14, "...0 .... Acknowledgement Headers: False");
+		 CEQU( 1, l[6], 0, 0x14, "...1 .... Acknowledgement Headers: True");
+		BBIT( 1, l[6], 5, 0xc9);
+		 CEQU( 0, l[6], 0, 0x14, ".... 0... Large Data Transfer: False");
+		 CEQU( 1, l[6], 0, 0x14, ".... 1... Large Data Transfer: True");
+		BBIT( 3, l[6], 5, 0);
+	}
+}
+
+void WSP::Charset()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Charset:\");
+	CST#( 0, l[1], 0, 0x14, WSP::Field_Type_Accept_Charset_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void WSP::Add_Length_Test()
+{
+	g[5] = pb[0];
+	if (g[5] == 0x81)
+	{
+		INCR 1;
+		GBYT 0 5;
+		ADDG 80 5;
+		TRTS;
+	}
+	if (g[5] == 0x82)
+	{
+		INCR 1;
+		GBYT 0 5;
+		ADDG 100 5;
+		TRTS;
+	}
+	if (g[5] == 0x83)
+	{
+		INCR 1;
+		GBYT 0 5;
+		ADDG 180 5;
+		TRTS;
+	}
+	if (g[5] == 0x84)
+	{
+		INCR 1;
+		GBYT 0 5;
+		ADDG 200 5;
+		TRTS;
+	}
+	if (g[5] == 0x85)
+	{
+		INCR 1;
+		GBYT 0 5;
+		ADDG 280 5;
+		TRTS;
+	}
+}
+
+void WSP::Add_Length()
+{
+	INCR 1;
+	GBYT 0 5;
+	ADDG 81 5;
+	SUBG 1 5;
+}
+
+void WSP::Check_Length()
+{
+
+	g[1] = pb[0];
+	if (g[1] == 0x80)
+	{
+		g[1] -= 0x80;
+	}
+}
+
+void WSP::Parse_Value()
+{
+	MOVE 0  1e;
+	GSTR 20000000 1e;
+}
+
+void WSP::String_Parse()
+{
+	WAP::00_Byte_Loop();
+	DECR 0 4;
+	CHR#( 0, g[4], 0x02, 0xc2);
+	INCR 1;
+	l[1] = pb[0];
+	if (l[1] != 0)
+	{
+		WAP::00_Byte_Loop();
+		DECR 0 4;
+		CHR#( 0, g[4], 0x90, 0);
+		INCR 1;
+	}
+}
+
+str# WSP::PDU_Type_Check_Str;
+	1 | WSP::Connect;
+	2 | WSP::Connect_Reply;
+	3 | WSP::Redirect;
+	4 | WSP::Reply;
+	5 | WSP::Disconnect;
+	6 | WSP::Push;
+	7 | WSP::Confirm_Push;
+	8 | WSP::Suspend;
+	9 | WSP::Resume;
+	0x40 | WSP::Get;
+	0x41 | WSP::Get;
+	0x42 | WSP::Get;
+	0x43 | WSP::Get;
+	0x44 | WSP::Get;
+/*	0x45 | WSP::Get;
+	0x46 | WSP::Get;
+	0x47 | WSP::Get;
+	0x48 | WSP::Get;
+	0x49 | WSP::Get;
+	0x4A | WSP::Get;
+	0x4B | WSP::Get;
+	0x4C | WSP::Get;
+	0x4D | WSP::Get;
+	0x4E | WSP::Get;
+	0x4F | WSP::Get; 
+	0x50 | WSP::Get;
+	0x51 | WSP::Get;
+	0x52 | WSP::Get;
+	0x53 | WSP::Get;
+	0x54 | WSP::Get;
+	0x55 | WSP::Get;
+	0x56 | WSP::Get;
+	0x57 | WSP::Get;
+	0x58 | WSP::Get;
+	0x59 | WSP::Get;
+	0x5A | WSP::Get;
+	0x5B | WSP::Get;
+	0x5C | WSP::Get;
+	0x5D | WSP::Get;
+	0x5E | WSP::Get;
+	0x5F | WSP::Get; */
+	0x60 | WSP::Post;
+/*	0x61 | WSP::Post;
+	0x62 | WSP::Post;
+	0x63 | WSP::Post;
+	0x64 | WSP::Post;
+	0x65 | WSP::Post;
+	0x66 | WSP::Post;
+	0x67 | WSP::Post;
+	0x68 | WSP::Post;
+	0x69 | WSP::Post;
+	0x6A | WSP::Post;
+	0x6B | WSP::Post;
+	0x6C | WSP::Post;
+	0x6D | WSP::Post;
+	0x6E | WSP::Post;
+	0x6F | WSP::Post; 
+	0x70 | WSP::Post;
+	0x71 | WSP::Post;
+	0x72 | WSP::Post;
+	0x73 | WSP::Post;
+	0x74 | WSP::Post;
+	0x75 | WSP::Post;
+	0x76 | WSP::Post;
+	0x77 | WSP::Post;
+	0x78 | WSP::Post;
+	0x79 | WSP::Post;
+	0x7A | WSP::Post;
+	0x7B | WSP::Post;
+	0x7C | WSP::Post;
+	0x7D | WSP::Post;
+	0x7E | WSP::Post;
+	0x7F | WSP::Post; */
+
+str# WSP::PDU_Type_Str;
+	0 | Reserved;
+	1 | Connect;
+	2 | Connect Reply;
+	3 | Redirect;
+	4 | Reply;
+	5 | Disconnect;
+	6 | Push;
+	7 | Confirm Push;
+	8 | Suspend;
+	9 | Resume;
+	0x40 | Get;
+	0x41 | Options;
+	0x42 | Head;
+	0x43 | Delete;
+	0x44 | Trace;
+	0x45 | Unassigned Get PDU;
+	0x46 | Unassigned Get PDU;
+	0x47 | Unassigned Get PDU;
+	0x48 | Unassigned Get PDU;
+	0x49 | Unassigned Get PDU;
+	0x4A | Unassigned Get PDU;
+	0x4B | Unassigned Get PDU;
+	0x4C | Unassigned Get PDU;
+	0x4D | Unassigned Get PDU;
+	0x4E | Unassigned Get PDU;
+	0x4F | Unassigned Get PDU;
+	0x50 | Extended Get Method;
+	0x51 | Extended Get Method;
+	0x52 | Extended Get Method;
+	0x53 | Extended Get Method;
+	0x54 | Extended Get Method;
+	0x55 | Extended Get Method;
+	0x56 | Extended Get Method;
+	0x57 | Extended Get Method;
+	0x58 | Extended Get Method;
+	0x59 | Extended Get Method;
+	0x5A | Extended Get Method;
+	0x5B | Extended Get Method;
+	0x5C | Extended Get Method;
+	0x5D | Extended Get Method;
+	0x5E | Extended Get Method;
+	0x5F | Extended Get Method;
+	0x60 | Post;
+	0x61 | Put;
+	0x62 | Unassigned Post PDU;
+	0x63 | Unassigned Post PDU;
+	0x64 | Unassigned Post PDU;
+	0x65 | Unassigned Post PDU;
+	0x66 | Unassigned Post PDU;
+	0x67 | Unassigned Post PDU;
+	0x68 | Unassigned Post PDU;
+	0x69 | Unassigned Post PDU;
+	0x6A | Unassigned Post PDU;
+	0x6B | Unassigned Post PDU;
+	0x6C | Unassigned Post PDU;
+	0x6D | Unassigned Post PDU;
+	0x6E | Unassigned Post PDU;
+	0x6F | Unassigned Post PDU;
+	0x70 | Extended Method Post PDU;
+	0x71 | Extended Method Post PDU;
+	0x72 | Extended Method Post PDU;
+	0x73 | Extended Method Post PDU;
+	0x74 | Extended Method Post PDU;
+	0x75 | Extended Method Post PDU;
+	0x76 | Extended Method Post PDU;
+	0x77 | Extended Method Post PDU;
+	0x78 | Extended Method Post PDU;
+	0x79 | Extended Method Post PDU;
+	0x7A | Extended Method Post PDU;
+	0x7B | Extended Method Post PDU;
+	0x7C | Extended Method Post PDU;
+	0x7D | Extended Method Post PDU;
+	0x7E | Extended Method Post PDU;
+	0x7F | Extended Method Post PDU;
+
+	*0x80-0xFF is reserved
+
+str# WSP::Status_Code_Str;
+	0x00 | Reserved;
+	0x01 | Reserved;
+	0x02 | Reserved;
+	0x03 | Reserved;
+	0x04 | Reserved;
+	0x05 | Reserved;
+	0x06 | Reserved;
+	0x07 | Reserved;
+	0x08 | Reserved;
+	0x09 | Reserved;
+	0x0A | Reserved;
+	0x0B | Reserved;
+	0x0C | Reserved;
+	0x0D | Reserved;
+	0x0E | Reserved;
+	0x0F | Reserved;
+	0x10 | Continue (HTTP 100);
+	0x11 | Switching Protocols (HTTP 101);
+	0x20 | OK, Success (HTTP 200);
+	0x21 | Created (HTTP 201);
+	0x22 | Accepted (HTTP 202);
+	0x23 | Non Authoritative Information (HTTP 203);
+	0x24 | No Content (HTTP 204);
+	0x25 | Reset Content (HTTP 205);
+	0x26 | Partial Content (HTTP 206);
+	0x30 | Multiple Choices (HTTP 300);
+	0x31 | Moved Permanently (HTTP 301);
+	0x32 | Moved Temporarily (HTTP 302);
+	0x33 | See Other (HTTP 303);
+	0x34 | Not Modified (HTTP 304);
+	0x35 | Use Proxy (HTTP 305);
+	0x40 | Bad Request (HTTP 400);
+	0x41 | Unauthorized (HTTP 401);
+	0x42 | Payment Required (HTTP 402);
+	0x43 | Forbidden (HTTP 403);
+	0x44 | Not Found (HTTP 404);
+	0x45 | Method Not Allowed (HTTP 405);
+	0x46 | Not Acceptable (HTTP 406);
+	0x47 | Proxy Authentication Required (HTTP 407);
+	0x48 | Request Timeout (HTTP 408);
+	0x49 | Conflict (HTTP 409);
+	0x4A | Gone (HTTP 410);
+	0x4B | Length Required (HTTP 411);
+	0x4C | Precondition Failed (HTTP 412);
+	0x4D | Requested Entity Too Large (HTTP 413);
+	0x4E | Request URI too large (HTTP 414);
+	0x4F | Unsupported Media Type (HTTP 415);
+	0x60 | Internal Server Error (HTTP 500);
+	0x61 | Not Implemented (HTTP 501);
+	0x62 | Bad Gateway (HTTP 502);
+	0x63 | Service Unavailable (HTTP 503);
+	0x64 | Gateway Timeout (HTTP 504);
+	0x65 | HTTP Version Not Supported (HTTP 505);
+
+str# WSP::Capabilities_Str;
+	0x80 | Client SDU:;
+	0x81 | Server SDU:;
+	0x82 | Protocol Options:;
+	0x83 | Method (MOR):;
+	0x84 | Push (MOR):;
+	0x85 | Extended Methods:;
+	0x86 | Header Code Pages:;
+	0x87 | Aliases;
+
+	* Unassigned 0x08 - 0x7F
+
+str# WSP::Well_Known_Str;
+	0x00 | Q-value;
+	0x01 | Well Known Charset;
+	0x02 | Version Value;
+	0x03 | Integer Value;
+	0x04 | Untyped Value;
+	0x05 | Text String;
+	0x06 | Text String;
+	0x07 | Field Name;
+	0x08 | Short Integer;
+
+str# WSP::Field_Type_Check;
+	0x01 | WSP::Field_Type;
+	0x10 | WSP::Shift_Code;
+	0x43 | WSP::String_Parse;
+	0x45 | WSP::String_Parse;
+	0x50 | WSP::String_Parse;
+	0x53 | WSP::String_Parse;
+	0x58 | WSP::String_Parse;
+	0x74 | WSP::String_Parse;
+	0x78 | WSP::String_Parse;
+	0x80 | WSP::Field_Type_80;
+	0x81 | WSP::Field_Type_81;
+	0x83 | WSP::Field_Type_83;
+	0x84 | WSP::Accept Ranges;
+	0x85 | WSP::Age;
+	0x86 | WSP::Field_Type_86;
+	0x87 | WSP::Field_Type_87;
+	0x88 | WSP::Field_Type_88;
+	0x89 | WSP::Field_Type_89;
+	0x8A | WSP::Undecoded_Openwave_Header;
+	0x8B | WSP::Undecoded_Openwave_Header;
+	0x8C | WSP::Undecoded_Openwave_Header;
+	0x8D | WSP::Field_Type_8D;
+	0x8E | WSP::Field_Type_8E;
+	0x90 | WSP::Content Range;
+	0x92 | WSP::Date;
+	0x93 | WSP::Etag;
+	0x94 | WSP::Expires;
+	0x95 | WSP::Field_Type_95;
+	0x9C | WSP::Location;
+	0x9D | WSP::Last_Modified;
+	0x9F | WSP::Field_Type_9F;
+	0xA1 | WSP::Field_Type_A1;
+	0xA6 | WSP::Field_Type_A6;
+	0xA9 | WSP::Field_Type_A9;
+	0xAA | WSP::Field_Type_AA;
+	0xAB | WSP::Field_Type_AB;
+	0xAC | WSP::Field_Type_AC;
+	0xB2 | WSP::Field_Type_B2;
+	0xB3 | WSP::Bearer_Indication;
+	0xB5 | WSP::Field_Type_B5;
+	0xB7 | WSP::Profile_Warning;
+	0xB8 | WSP::Expect;
+	0xBD | WSP::Field_Type_BD;
+
+str# WSP::Field_Type_Str;
+	0x01 | Shift Code:;
+	0x03 | Content Type:;
+	0x10 | Shift Code:;
+	0x80 | Accept:;
+	0x81 | Accept Charset:;
+	0x82 | Accept Encoding:;
+	0x83 | Accept Language:;
+	0x84 | Accept Ranges:;
+	0x85 | Age:;
+	0x86 | Allow:;
+	0x87 | Authorization:;
+	0x88 | Cache Control:;
+	0x89 | Connection:;
+	0x8A | Content Base:;
+	0x8B | Content Encoding:;
+	0x8C | Content Language:;
+	0x8D | Content Length:;
+	0x8E | Content Location:;
+	0x8F | Content MD5:;
+	0x90 | Content Range:;
+	0x91 | Content Type:;
+	0x92 | Date:;
+	0x93 | Etag:;
+	0x94 | Expires:;
+	0x95 | From:;
+	0x96 | Host:;
+	0x97 | If modified since:;
+	0x98 | If match:;
+	0x99 | If none match:;
+	0x9A | If range:;
+	0x9B | If unmodified since:;
+	0x9C | Location:;
+	0x9D | Last Modified:;
+	0x9E | Max Forwards:;
+	0x9F | Pragma:;
+	0xA0 | Proxy Authenticate:;
+	0xA1 | Proxy Authorization:;
+	0xA2 | Public:;
+	0xA3 | Range:;
+	0xA4 | Referer:;
+	0xA5 | Retry:;
+	0xA6 | Server:;
+	0xA7 | Transfer Encoding:;
+	0xA8 | Upgrade:;
+	0xA9 | User Agent:;
+	0xAA | Vary:;
+	0xAB | Via:;
+	0xAC | Warning:;
+	0xAD | WWW Authenticate:;
+	0xAE | Content Disposition:;
+	0xB2 | Accept Application:;
+	0xB3 | Bearer Indication:;
+	0xB5 | Profile:;
+	0xB7 | Profile Warning:;
+	0xB8 | Expect:;
+	0xBD | Cache Control:;
+
+str# WSP::Content_Type_Str;
+	0x80 | / (0x00);
+	0x81 | text/ (0x01);
+	0x82 | text/html (0x02);
+	0x83 | text/plain (0x03);
+	0x84 | text/x-hdml (0x04);
+	0x85 | text/x-ttml (0x05);
+	0x86 | text/x-vCalendar (0x06);
+	0x87 | text/x-vCard (0x07);
+	0x88 | text/vnd.wap.wml (0x08);
+	0x89 | text/vnd.ap.wmlscript (0x09);
+	0x8A | text/vnd.wap.wta-event (0x0A);
+	0x8B | multipart/ (0x0B);
+	0x8C | multipart/mixed (0x0C);
+	0x8D | multipart/form-data (0x0D);
+	0x8E | multipart/byteranges (0x0E);
+	0x8F | multipart/alternative (0x0F);
+	0x90 | application/ (0x10);
+	0x91 | application/java-vm (0x11);
+	0x92 | application/x-www-form-urlencoded (0x12);
+	0x93 | application/x-hdmlc (0x13);
+	0x94 | application/vnd.wap.wmlc (0x14);
+	0x95 | application/vnd.wap.wmlscriptc (0x15);
+	0x96 | application/vnd.wap.wta-eventc (0x16);
+	0x97 | application/vnd.wap.uaprof (0x17);
+	0x98 | application/vnd.wap.wtls-ca-certificate (0x18);
+	0x99 | application/vnd.wap.wtls-user-certificate (0x19);
+	0x9A | application/vnd.x509-ca-cert (0x1A);
+	0x9B | application/vnd.x509-user-cert (0x1B);
+	0x9C | image/ (0x1C);
+	0x9D | image/gif (0x1D);
+	0x9E | image/jpeg (0x1E);
+	0x9F | image/tiff (0x1F);
+	0xA0 | image/png (0x20);
+	0xA1 | image/vnd.wap.wbmp (0x21);
+	0xA2 | application/vnd.wap.multipart/ (0x22);
+	0xA3 | application/vnd.wap.multipart.mixed (0x23);
+	0xA4 | application/vnd.wap.multipart.form-data (0x24);
+	0xA5 | application/vnd.wap.multipart.byteranges (0x25);
+	0xA6 | application/vnd.wap.multipart.alternative (0x26);
+	0xA7 | application/xml (0x27);
+	0xA8 | text/xml (0x28);
+	0xA9 | application/vnd.wap.wbxml (0x29);
+	0xAA | application/x-x968-cross-cert (0x2A);
+	0xAB | application/x-x968-ca-cert (0x2B);
+	0xAC | application/x-x968-user-cert (0x2C);
+	0xAD | text/vnd.wap.si (0x2D);
+	0xAE | application/vnd.wap.sic (0x2E);
+	0xAF | text/vnd.wap.sl (0x2F);
+	0xB0 | application/vnd.wap.slc (0x30);
+	0xB1 | text/vnd.wap.co (0x31);
+	0xB2 | application/vnd.wap.coc (0x32);
+	0xB3 | application/vnd.wap.multipart.related (0x33);
+	0xB4 | application/vnd.wap.sia (0x34);
+	0xB5 | text/vnd.wap.connectivity-xml (0x35);
+	0xB6 | application/vnd.wap.connectivity-wbxml (0x36);
+	0xB7 | application/pkcs7-mime (0x37);
+	0xB8 | application/vnd.wap.hashed-certificate (0x38);
+	0xB9 | application/vnd.wap.signed-certificate (0x39);
+	0xBA | application/vnd.wap.cert-response (0x3A);
+	0xBB | application/xhtml+xml (0x3B);
+	0xBC | application/wml+xml (0x3C);
+	0xBD | text/css (0x3D);
+	0xBE | application/vnd.wap.mms-message (0x3E);
+	0xBF | application/vnd.wap.rollover-certificate (0x3F);
+	0xC0 | application/vnd.wap.locc+wbxml (0x40);
+	0xC1 | application/vnd.wap.loc+xml (0x41);
+	0xC2 | application/vnd.syncml.dm+wbxml (0x42);
+	0xC3 | application/vnd.syncml.dm+xml (0x43);
+	0xC4 | application/vnd.syncml.notification (0x44);
+	0xC5 | application/vnd.wap.xhtml+xml (0x45);
+	0xC6 | application/vnd.wv.csp.cir (0x46);
+	0xC7 | application/vnd.oma.dd+xml (0x47);
+	0xC8 | application/vnd.oma.drm.message (0x48);
+	0xC9 | application/vnd.oma.drm.content (0x49);
+	0xC9 | application/vnd.oma.drm.rights+xml (0x4A);
+	0xC9 | application/vnd.oma.drm.rights+wbxml (0x4B);
+	
+str# WSP::Cache_Control_Str;
+	0x80 | No Cache;
+	0x81 | No Store;
+	0x82 | Max Age;
+	0x83 | Max Stale;
+	0x84 | Min Fresh;
+	0x85 | Only if cached;
+	0x86 | Public;
+	0x87 | Private;
+	0x88 | No Transform;
+	0x89 | Must Revalidate;
+	0x8A | Proxy Revalidate;
+
+str# WSP::Shift_Code_Check;
+	0x53 | WSP::String_Parse;
+	0x78 | WSP::String_Parse;
+	0x80 | WSP::Shift_Code_Type;
+	0x81 | WSP::Shift_Code_Type;
+	0x82 | WSP::Shift_Code_Type;
+	0x83 | WSP::Shift_Code_Type;
+	0x84 | WSP::Shift_Code_Type;
+	0x85 | WSP::Shift_Code_Type1;
+	0x86 | WSP::Shift_Code_Type;
+	0x87 | WSP::Shift_Code_Type;
+	0x88 | WSP::Shift_Code_Type;
+	0x89 | WSP::Shift_Code_Type;
+	0x8A | WSP::Shift_Code_Type;
+	0x8B | WSP::Shift_Code_Type;
+	0x8C | WSP::Shift_Code_Type;
+	0x8D | WSP::Shift_Code_Type;
+	0x8E | WSP::Shift_Code_Type;
+	0x8F | WSP::Shift_Code_Type;
+	0x90 | WSP::Shift_Code_Type;
+	0x91 | WSP::Shift_Code_Type;
+	0x92 | WSP::Shift_Code_Type;
+	0x93 | WSP::Shift_Code_Type;
+	0x94 | WSP::Shift_Code_Type1;
+	0x95 | WSP::Shift_Code_Type;
+	0x96 | WSP::Shift_Code_Type;
+	0x97 | WSP::Shift_Code_Type;
+	0x98 | WSP::Shift_Code_Type;
+
+str# WSP::Shift_Code_Str;
+	0x80 | x-up-proxy-push-addr:;
+	0x81 | x-up-proxy-???:;
+	0x82 | x-up-proxy-push-seq:;
+	0x83 | x-up-proxy-notify:;
+	0x84 | x-up-proxy-operator-domain:;
+	0x85 | x-up-proxy-home-page:;
+	0x86 | x-up-Devcap-Has-Color:;
+	0x87 | x-up-Devcap-Num-Softkeys:;
+	0x88 | x-up-Softkey-Size:;
+	0x89 | x-up-???:;
+	0x8A | x-up-Devcap-Screen-Pixels:;
+	0x8B | x-up-Devcap-Em-Size:;
+	0x8C | x-up-Devcap-Screen-Depth:;
+	0x8D | x-up-Devcap-Immed-Alert:;
+	0x8E | x-up-???:;
+	0x8F | x-up-???:;
+	0x90 | x-up-proxy-tod:;
+	0x91 | x-up-proxy-ba-enable:;
+	0x92 | x-up-???:;
+	0x93 | x-up-proxy-redirect-enable:;
+	0x94 | x-up-proxy-request-URI:;
+	0x95 | x-up-proxy-redirect-status:;
+	0x96 | x-up-???:;
+	0x97 | x-up-???:;
+	0x98 | x-up-proxy-client-id:;
+
+* x-up-devcap-GUI
+* x-up-devcap-screen-chars
+* x-up-proxy-ba-realm
+* x-up-proxy-bookmark
+* x-up-proxy-enable-trust
+* x-up-proxy-linger
+* x-up-proxy-net-ask
+* x-up-proxy-push-accept
+* x-up-proxy-trans-charset
+* x-up-proxy-trust
+* x-up-proxy-trust-old
+* x-up-proxy-uplink-version
+
+str# WSP::Field_Type_Accept_Charset_Str;
+	0x00 | NULL;
+	0x03 | US-ASCII;
+	0x11 | Shift_JIS;
+	0x83 | US-ASCII (0x03);
+	0x84 | ISO-8859-1 (0x04);
+	0x85 | ISO-8859-2 (0x05);
+	0x86 | ISO-8859-3 (0x06);
+	0x87 | ISO-8859-4 (0x07);
+	0x88 | ISO-8859-5 (0x08);
+	0x89 | ISO-8859-6 (0x09);
+	0x8A | ISO-8859-7 (0x0A);
+	0x8B | ISO-8859-8 (0x0B);
+	0x8C | ISO-8859-9 (0x0C);
+	0x6A | UTF-8;
+	0xEA | UTF-8;
+	0x03E8 | iso-10646-ucs-2;
+	0x07EA | big5;
+
+str# WSP::Field_Type_Language;
+	0x99 | English (en) (0x19);
+	0xC1 | Chinese (zh) (0x41);
+
+str# WSP::Warning_Code_Str;
+	0x8A | (110) Response Is Stale (10);
+	0x8B | (111) Revalidation Failed (11);
+	0x8C | (112) Disconnected Operation (12);
+	0x8D | (113) Heuristic Expiration (13);
+	0x8E | (214) Transformation Applied (14);
+//	0x | (199) Miscellaneous Warning (99);
+
+str# WSP::Charset_Check;
+	0x83 | WSP::Charset;
+	0x84 | WSP::Charset;
+	0xEA | WSP::Charset;
+	
+str# WSP::Connection_Str;
+	0x80 | Close;
+
+
+

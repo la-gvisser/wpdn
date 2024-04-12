@@ -1,0 +1,504 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CLayerIP Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CLayerIP Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        The CLayerIP class provides access to IP layer properties.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px; margin-bottom:0px">
+        class CLayerIP
+    </p>
+    <p class="codeG" style="margin-left:50px; margin-top:0px; margin-bottom:0px">
+        :&nbsp;&nbsp;&nbsp;public CLayer
+    </p>
+
+    <!-- Class Member Overview -->
+    <!-- Constructor Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::CLayerIP">CLayerIP</a>
+            </td>
+            <td>
+                Constructs a CLayerIP object.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Member Functions Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetDestination">GetDestination</a>
+            </td>
+            <td>
+                Returns the destination IP Address.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetHeader">GetHeader</a>
+            </td>
+            <td>
+                Returns the IP Header as an object.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetHeaderLength">GetHeaderLength</a>
+            </td>
+            <td>
+                Returns the number of bytes in the IP Header layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetIp4Header">GetIp4Header</a>
+            </td>
+            <td>
+                Returns the IPv4 Header as an object. If the layer is not IPv4 then the object will be invalid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetIp6Header">GetIp6Header</a>
+            </td>
+            <td>
+                Returns the IPv6 Header as an object. If the layer is not IPv6 then the object will be invalid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetPayloadLength">GetPayloadLength</a>
+            </td>
+            <td>
+                Returns the number of bytes in the layer's payload.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetPayloadProtocol">GetPayloadProtocol</a>
+            </td>
+            <td>
+                Returns the protocol type of the payload.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetSource">GetSource</a>
+            </td>
+            <td>
+                Returns the source IP address.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::GetVersion">GetVersion</a>
+            </td>
+            <td>
+                Returns the object's IP version (IP version 4 or 6).
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsFragment">IsFragment</a>
+            </td>
+            <td>
+                Returns true if the payload is a fragment.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsNotValid</a>
+            </td>
+            <td>
+                Returns true if this object is not valid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsValid</a>
+            </td>
+            <td>
+                Returns true if this object is valid.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CLayerIP Public Member Functions</h2>
+
+    <!-- method details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CLayerIP::CLayerIP"></a>CLayerIP::CLayerIP</h3>
+    <p class="onlyP">
+        Constructs a CLayerIP object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CLayerIP();</td>
+        </tr>
+        <tr>
+            <td colspan="3">CLayerIP(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket*</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inHeader</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet that this layer belongs to.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inType</em></dt>
+        <dd>The layer type.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inHeader</em></dt>
+        <dd>The header of the layer.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inData</em></dt>
+        <dd>The payload or data of the layer.</dd>
+    </dl>
+
+    <!-- GetDestination details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::methodGetDestinationa>CLayerIP::GetDestination
+        </a>
+    </h3>
+    <p class="onlyP">
+        Get the destination IP address.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CIpAddress GetDestination() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The destination IP address.
+    </p>
+
+    <!-- GetHeader details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetHeader"></a>CLayerIP::GetHeader
+    </h3>
+    <p class="onlyP">
+        Get the layer's header as a CIpHeader.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                const CIpHeader& GetHeader() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A reference to to a CIpHeader object.
+    </p>
+
+    <!-- GetHeaderLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetHeaderLength"></a>CLayerIP::GetHeaderLength
+    </h3>
+    <p class="onlyP">
+        Get the length of the header in bytes.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetHeaderLength() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the layer's header.
+    </p>
+
+    <!-- GetIp4Header details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetIp4Header"></a>CLayerIP::GetIp4Header
+    </h3>
+    <p class="onlyP">
+        Get the IP version 4 header of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CIpV4Header GetIp4Header() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A CIpV4Header object.
+    </p>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        The returned object will not be valid if the layer is not IP version 4.
+    </p>
+
+    <!-- GetIp6Header details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetIp6Header"></a>CLayerIP::GetIp6Header
+    </h3>
+    <p class="onlyP">
+        Get the IP version 6 header of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CIpV6Header GetIp6Header() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A CIpV6Header object.
+    </p>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        The returned object will not be valid if the layer is not IP version 6.
+    </p>
+
+    <!-- GetPayloadLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetPayloadLength"></a>CLayerIP::GetPayloadLength
+    </h3>
+    <p class="onlyP">
+        Get the number of bytes in the payload.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetPayloadLength() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the payload.
+    </p>
+
+    <!-- GetPayloadProtocol details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetPayloadProtocol"></a>CLayerIP::GetPayloadProtocol
+    </h3>
+    <p class="onlyP">
+        Get the protocol type of the payload.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt8 GetPayloadProtocol() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The protocol type of the payload.
+    </p>
+
+    <!-- GetSource details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetSource"></a>CLayerIP::GetSource
+    </h3>
+    <p class="onlyP">
+        The source IP address of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CIpAddress GetSource() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The source IP address.
+    </p>
+
+    <!-- GetVersion details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::GetVersion"></a>CLayerIP::GetVersion
+    </h3>
+    <p class="onlyP">
+        Get the IP version of the layer: 4 or 6.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt32 GetVersion() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The IP version.
+    </p>
+    <p style="color: #000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        The IP version is either 4 or 6.
+    </p>
+
+    <!-- IsFragment details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::IsFragment"></a>CLayerIP::IsFragment
+    </h3>
+    <p class="onlyP">
+        Is the packet a fragment.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                bool IsFragment() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if the packet is a fragment.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        This function differs from Peek's idetification of a fragment in that
+        it includes the first packet. Fragmentation is not detected in IP V6
+        packets.
+    </p>
+
+    <!-- IsNotValid details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::IsValid"></a>CLayerIP::IsNotValid
+    </h3>
+    <p class="onlyP">
+        Is this object in an invalid state.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                bool IsNotValid() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if the object is not valid.
+    </p>
+
+    <!-- IsValid details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerIP::IsValid"></a>CLayerIP::IsValid
+    </h3>
+    <p class="onlyP">
+        Is this object in a valid state.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                bool IsValid() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if the object is valid.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

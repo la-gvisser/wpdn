@@ -1,0 +1,333 @@
+// -----------------------------------------------
+// SIP - Session Initiation Protocol [TT5001]
+
+void SIP()
+{
+	if (g[1] != 5060)
+	{
+		g[2] = g[1];					//si: if the source is not 5060 use that
+	}
+	MARK 1 2 0 0 SIP::MW_List;
+	SIP::Main();
+}
+
+str# SIP::MW_List;
+	SIP;
+
+void SIP::Main()
+{
+	LABL( 0, 0, 0, 177, "SIP - Session Initiation Protocol\SIP:");
+	GLNG( 0, g[1]);
+	MOVE( 0, g[0xc]);
+	SNEQ( 0x5349502f, g[1]);						// SIP/
+	SKIP( 4 );
+	SIP::Print_Response; 
+	MOVE( 1, g[0xc]);
+	SEQU( 1, g[0xc]);
+	SKIP( 2 );
+	SIP::Print_Request; 
+	MOVE( 1, g[0xb]);								// set printed a line flag;
+	SIP::2;
+	
+	// TNXT -Display Fields And Lines No Init;
+}
+
+
+void SIP::Print_Request()
+{
+	//identifying a valid request is a bit tricky because the request
+	//can be anything due to extensions
+	//the request line is suppose to have a sip version at the end, check for that
+	l[1] = g[16];
+	l[2] = 0;
+	l[5] = 0;	//0 if request line is invalid, 1 if it is valid
+	while( l[1] > 4 )
+	{
+		l[3] = pb[ 0 ];
+		l[4] = pl[ 0 ];
+		
+		l[2] += 1;
+		l[1] -= 1;
+		
+		//have we hit the end of the line CRLF?
+		if ( l[3] == 0x0a )
+		{
+			l[1] = 0;
+			l[2] -= 1;	//dont print the CRLF
+		}
+		
+		//are the 4 bytes "SIP/" ? 
+		if( l[4] == 0x5349502F )
+		{
+			//this is a valid request
+			l[5] = 1;
+		}
+		if( l[1] > 0 )
+		{
+			DBYT 0 0 5 5;
+		}
+	}
+	
+	if( l[5] == 0 )
+	{
+		//this is an invalid request
+		DUMP 0 0 90 c2 Invalid SIP Request:;
+		TRTS;
+	}
+	
+	DECR 0 42;
+	
+	CHR#( 0, l[2], 0x90, 0xc2, "Request:");
+	TSUB -MGCP::Cleanup;
+	
+	TRTS;
+}
+
+void SIP::Print_Response()
+{
+	//sanity check, response has to start with SIP
+	if( g[16] > 4 )
+	{
+		l[1] = pl[0];
+		
+		//are the first 4 bytes "SIP/" ?
+		if( l[1] != 0x5349502F )
+		{
+			DUMP 0 0 90 c2 Invalid SIP Response;
+			TRTS;
+		}
+	}
+	
+	//Find the end of the line
+	BREM 0 41 5 5;
+	l[2] = 0;
+	l[3] = 0;
+	while( l[1] > 2 )
+	{
+		l[2] = pw[0];
+		l[3] += 1;
+		
+		if( l[2] == 0x0d0a )
+		{
+			l[1] = 0;
+			l[3] -= 1;	//we dont want to print the CRLF
+		}
+		
+		if( l[1] > 0 )
+		{
+			INCR 1;
+		}
+	}
+	
+	DECR 0 43;
+	
+	CHR#( 0, l[3], 0x90, 0xc2, "Response:");
+	TSUB -MGCP::Cleanup;
+	TRTS;	
+}
+
+void SIP::2()
+{
+	l[1] = 1;
+	
+	while( l[1] == 1 )
+	{
+		BREM 0 42 0 0;
+		if( l[2] == 0 )
+		{
+			TRTS;
+		}
+		
+		SIP::Colon_Parser;
+		
+		l[2] = pw[0];
+		BREM 0 43 0 0;	//save the current packet position
+		
+		MGCP::Cleanup;
+		
+		BREM 0 44 0 0;
+		//has the packet pointer advanced?
+		if( l[3] > l[4] )
+		{
+			if( l[4] == 0)
+			{
+				//there is no more data
+				TRTS;
+			}
+			
+			//did we have a CRLF before calling Cleanup?
+			if( l[2] == 0x0d0a )
+			{
+				l[2] = pw[0];
+				
+				//do we have another CRLF?
+				if( l[2] == 0x0d0a )
+				{
+					LABL 0 0 0 04 <CR><LF>;
+					//this is a SIP message body
+					DBYT 0 0 5 5;
+					DBYT 0 0 5 5;
+					SIP::Message_Body;
+				}
+			}
+		}
+	}
+
+	TRTS;
+}
+
+void SIP::Colon_Parser()
+{
+	LABL 0 0 0 80;
+	l[1] = pw[0];
+	
+	//check for v= (start of SDP section)
+	if( l[1] == 0x763d )
+	{
+		//this is the start of SDP;
+		TRTS;
+	}
+	
+	//find the =
+	GBYT 0 41 5 5; 
+	g[2] = 0;
+	
+	while( l[1] != 0x3a )
+	{
+		DBYT 0 41 5 5;
+		g[2] += 1;
+	}
+	
+	SIP::Print_Red;
+	MGCP::Cleanup;
+	SDP::PrintLoop_no_spaces;
+}
+
+void SIP::Print_Red()
+{
+	DECR( 0, g[2]);
+	CHR#( 0, g[2], 2, 0x42);
+	MOVE( 0, g[2]);
+}
+
+void SIP::Message_Body()
+{
+	l[1] = g[16];
+	
+	SDP::Check;
+	
+	if( g[16] == 0 )
+	{
+		TRTS;
+	}
+	
+	//no SDP
+	if( l[1] == g[16] )
+	{
+		l[2] = pb[0];
+		
+		// Check if this is xml, 0x3c is '<'
+		if( l[2] == 0x3c )
+		{
+			LABL 0 0 0 c1 Message Body:;
+			SIP::XML_MessageBody;
+			TRTS;
+		}
+	}
+	
+	if( l[1] > g[16] )
+	{
+		//there may be another CRLF after the SDP
+		l[2] = pw[0];
+		if( l[2] == 0x0d0a )
+		{
+			MGCP::Cleanup;
+		}
+	}
+	
+	// check if there is a boundary
+	l[2] = pw[0];
+	if( l[2] == 0x2d2d )	//boundary always starts with "--"
+	{
+		SIP::BoundaryBody;
+	}
+}
+
+void SIP::BoundaryBody()
+{
+	//spit out the boundary body until we hit a CRLF
+	l[1] = 0;
+	
+	//RFC 2046 says the boundary is between 1-70 chars	
+	while( l[1] < 70 )
+	{
+		l[2] = pw[0];
+		
+		if( l[2] == 0x0d0a )
+		{
+			DECR 0 41;
+			LABL 0 0 0 80;
+			CHR# 0 41 2 c2;
+			LABL 0 0 0 80;	//new line
+			MGCP::Cleanup;
+			TRTS;
+		}
+		
+		INCR 1;
+		l[1] += 1;
+	}
+	
+	//more than 69 chars and no CRLF maybe this isn't a boundary
+	DECR 0 41 0 0;
+}
+
+void SIP::XML_MessageBody()
+{
+	if( g[16] == 0 )
+	{
+		TRTS;
+	}
+	
+	LABL 0 0 0 90;
+	MGCP::PrintLine;
+	MGCP::Cleanup;
+	SIP::XML_MessageBody;
+}
+
+void SDP::Check()
+{
+	GBYT( 0, g[1]);
+	SNEQ( 0x76, g[1]);
+	SKIP( 9 );
+	INCR( 1 );
+	GBYT( 0, g[1]);
+	SNEQ( 0x3d, g[1]);
+	SKIP( 3 );
+	DECR( 1 );
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -SDP;
+	DECR( 1 );
+	MGCP::Cleanup;
+}
+
+// ------------------------------------------------------------------------
+// SIP-TLS
+//	port 5061
+
+void SIP-TLS;
+	LABL 0 0 0 b1 SIP-TLS;
+	SSL;
+	TRTS;
+	
+
+
+
+
+
+
+
+
+
+
+
+

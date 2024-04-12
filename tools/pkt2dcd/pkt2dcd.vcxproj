@@ -1,0 +1,799 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{7D9764D5-95F3-4501-A9F8-CFCDF5BABFB6}</ProjectGuid>
+    <RootNamespace>pkt2dcd</RootNamespace>
+    <SccProjectName>Perforce Project</SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>.</SccLocalPath>
+    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>Static</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.30501.0</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>bin\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>$(ProjectName)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>bin64\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>bin\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>bin64\</OutDir>
+    <TargetName>$(ProjectName)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.\;.\shared\win;.\shared\multi;.\shared\helium;.\decode\source;.\decode\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)pkt2dcdD.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ImageHasSafeExceptionHandlers />
+    </Link>
+    <PostBuildEvent>
+      <Command />
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>.\;.\shared\win;.\shared\multi;.\shared\helium;.\decode\source;.\decode\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)pkt2dcdD.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <AdditionalLibraryDirectories>bin64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\;.\shared\win;.\shared\multi;.\shared\helium;.\decode\source;.\decode\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat />
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention />
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command />
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>.\;.\shared\win;.\shared\multi;.\shared\helium;.\decode\source;.\decode\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>comsuppw.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(TargetPath)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <AdditionalLibraryDirectories>bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="DecodeManager.cpp" />
+    <ClCompile Include="pkt2dcd.cpp" />
+    <ClCompile Include="shared\multi\ArrayEx.cpp" />
+    <ClCompile Include="shared\multi\ByteStream.cpp" />
+    <ClCompile Include="shared\multi\ChannelMgr.cpp" />
+    <ClCompile Include="shared\multi\ChecksumUtil.cpp" />
+    <ClCompile Include="shared\multi\MediaSpec.cpp" />
+    <ClCompile Include="shared\multi\MediaSpecUtil.cpp" />
+    <ClCompile Include="shared\multi\OutputFileStream.cpp" />
+    <ClCompile Include="shared\multi\Parser.cpp" />
+    <ClCompile Include="shared\multi\TimeStamp.cpp" />
+    <ClCompile Include="shared\multi\XMLBuilder.cpp" />
+    <ClCompile Include="shared\multi\XMLDoc.cpp" />
+    <ClCompile Include="shared\multi\XMLIter.cpp" />
+    <ClCompile Include="shared\multi\XMLParser.cpp" />
+    <ClCompile Include="shared\multi\XObject.cpp" />
+    <ClCompile Include="shared\win\AddressTableParser.cpp" />
+    <ClCompile Include="shared\win\Color.cpp" />
+    <ClCompile Include="shared\win\Environment.cpp" />
+    <ClCompile Include="shared\win\FileUtil.cpp" />
+    <ClCompile Include="shared\win\NameTable.cpp" />
+    <ClCompile Include="shared\win\NameTableFile.cpp" />
+    <ClCompile Include="shared\win\NameTableParser.cpp" />
+    <ClCompile Include="shared\win\NameTableReader.cpp" />
+    <ClCompile Include="shared\win\PeekTaggedFile.cpp" />
+    <ClCompile Include="shared\win\PortTableParser.cpp" />
+    <ClCompile Include="shared\win\ProtocolTableParser.cpp" />
+    <ClCompile Include="shared\win\StreamOnCByteStream.cpp" />
+    <ClCompile Include="shared\win\TimeStampFormat.cpp" />
+    <ClCompile Include="shared\win\VariantUtil.cpp" />
+    <ClCompile Include="shared\win\WFile.cpp" />
+    <ClCompile Include="shared\win\XMLParserFactory.cpp" />
+    <ClCompile Include="shared\win\XmlUtil.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DecodeManager.h" />
+    <ClInclude Include="decode\include\Dcod.h" />
+    <ClInclude Include="decode\include\PSIDs.h" />
+    <ClInclude Include="pkt2dcd.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="shared\helium\hecore.h" />
+    <ClInclude Include="shared\helium\heresult.h" />
+    <ClInclude Include="shared\helium\hestdint.h" />
+    <ClInclude Include="shared\helium\hlexcept.h" />
+    <ClInclude Include="shared\helium\hlstrconv.h" />
+    <ClInclude Include="shared\multi\AGTypes.h" />
+    <ClInclude Include="shared\multi\AlignUtil.h" />
+    <ClInclude Include="shared\multi\ArrayEx.h" />
+    <ClInclude Include="shared\multi\ByteStream.h" />
+    <ClInclude Include="shared\multi\ChannelMgr.h" />
+    <ClInclude Include="shared\multi\ChecksumUtil.h" />
+    <ClInclude Include="shared\multi\Comparator.h" />
+    <ClInclude Include="shared\multi\EP3xColors.h" />
+    <ClInclude Include="shared\multi\filepath.h" />
+    <ClInclude Include="shared\multi\MediaSpec.h" />
+    <ClInclude Include="shared\multi\MediaSpecUtil.h" />
+    <ClInclude Include="shared\multi\MediaTypes.h" />
+    <ClInclude Include="shared\multi\MemUtil.h" />
+    <ClInclude Include="shared\multi\OutputFileStream.h" />
+    <ClInclude Include="shared\multi\PacketHeaders.h" />
+    <ClInclude Include="shared\multi\Parser.h" />
+    <ClInclude Include="shared\multi\PeekPacket.h" />
+    <ClInclude Include="shared\multi\Peekplug.h" />
+    <ClInclude Include="shared\multi\Protospecs.h" />
+    <ClInclude Include="shared\multi\tagfile.h" />
+    <ClInclude Include="shared\multi\TimeConv.h" />
+    <ClInclude Include="shared\multi\TimeStamp.h" />
+    <ClInclude Include="shared\multi\wppushpack.h" />
+    <ClInclude Include="shared\multi\XFile.h" />
+    <ClInclude Include="shared\multi\XMLBuilder.h" />
+    <ClInclude Include="shared\multi\XMLDoc.h" />
+    <ClInclude Include="shared\multi\XMLIter.h" />
+    <ClInclude Include="shared\multi\XMLParser.h" />
+    <ClInclude Include="shared\multi\XObject.h" />
+    <ClInclude Include="shared\win\AddressTableParser.h" />
+    <ClInclude Include="shared\win\CatchHR.h" />
+    <ClInclude Include="shared\win\Color.h" />
+    <ClInclude Include="shared\win\Environment.h" />
+    <ClInclude Include="shared\win\FileUtil.h" />
+    <ClInclude Include="shared\win\NameTable.h" />
+    <ClInclude Include="shared\win\NameTableFile.h" />
+    <ClInclude Include="shared\win\NameTableParser.h" />
+    <ClInclude Include="shared\win\NameTableReader.h" />
+    <ClInclude Include="shared\win\PacketLoader.h" />
+    <ClInclude Include="shared\win\PeekTaggedFile.h" />
+    <ClInclude Include="shared\win\PortTableParser.h" />
+    <ClInclude Include="shared\win\ProtocolTableParser.h" />
+    <ClInclude Include="shared\win\SAXContentHandlerImpl.h" />
+    <ClInclude Include="shared\win\StreamOnCByteStream.h" />
+    <ClInclude Include="shared\win\TimeStampFormat.h" />
+    <ClInclude Include="shared\win\VariantUtil.h" />
+    <ClInclude Include="shared\win\XMLParserFactory.h" />
+    <ClInclude Include="shared\win\XmlUtil.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="pkt2dcd.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin64\dcodu.dll" />
+    <None Include="bin64\Decodes\802_11n.dcd" />
+    <None Include="bin64\Decodes\802_11r_fastroaming.dcd" />
+    <None Include="bin64\Decodes\802_1ae_macsec.dcd" />
+    <None Include="bin64\Decodes\802_1ag_cfm.dcd" />
+    <None Include="bin64\Decodes\802_1ah.dcd" />
+    <None Include="bin64\Decodes\802_1x.dcd" />
+    <None Include="bin64\Decodes\aa_decoder_types.dcd" />
+    <None Include="bin64\Decodes\aerohive.dcd" />
+    <None Include="bin64\Decodes\ah-authentication_header.dcd" />
+    <None Include="bin64\Decodes\alternative_decodes_list.dcd" />
+    <None Include="bin64\Decodes\aol-im_instant_messenging.dcd" />
+    <None Include="bin64\Decodes\apple-afp.dcd" />
+    <None Include="bin64\Decodes\apple.dcd" />
+    <None Include="bin64\Decodes\arp-address_resolution_protocol.dcd" />
+    <None Include="bin64\Decodes\aruba-instantap.dcd" />
+    <None Include="bin64\Decodes\aruba.dcd" />
+    <None Include="bin64\Decodes\aruba_erm.dcd" />
+    <None Include="bin64\Decodes\asap.dcd" />
+    <None Include="bin64\Decodes\asn1.dcd" />
+    <None Include="bin64\Decodes\autocol-automatic_device_discovery_protocol.dcd" />
+    <None Include="bin64\Decodes\avaya.dcd" />
+    <None Include="bin64\Decodes\bacnet-building_automation_and_control_network.dcd" />
+    <None Include="bin64\Decodes\banyan.dcd" />
+    <None Include="bin64\Decodes\bgp-border_gateway_protocol.dcd" />
+    <None Include="bin64\Decodes\bittorrent.dcd" />
+    <None Include="bin64\Decodes\bootp-bootstrap_protocol.dcd" />
+    <None Include="bin64\Decodes\calcapp.dcd" />
+    <None Include="bin64\Decodes\capwap.dcd" />
+    <None Include="bin64\Decodes\cgmp-cisco_group_management_protocol.dcd" />
+    <None Include="bin64\Decodes\cisco.dcd" />
+    <None Include="bin64\Decodes\ciscoap.dcd" />
+    <None Include="bin64\Decodes\ciscofabricpath.dcd" />
+    <None Include="bin64\Decodes\cisco_erspan.dcd" />
+    <None Include="bin64\Decodes\citix_cgp.dcd" />
+    <None Include="bin64\Decodes\citrix.dcd" />
+    <None Include="bin64\Decodes\citrix_ica_browser.dcd" />
+    <None Include="bin64\Decodes\cups-common_unix_printer_system.dcd" />
+    <None Include="bin64\Decodes\daap-digital_audio_access_protocol.dcd" />
+    <None Include="bin64\Decodes\dec.dcd" />
+    <None Include="bin64\Decodes\decodes.bin" />
+    <None Include="bin64\Decodes\dhcp-dynamic_host_configuration_protocol.dcd" />
+    <None Include="bin64\Decodes\diameter.dcd" />
+    <None Include="bin64\Decodes\dicom.dcd" />
+    <None Include="bin64\Decodes\dicom_libary.dcd" />
+    <None Include="bin64\Decodes\dns-domain_name_system.dcd" />
+    <None Include="bin64\Decodes\docsis.dcd" />
+    <None Include="bin64\Decodes\dvmrp-distance_vector_multicast_routing_protocol.dcd" />
+    <None Include="bin64\Decodes\egp-exterior_gateway_protocol.dcd" />
+    <None Include="bin64\Decodes\enrp-enpoint_handlespace_redundancy_protocol.dcd" />
+    <None Include="bin64\Decodes\epr-etherpeek_remote_protocol.dcd" />
+    <None Include="bin64\Decodes\esp-encapsulating_security_payload.dcd" />
+    <None Include="bin64\Decodes\etherip.dcd" />
+    <None Include="bin64\Decodes\ethernetpowerlink.dcd" />
+    <None Include="bin64\Decodes\ethernet_ip.dcd" />
+    <None Include="bin64\Decodes\fasttrack.dcd" />
+    <None Include="bin64\Decodes\fc-fibre_channel.dcd" />
+    <None Include="bin64\Decodes\fcoe.dcd" />
+    <None Include="bin64\Decodes\fix-financial_information_exchange.dcd" />
+    <None Include="bin64\Decodes\ftp-file_transfer_protocol.dcd" />
+    <None Include="bin64\Decodes\g722.dcd" />
+    <None Include="bin64\Decodes\g726.dcd" />
+    <None Include="bin64\Decodes\g7291.dcd" />
+    <None Include="bin64\Decodes\garp-generic_attributes_registration_protocol.dcd" />
+    <None Include="bin64\Decodes\gnutella.dcd" />
+    <None Include="bin64\Decodes\goose.dcd" />
+    <None Include="bin64\Decodes\gre-generic_routing_encapsulation.dcd" />
+    <None Include="bin64\Decodes\gsmfr.dcd" />
+    <None Include="bin64\Decodes\gsmhr.dcd" />
+    <None Include="bin64\Decodes\gss-generic_security_service.dcd" />
+    <None Include="bin64\Decodes\gtp-gprs_tunneling_protocol.dcd" />
+    <None Include="bin64\Decodes\h222.dcd" />
+    <None Include="bin64\Decodes\h245.dcd" />
+    <None Include="bin64\Decodes\h264.dcd" />
+    <None Include="bin64\Decodes\hperm.dcd" />
+    <None Include="bin64\Decodes\hsrp-hot_standby_router_protocol.dcd" />
+    <None Include="bin64\Decodes\http-hyper_text_transfer_protocol.dcd" />
+    <None Include="bin64\Decodes\iapp-inter-access_point_protocol.dcd" />
+    <None Include="bin64\Decodes\ibm.dcd" />
+    <None Include="bin64\Decodes\icap-internet_content_adaptation_protocol.dcd" />
+    <None Include="bin64\Decodes\icmp-internet_control_messages_protocol.dcd" />
+    <None Include="bin64\Decodes\iec61850sv.dcd" />
+    <None Include="bin64\Decodes\ieee.dcd" />
+    <None Include="bin64\Decodes\ieee1722avbtransportprotocol.dcd" />
+    <None Include="bin64\Decodes\ieee19051.dcd" />
+    <None Include="bin64\Decodes\ietf_main.dcd" />
+    <None Include="bin64\Decodes\igap-igmp_for_user_authentication_protocol.dcd" />
+    <None Include="bin64\Decodes\igmp-internet_group_management_protocol.dcd" />
+    <None Include="bin64\Decodes\igrp-interior_gateway_routing_protocol.dcd" />
+    <None Include="bin64\Decodes\imap-internet_message_access_protocol.dcd" />
+    <None Include="bin64\Decodes\imps - instant messaging and presence service.dcd" />
+    <None Include="bin64\Decodes\intel_ans.dcd" />
+    <None Include="bin64\Decodes\ipmi-intelligent_platform_management_interface.dcd" />
+    <None Include="bin64\Decodes\iptalk-appletalk_encapsulated_in_ip.dcd" />
+    <None Include="bin64\Decodes\ip_heuristic.dcd" />
+    <None Include="bin64\Decodes\irc-internet_relay_chat.dcd" />
+    <None Include="bin64\Decodes\isakmp-internet_security_association_and_key_management.dcd" />
+    <None Include="bin64\Decodes\iscsi-small_computer_systems_interface.dcd" />
+    <None Include="bin64\Decodes\isdn-q921_user_adaptation_layer.dcd" />
+    <None Include="bin64\Decodes\ismp-interswitch_message_protocol.dcd" />
+    <None Include="bin64\Decodes\isns-internet_storage_name_service.dcd" />
+    <None Include="bin64\Decodes\iso_connectionless_network_protocol.dcd" />
+    <None Include="bin64\Decodes\iso_transport_service.dcd" />
+    <None Include="bin64\Decodes\itu.dcd" />
+    <None Include="bin64\Decodes\kerberos.dcd" />
+    <None Include="bin64\Decodes\l2f_l2tp.dcd" />
+    <None Include="bin64\Decodes\l2tp-layer_2_tunneling_protocol.dcd" />
+    <None Include="bin64\Decodes\lacp-link_aggregation_control_protocol.dcd" />
+    <None Include="bin64\Decodes\ldap-lightweight_directory_access_protocol.dcd" />
+    <None Include="bin64\Decodes\ldp-label_distribution_protocol.dcd" />
+    <None Include="bin64\Decodes\lldp.dcd" />
+    <None Include="bin64\Decodes\llmnr.dcd" />
+    <None Include="bin64\Decodes\lmp-link_management_protocol.dcd" />
+    <None Include="bin64\Decodes\lotus_notes.dcd" />
+    <None Include="bin64\Decodes\lpd-line_printer_daemon.dcd" />
+    <None Include="bin64\Decodes\lseme.dcd" />
+    <None Include="bin64\Decodes\lwapp-light_weight_access_point_protocol.dcd" />
+    <None Include="bin64\Decodes\m2pa.dcd" />
+    <None Include="bin64\Decodes\manager.dcd" />
+    <None Include="bin64\Decodes\manet.dcd" />
+    <None Include="bin64\Decodes\mapi.dcd" />
+    <None Include="bin64\Decodes\matip.dcd" />
+    <None Include="bin64\Decodes\megaco.dcd" />
+    <None Include="bin64\Decodes\mgcp-media_gateway_control_protocol.dcd" />
+    <None Include="bin64\Decodes\microsoft.dcd" />
+    <None Include="bin64\Decodes\mms message encapulation.dcd" />
+    <None Include="bin64\Decodes\mobile_ip.dcd" />
+    <None Include="bin64\Decodes\mobile_ipv6.dcd" />
+    <None Include="bin64\Decodes\modbus.dcd" />
+    <None Include="bin64\Decodes\mpeg4.dcd" />
+    <None Include="bin64\Decodes\mqseries.dcd" />
+    <None Include="bin64\Decodes\mqtt.dcd" />
+    <None Include="bin64\Decodes\mrp-media_redundancy_protocol.dcd" />
+    <None Include="bin64\Decodes\msdp.dcd" />
+    <None Include="bin64\Decodes\msn-ms_messenger.dcd" />
+    <None Include="bin64\Decodes\msrp.dcd" />
+    <None Include="bin64\Decodes\ms_proxy.dcd" />
+    <None Include="bin64\Decodes\napster.dcd" />
+    <None Include="bin64\Decodes\netbios.dcd" />
+    <None Include="bin64\Decodes\nntp-network_news_transport_protocol.dcd" />
+    <None Include="bin64\Decodes\novell.dcd" />
+    <None Include="bin64\Decodes\novell_rehaul.dcd" />
+    <None Include="bin64\Decodes\ntlm.dcd" />
+    <None Include="bin64\Decodes\ntp-network_time_protocol.dcd" />
+    <None Include="bin64\Decodes\nyse_arcabook_multicast_equities.dcd" />
+    <None Include="bin64\Decodes\oam-operations_administration_management.dcd" />
+    <None Include="bin64\Decodes\oid.dcd" />
+    <None Include="bin64\Decodes\openflow.dcd" />
+    <None Include="bin64\Decodes\openflowv1.dcd" />
+    <None Include="bin64\Decodes\openflowv4.dcd" />
+    <None Include="bin64\Decodes\openflowv5.dcd" />
+    <None Include="bin64\Decodes\osi.dcd" />
+    <None Include="bin64\Decodes\ospf-open_shortest_path_first_routing_protocol.dcd" />
+    <None Include="bin64\Decodes\oui.dcd" />
+    <None Include="bin64\Decodes\pgm.dcd" />
+    <None Include="bin64\Decodes\pim-protocol_independent_multicast.dcd" />
+    <None Include="bin64\Decodes\pingpongprotocol.dcd" />
+    <None Include="bin64\Decodes\pop-post_office_protocol.dcd" />
+    <None Include="bin64\Decodes\ppp-point_to_point_protocol.dcd" />
+    <None Include="bin64\Decodes\pppoe.dcd" />
+    <None Include="bin64\Decodes\pptp-point_to_point_tunneling_protocol.dcd" />
+    <None Include="bin64\Decodes\profinet.dcd" />
+    <None Include="bin64\Decodes\prp-parallel_redundancy_protocol.dcd" />
+    <None Include="bin64\Decodes\ptp-precision_time_protocol.dcd" />
+    <None Include="bin64\Decodes\radius.dcd" />
+    <None Include="bin64\Decodes\rfc2833.dcd" />
+    <None Include="bin64\Decodes\rgmp-router_port_group_management_protocol.dcd" />
+    <None Include="bin64\Decodes\rip-routing_information_protocol.dcd" />
+    <None Include="bin64\Decodes\rmcp-remote_management_control_protocol.dcd" />
+    <None Include="bin64\Decodes\rsvp-resource_reservation_protocol.dcd" />
+    <None Include="bin64\Decodes\rtps.dcd" />
+    <None Include="bin64\Decodes\rtp_rtcp.dcd" />
+    <None Include="bin64\Decodes\rtsp-real_time_streaming_protocol.dcd" />
+    <None Include="bin64\Decodes\rx.dcd" />
+    <None Include="bin64\Decodes\s1ap - s1 application protocol.dcd" />
+    <None Include="bin64\Decodes\sabp - serviceareabroadcastprotocol.dcd" />
+    <None Include="bin64\Decodes\sap-session_announcement_protocol.dcd" />
+    <None Include="bin64\Decodes\sccp-skinny_client_control_protocol.dcd" />
+    <None Include="bin64\Decodes\sctp-stream_control_transmission_protocol.dcd" />
+    <None Include="bin64\Decodes\sdp-session_description_protocol.dcd" />
+    <None Include="bin64\Decodes\sflow.dcd" />
+    <None Include="bin64\Decodes\sgsap.dcd" />
+    <None Include="bin64\Decodes\sip-session_initiation_protocol.dcd" />
+    <None Include="bin64\Decodes\slp-service_location_protocol.dcd" />
+    <None Include="bin64\Decodes\slpp.dcd" />
+    <None Include="bin64\Decodes\smbv2_gss.dcd" />
+    <None Include="bin64\Decodes\smpp-short_message_peer_to_peer_protocol.dcd" />
+    <None Include="bin64\Decodes\smqp-simple_message_queue_protocol.dcd" />
+    <None Include="bin64\Decodes\smtp-simple_mail_transfer_protocol.dcd" />
+    <None Include="bin64\Decodes\snmp-simple_network_management_protocol.dcd" />
+    <None Include="bin64\Decodes\soap-simple_object_access_protocol.dcd" />
+    <None Include="bin64\Decodes\ss7-transport.dcd" />
+    <None Include="bin64\Decodes\ss7-user.dcd" />
+    <None Include="bin64\Decodes\ssdp-simple_service_discovery_protocol.dcd" />
+    <None Include="bin64\Decodes\ssh-secure_shell.dcd" />
+    <None Include="bin64\Decodes\ssl-secure_sockets_layer.dcd" />
+    <None Include="bin64\Decodes\stun.dcd" />
+    <None Include="bin64\Decodes\sun.dcd" />
+    <None Include="bin64\Decodes\syslog.dcd" />
+    <None Include="bin64\Decodes\t38.dcd" />
+    <None Include="bin64\Decodes\tacacs.dcd" />
+    <None Include="bin64\Decodes\tali-transport_adapter_layer_interface.dcd" />
+    <None Include="bin64\Decodes\tbrpf-topology_dissemination_based_on_reverse_path_forwarding.dcd" />
+    <None Include="bin64\Decodes\tcp_udp_ports.dcd" />
+    <None Include="bin64\Decodes\tds-tabular_data_stream.dcd" />
+    <None Include="bin64\Decodes\telnet-network_virtual_terminal.dcd" />
+    <None Include="bin64\Decodes\teredo.dcd" />
+    <None Include="bin64\Decodes\tftp-trivial_file_transfer_protocol.dcd" />
+    <None Include="bin64\Decodes\timbuktu.dcd" />
+    <None Include="bin64\Decodes\tivo.dcd" />
+    <None Include="bin64\Decodes\tns-transparent_network_substrate.dcd" />
+    <None Include="bin64\Decodes\tpkt.dcd" />
+    <None Include="bin64\Decodes\tzsp-tazman_sniffer_protocol.dcd" />
+    <None Include="bin64\Decodes\udp-lite.dcd" />
+    <None Include="bin64\Decodes\unistim.dcd" />
+    <None Include="bin64\Decodes\vendor_ids.dcd" />
+    <None Include="bin64\Decodes\vlacp.dcd" />
+    <None Include="bin64\Decodes\vn-tags.dcd" />
+    <None Include="bin64\Decodes\vvrp-virtual_router_redundancy_protocol.dcd" />
+    <None Include="bin64\Decodes\vxlan.dcd" />
+    <None Include="bin64\Decodes\wan.dcd" />
+    <None Include="bin64\Decodes\wap-wireless_application_protocol.dcd" />
+    <None Include="bin64\Decodes\wapi.dcd" />
+    <None Include="bin64\Decodes\wassp.dcd" />
+    <None Include="bin64\Decodes\wavelink.dcd" />
+    <None Include="bin64\Decodes\wccp.dcd" />
+    <None Include="bin64\Decodes\wccp_fwd.dcd" />
+    <None Include="bin64\Decodes\wfp2p-wi-fi_peer-to-peer.dcd" />
+    <None Include="bin64\Decodes\wlccp - wireless lan context control protocol.dcd" />
+    <None Include="bin64\Decodes\wol-wakeonlan.dcd" />
+    <None Include="bin64\Decodes\wps-wi-fi_protected_setup.dcd" />
+    <None Include="bin64\Decodes\wsp-wireless_session_protocol.dcd" />
+    <None Include="bin64\Decodes\wtp-wireless_transaction_protocol.dcd" />
+    <None Include="bin64\Decodes\xerox.dcd" />
+    <None Include="bin64\Decodes\xml.dcd" />
+    <None Include="bin64\Decodes\yahoo-im-yahoo_instant_messenging.dcd" />
+    <None Include="bin64\Decodes\zep.dcd" />
+    <None Include="bin64\Protospecs.dll" />
+    <None Include="bin\Dcodu.dll" />
+    <None Include="bin\Decodes\802_11n.dcd" />
+    <None Include="bin\Decodes\802_11r_fastroaming.dcd" />
+    <None Include="bin\Decodes\802_1ae_macsec.dcd" />
+    <None Include="bin\Decodes\802_1ag_cfm.dcd" />
+    <None Include="bin\Decodes\802_1ah.dcd" />
+    <None Include="bin\Decodes\802_1x.dcd" />
+    <None Include="bin\Decodes\aa_decoder_types.dcd" />
+    <None Include="bin\Decodes\aerohive.dcd" />
+    <None Include="bin\Decodes\ah-authentication_header.dcd" />
+    <None Include="bin\Decodes\alternative_decodes_list.dcd" />
+    <None Include="bin\Decodes\aol-im_instant_messenging.dcd" />
+    <None Include="bin\Decodes\apple-afp.dcd" />
+    <None Include="bin\Decodes\apple.dcd" />
+    <None Include="bin\Decodes\arp-address_resolution_protocol.dcd" />
+    <None Include="bin\Decodes\aruba-instantap.dcd" />
+    <None Include="bin\Decodes\aruba.dcd" />
+    <None Include="bin\Decodes\aruba_erm.dcd" />
+    <None Include="bin\Decodes\asap.dcd" />
+    <None Include="bin\Decodes\asn1.dcd" />
+    <None Include="bin\Decodes\autocol-automatic_device_discovery_protocol.dcd" />
+    <None Include="bin\Decodes\avaya.dcd" />
+    <None Include="bin\Decodes\bacnet-building_automation_and_control_network.dcd" />
+    <None Include="bin\Decodes\banyan.dcd" />
+    <None Include="bin\Decodes\bgp-border_gateway_protocol.dcd" />
+    <None Include="bin\Decodes\bittorrent.dcd" />
+    <None Include="bin\Decodes\bootp-bootstrap_protocol.dcd" />
+    <None Include="bin\Decodes\calcapp.dcd" />
+    <None Include="bin\Decodes\capwap.dcd" />
+    <None Include="bin\Decodes\cgmp-cisco_group_management_protocol.dcd" />
+    <None Include="bin\Decodes\cisco.dcd" />
+    <None Include="bin\Decodes\ciscoap.dcd" />
+    <None Include="bin\Decodes\ciscofabricpath.dcd" />
+    <None Include="bin\Decodes\cisco_erspan.dcd" />
+    <None Include="bin\Decodes\citix_cgp.dcd" />
+    <None Include="bin\Decodes\citrix.dcd" />
+    <None Include="bin\Decodes\citrix_ica_browser.dcd" />
+    <None Include="bin\Decodes\cups-common_unix_printer_system.dcd" />
+    <None Include="bin\Decodes\daap-digital_audio_access_protocol.dcd" />
+    <None Include="bin\Decodes\dec.dcd" />
+    <None Include="bin\Decodes\decodes.bin" />
+    <None Include="bin\Decodes\dhcp-dynamic_host_configuration_protocol.dcd" />
+    <None Include="bin\Decodes\diameter.dcd" />
+    <None Include="bin\Decodes\dicom.dcd" />
+    <None Include="bin\Decodes\dicom_libary.dcd" />
+    <None Include="bin\Decodes\dns-domain_name_system.dcd" />
+    <None Include="bin\Decodes\docsis.dcd" />
+    <None Include="bin\Decodes\dvmrp-distance_vector_multicast_routing_protocol.dcd" />
+    <None Include="bin\Decodes\egp-exterior_gateway_protocol.dcd" />
+    <None Include="bin\Decodes\enrp-enpoint_handlespace_redundancy_protocol.dcd" />
+    <None Include="bin\Decodes\epr-etherpeek_remote_protocol.dcd" />
+    <None Include="bin\Decodes\esp-encapsulating_security_payload.dcd" />
+    <None Include="bin\Decodes\etherip.dcd" />
+    <None Include="bin\Decodes\ethernetpowerlink.dcd" />
+    <None Include="bin\Decodes\ethernet_ip.dcd" />
+    <None Include="bin\Decodes\fasttrack.dcd" />
+    <None Include="bin\Decodes\fc-fibre_channel.dcd" />
+    <None Include="bin\Decodes\fcoe.dcd" />
+    <None Include="bin\Decodes\fix-financial_information_exchange.dcd" />
+    <None Include="bin\Decodes\ftp-file_transfer_protocol.dcd" />
+    <None Include="bin\Decodes\g722.dcd" />
+    <None Include="bin\Decodes\g726.dcd" />
+    <None Include="bin\Decodes\g7291.dcd" />
+    <None Include="bin\Decodes\garp-generic_attributes_registration_protocol.dcd" />
+    <None Include="bin\Decodes\gnutella.dcd" />
+    <None Include="bin\Decodes\goose.dcd" />
+    <None Include="bin\Decodes\gre-generic_routing_encapsulation.dcd" />
+    <None Include="bin\Decodes\gsmfr.dcd" />
+    <None Include="bin\Decodes\gsmhr.dcd" />
+    <None Include="bin\Decodes\gss-generic_security_service.dcd" />
+    <None Include="bin\Decodes\gtp-gprs_tunneling_protocol.dcd" />
+    <None Include="bin\Decodes\h222.dcd" />
+    <None Include="bin\Decodes\h245.dcd" />
+    <None Include="bin\Decodes\h264.dcd" />
+    <None Include="bin\Decodes\hperm.dcd" />
+    <None Include="bin\Decodes\hsrp-hot_standby_router_protocol.dcd" />
+    <None Include="bin\Decodes\http-hyper_text_transfer_protocol.dcd" />
+    <None Include="bin\Decodes\iapp-inter-access_point_protocol.dcd" />
+    <None Include="bin\Decodes\ibm.dcd" />
+    <None Include="bin\Decodes\icap-internet_content_adaptation_protocol.dcd" />
+    <None Include="bin\Decodes\icmp-internet_control_messages_protocol.dcd" />
+    <None Include="bin\Decodes\iec61850sv.dcd" />
+    <None Include="bin\Decodes\ieee.dcd" />
+    <None Include="bin\Decodes\ieee1722avbtransportprotocol.dcd" />
+    <None Include="bin\Decodes\ieee19051.dcd" />
+    <None Include="bin\Decodes\ietf_main.dcd" />
+    <None Include="bin\Decodes\igap-igmp_for_user_authentication_protocol.dcd" />
+    <None Include="bin\Decodes\igmp-internet_group_management_protocol.dcd" />
+    <None Include="bin\Decodes\igrp-interior_gateway_routing_protocol.dcd" />
+    <None Include="bin\Decodes\imap-internet_message_access_protocol.dcd" />
+    <None Include="bin\Decodes\imps - instant messaging and presence service.dcd" />
+    <None Include="bin\Decodes\intel_ans.dcd" />
+    <None Include="bin\Decodes\ipmi-intelligent_platform_management_interface.dcd" />
+    <None Include="bin\Decodes\iptalk-appletalk_encapsulated_in_ip.dcd" />
+    <None Include="bin\Decodes\ip_heuristic.dcd" />
+    <None Include="bin\Decodes\irc-internet_relay_chat.dcd" />
+    <None Include="bin\Decodes\isakmp-internet_security_association_and_key_management.dcd" />
+    <None Include="bin\Decodes\iscsi-small_computer_systems_interface.dcd" />
+    <None Include="bin\Decodes\isdn-q921_user_adaptation_layer.dcd" />
+    <None Include="bin\Decodes\ismp-interswitch_message_protocol.dcd" />
+    <None Include="bin\Decodes\isns-internet_storage_name_service.dcd" />
+    <None Include="bin\Decodes\iso_connectionless_network_protocol.dcd" />
+    <None Include="bin\Decodes\iso_transport_service.dcd" />
+    <None Include="bin\Decodes\itu.dcd" />
+    <None Include="bin\Decodes\kerberos.dcd" />
+    <None Include="bin\Decodes\l2f_l2tp.dcd" />
+    <None Include="bin\Decodes\l2tp-layer_2_tunneling_protocol.dcd" />
+    <None Include="bin\Decodes\lacp-link_aggregation_control_protocol.dcd" />
+    <None Include="bin\Decodes\ldap-lightweight_directory_access_protocol.dcd" />
+    <None Include="bin\Decodes\ldp-label_distribution_protocol.dcd" />
+    <None Include="bin\Decodes\lldp.dcd" />
+    <None Include="bin\Decodes\llmnr.dcd" />
+    <None Include="bin\Decodes\lmp-link_management_protocol.dcd" />
+    <None Include="bin\Decodes\lotus_notes.dcd" />
+    <None Include="bin\Decodes\lpd-line_printer_daemon.dcd" />
+    <None Include="bin\Decodes\lseme.dcd" />
+    <None Include="bin\Decodes\lwapp-light_weight_access_point_protocol.dcd" />
+    <None Include="bin\Decodes\m2pa.dcd" />
+    <None Include="bin\Decodes\manager.dcd" />
+    <None Include="bin\Decodes\manet.dcd" />
+    <None Include="bin\Decodes\mapi.dcd" />
+    <None Include="bin\Decodes\matip.dcd" />
+    <None Include="bin\Decodes\megaco.dcd" />
+    <None Include="bin\Decodes\mgcp-media_gateway_control_protocol.dcd" />
+    <None Include="bin\Decodes\microsoft.dcd" />
+    <None Include="bin\Decodes\mms message encapulation.dcd" />
+    <None Include="bin\Decodes\mobile_ip.dcd" />
+    <None Include="bin\Decodes\mobile_ipv6.dcd" />
+    <None Include="bin\Decodes\modbus.dcd" />
+    <None Include="bin\Decodes\mpeg4.dcd" />
+    <None Include="bin\Decodes\mqseries.dcd" />
+    <None Include="bin\Decodes\mqtt.dcd" />
+    <None Include="bin\Decodes\mrp-media_redundancy_protocol.dcd" />
+    <None Include="bin\Decodes\msdp.dcd" />
+    <None Include="bin\Decodes\msn-ms_messenger.dcd" />
+    <None Include="bin\Decodes\msrp.dcd" />
+    <None Include="bin\Decodes\ms_proxy.dcd" />
+    <None Include="bin\Decodes\napster.dcd" />
+    <None Include="bin\Decodes\nasdaq_moldudp_moldudp64_mossudp.dcd" />
+    <None Include="bin\Decodes\netbios.dcd" />
+    <None Include="bin\Decodes\nntp-network_news_transport_protocol.dcd" />
+    <None Include="bin\Decodes\novell.dcd" />
+    <None Include="bin\Decodes\novell_rehaul.dcd" />
+    <None Include="bin\Decodes\ntlm.dcd" />
+    <None Include="bin\Decodes\ntp-network_time_protocol.dcd" />
+    <None Include="bin\Decodes\nyse_arcabook_multicast_equities.dcd" />
+    <None Include="bin\Decodes\oam-operations_administration_management.dcd" />
+    <None Include="bin\Decodes\oid.dcd" />
+    <None Include="bin\Decodes\openflow.dcd" />
+    <None Include="bin\Decodes\openflowv1.dcd" />
+    <None Include="bin\Decodes\openflowv4.dcd" />
+    <None Include="bin\Decodes\openflowv5.dcd" />
+    <None Include="bin\Decodes\osi.dcd" />
+    <None Include="bin\Decodes\ospf-open_shortest_path_first_routing_protocol.dcd" />
+    <None Include="bin\Decodes\oui.dcd" />
+    <None Include="bin\Decodes\pgm.dcd" />
+    <None Include="bin\Decodes\pim-protocol_independent_multicast.dcd" />
+    <None Include="bin\Decodes\pingpongprotocol.dcd" />
+    <None Include="bin\Decodes\pop-post_office_protocol.dcd" />
+    <None Include="bin\Decodes\ppp-point_to_point_protocol.dcd" />
+    <None Include="bin\Decodes\pppoe.dcd" />
+    <None Include="bin\Decodes\pptp-point_to_point_tunneling_protocol.dcd" />
+    <None Include="bin\Decodes\profinet.dcd" />
+    <None Include="bin\Decodes\prp-parallel_redundancy_protocol.dcd" />
+    <None Include="bin\Decodes\ptp-precision_time_protocol.dcd" />
+    <None Include="bin\Decodes\radius.dcd" />
+    <None Include="bin\Decodes\rfc2833.dcd" />
+    <None Include="bin\Decodes\rgmp-router_port_group_management_protocol.dcd" />
+    <None Include="bin\Decodes\rip-routing_information_protocol.dcd" />
+    <None Include="bin\Decodes\rmcp-remote_management_control_protocol.dcd" />
+    <None Include="bin\Decodes\rsvp-resource_reservation_protocol.dcd" />
+    <None Include="bin\Decodes\rtps.dcd" />
+    <None Include="bin\Decodes\rtp_rtcp.dcd" />
+    <None Include="bin\Decodes\rtsp-real_time_streaming_protocol.dcd" />
+    <None Include="bin\Decodes\rx.dcd" />
+    <None Include="bin\Decodes\s1ap - s1 application protocol.dcd" />
+    <None Include="bin\Decodes\sabp - serviceareabroadcastprotocol.dcd" />
+    <None Include="bin\Decodes\sap-session_announcement_protocol.dcd" />
+    <None Include="bin\Decodes\sccp-skinny_client_control_protocol.dcd" />
+    <None Include="bin\Decodes\sctp-stream_control_transmission_protocol.dcd" />
+    <None Include="bin\Decodes\sdp-session_description_protocol.dcd" />
+    <None Include="bin\Decodes\sflow.dcd" />
+    <None Include="bin\Decodes\sgsap.dcd" />
+    <None Include="bin\Decodes\sip-session_initiation_protocol.dcd" />
+    <None Include="bin\Decodes\slp-service_location_protocol.dcd" />
+    <None Include="bin\Decodes\slpp.dcd" />
+    <None Include="bin\Decodes\smbv2_gss.dcd" />
+    <None Include="bin\Decodes\smpp-short_message_peer_to_peer_protocol.dcd" />
+    <None Include="bin\Decodes\smqp-simple_message_queue_protocol.dcd" />
+    <None Include="bin\Decodes\smtp-simple_mail_transfer_protocol.dcd" />
+    <None Include="bin\Decodes\snmp-simple_network_management_protocol.dcd" />
+    <None Include="bin\Decodes\soap-simple_object_access_protocol.dcd" />
+    <None Include="bin\Decodes\ss7-transport.dcd" />
+    <None Include="bin\Decodes\ss7-user.dcd" />
+    <None Include="bin\Decodes\ssdp-simple_service_discovery_protocol.dcd" />
+    <None Include="bin\Decodes\ssh-secure_shell.dcd" />
+    <None Include="bin\Decodes\ssl-secure_sockets_layer.dcd" />
+    <None Include="bin\Decodes\stun.dcd" />
+    <None Include="bin\Decodes\sun.dcd" />
+    <None Include="bin\Decodes\syslog.dcd" />
+    <None Include="bin\Decodes\t38.dcd" />
+    <None Include="bin\Decodes\tacacs.dcd" />
+    <None Include="bin\Decodes\tali-transport_adapter_layer_interface.dcd" />
+    <None Include="bin\Decodes\tbrpf-topology_dissemination_based_on_reverse_path_forwarding.dcd" />
+    <None Include="bin\Decodes\tcp_udp_ports.dcd" />
+    <None Include="bin\Decodes\tds-tabular_data_stream.dcd" />
+    <None Include="bin\Decodes\telnet-network_virtual_terminal.dcd" />
+    <None Include="bin\Decodes\teredo.dcd" />
+    <None Include="bin\Decodes\tftp-trivial_file_transfer_protocol.dcd" />
+    <None Include="bin\Decodes\timbuktu.dcd" />
+    <None Include="bin\Decodes\tivo.dcd" />
+    <None Include="bin\Decodes\tns-transparent_network_substrate.dcd" />
+    <None Include="bin\Decodes\tpkt.dcd" />
+    <None Include="bin\Decodes\tzsp-tazman_sniffer_protocol.dcd" />
+    <None Include="bin\Decodes\udp-lite.dcd" />
+    <None Include="bin\Decodes\unistim.dcd" />
+    <None Include="bin\Decodes\vendor_ids.dcd" />
+    <None Include="bin\Decodes\vlacp.dcd" />
+    <None Include="bin\Decodes\vn-tags.dcd" />
+    <None Include="bin\Decodes\vvrp-virtual_router_redundancy_protocol.dcd" />
+    <None Include="bin\Decodes\vxlan.dcd" />
+    <None Include="bin\Decodes\wan.dcd" />
+    <None Include="bin\Decodes\wap-wireless_application_protocol.dcd" />
+    <None Include="bin\Decodes\wapi.dcd" />
+    <None Include="bin\Decodes\wassp.dcd" />
+    <None Include="bin\Decodes\WaveLink.dcd" />
+    <None Include="bin\Decodes\wccp.dcd" />
+    <None Include="bin\Decodes\wccp_fwd.dcd" />
+    <None Include="bin\Decodes\wfp2p-wi-fi_peer-to-peer.dcd" />
+    <None Include="bin\Decodes\wlccp - wireless lan context control protocol.dcd" />
+    <None Include="bin\Decodes\wol-wakeonlan.dcd" />
+    <None Include="bin\Decodes\wps-wi-fi_protected_setup.dcd" />
+    <None Include="bin\Decodes\wsp-wireless_session_protocol.dcd" />
+    <None Include="bin\Decodes\wtp-wireless_transaction_protocol.dcd" />
+    <None Include="bin\Decodes\xerox.dcd" />
+    <None Include="bin\Decodes\xml.dcd" />
+    <None Include="bin\Decodes\yahoo-im-yahoo_instant_messenging.dcd" />
+    <None Include="bin\Decodes\zep.dcd" />
+    <None Include="bin\Protospecs.dll" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

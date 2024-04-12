@@ -1,0 +1,773 @@
+* Kerberos
+
+* Kerberos is encoded in ASN.1.  There is stuff in the encoding I have
+* not figured out.  in particular there seems to be two bytes between every
+* field
+
+void Kerberos;
+	ASN1_Init;
+	LABL  0  0  0 b1 Kerberos;
+	//Kerberos_DetermineHeaderLength;
+	//*INCR A;					* BD: either 8 or A... not sure why? even 6 if errors
+	DLNG  0  0 90 c2 Record Mark;
+	INCR c;
+	DBYT  0  0 90 c2 Version:;
+	//ASN1_Value;
+	INCR 4;
+	DBYT  0  3 90 c2 MSG Type:;
+	//ASN1_Value;
+	CST# 0 3 0 14 Kerberos::Messages;
+	TSB# 0 3 0  0 Kerberos::Messages_Func;
+	LABL 0 0 0 b8;
+	
+str# Kerberos::Messages;	
+	 0xa | KRB_AS_REQ (Request for initial authentication);
+	 0xb | KRB_AS_REP (Response to KRB_AS_REQ request);
+	 0xc | KRB_TGS_REQ (Request for authentication based on TGT);
+	 0xd | KRB_TGS_REP (Response to KRB_TGS_REQ request);
+	 0xe | KRB_AP_REQ (application request to server);
+	 0xf | KRB_AP_REP (Response to KRB_AP_REQ_MUTUAL);
+	0x14 | KRB_SAFE (Safe (checksummed) application message);
+	0x15 | KRB_PRIV (Private (encrypted) application message);
+	0x16 | KRB_CRED (Private (encrypted) message to forward credentials);
+	0x1e | KRB_ERROR (Error response);
+
+str# Kerberos::Messages_Func;
+	 0xa | KRB_AS_REQ;
+	 0xb | KRB_AS_REP;
+	 0xc | KRB_TGS_REQ;
+	 0xd | KRB_TGS_REP;
+	 0xe | KRB_AP_REQ;
+	 0xf | KRB_AP_REP;
+	0x14 | KRB_SAFE;
+	0x15 | KRB_PRIV;
+	0x16 | KRB_CRED;
+	0x1e | KRB_ERROR;
+
+
+* Will put packet pointer at the proper spot for all Kerberos packets
+* including both short form and long form packets, not sure what will happen
+* to indefinite length packets, never tested on that	
+* Still not determining the header length properly!!
+void Kerberos_DetermineHeaderLength;
+	INCR 1;
+	ASN1_ParseLengthOctets;
+	MULG 2 33;
+	Kerberos_HeaderLengthLoop;
+	INCR 5;
+	TRTS;
+		
+void Kerberos_HeaderLengthLoop;
+	SEQU 0 33;
+	SKIP 3;
+		SUBG 1 33;
+		INCR 1;
+		Kerberos_HeaderLengthLoop;
+	TRTS;
+
+void KerberosHostAddresses;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 b7 Host Addresses;
+	ASN1_EnumDisplay;
+	INCR 1;	* sequence
+	GBYT 0 d; * length of sequence;
+	INCR 1;	* length
+
+	MOVE 10 8e; * save 0x16 in e
+
+	KerberosHostAddressesLoop;
+	LABL 0 0 0 b8;  * End 
+	TRTS;
+
+void KerberosHostAddressesLoop;
+	LABL  0 0 90 c2 Type;
+	ASN1_Value;
+
+	CEQU 0  3 0 14 unspecified;
+	CEQU 1  3 0 14 local to host (pipes, portals);
+	CEQU 2  3 0 14 internetwork: UDP, TCP, etc.;
+	CEQU 3  3 0 14 arpanet imp ;
+	CEQU 4  3 0 14 pup: e.g. BSP;
+	CEQU 5  3 0 14 mit CHAOS ;
+	CEQU 6  3 0 14 IPX and SPX;
+	CEQU 6  3 0 14 XEROX NS ;
+	CEQU 7  3 0 14 ISO ;
+	CEQU 7  3 0 14 ISO ;
+	CEQU 8  3 0 14 european computer manufacturers;
+	CEQU 9  3 0 14 datakit ;
+	CEQU 10 3 0 14 CCITT , X.25 etc;
+	CEQU 11 3 0 14 IBM SNA;
+	CEQU 12 3 0 14 DECnet;
+	CEQU 13 3 0 14 Direct data link interface;
+	CEQU 14 3 0 14 LAT;
+	CEQU 15 3 0 14 NSC Hyperchannel;
+	CEQU 16 3 0 14 AppleTalk;
+	CEQU 17 3 0 14 NetBios-style address;
+	CEQU 18 3 0 14 VoiceView;
+	CEQU 19 3 0 14 FireFox;
+	CEQU 20 3 0 14 Somebody is using this!;
+	CEQU 21 3 0 14 Banyan;
+
+	LABL  0 0 90 c2 Address;
+
+	SNEQ 2 3; * IP?
+	SKIP 5;
+	INCR 2;
+	IPLG 0 0 90;
+	INCR 2;  * too emulate ASN1_Value
+	SEQU 2 3; * we know the answer is true
+	SKIP 1;
+
+	ASN1_Value;
+
+	DECR 2;
+	TGTE 0 10 0 0 RETURN; * we could be done done
+	INCR 2;
+
+	MOVE  e 8c;
+	SUBG 10 8c;
+	SEQU  d 8c;
+	SKIP  2;
+
+
+	INCR 2;     * ?
+	KerberosHostAddressesLoop;
+	TRTS;
+	
+void KerberosEncryptionTypes;
+	LABL 0 0 0 b7 Encryption Types;
+	ASN1_EnumDisplay;
+	INCR 1;	* sequence
+	GBYT 0 d; * length of sequence;
+	INCR 1;	* length
+
+	MOVE 10 8e; * save 0x16 in e
+
+	KerberosEncryptionTypesLoop;
+	LABL 0 0 0 b8;  * End 
+	TRTS;
+
+
+void KerberosEncryptionTypesLoop;
+	LABL  0 0 90 c2 Type;
+	ASN1_Value;
+
+	CEQU 1 3 0 14 des-cbc-crc;
+	CEQU 2 3 0 14 des-cbc-md4; 
+	CEQU 3 3 0 14 des-cbc-md5;
+
+	DECR 2;	* account for ASN1_Value's INCR 2;
+
+	MOVE  e 8c;
+	SUBG 10 8c;
+	SEQU  d 8c;
+	SKIP  1;
+
+	KerberosEncryptionTypesLoop;
+	TRTS;
+
+
+void KerberosPrincipalName;
+	INCR 4; * ?
+
+	LABL 0 0 90 c2 Type;
+	ASN1_Value;
+	CEQU 1 3 0 14 Principal;
+	CEQU 2 3 0 14 Service and Instance;
+
+	INCR  1;
+	GBYT  0 d; * length of sequence
+	INCR  1;  * incr before getting g10
+	MOVE 10 8e; * bytes left
+
+	KerberosPrincipalNameLoop;
+	INCR 2;
+	TRTS;
+
+
+void KerberosPrincipalNameLoop;
+	LABL 0 0 90 c2 Name;
+	ASN1_Value;
+
+	DECR 2;	* account for ASN1_Value's INCR 2;
+
+	MOVE  e  8c;
+	SUBG 10  8c; *is there anything left?
+	SEQU  d  8c;
+	SKIP  1;
+
+	KerberosPrincipalNameLoop;
+	TRTS;
+
+
+void KerberosOptions;
+	LABL 0 0 90 c2 Options;
+	ASN1_Value;
+
+	* Oh GOD - total hack - this depends on ASN1_Value putting
+	* the packet in the right place
+	* Get the last 4 bytes of the bit string
+	DECR 6;
+	GLNG 0 3;
+	INCR 6;
+
+    CBIT 0   3 0 d4 ........ ........ ........ ........ .......1 RESERVED;  
+	CLSE 0   0 0 d4 ........ ........ ........ ........ .......0 Not RESERVED;
+    CBIT 1   3 0 d4 ........ ........ ........ ........ ......1. FORWARDABLE; 
+	CLSE 0   0 0 d4 ........ ........ ........ ........ ......0. Not FORWARDABLE;
+    CBIT 2   3 0 d4 ........ ........ ........ ........ .....1.. FORWARDED; 
+	CLSE 0   0 0 d4 ........ ........ ........ ........ .....0.. Not FORWARDED; 
+    CBIT 3   3 0 d4 ........ ........ ........ ........ ....1... PROXIABLE;  
+	CLSE 0   0 0 d4 ........ ........ ........ ........ ....0... Not PROXIABLE; 
+    CBIT 4   3 0 d4 ........ ........ ........ ........ ...1.... PROXY;
+	CLSE 0   0 0 d4 ........ ........ ........ ........ ...0.... Not PROXY;
+    CBIT 5   3 0 d4 ........ ........ ........ ........ ..1..... ALLOW-POSTDATE;
+	CLSE 0   0 0 d4 ........ ........ ........ ........ ..0..... Not ALLOW-POSTDATE;
+    CBIT 6   3 0 d4 ........ ........ ........ ........ .1...... POSTDATED; 
+	CLSE 0   0 0 d4 ........ ........ ........ ........ .0...... Not POSTDATED;
+    CBIT 7   3 0 d4 ........ ........ ........ ........ 1....... UNUSED;    
+	CLSE 0   0 0 d4 ........ ........ ........ ........ 0....... Not UNUSED;
+    CBIT 8   3 0 d4 ........ ........ ........ .......1 ........ RENEWABLE;
+	CLSE 0   0 0 d4 ........ ........ ........ .......0 ........ Not RENEWABLE;  
+	LABL 0   0 0 d4 ........ .....??? ???????? ???????. ........ RESERVED;
+    CBIT 1b  3 0 d4 ........ ....1... ........ ........ ........ RENEWABLE-OK;
+	CLSE 0   0 0 d4 ........ ....0... ........ ........ ........ Not RENEWABLE-OK;
+    CBIT 1c  3 0 d4 ........ ...1.... ........ ........ ........ ENC-TKT-IN-SKEY; 
+	CLSE 0   0 0 d4 ........ ...0.... ........ ........ ........ Not ENC-TKT-IN-SKEY;
+    CBIT 1d  3 0 d4 ........ ..1..... ........ ........ ........ RESERVED;
+	CLSE 0   0 0 d4 ........ ..0..... ........ ........ ........ Not RESERVED;    
+    CBIT 1e  3 0 d4 ........ .1...... ........ ........ ........ RENEW; 
+	CLSE 0   0 0 d4 ........ .0...... ........ ........ ........ Not RENEW;
+    CBIT 1f  3 0 d4 ........ 1....... ........ ........ ........ VALIDATE;
+	CLSE 0   0 0 d4 ........ 0....... ........ ........ ........ Not VALIDATE;
+	LABL 0   0 0 d4 ???????? ........ ........ ........ ........ Not Used;
+ 
+	TRTS;
+
+void KerberosPreAuthData;
+	GBYT 0 1;   * test for NULL since it is optional
+	TEQU 0 1 0 0 RETURN;
+
+	LABL 0 0 0 b7 Pre-Authentication;
+	ASN1_EnumDisplay;
+
+	INCR 1;     * sequence
+	ASN1_Length;
+	MOVE 2 8d;  * save length in d
+	MOVE 10 8e; * save 0x16 in e
+	*INCR 4;     * ?
+	ASN1_FindNextSmallInteger;
+	KerberosPreAuthDataLoop;
+	LABL 0 0 0 b8;
+
+	INCR 2; * ?
+	TRTS;
+
+void KerberosPreAuthDataLoop;
+	LABL 0 0 90 c2 Type;
+	ASN1_Value;
+	CEQU 1 3 0 14 PA-TGS-REQ;
+	CEQU 2 3 0 14 PA-ENC-TIMESTAMP;  
+	CEQU 3 3 0 14 PA-PW-SALT;
+	CLTE 4 3 0 14 Unknown PreAuth Type;
+	
+	INCR 2;     * ?
+
+	LABL 0 0 90 c2 Value;
+	ASN1_Value;
+
+	MOVE  e 8c;
+	SUBG  2  c;  * account for ASN1_Value's INCR 2;
+	SUBG 10 8c;
+	SEQU  d 8c;
+	SKIP  2;
+
+	INCR 2;     * ?
+	KerberosPreAuthDataLoop;
+	TRTS;
+
+
+void KerberosTicket;
+	INCR c;  * skip the asn1 header
+	LABL  0 0 0 b7 Ticket:;
+	ASN1_EnumDisplay;
+
+	LABL  0  0 90 c2 Version;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+		
+	LABL 0 0 0 b7 Service Name;
+	ASN1_EnumDisplay;
+
+	KerberosPrincipalName; 
+	LABL 0 0 0 b8;  * End Service Name
+
+	LABL 0 0 0 b7 Ticket Data;
+	KerberosEncryptedData;
+	LABL 0 0 0 b8;
+
+  	LABL  0 0 0 b8; * End Ticket
+	TRTS;
+
+
+void KerberosEncryptedData;
+	LABL 0 0  0 b7 Encrypted Data;
+	ASN1_EnumDisplay;
+
+	ASN1_FindNextSmallInteger;
+	LABL 0 0 90 c2 Encryption Type;
+	ASN1_Value;
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 1 4;
+	SKIP 2;
+	LABL 0 0 90 c2 Key Version;
+	ASN1_Value;
+	
+	INCR 2;
+	
+	LABL 0 0 90 c2 Cipher Text;
+	ASN1_Value;
+
+	LABL 0 0 0 b8;
+	TRTS;
+	
+	 
+void KRB_AS_REQ;
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 3 4;  * the enum id for pa-data
+	SKIP 1;
+	KerberosPreAuthData;
+
+	INCR 4; * ?
+	LABL 0 0 0 b7 Request;
+	ASN1_EnumDisplay;
+
+	KerberosOptions;
+
+	LABL 0 0 0 b7 Client Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName;
+	LABL 0 0 0 b8;  * End Client Name
+
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+
+	LABL 0 0 0 b7 Server Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName; 
+	LABL 0 0 0 b8;  * End Server Name
+
+	LABL 0 0 90 c2 End Time;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Renewable Until;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Random Number;
+	ASN1_Value;
+	LABL 0 0 0 b7;
+	KerberosEncryptionTypes;
+	SGTE 0 10;
+	SKIP 2;
+
+	INCR 6; * ?
+
+	KerberosHostAddresses;
+
+	LABL 0 0 0 b8;  * End Request
+
+	TRTS;
+
+
+
+void KRB_AS_REP;
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 2 4;  * the enum id for pa-data
+	SKIP 1;
+	KerberosPreAuthData;
+
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+
+	LABL 0 0 0 b7 Client Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName; 
+	LABL 0 0 0 b8;  * End Client Name
+
+	KerberosTicket;
+
+	LABL 0 0 0 b7 Payload;
+	KerberosEncryptedData;
+	LABL 0 0 0 b8;
+	DECR 2;  * we ate too many!
+
+	TRTS;
+
+
+void KRB_TGS_REQ;
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 3 4;  * the enum id for pa-data
+	SKIP 2;
+	INCR 2;
+	KerberosPreAuthData;	
+
+	INCR 4; * ?	
+	
+	LABL 0 0 0 b7 Request;
+	ASN1_EnumDisplay;
+		
+	GBYT 0 31;						* BD: This is a hack to get this working, seems to be 
+	SEQU 3 31;						* BD:  something wrong with how ASN1 and kerberos work together
+	SKIP 8000001;
+		DECR 2;
+
+	KerberosOptions;
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 1 4;  * the enum id for Client Name
+	SKIP 4;
+	LABL 0 0 0 b7 Client Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName;
+	LABL 0 0 0 b8;  * End Client Name
+
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 3 4;  * the enum id for Server Name
+	SKIP 4;
+	LABL 0 0 0 b7 Server Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName; 
+	LABL 0 0 0 b8;  * End Server Name
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 4 4;  * the enum id for From
+	SKIP 2;
+	LABL 0 0 90 c2 From;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Till;
+	ASN1_Value;
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 6 4;  * the enum id for Renew
+	SKIP 2;
+	LABL 0 0 90 c2 Renew-Till;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Random Number;
+	ASN1_Value;
+
+	SGTE 0 10;
+	SKIP 5;						* BD: if true will skip to unindent
+		KerberosEncryptionTypes;
+	SGTE 0 10;
+	SKIP 2;						* BD: if true will skip to unindent
+		INCR 6; * ?
+
+		KerberosHostAddresses;
+
+	LABL 0 0 0 b8;  * End Request
+	TRTS;
+
+
+void KRB_TGS_REP;
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 2 4;  * the enum id for pa-data
+	SKIP 1;
+	KerberosPreAuthData;
+
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+
+	LABL 0 0 0 b7 Client Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName; 
+	LABL 0 0 0 b8;  * End Client Name
+
+	KerberosTicket;
+	KerberosEncryptedData;
+	DECR 2;  * we ate too many!
+
+	TRTS;
+
+void KRB_AP_REQ;			*si: i think this is right...i need a check!
+	INCR 2;			*si: not sure how to check if this is supposed to be here or not...
+	HLNG 0 1 90 c2 AP-Options:;
+	 CEQU 0 1 0 14 reserved;
+     CEQU 1 1 0 14 use-session-key;
+     CEQU 2 1 0 14 mutual-required;
+	//INCR 1;
+	//ASN1_SkipTag;
+    INCR 3;		*SI: ?
+	KerberosTicket;
+	//LABL 0 0 90 c9 Realm;
+	//ASN1_Value;
+	//LABL 0 0  0 c8;
+	KerberosEncryptedData;
+
+//-----------------------------------------------
+void KRB_AP_REP;			*5.5.2
+	*enc-part[2]               EncryptedData
+
+	// si: this was taken from the KerberosEncryptedData section 
+	//     but the incr 2 in it was screwing it up so i copied it here... 
+	LABL 0 0  0 b7 Encrypted Data;
+	ASN1_EnumDisplay;
+
+	ASN1_FindNextSmallInteger;
+	LABL 0 0 90 c2 Encryption Type;
+	ASN1_Value;
+
+	ASN1_EnumTest; * set up g4 with enum id
+	SNEQ 1 4;
+	SKIP 2;
+	 LABL 0 0 90 c2 Key Version;
+	 ASN1_Value;
+	
+	LABL 0 0 90 c2 Cipher Text;
+	ASN1_Value;
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+
+
+void KRB_SAFE;				*SI: ?!?
+	*CSTR 8 0 90 c2 User-Data:;
+	*LABL 0 0 90 c2 Timestamp:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 USec:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 Seq-Number:;
+	*ASN1_Value;
+
+	*s-address:;
+	*r-address:;
+
+
+void KRB_PRIV;
+	*CSTR 8 0 90 c2 User-Data:;
+	*LABL 0 0 90 c2 Timestamp:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 USec:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 Seq-Number:;
+	*ASN1_Value;
+
+	*s-address:;
+	*r-address:;
+
+
+void KRB_CRED;
+	*tickets?!?
+	*enc-part
+
+	*ticket-info:;
+	*TSUB -KRB_CRED_INFO;
+	*nonce
+	*timestamp
+	*usec
+	*s-address
+	*r-address
+
+
+void KRB_CRED_INFO;
+	*Key:;
+	*P-Realm:;
+	*P-Principal Name:;
+	*Flags:;
+	*LABL 0 0 90 c2 Auth Time:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 Start Time:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 End Time:;
+	*ASN1_Value;
+	*LABL 0 0 90 c2 Renew-Till:;
+	*ASN1_Value;
+	*S-Realm:;
+	*S-Principal Name:;
+	*Addr:;
+
+
+void KRB_ERROR;
+	* header for error packet
+	LABL 0 0 0 b7 Error;
+	MOVE 0 4;
+	
+	ASN1_EnumTest; * set up g4 with enum id
+	*ctime[2]	KerberosTime optional
+	SNEQ 2 4;
+		SKIP 3;
+		LABL 0 0 90 c2 Client Time;
+		ASN1_Value;
+		ASN1_EnumTest;
+
+	*cusec[3]	INTEGER optional
+	SNEQ 3 4;
+		SKIP 3;
+		LABL 0 0 90 c2 Client Microscnds;
+		ASN1_Value;
+		ASN1_EnumTest;
+	
+
+	*stime[4]	KerberosTime
+	LABL 0 0 90 c2 Server Time;
+	ASN1_Value;
+
+	ASN1_EnumTest;	
+	*susec[5]	INTEGER
+	LABL 0 0 90 c2 Server Microscnds;
+	ASN1_Value;
+		
+	ASN1_EnumTest;
+	*error-code[6]	INTEGER
+	LABL 0 0 90 c2 Error Code;
+	ASN1_Value;
+	Kerberos_ErrorCodeHack;
+
+	ASN1_EnumTest;
+	*crealm[7]	Realm optional
+	SNEQ 7 4;
+		SKIP 3;
+		LABL 0 0 90 c2 Client Realm;
+		ASN1_Value;
+		ASN1_EnumTest;
+
+	*cname[8]	PrincipalName optional
+	SNEQ 8 4;
+		SKIP 5;
+		LABL 0 0 0 b7 Principal Name;
+		ASN1_EnumDisplay;
+		KerberosPrincipalName;
+		LABL 0 0 0 b8;
+		ASN1_EnumTest;
+			
+	*realm[9]	Realm, --Correct Realm
+	LABL 0 0 90 c2 Realm;
+	ASN1_Value;
+
+	ASN1_EnumTest;	
+	*sname[10]	PrincipalName -- Correct Name
+	LABL 0 0 0 b7 Correct Principal Name;
+	ASN1_EnumDisplay;
+	KerberosPrincipalName;
+	LABL 0 0 0 b8;
+	
+	ASN1_EnumTest;
+	*e-text[11]	GeneralString optional
+	SNEQ B 4;
+		SKIP 5;
+		LABL 0 0 0 b7 Error Text;
+		LABL 0 0 90 c2 Text;
+		ASN1_Value;
+		LABL 0 0 0 b8;
+		ASN1_EnumTest;
+
+	*e-data[12]	octet string optional
+	*depends on g[49] not being changed
+	SNEQ C 4;
+		SKIP B;
+			SNEQ 19 31;
+			SKIP 2;
+				Kerberos_Error_TwentyFive;			* data decode for error 25
+				SKIP 7;
+			SNEQ 30 31;
+			SKIP 2;
+				Kerberos_Error_FortyEight;			* data decode for error 48
+				SKIP 3;
+		LABL 0 0 90 c2 Error Data;
+		ASN1_EnumTest;
+		ASN1_Value;
+	
+	LABL 0 0 0 b8;
+	DECR 2;							* BD: some how we always go into the FCS data so this stops that, don't know why
+	TRTS;
+	
+* BD: Not really clear in RFC1510 about what kind of error data that 25 generates
+* BD: Assumed it was basic until I find otherwise, have no way to test right now!!
+void Kerberos_Error_TwentyFive;
+	LABL 0 0 0 b7 Error Data;
+	KerberosPreAuthData;
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+void Kerberos_Error_FortyEight;
+	LABL 0 0 0 b7 Error Data;
+	ASN1_EnumTest;
+	LABL 0 0 90 c2 Method Type;				* gets method type
+	ASN1_Value;
+	ASN1_EnumTest;
+	SNEQ 1 4;
+	SKIP 2;
+		LABL 0 0 90 c2 Method Data;			* gets optional method data
+		ASN1_Value;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+*BD: From RFC 1510
+void Kerberos_ErrorCodeHack;
+	DECR 3;
+	GBYT 0 31;
+	CEQU 0 31 0 14 KDC_ERR_None (No Error);
+	CEQU 1 31 0 14 KDC_ERR_NAME_EXP (Client's entry in database has expired);
+	CEQU 2 31 0 14 KDC_ERR_SERVICE_EXP (Server's entry in database has expired);
+	CEQU 3 31 0 14 KDC_ERR_BAD_PVNO (Requested protocol version number not supported);
+	CEQU 4 31 0 14 KDC_ERR_C_OLD_MAST_KVNO (Client's key encrypted in old master key);
+	CEQU 5 31 0 14 KDC_ERR_S_OLD_MAST_KVNO (Server's key encrypted in old master key);
+	CEQU 6 31 0 14 KDC_ERR_C_PRINCIPAL_UNKNOWN (Client not found in Kerberos database);
+	CEQU 7 31 0 14 KDC_ERR_S_PRINCIPAL_UNKNOWN (Server not found in Kerberos database);
+	CEQU 8 31 0 14 KDC_ERR_PRINCIPAL_NOT_UNIQUE (Multiple principal entries in database);
+	CEQU 9 31 0 14 KDC_ERR_NULL_KEY (The client or server has a null key);
+	CEQU A 31 0 14 KDC_ERR_CANNOT_POSTDATE (Ticket not eligible for postdating);
+	CEQU B 31 0 14 KDC_ERR_NEVER_VALID (Requested start time is later than end time);
+	CEQU C 31 0 14 KDC_ERR_POLICY (KDC Policy rejects request);
+	CEQU D 31 0 14 KDC_ERR_BADOPTION (KDC cannot accomodate requested option);
+	CEQU E 31 0 14 KDC_ERR_ETYPE_NOSUPP (KDC has no support for encryption type);
+	CEQU F 31 0 14 KDC_ERR_SUMTYPE_NOSUPP (KDC has no support for checksum type);
+	CEQU 10 31 0 14 KDC_ERR_PADATA_TYPE_NOSUPP (KDC has no support for padata type);
+	CEQU 11 31 0 14 KDC_ERR_TRTYPE_NOSUPP (KDC has no support for transited type);
+	CEQU 12 31 0 14 KDC_ERR_CLIENT_REVOKED (Clients credentials have been revoked);
+	CEQU 13 31 0 14 KDC_ERR_SERVICE_REVOKED (Credentials for server have been revoked);
+	CEQU 14 31 0 14 KDC_ERR_TGT_REVOKED (TGT has been revoked);
+	CEQU 15 31 0 14 KDC_ERR_CLIENT_NOTYET (Client not yet valid - try again later);
+	CEQU 16 31 0 14 KDC_ERR_SERVICE_NOTYET (Server not yet valid - try again later);
+	CEQU 17 31 0 14 KDC_ERR_KEY_EXPIRED (Password has expired - change password to reset);
+	CEQU 18 31 0 14 KDC_ERR_PREAUTH_FAILED (Pre-authentication information was invalid);
+	CEQU 19 31 0 14 KDC_ERR_PREAUTH_REQUIRED (Additional pre-authentication requried);   * carries additional data
+	
+	CEQU 1F 31 0 14 KDC_AP_ERR_BAD_INTEGRITY (Integrity check on decrypted field failed);
+	CEQU 20 31 0 14 KDC_AP_ERR_TKT_EXPIRED (Ticket Expired);
+	CEQU 21 31 0 14 KDC_AP_ERR_TKT_NYV (Ticket not yet valid);
+	CEQU 22 31 0 14 KDC_AP_ERR_REPEAT (Request is a reply);
+	CEQU 23 31 0 14 KDC_AP_ERR_NOT_US (The ticket isn't for us);
+	CEQU 24 31 0 14 KDC_AP_ERR_BADMATCH (Ticket and authenticator don't match);
+	CEQU 25 31 0 14 KDC_AP_ERR_SKEW (Clock skew too great);
+	CEQU 26 31 0 14 KDC_AP_ERR_BADDADDR (Incorrect net address);
+	CEQU 27 31 0 14 KDC_AP_ERR_BADVERSION (Protocol version mismatch);
+	CEQU 28 31 0 14 KDC_AP_ERR_MSG_TYPE (Invalid msg type);
+	CEQU 29 31 0 14 KDC_AP_ERR_MODIFIED (Message stream modified);
+	CEQU 2a 31 0 14 KDC_AP_ERR_BADORDER (Message out of order);
+	
+	CEQU 2c 31 0 14 KDC_AP_ERR_BADKEYVER (Specified version of key is not available);
+	CEQU 2d 31 0 14 KDC_AP_ERR_NOKEY (Service key not available);
+	CEQU 2e 31 0 14 KDC_AP_ERR_MUT_FAIL (Mutual authentication failed);
+	CEQU 2f 31 0 14 KDC_AP_ERR_BADDIRECTION (Incorrect message direction);
+	CEQU 30 31 0 14 KDC_AP_ERR_METHOD (Alternative authentication method required); * carries additional data
+	CEQU 31 31 0 14 KDC_AP_ERR_BADSEQ (Incorrect sequence number in message);
+	CEQU 32 31 0 14 KDC_AP_ERR_INAPP_CKSUM (Inappropriate type of checksum in message);
+	
+	CEQU 3c 31 0 14 KDC_ERR_GENERIC (Generic error(description in e-text));
+	CEQU 3d 31 0 14 KDC_ERR_FIELD_TOOLONG (Field is too long for this implementation);
+	INCR 3;
+	TRTS;
+
+void KRB_Ticket;
+

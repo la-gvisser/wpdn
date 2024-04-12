@@ -1,0 +1,124 @@
+* SMTP - Simple Mail Transfer Protocol
+
+void SMTP;
+	TEQU 0 10  0  0  RETURN;
+	GBYT 0   1;
+	TEQU 0   1  0   0 RETURN;
+	LABL 0  0  0 b1  SMTP - Simple Mail Transfer Protocol\SMTP:;
+	Init Line Variables;
+	Parse Line;
+	SMTP Parse Command;
+	SMTP Print Command;
+	SEQU 1  3;
+	SKIP 2;
+	SMTP Parse Response;
+	SMTP Print Response;
+	TEQU 0 10  0  0  RETURN;
+	Display Fields And Lines No Init;
+	TRTS;
+
+void SMTP Parse Command;
+	MOVE 1 3;  *assume we found it
+	GLNG 0 1;
+	TEQU 4154524E 1 0 0 RETURN;		*ATRN Authenticated TURN. RFC 2645 
+	TEQU 41555448 1 0 0 RETURN;		*AUTH Authentication. RFC 2554 
+	TEQU 424F4054 1 0 0 RETURN;		*BDAT Binary data. RFC 3030 
+	TEQU 44415441 1 0 0 RETURN;		*DATA Data. RFC 2821 
+	TEQU 45484C4F 1 0 0 RETURN;		*EHLO Extended Hello. RFC 2821 
+	TEQU 4554524E 1 0 0 RETURN;		*ETRN   RFC 1985 
+	TEQU 4558504E 1 0 0 RETURN;		*EXPN Expand RFC 2821 
+	TEQU 48454C4F 1 0 0 RETURN;		*HELO Hello RFC 2821 
+	TEQU 48454C50 1 0 0 RETURN;		*HELP Help RFC 2821 
+	TEQU 4D41494C 1 0 0 RETURN;		*MAIL Mail RFC 2821 
+	TEQU 4E4F4F50 1 0 0 RETURN;		*NOOP No operation RFC 2821 
+	TEQU 51554954 1 0 0 RETURN;		*QUIT Quit RFC 2821 
+	TEQU 52435054 1 0 0 RETURN;		*RCPT Recipient RFC 2821 
+	TEQU 52534554 1 0 0 RETURN;		*RSET Reset RFC 2821 
+	TEQU 53414D4C 1 0 0 RETURN;		*SAML Send and mail RFC 821 
+	TEQU 53454E44 1 0 0 RETURN;		*SEND Send RFC 821 
+	TEQU 534F4D4C 1 0 0 RETURN;		*SOML Send or mail RFC 821 
+	TEQU 53544152 1 0 0 RETURN;		*STARTTLS   RFC 2487 
+	TEQU 5455524E 1 0 0 RETURN;		*TURN Turn RFC 821 
+	TEQU 56524659 1 0 0 RETURN;		*VRFY Verify RFC 2821 
+	MOVE 0 3;
+	TRTS;
+
+void SMTP Print Command;
+	TNEQ 1  3  0  0  RETURN;
+	GLNG 0  1;
+	Print Command;
+	CEQU 4154524E 1 0 94 Like TURN but optionally takes one or more domains as a parameter. (RFC 2645); 
+	CEQU 41555448 1 0 94 The AUTH command uses a [SASL] mechanism to authenticate the session. (RFC 2554); 
+	CEQU 424F4054 1 0 94 Binary data. (RFC 3030); 
+	CEQU 44415441 1 0 94 Causes the mail data to be appended to the mail data buffer. (RFC 2821); 
+	CEQU 45484C4F 1 0 94 Extended Hello. Used to identify the SMTP client to the SMTP server. (RFC 2821); 
+	CEQU 4554524E 1 0 94 Start the SMTP queue processing of a given server host. (RFC 1985); 
+	CEQU 4558504E 1 0 94 Asks the receiver to confirm that the argumentidentifies a mailing list. (RFC 2821);
+	CEQU 48454C4F 1 0 94 Used to identify the SMTP client to the SMTP server. (RFC 2821); 
+	CEQU 48454C50 1 0 94 Causes the server to send helpful information to the client. (RFC 2821); 
+	CEQU 4D41494C 1 0 94 Initiate a mail transaction.  (RFC 2821);
+	CEQU 4E4F4F50 1 0 94 Specifies no action other than that the receiver send an OK reply. (RFC 2821); 
+	CEQU 51554954 1 0 94 Specifies that the receiver MUST send an OK reply, and then close the transmission channel. (RFC 2821); 
+	CEQU 52435054 1 0 94 Identify an individual recipient of the mail data (RFC 2821); 
+	CEQU 52534554 1 0 94 The current mail transaction will be aborted.  (RFC 2821); 
+	CEQU 53414D4C 1 0 94 Send and mail. (RFC 821); 
+	CEQU 53454E44 1 0 94 Initiate a mail transaction in which the mail data is delivered to one or more terminals. (RFC 821); 
+	CEQU 534F4D4C 1 0 94 Send or mail. (RFC 821); 
+	CEQU 53544152 1 0 94 SMTP server allows use of TLS. (RFC 2487);
+	CEQU 5455524E 1 0 94 Used to reverse the roles of the two programs communicating over the transmission channel. (RFC 821); 
+	CEQU 56524659 1 0 94 Asks the receiver to confirm that the argument identifies a user or mailbox. (RFC 2821); 
+	TRTS;
+
+void SMTP Parse Response;
+	MOVE 1 3;  *assume we found it
+	GLNG 0 1;
+	TEQU 32313120 1 0 0 RETURN;		*211 
+	TEQU 32313420 1 0 0 RETURN;		*214 
+	TEQU 32323020 1 0 0 RETURN;		*220 
+	TEQU 32323120 1 0 0 RETURN;		*221 
+	TEQU 32353020 1 0 0 RETURN;		*250 
+	TEQU 32253120 1 0 0 RETURN;		*251 
+	TEQU 33353420 1 0 0 RETURN;		*354 
+	TEQU 34323120 1 0 0 RETURN;		*421 
+	TEQU 34353020 1 0 0 RETURN;		*450 
+	TEQU 34353120 1 0 0 RETURN;		*451 
+	TEQU 34353220 1 0 0 RETURN;		*452 
+	TEQU 35303020 1 0 0 RETURN;		*500 
+	TEQU 35303120 1 0 0 RETURN;		*501 
+	TEQU 35303220 1 0 0 RETURN;		*502 
+	TEQU 35303320 1 0 0 RETURN;		*503 
+	TEQU 35303420 1 0 0 RETURN;		*504 
+	TEQU 35353020 1 0 0 RETURN;		*550 
+	TEQU 35353120 1 0 0 RETURN;		*551 
+	TEQU 35353220 1 0 0 RETURN;		*552 
+	TEQU 35353320 1 0 0 RETURN;		*553 
+	TEQU 35353420 1 0 0 RETURN;		*554 
+	MOVE 0 3;
+	TRTS;       
+
+void SMTP Print Response;
+	TNEQ 1  3  0  0  RETURN;
+	GLNG 0  1;
+	Print Response;
+	CEQU 32313120 1 0 94 System status, or system help reply;
+	CEQU 32313420 1 0 94 Help message;
+	CEQU 32323020 1 0 94 <host> Service ready;
+	CEQU 32323120 1 0 94 <host> Service closing transmission channel;
+	CEQU 32353020 1 0 94 Requested mail action okay, completed;
+	CEQU 32253120 1 0 94 User not local, will forward to <forward-path>;
+	CEQU 33353420 1 0 94 Start mail input, end with <CRLF>.<CRLF>;
+	CEQU 34323120 1 0 94 <host> Service not available, closing transmission channel;
+	CEQU 34353020 1 0 94 Requested mail action not taken: mailbox unavailable;
+	CEQU 34353120 1 0 94 Requested action aborted: local error in processing;
+	CEQU 34353220 1 0 94 Requested action not taken: insufficient system storage;
+	CEQU 35303020 1 0 94 Syntax error, command unrecognized;
+	CEQU 35303120 1 0 94 Syntax error in parameters or arguments;
+	CEQU 35303220 1 0 94 Command not implemented;
+	CEQU 35303320 1 0 94 Bad sequence of commands;
+	CEQU 35303420 1 0 94 Command parameter not implemented;
+	CEQU 35353020 1 0 94 Requested action not taken: mailbox unavailable;
+	CEQU 35353120 1 0 94 User not local, please try <forward-path>;
+	CEQU 35353220 1 0 94 Requested mail action aborted: exceeded storage allocation;
+	CEQU 35353320 1 0 94 Requested action not taken: mailbox name not allowed;
+	CEQU 35353420 1 0 94 Transaction failed;
+	TRTS;

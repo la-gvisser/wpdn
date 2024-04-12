@@ -1,0 +1,243 @@
+*********************************************************************
+*
+* Protocol: Generic Security Service (over LDAPv3)
+*
+* Specifications: 
+*	1. RFC 2078 - Generic Security Service Application Program Interface, Version 2
+*	2. RFC 2478 - GSS-API Negotiation Mechanism
+*	3. RFC 1964 - The Kerberos Version 5 GSS-API Mechanism
+*
+*********************************************************************
+
+// Data file: ii02 - ldap1.pkt
+//
+// bindRequest (pkt 4)
+void GSS::SaslCredentials()
+{
+	LABL	0	0	0	b7 SaslCredentials;
+
+	ASN1_Init;
+	ASN1_DisableEnum;
+
+	ASN1_Length;
+
+	ASN1_SkipTag;*g2 has length
+	l[1] = pl[0];
+	l[2] = pl[1];
+	// check if its "GSS-SPNEGO"
+	if ((l[1] == 0x4753532d) && (l[2] == 0x53504e45)) 
+	{
+		CHR#	0	2	90	c2 SASL Mechanism:;
+		LABL	0	0	0	14 gss-api;
+		GSS::Credentials();
+		LABL	0	0	0	b8 ;
+		TRTS;
+	}
+	CHR#	0	2	90	c2 Mechanism:;
+	LABL	0	0	0	b8 ;
+}
+
+
+void GSS::Credentials()
+{
+	ASN1_SkipTag;
+	ASN1_SkipTag;
+
+	LABL	0	0	0	b7 Mechanism Type;
+	ASN1_Value;
+	LABL	0	0	0	b8 ;
+
+	l[1] = pb[0];
+	if (l[1] == 0xa0) 
+	{
+		LABL	0	0	90	c2	Negotiation Token Type:;
+		LABL	0	0	0	14	negTokenInit;
+		GSS::NegTokenInit();
+	}
+	if (l[1] == 0xa1) 
+	{
+		LABL	0	0	90	c2	Negotiation Token Type:;
+		LABL	0	0	0	14	NegTokenTarg;
+		GSS::NegTokenTarg();
+	}
+
+}
+
+void GSS::NegTokenInit()
+{
+	ASN1_SkipTag;*a0 ll
+	ASN1_SkipTag;*30 ll
+
+	l[1] = pb[0];
+	if (l[1] == 0xa0) 
+	{
+		LABL	0	0	0	b7 MechTypesList;
+		ASN1_SkipTag;*a0 ll
+		ASN1_SkipTag;*30 ll
+		l[1] = g[2];
+		while (l[1] > 1)
+		{
+			BREM	0	42;
+			LABL	0	0	0	b7 MechType;
+			ASN1_Value;
+			LABL	0	0	0	b8 ;
+			BREM	0	43;
+			l[2] -= l[3];
+			l[1] -= l[2];
+		}
+		LABL	0	0	0	b8 ;
+	}
+
+	l[1] = pb[0];
+	if (l[1] == 0xa1) 
+	{
+		LABL	0	0	0	b7 reqFlags;
+		*tbd
+		LABL	0	0	0	b8 ;
+	}
+	
+	l[1] = pb[0];
+	if (l[1] == 0xa2) 
+	{
+		LABL	0	0	0	b7 mechToken;
+		ASN1_SkipTag;*a2 ll
+		ASN1_SkipTag;*04 ll
+		ASN1_SkipTag;*60 ll
+
+		l[1] = g[2];
+		BREM	0	42;
+
+		LABL	0	0	0	b7 This Mechanism;
+		ASN1_Value;
+		LABL	0	0	0	b8 ;
+
+		BREM	0	43;
+		l[2] -= l[3];
+		l[1] -= l[2];
+
+		*DUMP	0	41	90	c2 Rest of mechToken Data:;
+		LABL	0	0	0	b8 ;
+
+		ASN1_SkipTag;*6e ll
+		Kerberos;
+	}
+
+	l[1] = pb[0];
+	if (l[1] == 0xa3) 
+	{
+		LABL	0	0	0	b7 mechListMIC;
+		ASN1_SkipTag;*a3 ll
+		DUMP	0	2	90	c2 mechListMIC Data:;
+		LABL	0	0	0	b8 ;
+	}
+}
+
+
+
+/// bindResponse (pkt 5)
+void GSS::ServerSaslCreds
+{
+	ASN1_SkipTag;*87 ll
+
+	l[1] = pb[0];
+	if (l[1] == 0xa1) 
+	{
+		LABL	0	0	90	c2	Negotiation Token Type:;
+		LABL	0	0	0	14	NegTokenTarg;
+		GSS::NegTokenTarg();
+	}
+}
+
+void GSS::NegTokenTarg()
+{
+	ASN1_SkipTag;*A1 ll
+	ASN1_SkipTag;*30 ll
+
+	l[1] = pb[0];
+	if (l[1] == 0xa0)
+	{
+		LABL	0	0	0	b7	negResult;
+		ASN1_SkipTag;*a0 ll
+		ASN1_SkipTag;*0a ll
+		DBYT	0	41	90	c2	Result:;
+		CEQU	0	41	0	14	accept_completed;
+		CEQU	1	41	0	14	accept_incomplete;
+		CEQU	2	41	0	14	reject;
+		LABL	0	0	0	b8 ;
+	}
+
+	l[1] = pb[0];
+	if (l[1] == 0xa1) 
+	{
+		LABL	0	0	0	b7 supportedMech;
+		ASN1_SkipTag;*a1 ll
+
+		LABL	0	0	0	b7 Mechanism Type;
+		ASN1_Value;
+		LABL	0	0	0	b8 ;
+		LABL	0	0	0	b8 ;
+	}
+
+	l[1] = pb[0];
+	if (l[1] == 0xa2) 
+	{
+		LABL	0	0	0	b7 responseToken;
+		ASN1_SkipTag;*a2 ll
+		*DUMP	0	2	90	c2 responseToken Data:;
+
+		ASN1_SkipTag;*04 ll
+		ASN1_SkipTag;*60 ll
+
+		LABL	0	0	0	b7 Mechanism Type;
+		ASN1_Value;
+		LABL	0	0	0	b8 ;
+
+		ASN1_SkipTag;*6f ll
+		Kerberos;
+		
+		LABL	0	0	0	b8 ;
+	}
+	
+	DECR 2;		//SI: frickn a ... asn_value1 incr's 2...son of a ... 
+	l[1] = pb[0];
+	if (l[1] == 0xa3) 
+	{
+		LABL	0	0	0	b7 mechListMIC1;
+		ASN1_SkipTag;	*a3 ll
+		
+		/*
+		ASN1_SkipTag;
+		ASN1_SkipTag;
+		LABL	0	0	0	b7 Blah;
+		ASN1_Value;
+		LABL	0	0	0	b8 ;
+		DECR 2;
+	
+		KRB_AP_REP;
+		*/
+		
+		DUMP	0	2	90	c2 mechListMIC Data:;
+		LABL	0	0	0	b8 ;
+	}
+}
+
+
+/// rest of the pkts such as 6, 7, 12, ....
+
+void GSS::Others()
+{
+	LABL	0	0	0	b1	GSS-API SASL Packet;
+	DLNG	0	0	90	c2	Length:;
+
+	ASN1_SkipTag;*60 ll
+
+	LABL	0	0	0	b7 Mechanism Type;
+	ASN1_Value;
+	LABL	0	0	0	b8 ;
+
+	if (g[16] > 30)
+	{
+		HEX#	1e	0	90	c2	Kerberos Blob:;
+		LDAP;
+	}
+}

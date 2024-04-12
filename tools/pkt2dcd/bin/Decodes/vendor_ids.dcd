@@ -1,0 +1,9 @@
+*si: this was taken from here: http://standards.ieee.org/regauth/oui/oui.txt
+
+
+* si: this prints out the vendor id as a COMMENT
+*     uses global 1 to get the vendor_id
+void print_vendor_id_comment()
+{
+	CST# 0 1 0 14 802_11::OUI_Strings;
+}

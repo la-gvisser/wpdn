@@ -1,0 +1,1296 @@
+// OSPF - Open Shortest Path First Routing Protocol
+
+void OSPF;
+	LABL 0 0 0 b1 OSPF - Open Shortest Path First Routing Protocol\OSPF:;
+	DBYT 0 1 90 c2 Version:\V=;
+	TEQU 1 1 0 00 OSPF Common;
+	TEQU 2 1 0 00 OSPF Common;
+	TEQU 3 1 0 00 OSPF::v3;
+	LABL 0 0 0 14 Unrecognized Version;
+	DUMP 0 10 90 c2 OSPF Data:;
+
+void OSPF Common;
+	OSPF::Header;
+	DWRD 0 3 90 c2 Authentication Type:\;
+	CEQU 0 3 0 14 No Authentication;
+	CEQU 1 3 0 14 Simple Password;
+	CEQU 2 3 0 14 Cryptographic Authentication;
+	l[4] = 0;
+	if (g[3] == 1)
+	{
+		CHR# 8 0 90 c2 Password:;
+	}
+	if (g[3] == 2)
+	{
+		HWRD 0 0 90 c2 Padding:;
+		DBYT 0 4 90 c2 Auth Key ID:;
+		DBYT 0 4 90 c2 Auth Data Length:;
+		HEX# 4 0 90 c2 Auth Crypto Seq Num:;
+		l[4] = g[4];
+	}
+	if (g[3] != 1) 
+	{
+		if (g[3] != 2) 
+		{
+			DUMP 8 0 90 c2 Authentication Data:\;
+	}	}
+	ADDG ffffffe8 2;
+	l[1] = g[16];
+	TSB# 0 1 0 14 OSPF Types;
+	if (l[1] == g[16])
+	{
+		DUMP 0 10 90 c2 OSPF Data:;
+	}
+	if (l[4] > 0)
+	{
+		HEX# 0 44 90 c2 Auth Data:;
+	}
+	TRTS;
+
+void OSPF::v3()
+{
+	OSPF::Header;
+	DBYT 0 42 90 c2 Instance ID:;
+		CST# 0 42 0 14 OSPF::v3::InstIDs;
+		CLSE 0 42 0 14 Reserved;
+	HBYT 0 0 90 c2 Reserved:;
+	l[1] = g[16];
+
+	TSB# 0 1 0 14 OSPF IPv6 Types;
+	LABL 0 0 0 b8;
+	if (l[1] == g[16])
+	{
+		LABL 0 0 0 b7 Undecoded Content:;
+		DUMP 0 10 90 c2 OSPF Data:;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+}
+str# OSPF::v3::InstIDs;
+0	|	IPv6 unicast AF;
+21	|	IPv6 multicast AF;
+41	|	IPv4 unicast AF;
+61	|	IPv4 multicast AF;
+
+
+void OSPF::v3::Link_State_Update()
+{
+	DLNG 0 a 90 c2 # Of Advertisements:;
+	while (g[10] > 0)
+	{
+		if (g[16] > 4){
+		LABL 0 0 00 b7 LSA-Type - ;
+		GWRD 2 42;
+			CST# 0 42 0 07 OSPF::v3::Link_State_Update::Types;
+			CLSE 0 42 0 07 Reserved;
+		DWRD 0 0 90 c2 Age:;LABL 0 0 0 14 seconds;
+		DWRD 0 42 90 c2 Type:;
+			CST# 0 42 0 14 OSPF::v3::Link_State_Update::Types;
+			CLSE 0 42 0 14 Reserved;
+		IPLG 0 0 90 c2 Link State ID:;
+		IPLG 0 0 90 c2 Advertising Router:;
+		HLNG 0 0 90 c2 Sequence Number:;
+		HWRD 0 0 90 c2 Checksum:;
+		DWRD 0 4a 90 c2 Length:;
+		l[10] -= 20;
+		g[28] = l[10];
+		g[29] = l[10];
+		BREM 0 1a;		//g[26]
+			TSB# 0 42 0 0 OSPF::v3::Link_State_Update::Type::Ldr;
+		BREM 0 1b;		//g[27]
+		g[26] -= g[27];
+		//No Data was consumed
+		if (g[26] == 0)
+		{
+			DUMP 0 1c 90 c2 LSA Content:;
+			g[26] = 1;
+			g[31] = 44444;
+		}
+		//Not enough Data was consumed
+		if (g[31] != 44444)
+		{
+			if ( g[26] < g[28] )
+			{
+				g[28] -= g[26];
+				DGLB 0 1c 90 c2 1c:;
+				DUMP 0 1c 90 c2 LSA Content1:;
+				g[26] = 0;
+				g[28] = 0;
+			}			
+			//More than enough Data was consumed
+			if ( g[26] > g[28] )
+			{
+				LABL 0 0 0 c2 More Bytes consumed than should. Setting Pointer back to the right position by decreasing ;
+				g[26] -= g[29];
+				DGLB 0 1a 02 02;
+				LABL 0 0 0 12 Bytes;				
+				DECR( 0, g[26] );				
+				//g[28] -= g[26];
+				//DUMP 0 1d 90 c2 LSA Content2:;
+				g[26] = 0;
+				g[28] = 0;
+			}
+		}
+		LABL 0 0 0 c8;
+		g[10] -= 1;
+		}
+	}
+	TRTS;
+}
+str# OSPF::v3::Link_State_Update::Types;
+0x2001	|	Router-LSA;
+0x2002	|	Network-LSA;
+0x2003	|	Inter-Area-Prefix-LSA;
+0x2004	|	Inter-Area-Router-LSA;
+0x4005	|	AS-External-LSA;
+0x2006	|	Group-Membership-LSA;
+0x2007	|	NSSA-LSA;
+0x0008	|	Link-LSA;
+0x2009	|	Intra-Area-Prefix-LSA2;
+0x800c	|	Router Information Opaque-LSA;
+
+str# OSPF::v3::Link_State_Update::Type::Ldr;
+0x2001	|	OSPF::v3::Link_State_Update::Type::Router-LSA;
+0x2002	|	OSPF::v3::Link_State_Update::Type::Network-LSA;
+0x2003	|	OSPF::v3::Link_State_Update::Type::Inter-Area-Prefix-LSA;
+0x2004	|	OSPF::v3::Link_State_Update::Type::Inter-Area-Router-LSA;
+0x4005	|	OSPF::v3::Link_State_Update::Type::AS-External-LSA;
+0x2006	|	OSPF::v3::Link_State_Update::Type::Group-Membership-LSA;
+0x2007	|	OSPF::v3::Link_State_Update::Type::NSSA-LSA;
+0x0008	|	OSPF::v3::Link_State_Update::Type::Link-LSA;
+0x2009	|	OSPF::v3::Link_State_Update::Type::Intra-Area-Prefix-LSA2;
+0x800c	|	OSPF::v3::Link_State_Update::Type::Router Information Opaque-LSA;
+
+void OSPF::v3::Link_State_Update::Type::Router-LSA()
+{
+	DBYT 0 41 90 c2 Flags:;
+	GBIT 18 1;
+	HEX# 3 0 90 c9 Options:;
+		CBIT a 1 0 d4 .... .... .... .1.. .... .... AT: is Set;
+		CLSE 0 0 0 d4 .... .... .... .0.. .... .... AT: is Not Set;
+		CBIT 9 1 0 d4 .... .... .... ..1. .... .... L: is Set;
+		CLSE 0 0 0 d4 .... .... .... ..0. .... .... L: is Not Set;
+		CBIT 8 1 0 d4 .... .... .... ...1 .... .... AF: is Set;
+		CLSE 0 0 0 d4 .... .... .... ...0 .... .... AF: is Not Set;		
+		CBIT 7 1 0 d4 .... .... .... .... 1... .... DN: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... 0... .... DN: is Not Set;		
+		CBIT 6 1 0 d4 .... .... .... .... .1.. .... O (Opaque capability): is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .0.. .... O (Opaque capability): is Not Set;
+		CBIT 5 1 0 d4 .... .... .... .... ..1. .... DC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ..0. .... DC: is Not Set;
+		CBIT 4 1 0 d4 .... .... .... .... ...1 .... R: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ...0 .... R: is Not Set;
+		CBIT 3 1 0 d4 .... .... .... .... .... 1... N: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... 0... N: is Not Set;
+		CBIT 2 1 0 d4 .... .... .... .... .... .1.. MC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... .0.. MC: is Not Set;
+		CBIT 1 1 0 d4 .... .... .... .... .... ..1. E: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ..0. E: is Not Set;
+		CBIT 0 1 0 d4 .... .... .... .... .... ...1 V6: V6 is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ...0 V6: V6 is Not Set;
+	LABL 0 0 0 c8;
+	g[28] -= 4;
+	l[2] = 1;
+	while (g[28] != 0)
+	{
+		LABL 0 0 0 b7 Router Interface Entry # ;
+		DGLB 0 42 07 0;
+		LABL 0 0 0 7 :;
+		DBYT 0 43 90 c2 Type:;
+		DBYT 0 0 90 c2 Reserved:;
+		DWRD 0 44 90 c2 Metric:;
+		DLNG 0 45 90 c2 Interface ID:;
+		DLNG 0 46 90 c2 Neighbor Interface ID:;
+		IPLG 0 47 90 c2 Neighbor Router ID:;
+		l[2] += 1;
+		g[28] -= 16;
+		LABL 0 0 0 c8;
+	}
+	g[31] = 44444;
+	TRTS;
+}
+
+void OSPF::v3::Link_State_Update::Type::Network-LSA()
+{
+	DBYT 0 41 90 c2 Flags:;
+	GBIT 18 1;
+	HEX# 3 0 90 c9 Options:;
+		CBIT a 1 0 d4 .... .... .... .1.. .... .... AT: is Set;
+		CLSE 0 0 0 d4 .... .... .... .0.. .... .... AT: is Not Set;
+		CBIT 9 1 0 d4 .... .... .... ..1. .... .... L: is Set;
+		CLSE 0 0 0 d4 .... .... .... ..0. .... .... L: is Not Set;
+		CBIT 8 1 0 d4 .... .... .... ...1 .... .... AF: is Set;
+		CLSE 0 0 0 d4 .... .... .... ...0 .... .... AF: is Not Set;		
+		CBIT 7 1 0 d4 .... .... .... .... 1... .... DN: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... 0... .... DN: is Not Set;		
+		CBIT 6 1 0 d4 .... .... .... .... .1.. .... O (Opaque capability): is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .0.. .... O (Opaque capability): is Not Set;
+		CBIT 5 1 0 d4 .... .... .... .... ..1. .... DC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ..0. .... DC: is Not Set;
+		CBIT 4 1 0 d4 .... .... .... .... ...1 .... R: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ...0 .... R: is Not Set;
+		CBIT 3 1 0 d4 .... .... .... .... .... 1... N: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... 0... N: is Not Set;
+		CBIT 2 1 0 d4 .... .... .... .... .... .1.. MC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... .0.. MC: is Not Set;
+		CBIT 1 1 0 d4 .... .... .... .... .... ..1. E: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ..0. E: is Not Set;
+		CBIT 0 1 0 d4 .... .... .... .... .... ...1 V6: V6 is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ...0 V6: V6 is Not Set;
+	LABL 0 0 0 c8;
+	g[28] -= 4;
+	//DGLB(0,g[28], 0x90,0xc2, "g28:");
+	while (g[28] > 0)
+	{
+		IPLG 0 0 90 c2 Attached Router:;
+		g[28] -= 4;
+	}
+	TRTS;
+}
+
+void OSPF::v3::Link_State_Update::Type::Inter-Area-Prefix-LSA()
+{
+	DWRD 0 41 90 c2 Number of Prefixes:;
+	DWRD 0 0 90 c2 Referenced LS Type:;
+	IPLG 0 0 90 c2 Referenced Link State ID:;
+	IPLG 0 0 90 c2 Referenced Advertising Router:;
+	g[28] -= 12;
+
+	while (l[1] > 0)
+	{
+		DBYT 0 42 90 c2 PrefixLength:;
+		l[2] /= 8;
+		BBYT 0 43 90 c2 PrefixOptions:;
+		DWRD 0 44 90 c2 Metric:;
+		g[28] -=3;
+		HEX#( 0, l[2], 0x90, 0xc2, "Address Prefix:" );
+		g[28] -= l[2];
+		l[1] -= 1;
+	}
+	g[31] = 44444;
+	TRTS;
+}
+
+void OSPF::v3::Link_State_Update::Type::Inter-Area-Router-LSA()
+{
+
+}
+void OSPF::v3::Link_State_Update::Type::AS-External-LSA()
+{
+
+}
+void OSPF::v3::Link_State_Update::Type::Group-Membership-LSA()
+{
+
+}
+void OSPF::v3::Link_State_Update::Type::NSSA-LSA()
+{
+
+}
+void OSPF::v3::Link_State_Update::Type::Link-LSA()
+{
+	DBYT 0 0 90 c2 Rtr Priority:;
+	
+	GBIT 18 1;
+	HEX# 3 0 90 c9 Options:;
+		CBIT a 1 0 d4 .... .... .... .1.. .... .... AT: is Set;
+		CLSE 0 0 0 d4 .... .... .... .0.. .... .... AT: is Not Set;
+		CBIT 9 1 0 d4 .... .... .... ..1. .... .... L: is Set;
+		CLSE 0 0 0 d4 .... .... .... ..0. .... .... L: is Not Set;
+		CBIT 8 1 0 d4 .... .... .... ...1 .... .... AF: is Set;
+		CLSE 0 0 0 d4 .... .... .... ...0 .... .... AF: is Not Set;		
+		CBIT 7 1 0 d4 .... .... .... .... 1... .... DN: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... 0... .... DN: is Not Set;		
+		CBIT 6 1 0 d4 .... .... .... .... .1.. .... O (Opaque capability): is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .0.. .... O (Opaque capability): is Not Set;
+		CBIT 5 1 0 d4 .... .... .... .... ..1. .... DC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ..0. .... DC: is Not Set;
+		CBIT 4 1 0 d4 .... .... .... .... ...1 .... R: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ...0 .... R: is Not Set;
+		CBIT 3 1 0 d4 .... .... .... .... .... 1... N: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... 0... N: is Not Set;
+		CBIT 2 1 0 d4 .... .... .... .... .... .1.. MC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... .0.. MC: is Not Set;
+		CBIT 1 1 0 d4 .... .... .... .... .... ..1. E: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ..0. E: is Not Set;
+		CBIT 0 1 0 d4 .... .... .... .... .... ...1 V6: V6 is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ...0 V6: V6 is Not Set;
+	LABL 0 0 0 c8;
+	IPV6 0 0 90 c2 Link-local Interface Address:;
+	DLNG 0 45 90 c2 # of prefixes:;
+	g[28] -= 24;
+	l[7] = 1;
+	while(l[5] != 0)
+	{
+		LABL 0 0 0 b7 Prefix # ;
+		DGLB 0 47 7;
+		LABL 0 0 0 7 :;
+		DBYT 0 46 90 c2 PrefixLength:;
+		DBYT 0 49 90 c9 PrefixOptions:;
+			LABL 0 0 0 d4 xxx. .... Reserved;
+			CBIT 4 49 0 d4 ...1 .... DN: is Set;
+			CLSE 0 0 0 d4 ...0 .... DN: is Not Set;
+			CBIT 3 49 0 d4 .... 1... P: is Set;
+			CLSE 0 0 0 d4 .... 0... P: is Not Set;
+			CBIT 2 49 0 d4 .... .1.. x: is Set;
+			CLSE 0 0 0 d4 .... .0.. x: is Not Set;
+			CBIT 1 49 0 d4 .... ..1. LA: is Set;
+			CLSE 0 0 0 d4 .... ..0. LA: is Not Set;
+			CBIT 0 49 0 d4 .... ...1 NU: V6 is Set;
+			CLSE 0 0 0 d4 .... ...0 NU: V6 is Not Set;
+		LABL 0 0 0 c8;
+		HWRD 0 0 90 c2 Reserved:;
+		l[6] /= 8;
+		if (l[6] == 8)
+		{
+			LABL 0 0 90 c2 Prefix:  ;
+			HWRD 80000000 0 90 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			LABL 0 0 0 0 :;
+		}
+		//HEX# 0 46 90 c2 Prefix:;
+		LABL 0 0 0 b8;
+		l[5] -= 1;
+		l[7] += 1;
+	}
+	g[31] = 44444;
+	TRTS;
+}
+void OSPF::v3::Link_State_Update::Type::Intra-Area-Prefix-LSA2()
+{
+	OSPF::v3::Link_State_Update::Type::Inter-Area-Prefix-LSA;
+}
+void OSPF::v3::Link_State_Update::Type::Router Information Opaque-LSA()
+{
+
+}
+void OSPF::v3::Link_State_Update::Database_Description()
+{
+	LABL 0 0 00 b7 Database Description;
+	HBYT 0 0 90 c2 Reserved:;
+	GBIT 18 3;
+	HEX# 3 0 90 c9 Options:;
+	
+		CBIT 2 3 0 d4 .... .1.. IP Multicast Datagrams Forwarded: yes;
+		CLSE 0 0 0 d4 .... .0.. IP Multicast Datagrams Forwarded: no;
+		CBIT 1 3 0 d4 .... ..1. AS External Link State Advertisements: yes;
+		CLSE 0 0 0 d4 .... ..0. AS External Link State Advertisements: no;
+		CBIT 0 3 0 d4 .... ...1 Router Supports Single Type Of Service: yes;
+		CLSE 0 0 0 d4 .... ...1 Router Supports Single Type Of Service: no;
+		LABL 0 0 0 c8;
+	DWRD 0 0 90 c2 Interface MTU:;
+	HBYT 0 0 90 c2 Reserved:;
+	BBYT 0 3 90 c9 Database Desc. Bits:;
+		CBIT 2 3 0 d4 .... .1.. This Packet First In Sequence;
+		CLSE 0 0 0 d4 .... .0.. This Packet is Not the First In Sequence;
+		CBIT 1 3 0 d4 .... ..1. More Descriptions To Follow;
+		CLSE 0 0 0 d4 .... ..0. No More Descriptions To Follow;
+		CBIT 0 3 0 d4 .... ...1 Router Is Master;
+		CLSE 0 0 0 d4 .... ...1 Router Is Not Master;
+		LABL 0 0 0 c8;
+	DLNG 0 0 90 c2 DD Sequence Number:;
+	ADDG fffffff8 2;
+	LABL 0 0 00 b8;
+	while (g[16] != 0)
+	{
+		if (g[16] > 4){
+		LABL 0 0 00 b7 LSA-Type - ;
+		GWRD 2 42;
+			CST# 0 42 0 07 OSPF::v3::Link_State_Update::Types;
+			CLSE 0 42 0 07 Reserved;
+		DWRD 0 0 90 c2 Age:;LABL 0 0 0 14 seconds;
+		DWRD 0 42 90 c2 Type:;
+			CST# 0 42 0 14 OSPF::v3::Link_State_Update::Types;
+			CLSE 0 42 0 14 Reserved;
+		IPLG 0 0 90 c2 Link State ID:;
+		IPLG 0 0 90 c2 Advertising Router:;
+		HLNG 0 0 90 c2 Sequence Number:;
+		HWRD 0 0 90 c2 Checksum:;
+		DWRD 0 4a 90 c2 Length:;
+		l[10] -= 20;
+		g[28] = l[10];
+		g[29] = l[10];
+		BREM 0 1a;		//g[26]
+			TSB# 0 42 0 0 OSPF::v3::Link_State_Update::Type::Ldr;
+		BREM 0 1b;		//g[27]		
+		g[26] -= g[27];
+		//No Data was consumed
+		if (g[26] == 0)
+		{
+			DUMP 0 1c 90 c2 LSA Content:;
+			g[26] = 1;
+			g[31] = 44444;
+		}
+		//Not enough Data was consumed
+		if (g[31] != 44444)
+		{
+			if ( g[26] < g[28] )
+			{
+				g[28] -= g[26];
+				DGLB 0 1c 90 c2 1c:;
+				DUMP 0 1c 90 c2 LSA Content1:;
+				g[26] = 0;
+				g[28] = 0;
+			}			
+			//More than enough Data was consumed
+			if ( g[26] > g[28] )
+			{
+				LABL 0 0 0 c2 More Bytes consumed than should. Setting Pointer back to the right position by decreasing ;
+				g[26] -= g[29];
+				DGLB 0 1a 02 02;
+				LABL 0 0 0 12 Bytes;				
+				DECR( 0, g[26] );				
+				//g[28] -= g[26];
+				//DUMP 0 1d 90 c2 LSA Content2:;
+				g[26] = 0;
+				g[28] = 0;
+			}
+		}
+		LABL 0 0 0 c8;
+		g[10] -= 1;
+		}
+	}
+	TRTS;
+}
+// outputs:
+// g[1] = ospf type
+// g[2] = packet length (header + data)
+// g[3] = checksum
+void OSPF::Header()
+{
+	DBYT 0 1 90 c2 Type:\Type=;
+	CST# 0 1 0 14 OSPF Types;
+	DWRD 0 2 90 c2 Packet Length:\Len=;
+	IPLG 0 0 90 c2 Router ID:\RID=;
+	IPLG 0 0 90 c2 Area ID:\;
+	HWRD 0 3 90 c2 Checksum:\;
+}
+void OSPF::Datablock()
+{
+	LABL 0 0 00 b7 LLS Datablock;
+	DWRD 0 4 90 c2 Checksum:\ChkSum=;
+	DWRD 0 5 90 c2 LLS Data Length:\LLSLen=;
+	//LLS-TLV
+	g[5] *= 4;
+	l[5] = g[5];
+	while(l[5] > 0)
+	{
+		GWRD 0 43;
+		CST# 0 43 0 b7 OSPF::Datablock::LLSTypes;
+		DWRD 0 43 90 c2 Type:\Typ=;
+			CST# 0 43 0 14 OSPF::Datablock::LLSTypes;
+			if (l[3] >= 3)
+			{
+				if (l[3] <= 32767)
+				{
+					LABL 0 0 0 14  Reserved for assignment by the IANA;
+				}
+			}
+			if (l[3] >= 32768)
+			{
+				if (l[3] <= 65535)
+				{
+					LABL 0 0 0 14  Private Use;
+				}
+			}
+		DWRD 0 44 90 c2 Length:\Len=;
+		if (l[3] == 1)
+		{
+			BLNG 0 46 90 c2  Extended Options and Flags:;
+				CBIT 1 46 0 d4 .... .... .... .... .... .... .... ..1. Restart Signal (RS-bit): is Set;
+				CLSE 0 0 0 d4 .... .... .... .... .... .... .... ..0. Restart Signal (RS-bit): is Not Set;
+				CBIT 0 46 0 d4 .... .... .... .... .... .... .... ...1 LSDB Resynchronization (LR): is Set;
+				CLSE 0 0 0 d4 .... .... .... .... .... .... .... ...0 LSDB Resynchronization (LR): is Not Set;
+		}
+		if (l[3] == 2)
+		{
+			BLNG 0 46 90 c2	Sequence Number:;
+			l[5] -= 4;
+			DUMP 0 45 90 c2 AuthData:;
+		}
+		if (l[3] > 2)
+		{
+			DUMP 0 44 90 c2 Data:;
+		}
+		l[5] -= l[4];
+		l[5] -= 8;
+		LABL 0 0 0 c8;
+	}
+	//DGLB 0 45 90 c2 g5:;
+	LABL 0 0 0 c8;
+	TRTS;
+}
+
+str# OSPF::Datablock::LLSTypes;
+0	|	Reserved;
+1	|	Extended Options and Flags;				//[RFC5613]
+2	|	Cryptographic Authentication+;			//[RFC5613]
+
+void Hello;
+	LABL 0 0 00 b7 Hello;
+	IPLG 0 0 90 c2 Network Mask:;
+	DWRD 0 0 90 c2 Hello Interval:;
+	LABL 0 0 0 10 seconds;
+	BBYT 0 3 90 c9 Options:;
+		CBIT 7 3 0 d4 1... .... DN: is Set;
+		CLSE 0 0 0 d4 0... .... DN: is Not Set;		
+		CBIT 6 3 0 d4 .1.. .... O (Opaque capability): is Set;
+		CLSE 0 0 0 d4 .0.. .... O (Opaque capability): is Not Set;
+		CBIT 5 3 0 d4 ..1. .... DC (demand circuit): is Set;
+		CLSE 0 0 0 d4 ..0. .... DC (demand circuit): is Not Set;
+		CBIT 4 3 0 d4 ...1 .... L (link local signaling): is Set;
+		CLSE 0 0 0 d4 ...0 .... L (link local signaling): is Not Set;
+		CBIT 3 3 0 d4 .... 1... NP (NSSA or Type-7 LSA): is Set;
+		CLSE 0 0 0 d4 .... 0... NP (NSSA or Type-7 LSA): is Not Set;
+		CBIT 2 3 0 d4 .... .1.. MC (Multicast Capability): is Set;
+		CLSE 0 0 0 d4 .... .0.. MC (Multicast Capability): is Not Set;
+		CBIT 1 3 0 d4 .... ..1. E (ExtrnalRouting Capability): is Set;
+		CLSE 0 0 0 d4 .... ..0. E (ExtrnalRouting Capability): is Not Set;
+		CBIT 0 3 0 d4 .... ...1 Reserved: is Set;
+		CLSE 0 0 0 d4 .... ...0 Reserved: is Not Set;
+		LABL 0 0 0 c8;
+		ADDG(  0x10, g[30] );
+		SHFR( 4, g[30]);
+	DBYT 0 0 90 c2 Router Priority:;
+	DLNG 0 0 90 c2 Dead Interval:;
+	LABL 0 0 0 10 seconds;
+	IPLG 0 0 90 c2 Designated Router:;
+	CEQU 0 3 0 10 No Desgntd Rtr;
+	IPLG 0 0 90 c2 Backup Desgntd Router:;
+	CEQU 0 3 0 14 No Backup Designated Router;
+	ADDG ffffffec 2;
+	Helo Nghbr IP Add Loop;
+	
+	if (g[30] == 1)
+	{
+		OSPF::Datablock;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void Hello_IPv6()
+{
+	LABL 0 0 00 b7 Hello;
+	DLNG 0 0 90 c2 Interface Id:;
+	DBYT 0 0 90 c2 Router Priority:;
+	GBIT 18 1;
+	HEX# 3 0 90 c9 Options:;
+		CBIT 9 1 0 d4 .... .... .... ..1. .... .... L: is Set;
+		CLSE 0 0 0 d4 .... .... .... ..0. .... .... L: is Not Set;
+		CBIT 8 1 0 d4 .... .... .... ...1 .... .... AF: is Set;
+		CLSE 0 0 0 d4 .... .... .... ...0 .... .... AF: is Not Set;		
+		CBIT 7 1 0 d4 .... .... .... .... 1... .... DN: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... 0... .... DN: is Not Set;		
+		CBIT 6 1 0 d4 .... .... .... .... .1.. .... O (Opaque capability): is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .0.. .... O (Opaque capability): is Not Set;
+		CBIT 5 1 0 d4 .... .... .... .... ..1. .... DC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ..0. .... DC: is Not Set;
+		CBIT 4 1 0 d4 .... .... .... .... ...1 .... R: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... ...0 .... R: is Not Set;
+		CBIT 3 1 0 d4 .... .... .... .... .... 1... N: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... 0... N: is Not Set;
+		CBIT 2 1 0 d4 .... .... .... .... .... .1.. MC: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... .0.. MC: is Not Set;
+		CBIT 1 1 0 d4 .... .... .... .... .... ..1. E: is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ..0. E: is Not Set;
+		CBIT 0 1 0 d4 .... .... .... .... .... ...1 V6: V6 is Set;
+		CLSE 0 0 0 d4 .... .... .... .... .... ...0 V6: V6 is Not Set;
+	LABL 0 0 0 c8;
+	DWRD 0 0 90 c2 Hello Interval:;
+	LABL 0 0 00 14 seconds;
+	DWRD 0 0 90 c2 Router Dead Interval:;
+	LABL 0 0 00 14 seconds;
+	IPLG 0 0 90 c2 Designated Router:;
+	IPLG 0 3 90 c2 Backup Desgntd Router:;
+	IPLG 0 3 90 c2 Active Neighbor:;
+	LABL 0 0 0 b8;
+}
+
+void Helo Nghbr IP Add Loop;
+	TEQU 0 10 -RETURN;
+	SEQU 0 2;
+	SKIP 3;
+	IPLG 0 0 90 c2 Nghbr IP Add:;
+	ADDG fffffffc 2;
+	TNXT -Helo Nghbr IP Add Loop;
+
+void Database Description;
+	LABL 0 0 00 b7 Database Description;
+	DWRD 0 0 90 c2 Interface MTU:;
+	BBYT 0 3 90 c2 Options:;
+	CBIT 0 3 0 e4 Router Supports Single Type Of Service;
+	CBIT 1 3 0 e4 AS External Link State Advertisements;
+	CBIT 2 3 0 e4 IP Multicast Datagrams Forwarded;
+	BBYT 0 3 90 c9 Database Desc. Bits:;
+		CBIT 2 3 0 d4 .... .1.. This Packet First In Sequence;
+		CLSE 0 0 0 d4 .... .0.. This Packet is Not the First In Sequence;
+		CBIT 1 3 0 d4 .... ..1. More Descriptions To Follow;
+		CLSE 0 0 0 d4 .... ..0. No More Descriptions To Follow;
+		CBIT 0 3 0 d4 .... ...1 Router Is Master;
+		CLSE 0 0 0 d4 .... ...1 Router Is Not Master;
+		LABL 0 0 0 c8;
+	DLNG 0 0 90 c2 DD Sequence Number:;
+	ADDG fffffff8 2;
+	LABL 0 0 00 b8;
+	SEQU 0 2;
+	SKIP 1;
+	TNXT -Link State Advertisement Header Loop;
+
+void Link State Request;
+	TGTE 0 10 0 0 RETURN;
+	SEQU 0 2;
+	SKIP 8;
+	LABL 0 0 00 b7 Link State Request;
+	DLNG 0 41 90 c2 Link State Type:;
+	CST# 0 41 00 14 Link State Request List;
+	IPLG 0 0 90 c2 Link State ID:;
+	IPLG 0 0 90 c2 Advertising Router:;
+	LABL 0 0 00 b8;
+	ADDG fffffff4 2;
+	TNXT -Link State Request;
+	TRTS;
+
+str# Link State Request List;
+	1 | Router-LSA;
+	2 | Network-LSA;
+	3 | Summary-LSA;
+	4 | Summary-LSA;
+	5 | AS-External-LSA;
+
+void Link State Update;
+	DLNG 0 0 90 c2 # Of Advertisements:;
+	ADDG fffffffc 2;
+	
+	TNXT -Link State Advertisement Header;
+
+void Link State Acknowledgment;
+	TNXT -Link State Advertisement Header Loop;
+
+void Link State Advertisement Header Loop;
+	if (g[2] > 0)
+	{
+		//SEQU 0 2;
+		//SKIP 11;
+		LABL 0 0 0 b7 Link State Advertisement Header\Link State:;
+		DWRD 0 0 90 c2 Age:;
+		LABL 0 0 0 10 seconds;
+		BBYT 0 3 90 c9 Options:;
+		  LABL 0 0 0 d4 xxxx x... Reserved;
+		  CBIT 2 3 0 d4 .... .1.. IP Multicast Datagrams Forwarded;
+		  CLSE 0 0 0 d4 .... .0.. IP Multicast Datagrams Not Forwarded;
+		  CBIT 1 3 0 d4 .... ..1. AS External Link State Advertisements;
+		  CLSE 0 0 0 d4 .... ..0. No AS External Link State Advertisements;
+		  CBIT 0 3 0 d4 .... ...1 Router Supports Single Type Of Service;
+		  CLSE 0 0 0 d4 .... ...0 Router Does Not Support Single Type Of Service;
+		  LABL 0 0 0 c8;
+		DBYT 0 3 90 c2 Type:;
+		CST# 0 3 0 14 OSPF::LS_Types::Names;
+		IPLG 0 0 90 c2 ID:;
+		IPLG 0 0 90 c2 Advertising Router:;
+		HLNG 0 0 90 c2 Sequence Number:;
+		HWRD 0 0 90 c2 Checksum:;
+		DWRD 0 4 90 c2 Link State Length:;
+		//ADDG ffffffec 2;
+		g[2] -= 20;
+		LABL 0 0 0 b8;
+		TNXT -Link State Advertisement Header Loop;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void Link State Advertisement Header;
+	TGTE 0 10 0 0 RETURN;
+	if (g[2] > 0)
+	{
+	//SEQU 0 2;
+	//SKIP 18;
+	LABL 0 0 0 b7 Link State Advertisement Header\Link State:;
+	DWRD 0 0 90 c2 Age:;
+	LABL 0 0 0 10 seconds;
+	BBYT 0 3 90 c9 Options:;
+	  LABL 0 0 0 d4 xxxx x... Reserved;
+	  CBIT 2 3 0 d4 .... .1.. IP Multicast Datagrams Forwarded;
+	  CLSE 0 0 0 d4 .... .0.. IP Multicast Datagrams Not Forwarded;
+	  CBIT 1 3 0 d4 .... ..1. AS External Link State Advertisements;
+	  CLSE 0 0 0 d4 .... ..0. No AS External Link State Advertisements;
+	  CBIT 0 3 0 d4 .... ...1 Router Supports Single Type Of Service;
+	  CLSE 0 0 0 d4 .... ...0 Router Does Not Support Single Type Of Service;
+	  LABL 0 0 0 c8;
+	DBYT 0 3 90 c2 Type:;
+	CST# 0 3 0 14 OSPF::LS_Types::Names;
+	if (g[3] >= 9)
+	{
+		if (g[3] <= 11)
+		{
+			TST# 0 3 0 00 OSPF::LS_Types::Func;
+		}
+	}
+	IPLG 0 0 90 c2 ID:;
+	IPLG 0 0 90 c2 Advertising Router:;
+	HLNG 0 0 90 c2 Sequence Number:;
+	HWRD 0 0 90 c2 Checksum:;
+	DWRD 0 4 90 c2 Link State Length:;
+	ADDG ffffffec 4;
+	ADDG ffffffec 2;
+	if (g[4] > 0)
+	{
+		//SEQU 0 4;
+		//SKIP 4;
+		TST# 0 3 0 00 OSPF::LS_Types::Func;
+		LABL 0 0 0 c6 Unrecognized Link State Advertisement Type;
+		DUMP 0 4 90 c2 Link State Advertisement Data:;
+		SUBG 4 82;
+	}
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+	}
+	TRTS;
+
+void OSPF::LS_Type::Router_Links;
+	LABL 0 0 0 b7 Router Link Advertisement;
+	BBYT 0 3 90 c9 Router Info:;
+	CBIT 3 3 0 d4 Wild-card Multicast Receiver;
+	CBIT 2 3 0 d4 Endpoint of Virtual Links;
+	CBIT 1 3 0 d4 AS Boundary Router;
+	CBIT 0 3 0 d4 Area Border Router;
+	LABL 0 0 0 c8;
+	BBYT 0 0 90 c2 Reserved:;
+	DWRD 0 3 90 c2 Number of Links:;
+	ADDG fffffffc 2;
+	TNXT -OSPF::LS_Type::Router_Links::Loop;
+
+void OSPF::LS_Type::Router_Links::Loop;
+	SEQU 0 3;
+	SKIP c;
+		LABL 0 0 0 b7 Link;
+		IPLG 0 0 90 c2 Link ID:;
+		IPLG 0 0 90 c2 Link Data:;
+		DBYT 0 5 90 c2 Type:;
+		CST# 0 5 0 14 Routr Link Advert Types;
+		DBYT 0 5 90 c2 Number of Metrics:;
+		DWRD 0 0 90 c2 TOS 0 Metric:;
+		Router Link Metric Loop;
+		ADDG ffffffff 3;
+		ADDG fffffff4 2;
+		LABL 0 0 0 b8;
+		TNXT -OSPF::LS_Type::Router_Links::Loop;
+	LABL 0 0 0 b8;
+	
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+void Router Link Metric Loop;
+	SEQU 0 5;
+	SKIP 6;
+	DBYT 0 0 a0 c3 Type Of Service:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Metric:;
+	ADDG ffffffff 5;
+	ADDG fffffffc 2;
+	TNXT -Router Link Metric Loop;
+	TRTS;
+
+void OSPF::LS_Type::Network_Links;
+	LABL 0 0 0 b7 Network Links Advertisement;
+	IPLG 0 0 90 c2 Network Mask:;
+	ADDG fffffffc 4;
+	ADDG fffffffc 2;
+	TNXT -Network Link Loop;
+
+void Network Link Loop;
+	if (g[4] <= 0)
+	{
+		LABL 0 0 0 b8;
+	}
+	if (g[4] > 0)
+	{
+		IPLG 0 0 90 c2 Attached Router:;
+		ADDG fffffffc 4;
+		ADDG fffffffc 2;
+		TNXT -Network Link Loop;
+	}
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+void OSPF::LS_Type::Summary_Link_IP_Network;
+	LABL 0 0 0 b7 Summary Links Advertisement (IP Network);
+	IPLG 0 0 90 c2 Network Mask:;
+	ADDG fffffffc 4;
+	ADDG fffffffc 2;
+	TNXT -Summary Link Loop;
+
+void OSPF::LS_Type::Summary_Link_ASBR;
+	LABL 0 0 0 b7 Summary Links Advertisement (ASBR);
+	IPLG 0 0 90 c2 Network Mask:;
+	ADDG fffffffc 4;
+	ADDG fffffffc 2;
+	TNXT -Summary Link Loop;
+
+void Summary Link Loop;
+	if (g[4] > 0)
+	{
+		//SEQU 0 4;
+		//SKIP 6;
+		//DBYT 0 0 90 c2 Type Of Service:;
+		DLNG 0 0 90 c2 Metric:;
+		//HWRD 80000000 0 0 2;
+		ADDG fffffffc 4;
+		ADDG fffffffc 2;
+		TNXT -Summary Link Loop;
+	}
+	LABL 0 0 0 b8;
+	
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+void OSPF::LS_Type::AS_External_Link;
+	SEQU 0 4;
+	SKIP 10;
+	IPLG 0 0 90 c2 Network Mask:;
+	GBYT 0 3;
+	ANDG 7f 3;
+	DGLB 0 3 90 c2 Type Of Service:;
+	GBYT 0 3;
+	CBIT 7 3 0 14 External Metric Type 2;
+	CLSE 0 0 0 14 External Metric Type 1;
+	//INCR 1;
+	DLNG 0 0 90 c2 Metric:;
+	//HWRD 80000000 0 0 2;
+	IPLG 0 0 90 c2 Forwarding Address:;
+	HLNG 0 0 90 c2 External Route Tag:;
+	ADDG fffffff0 4;
+	ADDG fffffff0 2;
+	TNXT -Summary Link Loop;
+	
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+void OSPF::LS_Type::Not_So_Stubby_Area;			//rfc 3101
+	if (g[4] > 0)
+	{
+		LABL 0 0 00 b7 Not So Stubby Area;
+		IPLG 0 0 90 c2 Network Mask:;
+		GBYT 0 3;
+		ANDG 7f 3;
+		DGLB 0 3 90 c2 Type Of Service:;
+		GBYT 0 3;
+		CBIT 7 3 0 14 External Metric Type 2;
+		CLSE 0 0 0 14 External Metric Type 1;
+		g[1] = pl[0];
+		ANDG ffffff 1;
+		DGLB 0 1 90 c2 Metric:;
+		DLNG 0 1 5 5;
+		IPLG 0 0 90 c2 Forwarding Address:;
+		HLNG 0 0 90 c2 External Route Tag:;
+		ADDG fffffff0 4;
+		ADDG fffffff0 2;
+		LABL 0 0 00 b8;
+	}
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+
+void OSPF::LS_Type::Opaque::Link_Local;
+	TNXT -OSPF::LS_Type::Opaque::Generic;
+
+void OSPF::LS_Type::Opaque::Area_Local;
+	DBYT 0 45 90 c2 Opaque Type:;
+	CEQU 1 45 00 14 Traffic Engineering;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	if (l[5] == 1)
+	{
+		DGLB 0 42 90 c2 Instance:;
+	}
+	if (l[5] != 1)
+	{
+		DGLB 0 42 90 c2 Opaque ID:;
+	}
+	HEX# 3 0 05 05;
+	IPLG 0 0 90 c2 Advertising Router:;
+	HLNG 0 0 90 c2 Sequence Number:;
+	HWRD 0 0 90 c2 Checksum:;
+	DWRD 0 4 90 c2 Link State Length:;
+	g[2] -= 20;
+	g[4] -= 20;
+	if (l[5] == 1)
+	{
+		OSPF::LS_Type::Opaque::Area_Local::TE_Payload;
+	}
+	if (l[5] != 1)
+	{
+		DUMP 0 4 90 c2 Opaque Data:;		//si: ??
+		g[2] -= g[4];
+		g[4] = 0;
+	}
+	
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload;			// rfc 3630
+	if (g[4] > 0)
+	{
+		LABL 0 0 00 b7 MPLS Traffic Engineering LSA;
+		while (g[4] > 0)
+		{
+			l[1] = g[16];
+			g[1] = pw[0];
+			TSB# 0 1 00 00 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::TLVFunc;
+			if (l[1] == g[16])
+			{
+				DUMP 0 4 90 c2 Remaining Data:;
+				// si: this should actually never get hit
+				//LABL 0 0 00 c7 Unknown TLV;
+				//DWRD 0 1 90 c2 Type:;
+				//DWRD 0 1 90 c2 Length:;
+				//DUMP 0 1 90 c2 Value:;
+				//LABL 0 0 00 c8;
+			}
+			l[1] -= g[16];
+			g[4] -= l[1];
+		}
+		LABL 0 0 00 b8;
+	}
+	TRTS;
+
+str# OSPF::LS_Type::Opaque::Area_Local::TE_Payload::TLVFunc;
+	0x01 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::RouterAddressTLV;
+	0x02 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::RouterAddressTLV;
+	LABL 0 0 00 c7 Router Address TLV;
+	DWRD 0 1 90 c2 Type:;
+	LABL 0 0 00 14 Router Address;
+	DWRD 0 1 90 c2 Length:;
+	IPLG 0 1 90 c2 Address:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV;
+	LABL 0 0 00 c7 Link TLV;
+	DWRD 0 1 90 c2 Type:;
+	LABL 0 0 00 14 Link;
+	DWRD 0 3 90 c2 Length:;
+	while (g[3] > 0)
+	{
+			l[1] = g[16];
+			g[1] = pw[0];
+			TSB# 0 1 00 00 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::Func;
+			if (l[1] == g[16])
+			{
+				LABL 0 0 00 c7 Unknown Sub-TLV;
+				DWRD 0 1 90 c2 Type:;
+				DWRD 0 1 90 c2 Length:;
+				DUMP 0 1 90 c2 Value:;
+				LABL 0 0 00 c8;
+			}
+			l[1] -= g[16];
+			g[3] -= l[1];
+	}
+	LABL 0 0 00 c8;
+	TRTS;
+
+// si: NOTE: the nested TLV's are 32 bit aligned!!!!!!
+
+str# OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	1 | Link Type;
+	2 | Link ID;
+	3 | Local Interface IP Address;
+	4 | Remote Interface IP Address;
+	5 | Traffic Engineering Metric;
+	6 | Maximum Bandwidth;
+	7 | Maximum Reservable Bandwidth;
+	8 | Unreserved Bandwidth;
+	9 | Administrative Group (Resource Class/Color);
+
+str# OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::Func;
+	1 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::01;
+	2 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::02;
+	3 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::03;
+	4 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::04;
+	5 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::05;
+	6 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::06;
+	7 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::07;
+	8 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::08;
+	9 | OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::09;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::01;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	DBYT 0 1 90 c2 Type:;
+	CEQU 1 1 00 14 Point-to-Point;
+	CEQU 2 1 00 14 Multi-Access;
+	LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Alignment Bytes:;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::02;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	IPLG 0 1 90 c2 Link ID:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::03;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	IPLG 0 1 90 c2 IP Address:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::04;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	IPLG 0 1 90 c2 IP Address:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::05;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	DLNG 0 1 90 c2 Metric:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::06;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	OSPF::Bandwidth();
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::07;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	OSPF::Bandwidth();
+
+	LABL 0 0 00 c8;
+	TRTS;
+	
+void OSPF::Bandwidth()
+{
+	l[1] = pb[0];
+	l[1] &= 0xF;
+	l[1] *= 0x10;
+	l[2] = pb[1];
+	l[2] &= 0xF;
+	l[1] += l[2];
+	l[3] = pw[2];
+	l[1] *= 0x10000;
+	l[1] += l[3];
+	DGLB 0 41 90 c2 Max Bandwidth:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+}
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::08;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	OSPF::Priority();
+	DGLB 0 1 90 c2 Priority 0:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 1:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 2:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 3:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 4:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 5:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 6:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	DGLB 0 1 90 c2 Priority 7:;
+	LABL 0 0 00 14 bytes/second;
+	DLNG 0 0 05 05;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void OSPF::Priority()
+{
+	g[1] = pb[0];
+	g[1] &= 0xF;
+	g[1] *= 0x10;
+	l[2] = pb[1];
+	l[2] &= 0xF;
+	g[1] += l[2];
+	l[3] = pw[2];
+	g[1] *= 0x10000;
+	g[1] += l[3];
+}
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::09;
+	CST# 0 1 00 c7 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	LABL 0 0 00 07 " Sub-TLV";
+	DWRD 0 1 90 c2 Type:;
+	CST# 0 1 00 14 OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::List;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Value:;
+	LABL 0 0 00 c8;
+	TRTS;
+
+
+void OSPF::LS_Type::Opaque::Area_Local::TE_Payload::LinkTLV::IEEEFloatingPoint;
+//	100 1001  exponent 73
+//	1 1000 1001 0110 1000 0000 fraction	1611392
+//	0100 1001 1100
+
+
+
+void OSPF::LS_Type::Opaque::Routing_Domain;
+	TNXT -OSPF::LS_Type::Opaque::Generic;
+
+void OSPF::LS_Type::Opaque::Generic;
+	DBYT 0 0 90 c2 Opaque Type:;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 Opaque ID:;
+	HEX# 3 0 05 05;
+	IPLG 0 0 90 c2 Advertising Router:;
+	HLNG 0 0 90 c2 Sequence Number:;
+	HWRD 0 0 90 c2 Checksum:;
+	DWRD 0 4 90 c2 Link State Length:;
+	g[2] -= 16;
+	g[4] -= 16;
+	DUMP 0 4 90 c2 Opaque Data:;		//si: ??
+	g[2] -= g[4];
+	g[4] = 0;
+	
+	LABL 0 0 0 b8;
+	TNXT -Link State Advertisement Header;
+void OSPF::LS_Type::Link-LSA()
+{
+	//HWRD 0 0 90 c2 LS Age:;
+	//BBIT 3 0 90 c2 000:;
+	//BBIT d 0 90 c2 8:;
+	//IPLG 0 0 90 c2 Link State ID:;
+	//IPLG 0 0 90 c2 Advertising Router:;
+	//DLNG 0 0 90 c2 LS Sequence Number:;
+	//HWRD 0 0 90 c2 LS Checksum:;
+	//DWRD 0 0 90 c2 Length:;
+	DBYT 0 0 90 c2 Rtr Priority:;
+	HEX# 3 0 90 c2 Options:;
+	
+	IPV6 0 0 90 c2 Link-local Interface Address:;
+	DLNG 0 45 90 c2 # of prefixes:;
+	l[7] = 1;
+	while(l[5] != 0)
+	{
+		LABL 0 0 0 b7 Prefix # ;
+		DGLB 0 47 7;
+		LABL 0 0 0 7 :;
+		DBYT 0 46 90 c2 PrefixLength:;
+		DBYT 0 0 90 c2 PrefixOptions:;
+		HWRD 0 0 90 c2 Reserved:;
+		l[6] /= 8;
+		if (l[6] == 8)
+		{
+			LABL 0 0 90 c2 Prefix:  ;
+			HWRD 80000000 0 90 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			HWRD 80000000 0 0 0;
+			LABL 0 0 0 0 :;
+			LABL 0 0 0 0 :;
+		}
+		//HEX# 0 46 90 c2 Prefix:;
+		LABL 0 0 0 b8;
+		l[5] -= 1;
+		l[7] += 1;
+	}
+}
+
+str# OSPF::LS_Types::Opaque::Func;
+	
+
+str# OSPF::LS_Types::Names;
+	Router Links;
+	Network Links;
+	Summary Link - IP Network;
+	Summary Link - ASBR;
+	AS External Link;
+	;
+	Not So Stubby Area;
+	Link-LSA;
+	Opaque - Link Local;
+	Opaque - Area Local;
+	Opaque - Routing Domain;
+
+str# OSPF::LS_Types::Func;
+	OSPF::LS_Type::Router_Links;
+	OSPF::LS_Type::Network_Links;
+	OSPF::LS_Type::Summary_Link_IP_Network;
+	OSPF::LS_Type::Summary_Link_ASBR;
+	OSPF::LS_Type::AS_External_Link;
+	;
+	OSPF::LS_Type::Not_So_Stubby_Area;
+	OSPF::LS_Type::Link-LSA;
+	OSPF::LS_Type::Opaque::Link_Local;
+	OSPF::LS_Type::Opaque::Area_Local;
+	OSPF::LS_Type::Opaque::Routing_Domain;
+
+str# OSPF Types;
+	Hello;
+	Database Description;
+	Link State Request;
+	Link State Update;
+	Link State Acknowledgment;
+
+str# Routr Link Advert Types;
+	Pnt-To-Pnt Connection To Other Router;
+	Connection To Transit Network;
+	Connection To Stub Network;
+	Virtual Link;
+
+str# OSPF IPv6 Types;
+	1	| Hello_IPv6;
+	2	| OSPF::v3::Link_State_Update::Database_Description;
+	3	| Link State Request;
+	4	| OSPF::v3::Link_State_Update;
+	5	| Link State Acknowledgment;
+

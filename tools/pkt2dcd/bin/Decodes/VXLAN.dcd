@@ -1,0 +1,44 @@
+//VXLAN - Virtual Extensible LAN
+
+//coded from http://tools.ietf.org/pdf/rfc7348.pdf
+
+
+str# UDP::Ports_Str;
+4789	|	VXLAN;
+8472	|	VXLAN;
+
+void VXLAN()
+{
+	LABL( 0, 0, 0, 0xb1, "VXLAN - Virtual Extensible LAN\VXLAN:" );
+	BBIT( 4, l[1], 0x90, 0xc2, "Reserved:" );
+	BBIT( 1, l[2], 0x90, 0xc2, "I:" );
+	BBIT( 3, l[3], 0x90, 0xc2, "Reserved:" );
+	HEX#( 3, 0, 0x90, 0xc2, "Reserved:" );
+	GWRD( 0, l[5] );
+	GBYT( 2, l[6] );
+	SHFL( 8, l[5] );
+	ADDG( l[5], l[6]);	
+	HEX#( 3, 0, 0x05, 0xc2, "VXLAN Network Identifier (VNI):" );
+	DGLB( 0, l[5], 0x90,0 );
+	HBYT( 0, l[8], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xb8 );
+	//------------------------------------------------eof VXLAN---------------------------------------------------------		
+		LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+		ETHR 0 0 90 c2 Destination:\D:;
+		ETHR 0 0 90 c2 Source:\S:;		
+		g[1] = pw[0];
+		if (g[1] <= 0x5dc)
+		{
+			802_2();				
+			TRTS;					
+		}
+		if (g[1] == 0x8808)			
+		{
+			802.3::MAC_Control;
+			TRTS;
+		}
+		TGTE 0 10 0 0 RETURN;
+		Ether::Branching_2();
+	Ether::Branching_3;
+	LABL( 0, 0, 0, 0xb8);
+}

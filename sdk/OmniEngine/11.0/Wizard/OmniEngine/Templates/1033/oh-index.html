@@ -1,0 +1,333 @@
+<html>
+<head>
+  <!-- After this page loads, the title of the dialog box is set to  -->
+  <!-- the title of the web page. -->
+  <title>[!output SAFE_PROJECT_NAME] Options</title>
+  <script type="text/javascript">
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlTagName(xml) {
+      var end = xml.indexOf(' ');
+      if (end == -1) {
+        end = xml.length;
+      }
+
+      return xml.substring(0, end);
+    }
+
+    function xmlTagAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.length;
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf(' ', sep);
+        if (next == -1) next = end;
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next - 1);
+        }
+        begin = next;
+      }
+      return '';
+    }
+
+    function xmlGetValue(xml, tag) {
+      var begin = xml.indexOf(tag);
+      if (begin == -1) return '';
+      begin++;
+
+      var begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetNode(xml, tag) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('>', (begin + 1));
+      if (end == -1) return '';
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, (end + 1));
+      if (end == -1) return '';
+      end += tagEnd.length;
+
+      return xml.substring(begin, end);
+    }
+  </script>
+
+  <script type="text/javascript">
+    // Called after this page loads.
+    // Return the desired width and height in pixels as decimal values.
+    function GetDisplayProperties() {
+      var props;
+      props = "543 615";
+      return props;
+    }
+
+      // Called when user clicks Ok. Return Plugin Settings as XML.
+    function GetPreferences() {
+      var prefs;
+[!if NOTIFY_CODEEXAMPLES]
+      var enabled = "False";
+      if (document.getElementById("state_id").checked) enabled = "True";
+
+      prefs =
+        '<Examples>' +
+        '<Object Enabled="' + enabled + '">' +
+          '<Label>' + document.getElementById("label_id").value + '</Label>' +
+          '<Ethernet>' + document.getElementById("ethernet_id").value + '</Ethernet>' +
+          '<Address>' + document.getElementById("address_id").value + '</Address>' +
+          '<Port>' + document.getElementById("port_id").value + '</Port>' +
+          '<Time>' + document.getElementById("time_id").value + '</Time>' +
+        '</Object>' +
+        '<RepeatingExample>' +
+          '<ComputerList>' +
+          '<Computer Name="Computer 0">' +
+            '<IPAddress>10.9.148.128</IPAddress>' +
+            '<Port>0</Port>' +
+            '<Id>{C1A19CAC-4FA3-4223-823F-EC5054F333A7}</Id>' +
+            '<UserList>' +
+            '<User>User 1</User>' +
+            '<User>User 2</User>' +
+            '<User>User 3</User>' +
+            '<User>User 4</User>' +
+            '<User>User 5</User>' +
+            '</UserList>' +
+          '</Computer>' +
+          '<Computer Name="Computer 1">' +
+            '<IPAddress>10.9.148.228</IPAddress>' +
+            '<Port>1</Port>' +
+            '<Id>{C1A19CAC-4FA3-4223-823F-EC5054F333A7}</Id>' +
+            '<UserList>' +
+            '<User>User 1</User>' +
+            '<User>User 2</User>' +
+            '<User>User 3</User>' +
+            '<User>User 4</User>' +
+            '<User>User 5</User>' +
+            '</UserList>' +
+          '</Computer>' +
+          '<Computer Name="Computer 2">' +
+            '<IPAddress>10.9.149.72</IPAddress>' +
+            '<Port>2</Port>' +
+            '<Id>{C1A19CAC-4FA3-4223-823F-EC5054F333A7}</Id>' +
+            '<UserList>' +
+            '<User>User 1</User>' +
+            '<User>User 2</User>' +
+            '<User>User 3</User>' +
+            '<User>User 4</User>' +
+            '<User>User 5</User>' +
+            '</UserList>' +
+          '</Computer>' +
+          '</ComputerList>' +
+        '</RepeatingExample>' +
+        '</Examples>';
+[!else]
+      prefs = '<[!output SAFE_PROJECT_NAME] />';
+[!endif]
+        
+      return prefs;
+    }
+
+    // Called with Plugin Settings in XML after page has completed loading.
+    function PutPreferences(inXml) {
+      // Preamble
+      var pre = xmlGetPreamble(inXml);
+      var xml = inXml.substring(pre.length);
+
+      // Root node
+      var tagRoot = xmlGetTag(xml);
+      var nameRoot = xmlTagName(tagRoot);
+      var valRoot = xmlGetValue(xml,nameRoot);
+[!if NOTIFY_CODEEXAMPLES]
+
+      // Object
+      var tagObject = xmlGetTag(valRoot);
+      var nameObject = xmlTagName(tagObject);
+      var valObject = xmlGetValue(valRoot, nameObject);
+      if (valObject.length == 0) return;
+
+      document.getElementById('state_id').checked = (xmlTagAttribute(tagObject, 'Enabled') == 'True');
+
+      // Reference by Id.
+      document.getElementById('label_id').value = xmlGetValue(valObject, 'Label');
+      document.getElementById('ethernet_id').value = xmlGetValue(valObject, 'Ethernet');
+      document.getElementById('address_id').value = xmlGetValue(valObject, 'Address');
+      document.getElementById('port_id').value = xmlGetValue(valObject, 'Port');
+      document.getElementById('time_id').value = xmlGetValue(valObject, 'Time');
+[!endif]
+    }
+  </script>
+
+  <script type="text/javascript">
+    function SetDefaults() {
+[!if NOTIFY_CODEEXAMPLES]
+      var oForm = document.forms['browse_form'];
+
+      oForm.elements["showfiles"].checked = true;
+      oForm.elements["showhiddenfiles"].checked = false;
+      oForm.elements["hidehiddenctrl"].checked = false;
+      oForm.elements["path"].value = "C:\\";
+[!endif]
+    }
+
+    // Called when user clicks Browse button: app:browse
+    // Return unsigned integer with flags:
+    //   0x0002 : Hide the 'Show Hidden' control.
+    //   0x0004 : Initially show hidden files.
+    //   0x0008 : Show the files pane. User must select a file.
+    function GetRemoteBrowserFlags() {
+      // If the Path has a file name, then set show files.
+      var oForm = document.forms['browse_form'];
+
+      var flags = 0;
+      if ( oForm.elements["hidehiddenctrl"].checked ) {
+        flags = flags | 0x02;
+      }
+      if ( oForm.elements["showhiddenfiles"].checked ) {
+        flags = flags | 0x04;
+      }
+      if ( oForm.elements["showfiles"].checked ) {
+        flags = flags | 0x08;
+      }
+      flags = flags | 0x10;
+
+      return flags;
+    }
+
+    // Called when users clicks Ok to the Remote File Browser.
+    // inPath is a fully qualified file name.
+    function PutRemoteBrowserPath(inPath) {
+      var oForm = document.forms['browse_form'];
+      oForm.elements["path"].value = inPath;
+    }
+
+    // Called when user clicks Get File button: app:getremote
+    //                 or the Send File button: app:sendlocal
+    // return the fully qualified file name.
+    function GetRemoteBrowserPath() {
+      var oForm = document.forms['browse_form'];
+
+      var path;
+      path = oForm.elements["path"].value;
+
+      return path;
+    }
+
+    // Called when user clicks Send File button: app:sendlocal
+    // return the file contents as a Unicode String.
+    function GetFileContent() {
+      var oForm = document.forms['browse_form'];
+
+      var filetext;
+      filetext = oForm.elements["filetext"].value;
+
+      var content;
+      if (document.getElementById('pcfile').checked) {
+        content = filetext.replace(/\n/g, '\r\n');
+      }
+      else {
+        content = filetext;
+      }
+
+      return content;
+    }
+
+      // Called after file transfer has been completed.
+      //     inFlags : 1 - file has been retrieved.
+      //               2 - file has been sent.
+      //   inContent : the Unicode String contents of the file retrieved.
+      function PutTransferComplete(inFlags, inContent) {
+        var oForm = document.forms['browse_form'];
+        oForm.elements["filetext"].value = inContent;
+        document.getElementById('pcfile').checked = inContent.match(/\r/g);
+      }
+  </script>
+</head>
+<body onload="SetDefaults()">
+  <bold>[!output SAFE_PROJECT_NAME] Options</bold><br />
+  Copyright 2017 Savvius, Inc.<br>
+  Version 1.0.0.0<br /><br />
+  All Rights Reserved.<br>
+[!if NOTIFY_CODEEXAMPLES]
+  <div id="preferences_form">
+    <form id="prefs_form" name="preferences" action="">
+      <fieldset>
+        <br />
+        Current State:&nbsp;
+        <input type="checkbox" id="state_id" name="current_state" checked=false /><br />
+        Label:&nbsp;
+        <input type="text" id="label_id" name="label" size="30" value="" class="text-input" /><br />
+        Ethernet Address:&nbsp;
+        <input type="text" id="ethernet_id" name="ethernet" size="30" value="" class="text-input" /><br />
+        IP Address:&nbsp;
+        <input type="text" id="address_id" name="ip" size="30" value="" class="text-input" /><br />
+        Port:&nbsp;
+        <input type="text" id="port_id" name="port" size="30" value="" class="text-input" /><br />
+        Time:&nbsp;
+        <input type="text" id="time_id" name="time" size="30" value="" class="text-input" /><br />
+      </fieldset>
+    </form>
+    <form id="browse_form" name="browser" action="">
+      <fieldset>
+        <br />
+        Path:&nbsp;<input type="text" name="path" size="60" value="" class="text-input" /><br />
+        <input type="checkbox" id="show_id" name="showfiles" checked=false />Show Files<br />        
+        <input type="checkbox" id="hide_id" name="showhiddenfiles" checked=false />Show hidden files<br />        
+        <input type="checkbox" id="hidden_id" name="hidehiddenctrl" checked=false />Hide 'Hidden Files' control<br />        
+        <br />
+        <textarea type="filetext" id="text_id" name="filetext" cols="60" rows="10" wrap="off"></textarea>
+        <br />
+        <!-- The Remote Browser intercepts the app:browse command then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then displays the Remote Browser Dialog.                   -->
+        <!-- If the user clicks OK, then PutRemoteBrowserPath is called.                           -->
+        <a href="app:browse">Browse</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:getremote command, then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then retrieves the file specified.                             -->
+        <!-- Once the file has been retrieved PutTransferComplete is called.                           -->
+        <a href="app:getremote">Get Remote File</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:sendlocal command, then calls GetRemoteBrowserFlags, -->
+        <!-- GetRemoteBrowserFolder and GetFileContents then sends the file specified.                  -->
+        <a href="app:sendlocal">Send Local File</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input class="browse-checkbox" type="checkbox" id="pcfile" name="pcfile">
+        <label class="browse-label" for="pcfile">PC File Format</label>
+      </fieldset>
+    </form>
+  </div>
+[!endif]
+</body>
+</html>

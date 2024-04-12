@@ -1,0 +1,431 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "..\\Resources\\wplogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PLUGIN_ABOUT DIALOGEX 0, 0, 169, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About Email Capture"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         101,IDC_ABOUT_LOGO,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,155,52
+    CTEXT           "EmailCaptureOE",IDC_ABOUT_NAME,7,68,155,8
+    CTEXT           "Version 1.4.0.0",IDC_PLUGIN_VERSION,7,85,155,8
+    CTEXT           "Copyright © 2011-2015 WildPackets, Inc.",IDC_STATIC,7,102,155,8
+    CTEXT           "Pen and full capture and analysis of SMTP and POP3 email.",IDC_STATIC,7,119,155,24
+    DEFPUSHBUTTON   "Close",IDOK,60,153,50,14
+END
+
+IDD_MODE_OPTS DIALOGEX 0, 0, 250, 250
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Protocols",IDC_STATIC,7,7,236,24
+    CONTROL         "SMTP",IDC_PROTOCOL_SMTP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,20,18,36,8
+    CONTROL         "POP3",IDC_PROTOCOL_POP3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,68,18,36,8
+    CONTROL         "Display packets in Capture Window.",IDC_ACCEPT_PACKETS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,38,95,10
+    CONTROL         "Post messages to the Log.",IDC_DISPLAY_LOG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,51,95,10
+    CONTROL         "Display Summary Statistics.",IDC_DISPLAY_SUMMARY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,124,38,104,10
+    CONTROL         "Save packets to disk.",IDC_WRITE_PACKETS,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | WS_TABSTOP,124,51,84,10
+    GROUPBOX        "Output",IDC_STATIC,7,66,236,75
+    LTEXT           "Filename Prefix:",IDC_STATIC,20,80,52,8
+    EDITTEXT        IDC_FILENAME_PREFIX,76,79,161,11,ES_AUTOHSCROLL
+    CONTROL         "Append email address and '_' to Prefix.",IDC_APPEND_EMAIL,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,76,96,141,10
+    LTEXT           "Directory:",IDC_STATIC,20,109,37,10
+    EDITTEXT        IDC_OUTPUT_DIRECTORY,20,120,217,12,ES_AUTOHSCROLL
+    GROUPBOX        "Collection type",IDC_STATIC,7,146,236,97
+    CONTROL         "Pen Capture",IDC_MODE_PEN,"Button",BS_AUTORADIOBUTTON | WS_GROUP,20,157,58,8
+    CONTROL         ".eml file",IDC_PEN_EML,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,32,169,43,8
+    CONTROL         "XML Report",IDC_PEN_XML,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | WS_TABSTOP,32,180,53,8
+    CONTROL         "Text Report",IDC_PEN_TEXT,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_DISABLED | WS_TABSTOP,32,191,55,8
+    CONTROL         "Full Capture",IDC_MODE_FULL,"Button",BS_AUTORADIOBUTTON,124,157,58,8
+    CONTROL         ".eml file",IDC_FULL_EML,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,136,169,41,8
+    CONTROL         ".pcap file",IDC_FULL_PKT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,136,180,42,8
+    GROUPBOX        "Save text report every",IDC_SAVE_GROUP,49,203,193,40,NOT WS_VISIBLE
+    CONTROL         "",IDC_SAVE_TIME,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,63,216,11,8
+    EDITTEXT        IDC_SAVE_TIME_COUNT,79,214,25,12,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    COMBOBOX        IDC_SAVE_TIME_UNITS,109,214,65,47,CBS_DROPDOWN | NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_SAVE_SIZE,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,63,229,11,8
+    EDITTEXT        IDC_SAVE_SIZE_COUNT,79,227,25,12,ES_AUTOHSCROLL | NOT WS_VISIBLE
+    COMBOBOX        IDC_SAVE_SIZE_UNITS,109,227,65,47,CBS_DROPDOWN | NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Per Address",IDC_PEN_PER_ADDRESS,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,184,221,56,10
+END
+
+IDD_ADDRESS_OPTS DIALOGEX 0, 0, 250, 250
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Email addresses to capture",IDC_LABEL_ADDRESS,7,7,236,236
+    EDITTEXT        IDC_EDIT_ADDRESS,16,22,149,12,ES_MULTILINE | ES_AUTOHSCROLL | ES_WANTRETURN
+    PUSHBUTTON      "Add",IDC_ADD_ADDRESS,169,22,30,12
+    PUSHBUTTON      "Delete",IDC_DELETE_ADDRESS,204,22,30,12
+    CONTROL         "",IDC_ADDRESS_LIST,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,16,40,218,179
+    CONTROL         "Capture any email address",IDC_CAPTURE_ALL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,226,100,11
+END
+
+IDD_INTEGRITY_OPTS DIALOGEX 0, 0, 250, 210
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Enable Integrity",IDC_ENABLE_INTEGRITY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,0,67,15,WS_EX_TRANSPARENT
+    GROUPBOX        " ",IDC_STATIC,7,2,236,129
+    LTEXT           "Hash Algorithm:",IDC_HASH_ALG_LBL,17,18,55,12
+    COMBOBOX        IDC_HASH_ALG,76,18,75,41,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Digitally Sign",IDC_SIGN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,26,40,55,14,WS_EX_TRANSPARENT
+    GROUPBOX        " ",IDC_STATIC,17,43,216,61
+    LTEXT           "Key Container:",IDC_KEY_CONTAINER_LBL,26,58,50,10
+    EDITTEXT        IDC_KEY_CONTAINER,26,70,196,13,ES_AUTOHSCROLL
+    LTEXT           "the key status",IDC_KEY_STATUS,26,89,134,8
+    PUSHBUTTON      "Default",IDC_DEFAULT_CONTAINER,163,87,59,11
+    PUSHBUTTON      "Create Key",IDC_CREATE_KEY,17,109,65,15
+END
+
+IDD_CASE_LIST_OPTS DIALOGEX 0, 0, 554, 297
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_CASE_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDRAWFIXED | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,0,0,553,274
+    PUSHBUTTON      "Edit",IDC_EDIT_CASE,0,283,50,14
+    PUSHBUTTON      "Add",IDC_ADD_CASE,58,283,50,14
+    PUSHBUTTON      "Delete",IDC_DELETE_CASE,116,283,50,14
+    PUSHBUTTON      "Import",IDC_IMPORT_ADDRESS,174,283,50,14
+    PUSHBUTTON      "Export",IDC_EXPORT_ADDRESS,232,283,50,14
+    LTEXT           "All packets will be sliced.",IDC_SLICE_STATUS,290,286,106,8
+END
+
+IDD_TRIGGER_OPTS DIALOGEX 0, 0, 250, 168
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Start",IDC_START_GROUP,7,7,236,59
+    LTEXT           "Date:",IDC_STATIC,22,22,24,8
+    CONTROL         "",IDC_START_DATE,"SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,52,19,82,15
+    LTEXT           "Time:",IDC_STATIC,22,46,24,8
+    CONTROL         "",IDC_START_TIME,"SysDateTimePick32",DTS_RIGHTALIGN | DTS_UPDOWN | WS_TABSTOP | 0x8,52,43,82,15
+    PUSHBUTTON      "Now",IDC_TIME_NOW,155,18,52,16,NOT WS_VISIBLE
+    GROUPBOX        "End",IDC_END_GROUP,7,75,236,86
+    LTEXT           "Date:",IDC_STATIC,22,91,24,8
+    CONTROL         "",IDC_STOP_DATE,"SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,52,88,82,15
+    LTEXT           "Time:",IDC_STATIC,22,115,24,8
+    CONTROL         "",IDC_STOP_TIME,"SysDateTimePick32",DTS_RIGHTALIGN | DTS_UPDOWN | WS_TABSTOP | 0x8,52,112,82,15
+    PUSHBUTTON      "One Day",IDC_TIME_ONE_DAY,157,88,52,16,NOT WS_VISIBLE
+    PUSHBUTTON      "One Week",IDC_TIME_ONE_WEEK,157,112,52,16,NOT WS_VISIBLE
+    PUSHBUTTON      "One Month",IDC_TIME_ONE_MONTH,158,136,52,16,NOT WS_VISIBLE
+END
+
+IDD_PLUGIN_OPTIONS DIALOGEX 0, 0, 435, 244
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "EmailCaptureOE Options"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,322,223,50,14
+    DEFPUSHBUTTON   "Cancel",IDCANCEL,378,223,50,14
+END
+
+IDD_ATTACHMENT_OPTS DIALOGEX 0, 0, 250, 86
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "Save Attachments",IDC_ATTACHMENT_SAVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,75,8
+    LTEXT           "Attachment Directory:",IDC_ATTACHMENT_LABEL,7,19,77,8
+    EDITTEXT        IDC_ATTACHMENT_DIRECTORY,7,31,234,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Browse",IDC_ATTACHMENT_BROWSE,193,51,49,13
+END
+
+IDD_CASE_DLG DIALOGEX 0, 0, 350, 305
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Case Options"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Name:",IDC_STATIC,67,8,22,9
+    EDITTEXT        IDC_CASE_NAME,91,7,160,12,ES_AUTOHSCROLL
+    CONTROL         "",IDC_CASE_TREE,"SysTreeView32",TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,7,26,76,250
+    LTEXT           "Static",IDC_CASE_VIEW,91,26,252,250,WS_BORDER
+    DEFPUSHBUTTON   "OK",IDOK,233,284,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,293,284,50,14
+END
+
+IDD_PLUGIN_TAB DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LISTBOX         IDC_CONTEXT_LIST,7,33,115,143,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_OPTIONS_STATUS DIALOGEX 0, 0, 331, 285
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "Case:",IDC_STATIC,7,7,31,8
+    LISTBOX         IDC_CASE_LIST,7,18,78,259,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "General",IDC_STATIC,90,7,234,120
+    RTEXT           "Collection type:",IDC_STATIC,102,21,88,8
+    LTEXT           "Full capture",IDC_TYPE_STATUS,193,21,121,8
+    RTEXT           "Protocols:",IDC_STATIC,102,34,88,8
+    LTEXT           "POP3, SMTP",IDC_PROTOCOL_STATUS,193,34,121,8
+    RTEXT           "Display packets:",IDC_STATIC,102,47,88,8
+    LTEXT           "Enabled",IDC_PACKETS_STATUS,193,47,121,8
+    RTEXT           "Post messages to the Log:",IDC_STATIC,102,60,88,8
+    LTEXT           "Enabled",IDC_MESSAGES_STATUS,193,60,121,8
+    RTEXT           "Display summary statistics:",IDC_STATIC,102,73,88,8
+    LTEXT           "Enabled",IDC_SUMMARY_STATUS,193,73,121,8
+    RTEXT           "Filename Prefix:",IDC_STATIC,102,99,58,8
+    CONTROL         "Prefix_",IDC_FILENAME_PREFIX,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,162,99,152,8
+    RTEXT           "Output Directory:",IDC_STATIC,102,112,58,8
+    CONTROL         "C:\\EmailCapture",IDC_OUTPUT_STATUS,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,162,112,152,8
+    GROUPBOX        "Triggers",IDC_STATIC,91,135,233,44
+    LTEXT           "Start:",IDC_STATIC,102,148,25,8
+    LTEXT           "12:00:00.000-0 November 1, 2010",IDC_START_STATUS,134,148,182,8
+    LTEXT           "Stop:",IDC_STATIC,102,161,25,8
+    LTEXT           "12:00:00.000-0 November 1, 2010",IDC_STOP_STATUS,134,161,182,8
+    GROUPBOX        "Address List",IDC_STATIC,91,185,233,93
+    LISTBOX         IDC_ADDRESSES_STATUS,102,201,213,69,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP,WS_EX_TRANSPARENT
+    LTEXT           "Capturing all addresses.",IDC_CAPTURE_ALL_STATUS,102,201,215,8
+END
+
+IDD_OPTIONS_VIEW DIALOGEX 0, 0, 237, 158
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+END
+
+IDD_CONTEXT_TAB DIALOGEX 0, 0, 207, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PLUGIN_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_PLUGIN_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 428
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 237
+    END
+
+    IDD_PLUGIN_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_OPTIONS_STATUS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 324
+    END
+
+    IDD_OPTIONS_VIEW, DIALOG
+    BEGIN
+    END
+
+    IDD_CONTEXT_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,4,0,0
+ PRODUCTVERSION 1,4,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "Email Capture OE"
+#ifdef X64
+            " 64-bit"
+#else
+            " 32-bit"
+#endif
+            VALUE "FileVersion", "1.4.0.0"
+            VALUE "InternalName", "EmailCaptureOE"
+            VALUE "LegalCopyright", "Copyright (C) 2011-2015, WildPackets, Inc."
+            VALUE "OriginalFilename", "EmailCaptureOE.dll"
+            VALUE "ProductName", "Email Capture OmniEngine"
+            VALUE "ProductVersion", "1.4.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PLUGIN_NAME         "EmailCaptureOE"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VERSION_TEMPLATE    "Version %d.%d.%d.%d"
+    IDS_OPTIONS_TITLE       "EmailCaptureOE Options"
+    IDS_ADD_TARGET_TITLE    "Add Case"
+    IDS_EDIT_TARGET_TITLE   "Edit Case Options"
+    IDS_SMTP_TOTAL          "SMTP - Target Emails Detected"
+    IDS_SMTP_FULL           "SMTP - Full Emails Reports"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMTP_PEN            "SMTP - Pen Emails Reports"
+    IDS_SMTP_RESET          "SMTP - Reset or Aborted Email Connections"
+    IDS_SMTP_ABORT          "SMTP - Malformed Emails Detected"
+    IDS_SMTP_TIMEDOUT       "SMTP - Timed Out Email Connections"
+    IDS_POP3_TOTAL          "POP3 - Emails Detected"
+    IDS_POP3_FULL           "POP3 - Full Emails Reports"
+    IDS_POP3_PEN            "POP3 - Pen Emails Reports"
+    IDS_POP3_NO_TARGETS     "POP3 - No Targets"
+    IDS_POP3_RESET          "POP3 - Reset or Aborted Email Connections"
+    IDS_POP3_ABORT          "POP3 - Malformed Emails Detected"
+    IDS_POP3_TIMEDOUT       "POP3 - Timed Out Email Connections"
+    IDS_FILE_ERROR          "File Errors"
+    IDS_STAT_COUNT          "Invalid Index"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SMTP_OPEN           "Open SMTP Emails"
+    IDS_POP3_OPEN           "Open POP3 Emails"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SLICE_ON            "All packets will be sliced."
+    IDS_SLICE_OFF           "Packets will NOT be sliced."
+END
+
+STRINGTABLE
+BEGIN
+    ID_ADD_CASE             "Add Case"
+    ID_REMOVE_CASE          "Remove Case"
+    ID_IMPORT               "Import"
+    ID_EXPORT               "Export"
+    ID_OPTIONS              "Options"
+    IDS_INTEGRITY           "Integrity"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_UNSUPPORTED_VERSION "The Email Capture Plugin requires OmniPeek Professional or Enterprise."
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

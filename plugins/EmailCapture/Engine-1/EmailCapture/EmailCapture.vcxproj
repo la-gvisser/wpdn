@@ -1,0 +1,575 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|x64">
+      <Configuration>Template</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CB938E3A-6236-41BF-ACF7-B8611D902B59}</ProjectGuid>
+    <RootNamespace>EmailCapture</RootNamespace>
+    <SccProjectName>Perforce Project</SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>.</SccLocalPath>
+    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">EmailCaptureOE</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">EmailCaptureOE</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Template|x64'">EmailCaptureOE</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Template|x64'">.dll</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EmailCaptureOE</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">EmailCaptureOE</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">EmailCaptureOE</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">.dll</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>./;./Plugin;./Options;./Helium;./Framework;./Third-Party;./Third-Party/mimepp/4.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;WIN32;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Version.lib;uxtheme.lib;.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;.\Third-Party\mimepp\4.0.5\lib\mimepp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <DelayLoadDLLs>mimepp.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ProfileGuidedDatabase>$(TargetDir)$(TargetName).pgd</ProfileGuidedDatabase>
+      <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).intermediate.manifest</ManifestFile>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>if not exist "C:\wp\branches\omni\8.0.0\src\omni\peek\Debug\Engine Plugins" mkdir "C:\wp\branches\omni\8.0.0\src\omni\peek\Debug\Engine Plugins"
+copy "$(TargetPath)" "C:\wp\branches\omni\8.0.0\src\omni\peek\Debug\Engine Plugins\"
+copy ".\$(TargetName).he" "C:\wp\branches\omni\8.0.0\src\omni\peek\Debug\Engine Plugins\"
+
+
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>./;./Plugin;./Options;./Helium;./Framework;./Third-Party;./Third-Party/mimepp/4.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;Version.lib;uxtheme.lib;.\Third-Party\mimepp\4.0.5\lib\mimepp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <DelayLoadDLLs>mimepp64.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>copy "$(TargetPath)" "C:\Program Files\WildPackets\OmniEngine\plugins\"
+copy ".\$(TargetName).he" "C:\Program Files\WildPackets\OmniEngine\plugins\"
+copy "$(TargetPath)" "C:\wp\branches\omni\8.0.0\src\omni\bin64\Plugins\"
+copy ".\$(TargetName).he" "C:\wp\branches\omni\8.0.0\src\omni\bin64\Plugins\"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>./;./Plugin;./Options;./Helium;./Framework;./Third-Party;./Third-Party/mimepp/4.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;WIN32;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>Version.lib;uxtheme.lib;.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;.\Third-Party\mimepp\4.0.5\lib\mimepp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <DelayLoadDLLs>mimepp.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <ProfileGuidedDatabase>$(TargetDir)$(TargetName).pgd</ProfileGuidedDatabase>
+      <ManifestFile>$(IntDir)$(TargetName)$(TargetExt).intermediate.manifest</ManifestFile>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>copy "$(TargetPath)" "C:\Program Files (x86)\WildPackets\OmniEngine\"
+copy ".\$(TargetName).he" "\"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>./;./Plugin;./Options;./Helium;./Framework;./Third-Party;./Third-Party/mimepp/4.0.5/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;Version.lib;uxtheme.lib;.\Third-Party\mimepp\4.0.5\lib\mimepp64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <DelayLoadDLLs>mimepp64.dll;%(DelayLoadDLLs)</DelayLoadDLLs>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)$(TargetName).lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>copy "$(TargetPath)" "C:\Program Files\WildPackets\OmniEngine\"
+copy ".\$(TargetName).he" "C:\Program Files\WildPackets\OmniEngine\"
+</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'">
+    <Link>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="Resources\WPLogo.bmp" />
+    <None Include="Third-Party\atlcrypt.inl" />
+    <None Include="EmailCaptureOE-Install.bat" />
+    <None Include="EmailCaptureOE.he" />
+    <None Include="Uninstall-EmailCaptureOE.bat" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Helium\encodehex.h" />
+    <ClInclude Include="Helium\hecom.h" />
+    <ClInclude Include="Helium\hecomweak.h" />
+    <ClInclude Include="Helium\hecore.h" />
+    <ClInclude Include="Helium\heid.h" />
+    <ClInclude Include="Helium\heinttypes.h" />
+    <ClInclude Include="Helium\helib.h" />
+    <ClInclude Include="Helium\hepoppack.h" />
+    <ClInclude Include="Helium\hepushpack.h" />
+    <ClInclude Include="Helium\heresult.h" />
+    <ClInclude Include="Helium\hestdint.h" />
+    <ClInclude Include="Helium\hestr.h" />
+    <ClInclude Include="Helium\heunk.h" />
+    <ClInclude Include="Helium\hevariant.h" />
+    <ClInclude Include="Helium\heweakref.h" />
+    <ClInclude Include="Helium\hlalloc.h" />
+    <ClInclude Include="Helium\hlatomic.h" />
+    <ClInclude Include="Helium\hlbase.h" />
+    <ClInclude Include="Helium\hlclstab.h" />
+    <ClInclude Include="Helium\hlcom.h" />
+    <ClInclude Include="Helium\hldef.h" />
+    <ClInclude Include="Helium\hlexcept.h" />
+    <ClInclude Include="Helium\hlid.h" />
+    <ClInclude Include="Helium\hlptr.h" />
+    <ClInclude Include="Helium\hlruntime.h" />
+    <ClInclude Include="Helium\hlstr.h" />
+    <ClInclude Include="Helium\hlstrconv.h" />
+    <ClInclude Include="Helium\hlsync.h" />
+    <ClInclude Include="Helium\hlvariant.h" />
+    <ClInclude Include="Helium\hlweakref.h" />
+    <ClInclude Include="Helium\imemorystream.h" />
+    <ClInclude Include="Helium\iomniengineplugin.h" />
+    <ClInclude Include="Helium\ixmldom.h" />
+    <ClInclude Include="Helium\objectwithsiteimpl.h" />
+    <ClInclude Include="Helium\omnicommands.h" />
+    <ClInclude Include="Helium\omnigraphs.h" />
+    <ClInclude Include="Helium\peekcore.h" />
+    <ClInclude Include="Helium\peekfilters.h" />
+    <ClInclude Include="Helium\peeknames.h" />
+    <ClInclude Include="Helium\peeknotify.h" />
+    <ClInclude Include="Helium\peekstats.h" />
+    <ClInclude Include="Helium\peekutil.h" />
+    <ClInclude Include="Helium\peekvoipcall.h" />
+    <ClInclude Include="Framework\ByteVectRef.h" />
+    <ClInclude Include="Framework\CaptureBuffer.h" />
+    <ClInclude Include="Framework\CaptureFile.h" />
+    <ClInclude Include="Framework\ContextManager.h" />
+    <ClInclude Include="Framework\Ethernet.h" />
+    <ClInclude Include="Framework\FileCaptureBuffer.h" />
+    <ClInclude Include="Framework\FileEx.h" />
+    <ClInclude Include="Framework\FilePacketArray.h" />
+    <ClInclude Include="Framework\GlobalId.h" />
+    <ClInclude Include="Framework\GPSInfo.h" />
+    <ClInclude Include="Framework\IpHeaders.h" />
+    <ClInclude Include="Framework\Layers.h" />
+    <ClInclude Include="Framework\MediaTypes.h" />
+    <ClInclude Include="Framework\MemUtil.h" />
+    <ClInclude Include="Framework\NotifyService.h" />
+    <ClInclude Include="Framework\Packet.h" />
+    <ClInclude Include="Framework\PacketArray.h" />
+    <ClInclude Include="Framework\PacketHeaders.h" />
+    <ClInclude Include="Framework\PCapCaptureFile.h" />
+    <ClInclude Include="Framework\Peek.h" />
+    <ClInclude Include="Framework\PeekArray.h" />
+    <ClInclude Include="Framework\PeekCaptureFile.h" />
+    <ClInclude Include="Framework\PeekConsoleContext.h" />
+    <ClInclude Include="Framework\PeekContext.h" />
+    <ClInclude Include="Framework\PeekContextProxy.h" />
+    <ClInclude Include="Framework\PeekDataModeler.h" />
+    <ClInclude Include="Framework\PeekEngineContext.h" />
+    <ClInclude Include="Framework\PeekFile.h" />
+    <ClInclude Include="Framework\PeekHash.h" />
+    <ClInclude Include="Framework\PeekLock.h" />
+    <ClInclude Include="Framework\PeekMessage.h" />
+    <ClInclude Include="Framework\PeekPacket.h" />
+    <ClInclude Include="Framework\PeekPlugin.h" />
+    <ClInclude Include="Framework\PeekProxy.h" />
+    <ClInclude Include="Framework\PeekStream.h" />
+    <ClInclude Include="Framework\PeekStrings.h" />
+    <ClInclude Include="Framework\PeekSummarySnapshot.h" />
+    <ClInclude Include="Framework\PeekSummaryStats.h" />
+    <ClInclude Include="Framework\PeekTime.h" />
+    <ClInclude Include="Framework\PeekUnits.h" />
+    <ClInclude Include="Framework\PeekXml.h" />
+    <ClInclude Include="Framework\PluginController.h" />
+    <ClInclude Include="Framework\PluginManager.h" />
+    <ClInclude Include="Framework\Protospecs.h" />
+    <ClInclude Include="Framework\ProxySummaryStats.h" />
+    <ClInclude Include="Framework\PSDefs.h" />
+    <ClInclude Include="Framework\PSIDs.h" />
+    <ClInclude Include="Framework\RefreshFile.h" />
+    <ClInclude Include="Framework\RemotePlugin.h" />
+    <ClInclude Include="Framework\Snapshot.h" />
+    <ClInclude Include="Framework\Stats.h" />
+    <ClInclude Include="Framework\std-tr1.h" />
+    <ClInclude Include="Framework\tagfile.h" />
+    <ClInclude Include="Framework\Version.h" />
+    <ClInclude Include="Framework\wppoppack.h" />
+    <ClInclude Include="Framework\wppushpack.h" />
+    <ClInclude Include="Framework\WPTypes.h" />
+    <ClInclude Include="Plugin\AboutDialog.h" />
+    <ClInclude Include="Plugin\Case.h" />
+    <ClInclude Include="Plugin\ContextTab.h" />
+    <ClInclude Include="Plugin\EmailStats.h" />
+    <ClInclude Include="Plugin\FileMap.h" />
+    <ClInclude Include="Plugin\GlobalTags.h" />
+    <ClInclude Include="Plugin\LockedPtr.h" />
+    <ClInclude Include="Plugin\LogQueue.h" />
+    <ClInclude Include="Plugin\MsgAddress.h" />
+    <ClInclude Include="Plugin\MsgInfo.h" />
+    <ClInclude Include="Plugin\MsgPacket.h" />
+    <ClInclude Include="Plugin\MsgStream.h" />
+    <ClInclude Include="Plugin\MsgText.h" />
+    <ClInclude Include="Plugin\OmniConsoleContext.h" />
+    <ClInclude Include="Plugin\OmniEngineContext.h" />
+    <ClInclude Include="Plugin\OmniPlugin.h" />
+    <ClInclude Include="Plugin\Options.h" />
+    <ClInclude Include="Plugin\PenFileEx.h" />
+    <ClInclude Include="Plugin\PenInfo.h" />
+    <ClInclude Include="Plugin\PluginMessages.h" />
+    <ClInclude Include="Plugin\PluginTab.h" />
+    <ClInclude Include="Plugin\Pop3MsgStream.h" />
+    <ClInclude Include="Plugin\ProtocolType.h" />
+    <ClInclude Include="Plugin\RegExps.h" />
+    <ClInclude Include="Plugin\ReportMode.h" />
+    <ClInclude Include="Plugin\resource.h" />
+    <ClInclude Include="Plugin\SmtpMsgStream.h" />
+    <ClInclude Include="Plugin\StdAfx.h" />
+    <ClInclude Include="Plugin\TabHost.h" />
+    <ClInclude Include="Plugin\TargetAddress.h" />
+    <ClInclude Include="Options\AddressPage.h" />
+    <ClInclude Include="Options\AttachmentPage.h" />
+    <ClInclude Include="Options\CaseDlg.h" />
+    <ClInclude Include="Options\CaseSheet.h" />
+    <ClInclude Include="Options\CasesOpts.h" />
+    <ClInclude Include="Options\CheckboxUtil.h" />
+    <ClInclude Include="Options\ModePage.h" />
+    <ClInclude Include="Options\OptionsDialog.h" />
+    <ClInclude Include="Options\OptionsStatus.h" />
+    <ClInclude Include="Options\TriggerPage.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Address.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\AddressList.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\AppleFile.h" />
+    <ClInclude Include="Third-Party\atlcrypt.h" />
+    <ClInclude Include="Third-Party\atlrx.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Base64Decoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Base64Encoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\BinHex.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Body.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\BodyPart.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\ByteBuffer.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\CharBuffer.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Class.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\DateTime.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\DispositionType.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\EncodedWord.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Entity.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Field.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\FieldBody.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Group.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Headers.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\hsString.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Mailbox.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\MailboxList.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\MediaType.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Message.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\mimepp.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\MimeTokenizer.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\MsgId.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Node.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Parameter.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\QuotedPrintableDecoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\QuotedPrintableEncoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Rfc822Tokenizer.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Stamp.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\StringRep.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Text.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\TextDecoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\TextEncoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\TextUtil.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\TnefDecoder.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\TransferEncodingType.h" />
+    <ClInclude Include="Third-Party\mimepp\4.0.5\include\Uuencode.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framework\ByteVectRef.cpp" />
+    <ClCompile Include="Framework\CaptureFile.cpp" />
+    <ClCompile Include="Framework\ContextManager.cpp" />
+    <ClCompile Include="Framework\FileCaptureBuffer.cpp" />
+    <ClCompile Include="Framework\FileEx.cpp" />
+    <ClCompile Include="Framework\GPSInfo.cpp" />
+    <ClCompile Include="Framework\IpHeaders.cpp" />
+    <ClCompile Include="Framework\Layers.cpp" />
+    <ClCompile Include="Framework\NotifyService.cpp" />
+    <ClCompile Include="Framework\Packet.cpp" />
+    <ClCompile Include="Framework\PacketArray.cpp" />
+    <ClCompile Include="Framework\PCapCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekConsoleContext.cpp" />
+    <ClCompile Include="Framework\PeekContext.cpp" />
+    <ClCompile Include="Framework\PeekContextProxy.cpp" />
+    <ClCompile Include="Framework\PeekDataModeler.cpp" />
+    <ClCompile Include="Framework\PeekMessage.cpp" />
+    <ClCompile Include="Framework\PeekPlugin.cpp" />
+    <ClCompile Include="Framework\PeekProxy.cpp" />
+    <ClCompile Include="Framework\PeekStrings.cpp" />
+    <ClCompile Include="Framework\PeekSummarySnapshot.cpp" />
+    <ClCompile Include="Framework\PeekSummaryStats.cpp" />
+    <ClCompile Include="Framework\PeekTime.cpp" />
+    <ClCompile Include="Framework\PeekUnits.cpp" />
+    <ClCompile Include="Framework\PeekXml.cpp" />
+    <ClCompile Include="Framework\PluginManager.cpp" />
+    <ClCompile Include="Framework\PluginModule.cpp" />
+    <ClCompile Include="Framework\ProxySummaryStats.cpp" />
+    <ClCompile Include="Framework\RefreshFile.cpp" />
+    <ClCompile Include="Framework\RemotePlugin.cpp" />
+    <ClCompile Include="Framework\Snapshot.cpp" />
+    <ClCompile Include="Framework\Version.cpp" />
+    <ClCompile Include="Plugin\AboutDialog.cpp" />
+    <ClCompile Include="Plugin\Case.cpp" />
+    <ClCompile Include="Plugin\ContextTab.cpp" />
+    <ClCompile Include="Plugin\EmailStats.cpp" />
+    <ClCompile Include="Plugin\FileMap.cpp" />
+    <ClCompile Include="Plugin\GlobalTags.cpp" />
+    <ClCompile Include="Plugin\LogQueue.cpp" />
+    <ClCompile Include="Plugin\MsgAddress.cpp" />
+    <ClCompile Include="Plugin\MsgInfo.cpp" />
+    <ClCompile Include="Plugin\MsgPacket.cpp" />
+    <ClCompile Include="Plugin\MsgStream.cpp" />
+    <ClCompile Include="Plugin\MsgText.cpp" />
+    <ClCompile Include="Plugin\OmniConsoleContext.cpp" />
+    <ClCompile Include="Plugin\OmniEngineContext.cpp" />
+    <ClCompile Include="Plugin\OmniPlugin.cpp" />
+    <ClCompile Include="Plugin\Options.cpp" />
+    <ClCompile Include="Plugin\PenFileEx.cpp" />
+    <ClCompile Include="Plugin\PenInfo.cpp" />
+    <ClCompile Include="Plugin\PluginMessages.cpp" />
+    <ClCompile Include="Plugin\PluginTab.cpp" />
+    <ClCompile Include="Plugin\Pop3MsgStream.cpp" />
+    <ClCompile Include="Plugin\ProtocolType.cpp" />
+    <ClCompile Include="Plugin\RegExps.cpp" />
+    <ClCompile Include="Plugin\ReportMode.cpp" />
+    <ClCompile Include="Plugin\SmtpMsgStream.cpp" />
+    <ClCompile Include="Plugin\StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Plugin\TabHost.cpp" />
+    <ClCompile Include="Plugin\TargetAddress.cpp" />
+    <ClCompile Include="Options\AddressPage.cpp" />
+    <ClCompile Include="Options\AttachmentPage.cpp" />
+    <ClCompile Include="Options\CaseDlg.cpp" />
+    <ClCompile Include="Options\CaseSheet.cpp" />
+    <ClCompile Include="Options\CasesOpts.cpp" />
+    <ClCompile Include="Options\ModePage.cpp" />
+    <ClCompile Include="Options\OptionsDialog.cpp" />
+    <ClCompile Include="Options\OptionsStatus.cpp" />
+    <ClCompile Include="Options\TriggerPage.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\Win32\libheruntime.lib" />
+    <Library Include="Third-Party\mimepp\4.0.5\lib\mimepp.lib" />
+    <Library Include="lib\Win32\Protospecs.lib" />
+    <Library Include="lib\x64\libheruntime.lib" />
+    <Library Include="Third-Party\mimepp\4.0.5\lib\mimepp64.lib" />
+    <Library Include="lib\x64\Protospecs.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Plugin\Plugin.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="Plugin\Plugin.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

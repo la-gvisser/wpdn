@@ -1,0 +1,5 @@
+/* menus definitions  */
+#myproductsMenu {top:98px; left:142px; width:175px; visibility:hidden; z-index : 2; position : absolute;}
+#downloadsMenu {top:98px; left:278px; width:175px; visibility:hidden; z-index : 2; position : absolute;}
+#resourcesMenu {top:98px; left:413px; width:175px; visibility:hidden; z-index : 2; position : absolute;}
+#contractsMenu {top:98px; left:548px; width:175px; visibility:hidden; z-index : 2; position : absolute;}

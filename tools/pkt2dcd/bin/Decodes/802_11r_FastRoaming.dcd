@@ -1,0 +1,30 @@
+//Extension to 802.11
+//802.11r - Ethertype 0x890D
+//
+//
+
+
+str# Ether::Branching_3_Str;
+0x890d	|	802_11::FastroamingRemote;
+
+
+void 802_11::FastroamingRemote()
+{
+	LABL( 0, 0, 0, 0xb1, "IEEE 802.11 Data Encapsulation" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Payload Type:" );
+		CEQU( 1, l[1], 0, 0x14, "Remote Request/Response" );
+		CEQU( 2, l[1], 0, 0x14, "TDLS" );
+		CLSE( 2, l[1], 0, 0x14, "reserved" );
+	if (l[1] == 1)
+	{	
+		DBYT( 0, l[2], 0x90, 0xc2, "FT Packet Type:" );
+		DWRD( 0, l[3], 0x90, 0xc2, "FT Action Length:" );
+		ETHR( 0, 0, 0x90, 0xc2, "AP Address:" );
+		802_11::Mgmt_Action;
+	}
+	if (l[1] == 2)
+	{
+		802_11::Mgmt_Action;
+	}	
+	LABL 0 0 0 b8;
+}

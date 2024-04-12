@@ -1,0 +1,793 @@
+// WAPI
+// WLAN Authentication and Privacy Infrastructure
+// Updated Dec 02, 2009
+//////////////////////////////////////////////////////////
+	
+str# EProto::Names_Str;
+	0x88b4	|	WAPI;
+
+void 802_11::IE_WAPI()
+{
+	//g[2] should have the IE length, save it away for later
+	l[10] = g[2];
+	BREM 0 4b 5 5;	//get the remaining bytes and store in l[11]
+	
+	DWRD( 0x40000000, 0, 0x90, 0xc2, "Version:" );
+	
+	LABL( 0, 0, 0, 0xb7, "AKM Suites" );
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "AKM Suite Count:" );
+
+	l[2] = l[1];
+	while (l[2] != 0)
+	{
+		HEX#( 3, 0, 0x90, 0xc2, "OUI:" );
+
+		/*
+		HEX#( 0x80000003, 0, 0x90, 0xc2, "OUI:" );
+		LABL( 0, 0, 0, 0, "-" );
+		HEX#( 0x80000001, 0, 0, 0  );
+		LABL( 0, 0, 0, 0, "-" );
+		HEX#( 0x80000001, 0, 0, 0  );
+		*/
+		
+		DBYT( 0, l[4], 0x90, 0xc2, "Suite Type:" );
+		CST#( 0, l[4], 0x0, 0x24, 802_11::AKMTypes );
+		SKIP( 1 );
+		LABL( 0, 0, 0x0, 0x24, "Reserved" );
+		l[2] -= 1;
+	}
+	
+	LABL( 0, 0, 0, 0xb8  );
+
+	LABL( 0, 0, 0, 0xb7, "Unicast Suites" );
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Unicast Suite Count:" );
+
+	l[2] = l[1];
+	while (l[2] != 0)
+	{
+		HEX#( 3, 0, 0x90, 0xc2, "OUI:" );
+		DBYT( 0, l[4], 0x90, 0xc2, "Suite Type:" );
+		CST#( 0, l[4], 0x0, 0x24, 802_11::UnicastCypherTypes );
+		SKIP( 1 );
+		LABL( 0, 0, 0x0, 0x24, "Reserved" );
+		l[2] -= 1;
+	}
+
+	LABL( 0, 0, 0, 0xb8  );
+	
+	LABL( 0, 0, 0, 0xb7, "Multicast Cypher Suite:" );
+	HEX#( 3, 0, 0x90, 0xc2, "OUI:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Suite Type:" );
+	CST#( 0, l[4], 0x0, 0x24, 802_11::MulticastCypherTypes );
+	SKIP( 1 );
+	LABL( 0, 0, 0x0, 0x24, "Reserved" );
+	LABL( 0, 0, 0, 0xb8  );
+	
+	BWRD( 0, l[1], 0x90, 0xc9, "Capability Info:" );
+	CBIT 5 01 00 d4 1... .... .... .... Pre-authentication;
+	CLSE 0 00 00 d4 0... .... .... .... No pre-authentication;
+	LABL 0 00 00 d4 .xxx xxxx xxxx xxxx Reserved;
+	LABL( 0, 0, 0, 0xb8  );
+	BREM 0 4c 5 5;
+	l[11] -= l[12];	//get the number of bytes read so far
+	l[13] = l[10];
+	l[13] -= l[11];
+	if (l[10] > l[11])
+	{
+		//if the IE length is greater than the bytes read so far
+		//then there should be BKID information.
+		LABL( 0, 0, 0, 0xb7, "Base Key ID:" );	
+		DWRD( 0x40000000, l[1], 0x90, 0xc2, "BKID Count:" );
+		l[13] -= 2;
+		l[2] = l[1];
+		while (l[2] != 0)
+		{
+			if (l[1] == 1)
+			{
+				DUMP( 0, l[13], 0x02, 0xc2, "BKID" );
+				l[1] -= 1;
+				l[2] -= 1;
+			}
+			if (l[1] >= 2 )
+			{
+				l[2] -= 1;
+				DGLB( 0, l[2], 0x02, 0xc2, "BKID #" );
+				HEX#( 4, 0, 0x90 );
+				
+			}
+		}
+		
+		LABL( 0, 0, 0, 0xb8  );
+	}
+
+}
+
+str# 802_11::AKMTypes;
+	1 | "WAI Certificate Authentication and Key Management";
+	2 | "WAI Preshared Key Authentication and Key Management";
+	
+str# 802_11::UnicastCypherTypes;
+	1 | "WPI-SMS4";
+	
+str# 802_11::MulticastCypherTypes;
+	1 | "WPI-SMS4";
+
+void WAI_Protocol()
+{
+	LABL 0 0 0 b7 WAPI;
+	
+	DWRD 0 41 90 c2 Version:;
+	DBYT 0 45 90 c2 Type:;
+	CEQU 1 45 0 24 WAI protocol;
+	CLSE 0 0 0 24 Reserved;
+	
+	DBYT 0 46 90 c2 SubType:;
+	CST# 0 46 0 24 WAI_Protocol::SubTypes_str;
+	CLSE 0 0 0 24 Reserved;
+	
+	DWRD 0 0 90 c2 Reserved:;
+	DWRD 0 42 90 c2 Length:;
+	
+	DWRD 0 41 90 c2 Message Sequence Number:;
+	DBYT 0 47 90 c2 Fragment Sequence Number:;
+	BBYT 0 41 90 b9 Flag:;
+	LABL 0 0 0 d4  xxxx xxx. Reserved;
+	CBIT 0 41 0 d4 .... ...1 WAI Message Fragment;
+	CLSE 0 0 0 d4  .... ...0 No Fragment;
+	LABL 0 0 0 b8;
+	
+	l[2] -= 12;	//the length field includes the protocol header
+	BREM 0 43 5 5;
+	
+	//we can only decode the first fragment
+	if( l[7] == 0 )
+	{
+		if( l[5] == 1 )
+		{
+			TSB# 0 46 5 5 WAI_Protocol::SubTypes_func;
+		}
+	}
+		
+	BREM 0 44 5 5;
+	l[3] -= l[4];
+	l[2] -= l[3];
+	if( l[2] > 0 )
+	{
+		DUMP 0 42 90 c2 WAI Data:;
+	}
+	
+	LABL 0 0 0 b8;
+}
+
+//g[1] will contain the value of the option field bit
+void WAI::Flag_Field()
+{
+	BBYT 0 41 90 b9 Flag:;
+	LABL 0 0 0 d4	x... .... Reserved;
+	CBIT 6 41 0 d4	.1.. .... STAKey Revoking Message;
+	CLSE 0 0 0 d4   .0.. .... Not a STAKey Revoking Message;
+	CBIT 5 41 0 d4  ..1. .... STAKey Negotiation Message;
+	CLSE 0 0 0 d4   ..0. .... Not a STAKey Negotiation Message;
+	CBIT 4 41 0 d4  ...1 .... USK Rekeying Message;
+	CLSE 0 0 0 d4   ...0 .... Not a USK Rekeying Message;
+	CBIT 3 41 0 d4   .... 1... Optional Field Present;
+	CLSE 0 0 0 d4   .... 0... Optional Field Not Present;
+	CBIT 2 41 0 d4  .... .1.. Certificate Authentication Request;
+	CLSE 0 0 0 d4   .... .0.. Certificate Authentication Request Not Required;
+	CBIT 1 41 0 d4  .... ..1. Preauthentication Message;
+	CLSE 0 0 0 d4   .... ..0. Not a Preauthentication Message;
+	CBIT 0 41 0 d4  .... ...1 BK Rekeying Message;
+	CLSE 0 0 0 d4   .... ...0 Not a BK Rekeying Message;
+	LABL 0 0 0 b8;
+	
+	g[1] = l[1];
+	g[1] &= 0x08;
+	SHFR 3 1;
+}
+
+void WAI::Identity_Field()
+{
+	DWRD 0 41 90 c2 Identifier:;
+	CNEQ 1 41 0 24 Reserved;
+	
+	DWRD 0 42 90 c2 Length:;
+	
+	//TODO: Decode identifier data
+	DUMP 0 42 90 c2 Identifier Data:;
+}
+
+void WAI::Identity_List()
+{
+	DBYT 0 41 90 c2 Type:;
+	DWRD 0 42 90 c2 Length:;
+	DBYT 0 0 90 c2 Reserved:;
+	DWRD 0 43 90 c2 Identity Count:;
+	
+	while( l[3] > 0 )
+	{
+		LABL 0 0 0 c7 Identity ;
+		DGLB 0 43 1 0;
+		WAI::Identity_Field();
+		LABL 0 0 0 c8;
+		
+		l[3] -= 1;
+	}
+}
+
+void WAI::Certificate_Field()
+{
+	DWRD 0 41 90 c2 Identifier:;
+	CST# 0 41 0 24 WAI_Protocol::Certificate_Identifier_str;
+	CLSE 0 0 0 24 Reserved;
+	
+	DWRD 0 42 90 c2 Length:;
+	
+	DUMP 0 42 90 c2 Certificate Data:;
+}
+
+void WAI::Certificate_Verification_Result()
+{
+	DBYT 0 41 90 c2 Type:;
+	DWRD 0 42 90 c2 Length:;
+	WAI::Nonce_Field();
+	WAI::Nonce_Field();
+	DBYT 0 43 90 c2 Verification Result 1: ;
+	CST# 0 43 0 24 WAI::Certificate_Verification_Result_str;
+	CLSE 0 0 0 24 Reserved;
+	
+	LABL 0 0 0 c7 Certificate 1;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+	
+	DBYT 0 43 90 c2 Verification Result 2: ;
+	CST# 0 43 0 24 WAI::Certificate_Verification_Result_str;
+	CLSE 0 0 0 24 Reserved;
+		
+	LABL 0 0 0 c7 Certificate 2;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+}
+
+void WAI::ADDID_Field()
+{
+	ETHR 0 0 90 c2 MAC 1:;
+	ETHR 0 0 90 c2 MAC 2:;
+}
+
+void WAI::BKID_Field()
+{
+	HEX# 10 0 90 c2 BK Id:; 
+}
+
+void WAI::USKID_Field()
+{
+	BBYT 0 41 90 b9 USK Id:;
+	LABL 0 0 0 d4	xxxx xxx. Reserved;
+	CBIT 0 41 0 d4	.... ...1 New Key Negotiation;
+	CLSE 0 0 0 d4	.... ...0 Current Key Negotiation;
+	LABL 0 0 0 b8;
+}
+
+void WAI::Result_Field()
+{
+	DBYT 0 41 90 c2 Result:;
+	CEQU 0 41 0 24 Success;
+}
+
+void WAI::Nonce_Field()
+{
+	DUMP 20 0 90 c2 Nonce:;
+}
+
+void WAI::Key_Data()
+{
+	DBYT 0 41 90 c2 Length:;
+	DUMP 0 41 90 c2 Content:;
+}
+
+void WAI::Key_Announcement_Identifier_Field()
+{
+	HEX# 10 0 90 c2 Key Announcement Id:;
+}
+
+void WAI::Data_Sequence_Number_Field()
+{
+	HEX# 10 0 90 c2 Data Sequence Number:;
+}
+
+void WAI::ECDH_Field()
+{
+	DBYT 0 41 90 c2 Identifier:;
+	CEQU 1 41 0 24 OID;
+	CLSE 0 0 0 24 Reserved;
+	
+	DWRD 0 42 90 c2 Length:;
+	
+	//this should read and parse oids in ASN.1 DER encoding
+	l[3] = g[2];
+	g[2] = l[2];
+	WAI::Parameter_OID;
+	g[2] = l[3];
+}
+
+void WAI::Signature_Attribute()
+{
+	DBYT 0 41 90 c2 Type:;
+	DWRD 0 41 90 c2 Length:;
+	
+	LABL 0 0 0 c7 Identity;
+	WAI::Identity_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 Signature Algorithm;
+	WAI::Signature_Algorithm_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 Signature Value;
+	DWRD 0 42 90 c2 Length:;
+	DUMP 0 42 90 c2 Content:;
+	LABL 0 0 0 c8;
+	
+}
+
+void WAI::Signature_Algorithm_Field()
+{
+	DWRD 0 41 90 c2 Length:;
+	DBYT 0 42 90 c2 Hash Algorithm:;
+	CEQU 1 42 0 24 SHA-256;
+	CLSE 0 0 0 24 Reserved;
+	
+	DBYT 0 42 90 c2 Signature Algorithm:;
+	CEQU 1 42 0 24 ECDSA-192;
+	CLSE 0 0 0 24 Reserved;
+	
+	LABL 0 0 0 c7 Parameter;
+	
+	DBYT 0 42 90 c2 Parameter Id:;
+	CST# 0 42 0 24 WAI::Signature_Algorithm_Parameter_str;
+	CLSE 0 0 0 24 Reserved;
+	
+	DWRD 0 43 90 c2 Length:;
+	
+	//store the length in g[2]
+	l[4] = g[2];
+	g[2] = l[3];
+	TSB# 0 42 5 5  WAI::Signature_Algorithm_Parameter_func;
+	
+	if( g[2] != 0 )
+	{
+		DUMP 0 2 90 c2 Content:;
+	}
+	
+	g[2] = l[4];	//restore contents of g[2];
+	
+	LABL 0 0 0 c8;	
+}
+
+void WAI::WIE()
+{
+	DBYT 0 41 90 c2 Element Id:;
+	DBYT 0 42 90 c2 Length:;
+	
+	if( l[1] == 68 )
+	{
+		//the wapi ie expects the length to be in g[2]
+		l[3] = g[2];
+		g[2] = l[2];
+		802_11::IE_WAPI();
+		g[2] = l[3];	//restore the contents of g[2]
+		TRTS;
+	}
+	
+	DUMP 0 42 90 c2 WIE Data:;
+}
+void WAI::Parameter_OID()
+{	
+	//g[2] has the length of this parameter
+	l[4] = g[2];
+	
+	BREM 0 45 5 5;
+	
+	DBYT 0 41 5 85;	//get the ASN1 type
+	DBYT 0 42 5 5;	//get the length
+	
+	//make sure this is an oid type
+	if( l[1] == 6 )
+	{
+		LABL 0 0 0 42 OID:;
+		//put the oid length in g[2]
+		l[3] = g[2];
+		g[2] = l[2];
+		ASN1_OID;
+		g[2] = l[3];
+	}
+	
+	BREM 0 46 5 5;
+	l[5] -= l[6];
+	l[4] -= l[5];
+	
+	if( l[4] > 0 )
+	{
+		DUMP 0 44 90 c2 Extra Parameter Data:;
+	}
+	
+	g[2] = 0;
+}
+
+void WAI::Detailed_Parameters()
+{
+	DUMP 0 2 90 c2 Parameter Data:;
+	
+	g[2] = 0;
+}
+
+void WAI::Authentication_Activation()
+{
+	LABL 0 0 0 b7 Authentication Activation;
+	
+	WAI::Flag_Field();
+	HEX# 20 0 90 c2 Auth Id:;
+	
+	LABL 0 0 0 c7 Local ASU Identity;
+	WAI::Identity_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 STA Certificate;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 ECDH Parameter;
+	WAI::ECDH_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Access_Authentication_Request()
+{
+	LABL 0 0 0 b7 Access Authentication Request;
+	
+	l[1] = g[1];
+	WAI::Flag_Field();
+	l[2] = g[1];	//get the optional field bit
+	g[1] = l[1];	//restore the contents of g1
+	
+	HEX# 20 0 90 c2 Auth Id:;
+	HEX# 20 0 90 c2 ASUE Challenge:;
+	
+	LABL 0 0 0 c7 ASUE Key;
+	WAI::Key_Data();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 STA Identity;
+	WAI::Identity_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 STA Certificate;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 ECDH Parameter;
+	WAI::ECDH_Field();
+	LABL 0 0 0 c8;
+	
+	//the trusted ASU list is optional
+	if( l[2] == 1 )
+	{
+		LABL 0 0 0 c7 Trusted ASUs;
+		WAI::Identity_List();
+		LABL 0 0 0 c8;
+	}
+	
+	LABL 0 0 0 c7 ASUE Signature;
+	WAI::Signature_Attribute();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Access_Authentication_Response()
+{
+	LABL 0 0 0 b7 Access Authentication Response;
+	
+	l[1] = g[1];
+	WAI::Flag_Field();
+	l[2] = g[1];	//get optional field bit
+	g[1] = l[1];
+	
+	HEX# 20 0 90 c2 ASUE Challenge:;
+	HEX# 20 0 90 c2 AE Challenge:;
+	
+	DBYT 0 41 90 c2 Access Result:;
+	CST# 0 41 0 24 WAI::Access_Result_str;
+	CLSE 0 0 0 24 Reserved;
+	
+	LABL 0 0 0 c7 ASUE Key Data;
+	WAI::Key_Data();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 AE Key Data;
+	WAI::Key_Data();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 AE Identity;
+	WAI::Identity_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 ASUE Identity;
+	WAI::Identity_Field();
+	LABL 0 0 0 c8;
+	
+	//the multiple certificate verification result field is optional
+	if( l[2] == 1 )
+	{
+		LABL 0 0 0 c7 Verification Results;
+		WAI::Certificate_Authentication_Response_Results();
+		LABL 0 0 0 c8;
+	}
+	
+	LABL 0 0 0 c7 AE Signature;
+	WAI::Signature_Attribute();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Certificate_Authentication_Request()
+{
+	LABL 0 0 0 b7 Certificate Authentication Request;
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	HEX# 20 41 90 c2 AE Challenge:;
+	HEX# 20 41 90 c2 ASUE Challenge:;
+	
+	LABL 0 0 0 c7 ASUE Certificate;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 AE Certificate;
+	WAI::Certificate_Field();
+	LABL 0 0 0 c8;
+	
+	BREM 0 41 5 5;
+	
+	//the trusted asu list is optional
+	if( l[1] > 4 )
+	{
+		LABL 0 0 0 c7 Trusted ASUs;
+		WAI::Identity_List();
+		LABL 0 0 0 c8;
+	}
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Certificate_Authentication_Response()
+{
+	LABL 0 0 0 b7 Certificate Authentication Response;
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	WAI::Certificate_Authentication_Response_Results();
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Certificate_Authentication_Response_Results()
+{
+	LABL 0 0 0 c7 Auth Result;
+	WAI::Certificate_Verification_Result();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 ASUE Server Signature;
+	WAI::Signature_Attribute();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 c7 AE Server Signature;
+	WAI::Signature_Attribute();
+	LABL 0 0 0 c8;
+}
+
+void WAI::Unicast_Key_Negotiation_Request()
+{
+	LABL 0 0 0 b7 Unicast Key Negotiation Request;
+	WAI::Flag_Field();
+	
+	WAI::BKID_Field();
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	HEX# 20 0 90 c2 AE Challenge:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Unicast_Key_Negotiation_Response()
+{
+	LABL 0 0 0 b7 Unicast Key Negotation Response;
+	WAI::Flag_Field();
+	
+	WAI::BKID_Field();
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	HEX# 20 0 90 c2 ASUE Challenge:;
+	HEX# 20 0 90 c2 AE Challenge:;
+	
+	LABL 0 0 0 c7 WAPI Information Element;
+	//this should be the WAPI information element
+	WAI::WIE();
+	LABL 0 0 0 c8;
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Unicast_Key_Negotiation_Confirmation()
+{
+	LABL 0 0 0 b7 Unicast Key Negotiation Confirmation;
+	WAI::Flag_Field();
+	WAI::BKID_Field();
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	HEX# 20 0 90 c2 ASUE Challenge:;
+	
+	LABL 0 0 0 c7 WAPI Information Element;
+	WAI::WIE();
+	LABL 0 0 0 c8;
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Multicast_Key_Announcement()
+{
+	LABL 0 0 0 b7 Multicast Key Announcement;
+	
+	WAI::Flag_Field();
+	BBYT 0 41 90 c2 MSK Id:;
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	WAI::Data_Sequence_Number_Field();
+	WAI::Key_Announcement_Identifier_Field();
+	
+	LABL 0 0 0 c7 Key Data;
+	WAI::Key_Data();
+	LABL 0 0 0 c8;
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Multicast_Key_Announcement_Response()
+{
+	LABL 0 0 0 b7 Multicast Key Announcement Response;
+	
+	WAI::Flag_Field();
+	BBYT 0 41 90 c2 MSK Id:;
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	WAI::Key_Announcement_Identifier_Field();
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::STAKey_Establishment_Request()
+{
+	LABL 0 0 0 b7 STAKey Establishment Request;
+	WAI::Flag_Field();
+	DBYT 0 41 90 c2 STAKey Id:;
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+	
+	HEX# 10 0 90 c2 Replay Counter:;
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+	
+	LABL 0 0 0 b8;
+}
+
+void WAI::Preauthentication()
+{
+	LABL 0 0 0 b7 Preauthentication;
+	WAI::Flag_Field();
+	WAI::USKID_Field();
+	
+	LABL 0 0 0 c7 ADDID;
+	WAI::ADDID_Field();
+	LABL 0 0 0 c8;
+
+	WAI::Key_Announcement_Identifier_Field();
+	
+	HEX# 14 0 90 c2 Message Auth Code:;
+		
+	LABL 0 0 0 b8;
+}
+
+str# WAI_Protocol::SubTypes_str;
+	1 | Preauthentication Start;
+	2 | STAKey Establishment Request;
+	3 | WAI Authentication Activation;
+	4 | Access WAI Authentication Request;
+	5 | Access WAI Authentication Response;
+	6 | Certificate Authentication Request;
+	7 | Certificate Authentication Response;
+	8 | Unicast Key Negotiation Request;
+	9 | Unicast Key Negotiation Response;
+	0xa | Unicast Key Negotiation Confirmation;
+	0xb | Multicast Key/STAKey Announcement;
+	0xc | Multicast Key/STAKey Announcement Response;
+
+str# WAI_Protocol::SubTypes_func;
+	1 | WAI::Preauthentication;
+	2 | STAKey_Establishment_Request;
+	3 | WAI::Authentication_Activation;
+	4 | WAI::Access_Authentication_Request;
+	5 | WAI::Access_Authentication_Response;
+	6 | WAI::Certificate_Authentication_Request;
+	7 | WAI::Certificate_Authentication_Response;
+	8 | WAI::Unicast_Key_Negotiation_Request;
+	9 | WAI::Unicast_Key_Negotiation_Response;
+	0xa | WAI::Unicast_Key_Negotiation_Confirmation;
+	0xb | WAI::Multicast_Key_Announcement;
+	0xc | WAI::Multicast_Key_Announcement_Response;
+			
+str# WAI_Protocol::Certificate_Identifier_str;
+	1 | X.509 v3 certificate;
+	2 | GBW certificate;
+	
+str# WAI::Signature_Algorithm_Parameter_str;
+	1 | OID;
+	2 | Detailed Parameters;
+
+str# WAI::Signature_Algorithm_Parameter_func;
+	1 | WAI::Parameter_OID;
+	2 | WAI::Detailed_Parameters;
+		
+str# WAI::Certificate_Verification_Result_str;
+	0 | Valid;
+	1 | Certificate Issuer Unknown;
+	2 | Root Certificate is Untrusted;
+	3 | Certificate Time Range not Valid;
+	4 | Signature is Invalid;
+	5 | Certificate is Revoked;
+	6 | Certificate not Valid in Proposed Usage;
+	7 | Revocation State is Unknown;
+	8 | Certificate has Unknown Error;
+	
+str# WAI::Access_Result_str;
+	0 | Success;
+	1 | Unidentified Certificate;
+	2 | Certificate Error;
+	3 | Prohibited by AE;

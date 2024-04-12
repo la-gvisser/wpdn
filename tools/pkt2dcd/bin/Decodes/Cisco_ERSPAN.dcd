@@ -1,0 +1,68 @@
+//ERSPAN
+
+
+str# Ether::Branching_3_Str;
+0x88BE	|	ERSPAN;
+0x22EB	|	ERSPAN;
+
+str# EProto::Names_Str;
+0x88BE	|	ERSPAN;
+0x22EB	|	ERSPAN;
+
+void ERSPAN()
+{
+	LABL 0 0 00 b1 ERSPAN - Encapsulated Remote Switched Port ANalyzer (CISCO); 	
+	l[1] = pb[0];
+	l[1] &= 0xf0;
+	SHFR( 4, l[1]);
+	//l[1] = 0;
+	if ( l[1] == 1 )				*offset 8
+	{
+		BBIT( 4, l[1], 0x90, 0xc2, "Version:");
+			CEQU( 1, l[1], 0, 0x14, "Type II");
+			CEQU( 2, l[1], 0, 0x14, "Type III");
+		DBIT( 12, 0, 0x90, 0xc2, "Vlan:"); 	
+		DBIT( 3, l[2], 0x90, 0xc2, "Priority:");
+		DBIT( 1, l[3], 0x90, 0xc2, "Unknown1:");
+		DBIT( 1, l[4], 0x90, 0xc2, "Direction:");
+			CEQU( 0, l[4], 0, 0x14, "Incoming");
+			CEQU( 1, l[4], 0, 0x14, "Outgoing");
+		DBIT( 1, l[5], 0x90, 0xc2, "Truncated:"); 
+			CEQU( 0, l[5], 0, 0x14, "not truncated");
+			CEQU( 1, l[5], 0, 0x14, "truncated");
+		DBIT( 10, l[6], 0x90, 0xc2, "SpanID:");		
+		HEX#( 0, 4, 0x90, 0xc2, "Unknown2:");
+		LABL 0 0 00 b8;
+		Ether::Branching;
+	}
+	if ( l[1] == 2 )				*offset 16(20)
+	{
+		BBIT( 4, l[1], 0x90, 0xc2, "Version:");
+			CEQU( 2, l[1], 0, 0x14, "Type III");
+		DBIT( 12, 0, 0x90, 0xc2, "Vlan:"); 	
+		DBIT( 3, l[2], 0x90, 0xc2, "Priority:");
+		DBIT( 1, l[3], 0x90, 0xc2, "Unknown1:");
+		DBIT( 1, l[4], 0x90, 0xc2, "Unknown2:");
+		DBIT( 1, l[5], 0x90, 0xc2, "Truncated:"); 
+			CEQU( 0, l[5], 0, 0x14, "not truncated");
+			CEQU( 1, l[5], 0, 0x14, "truncated");
+		DBIT( 10, l[6], 0x90, 0xc2, "SpanID:");
+		HLNG( 0, l[7], 0x90, 0xc2, "Timestamp:");
+		DWRD( 0, l[7], 0x90, 0xc2, "Unknown3:");
+		DBIT( 3, l[8], 0x90, 0xc2, "Unknown4:");
+		DBIT( 1, l[8], 0x90, 0xc2, "Direction:");
+			CEQU( 0, l[8], 0, 0x14, "Incoming");
+			CEQU( 1, l[8], 0, 0x14, "Outgoing");
+		DBIT( 14, l[8], 0x90, 0xc2, "Unknown5:");
+		HLNG( 0, l[8], 0x90, 0xc2, "Unknown6:");
+		HLNG( 0, l[8], 0x90, 0xc2, "Unknown7:");
+		//DWRD( 0, l[7], 0x90, 0xc2, "Unknown6:");
+		LABL 0 0 00 b8;
+		Ether::Branching;
+	}
+	if ((l[1] != 1) && (l[1] != 2))
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Unknown Version:");
+	}
+	TRTS;
+}

@@ -1,0 +1,181 @@
+Folder Adapter OE
+Adding Modify Adapter
+
+Overview:
+Modify the Options web page by adding PutPreferences(). This function will extract the adapter GUID from the
+XML input. If the GUID is not NULL ( {0000---0000} ) then reconfigure the page for modifying the adapter. Also
+Get the adapter's settings from the engine. When the user clicks the Modify button send the currently displayed
+settings to the engine.
+
+In the plugin handle Get Adapter messages in OmniPlugin (OmniEngineContext already handles Get Adapter messages).
+And add a Modify Adapter message handler.
+
+Updating adapter settings, especially while capturing, will be specific to each adapter type.
+The plugin may refuse to update the adapter's settings while it has active captures.
+
+
+
+PeekAdapter.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+virtual bool	IsCapturing() const { return m_bCapturing; }    <-- Make IsCapturing() virtual.
+
+
+PeekContextProxy.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class COmniAdapter                      <-- Add
+
+void	SetDeletable( bool inDeleteable ) {
+    if ( IsValid() ) {
+        BOOL	bDeletable( inDeleteable );
+        Peek::ThrowIfFailed( m_spPluginAdapterInfo->SetDeletable( bDeletable ) );   <-- Fix: call SetDeletable not SetPersistent.
+    }
+}
+
+// CAdapter
+
+bool Open() {
+<snip>
+}
+
+COmniAdapter*	GetOmniAdapter();       <-- Add
+
+
+PeekContextProxy.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+VVVVVVVVVVVVVVVVVVV Add VVVVVVVVVVVVVVVVVVV
+
+#include "RemoteAdapter.h"
+
+
+// =============================================================================
+//		CAdapter
+// =============================================================================
+
+COmniAdapter*
+CAdapter::GetOmniAdapter()
+{
+	CRemoteAdapter*	pRemoteAdapter = dynamic_cast<CRemoteAdapter*>( m_spAdapter.get() );
+	if ( pRemoteAdapter != nullptr ) {
+		return &(pRemoteAdapter->GetAdapter());
+	}
+
+	return nullptr;
+}
+^^^^^^^^^^^^^^^^^^^ Add ^^^^^^^^^^^^^^^^^^^
+
+Options\index.html
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Updated XML functions.
+- Added PutPreferences() to received adapter id.
+- Updated PutResponse() to handle new messages.
+- Modified CanClose() to always allow when modifying an adapter.
+- CreateConfig() renamed to ConfigAdapter() to issue either Create or Modify message.
+- Added CreateAdapter() and ModifyAdapter().
+- Added ProcessGetAdapter() and ProcessModifyAdapter() to hande new message responses.
+- Added Modify button. Initially hidden. If adapter GUID is not NULL then show Modify button and hide Create button.
+- Added hidden text control to hold adapter id.
+
+
+OmniAdapter.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+COmniAdapter::CreateAdapterInfo()
+<snip>
+	paiDefault.SetDeletable( true );			<--- Add
+
+
+COmniAdapter::GetOptions()
+<snip>
+	options.SetId( m_Id );					<-- Add
+
+
+COmniAdapter::Initialize()
+<snip>
+	m_AdapterInfo.SetDeletable( info.GetDeletable() );	<-- Add
+
+
+COmniAdapter::ProcessFile()
+<snip>
+	SInt64  nDelay = (m_nSpeed > 0) ? (1000000000 / m_nSpeed) : 0;	<-- Modify
+
+
+COmniAdapter::SetOptions()
+<snip>
+	if ( m_Id.IsNull() ) {					<-- Add
+		m_Id = inOptions.GetId();			<-- Add
+	}							<-- Add
+	else {							<-- Add
+		_ASSERTE( m_Id == inOptions.GetId() );		<-- Add
+	}							<-- Add
+
+
+COmniAdapter::UpdateOptions()					<-- Add this function.
+
+
+
+OmniAdapter.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+virtual bool	IsCapturing() const { return (m_nRunningCaptures > 0); }	<-- Add
+bool		UpdateOptions( const CAdapterOptions& inOptions );		<-- Add
+
+
+
+OmniEngineContext.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+COmniEngineContext::OnProcessPluginMessage()
+	case CMessageGetAdapter::s_nMessageType:		<-- Rename class
+
+COmniEngineContext::ProcessGetAdapterOptions()
+	CMessageGetAdapter*	pMessage( dynamic_cast<CMessageGetAdapter*>( ioMessage ) );	<-- Rename class
+<snip>
+	CAdapterOptions	optAdapter;				<-- Add
+	if ( opt.Find( adptId, optAdapter ) ) {			<-- Add
+		pMessage->SetAdapterOptions( optAdapter );	<-- Add
+	}
+
+
+OmniPlugin.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Add COmniPlugin::ModifyAdapter()
+- Add COmniPlugin::ProcessGetAdapter()
+- Add COmniPlugin::ProcessModifyAdapter()
+
+
+COmniPlugin::OnLoad()
+	m_nOptionsFlags = peekPluginHandlerUI_Zipped;		<-- Remove peekPluginHandlerUI_NoDefaultPrefs
+
+
+COmniPlugin::OnProcessPluginMessage()
+- Add CMessageGetAdapter and CMessageModifyAdapter handlers.
+
+
+
+OmniPlugin.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Add COmniPlugin::ModifyAdapter()
+- Add COmniPlugin::ProcessGetAdapter()
+- Add COmniPlugin::ProcessModifyAdapter()
+
+- Remove m_ayAdapters
+
+
+
+Options.cpp & Options.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Add COptions::Update()
+
+
+
+PluginMessages.cpp && PluginMessages.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- Rename CMessageGetAdapter from CMessageGetAdapterOptions.
+- Add CMessageModifyAdapter

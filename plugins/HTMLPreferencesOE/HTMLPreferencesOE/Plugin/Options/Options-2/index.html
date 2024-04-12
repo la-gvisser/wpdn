@@ -1,0 +1,571 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body, input, label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+    }
+
+    .left-col {
+      display: table-cell;
+      width: 35%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .right-col {
+      display: table-cell;
+      width: 65%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .row {
+      display: table;
+    }
+
+    .info-label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 1em;
+      display: inline-block;
+      vertical-align: baseline;
+      width: 8em;
+      text-align: right;
+    }
+
+    .info-input {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 1em;
+      display: inline;
+      vertical-align: baseline;
+      width: 30em;
+    }
+
+    .case-label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline-block;
+      vertical-align: baseline;
+      width: 6em;
+      text-align: right;
+    }
+
+    .case-input {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline;
+      vertical-align: baseline;
+      width: 53em;
+    }
+
+    .message-label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline-block;
+      vertical-align: baseline;
+      width: 6em;
+      text-align: right;
+    }
+
+    .message-input {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline;
+      vertical-align: baseline;
+      width: 53em;
+    }
+
+    .path-label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline-block;
+      vertical-align: baseline;
+      width: 6em;
+      text-align: right;
+    }
+
+    .path-input {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      display: inline;
+      vertical-align: baseline;
+      width: 53em;
+    }
+
+    .browse-label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      vertical-align: middle;
+    }
+
+    .browse-checkbox {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+      vertical-align: middle;
+    }
+  </style>
+  <!-- After this page load, the title of the dialog box is set to  -->
+  <!-- the title of the web page. -->
+  <title>HTML Prefs OE - 2 Options</title>
+  <script type="text/javascript">
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      var space = xml.indexOf(' ', begin);
+      if (space > 0 && space < end) end = space;
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>');
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf('"', sep + 2);
+        if (next == -1) return '';
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next);
+        }
+        begin = next + 2;
+      }
+      return '';
+    }
+
+    function xmlGetValue(xml, tag, opt) {
+      // opt is used to iterate through a list of tags with the same name.
+      // var opt = {'offset' : 0}
+      // var value1 = xmlGetValue(xml, 'item', opt)
+      // var value2 = xmlGetValue(xml, 'item', opt)
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) return '';
+      }
+      begin++;
+
+      begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      if (typeof opt != 'undefined') opt['offset'] = xml.indexOf('>', end);
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetElement(xml, tag, opt) {
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+      }
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, begin + 1);
+      if (end == -1) {
+        if (typeof opt != 'undefined') opt['offset'] = -1;
+        return '';
+      }
+      end += tagEnd.length;
+
+      if (typeof opt != 'undefined') opt['offset'] = end;
+      return xml.substring(begin, end);
+    }
+
+    function xmlEscape(xml) {
+      xml = xml.split('&quot;').join('\"');
+      xml = xml.split('&apos;').join('\'');
+      xml = xml.split('&lt;').join('<');
+      xml = xml.split('&gt;').join('>');
+      xml = xml.split('&amp;').join('&');
+      return xml;
+    }
+  </script>
+  <script type="text/javascript">
+    // Called after this page has been loaded.
+    // Return the desired width and height in pixels as decimal values.
+    function GetDisplayProperties() {
+      var props;
+      props = '640 690';
+      return props;
+    }
+
+    // Called when web page requested to send a message.
+    // Must be XML.
+    // Return the message as XML text.
+    function GetMessage() {
+      msg = document.getElementById('pluginmessage').value;
+      return msg;
+    }
+
+    // The Context Id (UUID/GUID), in text, of the Capture.
+    // A new capture has a NULL context Id:
+    // "{00000000-0000-0000-0000-000000000000}"
+    function PutContextId(id) {
+      var idContext = id;
+      var bNewCapture = idContext == "{00000000-0000-0000-0000-000000000000}";
+      var indicator = "";
+      if (bNewCapture) {
+        indicator = " *";
+      }
+      document.getElementById('captureid').value = idContext + indicator;
+    }
+
+    // Called with Engine Information in XML.
+    function PutEngineInfo(xml) {
+      // Preamble
+      var pre = xmlGetPreamble(xml);
+      var root = xml.substring(pre.length);
+
+      // Root node: engineinfo
+      var tagRoot = xmlGetTag(root);
+      var valRoot = xmlGetValue(root, tagRoot);
+
+      var valName = xmlGetValue(valRoot, 'name');
+      document.getElementById('enginename').value = xmlEscape(valName);
+
+      var valAddress = xmlGetValue(valRoot, 'address');
+      var valPort = xmlGetValue(valRoot, 'port');
+      document.getElementById('engineaddress').value = valAddress + ':' + valPort;
+
+      var valAuth = xmlGetValue(valRoot, 'auth');
+      var valDomain = xmlGetValue(valRoot, 'domain');
+      var valUser = xmlGetValue(valRoot, 'user');
+      document.getElementById('engineuser').value = valDomain + '\\' + valUser + ' (' + valAuth + ')';
+
+      var valType = xmlGetValue(valRoot, 'enginetype');
+      document.getElementById('enginetype').value = xmlEscape(valType);
+
+      var valOS = xmlGetValue(valRoot, 'operatingsystem');
+      document.getElementById('engineos').value = xmlEscape(valOS);
+
+      var valFolder = xmlGetValue(valRoot, 'datafolder');
+      document.getElementById('enginefolder').value = xmlEscape(valFolder);
+    }
+
+    // Called with the plugin's response to the message.
+    // The response is Xml.
+    function PutResponse(xml) {
+      // Root node: Tag
+      var tagRoot = xmlGetTag(xml);
+      var valRoot = xmlGetValue(xml, tagRoot);
+
+      if (tagRoot == 'GetOptions') {
+        ProcessGetOptions(xml);
+      }
+      else if (tagRoot == 'Tab') {
+        ProcessTabMessage(xml);
+      }
+    }
+
+    // Called when user clicks Ok. Return Plugin Settings as XML.
+    function GetPreferences() {
+      var prefs;
+      prefs =
+        '<Case>' + document.getElementById('casename1').value + '</Case>' +
+        '<Case>' + document.getElementById('casename2').value + '</Case>' +
+        '<Case>' + document.getElementById('casename3').value + '</Case>';
+      return prefs;
+    }
+
+    // Called with Plugin Settings in XML after page has completed loading.
+    function PutPreferences(xml) {
+      // Preamble
+      var pre = xmlGetPreamble(xml);
+      var root = xml.substring(pre.length);
+
+      // Case elements
+      var caseIndex = 1;
+      var optCase = { 'offset': 0 }
+      while (optCase['offset'] >= 0) {
+        var kase = xmlGetElement(root, 'Case', optCase);
+        if (optCase['offset'] >= 0) {
+          var id = 'casename' + caseIndex;
+          var value = xmlGetValue(kase, 'Case');
+          document.getElementById(id).value = value;
+          caseIndex++;
+        }
+      }
+    }
+  </script>
+  <script type="text/javascript">
+    // Simulate clicking an anchor control to send the app an event.
+    function appMessage(anchorObj) {
+      if (anchorObj.click) {
+        anchorObj.click()
+      }
+      else if (document.createEvent) {
+        var evt = document.createEvent('MouseEvents');
+        evt.initMouseEvent('click', true, true, window,
+            0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        var allowDefault = anchorObj.dispatchEvent(evt);
+      }
+    }
+
+    function SetDefaults() {
+      appMessage(document.getElementById('engineinfo'));
+    }
+
+    // Called when user clicks Browse button: app:browse
+    // Return unsigned integer with flags:
+    //   0x0002 : Hide the 'Show Hidden' control.
+    //   0x0004 : Initially show hidden files.
+    //   0x0008 : Show the files pane. User must select a file.
+    function GetRemoteBrowserFlags() {
+      // If the Path has a file name, then set show files.
+      var oForm = document.forms['browse_form'];
+
+      var flags = 0;
+      if (oForm.elements['hidehiddenctrl'].checked) {
+        flags = flags | 0x02;
+      }
+      if (oForm.elements['showhiddenfiles'].checked) {
+        flags = flags | 0x04;
+      }
+      if (oForm.elements['showfiles'].checked) {
+        flags = flags | 0x08;
+      }
+      flags = flags | 0x10;
+      return flags;
+    }
+
+    // Called when users clicks Ok to the Remote File Browser.
+    // inPath is a fully qualified file name.
+    function PutRemoteBrowserPath(inPath) {
+      document.getElementById('path').value = inPath;
+    }
+
+    // Called when user clicks Get File button: app:getremote
+    //                 or the Send File button: app:sendlocal
+    // return the fully qualified file name.
+    function GetRemoteBrowserPath() {
+      var path;
+      path = document.getElementById('path').value;
+      return path;
+    }
+
+    // Called when user clicks Send File button: app:sendlocal
+    // return the file contents as a Unicode String.
+    function GetFileContent() {
+      var filetext = document.getElementById('filetext').value;
+      var content;
+      if (document.getElementById('pcfile').checked) {
+        content = filetext.replace(/\n/g, '\r\n');
+      }
+      else {
+        content = filetext;
+      }
+      return content;
+    }
+
+    // Called after file transfer has been completed.
+    //     inFlags : 1 - file has been retrieved.
+    //               2 - file has been sent.
+    //   inContent : the Unicode String contents of the file retrieved.
+    function PutTransferComplete(inFlags, inContent) {
+      document.getElementById('filetext').value = inContent;
+      document.getElementById('pcfile').checked = inContent.match(/\r/g);
+    }
+  </script>
+  <script type="text/javascript">
+    function ProcessGetOptions(xml) {
+      // Root node: Tag
+      var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+      var valOptions = xmlGetValue(valRoot, xmlGetTag(valRoot));
+      var valHtmlPrefs = xmlGetValue(valOptions, xmlGetTag(valOptions));
+      var valCaseList = xmlGetValue(valHtmlPrefs, xmlGetTag(valHtmlPrefs));
+
+      var tagCase = xmlGetTag(valCaseList);
+      var opts = { 'offset': 0 };
+
+      var valCase = xmlGetValue(valCaseList, tagCase, opts);
+      document.getElementById('casename1').value = valCase;
+
+      valCase = xmlGetValue(valCaseList, tagCase, opts);
+      document.getElementById('casename2').value = valCase;
+
+      valCase = xmlGetValue(valCaseList, tagCase, opts);
+      document.getElementById('casename3').value = valCase;
+    }
+
+    function ProcessTabMessage(xml) {
+      // Message node: Message
+      var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+      var valMessage = xmlGetValue(valRoot, xmlGetTag(valRoot));
+      document.getElementById('msg_response').value = valMessage;
+    }
+
+    function SendGetOptions() {
+      document.getElementById('casename1').value = '';
+      document.getElementById('casename2').value = '';
+      document.getElementById('casename3').value = '';
+      document.getElementById('pluginmessage').value = '<GetOptions/>';
+      appMessage(document.getElementById('appmessage'));
+    }
+
+    function SendTabMessage() {
+      var msg =
+        '<Tab>' +
+          '<Message>' +
+            document.getElementById('msg_message').value +
+          '</Message>' +
+        '</Tab>';
+
+      document.getElementById('pluginmessage').value = msg;
+      appMessage(document.getElementById('appmessage'));
+    }
+  </script>
+</head>
+<body onload="SetDefaults()">
+  <div class="row">
+    <div class="left-col" id="about" style="text-align:center">
+      <b>HTML Prefs OE - 2 Options</b><br><br>
+      Copyright 2019 LiveAction<br>
+      Version 2.0.0.0<br>
+      All Rights Reserved.<br>
+    </div>
+    <div>
+      &nbsp;
+    </div>
+    <div class="right-col" id="info">
+      <form>
+        <label class="info-label" for="enginename">Engine Name:&nbsp;</label>
+        <input class="info-input" type="text" id="enginename" readonly />
+        <br>
+        <label class="info-label" for="engineaddress">Address:&nbsp;</label>
+        <input class="info-input" type="text" id="engineaddress" readonly />
+        <br>
+        <label class="info-label" for="engineuser">User:&nbsp;</label>
+        <input class="info-input" type="text" id="engineuser" readonly />
+        <br>
+        <label class="info-label" for="enginetype">Type:&nbsp;</label>
+        <input class="info-input" type="text" id="enginetype" readonly />
+        <br>
+        <label class="info-label" for="engineos">OS:&nbsp;</label>
+        <input class="info-input" type="text" id="engineos" readonly />
+        <br>
+        <label class="info-label" for="enginefolder">Folder:&nbsp;</label>
+        <input class="info-input" type="text" id="enginefolder" readonly />
+        <br>
+        <br>
+        <label class="info-label" for="captureid">Capture Id:&nbsp;</label>
+        <input class="info-input" type="text" id="captureid" readonly />
+      </form>
+    </div>
+    <!-- Hidden button. Call appMessage() to simulate click, see SetDefaults above. -->
+    <a style="display:none" href="app:engineinfo" id="engineinfo" name="engineinfo">Info</a>
+    &nbsp;<br>
+    &nbsp;<br>
+  </div>
+  <br>
+  <div>
+    <form id="prefs_form" name="preferences" action="">
+      <fieldset>
+        <label class="case-label" for="casename1">Case 1:&nbsp;</label>
+        <input class="case-input" type="text" id="casename1" name="casename1" />
+        <br>
+        <label class="case-label" for="casename2">Case 2:&nbsp;</label>
+        <input class="case-input" type="text" id="casename2" name="casename2" />
+        <br>
+        <label class="case-label" for="casename3">Case 3:&nbsp;</label>
+        <input class="case-input" type="text" id="casename3" name="casename3" />
+        <br>
+        <a href="javascript:SendGetOptions();">Refresh</a>
+      </fieldset>
+    </form>
+    <form id="message_form" action="">
+      <fieldset>
+        <label class="message-label" for="msg_message">Message:&nbsp;</label>
+        <input class="message-input" type="text" id="msg_message" name="message" />
+        <br>
+        <label class="message-label">Response:&nbsp;</label>
+        <input class="message-input" type="text" id="msg_response" name="response" />
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a href="javascript:SendTabMessage();">Message</a>
+      </fieldset>
+    </form>
+    <form id="browse_form" name="browser" action="">
+      <fieldset>
+        <span>
+          <label class="path-label" for="path">Path:&nbsp;</label>
+          <input class="path-input" type="text" id="path" name="path" />
+          <br>
+        </span>
+        <span>
+          <input class="browse-checkbox" type="checkbox" id="showfiles" name="showfiles" checked>
+          <label class="browse-label" for="showfiles">Show Files</label>
+          <br>
+        </span>
+        <span>
+          <input class="browse-checkbox" type="checkbox" id="showhiddenfiles" name="showhiddenfiles">
+          <label class="browse-label" for="showhiddenfiles">Show hidden files</label>
+          <br>
+        </span>
+        <span>
+          <input class="browse-checkbox" type="checkbox" id="hidehiddenctrl" name="hidehiddenctrl">
+          <label class="browse-label" for="hidehiddenctrl">Hide 'Hidden Files' control</label>
+          <br>
+        </span>
+        <br>
+        <textarea id="filetext" name="filetext" cols="70" rows="10"></textarea>
+        <br>
+        <!-- The Remote Browser intercepts the app:browse command then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then displays the Remote Browser Dialog.                   -->
+        <!-- If the user clicks OK, then PutRemoteBrowserPath is called.                           -->
+        <a href="app:browse">Browse</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:getremote command, then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then retrieves the file specified.                             -->
+        <!-- Once the file has been retrieved PutTransferComplete is called.                           -->
+        <a href="app:getremote">Get Remote File</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:sendlocal command, then calls GetRemoteBrowserFlags, -->
+        <!-- GetRemoteBrowserFolder and GetFileContents then sends the file specified.                  -->
+        <a href="app:sendlocal">Send Local File</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input class="browse-checkbox" type="checkbox" id="pcfile" name="pcfile">
+        <label class="browse-label" for="pcfile">PC File Format</label>
+      </fieldset>
+    </form>
+  </div>
+  <div style="display: none">
+    <!-- Hidden controls for Plugin Messaging. -->
+    <a style="display:none" href="app:message" id="appmessage" name="appmessage">Message</a>
+    <input type="text" id="pluginmessage" name="pluginmessage" size="75" value="" class="text-input" readonly />
+  </div>
+</body>
+</html>

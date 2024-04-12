@@ -1,0 +1,46 @@
+// POP - Post Office Protocol
+//
+
+void POP()
+{
+	TEQU 0  10   0    0 RETURN;
+	GBYT 0   1;
+	TEQU 0   1   0    0 RETURN;
+	LABL 0   0   0   b1 POP - Post Office Protocol\POP:;
+	BREM 0 41;
+	l[11] = 1;
+	while (l[1] != 0)
+	{		
+		GBYT( 0, l[2] );
+		GBYT( 1, l[3] );
+		if (l[2] == 0x0d)
+		{
+			if (l[3] == 0x0a)
+			{
+				//DUMP <CR><LF>
+				CHR# 2 0 05 0 <CR><LF>;
+			}
+		}
+		l[12] = l[11];
+		MODG( 64, l[12] );
+		if (l[12] == 1)
+		{
+			if (g[16] > 4)
+			{
+				LABL 0 0 90 c2 POP Stream:;
+				CHR# 1 0 90 0;
+			}
+		}
+		if (l[11] == 1)
+		{
+			CHR# 1 0 90 0;
+		}
+		if (l[11] != 1)
+		{
+			CHR# 1 0 0 0;
+		}
+		l[1] -= 1;
+		l[11] += 1;
+	}
+	TRTS;
+}

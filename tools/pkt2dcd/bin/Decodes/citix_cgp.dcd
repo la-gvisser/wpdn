@@ -1,0 +1,749 @@
+// -----------------------------------------------------------------------------------------------
+//	Common Gateway Protocol
+//		seems to default on port 2598 [0xa26]
+//
+//	globals used:
+//		bah...i use some of them, but no real need to save them
+//		g[1-4] = free for all!
+//	last edited:	si 09.15.2004
+//	orig decoder:	si
+// -----------------------------------------------------------------------------------------------
+
+void CGP;
+	LABL 0 0 0 b1 Common Gateway Protocol;
+	g[1] = pb[0];
+	if (g[1] == 0x1a)
+	{
+		TNXT -CGP::Signature;
+	}
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 6 90 c2 Packet Size:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[6] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[6] += g[1];
+		DGLB 0 6 90 c2 Packet Size:;
+		DWRD 0 0 5 5;
+	}
+	HBYT 0 5 90 c2 Command Byte:;
+	CST# 0 5 00 14 CGP::Command_List;
+	TST# 0 5 00 14 CGP::Command_Func;
+	TRTS;
+
+str# CGP::Command_List;
+	Bind Request;
+	Bind Response;
+	Finish Request;
+	Finish Response;
+	NOP;
+	Channel Open Request;
+	Channel Open Response;
+	Channel Close;
+	Data;
+	Data Realtime;
+	Data Realtime w ACK;
+
+str# CGP::Command_Func;
+	CGP::BindRequest;
+	CGP::BindResponse;
+	CGP::FinishRequest;
+	CGP::FinishResponse;
+	CGP::NOP;
+	CGP::ChannelOpenRequest;
+	CGP::ChannelOpenResponse;
+	CGP::ChannelClose;
+	CGP::Data;
+	CGP::DataRealtime;
+	CGP::DataRealtimeWithACK;
+
+void CGP::HeaderExtFlags;
+	g[1] = 1;
+	BBYT 0 1 90 c9 Header Ext Flags;
+	 CBIT 3 1 0 d4 .... 1... Reliability;
+	 CLSE 0 0 0 d4 .... 0... Reliability;
+	 CBIT 2 1 0 d4 .... .1.. Compression Enabled;
+	 CLSE 0 0 0 d4 .... .0.. Compression Disabled;
+	 CBIT 1 1 0 d4 .... ..1. Monitoring Enabled;
+	 CLSE 0 0 0 d4 .... ..0. Monitoring Disabled;
+	 CBIT 0 1 0 d4 .... ...1 Extension Length Included;
+	 CLSE 0 0 0 d4 .... ...0 Extension Length Not Included;
+	LABL 0 0 00 c8;
+	
+	// si: header extension data
+	ANDG 1 1;
+	if (g[1] == 1)
+	{
+		g[1] = pb[0];
+		ANDG 80 1;
+		if (g[1] == 0)
+		{
+			DBYT 0 2 90 c2 Header Ext Len:;
+		}
+		if (g[1] != 0)
+		{
+			g[1] = pb[0];
+			ANDG 7f 1;
+			g[2] = g[1];
+			g[1] = pb[1];
+			SHFL 7 1;
+			g[2] += g[1];
+			DGLB 0 2 90 c2 Header Ext Len:;
+			DWRD 0 0 5 5;
+		}
+		DUMP 0 2 90 c2 Extended Header:;
+	}
+	TRTS;
+
+
+// -----------------------------------------------------------------------------------------------
+//	CGP - Functions
+// -----------------------------------------------------------------------------------------------
+
+void CGP::Signature;
+	HBYT 0 0 90 c2 CGP Signature1:;
+	CHR# 6 0 90 c2 CGP Signature2:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 6 90 c2 Packet Size:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[6] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[6] += g[1];
+		DGLB 0 6 90 c2 Packet Size:;
+		DWRD 0 0 5 5;
+	}
+	HBYT 0 5 90 c2 Command Byte:;
+	CST# 0 5 00 14 CGP::Command_List;			// si: 
+	CGP::HeaderExtFlags;
+	HWRD 0 0 90 c2 Reserved:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Num of Capability Blocks:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Num of Capability Blocks:;
+		DWRD 0 0 5 5;
+	}
+
+	TEQU 1 5 00 00 CGP::BindRequest;						//si: this isn't right
+	TEQU 2 5 00 00 CGP::BindResponse;
+	// si: ahhhhhhhhhhhhhhhhhhhhhhhh make a default case here !@#!@!@#!@#!@#!@#!@#!@#!@#
+
+// -----------------------------------------------------------------------------------------------
+void CGP::BindRequest;										// 0x01
+	g[9] = 0;											// si: use this for session reliability capability
+	TNXT -CGP::CapBlock::Header;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::BindResponse;										// 0x02
+	g[9] = 1;											// si: use this for session reliability capability
+	TNXT -CGP::CapBlock::Header;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::FinishRequest;									// 0x03
+	CGP::HeaderExtFlags;
+	DBYT 0 1 90 c2 Type SubCommand:;
+	 CEQU 0 1 00 14 Finish Type Close;
+	 CEQU 1 1 00 14 Finish Type Restart;
+	DBYT 0 1 90 c2 Reason Code:;
+	 CEQU 0 1 00 14 Session Normal;
+	 CEQU 1 1 00 14 Session Ticket Expired;
+	 CEQU 2 1 00 14 Session Server Shutdown;
+	 CEQU 3 1 00 14 Session Admin Disconnect;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::FinishResponse;									// 0x04
+	CGP::HeaderExtFlags;
+	DBYT 0 1 90 c2 Type SubCommand:;
+	 CEQU 0 1 00 14 Finish Type Close;
+	 CEQU 1 1 00 14 Finish Type Restart;
+	DBYT 0 1 90 c2 Reason Code:;
+	 CEQU 0 1 00 14 Session Normal;
+	 CEQU 1 1 00 14 Session Ticket Expired;
+	 CEQU 2 1 00 14 Session Server Shutdown;
+	 CEQU 3 1 00 14 Session Admin Disconnect;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::NOP;												// 0x05
+	CGP::HeaderExtFlags;
+	if (g[16] > 0)
+	{
+		DUMP 0 10 90 c2 Data Bytes:;			//si: arbitrary data bytes according to spec
+	}
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::ChannelOpenRequest;								// 0x06
+	CGP::HeaderExtFlags;
+	HLNG 40000000 0 90 c2 Service ID:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Channel ID:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Channel ID:;
+		DWRD 0 0 5 5;
+	}
+	CEQU 0 2 00 14 Assigned by Client;
+	CEQU 1 2 00 14 Assigned by Server;
+	DBYT 0 1 90 c2 Channel Framing:;
+	CEQU 0 1 00 14 Stream;
+	CEQU 1 1 00 14 Message;
+	DBYT 0 1 90 c2 Channel Priority:;
+	CEQU 0 1 00 14 Low;
+	CEQU 1 1 00 14 Normal;
+	CEQU 2 1 00 14 Real-time;
+	HWRD 0 0 90 c2 Reserved:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Params Block Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Params Block Len:;
+		DWRD 0 0 5 5;
+	}
+	if (g[16] > 0)
+	{
+		DUMP 0 2 90 c2 Opaque Params Block:;				//si: hmm, should we print this data out?
+	}
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::ChannelOpenResponse;								// 0x07
+	CGP::HeaderExtFlags;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Channel ID:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Channel ID:;
+		DWRD 0 0 5 5;
+	}
+	HLNG 40000000 0 90 c2 Status Code:;					// si: error codes here!
+	HLNG 40000000 0 90 c2 Service Stat Code:;
+	HWRD 0 0 90 c2 Reserved:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Params Block Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Params Block Len:;
+		DWRD 0 0 5 5;
+	}
+	if (g[16] > 0)
+	{
+		DUMP 0 2 90 c2 Opaque Params Block:;				//si: hmm, should we print this data out?
+	}
+	TRTS;
+	
+// -----------------------------------------------------------------------------------------------
+void CGP::ChannelClose;										// 0x08									!!!!!!!!!!!!!
+	CGP::HeaderExtFlags;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Channel ID:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Channel ID:;
+		DWRD 0 0 5 5;
+	}
+	HWRD 0 0 90 c2 Reserved:;
+	HWRD 40000000 1 90 c2 Status Code:;
+	CEQU		0 1 00 14 Status Normal;
+	CEQU		1 1 00 14 Status Service Error;
+	HWRD 40000000 0 90 c2 Service Status Code:;
+	TRTS;
+	
+// -----------------------------------------------------------------------------------------------
+void CGP::Data;												// 0x09									!!!!!!!!!!!!!
+	CGP::HeaderExtFlags;
+	BBYT 0 1 90 c9 Message Flags:;
+	 LABL 0 0 0 d4 xxxx .... Reserved;
+	 CBIT 0 0 0 d4 .... 1... Push Data;
+	 CLSE 0 0 0 d4 .... 0... Push Data Not Set;
+	 CBIT 0 0 0 d4 .... .1.. Priority RealTime Set; 
+	 CLSE 0 0 0 d4 .... .0.. Priority RealTime Not Set;
+	 CBIT 0 0 0 d4 .... ..1. Priority Medium Set;
+	 CLSE 0 0 0 d4 .... ..0. Priority Medium Not Set;
+	 CBIT 0 0 0 d4 .... ...1 Partial Message;
+	 CLSE 0 0 0 d4 .... ...0 Not a Partial Message;
+	 LABL 0 0 0 c8;	
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Channel ID:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Channel ID:;
+		DWRD 0 0 5 5;
+	}
+	if (g[16] > 0)
+	{
+		DUMP 0 10 90 c2 Opaque Data Block:;					// si: just dump data???
+	}
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::DataRealtime;										// 0x0a
+	if (g[16] > 0)
+	{
+		DUMP 0 10 90 c2 Opaque Data Block:;					// si: just dump data???
+	}
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::DataRealtimeWithACK;								// 0x0b				!@#!@#!@#!@#!@#!@#!@#!@#!@#!@#!@#!@#!@#!@#
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 ACK Delta:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 ACK Delta:;
+		DWRD 0 0 5 5;
+	}
+	if (g[16] > 0)
+	{
+		DUMP 0 10 90 c2 Opaque Data Block:;
+	}
+	TRTS;
+
+
+
+// -----------------------------------------------------------------------------------------------
+//	CGP - Capabilities
+// -----------------------------------------------------------------------------------------------
+
+void CGP::CapBlock::Header;
+	LABL 0 0 0 b7 Capability Block Header;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 7 90 c2 Capability Block Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[7] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[7] += g[1];
+		DGLB 0 7 90 c2 Capability Block Len:;
+		DWRD 0 0 5 5;
+	}
+	HWRD 40000000 0 90 c2 Service ID:;
+	HWRD 40000000 1 90 c2 Capability ID:;
+	CST# 0 1 00 14 CGP::CapBlock::List;
+	
+	TSB# 0 1 0 0 CGP::CapBlock::Func;
+	// si: put a default case here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//LABL 0 0 0 c4 Unknown Capability Block;
+	LABL 0 0 00 b8;
+	if (g[16] > 0)
+	{
+		TNXT -CGP::CapBlock::Header;
+	}
+	TRTS;
+
+// si: list starts w/ 1
+str# CGP::CapBlock::List;
+	Services Binding;
+	Endpoint Address;
+	Channel Monitoring;
+	Compression;
+	Session Reliability;
+	Security Ticket;
+	Keep Alives;
+
+str# CGP::CapBlock::Func;
+	CGP::CapBlock::ServicesBinding;
+	CGP::CapBlock::EndpointAddress;
+	CGP::CapBlock::ChannelMonitoring;
+	CGP::CapBlock::Compression;
+	CGP::CapBlock::SessionReliability;
+	CGP::CapBlock::SecurityTicket;
+	CGP::CapBlock::KeepAlives;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::ServicesBinding;									// 0x01
+	LABL 0 0 00 b7 Services Binding;
+	HWRD 0 0 90 c2 Reserved:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Num of Services:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Num of Services:;
+		DWRD 0 0 5 5;
+	}
+	l[2] = g[2];
+	while (l[2] > 0)
+	{
+		CGP::CapBlock::ServicesBinding::ServiceBlock;
+		l[2] -= 1;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void CGP::CapBlock::ServicesBinding::ServiceBlock;
+	LABL 0 0 00 b7 Service Block;
+	HWRD 40000000 1 90 c2 Service ID:;
+	DGLB 0 1 04 14 "= ";
+	DWRD 0 0 90 c2 Service Version:;
+	HWRD 0 0 90 c2 Reserved:;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Service Name Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Service Name Len:;
+		DWRD 0 0 5 5;
+	}
+	if (g[2] > 0)
+	{
+		CGP::CapBlock::ServicesBinding::ServiceBlock::PrintName;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void CGP::CapBlock::ServicesBinding::ServiceBlock::PrintName;
+	g[1] = 0;
+	while (g[2] > 0)
+	{
+		l[1] = pb[0];
+		g[1] += 1;
+		INCR 1;
+		// si: services are separated by a period ... 0x2e == "."
+		if (l[1] == 0x2e)
+		{
+			DECR 0 1;
+			CHR# 0 1 90 c2 Service Name:;
+			g[1] = 0;
+		}
+		if (g[16] == 0)
+		{
+			DECR 0 1;
+			CHR# 0 1 90 c2 Service Name:;
+			g[1] = 0;
+			g[2] = 0;
+		}
+		g[2] -= 1;
+	}
+	if (g[1] > 0)
+	{
+		DECR 0 1;
+		CHR# 0 1 90 c2 Service Name:;
+	}
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::EndpointAddress;									// 0x02
+	LABL 0 0 00 b7 Endpoint Adress;
+	HWRD 0 0 90 c2 Reserved:;
+	HBYT 0 1 90 c2 Address Type:;
+	CEQU 0 1 00 14 Default;
+	CEQU 0 1 00 14 Host Name;
+	CEQU 0 1 00 14 Ticket STA;
+	CEQU 0 1 00 14 Security Ticket;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Address Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Address Len:;
+		DWRD 0 0 5 5;
+	}
+	if (g[2] > 0)
+	{
+		DUMP 0 2 90 c2 Address Data:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::ChannelMonitoring;									// 0x03
+	LABL 0 0 00 b7 Channel Monitoring;
+	DBYT 0 0 90 c2 Vers Preferred:;
+	DBYT 0 0 90 c2 Vers Min:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::Compression;										// 0x04
+	LABL 0 0 00 b7 Compression;
+	DBYT 0 0 90 c2 Vers Preferred:;
+	DBYT 0 0 90 c2 Vers Min:;
+	DWRD 40000000 0 90 c2 Buffer:;
+	LABL 0 0 00 14 kilobytes [S->C];
+	DWRD 40000000 0 90 c2 Buffer:;
+	LABL 0 0 00 14 kilobytes [C->S];
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::SessionReliability;									// 0x05
+	LABL 0 0 00 b7 Session Reliability;
+	DBYT 0 0 90 c2 Sess Reliability Vers Preferred:;
+	DBYT 0 0 90 c2 Sess Reliability Vers Min:;
+	HBYT 0 0 90 c2 ACKing Algorithm:;
+	LABL 0 0 00 14 [C->S];
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 ACK Data Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 ACK Data Len:;
+		DWRD 0 0 5 5;
+	}
+	DUMP 0 2 90 c2 ACKing Alg Data:;
+	LABL 0 0 00 14 [C->S];
+	
+	HBYT 0 0 90 c2 ACKing Algorithm:;
+	LABL 0 0 00 14 [S->C];
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 ACK Data Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 ACK Data Len:;
+		DWRD 0 0 5 5;
+	}
+	DUMP 0 2 90 c2 ACKing Alg Data:;
+		LABL 0 0 00 14 [S->C];
+	DLNG 0 0 90 c2 Next Msg Number:;
+	if (g[1] == 0)
+	{
+		LABL 0 0 00 14 [S->C];
+	}
+	if (g[1] == 1)
+	{
+		LABL 0 0 00 14 [C->S];
+	}
+	HBYT 0 1 90 c2 Reconnect Flags:;
+	if (g[9] == 0)
+	{
+		CEQU 0 1 00 14 Initial Connection;
+		CEQU 1 1 00 14 Reconnect Attempt;
+	}
+	if (g[9] == 1)
+	{
+		CEQU 0 1 00 14 Server Rejects Reconnect Attempt;
+		CEQU 1 1 00 14 Server Confirms Reconnect;
+	}
+	DBYT 0 0 90 c2 Reconnect Ticket Vers:;
+	
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Reconnect Ticket Len:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Reconnect Ticket Len:;
+		DWRD 0 0 5 5;
+	}
+	DUMP 0 2 90 c2 Reconnect Ticket Data:;
+	
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 # of Ch Open msgs:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 # of Ch Open msgs:;
+		DWRD 0 0 5 5;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::SecurityTicket;										// 0x06
+	LABL 0 0 0 b7 Security Ticket;
+	HWRD 0 0 90 c2 Reserved:;
+	HBYT 0 1 90 c2 Ticket Type:;
+	CEQU 0 1 00 14 Citrix STA Ticket;
+	g[1] = pb[0];
+	ANDG 80 1;
+	if (g[1] == 0)
+	{
+		DBYT 0 2 90 c2 Ticket Length:;
+	}
+	if (g[1] != 0)
+	{
+		g[1] = pb[0];
+		ANDG 7f 1;
+		g[2] = g[1];
+		g[1] = pb[1];
+		SHFL 7 1;
+		g[2] += g[1];
+		DGLB 0 2 90 c2 Ticket Length:;
+		DWRD 0 0 5 5;
+	}
+	if (g[2] > 0)
+	{
+		DUMP 0 2 90 c2 Ticket Data:;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void CGP::CapBlock::KeepAlives;											// 0x07
+	LABL 0 0 0 b7 Keep Alives;
+	HWRD 0 0 90 c2 Reserved:;
+	DLNG 40000000 0 90 c2 KeepAlive Interval:;
+	LABL 0 0 00 14 milliseconds [C->S];
+	DLNG 40000000 0 90 c2 KeepAlive Interval:;
+	LABL 0 0 00 14 milliseconds [S->C];
+	LABL 0 0 0 b8;
+	TRTS;
+

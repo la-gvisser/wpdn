@@ -1,0 +1,2513 @@
+//--------------------------UNIStim-------------------------------
+//Globals used:
+//g[17] stored in g[3](Ports)
+//g[23] = Length of UDP Packet 
+//g[24] = CMD Length
+//
+//________________________________________________________________
+/*  4100/udp Nortel UNIStim (Unified Networks IP Stimulus), i200x
+	5000/rudp Nortel UNIStim (Unified Networks IP Stimulus), i2002/i2004 on ITG Line	------>>> works!
+	5100/rudp Nortel UNIStim (Unified Networks IP Stimulus), ITG Line	------>>> works!
+	5105/udp Nortel UNIStim (Unified Networks IP Stimulus) FTP (UFTP)
+	6800/tcp Nortel Unified Manager
+	7000/rudp Nortel UNIStim (Unified Networks IP Stimulus), BCM FP1 VoIP to/from IP Phones------>>> works!
+ */
+
+ 
+str# UDP::Ports_Str;
+5000	|	UNIStim::MAIN;
+5100	|	UNIStim::MAIN;
+7000	|	UNIStim::MAIN;
+5105 	|	UNIStim::MAIN;
+
+void UNIStim::MAIN( )
+{
+	//DGLB( 0, g[23], 0x90, 0xc2, "Left UDP Length: \Lft-UDP-Lngth:" );
+	LABL( 0, 0, 0, 0xb1, "Unified Networks IP Stimulus (UNIStim) Protocol" );
+		LABL( 0, 0, 0, 0xb7, "Reliable UDP" );
+	HLNG( 0, 0, 0x90, 0xc2, "RUDP Seq ID:\RUDP-Seq-ID:" );
+	//	DGLB( 0, g[23], 0x90, 0xc2, "Left UDP Length: \Lft-UDP-Lngth:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "RUDP Pkt type: \RUDP-Pkt-type:" );
+	CEQU( 0, l[2], 0, 0x24, "NAK" );
+	CEQU( 1, l[2], 0, 0x24, "ACK" );
+	CEQU( 2, l[2], 0, 0x24, "PAYLOAD" );
+	//DGLB( 0, g[16], 0x90, 0xc2, "Left Packet Length: \Lft-Pkt-Lng4th:" );
+	g[23] -= 2; 	//Hdr UDP +
+	g[23] -= 5;		// HDR UNISTIM
+	//DGLB( 0, g[23], 0x90, 0xc2, "Left UDP Length: \Lft-UDP-Lngth:" );
+	LABL( 0, 0, 0, 0xb8 );
+	TSB#( 0, l[2], 0, 0, UNIStim::PAYLOAD );
+	TLSE( 0, 0, 0, 0, UNIStim::DUMPIT );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void UNIStim::DUMPIT( )
+{
+	CHR#( 0, g[23], 0x90, 0xc2, "UNKNOWN DI:" );
+}
+
+void UNIStim::DUMPIT2( )
+{
+	CHR#( 0, g[24], 0x90, 0xc2, "UNKNOWNDI2:" );
+}
+
+str# UNIStim::PAYLOAD;
+0x0	|	UNIStim::PAYLOAD::NAK;
+0x1	|	UNIStim::PAYLOAD::ACK;
+0x2	|	UNIStim::PAYLOAD::PAYLOAD;
+
+void UNIStim::PAYLOAD::ACK( )
+{
+	LABL( 0, 0, 0, 0xb7, "UNIStim Acknowledge:" );
+	DUMP( 0, g[23], 0x90, 0xc2, "ACK DATA:" );
+}
+
+void UNIStim::PAYLOAD::NAK( )
+{
+	LABL( 0, 0, 0, 0xb7, "UNIStim Negoation Acknowledge:" );
+	DUMP( 0, g[23], 0x90, 0xc2, "NAK DATA:" );
+}
+
+void UNIStim::PAYLOAD::PAYLOAD( )
+{	
+	LABL( 0, 0, 0, 0xb7, "UNIStim Payload:" );
+	GBYT( 0, l[1]);
+		CEQU( 0, l[1], 0, 0x07, " NULL Protocol" );
+		CEQU( 1, l[1], 0, 0x07, " Aggregate Unistim" );
+		CEQU( 2, l[1], 0, 0x07, " Aggregate Unistim with Terminal ID" );
+		CEQU( 3, l[1], 0, 0x07, " UFTP" );
+		CEQU( 0xff, l[1], 0, 0x07, " Free Form Protocol" );
+	LABL( 0, 0, 0, 0x07, " (" );
+	HGLB( 0, l[1], 0x07, 0, );
+	LABL( 0, 0, 0, 0x07, ")" );
+	HBYT( 0, l[1], 0x90, 0xc2, "UNIStim Payload Type: \UNIStim-PL-Type:" );
+	g[23] -= 1;
+	if ( l[1] == 0x02 )
+	{
+		IPLG( 0, l[2], 0x90, 0xc2, "Terminal ID:" );
+		g[23] -= 4;
+	}
+	TSB#( 0, l[1], 0, 0, UNISTIM::Payload::Types ); 	
+	TLSE( 0, 0, 0, 0, UNIStim::DUMPIT );
+	LABL( 0, 0, 0, 0xb8);
+}
+
+str# UNISTIM::Payload::Types;
+0x01	|	UNIStim::Payload::Aggregate Unistim;
+0x02	|	UNIStim::Payload::Aggregate Unistim;
+0x03	|	UNIStim::Payload::UFTP;
+
+void UNIStim::Payload::UFTP( )
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "UNIStim UFTP Command: \UFTP-CMD:" );
+		CST#(0, l[1], 0, 0x24, UNIStim::Payload::UFTP::Command );
+	CHR#( 0, g[23], 0x90, 0xc2, "FTP Stream DATA:" );
+}
+
+str# UNIStim::Payload::UFTP::Command;
+0x00	|	Connection Granted;
+0x01	|	Connection Denied;
+0x02	|	File Data Block;
+0x80	|	Connection Request;
+0x81	|	Connection Details;
+0x82	|	Flow Control Off;
+
+void UNIStim::Payload::Aggregate Unistim( )
+{	
+	while(g[23] > 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "UNIStim CMD - " );
+		GBYT( 0, l[1]);
+			CST#(0, l[1], 0, 0x07, UNIStim::Payload::CMD::Address );
+		HBYT( 0, l[1], 0x90, 0xc2, "UNIStim CMD Address: \UNIStim-CMD-Adr:" );
+			CST#(0, l[1], 0, 0x24, UNIStim::Payload::CMD::Address );
+		DBYT( 0, l[2], 0x90, 0xc2, "UNIStim CMD Length: \Length:" );
+		g[26] = l[2];
+		
+		l[2] -= 2;
+		g[24] = l[2];
+		
+		TSB#( 0, l[1], 0, 0, UNIStim::Payload::CMD::Address::Types ); 
+		//	DGLB( 0, g[23], 0x90, 0xc2, "g23" );
+		//	DGLB( 0, g[24], 0x90, 0xc2, "g24" );
+			
+			if ( g[24] > 0 )
+			{
+				HEX#( 0, g[24], 0x90, 0xc2, "DATA Dump:" );
+				//g[23] -= g[24];
+				//g[25] = 0;
+				g[24] = 0;
+			}	
+		LABL( 0, 0, 0, 0xb8);
+		g[23] -= g[26];
+		//DGLB( 0, g[23], 0x90, 0xc2, "g23-2" );
+		//DGLB( 0, g[24], 0x90, 0xc2, "g24-2" );
+	}	
+}
+
+str# UNIStim::Payload::CMD::Address;
+0x09	|	Expansion Module-1 Manager Switch;
+0x0A	|	Expansion Module-2 Manager Switch;
+0x0B	|	Expansion Module-3 Manager Switch;
+0x0C	|	Expansion Module-4 Manager Switch;
+0x0D	|	Expansion Module-5 Manager Switch;
+0x0E	|	Expansion Module-6 Manager Switch;
+0x10	|	Expansion Module Manager Phone;
+0x11	|	Broadcast Manager Switch;
+0x16	|	Audio Manager Switch;
+0x17	|	Display Manager Switch;
+0x19	|	Key/Indicator Manager Switch;
+0x1a	|	Basic Manager Switch;
+0x1e	|	Network Manager Switch;
+0x89	|	Expansion Module-1 Manager Phone;
+0x8A	|	Expansion Module-2 Manager Phone;
+0x8B	|	Expansion Module-3 Manager Phone;
+0x8C	|	Expansion Module-4 Manager Phone;
+0x8D	|	Expansion Module-5 Manager Phone;
+0x8E	|	Expansion Module-6 Manager Phone;
+0x91	|	Broadcast Manager Phone;
+0x96	|	Audio Manager Phone;
+0x97	|	Display Manager Phone;
+0x99	|	Key/Indicator Manager Phone;
+0x9a	|	Basic Manager Phone;
+0x9e	|	Network Manager Phone;
+
+str# UNIStim::Payload::CMD::Address::Types;
+0x09	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x0A	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x0B	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x0C	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x0D	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x0E	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Switch;
+0x10	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x11	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch;
+0x16	|	UNIStim::Payload::CMD::Address::Audio Manager Switch;
+0x17	|	UNIStim::Payload::CMD::Address::Display Manager Switch;
+0x19	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch;
+0x1a	|	UNIStim::Payload::CMD::Address::Basic Manager Switch;
+0x1e	|	UNIStim::Payload::CMD::Address::Network Manager Switch;
+0x89	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x8A	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x8B	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x8C	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x8D	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x8E	|	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone;
+0x91	|	UNIStim::Payload::CMD::Address::Broadcast Manager Phone;
+0x96	|	UNIStim::Payload::CMD::Address::Audio Manager Phone;
+0x97	|	UNIStim::Payload::CMD::Address::Display Manager Phone;
+0x99	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone;
+0x9a	|	UNIStim::Payload::CMD::Address::Basic Manager Phone;
+0x9e	|	UNIStim::Payload::CMD::Address::Network Manager Phone;
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Key / Indicator  Manager (phone): \KyIndMngrPh:" );
+	g[24] -= 1;
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Types );
+	CLSE( 0, 0, 0x00, 0x14, "reserved" );
+	TSB#( 0, l[2], 0, 0, UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Calls );
+}
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Types;
+0x00	|	Key Event;
+0x01	|	LED Status Report;
+0x03	|	On Hook;
+0x04	|	Off Hook;
+0x05	|	User Activity Timer Expired;
+0x06	|	Hookswitch State (on hook);
+0x07	|	Hookswitch State (off hook);
+0x08	|	Key/Indicator Manager Attributes Info;
+0x09	|	Key/Indicator Manager Options Report;
+0x0a	|	Phone Icon Status Report;
+
+str#  UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Calls;
+0x00	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event;
+0x01	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::LED Status Report;
+0x03	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::On Hook;
+0x04	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Off Hook;
+0x05	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::User Activity Timer Expired;
+0x06	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Hookswitch State_on hook;
+0x07	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Hookswitch State_off hook;
+0x08	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key/Indicator Manager Attributes Info;
+0x09	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key/Indicator Manager Options Report;
+0x0a	|	UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Phone Icon Status Report;
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 2 , l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......" );
+			LABL( 0, 0, 0, 0x14, "Key Action:   " );
+			CST#(0, l[44], 0, 0x04, UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event::KeyAction );
+			HGLB( 0, l[44], 0x04, 0x04, "  " );
+		LABL( 0, 0, 0, 0x84, ".." );
+			BBIT( 6, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Key Name:   " );
+			CST#(0, l[47], 0, 0x04, UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event::KeyName );
+			HGLB( 0, l[47], 0x04, 0x04, "  " );
+	LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 1;
+	
+}
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event::KeyAction;
+0x00    |     Key Released;
+0x01    |     Key Depressed;
+0x02    |     Key Repeated;
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Key Event::KeyName;
+0x00    |     Dial Pad 0;
+0x01    |     Dial Pad 1;
+0x02    |     Dial Pad 2;
+0x03    |     Dial Pad 3;
+0x04    |     Dial Pad 4;
+0x05    |     Dial Pad 5;
+0x06    |     Dial Pad 6;
+0x07    |     Dial Pad 7;
+0x08    |     Dial Pad 8;
+0x09    |     Dial Pad 9;
+0x0a    |     Dial Pad Asterisk;
+0x0b    |     Dial Pad #;
+0x0c    |     Navigation Up;
+0x0d    |     Navigation Down;
+0x0e    |     Navigation Right;
+0x0f    |     Navigation Left;
+0x10    |     Quit;
+0x11    |     Copy;
+0x12    |     Volume Up;
+0x13    |     Volume Down;
+0x14    |     Soft Key 0;
+0x15    |     Soft Key 1;
+0x16    |     Soft Key 2;
+0x17    |     Soft Key 3;
+0x1a    |     Supervisor Access Key;
+0x1b    |     Hold;
+0x1c    |     Release;
+0x1d    |     Mute;
+0x1e    |     Headset;
+0x1f    |     Handsfree;
+0x20    |     Prog Key 0;
+0x21    |     Prog Key 1;
+0x22    |     Prog Key 2;
+0x23    |     Prog Key 3;
+0x24    |     Prog Key 4;
+0x25    |     Prog Key 5;
+0x26    |     Prog Key 6;
+0x27    |     Prog Key 7;
+0x28    |     Prog Key 8;
+0x29    |     Prog Key 9;
+0x2a    |     Prog Key 10;
+0x2b    |     Prog Key 11;
+0x2c    |     Prog Key 12;
+0x2d    |     Prog Key 13;
+0x2e    |     Prog Key 14;
+0x2f    |     Prog Key 15;
+0x30    |     Prog Key 16;
+0x31    |     Prog Key 17;
+0x32    |     Prog Key 18;
+0x33    |     Prog Key 19;
+0x34    |     Prog Key 20;
+0x35    |     Prog Key 21;
+0x36    |     Prog Key 22;
+0x37    |     Prog Key 23;
+0x38    |     Prog Key 24;
+0x3b    |     Conspicuous Key 0;
+0x3c    |     Conspicuous Key 1;
+0x3d    |     Conspicuous Key 2;
+0x3e    |     Conspicuous Key 3;
+0x3f    |     Conspicuous Key 4;
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Hookswitch State_off hook( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Hookswitch State_on hook( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::User Activity Timer Expired( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::On Hook( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Phone::Off Hook( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Basic Manager (phone): \NMngrSw:" );
+	g[24] -= 1;
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Basic Manager Phone::Types );
+	CLSE( 0, 0, 0x00, 0x14, "reserved" );
+	TSB#( 0, l[2], 0, 0, UNIStim::Payload::CMD::Address::Basic Manager Phone::Calls );
+}
+
+str# UNIStim::Payload::CMD::Address::Basic Manager Phone::Types;
+0x00	|	Basic Manager Attributes Info;
+0x01	|	Basic Manager Options Report;
+0x02	|	Firmware Version;
+0x03	|	IT Type;
+0x07	|	Hardware ID;
+0x08	|	Product Engineering Code;
+0x09	|	Grey Market Info;
+0x0a	|	Encapsulate Command;
+0x0b	|	Startup Reason;
+0x11	|	Phone Ethernet address;
+
+str# UNIStim::Payload::CMD::Address::Basic Manager Phone::Calls;
+0x00	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Basic Manager Attributes Info;
+0x01	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Basic Manager Options Report;
+0x02	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Firmware Version;
+0x03	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::IT Type;
+0x07	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::HardwareID;
+0x08	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Product Engineering Code;
+0x09	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Grey Market Info;
+0x0a	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Encapsulate Command;
+0x0b	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Startup Reason;
+0x11	|	UNIStim::Payload::CMD::Address::Basic Manager Phone::Phone Ethernet address;
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone::IT Type( )
+{
+	HBYT( 0, 0, 0x90, 0xc2, "IT (Phone) Type: \ITPhnTyp:" );
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Basic Manager Phone::ITTypes );
+	g[24] -= 1;	
+}
+
+str# UNIStim::Payload::CMD::Address::Basic Manager Phone::ITTypes;
+0x02	|	 i2004;
+0x03	|	 i2002 Basic Etherset;
+0x04	|	 Nortel Conference phone 2033 (polycom);
+0x10	|	 Juniper 7308;
+0x11	|	 i2050 Softphone;
+0x30	|	 Meridian M6350;
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone::Phone Ethernet address( )
+{
+	ETHR( 0, g[24], 0x90, 0xc2, "Phone Ethernet address: \PhnEthrAddr:" );
+	g[24] -= 6;
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone::Firmware Version( )
+{
+	CHR#( 0, g[24], 0x90, 0xc2, "Basic Phone Firmware Version: \BscPhnFwVer:" );
+	g[24] -= g[24];
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone::Startup Reason( )
+{
+	CHR#( 0, g[24], 0x90, 0xc2, "Data: \StrtpRsn:" );
+	g[24] -= g[24];
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Phone::HardwareID( )
+{
+	HEX#( 0, g[24], 0x90, 0xc2, "Basic Phone Hardware ID: \BasPhHWID:" );
+	g[24] -= g[24];
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Phone( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Network Manager (phone): \NMngrSw:" );
+	g[24] -= 1;
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Network Manager Phone::Types );
+	CLSE( 0, 0, 0x00, 0x14, "reserved" );
+	TSB#( 0, l[2], 0x90, 0xc2, UNIStim::Payload::CMD::Address::Network Manager Phone::Calls );
+}
+
+str# UNIStim::Payload::CMD::Address::Network Manager Phone::Types;
+0x00	|	 Soft Reset Ack;
+0x01	|	 Sanity OK;
+0x02	|	 Network Manager Attributes Info;
+0x03	|	 Network Manager Diagnostic Info;
+0x04	|	 Manager IDs;
+0x05	|	 Network Manager Options Report;
+0x08	|	 Resume Connection with Server;
+0x09	|	 Suspend Connection with Server;
+0x0b	|	 Network Configuration Element Report;
+0x0c	|	 Server Information Report;
+0xff	|	 Reserved; 
+
+str# UNIStim::Payload::CMD::Address::Network Manager Phone::Calls;
+0x0c	|	 UNIStim::Payload::CMD::Address::Network Manager Phone::Server Information Report;
+
+void UNIStim::Payload::CMD::Address::Network Manager Phone::Server Information Report( )
+{
+	DBYT( 0, l[5], 0x90, 0xc2, "Phone Primary Server ID: \PhnPriSrvID:" );
+	g[24] -= 1;	
+	l[1] = 0;
+	l[2] = 1;
+	while (g[24] > 0)
+	{
+		
+		LABL( 0, 0, 0, 0xb7, "Server Nr." );
+		DGLB( 0, l[2], 0x07, 0x07, "" );
+		LABL( 0, 0, 0, 0x07, " /  ID: " );
+		DGLB( 0, l[1], 0x07, 0x07, "" );
+		INCR 5;
+		LABL( 0, 0, 0, 0x07, " /  IP: " );
+		IPLG( 0, 0, 0x07, 0, "" );
+		DECR 9;
+			DWRD( 0, l[5], 0x90, 0xc2, "Port Number: \PrtNmbr:" );
+			HBYT( 0, l[6], 0x90, 0xc2, "Action: \Act:" );		
+				CEQU( 0, l[6], 0x04, 0x14, "Reserved" );
+				CEQU( 1, l[6], 0x04, 0x14, "Establish UNISTIM Connection with Server" );
+			DBYT( 0, l[7], 0x90, 0xc2, "Number of times to Retry: \NmbrTmsRty:" );
+			DBYT( 0, l[8], 0x90, 0xc2, "Failover Server ID: \FailSrvID:" );
+			IPLG( 0, l[9], 0x90, 0xc2, "IP address: \IPAddr:" );
+		LABL( 0, 0, 0, 0xb8);
+		g[24] -= 9;
+		l[1] += 1;
+		l[2] += 1;
+	}
+}
+
+void  UNIStim::Payload::CMD::Address::Audio Manager Phone( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Audio Cmd (phone): \NCmdSw:" );
+	g[24] -= 1;
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Phone::Types);
+	CLSE( 0, 0, 0x00, 0x14, "reserved" );
+	TSB#( 0, l[2], 0x90, 0xc2, UNIStim::Payload::CMD::Address::Audio Manager Phone::Calls );
+}
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Phone::Types;
+0x00	|	Handset Connected;
+0x01	|	Handset Disconnected;
+0x02	|	Headset Connected;
+0x03	|	Headset Disconnected;
+0x04	|	Supervisor Headset Connected;
+0x05	|	Supervisor Headset Disconnected;
+0x07	|	Audio Manager Attributes Info;
+0x08	|	Audio Manager Options Report;
+0x09	|	Adjustable Rx Volume Report;
+0x0a	|	Adjustable Rx Volume Information;
+0x0b	|	APB's Default Rx Volume Value;
+0x0c	|	Alerting Tone Select;
+0x0e	|	RTCP Statistics Report;
+0x0f	|	Open Audio Stream Report;
+0x10	|	RTCP Bucket SDES Information Report;
+0x11	|	Port Mapping Discovery;
+0x12	|	Resolve Port Mapping;
+0x13	|	Audio Stream Status Report;
+0x14	|	Query APB Response;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Phone::Calls;
+0x00	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Handset Connected;
+0x01	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Handset Disconnected;
+0x02	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Headset Connected;
+0x03	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Headset Disconnected;
+0x04	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Supervisor Headset Connected;
+0x05	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Supervisor Headset Disconnected;
+0x07	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Audio Manager Attributes Info;
+0x08	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Audio Manager Options Report;
+0x09	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Adjustable Rx Volume Report;
+0x0a	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Adjustable Rx Volume Information;
+0x0b	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::APB's Default Rx Volume Value;
+0x0c	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Alerting Tone Select;
+0x0e	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::RTCP Statistics Report;
+0x0f	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Open Audio Stream Report;
+0x10	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::RTCP Bucket SDES Information Report;
+0x11	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Port Mapping Discovery;
+0x12	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Resolve Port Mapping;
+0x13	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Audio Stream Status Report;
+0x14	|	UNIStim::Payload::CMD::Address::Audio Manager Phone::Query APB Response;
+
+void UNIStim::Payload::CMD::Address::Audio Manager Phone::Open Audio Stream Report( )
+{
+	HBYT( 0, l[3], 0x90, 0xc2, Open Stream Report: \open.audio.stream.rpt: );
+		CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Phone::Open Audio Stream Report::Type );
+		CLSE( 0, l[3], 0x04, 0x14, "unknown" );			
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Phone::RTCP Statistics Report( )
+{
+	DUMP( 0, g[24], 0x90, 0xc2, "DATA:" );
+	g[24] -= g[24];
+}
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Phone::Open Audio Stream Report::Type;
+0x00	|	 Stream opened successfully;
+0x01	|	 Operation failed: Invalid Stream ID;
+0x02	|	 Operation failed: Unsupported Vocoder;
+0x03	|	 Operation failed: Stream already in use;
+0x04	|	 Operation failed: Local port already in use;
+0x05	|	 Operation failed: No streams specified;
+0x06	|	 Operation failed: Audio packet size too large based on frames per packets;
+0x07	|	 Operation failed: Invalid Frames Per Packet value;
+0x08	|	 Operation failed: Invalid Bucket ID;
+0x09	|	 Operation failed: RTP and RTCP ports Identical;
+0x0a	|	 Operation failed: Inconsistent Parameters on full duplex promotion;
+0x0b	|	 Operation failed: No Empty Vocoder Bins;
+0x0c	|	 Operation failed: Vocoders Not Identical;
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Network Cmd (switch): \NCmdSw:" );
+	g[24] -= 1;
+	CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Network Manager Switch::Types);
+	CLSE( 0, 0, 0x00, 0x14, "reserved" );
+	TSB#( 0, l[2], 0x90, 0xc2, UNIStim::Payload::CMD::Address::Network Manager Switch::Types::Calls );
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Reset Watchdog( )
+{
+	UNIStim::Function::Watchdog Timeout;
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Soft Reset done( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Hard Reset done( )
+{
+	if (g[24] == 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length ok" );
+	}
+	if (g[24] != 3)
+	{
+		LABL( 0, 0, 0, 0x24, "length not ok" );
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Query Network Manager( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;				
+			BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Santity:" );
+				CEQU( 0x00, l[44], 0, 0x14, "false" );
+				CEQU( 0x01, l[44], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 1, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......"  );	
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager res.:" );
+				CEQU( 0x00, l[45], 0, 0x14, "false" );
+				CEQU( 0x01, l[45], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, ".."  );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager res. :" );
+				CEQU( 0x00, l[46], 0, 0x14, "false" );
+				CEQU( 0x01, l[46], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Options:" );
+				CEQU( 0x00, l[47], 0, 0x14, "false" );
+				CEQU( 0x01, l[47], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "...."  );
+			BBIT( 1, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..."  );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Server Info:" );
+				CEQU( 0x00, l[48], 0, 0x14, "false" );
+				CEQU( 0x01, l[48], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "....."  );
+			BBIT( 1, l[49], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".."  );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Attributes:" );
+				CEQU( 0x00, l[49], 0, 0x14, "false" );
+				CEQU( 0x01, l[49], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "......"  );
+			BBIT( 1, l[50], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "."  );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Managers:" );
+				CEQU( 0x00, l[50], 0, 0x14, "false" );
+				CEQU( 0x01, l[50], 0, 0x14, "true" );		
+			LABL( 0, 0, 0, 0x84, "......."  );
+			BBIT( 1, l[51], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Query Network Manager Diagnostic:" );
+				CEQU( 0x00, l[51], 0, 0x14, "false" );
+				CEQU( 0x01, l[51], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Network Manager Options( )
+{
+	//
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::QoS Configuration( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Set RTCP Source Description Item( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Download Server Information( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Server Switch( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Query Network Configuration Element( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Download Software Upgrade( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Set RTCP Report Interval( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Set Primary Server( )
+{
+
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Set Recovery Procedure Time Interval( )
+{
+	DWRD( 0, l[3], 0x90, 0xc2, Recovery Procedure Idle Low Boundary: \Rec.Proc.Idle.Low.Bound.: );
+	DWRD( 0, l[4], 0x90, 0xc2, Recovery Procedure Idle High Boundary: \Rec.Proc.Idle.High.Bound.: );
+	g[24] -= 4;
+}
+
+void UNIStim::Payload::CMD::Address::Network Manager Switch::Transport Reliability Layer Parameters Download( )
+{
+
+}
+
+str# UNIStim::Payload::CMD::Address::Network Manager Switch::Types;
+0x02	|	Soft Reset done;
+0x03	|	Hard Reset done;
+0x04	|	Query Network Manager;
+0x05	|	Network Manager Options;
+0x06	|	QoS Configuration;
+0x09	|	Set RTCP Source Description Item;
+0x0b	|	Download Server Information;
+0x0c	|	Server Switch;
+0x0d	|	Query Network Configuration Element;
+0x0e	|	Download Software Upgrade;
+0x0f	|	Set RTCP Report Interval;
+0x10	|	Set Primary Server;
+0x12	|	Reset Watchdog;
+0x13	|	Set Recovery Procedure Time Interval;
+0x14	|	Transport Reliability Layer Parameters Download;
+
+str# UNIStim::Payload::CMD::Address::Network Manager Switch::Types::Calls;
+0x02	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Soft Reset done;
+0x03	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Hard Reset done;
+0x04	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Query Network Manager;
+0x05	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Network Manager Options;
+0x06	|	UNIStim::Payload::CMD::Address::Network Manager Switch::QoS Configuration;
+0x09	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Set RTCP Source Description Item;
+0x0b	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Download Server Information;
+0x0c	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Server Switch;
+0x0d	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Query Network Configuration Element;
+0x0e	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Download Software Upgrade;
+0x0f	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Set RTCP Report Interval;
+0x10	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Set Primary Server;
+0x12	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Reset Watchdog;
+0x13	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Set Recovery Procedure Time Interval;
+0x14	|	UNIStim::Payload::CMD::Address::Network Manager Switch::Transport Reliability Layer Parameters Download;
+
+void UNIStim::Payload::CMD::Address::Expansion Module Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Expansion Module Manager (switch): \ExpModSw:" );
+	//g[23] -= 1;
+	g[24] -= 1;
+	//CST#( 0, l[2], 0x00, 0x14, UNIStim::Payload::CMD::Address::Expansion Module Manager Switch::Types );
+	//TSB#( 0, l[2], 0x90, 0xc2, UNIStim::Payload::CMD::Address::Expansion Module Manager Switch::Types::Calls );	
+	CHR#( 0, g[24], 0x90, 0xc2, "Expansion Module Manager Switch:" );
+	g[24] -= g[24];
+}
+
+void UNIStim::Payload::CMD::Address::Expansion Module Manager Phone( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Expansion Module Manager (Phone): \ExpModPh:" );
+	CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Expansion Module Manager Phone::Types );
+	g[24] -= 1;
+	CHR#( 0, g[24], 0x90, 0xc2, "Unknown Decode:" );	
+}
+
+str# UNIStim::Payload::CMD::Address::Expansion Module Manager Phone::Types;
+0x59	|	Module Key Number;
+
+void UNIStim::Payload::CMD::Address::Broadcast Manager Switch( )
+{	
+	HBYT( 0, l[2], 0x90, 0xc2, "Broadcast Manager (Switch): \ExpModSw:" );
+	CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Types );
+	g[24] -= 1;
+	TSB#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Calls );
+}
+
+void UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Time and Date Download( )
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Date Year: \DtYr:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Date Month: \DtMth:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Date Day: \DtDy:" );
+	DBYT( 0, l[5], 0x90, 0xc2, "Time Hour: \THr:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Time Minute: \Tmin:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Time Second: \TSec:" );
+	g[24] -= 6;
+}
+
+
+str# UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Types;
+0x00	|	Accessory Sync Update;
+0x01	|	Logical Icon Update;
+0x02	|	Time and Date Download;
+0x03	|	Set Default Character Table Config;
+0xff	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Calls;
+0x00	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Accessory Sync Update;
+0x01	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Logical Icon Update;
+0x02	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Time and Date Download;
+0x03	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Set Default Character Table Config;
+0xff	|	UNIStim::Payload::CMD::Address::Broadcast Manager Switch::Reserved;
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Audio Cmd (switch): \Aud-cmd-sw:" );	
+		CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Audio Manager Switch::Types );
+		g[24] -= 1;
+		TSB#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Audio Manager Switch::TypeCalls );	
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Alerting Tone Configuration( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 5, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "..." );
+		LABL( 0, 0, 0, 0x14, "	Transducer Routing:  " );
+		CST#(0, l[44], 0, 0x04, 	UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Routing );
+			HGLB( 0, l[44], 0x04, 0x04, " " );
+			LABL( 0, 0, 0, 0x84, "....." );
+			BBIT( 3, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Warbler Select:" );
+			HGLB( 0, l[47], 0x04, 0x04, " " );
+	LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 4, l[45], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+		LABL( 0, 0, 0, 0x14, "Cadence Select:  " );
+		CST#(0, l[45], 0, 0x04, 	UNIStim::Payload::CMD::Address::Audio Manager Switch::Cadence Select );
+			HGLB( 0, l[45], 0x04, 0x04, " " );
+			LABL( 0, 0, 0, 0x84, "...." );
+			BBIT( 4, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Tone Volume Range in Steps:" );
+			HGLB( 0, l[48], 0x04, 0x04, " " );
+		g[24] -= 2;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Visual Transducer Based Tone Enable( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 7, l[44], 0x05, 0, );
+		
+			LABL( 0, 0, 0, 0x84, "......." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Enable Visual Tones:" );
+			CEQU( 0, l[47], 0x04, 0x14, "false" );
+			CEQU( 1, l[47], 0x04, 0x14, "true" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+	BBIT( 4, l[2], 0x05, 0, );
+	LABL( 0, 0, 0, 0x84, "...." );
+	BBIT( 1, l[44], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "..." );
+	LABL( 0, 0, 0, 0x14, "Audio Manager Transducer Tone Attenuated:  " );
+		CEQU( 0, l[44], 0x04, 0x14, "false" );
+		CEQU( 1, l[44], 0x04, 0x14, "true" );
+		
+		LABL( 0, 0, 0, 0x84, "....." );
+		BBIT( 3, l[47], 0x04, 0, );
+		LABL( 0, 0, 0, 0x14, "Audio Manager Transducer based Tone ON:  " );
+		CST#(0, l[44], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On::Type );
+		HGLB( 0, l[47], 0x04, 0x04, " " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone Volume Level( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;		
+		LABL( 0, 0, 0, 0x84, "...." );
+		BBIT( 4, l[2], 0x05, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+		LABL( 0, 0, 0, 0x14, "	Tone Level:  " );
+			HGLB( 0, l[2], 0x04, 0x04, " " );
+			BBIT( 1, l[44], 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "....." );
+			BBIT( 3, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "	Audio Manager Transducer based Tone ON:" );
+			CST#(0, l[44], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On::Type );
+			HGLB( 0, l[47], 0x04, 0x04, " " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Connect Transducer / Tap info again( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x14, "TX Enable:  " );
+			CEQU( 0, l[44], 0x04, 0x14, "false" );
+			CEQU( 1, l[44], 0x04, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......" );
+			LABL( 0, 0, 0, 0x14, "RX Enable:  " );
+			CEQU( 0, l[44], 0x04, 0x14, "false" );
+			CEQU( 1, l[44], 0x04, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, ".." );
+			BBIT( 6, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Audio Transducer Pair:  " );
+			CST#( 0, l[48], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Routing );
+			HGLB( 0, l[48], 0x04, 0, "  " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 1, l[44], 0x14, 0, "" );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x14, "reserved:  " );
+			CEQU( 0, l[44], 0x04, 0x14, "false" );
+			CEQU( 1, l[44], 0x04, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "." );
+			BBIT( 1, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......" );
+			LABL( 0, 0, 0, 0x14, "Don't force active:  " );
+			CEQU( 0, l[45], 0x04, 0x14, "The APB specified will be the active one" );
+			CEQU( 1, l[45], 0x04, 0x14, "The APB specified will NOT be the active one" );
+		LABL( 0, 0, 0, 0x84, ".." );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x14, "Destructive/Additive:  " );
+			CEQU( 0, l[46], 0x04, 0x14, "All transducers that were connected prior will be disconnected" );
+			CEQU( 1, l[46], 0x04, 0x14, "This will not affect the connections that were established prior" );
+		LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x14, "Disable Sidetone:  " );
+			CEQU( 0, l[47], 0x04, 0x14, "false" );
+			CEQU( 1, l[47], 0x04, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "...." );
+			BBIT( 4, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "APB Number:  " );
+			HGLB( 4, l[48], 0x04, 0, "  ");
+		LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+	while (g[24] > 0)
+	{
+		//DGLB( 0, g[24], 0x90, 0xc2, "g24" );
+		DBYT( 0, l[5], 0x90, 0xc2, "AudioManager Stream ID: \AMngStrID:" );
+		g[24] -= 1;
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters( )
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Audio Manager Stream ID: \AmStrmID:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Vocoder Protocol:   \VocPrt:" );
+		CST#(0, l[3], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters::VocProt );
+	g[24] -= 2;
+	while (g[24] > 0)
+	{
+		LABL( 0, 0, 0x90, 0xc9, "Parameter: " );
+			BBYT( 0, l[4], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 2, l[5], 0x14, 0, );
+				LABL( 0, 0, 0, 0x04, "......" );
+				LABL( 0, 0, 0, 0x14, "Vocoder Entity:" );
+					CST#( 0, l[5], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Vocoder Entity );
+					CLSE( 0, 0, 0, 0x14, "Unknown" );
+			HGLB( 4, l[5], 0x04, 0, "  ");
+			LABL( 0, 0, 0, 0x84, ".." );
+				BBIT( 6, l[6], 0x04, 0, );
+				LABL( 0, 0, 0, 0x14, "Vocoder Config Param:" );
+					CST#( 0, l[6], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Vocoder Config Param );
+					CLSE( 0, 0, 0, 0x14, "Unknown" );
+			HGLB( 4, l[6], 0x04, 0, "  ");
+			LABL( 0, 0, 0, 0xb8 );
+			if (l[6] == 0x20)
+			{
+				DWRD( 0, l[7], 0x90, 0xc2, "Bytes per Frame:" );
+				g[24] -= 2;
+			}
+			g[24] -= 1;
+			
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	
+	
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Set APB's Rx Volume Level( )
+{	
+	HEX#( 0, g[24], 0x90, 0xc2, "Data:" );
+	g[24] -= 2;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone On( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x14, "Stream Based Tone Mute:" );
+			CEQU( 0, l[44], 0x04, 0x14, "Stream Based tone will be summed with Stream Data" );
+			CEQU( 1, l[44], 0x04, 0x14, "Stream Based Tone will replace Stream Data" );
+		LABL( 0, 0, 0, 0x84, "." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......" );
+			LABL( 0, 0, 0, 0x14, "Stream Based Tone RX or TX:" );
+			CEQU( 0, l[47], 0x04, 0x14, "Stream ID specified in last byte is in the rx direction" );
+			CEQU( 1, l[47], 0x04, 0x14, "Stream ID specified in last byte is in the tx direction" );
+		BBIT( 1, 0, 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 5, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Stream Based Tone ID:" );
+			CST#( 0, l[48], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone ID );
+			CLSE( 0, 0, 0, 0x14, "Unknown" );
+			HGLB( 0, l[48], 0x04, 0, "  " ); 
+	LABL( 0, 0, 0, 0xb8 );
+	HBYT( 0, l[49], 0x90, 0xc2, "Stream ID: \StrmID:" );
+	HBYT( 0, l[50], 0x90, 0xc2, "Stream Based Vol. ID: \StrmBsdVolID:" );
+		CST#( 0, l[50], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Volume ID );
+		CLSE( 0, 0, 0, 0x14, "Unknown" );
+	g[24] -= 3;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Mute/Unmute( )
+{
+	while (g[24] > 0)
+	{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 6, l[2], 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "......" );
+			BBIT( 1, l[3], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".	Audio Manager RX or TX:" );
+			CEQU( 0, l[3], 0x04, 0x14, "Next Byte specifies an TX Stream ID" );
+			CEQU( 1, l[3], 0x04, 0x14, "Next Byte specifies an RX Stream ID" );
+		LABL( 0, 0, 0, 0x84, "......." );
+			BBIT( 1, l[4], 0x04, 0, );
+			LABL( 0, 0, 0, 0x14, "Audio Manager Mute :" );
+			CEQU( 0, l[4], 0x04, 0x14, "Following Stream will be unmuted" );
+			CEQU( 1, l[4], 0x04, 0x14, "Following Stream will be Muted" );
+			LABL( 0, 0, 0, 0xb8 );
+			HBYT( 0, l[5], 0x90, 0xc2, "Audio Manager Stream ID: \AmStrmID:" );
+		LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 2;
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Close Audio Stream( )
+{
+	HBYT( 0, l[3], 0x90, 0xc2, Receive Stream Id: \rx.stream.id: );
+	HBYT( 0, l[4], 0x90, 0xc2, Transmit Stream Id: \rx.stream.id: );
+	g[24] -= 2;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::APB Download( )
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "APB Number: \APB#:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "APB Operation Code: \APBOpCd:" );
+		CST#( 0, l[2], 0, 0x24, UNIStim::Payload::CMD::Address::Audio Manager Switch::APB Download::APBOpCd );
+	HBYT( 0, l[3], 0x90, 0xc2, "APB Parameter Length: \APBParaLngt:" );
+	g[24] -= 3;
+	HEX#( 0, g[24], 0x90, 0xc2, "APB Operation Data: \APBOpDt:" );
+	g[24] -= g[24];
+	
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone Off( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		
+		DECR 1;
+		BBIT( 1, 0, 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "." );
+		BBIT( 1, l[47], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "......" );
+		LABL( 0, 0, 0, 0x14, "	Stream Based Tone RX or TX:" );
+			CEQU( 0, l[47], 0x04, 0x14, "Stream ID specified in last byte is in the rx direction" );
+			CEQU( 1, l[47], 0x04, 0x14, "Stream ID specified in last byte is in the tx direction" );
+			BBIT( 1, 0, 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "..." );		
+		BBIT( 5, l[48], 0x04, 0, );
+		LABL( 0, 0, 0, 0x14, "	Stream Based Tone ID:" );
+			CST#( 0, l[48], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone ID );
+			CLSE( 0, 0, 0, 0x14, "Unknown" );
+			HGLB( 0, l[48], 0x04, 0, "  " ); 
+	LABL( 0, 0, 0, 0xb8 );
+	HBYT( 0, l[49], 0x90, 0xc2, "Stream ID: \StrmID:" );
+	g[24] -= 2;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone Off( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+	BBIT( 5, l[2], 0x05, 0, );
+	
+		LABL( 0, 0, 0, 0x84, "....." );
+		BBIT( 3, l[47], 0x04, 0, );
+		LABL( 0, 0, 0, 0x14, "	Audio Manager Transducer based Tone ON:  " );
+		CST#( 0, l[44], 0, 0x04, UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On::Type );
+		HGLB( 0, l[47], 0x04, 0x04, " " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Audio Manager Switch::Open Audio Stream( )
+{
+	HBYT( 0, l[3], 0x90, 0xc2, Receive Stream Id: \rx.stream.id: );
+	HBYT( 0, l[4], 0x90, 0xc2, Transmit Stream Id: \rx.stream.id: );
+	HBYT( 0, l[5], 0x90, 0xc2, "Receive Vocoder Protocol:   \RecVocPrt:" );
+		CST#(0, l[5], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters::VocProt );
+	HBYT( 0, l[6], 0x90, 0xc2, "Transmit Vocoder Protocol:   \TrmtVocPrt:" );
+		CST#(0, l[6], 0, 0x14, UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters::VocProt );
+	DBYT( 0, l[7], 0x90, 0xc2, Frames per Packet: \FrmpPkt: );
+	BBYT( 0, l[8], 0x90, 0xc2, "Flags: \Flags:" );
+	HBYT( 0, l[9], 0x90, 0xc2, "RTCP Bucket ID: \RTCP BktID:" );
+	DLNG( 0, l[10], 0x90, 0xc2, "Data: " );
+	DWRD( 0, l[11], 0x90, 0xc2, "Phone RTP Port: \PhnRTP Prt:" );
+	DWRD( 0, l[12], 0x90, 0xc2, "Phone RTCP Port: \PhnRTCP Prt:" );	
+	DWRD( 0, l[11], 0x90, 0xc2, "Distant RTP Port: \DstRTP Prt:" );
+	DWRD( 0, l[12], 0x90, 0xc2, "Distant RTCP Port: \DstRTCP Prt:" );
+	IPLG( 0, l[12], 0x90, 0xc2, "Distant IP Address for RTCP: \DstIP RTCP:" );
+	g[24] -= 23;
+}
+
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::APB Download::APBOpCd;
+0x00	|	 Enable Return To Default Option;
+0x01	|	 Disable Return To Default Option;
+0x02	|	 Enable Automatic Gain Control Option;
+0x03	|	 Disable Automatic Gain Control Option;
+0x04	|	 Select APB for Volume Control Option;
+0x05	|	 Deselect APB for Volume Control Option;
+0x06	|	 Enable Listener Sidetone Option;
+0x07	|	 Disable Listener Sidetone Option;
+0x08	|	 Enable Acoustic Echo Canceller (AEC) Option;
+0x09	|	 Disable Acoustic Echo Canceller (AEC) Option;
+0x10	|	 Enable Hearing Impaired (HIP) Option;
+0x11	|	 Disable Hearing Impaired (HIP) Option;
+0x0A	|	 Enable Rx Squelch Option;
+0x0B	|	 Disable Rx Squelch Option;
+0x0C	|	 Enable Rx Compressor Option;
+0x0D	|	 Disable Rx Compressor Option;
+0x0E	|	 Enable Tx Echo Squelch Option;
+0x0F	|	 Disable Tx Echo Squelch Option;
+0x40	|	 Query Audio Parameters;
+0x41	|	 Step Size setting;
+0x42	|	 Maximum Volume setting;
+0x43	|	 Minimum Volume setting;
+0x44	|	 Rx CODEC Gain Value;
+0x45	|	 Tx CODEC Gain Value;
+0x46	|	 Rx DSP Gain Value;
+0x47	|	 Tx DSP Gain Value;
+0x48	|	 Sidetone Gain Value;
+0x49	|	 Switched Loss Depth;
+0x4A	|	 Length of AEC;
+0x4B	|	 MCS_NOISE_THR;
+0x4C	|	 LineDelayLength;
+0x4D	|	 MaxReturnLossTG;
+0x4E	|	 SWL_AEC_OFF;
+0x4F	|	 NormDelta;
+0x50	|	 TxLevelCompHD;
+0x51	|	 TxRL_BOOT;
+0x52	|	 NoiseWaitCounter ;
+0x53	|	 Whole APS ;
+0x54	|	 Change Default Volume setting;
+0x55	|	 Change Current Volume setting;
+0x56	|	 Sampling Rate setting;
+0x57	|	 The filter(s) to be used when the HIP is enabled;
+0x58	|	 The threshold that should be used when AGC is enabled;
+0x59	|	 The threshold that should be used when Listener Sidetone (LST) is enabled;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Vocoder Entity;
+0x01	|	Configuration Parameter in byte only affects the encoder;
+0x02	|	Configuration Parameter in byte only affects decoder;
+0x03	|	Configuration Parameter in byte affects the whole vocoder;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Vocoder Config Param;
+0x00	|	Turn Off Voice Activity Detection;
+0x01	|	Turn On Voice Activity Detection;
+0x02	|	Turn Off Bad Frame Interpolation Algorithm;
+0x03	|	Turn On Bad Frame Interpolation Algorithm;
+0x04	|	Disable Post Filter;
+0x05	|	Enable Post Filter;
+0x06	|	Disable High Pass Filter;
+0x07	|	Enable High Pass Filter;
+0x08	|	G.723 6.3kbps Working Rate ;
+0x09	|	G.723 5.3kbps Working Rate ;
+0x0A	|	G.729 Annexes Selection ;
+0x0B	|	Set the sampling Rate of the vocoder ;
+0x0C	|	Set RTP Payload Type ;
+0x20	|	Set number of bytes per frame ;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone ID;
+0x00	|	Dial Tone F1=0x0B33 - 350 Hz F2=0x0E14 - 440 Hz F3=0x00 - not present F4=0x00 - not present;
+0x01	|	Recall Dial Tone F1=0x0B33 - 350 Hz F2=0x0E14 - 440 Hz F3=0x00 - not present F4=0x00 - not present;
+0x02	|	Line Busy F1 = 0x0F5C - 480 Hz F2 = 0x13D7 - 620 Hz F3 = 0x00 - not present F4 = 0x00 - not present;
+0x03	|	Reorder F1 = 0x0F5C - 480 Hz F2 = 0x13D7 - 620 Hz F3 = 0x00 - not present F4 = 0x00 - not present;
+0x04	|	Audible Ringing F1=0x0E14 - 440 Hz F2=0x0F5C - 480 Hz F3=0x00 - not present F4=0x00 - not present;
+0x05	|	Receiver Off Hook (ROH) F1=0x2CCC-1400 Hz F2=0x4851-2260 Hz F3=0x4E66-2450 Hz F4=0x5333 - 2600 Hz;
+0x06	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x07	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x08	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x09	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0a	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0b	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0c	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0d	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0e	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+0x0f	|	No Tone F1=0x00-0 Hz F2=0x00-0 Hz F3=0x00-0 Hz F4=0x00-0 Hz 0x00 C1=0x00 C2=0x00 C3=0x0 c4=0x0;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Volume ID;
+0x6F	|	 C1=0xFF00 C2=0x00 C3=0x00 c4=0x00 Steady on.  -13 dBmO per frequency.;
+0x6F	|	 C1=0x0505 C2=0x0505 C3=0x0505 c4=0xFF00 3 burst(0.1 sec on,0.1 sec off),Then steady on.-13 dBmO per frequency.;
+0x60	|	 C1=0x1919 C2=0x00 C3=0x00 c4=0x00 0.5 sec on, 0.5 sec off, repeating.  -24 dBmO per frequency.;
+0x67	|	 C1=0x64C8 C2=0x00 C3=0x00 c4=0x00 2 sec on, 4 sec off, repeating.  -19 dBmO per frequency.;
+0x80	|	 C1=0xFF00 C2=0x00 C3=0x00 c4=0x00 0.1 sec on, 0.1 sec off, repeating.  +3 to -6 dBmO/frequency.;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters::VocProt;
+0x00	|	G.711, Mu-Law;
+0x04	|	G.723;
+0x08	|	G.711, A-Law;
+0x0A	|	16-bit Linear;
+0x12	|	G.729;
+0x60	|	8-bit Linear;
+0x61	|	G.711, Mu-Law with PLP;
+0x62	|	G.711, A-Law with PLP;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On::Type;
+0x00	|	Alerting;
+0x01	|	Special Tones;
+0x02	|	Paging Tones;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Cadence Select;
+0x00	|	cadence 0 (2 secs on, 4 secs off, cyclic);
+0x01	|	cadence 1 (0.5 secs on, 0.3 secs off, 1.2 secs on, 4 secs off, cyclic);
+0x02	|	cadence 2 (0.7 secs on, 0.5 secs off, 0.7 secs on, 4 secs off, cyclic);
+0x03	|	cadence 3 (0.5 secs on then off, one-shot);
+0x04	|	cadence 4 (test cadence);
+0x05	|	cadence 5 (test cadence);
+0x06	|	cadence 6 (test cadence);
+0x07	|	downloadable alerter tone cadence;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Routing;
+0x00	|	Handset;
+0x01	|	Headset;
+0x02	|	Handsfree Speaker/Microphone;
+0x3F	|	All Transducer Pairs;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::Types;
+0x00	|	Query Audio Manager;
+0x01	|	Query Supervisor Headset Status;
+0x02	|	Audio Manager Options;
+0x04	|	Mute/Unmute;
+0x10	|	Transducer Based Tone On;
+0x11	|	Transducer Based Tone Off;
+0x12	|	Alerting Tone Configuration;
+0x13	|	Special Tone Configuration;
+0x14	|	Paging Tone Configuration;
+0x15	|	Alerting Tone Cadence Download;
+0x17	|	Paging Tone Cadence Download;
+0x18	|	Transducer Based Tone Volume Level;
+0x1a	|	Visual Transducer Based Tone Enable;
+0x1b	|	Stream Based Tone On;
+0x1c	|	Stream Based Tone Off;
+0x1d	|	Stream Based Tone Frequency Component List Download;
+0x1e	|	Stream Based Tone Cadence Download;
+0x20	|	Select Adjustable Rx Volume;
+0x21	|	Set APB's Rx Volume Level;
+0x22	|	Change Adjustable Rx Volume (quieter) DONE;
+0x23	|	Change Adjustable Rx Volume (louder) DONE;
+0x24	|	Adjust Default Rx Volume(quieter);
+0x25	|	Adjust Default Rx Volume(louder);
+0x28	|	APB Download;
+0x30	|	Open Audio Stream;
+0x31	|	Close Audio Stream;
+0x32	|	Connect Transducer / Tap info again;
+0x34	|	Filter Block Download;
+0x37	|	Query RTCP Statistics;
+0x38	|	Configure Vocoder Parameters;
+0x39	|	Query RTCP Bucket's SDES Information;
+0x3a	|	Jitter Buffer Parameters Configuration;
+0x3b	|	Resolve Port Mapping;
+0x3c	|	Port Mpping Discovery Ack;
+0x3d	|	Query Audio Stream Status;
+0xff	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Audio Manager Switch::TypeCalls;
+0x00	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Query Audio Manager;
+0x01	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Query Supervisor Headset Status;
+0x02	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Audio Manager Options;
+0x04	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Mute/Unmute;
+0x10	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone On;
+0x11	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone Off;
+0x12	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Alerting Tone Configuration;
+0x13	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Special Tone Configuration;
+0x14	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Paging Tone Configuration;
+0x15	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Alerting Tone Cadence Download;
+0x17	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Paging Tone Cadence Download;
+0x18	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Transducer Based Tone Volume Level;
+0x1a	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Visual Transducer Based Tone Enable;
+0x1b	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone On;
+0x1c	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone Off;
+0x1d	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone Frequency Component List Download;
+0x1e	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Stream Based Tone Cadence Download;
+0x20	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Select Adjustable Rx Volume;
+0x21	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Set APB's Rx Volume Level;
+0x22	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Change Adjustable Rx Volume (quieter) DONE;
+0x23	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Change Adjustable Rx Volume (louder) DONE;
+0x24	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Adjust Default Rx Volume(quieter);
+0x25	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Adjust Default Rx Volume(louder);
+0x28	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::APB Download;
+0x30	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Open Audio Stream;
+0x31	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Close Audio Stream;
+0x32	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Connect Transducer / Tap info again;
+0x34	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Filter Block Download;
+0x37	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Query RTCP Statistics;
+0x38	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Configure Vocoder Parameters;
+0x39	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Query RTCP Bucket's SDES Information;
+0x3a	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Jitter Buffer Parameters Configuration;
+0x3b	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Resolve Port Mapping;
+0x3c	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Port Mpping Discovery Ack;
+0x3d	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Query Audio Stream Status;
+0xff	|	UNIStim::Payload::CMD::Address::Audio Manager Switch::Reserved;
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Display Cmd (switch): \Display-cmd-sw:" );
+	g[24] -= 1;
+	CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Display Manager Switch::Types );
+	TSB#(0, l[2], 0, 0, UNIStim::Payload::CMD::Address::Display Manager Switch::TypeCalls );   
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Status Bar Icon Update( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 3, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   res:" );
+		LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 5, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "" );
+			LABL( 0, 0, 0, 0x04, "   Icon ID: " );
+			HGLB( 0x00, l[47], 0, 0x04, );
+			LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 3, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   Icon Cadence:" );
+			CST#( 0, l[44], 0, 0x24, UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_cadence );
+		LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 5, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "" );
+			LABL( 0, 0, 0, 0x04, "   Icon State: " );
+			CST#( 0, l[47], 0, 0x24, UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_state );
+	g[24] -= 1;	
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Clear Field( )
+{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;				
+			BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   Soft Key Label:" );
+				CEQU( 0x00, l[44], 0, 0x14, "false" );
+				CEQU( 0x01, l[44], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 1, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......"  );	
+			LABL( 0, 0, 0, 0x04, "   Soft Key:" );
+				CEQU( 0x00, l[45], 0, 0x14, "false" );
+				CEQU( 0x01, l[45], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, ".."  );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Status Bar Icon:" );
+				CEQU( 0x00, l[46], 0, 0x14, "false" );
+				CEQU( 0x01, l[46], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x04, "   Line Data:" );
+				CEQU( 0x00, l[47], 0, 0x14, "false" );
+				CEQU( 0x01, l[47], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "...."  );
+			BBIT( 1, l[48], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..."  );
+			LABL( 0, 0, 0, 0x04, "   Time Field:" );
+				CEQU( 0x00, l[48], 0, 0x14, "false" );
+				CEQU( 0x01, l[48], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "....."  );
+			BBIT( 1, l[49], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".."  );
+			LABL( 0, 0, 0, 0x04, "   Date Field:" );
+				CEQU( 0x00, l[49], 0, 0x14, "false" );
+				CEQU( 0x01, l[49], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "......"  );
+			BBIT( 1, l[50], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "."  );
+			LABL( 0, 0, 0, 0x04, "   Context Field:" );
+				CEQU( 0x00, l[50], 0, 0x14, "false" );
+				CEQU( 0x01, l[50], 0, 0x14, "true" );		
+			LABL( 0, 0, 0, 0x84, "......."  );
+			BBIT( 1, l[51], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Numeric Index Field in InfoBar:" );
+				CEQU( 0x00, l[51], 0, 0x14, "false" );
+				CEQU( 0x01, l[51], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 1;
+	if (l[47] == 0x01)
+	{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );	
+		DECR 1;				
+			BBIT( 1, l[20], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   Line 8:" );
+				CEQU( 0x00, l[20], 0, 0x14, "false" );
+				CEQU( 0x01, l[20], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 1, l[21], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......"  );	
+			LABL( 0, 0, 0, 0x04, "   Line 7:" );
+				CEQU( 0x00, l[21], 0, 0x14, "false" );
+				CEQU( 0x01, l[21], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, ".."  );
+			BBIT( 1, l[22], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Line 6:" );
+				CEQU( 0x00, l[22], 0, 0x14, "false" );
+				CEQU( 0x01, l[22], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[23], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x04, "   Line 5:" );
+				CEQU( 0x00, l[23], 0, 0x14, "false" );
+				CEQU( 0x01, l[23], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "...."  );
+			BBIT( 1, l[24], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..."  );
+			LABL( 0, 0, 0, 0x04, "   Line 4:" );
+				CEQU( 0x00, l[24], 0, 0x14, "false" );
+				CEQU( 0x01, l[24], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "....."  );
+			BBIT( 1, l[25], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".."  );
+			LABL( 0, 0, 0, 0x04, "   Line 3:" );
+				CEQU( 0x00, l[25], 0, 0x14, "false" );
+				CEQU( 0x01, l[25], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "......"  );
+			BBIT( 1, l[26], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "."  );
+			LABL( 0, 0, 0, 0x04, "   Line 2:" );
+				CEQU( 0x00, l[26], 0, 0x14, "false" );
+				CEQU( 0x01, l[26], 0, 0x14, "true" );				
+			LABL( 0, 0, 0, 0x84, "......."  );
+			BBIT( 1, l[27], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Line 1:" );
+				CEQU( 0x00, l[27], 0, 0x14, "false" );
+				CEQU( 0x01, l[27], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0xb8 );		
+		g[24] -= 1;		
+	}
+	if (l[45] == 0x01)
+	{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );	
+		DECR 1;				
+			BBIT( 1, l[20], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 8:" );
+				CEQU( 0x00, l[20], 0, 0x14, "false" );
+				CEQU( 0x01, l[20], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 1, l[21], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......"  );	
+			LABL( 0, 0, 0, 0x04, "   Soft Key 7:" );
+				CEQU( 0x00, l[21], 0, 0x14, "false" );
+				CEQU( 0x01, l[21], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, ".."  );
+			BBIT( 1, l[22], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 6:" );
+				CEQU( 0x00, l[22], 0, 0x14, "false" );
+				CEQU( 0x01, l[22], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[23], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 5:" );
+				CEQU( 0x00, l[23], 0, 0x14, "false" );
+				CEQU( 0x01, l[23], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "...."  );
+			BBIT( 1, l[24], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..."  );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 4:" );
+				CEQU( 0x00, l[24], 0, 0x14, "false" );
+				CEQU( 0x01, l[24], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "....."  );
+			BBIT( 1, l[25], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".."  );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 3:" );
+				CEQU( 0x00, l[25], 0, 0x14, "false" );
+				CEQU( 0x01, l[25], 0, 0x14, "true" );	
+			LABL( 0, 0, 0, 0x84, "......"  );
+			BBIT( 1, l[26], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "."  );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 2:" );
+				CEQU( 0x00, l[26], 0, 0x14, "false" );
+				CEQU( 0x01, l[26], 0, 0x14, "true" );				
+			LABL( 0, 0, 0, 0x84, "......."  );
+			BBIT( 1, l[27], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Soft Key 1:" );
+				CEQU( 0x00, l[27], 0, 0x14, "false" );
+				CEQU( 0x01, l[27], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0xb8 );		
+		g[24] -= 1;
+	}
+	if (l[44] == 0x01)
+	{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;				
+			BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   res:" );
+				// CEQU( 0x00, l[44], 0, 0x14, "false" );
+				// CEQU( 0x01, l[44], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 1, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "......"  );	
+			LABL( 0, 0, 0, 0x04, "   res:" );
+				// CEQU( 0x00, l[45], 0, 0x14, "false" );
+				// CEQU( 0x01, l[45], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, ".."  );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Clear All Soft Key Labels:" );
+				CEQU( 0x00, l[46], 0, 0x14, "false" );
+				CEQU( 0x01, l[46], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 5, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "" );
+			LABL( 0, 0, 0, 0x04, "   Soft Key Label ID: " );
+				HGLB( 0x00, l[47], 0, 0x04, );
+		LABL( 0, 0, 0, 0xb8 );	
+		g[24] -= 1;		
+	}
+	
+	while (g[24] != 0)
+	{
+		BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 1;		
+	}
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:no tag:no( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 3, l[44], 0x14, 0, );
+		LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   res:" );
+		LABL( 0, 0, 0, 0x84, "..." );
+		BBIT( 1, l[47], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "...." );
+		LABL( 0, 0, 0, 0x04, "   Write a Softkey Label:" );
+			CEQU( 0x00, l[47], 0, 0x14, "false" );
+			CEQU( 0x01, l[47], 0, 0x14, "true" );	
+		LABL( 0, 0, 0, 0x84, "...."  );
+		BBIT( 1, l[48], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "..."  );
+		LABL( 0, 0, 0, 0x04, "   Write a Softkey:" );
+			CEQU( 0x00, l[48], 0, 0x14, "false" );
+			CEQU( 0x01, l[48], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "....."  );
+		BBIT( 1, l[49], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, ".."  );
+		LABL( 0, 0, 0, 0x04, "   Write a Line:" );
+			CEQU( 0x00, l[49], 0, 0x14, "false" );
+			CEQU( 0x01, l[49], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......"  );
+		BBIT( 1, l[50], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "."  );
+		LABL( 0, 0, 0, 0x04, "   Context Field in the Info Bar:" );
+			CEQU( 0x00, l[50], 0, 0x14, "false" );
+			CEQU( 0x01, l[50], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......."  );
+		BBIT( 1, l[51], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "   Is Address Numeric:" );
+			CEQU( 0x00, l[51], 0, 0x14, "false" );
+			CEQU( 0x01, l[51], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+		if( l[50] == 0x01 )
+		{
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );				
+			g[24] -= g[24];
+		}
+		if( l[48] == 0x01 )
+		{
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );				
+			g[24] -= g[24];
+		}
+		if( l[49] == 0x01 )
+		{
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 3, l[52], 0x14, 0, );
+				LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   Line Number:  " );
+		
+				DGLB( 0, l[52], 0x04, 0x04, " " );
+				LABL( 0, 0, 0, 0x84, "..." );
+				BBIT( 5, l[53], 0x04, 0, );
+				LABL( 0, 0, 0, 0x14, "res:" );
+			g[24] -= 1;
+			LABL( 0, 0, 0, 0xb8 );
+
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );	
+			
+			g[24] -= g[24];
+		}
+		if( l[47] == 0x01 )
+		{
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 3, l[44], 0x14, 0, );
+				LABL( 0, 0, 0, 0x04, "....." );
+				LABL( 0, 0, 0, 0x04, "   res:" );
+			LABL( 0, 0, 0, 0x84, "..." );
+				BBIT( 5, l[47], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "" );
+				LABL( 0, 0, 0, 0x04, "   Character Position or Soft-Label Key ID: " );
+				HGLB( 0x00, l[47], 0, 0x04, );
+				g[24] -= 1;
+			LABL( 0, 0, 0, 0xb8 );
+				CHR#( 0, g[24], 0x90, 0xc2, "Data:" );	
+				g[24] -= g[24];
+		}
+
+
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:yes tag:no( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 3, l[44], 0x14, 0, );
+		LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   Line Number:" );
+		DGLB( 0, l[44], 0, 0x14, );
+		LABL( 0, 0, 0, 0x84, "..." );
+		BBIT( 1, l[47], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "...." );
+		LABL( 0, 0, 0, 0x04, "   Write a Softkey Label:" );
+			CEQU( 0x00, l[47], 0, 0x14, "false" );
+			CEQU( 0x01, l[47], 0, 0x14, "true" );	
+		LABL( 0, 0, 0, 0x84, "...."  );
+		BBIT( 1, l[48], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "..."  );
+		LABL( 0, 0, 0, 0x04, "   Write a Softkey:" );
+			CEQU( 0x00, l[48], 0, 0x14, "false" );
+			CEQU( 0x01, l[48], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "....."  );
+		BBIT( 1, l[49], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, ".."  );
+		LABL( 0, 0, 0, 0x04, "   Write a Line:" );
+			CEQU( 0x00, l[49], 0, 0x14, "false" );
+			CEQU( 0x01, l[49], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......"  );
+		BBIT( 1, l[50], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "."  );
+		LABL( 0, 0, 0, 0x04, "   Context Field in the Info Bar:" );
+			CEQU( 0x00, l[50], 0, 0x14, "false" );
+			CEQU( 0x01, l[50], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......."  );
+		BBIT( 1, l[51], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "   Is Address Numeric:" );
+			CEQU( 0x00, l[51], 0, 0x14, "false" );
+			CEQU( 0x01, l[51], 0, 0x14, "true" );
+			DGLB( 0, l[48], 0x90, 0xc2, "l48:" );
+		LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+		if( l[50] == 0x01 )
+		{
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );
+			g[24] -= g[24];
+		}
+		if( l[48] == 0x01 )
+		{
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );
+			g[24] -= g[24];
+		}
+		if( l[49] == 0x01 )
+		{
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 2, l[52], 0x05, 0, );
+			LABL( 0, 0, 0, 0x84, ".." );
+			BBIT( 1, l[52], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x14, "Highlight:  " );
+				CEQU( 0x00, l[52], 0, 0x14, "false" );
+				CEQU( 0x01, l[52], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[53], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "...." );
+				LABL( 0, 0, 0, 0x14, "Shift Right:  " );
+				CEQU( 0x00, l[53], 0, 0x14, "false" );
+				CEQU( 0x01, l[53], 0, 0x14, "true" );
+			LABL( 0, 0, 0, 0x84, "...." );
+
+			BBIT( 4, l[53], 0x04, 0, );
+				LABL( 0, 0, 0, 0x14, "res:" );
+			g[24] -= 1;
+			LABL( 0, 0, 0, 0xb8 );
+
+			CHR#( 0, g[24], 0x90, 0xc2, "Data:" );	
+			
+			g[24] -= g[24];
+		}
+		if( l[47] == 0x01 )
+		{
+			//DGLB( 0, g[24], 0x90, 0xc2, "g24:" );	
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 3, l[44], 0x14, 0, );
+				LABL( 0, 0, 0, 0x04, "....." );
+				LABL( 0, 0, 0, 0x04, "   res:" );
+			LABL( 0, 0, 0, 0x84, "..." );
+				BBIT( 5, l[47], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "" );
+				LABL( 0, 0, 0, 0x04, "   Character Position or Soft-Label Key ID: " );
+				HGLB( 0x00, l[47], 0, 0x04, );
+				g[24] -= 1;
+			LABL( 0, 0, 0, 0xb8 );
+				CHR#( 0, g[24], 0x90, 0xc2, "Data:" );	
+				g[24] -= g[24];
+		}
+
+
+}
+
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Cursor Control( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;
+			BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   Should Curor blink:" );
+				CEQU( 0x00, l[44], 0, 0x14, "false" );
+				CEQU( 0x01, l[44], 0, 0x14, "true" );
+			BBIT( 1, l[45], 0x05, 0, );
+			BBIT( 1, l[46], 0x05, 0, );
+			BBIT( 1, l[47], 0x05, 0, );
+			LABL( 0, 0, 0, 0x84, "...."  );
+			BBIT( 4, l[47], 0x04, 0, );			
+			LABL( 0, 0, 0, 0x04, "   Cursor Movement Command:" );
+				CST#( 0, l[47], 0, 0x24, UNIStim::Payload::CMD::Address::Display Manager Switch::Cursor Control::cursor_move_cmds );
+				HGLB( 0,  l[47], 0x04, 0x04, " " );
+			LABL( 0, 0, 0, 0xb8 );
+		g[24] -= 1;
+		if (g[24] >= 1)
+		{
+			if (l[47] == 0x07)
+			{
+				BBYT( 0, l[2], 0x90, 0xc9, "Flags: \Flags:" );
+				DECR 1;
+				BBIT( 4, l[50], 0x05, 0, );
+				LABL( 0, 0, 0, 0x84, "...."  );
+				BBIT( 1, l[51], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "..." );
+				LABL( 0, 0, 0, 0x04, "   Write a SoftKey:" );
+					CEQU( 0x00, l[51], 0, 0x14, "false" );
+					CEQU( 0x01, l[51], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "....."  );
+				BBIT( 1, l[52], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, ".." );
+				LABL( 0, 0, 0, 0x04, "   Write a Line:" );
+					CEQU( 0x00, l[52], 0, 0x14, "false" );
+					CEQU( 0x01, l[52], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "......"  );
+				BBIT( 1, l[53], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "." );
+				LABL( 0, 0, 0, 0x04, "   Context field in the info bar: " );
+					CEQU( 0x00, l[53], 0, 0x14, "false" );
+					CEQU( 0x01, l[53], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "......."  );
+				
+				BBIT( 1, l[54], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "   Is Address numeric:" );
+					CEQU( 0x00, l[54], 0, 0x14, "false" );
+					CEQU( 0x01, l[54], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0xb8 );
+				g[24] -= 1;
+			}
+			if (l[47] == 0x01)
+			{
+				BBYT( 0, l[2], 0x90, 0xc9, "Flags: \Flags:" );
+				DECR 1;
+				BBIT( 4, l[50], 0x05, 0, );
+				LABL( 0, 0, 0, 0x84, "...."  );
+				BBIT( 1, l[51], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "..." );
+				LABL( 0, 0, 0, 0x04, "   Write a SoftKey:" );
+					CEQU( 0x00, l[51], 0, 0x14, "false" );
+					CEQU( 0x01, l[51], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "....."  );
+				BBIT( 1, l[52], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, ".." );
+				LABL( 0, 0, 0, 0x04, "   Write a Line:" );
+					CEQU( 0x00, l[52], 0, 0x14, "false" );
+					CEQU( 0x01, l[52], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "......"  );
+				BBIT( 1, l[53], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "." );
+				LABL( 0, 0, 0, 0x04, "   Context field in the info bar: " );
+					CEQU( 0x00, l[53], 0, 0x14, "false" );
+					CEQU( 0x01, l[53], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0x84, "......."  );
+				
+				BBIT( 1, l[54], 0x04, 0, );
+				LABL( 0, 0, 0, 0x04, "   Is Address numeric:" );
+					CEQU( 0x00, l[54], 0, 0x14, "false" );
+					CEQU( 0x01, l[54], 0, 0x14, "true" );
+				LABL( 0, 0, 0, 0xb8 );
+				g[24] -= 1;
+				BBYT( 0, l[2], 0x90, 0xc9, "Flags: \Flags:" );
+				DECR 1;		
+					
+					BBIT( 3, l[48], 0x14, 0, );
+					LABL( 0, 0, 0, 0x04, "....." );
+					LABL( 0, 0, 0, 0x04, "   Line Number:" );
+					HGLB( 0,  l[48], 0x04, 0x04, " " );
+					LABL( 0, 0, 0, 0x84, "..."  );
+					BBIT( 5, l[49], 0x04, 0, );
+					LABL( 0, 0, 0, 0x04, "   Charakter Position or Soft-Label Key ID:" );
+						HGLB( 0,  l[49], 0x04, 0x04, " " );
+					LABL( 0, 0, 0, 0xb8 );
+				g[24] -= 1;
+			}
+			if (l[47] == 0x06)
+			{	
+				BBYT( 0, l[2], 0x90, 0xc9, "Flags: \Flags:" );
+				DECR 1;		
+					
+					BBIT( 3, l[48], 0x14, 0, );
+					LABL( 0, 0, 0, 0x04, "....." );
+					LABL( 0, 0, 0, 0x04, "   Line Number:" );
+					HGLB( 0,  l[48], 0x04, 0x04, " " );
+					LABL( 0, 0, 0, 0x84, "..."  );
+					BBIT( 6, l[49], 0x04, 0, );
+					LABL( 0, 0, 0, 0x04, "   Charakter Position or Soft-Label Key ID:" );
+						HGLB( 0,  l[49], 0x04, 0x04, " " );
+					LABL( 0, 0, 0, 0xb8 );
+				g[24] -= 1;
+			}
+		}
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Arrow( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Arrow Display Direct.:" );
+		CST#( 0, l[2], 0, 0x24, UNIStim::Payload::CMD::Address::Display Manager Switch::Arrow::str );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Highlighted Field Definition( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBIT( 3, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "....." );
+			LABL( 0, 0, 0, 0x04, "   Soft Key ID:" );
+			DGLB( 0, l[44], 0x04, 0, "  " );
+		LABL( 0, 0, 0, 0x84, "..." );
+			BBIT( 1, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...." );
+			LABL( 0, 0, 0, 0x04, "   res.:" );
+		LABL( 0, 0, 0, 0x84, "...." );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..." );
+			LABL( 0, 0, 0, 0x04, "   Soft Key Position:" );
+			CEQU( 0x00, l[46], 0, 0x14, "false" );
+			CEQU( 0x01, l[46], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "....." );	
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".." );
+			LABL( 0, 0, 0, 0x04, "   Text Line:" );
+			CEQU( 0x00, l[47], 0, 0x14, "false" );
+			CEQU( 0x01, l[47], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......" );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "." );
+			LABL( 0, 0, 0, 0x04, "   Context Field:" );
+			CEQU( 0x00, l[47], 0, 0x14, "false" );
+			CEQU( 0x01, l[47], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "......." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Numeric index Field:" );
+			CEQU( 0x00, l[47], 0, 0x14, "false" );
+			CEQU( 0x01, l[47], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0xb8 );
+			DBYT( 0, l[3], 0x90, 0xc2, "Display Highlight Start Position: \DisHghLStrtPos:" );
+			DBYT( 0, l[4], 0x90, 0xc2, "Display Highlight End Position: \DisHghLEndPos:" );
+	g[24] -= 3;
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Duration Timer( )
+{
+	BBYT( 0, 0, 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 4, l[1], 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, "...." );
+		BBIT( 1, l[2], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "..." );
+		LABL( 0, 0, 0, 0x04, "   Call Timer Delay:" );
+			CEQU( 0x00, l[2], 0, 0x14, "Action occurs immediately" );
+			CEQU( 0x01, l[2], 0, 0x14, "Action occurs after Call Duration Timer Delay" );
+		LABL( 0, 0, 0, 0x84, "....." );	
+			BBIT( 1, l[3], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, ".." );
+			LABL( 0, 0, 0, 0x04, "   Call Timer Display:" );
+			CEQU( 0x00, l[3], 0, 0x14, "Call Duration timer is not shown on the display" );
+			CEQU( 0x01, l[3], 0, 0x14, "Call Duration timer is shown on the display" );
+		LABL( 0, 0, 0, 0x84, "......" );
+			BBIT( 1, l[4], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "." );
+			LABL( 0, 0, 0, 0x04, "   Call Timer Reset:" );
+			CEQU( 0x00, l[4], 0, 0x14, "Do not reset timer" );
+			CEQU( 0x01, l[4], 0, 0x14, "Reset time to zero" );
+		LABL( 0, 0, 0, 0x84, "......." );
+			BBIT( 1, l[5], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Call Timer Mode:" );
+			CEQU( 0x00, l[5], 0, 0x14, "stop timer" );
+			CEQU( 0x01, l[5], 0, 0x14, "start timer" );
+			LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[6], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 2, l[7], 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, ".." );
+		BBIT( 6, l[8], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "   Call Timer ID:" );
+			DGLB( 0, l[8], 0x04, 0x04, " " );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 2;
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Time and Date Format( )
+{
+	BBYT( 0, 0, 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+		BBIT( 2, l[1], 0x05, 0, );
+		LABL( 0, 0, 0, 0x84, ".." );
+		BBIT( 1, l[2], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "....." );
+		LABL( 0, 0, 0, 0x04, "   Use Date Format:" );
+			CEQU( 0x00, l[2], 0, 0x14, "false" );
+			CEQU( 0x01, l[2], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "..." );
+		BBIT( 1, l[3], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "...." );
+		LABL( 0, 0, 0, 0x04, "   Use Time Format:" );
+			CEQU( 0x00, l[3], 0, 0x14, "false" );
+			CEQU( 0x01, l[3], 0, 0x14, "true" );
+		LABL( 0, 0, 0, 0x84, "...." );
+		BBIT( 2, l[4], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, ".." );
+		LABL( 0, 0, 0, 0x04, "   Date Format:" );
+			CST#( 0, l[4], 0, 0x24, UNIStim::Payload::CMD::Address::Display Manager Switch::Date Format );
+		LABL( 0, 0, 0, 0x84, "......" );
+		BBIT( 2, l[5], 0x04, 0, );
+		LABL( 0, 0, 0, 0x04, "   Time Format:" );
+			CST#( 0, l[5], 0, 0x24, UNIStim::Payload::CMD::Address::Display Manager Switch::Time Format );
+		
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Download Duration Timer Delay( )
+{
+	HEX#( 0, g[24], 0x90, 0xc2, "DATA:" );
+	g[24] -= g[24];
+}
+
+void UNIStim::Payload::CMD::Address::Display Manager Switch::Special Character Download( )
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Display Charater Address:" );
+	g[24] -= 1;
+	HEX#( 0, g[24], 0x90, 0xc2, "DATA:" );
+	g[24] -= g[24];
+}
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::Date Format;
+0x00	|	Day first, e.g. 16Sep;
+0x01	|	Month first, e.g. Sep16;
+0x02	|	Numeric standard, e.g. 09/16;
+0x03	|	Numeric inverse, e.g. 16/09;
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::Time Format;
+0x00	|	12-hour clock, e.g. 10:34pm;
+0x01	|	French clock, e.g. 22h34;
+0x02	|	24-hour clock, e.g. 22:34;
+0x03	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::Arrow::str;
+0x00	|	Down;
+0x01	|	Up;
+0x02	|	Right;
+0x03	|	Left;
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::Cursor Control::cursor_move_cmds;
+0x00	|	Set cursor at home (first character on the first text line);
+0x01	|	Set cursor at the address specified in the following byte;
+0x02	|	Move the cursor by one to the left;
+0x03	|	Move the cursor by one to the right;
+0x04	|	Move the cursor to the left as specified by the Character Position field contained in the last byte;
+0x05	|	Move the cursor to the right as specified by the Character Position field contained in the last byte;
+0x06	|	Cursor ON;
+0x07	|	Cursor OFF;
+0xff	|	No Movement command;
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::Types;
+0x01	|	Restore Default Character Table Configuration;
+0x04	|	Arrow;
+0x05	|	Query Status  Icon;
+0x06	|	Highlight Off;
+0x07	|	Highlight On;
+0x09	|	Restore Time   l;
+0x0a	|	Time;
+0x0b	|	Duration Timer;
+0x0c	|	Query Display Manager;
+0x0d	|	Download  Duration Timer Delay;
+0x0e	|	Disable Display Field;
+0x0f	|	Clear Field;
+0x10	|	Cursor Control;
+0x12	|	Display Scroll with Data (before);
+0x13	|	Display Scroll with Data (after);
+0x14	|	Status Bar Icon Update;
+0x15	|	Month Labels Downloa;
+0x16	|	Call Duration Timer Label Download	;
+0x17	|	Time and Date Format;
+0x18	|	address:no control:no tag:no;
+0x19	|	address:yes control:no tag:no;
+0x1a	|	address:no control:yes tag:no;
+0x1b	|	address:yes control:yes tag:no;
+0x1c	|	address:no control:no tag:yes;
+0x1d	|	address:yes control:no tag:yes;
+0x1e	|	address:no control:yes tag:yes;
+0x1f	|	address:yes control:yes tag:yes;
+0x20	|	Context Info Bar Format;
+0x21	|	Set Default Character Table Configuration VERY UGLY;
+0x22	|	Special Character Download;
+0x23	|	Highlighted Field Definition;
+0x24	|	Contrast;
+0x25	|	Caller Log Download;
+0x30	|	Layered Softkey Text Download;
+0x31	|	Layered Softkey Clear;
+0x32	|	Set Visible Softkey Layer;
+0x33	|	Layered Softkey Cadence Download;
+0x34	|	Layered Softkey Cadencing On;
+0x35	|	Layered Softkey Cadencing Off;
+0xff	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Display Manager Switch::TypeCalls;
+0x01	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Restore Default Character Table Configuration;
+0x04	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Arrow;
+0x05	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Query Status  Icon;
+0x06	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Highlight Off;
+0x07	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Highlight On;
+0x09	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Restore Time   l;
+0x0a	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Time;
+0x0b	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Duration Timer;
+0x0c	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Query Display Manager;
+0x0d	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Download Duration Timer Delay;
+0x0e	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Disable Display Field;
+0x0f	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Clear Field;
+0x10	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Cursor Control;
+0x12	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Display Scroll with Data (before);
+0x13	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Display Scroll with Data (after);
+0x14	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Status Bar Icon Update;
+0x15	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Month Labels Downloa;
+0x16	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Call Duration Timer Label Download	;
+0x17	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Time and Date Format;
+0x18	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:no control:no tag:no;
+0x19	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:no tag:no;
+0x1a	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:no control:yes tag:no;
+0x1b	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:yes tag:no;
+0x1c	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:no control:no tag:yes;
+0x1d	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:no tag:yes;
+0x1e	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:no control:yes tag:yes;
+0x1f	|	UNIStim::Payload::CMD::Address::Display Manager Switch::address:yes control:yes tag:yes;
+0x20	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Context Info Bar Format;
+0x21	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Set Default Character Table Configuration VERY UGLY;
+0x22	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Special Character Download;
+0x23	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Highlighted Field Definition;
+0x24	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Contrast;
+0x25	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Caller Log Download;
+0x30	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Layered Softkey Text Download;
+0x31	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Layered Softkey Clear;
+0x32	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Set Visible Softkey Layer;
+0x33	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Layered Softkey Cadence Download;
+0x34	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Layered Softkey Cadencing On;
+0x35	|	UNIStim::Payload::CMD::Address::Display Manager Switch::Layered Softkey Cadencing Off;
+
+void UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Key Cmd (switch): \key-cmd-sw:" );
+		CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::Types );
+		g[24] -= 1;
+		if (l[2] == 0x00)
+		{	
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBIT( 3, l[44], 0x05, 0, );
+			LABL( 0, 0, 0, 0x84, "..." );	
+			BBIT( 2, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..." );
+			LABL( 0, 0, 0, 0x04, "   LED ID:" );
+			HGLB( 0, l[46], 0x04, 0, "  " );
+				CEQU( 0x00, l[46], 0, 0x14, "Message Waiting LED" );
+				CEQU( 0x01, l[46], 0, 0x14, "Handsfree or Supervisor Access LED" );
+				CEQU( 0x02, l[46], 0, 0x14, "Headset LED" );
+				CEQU( 0x03, l[46], 0, 0x14, "Mute LED" );
+			LABL( 0, 0, 0, 0x84, "....." );	
+			BBIT( 3, l[47], 0x04, 0, );				
+			LABL( 0, 0, 0, 0x04, "   LED Cadenece:" );
+				HGLB( 0, l[47], 0x04, 0, "  " );
+				CEQU( 0x00, l[47], 0, 0x14, "Off" );
+				CEQU( 0x01, l[47], 0, 0x14, "On" );
+			LABL( 0, 0, 0, 0xb8 );
+			g[24] -= 1;
+		 }	
+		if (l[2] == 0x01)
+		{		
+			if (g[24] == 3)
+			{			
+				LABL( 0, 0, 0, 0x24, "length ok" );
+			}
+			if (g[24] != 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length not ok" );
+			}
+		}	
+		if (l[2] == 0x02)
+		{
+			if (g[24] == 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length ok" );
+			}
+			if (g[24] != 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length not ok" );
+			}
+		}	
+		if (l[2] == 0x03)
+		{	
+			if (g[24] == 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length ok" );
+			}
+			if (g[24] != 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length not ok" );
+			}
+		}	
+		if (l[2] == 0x04)
+		{	 
+			if (g[24] == 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length ok" );
+			}
+			if (g[24] != 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length not ok" );
+			}
+		}	
+		if (l[2] == 0x05)
+		{
+			if (g[24] == 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length ok" );
+			}
+			if (g[24] != 3)
+			{
+				LABL( 0, 0, 0, 0x24, "length not ok" );
+			}
+		}	
+		if (l[2] == 0x06)
+		{
+			DUMP( 0, g[24], 0x90, 0xc2, "Dump:" );
+		}	
+		if (l[2] == 0x07)
+		{
+		 BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+		DECR 1;
+		BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;
+			BBIT( 1, l[44], 0x14, 0, );
+			LABL( 0, 0, 0, 0x04, "......." );
+			LABL( 0, 0, 0, 0x04, "   res:" );
+			LABL( 0, 0, 0, 0x84, "."  );
+			BBIT( 2, l[45], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "....."  );
+			LABL( 0, 0, 0, 0x04, "   Local Keypad Feedback:" );
+				//CST#( 0, l[44], 0, 0x24, UNIStim:: );
+			LABL( 0, 0, 0, 0x84, "..."  );
+			BBIT( 1, l[46], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "...."  );
+			LABL( 0, 0, 0, 0x04, "   ACD Supervisor Control:" );
+				CEQU( 0x00, l[46], 0, 0x14, "by phone" );
+				CEQU( 0x01, l[46], 0, 0x14, "by Supervisor" );
+			LABL( 0, 0, 0, 0x84, "...." );
+			BBIT( 1, l[47], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "..." );
+			LABL( 0, 0, 0, 0x04, "   Conspicuous and Programmable Keys same:" );
+				CEQU( 0x00, l[47], 0, 0x14, "false" );
+				CEQU( 0x01, l[47], 0, 0x14, "true" );
+			BBIT( 1, l[48], 0x05, 0, );
+			LABL( 0, 0, 0, 0x84, "......"  );
+			BBIT( 1, l[50], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "."  );
+			LABL( 0, 0, 0, 0x04, "   Enable Volume Control:" );
+				//CST#( 0, l[44], 0, 0x24, UNIStim::Payload::CMD::Address:: );
+			LABL( 0, 0, 0, 0x84, "......."  );
+			BBIT( 1, l[51], 0x04, 0, );
+			LABL( 0, 0, 0, 0x04, "   Send Key Release:" );
+					//CST#( 0, l[51], 0, 0x24, UNIStim::Payload::CMD::Address:: );
+			 g[24] -= 1;
+			LABL( 0, 0, 0, 0xb8 );
+		}	
+		if (l[2] == 0x08)
+		{	
+		}	
+		if (l[2] == 0x09)
+		{	 
+	
+		}	
+		if (l[2] == 0x0a)
+		{
+	
+
+		}	
+		if (l[2] == 0x0b)
+		{
+		
+		}	
+		if (l[2] == 0x0c)
+		{
+		  
+		}	
+		if (l[2] == 0x0d)
+		{
+		 
+		}	
+		if (l[2] == 0x0e)
+		{ 	
+			HBYT( 0, l[2], 0x90, 0xc2, "Icon ID: \IcnID:" );
+			g[24] -= 1;
+		}	
+		if (l[2] == 0x0f)
+		{ 	
+			
+			HBYT( 0, l[1], 0x90, 0xc2, "Icon ID: \ICON-ID:" );
+			
+			BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+			DECR 1;
+			BBYT( 0, l[1], 0x04, 0xd4, "" );
+			DECR 1;
+			
+				BBIT( 0x03, l[44], 0x14, 0,  );
+				LABL( 0, 0, 0, 0x04, .....  );
+					CST#( 0, l[44], 0, 0x24, UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_cadence );
+
+				
+				LABL( 0, 0, 0, 0x84, ...  );
+				BBIT( 0x05, l[45], 0x04, 0, );
+					CST#( 0, l[44], 0, 0x24, UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_state );
+				
+				LABL( 0, 0, 0, 0xb8 );
+		
+				g[24] -= 2;
+		}	
+		if (l[2] == 0xff)
+		{ 
+			CHR#( 0, g[24], 0x90, 0xc2, "Dump:" );
+		}
+}
+
+str# UNIStim::Payload::CMD::Address::Key/Indicator Manager Switch::toname;
+0x00	|	No tone feedback provided when a dial pad key is depressed;
+0x01	|	Short 'click' provided when a dial pad key is depressed;
+0x02	|	Corresponding DTMF tone provided when a dial pad key is depressed;
+0x03	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::Types;
+0x00	|	LED Update;
+0x01	|	Query Hookswitch;
+0x02	|	User Activity Timer Stop;
+0x03	|	User Activity Timer Start;
+0x04	|	Downloadable Free Form Icon Access (Hardcoded);
+0x05	|	Downloadable Free Form Icon Access (Downloadable);
+0x06	|	Query Key/Indicator Manager;
+0x07	|	Key/Indicator Manager Options;
+0x08	|	Logical Icon Mapping;
+0x09	|	Key Repeat Timer Download;
+0x0a	|	Query LED State;
+0x0b	|	Query Phone Icon State;
+0x0c	|	Indicator Cadence Download;
+0x0d	|	User Activity Timer Download;
+0x0e	|	Free Form Icon Download;
+0x0f	|	Phone Icon Update;
+0xff	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_state;
+0x00	|	I-Idle;
+0x01	|	U-Idle;
+0x02	|	I-Ring;
+0x03	|	U-Ring;
+0x04	|	I-Active;
+0x05	|	U-Active;
+0x06	|	I-Hold;
+0x07	|	U-Hold;
+0x08	|	I-Group Listen;
+0x09	|	U-Group Listen;
+0x0A	|	Feature Active;
+0x0B	|	Feature Inactive;
+0x0C	|	I-Hold Ringing;
+0x0D	|	U-Hold Ringing;
+0x0E	|	Active Audio;
+0x0F	|	Hold Audio;
+0x10	|	Home;
+0x11	|	Business;
+0x12	|	Extension Number;
+0x13	|	Pager;
+0x14	|	Voice;
+0x15	|	Fax;
+0x16	|	Email;
+0x17	|	Wireless;
+0x18	|	Internet Address;
+0x19	|	Set-to-Set command;
+0x1A	|	Secured;
+0x1B	|	Trash Can;
+0x1C	|	In Box;
+0x1D	|	Out box;
+0x1E	|	Video;
+0x1F	|	Other/Misc;
+
+str# UNIStim::Payload::CMD::Address::Key_Indicator Manager Switch::bcast_icon_cadence;
+0x00	|	Cadence off,  On continuously;
+0x01	|	Cadence on, Off continuously;
+0x02	|	Flash, 1Hz 1 2;
+0x03	|	Flicker, 0.5Hz 13 16;
+0x04	|	Wink, 2Hz 3 4;
+0x07	|	Downloaded Cadence;
+
+str# UNIStim::Payload::CMD::Address::Basic Manager Switch::Types;
+0x01	|	Query Basic Manager;
+0x02	|	Basic Manager Options;
+0x06	|	EEprom Write;
+0x07	|	Assign Terminal ID;
+0x08	|	Encapsulate Command;
+0x0f	|	showing up in captures but not in pdf;
+0xff	|	Reserved;
+
+str# UNIStim::Payload::CMD::Address::Basic Manager Switch::TypeCalls;
+0x01	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::Query Basic Manager;
+0x02	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::Basic Manager Options;
+0x06	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::EEprom Write;
+0x07	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::Assign Terminal ID;
+0x08	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::Encapsulate Command;
+0x0f	|	UNIStim::Payload::CMD::Address::Basic Manager Switch::showing up in captures but not in pdf;
+
+void UNIStim::Payload::CMD::Address::Basic Manager Switch( )
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Display Cmd (switch): \Display-cmd-sw:" );
+	g[24] -= 1;
+	CST#(0, l[2], 0, 0x24, 	UNIStim::Payload::CMD::Address::Basic Manager Switch::Types );
+	TSB#(0, l[2], 0, 0, UNIStim::Payload::CMD::Address::Basic Manager Switch::TypeCalls );  
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Switch::Basic Manager Options( )
+{
+	BBYT( 0, l[3], 0x90, 0xc2, Basic Switch Options Secure Code: \basic.secure: );
+	g[24] -= 1;
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Switch::EEprom Write( )
+{	
+	HBYT( 0, l[3], 0x90, 0xc2, Basic Element ID: \basic.element.id: );
+	HBYT( 0, l[3], 0x90, 0xc2, Basic Phone EEProm Static Checksum: \static.cksum: );	
+	g[24] -= 2;
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Switch::Assign Terminal ID( )
+{
+	IPLG( 0, 0, 0x90, 0xc2, Terminal ID assigned by Switch: \switch.terminal.id: );
+
+	g[24] -= 4;
+}
+
+void UNIStim::Payload::CMD::Address::Basic Manager Switch::Query Basic Manager( )
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags: \Flags:" );
+	DECR 1;
+	BBIT( 1, l[44], 0x14, 0, );
+	LABL( 0, 0, 0, 0x04, .......  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Gray Mkt Info:" );
+		CEQU( 0x00, l[44], 0, 0x14, "false" );
+		CEQU( 0x01, l[44], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, .  );
+	BBIT( 1, l[45], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, ......  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Prod Eng Code:" );
+		CEQU( 0x00, l[45], 0, 0x14, "false" );
+		CEQU( 0x01, l[45], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, ..  );
+	BBIT( 1, l[46], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, .....  );
+	LABL( 0, 0, 0, 0x04, "   reserved:" );
+		CEQU( 0x00, l[46], 0, 0x14, "false" );
+		CEQU( 0x01, l[46], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, ...  );
+	BBIT( 1, l[47], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, ....  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Phone Type:" );	
+		CEQU( 0x00, l[47], 0, 0x14, "false" );
+		CEQU( 0x01, l[47], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, ....  );
+	BBIT( 1, l[48], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, ...  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Hardware ID:" );
+		CEQU( 0x00, l[48], 0, 0x14, "false" );
+		CEQU( 0x01, l[48], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, .....  );
+		BBIT( 1, l[49], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, ..  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Firmware: ");
+		CEQU( 0x00, l[49], 0, 0x14, "false" );
+		CEQU( 0x01, l[49], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, ......  );
+	BBIT( 1, l[50], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, .  );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Options: ");
+		CEQU( 0x00, l[49], 0, 0x14, "false" );
+		CEQU( 0x01, l[49], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0x84, .......  );
+	BBIT( 1, l[45], 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, "   Query Basic Manager Attributes: ");
+		CEQU( 0x00, l[49], 0, 0x14, "false" );
+		CEQU( 0x01, l[49], 0, 0x14, "true" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[24] -= 1; 
+}
+
+void UNIStim::Function::Basic Bit Field( )
+{
+	BBYT( 0, l[3], 0x90, 0xc2, BBF: \bbf: );
+	g[24] -= 1;
+}
+
+void UNIStim::Function::Watchdog Timeout( )
+{
+	DWRD( 0,  l[1], 0x90, 0xc2, Watchdog Timeout: \watchdog.timeout: );
+	g[24] -= 2;
+}

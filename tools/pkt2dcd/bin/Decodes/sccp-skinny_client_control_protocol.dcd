@@ -1,0 +1,3194 @@
+// Cisco - Skinny Client Control Protocol (SCCP)
+// Spec: Version 3.x, 4.x, 5.0
+// 7/05/2012
+
+void Skinny()
+{
+	Skinny::Main();
+}
+
+void Skinny::Main()
+{
+	GLNG( 0x40000000, g[20] );
+	while (g[16] != 0)
+	{
+		if (g[20] == 0)
+		{
+			TRTS;
+		}
+		if (g[20] != 0)
+		{
+			
+			if( g[3] == 17 )	// NO, not UDP!
+			{
+				TRTS;
+			}
+			LABL 0 0 0 b1 Skinny Client Control Protocol\SCCP:;
+			DLNG 40000000 2 90 c2 Data Length:;			//SI: SAVE! SAVE! SAVE! this is important for later use
+			HLNG 40000000 1 90 c2 Reserved:;
+			MOVE 10 83;									//SI: used to do a length vs data used check
+			HLNG 40000000 1 90 c2 Message ID:;
+			g[20] -= 4;
+			CST# 0 1 00 14 Skinny::MessageTypesList;
+			TSB# 0 1 00 00 Skinny::MessageTypesFunc;
+			// if ( g[20] != 0)
+			// {
+				// DUMP( 0, g[20], 0x90, 0xc2, "Extra Bytes:\Extra:");
+				// g[20] -= g[20];
+			SUBG 10 83;						// SI: this section uses the data length [g2] and compares it the 
+			SUBG 3 82;						//		amt of data that we've actually used [g3]... the diff we incr by
+			SGTE 0 2;
+			 SKIP 1;
+			 DUMP 0 2 90 c2 "Extra Bytes:\Extra:";
+				//g[20] -= g[2];
+			// SGTE 8 10;
+			 // SKIP 1;
+			 }
+			 if (g[16] >= 4)
+			 {
+				TNXT -Skinny;
+			 }
+		}
+	}
+	TRTS;
+}
+
+// Skinny Client Control Protocol - Sub Functions
+
+void Skinny::KeepAliveMessage;
+	TRTS;
+	
+void Skinny::RegisterMessage()
+{
+	Skinny::StationIdentifier();
+	IPLG  40000000 0 90 c2 IP Address:;
+	DLNG  40000000 1 90 c2 Device Type:;
+	 CST#		 0 1  0 14 Skinny::DeviceType_Str;
+	DLNG  40000000 0 90 c2 Max Streams:;
+	DLNG  40000000 0 90 c2 Active Streams:;
+	HLNG  40000000 1 90 c2 Protocol Ver:;
+	 CST#		 0 1  0 14 Skinny::Protocol_Ver_Str;
+	DLNG  40000000 0 90 c2 MaxConferences:;
+	DLNG  40000000 0 90 c2 ActiveConferences:;
+	CHR#		 C 0 90 c2 Mac Address:;
+	g[2] -= g[3];
+}
+
+str# Skinny::DeviceType_Str;
+	1	| DeviceStation30SPplus;
+	2	| DeviceStation12SPplus;
+	3	| DeviceStation12SP;
+	4	| DeviceStation12;
+	5	| DeviceStation30VIP;
+	6	| DeviceStationTelecaster;
+	7	| DeviceStationTelecasterMgr;
+	8	| DeviceStationTelecasterBus;
+	9	| DeviceStationPolycom;
+	10	| DeviceStationVGC;
+	12	| DeviceStationATA;
+	20	| DeviceVirtual30SPplus;
+	21	| DeviceStationPhoneApplication;
+	30	| DeviceAnalogAccess;
+	40	| DeviceDigitalAccessTitan1;
+	42	| DeviceDigitalAccessTitan2;
+	43	| DeviceDigitalAccessLennon;
+	47	| DeviceAnalogAccessElvis;
+	50	| DeviceConferenceBridge;
+	51	| DeviceConferenceBridgeYoko;
+	52	| DeviceConferenceBridgeDixieLand;
+	53	| DeviceConferenceBridgeSummit;
+	60	| DeviceH225;
+	61	| DeviceH323Phone;
+	62	| DeviceH323Gateway;
+	70	| DeviceMusicOnHold;
+	71	| DevicePilot;
+	72	| DeviceTapiPort;
+	73	| DeviceTapiRoutePoint;
+	80	| DeviceVoiceInBox;
+	81	| DeviceVoiceInboxAdmin;
+	82	| DeviceLineAnnunciator;
+	83	| DeviceSoftwareMtpDixieLand;
+	84	| DeviceCiscoMediaServer;
+	85	| DeviceConferenceBridgeFlint;
+	90	| DeviceRouteList;
+	100	| DeviceLoadSimulator;
+	110	| DeviceMediaTerminationPoint;
+	111	| DeviceMediaTerminationPointYoko;
+	112	| DeviceMediaTerminationPointDixieLand;
+	113	| DeviceMediaTerminationPointSummit;
+	120	| DeviceMGCPStation;
+	121	| DeviceMGCPTrunk;
+	122	| DeviceRASProxy;
+	125	| DeviceTrunk;
+	126	| DeviceAnnunciator;
+	127	| DeviceMonitorBridge;
+	128	| DeviceRecorder;
+	129	| DeviceMonitorBridgeYoko;
+	131	| DeviceSipTrunk;
+	254	| DeviceUnknownMGCPGateway;
+	255	| DeviceNotDefined;
+
+str# Skinny::Protocol_Ver_Str;
+	0	| Current Stations;
+	1	| Cisco IP 30VIP/12SP/7910 client;
+	2	| Cisco IP Phones 7940 and 7960 English only;
+	3	| Cisco IP Phones 7940 and 7960 local;
+
+// ID = 0x2
+void Skinny::IpPortMessage;
+	DWRD 40000000 0 90 c2 Port:;
+	TRTS;
+
+// ID = 0x3
+void Skinny::KeypadButtonMessage()
+{
+	HLNG 40000000 1 90 c2 KeyPad Button:;
+	 CST# 0 1  0 14 Skinny::KeyPadButton_Str;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+str# Skinny::KeyPadButton_Str;
+	0x0	| skpZero;
+	0x1	| skpOne;
+	0x2	| skpTwo;
+	0x3	| skpThree;
+	0x4	| skpFour;
+	0x5	| skpFive;
+	0x6	| skpSix;
+	0x7	| skpSeven;
+	0x8	| skpEight;
+	0x9	| skpNine;
+	0xa	| skpA;
+	0xb	| skpB;
+	0xc	| skpC;
+	0xd	| skpD;
+	0xe	| skpStar;
+	0xf	| skpPound;
+
+// ID = 0x4
+void Skinny::EnblocCallMessage()
+{
+	CHR# 18 0 90 c2 Called Party:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+}
+
+// ID = 0x5
+void Skinny::StimulusMessage()
+{
+	HLNG 40000000 1 90 c2 Stimulus;
+	 CST# 0 1  0 14 Skinny::Stimuli;
+	DLNG 40000000 0 90 c2 Stimulus Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+str# Skinny::Stimuli;
+	0x01 | Last Number Redial;
+	0x02 | Speed Dial;
+	0x03 | Hold;
+	0x04 | Transfer;
+	0x05 | Forward All;
+	0x06 | Forward Busy;
+	0x07 | Forward No Answer;
+	0x08 | Display;
+	0x09 | Line;
+	0x0a | T120 Chat;
+	0x0b | T120 Whiteboard;
+	0x0c | T120 Application Sharing;
+	0x0d | T120 File Transfer;
+	0x0e | Video;
+	0x0f | Voice Mail;
+	0x10 | Answer Release;
+	0x11 | Auto Answer;
+	0x12 | Select;
+	0x13 | Privacy;
+	0x14 | Service URL;
+	0x1B | Malicious Call;
+	0x21 | Generic App B1;
+	0x22 | Generic App B2;
+	0x23 | Generic App B3;
+	0x24 | Generic App B4;
+	0x25 | Generic App B5;
+	0x7b | Meet Me Conference;
+	0x7d | Conference;
+	0x7e | Call Park;
+	0x7f | Call Pickup;
+	0x80 | Group Call Pickup;
+
+// ID = 0x6
+void Skinny::OffHookMessage()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID = 0x7
+void Skinny::OnHookMessage()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID = 0x8
+void Skinny::HookFlashMessage;
+	TRTS;
+
+// ID = 0x9
+void Skinny::ForwardStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 Line Number:;
+}
+
+// ID = 0xa
+void Skinny::SpeedDialStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 Speed Dial Num:;
+}
+
+// ID = 0xb
+void Skinny::LineStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 Line Number:;
+}
+
+// ID = 0xc
+void Skinny::ConfigStatReqMessage;
+	TRTS;
+
+// ID = 0xd
+void Skinny::TimeDateReqMessage;
+	TRTS;
+
+// ID = 0xe
+void Skinny::ButtonTemplateReqMessage;
+	TRTS;
+
+// ID = 0xf
+void Skinny::VersionReqMessage;
+	TRTS;
+
+// ID = 0x10
+void Skinny::CapabilitiesResMessage()
+{
+	DLNG 40000000 4 90 c2 Cap Count:;
+	while (g[4] > 0)
+	{
+		DLNG 40000000 1 90 c2 Payload Capability:;
+		CST# 0 1 0 14 Skinny::Payload_Capability_Str;
+		DWRD 40000000 0 90 c2 Max Frames/Packet:;
+		HEX# A 0 90 c2 Padding:;
+		g[4] -= 1;
+	}
+}
+
+str# Skinny::Payload_Capability_Str;
+	1	| Non Standard;
+	2	| G.711 a-law 64k;
+	3	| G.711 a-law 56k;
+	4	| G.711 u-law 64k;
+	5	| G.711 u-law 56k;
+	6	| G.722 64k;
+	7	| G.722 56k;
+	8	| G.722 48k;
+	9	| G.723.1;
+	10	| G.728;
+	11	| G.729;
+	12	| G.729 Annex A;
+	13	| Is11172AudioCap;
+	14	| Is13818AudioCap;
+	15	| G.729 Annex B;
+	16	| G.729 Annex A + AnnexB;
+	18	| GSM Full Rate;
+	19	| GSM Half Rate;
+	20	| GSM Enhanced Full Rate;
+	25	| Wide Band 256k;
+	32	| Data 64;
+	33	| Data 56;
+	80	| GSM;
+	81	| Active Voice;
+	82	| G.726 32k;
+	83	| G.726 24k;
+	84	| G.726 16k;
+	85	| G.729 B;
+	86	| G.729 B Low Complexity;
+	100	| H.261;
+	101	| H.263;
+	102	| Vieo;
+	105	| T120;
+	106	| H.224;
+	111	| XV150 MR;
+	112 | NSE VBD;
+	257	| RFC2833_DynPayload;
+
+
+// ID = 0x11
+void Skinny::MediaPortListMessage;
+	TRTS;
+
+// ID = 0x12
+void Skinny::ServerReqMessage;
+	TRTS;
+
+// ID = 0x20
+void Skinny::AlarmMessage()
+{
+	DLNG 40000000 1 90 c2 Alarm Severity:;
+	CST# 0 1  0 14 Skinny::AlarmSeverity_Str;
+	SUBG 10 2;
+	CHR# 0 2 90 c2 Display Message:;		// max length 80
+	HLNG 40000000 0 90 c2 Alarm Param1:;
+	HLNG 40000000 0 90 c2 Alarm Param2:;
+}
+
+str# Skinny::AlarmSeverity_Str;
+	0	| Emergency;
+	1	| Alert;
+	2	| Critical;
+	3	| Error;
+	4	| Warning;
+	5	| Notice;
+	6	| Informational;
+	7	| Debug;
+
+// ID = 0x21
+void Skinny::MulticastMediaReceptionAck;
+	DLNG 40000000 1 90 c2 Reception Status:;
+	 CEQU 0 1 0 14 Ok;
+	 CEQU 1 1 0 14 Error;
+	DLNG 40000000 1 90 c2 Pass Thru Party ID:;
+	TRTS;
+
+// ID: 0x22
+void Skinny::OpenReceiveChannelAck()
+{
+	Skinny::OpenReceiveChanStatus();
+	IPLG		0 0 90 c2 IP Address:;
+	DLNG 40000000 0 90 c2 Port Number:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+void Skinny::OpenReceiveChanStatus()
+{
+	DLNG 40000000 0 90 c2 ChanStatus:;
+	 CEQU		0 1 00 14 orc Ok;
+	 CEQU		1 1 00 14 orc Error;
+}
+
+// ID: 0x23
+void Skinny::ConnectionStatisticsRes()
+{
+	CHR# 18 0 90 c2 Directory Num:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 StatsProcessingMode:;
+	 CEQU		0 1 00 14 Clear Stats;
+	 CEQU		1 1 00 14 Do Not Clear Stats;
+	DLNG 40000000 0 90 c2 Packets Sent:;
+	DLNG 40000000 0 90 c2 Octets Sent:;
+	DLNG 40000000 0 90 c2 Packets Received:;
+	DLNG 40000000 0 90 c2 Octets Received:;
+	DLNG 40000000 0 90 c2 Packets Lost:;
+	DLNG 40000000 0 90 c2 Jitter:;
+	DLNG 40000000 0 90 c2 Latency:;
+	DLNG 40000000 1 90 c2 DataSize:;
+	CHR# 0 1 90 c2 K-factor Data:;
+}
+
+// ID: 0x24
+void Skinny::OffHookWithCgpnMessage()
+{
+	CHR# 18 0 90 c2 Calling Party Num:;
+	CHR# 18 0 90 c2 Calling Party VM box:;
+	DLNG 40000000 1 90 c2 Line Instance:;
+}
+
+// ID: 0x25
+void Skinny::SoftKeySetReqMessage;
+	TRTS;
+	
+// ID: 0x26
+void Skinny::SoftKeyEventMessage()
+{
+	DLNG 40000000 1 90 c2 SoftKey Event:;
+	 CST#		0 1  0 14 Skinny::SoftKeyEvents;
+	DLNG 40000000 1 90 c2 Line Instance:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+}
+
+str# Skinny::SoftKeyEvents;
+	1	| Redial;
+	2	| NewCall;
+	3	| Hold;
+	4	| Transfer;
+	5	| CFwdAll;
+	6	| CFwdBusy;
+	7	| CFwdNoAnswer;
+	8	| BackSpace;
+	9	| EndCall;
+	10	| Resume;
+	11	| Answer;
+	12	| Info;
+	13	| Confrn;
+	14	| Park;
+	15	| Join;
+	16	| MeetMeConfrn;
+	17	| CallPickUp;
+	18	| GrpCallPickUp;
+	19	| DropLastConfee;
+	20	| CallBack;
+	21	| Barge;
+
+// ID: 0x27
+void Skinny::UnregisterMessage;
+	TRTS;
+
+// ID: 0x28
+void Skinny::SoftKeyTemplateReqMessage;
+	TRTS;
+
+// ID: 0x29
+void Skinny::RegisterTokenReq()
+{
+	Skinny::StationIdentifier();
+	IPLG		0 0 90 c2 IP Address:;
+	DLNG  40000000 1 90 c2 Device Type:;
+	 CST#		 0 1  0 14 Skinny::DeviceType_Str;
+}
+
+// ID: 0x2a
+void Skinny::MediaTransmissionFailure()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x2b
+void Skinny::HeadsetStatusMessage()
+{
+	DLNG 40000000 1 90 c2 Headset Mode:;
+	 CEQU		1 1 00 14 On;
+	 CEQU		2 1 00 14 Off;
+}
+
+// ID: 0x2c
+void Skinny::MediaResourceNotification()
+{
+	DLNG  40000000 1 90 c2 Device Type:;
+	 CST#		 0 1  0 14 Skinny::DeviceType_Str;
+	DLNG  40000000 0 90 c2 In Service Streams:;
+	DLNG  40000000 0 90 c2 Max Streams/Conf:;
+	DLNG  40000000 0 90 c2 Out Of Service Streams:;
+}
+
+// ID: 0x2d
+void Skinny::RegisterAvailableLinesMessage()
+{
+	DLNG 40000000 0 90 c2 Max Num Avail Lines:;
+}
+
+// ID: 0x2e
+void Skinny::DeviceToUserData()
+{
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	CHR# 0 4 90 c2 UserDeviceData:;
+}
+
+// ID: 0x2f
+void Skinny::DeviceToUserDataResponse()
+{
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	CHR# 0 4 90 c2 UserDeviceData:;
+}
+
+// ID: 0x30
+void Skinny::UpdateCapabilities()
+{
+	DLNG 40000000 0 90 c2 Audio Cap Count:;
+	DLNG 40000000 0 90 c2 Video Cap Count:;
+	DLNG 40000000 0 90 c2 Data Cap Count:;
+	DLNG 40000000 0 90 c2 RTPPayloadFormat:;
+	DLNG 40000000 0 90 c2 PictureFormatCount:;
+	Skinny::CustomPictureFormat();
+	// MAX_CUSTOM_PICTURES = 6
+	Skinny::ConfResources();
+	Skinny::AudioMediaCapability();
+	Skinny::VideoMediaCapability();
+	Skinny::DataMediaCapability();
+	DLNG 40000000 0 90 c2 Data Caps:;
+}
+
+void Skinny::CustomPictureFormat()
+{
+	DLNG 40000000 0 90 c2 Picture Width:;
+	DLNG 40000000 0 90 c2 Picture Height:;
+	DLNG 40000000 0 90 c2 Pixel Aspect Ratio:;
+	DLNG 40000000 0 90 c2 Clock Conversion Code:;
+	DLNG 40000000 0 90 c2 Clock Divisor:;
+}
+
+void Skinny::ConfResources()
+{
+	DLNG 40000000 0 90 c2 ActiveStreamsOnRegistration:;
+	DLNG 40000000 0 90 c2 maxBW:;
+	DLNG 40000000 0 90 c2 ServiceResourceCount:;
+	Skinny::ServiceResource();
+}
+
+void Skinny::ServiceResource()
+{
+	DLNG 40000000 3 90 c2 Layout Count:;
+	while (g[3] > 0)
+	{
+		DLNG 40000000 1 90 c2 Layout:;
+		 CST#		0 1 00 14 Skinny::Layout_Str;
+		g[3] -= 1;
+	}
+	DLNG 40000000 0 90 c2 Service Num:;
+	DLNG 40000000 0 90 c2 Max Streams:;
+	DLNG 40000000 0 90 c2 Max Conferences:;
+	DLNG 40000000 0 90 c2 ActiveConferenceOnRegistration:;
+}
+
+str# Skinny::Layout_Str;
+	0	| No Layout;
+	1	| One By One;
+	2	| OneByTwo;
+	3	| TwoByTwo;
+	4	| TwoByTwo3Alt1;
+	5	| TwoByTwo3Alt2;
+	6	| ThreeByThree;
+	7	| ThreeByThree6Alt1;
+	8	| ThreeByThree6Alt2;
+	9	| ThreeByThree4Alt1;
+	10	| ThreeByThree4Alt2;
+
+void Skinny::AudioMediaCapability()
+{
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 0 90 c2 Max Frames/Packet:;
+	DBYT 0 1 90 c2 Future Use:;
+	DLNG 40000000 1 90 c2 Media G.723 Bit Rate:;
+	 CEQU		1 1 00 14 5.3 Kbps;
+	 CEQU		2 1 00 14 6.4 Kbps;
+}
+
+void Skinny::VideoMediaCapability()
+{
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 1 90 c2 TransmitOrReceive:;
+	 CST# 0 1  0 14 Skinny::TransmitOrReceive_Str;
+	DLNG 40000000 0 90 c2 LvlPreferenceCount:;
+	Skinny::LevelPreferences();
+	Skinny::StationVideoCapability();
+}
+
+str# Skinny::TransmitOrReceive_Str;
+	1	| Receive Only;
+	2	| Transmit Only;
+	3	| Receive and Transmit;
+
+void Skinny::LevelPreferences()
+{
+	DLNG 40000000 0 90 c2 Transmit Preference:;
+	DLNG 40000000 0 90 c2 Format:;
+	DLNG 40000000 0 90 c2 Max Bit Rate:;
+	DLNG 40000000 0 90 c2 Min Bit Rate:;
+	DLNG 40000000 0 90 c2 MPI:;
+	DLNG 40000000 0 90 c2 Service Number:;
+}
+
+void Skinny::StationVideoCapability()
+{
+	Skinny::H261VideoCapability();
+	Skinny::H263VideoCapability();
+	Skinny::VieoVideoCapability();
+}
+
+void Skinny::H261VideoCapability()
+{
+	DLNG 40000000 1 90 c2 Temp.SpatialTradeOffCap:;
+	 CEQU		0 1 00 14 Not Present;
+	 CEQU		1 1 00 14 Present;
+	DLNG 40000000 1 90 c2 StillImageTransmission:;
+	 CEQU		0 1 00 14 Not Present;
+	 CEQU		1 1 00 14 Present;
+}
+
+void Skinny::H263VideoCapability()
+{
+	HLNG 40000000 1 90 c2 H.263 Capability:;
+	 CST#		0 1 00 14 Skinny::H263CapabilityBitfield;
+	HLNG 40000000 1 90 c2 Add. MemAnnexW:;
+	 CST#		0 1 00 14 Skinny::AnnexWBitfield;
+}
+
+str# Skinny::H263CapabilityBitfield;
+	0x00001	| Unrestricted Vector;
+	0x00002	| Unlimited Motion Vectors;
+	0x00004	| Advanced Prediction;
+	0x00008	| Advanced Intra Coding Mode;
+	0x00010	| Deblocking Filter Mode;
+	0x00020	| Slice Structured;
+	0x00040	| Slice Structured Rect Submode;
+	0x00080	| Slice Structured ASO;
+	0x00100	| Full Picture Freeze;
+	0x00200	| Full Picture Snapshot;
+	0x00400	| Ref Picture Selection;
+	0x00800	| Picture Resample Factor Four;
+	0x01000	| Modified Quantization Mode;
+	0x02000	| Enhanced Ref Picture Selection;
+	0x04000	| Backchannel Videomux;
+	0x08000	| Backchannel ACK;
+	0x10000	| Backchannel NACK;
+	0x20000	| Backchannel ACK and NACK;
+	0x40000	| Backchannel ACK or NACK;
+	0x80000	| TemporalSpatialTradeOffSupported;
+	
+str# Skinny::AnnexWBitfield;
+	0x010000	| Data Partitioned Slices;
+	0x020000	| Fixed Point IDCT0;
+	0x040000	| Interlaced Fields;
+	0x080000	| Current Picture Header Repetition;
+	0x100000	| Data Partitioned Slices;
+	0x200000	| Next Picture Header Repetition;
+	0x400000	| Picture Number;
+	0x800000	| Spare Reference Pictures;
+
+void Skinny::VieoVideoCapability()
+{
+	DLNG 40000000 0 90 c2 Model Number:;
+	DLNG 40000000 1 90 c2 Bandwidth:;
+	 CST#		0 1 00 14 Skinny::Bandwidth_Str;
+	LABL		0 0 00 14 bits/second;
+}
+
+str# Skinny::Bandwidth_Str;
+	7	| 56K (G.723);
+	10	| 729 (G.729);
+	11	| 722 (G.722);
+	13	| 13K (GSM);
+	16	| 728 (G.728);
+	64	| 1M (G.711);
+	256	| 256K (Wideband);
+
+// ID: 0x31
+void Skinny::OpenMultiMediaReceiveChannelAck()
+{
+	Skinny::OpenReceiveChanStatus();
+	IPLG 40000000 0 90 c2 IP Address:;
+	DLNG 40000000 0 90 c2 Port Number:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x32
+void Skinny::ClearConferenceMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Service Number:;
+}
+
+// ID: 0x33
+void Skinny::ServiceURLStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 ServiceURLIndex:;
+}
+
+// ID: 0x34
+void Skinny::FeatureStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 Feature Index:;
+}
+
+// ID: 0x35
+void Skinny::CreateConferenceResMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 CreateConfResult:;
+	 CST#		0 1 00 14 Skinny::CreateConfResult_Str;
+	DLNG 40000000 1 90 c2 Data Length:;
+	CHR# 0 1 90 c2 PassThru Data:;
+}
+
+str# Skinny::CreateConfResult_Str;
+	0 | Ok;
+	1 | Resource Not Available;
+	2 | Conference Already Exist;
+	3 | System Err;
+
+// ID: 0x36
+void Skinny::DeleteConferenceRes()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 DeleteConfResult:;
+	 CST#		0 1 00 14 Skinny::DeleteConfResult_Str;
+}
+
+str# Skinny::DeleteConfResult_Str;
+	0 | Ok;
+	1 | ConferenceNotExist;
+	2 | SystemErr;
+
+// ID: 0x37
+void Skinny::ModifyConferenceRes()
+{
+	DLNG 40000000 1 90 c2 Reception Status:;
+	 CEQU		0 1 00 14 mmrOk;
+	 CEQU		1 1 00 14 mmrError;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x38
+void Skinny::AddParticipantRes()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 AddParticipantResult:;
+	 CST#		0 1 00 14 Skinny::AddParticipantResult_Str;
+}
+
+str# Skinny::AddParticipantResult_Str;
+	0 | Ok;
+	1 | ResourceNotAvailable;
+	2 | ConferenceNotExist;
+	3 | DuplicateCallRef;
+	4 | SystemErr;
+	
+// ID: 0x39
+void Skinny::AuditConferenceRes()
+{
+	DLNG 40000000 1 90 c2 Last:;
+	DLNG 40000000 1 90 c2 Number of Entries:;
+	Skinny::AuditConferenceEntry();
+}
+
+void Skinny::AuditConferenceEntry()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Reserved Participants:;
+	DLNG 40000000 0 90 c2 Active Participants:;
+	DLNG 40000000 0 90 c2 App ID:;
+	CHR# 20 0 90 c2 App Conf ID:;			// max length 32
+	CHR# 18 0 90 c2 App Data:;				// max length 24
+}
+
+// ID: 0x40
+void Skinny::AuditParticipantResMessage()
+{
+	DLNG 40000000 1 90 c2 AuditParticipantResult:;
+	 CEQU		0 1 00 14 Ok;
+	 CEQU		1 1 00 14 Conference Not Exist;
+	DLNG 40000000 0 90 c2 Last:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 4 90 c2 Number of Entries:;
+	DLNG 40000000 1 90 c2 Participant Entry:;
+	//participantEntry[StationMaxParticipant] ???
+}
+
+// ID: 0x41
+void Skinny::DeviceToUserDataVersion1()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	Skinny::SequenceFlag();
+	DLNG 40000000 0 90 c2 Display Priority:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Routing ID:;
+	CHR# 0 4 90 c2 UserDeviceData:;
+}
+
+void Skinny::SequenceFlag()
+{
+	DLNG 40000000 1 90 c2 Sequence Flag:;
+	 CEQU		0 1 00 14 First;
+	 CEQU		1 1 00 14 More;
+	 CEQU		2 1 00 14 Last;
+}
+
+// ID: 0x42
+void Skinny::DeviceToUserDataResponseVersion1()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	Skinny::SequenceFlag();
+	DLNG 40000000 0 90 c2 Display Priority:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Routing ID:;
+	CHR# 0 4 90 c2 UserDeviceData:;
+}
+
+// ID = 0x43
+void Skinny::UpdateCapabilitiesV2()
+{
+	DLNG 40000000 0 90 c2 Audio Cap Count:;
+	DLNG 40000000 0 90 c2 Video Cap Count:;
+	DLNG 40000000 0 90 c2 Data Cap Count:;
+	DLNG 40000000 0 90 c2 RTPPayloadFormat:;
+	DLNG 40000000 0 90 c2 PictureFormatCount:;
+	Skinny::CustomPictureFormat();
+	// MAX_CUSTOM_PICTURES = 6
+	Skinny::ConfResources();
+	Skinny::AudioMediaCapability();
+	Skinny::VideoMediaCapability();
+	Skinny::DataMediaCapability();
+	DLNG 40000000 0 90 c2 Data Caps:;
+}
+
+void Skinny::DataMediaCapability()
+{
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 1 90 c2 TransmitOrReceive:;
+	 CST# 0 1  0 14 Skinny::TransmitOrReceive_Str;
+	DLNG 40000000 0 90 c2 Protocol Dependent Data:;
+	DLNG 40000000 0 90 c2 Max Bit Rate:;
+}
+
+// ID = 0x44
+void Skinny::UpdateCapabilitiesV3()
+{
+	DLNG 40000000 0 90 c2 AudioCap Count:;
+	DLNG 40000000 0 90 c2 VideoCap Count:;
+	DLNG 40000000 0 90 c2 DataCap Count:;
+	DLNG 40000000 0 90 c2 RTPPayloadFormat:;
+	DLNG 40000000 0 90 c2 PictureFormatCount:;
+	Skinny::CustomPictureFormat();
+	// MAX_CUSTOM_PICTURES = 6
+	Skinny::ConfResources();
+	Skinny::AudioMediaCapability();
+	Skinny::VideoMediaCapability();
+	Skinny::DataMediaCapability();
+	DLNG 40000000 0 90 c2 Data Caps:;
+}
+
+// ID = 0x45
+void Skinny::PortResMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	IPLG 40000000 0 90 c2 IP Address:;
+	DLNG 40000000 0 90 c2 RTP Port Num:;
+	DLNG 40000000 0 90 c2 RTCP Port Num:;
+}
+
+// ID = 0x46
+void Skinny::QoSResvNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 RSVP Direction:;
+	 CEQU		1 1 00 14 Send;
+	 CEQU		2 1 00 14 Receive;
+	 CEQU		3 1 00 14 Send and Receive;
+}
+
+// ID = 0x47
+void Skinny::QoSErrorNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 RSVP Direction:;
+	 CEQU		1 1 00 14 Send;
+	 CEQU		2 1 00 14 Receive;
+	 CEQU		3 1 00 14 Send and Receive;
+	DLNG 40000000 1 90 c2 QoS Error Code:;
+	CST#		0 1 00 14 Skinny::QoSErrorCode_Str;
+	DLNG 40000000 1 90 c2 RSVP Error Code:;
+	CST#		0 1 00 14 Skinny::RSVPErrorCode_Str;
+	DLNG 40000000 41 90 c2 RSVP Error SubCode:;
+	if (g[1] == 1)
+	{
+		CST#		0 41 00 14 Skinny::RSVPError_ADMISSION_Str;
+	}
+	if (g[1] == 2)
+	{
+		CST#		0 41 00 14 Skinny::RSVPError_ADMINISTRATIVE_Str;
+	}
+	if (g[1] == 21)
+	{
+		CST#		0 41 00 14 Skinny::RSVPError_TRAFFIC_Str;
+	}
+	if (g[1] == 24)
+	{
+		CST#		0 41 00 14 Skinny::RSVPError_ROUTING_PROBLEM_Str;
+	}
+	DLNG 40000000 1 90 c2 RSVP Error Flag:;
+	CST#		0 1 00 14 Skinny::RSVPError_Flag_Str;
+}
+
+str# Skinny::QoSErrorCode_Str;
+	0	| Reservation Timeout;
+	1	| Path Fail;
+	2	| Resv Fail;
+	3	| Listen Fail;
+	4	| Resource Unavailable;
+	5	| Listen Timeout;
+	6	| Resv Retries Fail;
+	7	| Path Retries Fail;
+	8	| Resv Preemption;
+	9	| Path Preemption;
+	10	| Resv Modify Fail;
+	11	| Path Modify Fail;
+	
+str# Skinny::RSVPErrorCode_Str;
+	0	| Confirm;
+	1	| Admission;
+	2	| Administrative;
+	3	| No Path Information;
+	4	| No Sender Information;
+	5	| Conflicting Style;
+	6	| Unknown Style;
+	7	| Conflicting Dst Ports;
+	8	| Conflicting Src Ports;
+	12	| Service Preempted;
+	13	| Unknown Object Class;
+	14	| Unknown Class Type;
+	20	| API;
+	21	| Traffic;
+	22	| Traffic_System;
+	23	| System;
+	24	| Routing Problem;
+	
+str# Skinny::RSVPError_ADMISSION_Str;
+	1	| Delay Bound Can't Be Met;
+	2	| Requested B/W Not Free;
+	3	| Flowspec MTU > i/f MTU;
+	
+str# Skinny::RSVPError_ADMINISTRATIVE_Str;
+	0	| Informational Reporting;
+	1	| Warning;
+	2	| Unknown Reason;
+	3	| Generic Policy Rejection;
+	4	| Quota or Accouting Violation;
+	5	| Flow was Preempted;
+	6	| Installed Policy Expired;
+	7	| Policy Update Caused Rejection;
+	8	| Policies Could Not Be Merged;
+	9	| PDP Down or Not Functioning;
+	10	| 3rd-party Server Not Available;
+	11	| Bad Syntax In POLICY_DATA Object;
+	12	| Integrity Error in POLICY_DATA Object;
+	13	| Bad Syntax in POLICY_ELEMENT Object;
+	14	| Mandatory POLICY_ELEMENT is Missing;
+	15	| No PEP Resources to Implement Policy;
+	16	| PDP Encountered Bad RSVP Objects;
+	17	| Service Type was Rejected;
+	18	| Reservation Style was Rejected;
+	19	| Flowspec was Rejected;
+
+str# Skinny::RSVPError_TRAFFIC_Str;
+	1	| Incompatible Service Requests;
+	2	| Service Unsupported;
+	3	| Bad FLOWSPEC;
+	4	| Bad TSPEC;
+	5	| Bad ADSPEC;
+	
+str# Skinny::RSVPError_ROUTING_PROBLEM_Str;
+	0	| No Error;
+	1	| Bad EXPLICIT_ROUTE Object;
+	2	| Bad Strict Node;
+	3	| Bad Loose Node;
+	4	| Bad Initial Subobject;
+	5	| No Route Available Toward Destination;
+	6	| Unacceptable Label Value;
+	7	| RRO Indicates Routing Loops;
+	8	| Non RSVP Capable Router in MPLS Path;
+	9	| MPLS Label Allocation Failure;
+	10	| Unsupported L3PID;
+
+str# Skinny::RSVPError_Flag_Str;
+	0x01	| Inplace;
+	0x02	| Not Guilty;
+	0x04	| Path State Removed;
+
+// ID = 0x48
+void Skinny::SubscriptionStatReqMessage()
+{
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 1 90 c2 Feature ID:;
+	 CEQU		1 1 00 14 SfBLF;
+	DLNG 40000000 0 90 c2 Timer:;
+	CHR# 40 0 90 c2 Subscription ID:;		// max length 64
+}
+
+// ID = 0x49
+void Skinny::MediaPathEventMessage()
+{
+	Skinny::MediaPathID();
+	Skinny::MediaPathEvent();
+}
+
+// ID = 0x4A
+void Skinny::MediaPathCapabilityMessage()
+{
+	Skinny::MediaPathID();
+	Skinny::MediaPathCapabilities();
+}
+
+void Skinny::MediaPathID()
+{
+	DLNG 40000000 1 90 c2 Media Path ID:;
+	 CEQU		1 1 00 14 Media Path Headset;
+	 CEQU		2 1 00 14 Media Path Handset;
+	 CEQU		3 1 00 14 Media Path Speaker;
+}
+
+void Skinny::MediaPathCapabilities()
+{
+	DLNG 40000000 1 90 c2 MediaPathCapabilities:;
+	 CEQU		1 1 00 14 Enable;
+	 CEQU		2 1 00 14 Disable;
+	 CEQU		3 1 00 14 Monitor;
+}
+
+void Skinny::MediaPathEvent()
+{
+	DLNG 40000000 1 90 c2 Media Path Event:;
+	 CEQU		1 1 00 14 On;
+	 CEQU		2 1 00 14 Off;
+}
+
+// ID = 0x4B
+void Skinny::CallRejectMessage()
+{
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 Reject Cause:;
+}
+
+// ID = 0x81
+void Skinny::RegisterAckMessage()
+{
+	DLNG 40000000 1 90 c2 KeepAliveInterval:;
+	LABL		0 0 00 14 seconds;
+	CHR# 6 0 90 c2 DateTemplate:;  // length 6
+	HWRD 0 0 90 c2 Alignment Padding:;
+	DLNG 40000000 0 90 c2 2ndKeepAliveInterval:;
+	LABL		0 0 00 14 seconds;
+	HLNG 40000000 0 90 c2 Max Protocol Ver:;
+}
+
+// ID = 0x82
+void Skinny::StartToneMessage()
+{
+	HLNG 40000000 1 90 c2 Device Tone:;
+	 CST#		0 1 00 14 Skinny::DeviceTone_Str;
+	DLNG 40000000 1 90 c2 ToneOutputDirection;
+	 CEQU 0 1 0 14 ToneOutputUser;
+	 CEQU 1 1 0 14 ToneOutputNetwork;
+	 CEQU 2 1 0 14 ToneOutputAll;
+	if (g[2] != 12)
+	{
+		DLNG 40000000 0 90 c2 Line Instance:;
+		DLNG 40000000 0 90 c2 Call Reference:;
+	}
+}
+
+str# Skinny::DeviceTone_Str;
+	0x00 | Silence;
+	0x01 | Dtmf1;
+	0x02 | Dtmf2;
+	0x03 | Dtmf3;
+	0x04 | Dtmf4;
+	0x05 | Dtmf5;
+	0x06 | Dtmf6;
+	0x07 | Dtmf7;
+	0x08 | Dtmf8;
+	0x09 | Dtmf9;
+	0x0a | Dtmf0;
+	0x0e | Dtmf Star;
+	0x0f | Dtmf Pound;
+	0x10 | Dtmf A;
+	0x11 | Dtmf B;
+	0x12 | Dtmf C;
+	0x13 | Dtmf D;
+	0x21 | Inside Dial Tone;
+	0x22 | Outside Dial Tone;
+	0x23 | Line Busy Tone;
+	0x24 | Alerting Tone;
+	0x25 | Reorder Tone;
+	0x26 | Recorder Warning Tone;
+	0x27 | Recorder Detected Tone;
+	0x28 | Reverting Tone;
+	0x29 | Receiver Off Hook Tone;
+	0x2a | Partial Dial Tone;
+	0x2b | No Such Number Tone;
+	0x2c | Busy Verification Tone;
+	0x2d | Call Waiting Tone;
+	0x2e | Confirmation Tone;
+	0x2f | Camp On Indication Tone;
+	0x30 | Recall Dial Tone;
+	0x31 | Zip Zip;
+	0x32 | Zip;
+	0x33 | Beep Bonk;
+	0x34 | Music Tone;
+	0x35 | Hold Tone;
+	0x36 | Test Tone;
+	0x37 | Dt Moniter Warning Tone;
+	0x40 | Add Call Waiting;
+	0x41 | Priority Call Wait;
+	0x42 | Recall Dial;
+	0x43 | Barge In;
+	0x44 | Distinct Alert;
+	0x45 | Priority Alert;
+	0x46 | Reminder Ring;
+	0x47 | Precedence Ring Back;
+	0x48 | Preemption Tone;
+	0x50 | MF1;
+	0x51 | MF2;
+	0x52 | MF3;
+	0x53 | MF4;
+	0x54 | MF5;
+	0x55 | MF6;
+	0x56 | MF7;
+	0x57 | MF8;
+	0x58 | MF9;
+	0x59 | MF0;
+	0x5a | MFKP1;
+	0x5b | MFST;
+	0x5c | MFKP2;
+	0x5d | MFSTP;
+	0x5e | MFST3P;
+	0x5f | MILLIWATT;
+	0x60 | MILLIWATTTEST;
+	0x61 | HIGHTONE;
+	0x62 | FLASHOVERRIDE;
+	0x63 | FLASH;
+	0x64 | PRIORITY;
+	0x65 | IMMEDIATE;
+	0x66 | PREAMPWARN;
+	0x67 | 2105HZ;
+	0x68 | 2600HZ;
+	0x69 | 440HZ;
+	0x6a | 300HZ;
+	0x77 | MLPP_PALA;
+	0x78 | MLPP_ICA;
+	0x79 | MLPP_VCA;
+	0x7A | MLPP_BPA;
+	0x7B | MLPP_BNEA;
+	0x7C | MLPP_UPA;
+	0x7f | No Tone;
+
+// ID = 0x83
+void Skinny::StopToneMessage()
+{
+	if (g[20] != 0)
+	{
+		DLNG 40000000 1 90 c2 Line Instance:;
+		DLNG 40000000 1 90 c2 Call Reference:;
+		g[20] -= 8;
+	}
+}
+
+// ID = 0x85
+void Skinny::SetRingerMessage()
+{
+	HLNG 40000000 1 90 c2 Ring Mode:;
+	 CEQU 1 1 0 14 Ring Off;
+	 CEQU 2 1 0 14 Inside Ring;
+	 CEQU 3 1 0 14 Outside Ring;
+	 CEQU 4 1 0 14 Feature Ring;
+	 CEQU 5 1 0 14 Flash Only;
+	 CEQU 6 1 0 14 Precedence Ring;
+	HLNG 40000000 1 90 c2 Ring Duration:;
+	 CEQU 1 1 0 14 Normal Ring;
+	 CEQU 2 1 0 14 Single Ring;
+	DLNG 40000000 1 90 c2 Line Instance:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+}
+
+// ID = 0x86
+void Skinny::SetLampMessage()
+{
+	HLNG 40000000 1 90 c2 Stimulus:;
+	CST# 0 1 0 14 Skinny::Stimuli;
+	DLNG 40000000 1 90 c2 Stimulus Instance:;
+	DLNG 40000000 1 90 c2 Lamp Mode:;
+	 CEQU 0 1 0 14 Undefined;
+	 CEQU 1 1 0 14 Off;
+	 CEQU 2 1 0 14 On;
+	 CEQU 3 1 0 14 Wink;
+	 CEQU 4 1 0 14 Flash;
+	 CEQU 5 1 0 14 Blink;
+}
+
+// ID = 0x87
+void Skinny::SetHkFDetectMessage()
+{
+	DLNG 40000000 1 90 c2 HkF Detect Mode:;
+	 CEQU 1 1 0 14 Hook Flash On;
+	 CEQU 2 1 0 14 Hook Flash Off;
+	DLNG 0 1 90 c2 Detect Interval:;
+}
+
+// ID = 0x88
+void Skinny::SetSpeakerModeMessage()
+{
+	HLNG 40000000 1 90 c2 Speaker Mode:;
+	 CEQU 1 1 0 14 On;
+	 CEQU 2 1 0 14 Off;
+}
+
+// ID = 0x89
+void Skinny::SetMicroModeMessage()
+{
+	DLNG 40000000 1 90 c2 Mic Mode:;
+	 CEQU 1 1 0 14 On;
+	 CEQU 2 1 0 14 Off;
+}
+
+// ID = 0x8a
+void Skinny::StartMediaTransmission()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 0 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1 0 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 0 90 c2 Precedence Value:;
+	Skinny::QualifierOut();
+	DLNG 40000000 0 90 c2 Call Reference:;
+	Skinny::MediaEncryptionKeyInfo();
+	DLNG 40000000 1 90 c2 StreamPassThrough ID:;
+	DLNG 40000000 1 90 c2 AssociatedStream ID:;
+	DLNG 40000000 1 90 c2 RFC2833Payload Type:;
+}
+
+void Skinny::QualifierOut()
+{
+	DLNG 40000000 0 90 c2 Precedence Value:;
+	HLNG 40000000 1 90 c2 Silence Suppression:;
+	 CEQU 0 1 0 14 Media Silence Suppression Off;
+	 CEQU 1 1 0 14 Media Silence Suppression On;
+	DLNG 40000000 0 90 c2 Max Frames/Packet:;
+	DLNG 40000000 1 90 c2 Media G.723 Bit Rate:;
+	 CEQU		1 1 00 14 5.3 Kbps;
+	 CEQU		2 1 00 14 6.4 Kbps;
+}
+
+void Skinny::MediaEncryptionKeyInfo()
+{
+	DLNG 40000000 1 90 c2 Encryption Type:;
+	 CEQU		0 1 00 14 No Encryption;
+	 CEQU		1 1 00 14 AES 128 Counter;
+	DWRD 40000000 1 90 c2 Key Length:;
+	DWRD 40000000 1 90 c2 Salt Length:;
+	Skinny::KeyData();
+}
+
+void Skinny::KeyData()
+{
+	CHR# 10 0 90 c2 Protection Key;
+	CHR# 10 0 90 c2 Initial Vector;
+}
+
+// ID = 0x8b
+void Skinny::StopMediaTransmission()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 PassThru Party ID:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+	Skinny::PortHandling();
+}
+
+void Skinny::PortHandling()
+{
+	DLNG 40000000 1 90 c2 Port Handling:;
+	 CEQU		0 1 00 14 Close Port;
+	 CEQU		1 1 00 14 Keep Port;
+}
+
+// ID = 0x8c
+void Skinny::StartMediaReception;
+	TRTS;
+
+// ID = 0x8d
+void Skinny::StopMediaReception;
+	TRTS;
+
+// ID = 0x8f
+void Skinny::CallInfoMessage()
+{
+	CHR#	   28 0 90 c2 Calling Party Name:;
+	CHR#	   18 0 90 c2 Calling Party:;
+	CHR#	   28 0 90 c2 Called Party Name:;
+	CHR#	   18 0 90 c2 Called Party:;
+	g[20] -= 128;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 Call Type:;
+	 CEQU 1 1 0 14 InBound Call;
+	 CEQU 2 1 0 14 OutBound Call;
+	 CEQU 3 1 0 14 Forward Call;
+	CHR#	   28 0 90 c2 Orig Called Party Name:;
+	CHR#	   18 0 90 c2 Orig Called Party:;
+	g[20] -= 84;
+	if (g[20] > 0)
+	{
+		CHR#	   28 0 90 c2 Last Redirecting PN:;
+		CHR#	   18 0 90 c2 Last Redirecting Party:;
+		DLNG 40000000 0 90 c2 Orig Cdpn Redirect Rsn:;
+		DLNG 40000000 0 90 c2 Last Redirecting Rsn:;
+		CHR#	   18 0 90 c2 Calling Voice Mailbox:;
+		CHR#	   18 0 90 c2 Called Voice Mailbox:;
+		CHR#	   18 0 90 c2 Orig Called Party VMbox:;
+		CHR#	   18 0 90 c2 Last Redirecting VMbox:;
+		if (g[2] == 388)
+		{
+			DLNG 40000000 0 90 c2 Call Instance:;
+			DLNG 40000000 1 90 c2 Call Security Status:;
+			 CST#		0 1 00 14 Skinny::CallSecurityStatusType_Str;
+			HLNG 40000000 1 90 c2 Restrict Info Type:;
+			 CST#		0 1 00 14 Skinny::RestrictInformationType_Str;
+		}
+	}
+}
+
+str# Skinny::CallSecurityStatusType_Str;
+	0 | Unknown;
+	1 | Not Authenticated;
+	2 | Authenticated;
+
+str# Skinny::RestrictInformationType_Str;
+	0x0001	| Calling Party Name;
+	0x0002	| Calling Party Number;
+	0x0004	| Called Party Name;
+	0x0008	| Called Party Number ;
+	0x0010	| OriginalCalledPartyName;
+	0x0020	| OriginalCalledPartyNumber;
+	0x0040	| LastRedirectPartyName;
+	0x0080	| LastRedirectPartyNumber;
+	0x00FF	| LastRedirectParty;	
+
+// ID = 0x90
+void Skinny::ForwardStatMessage()
+{
+	DLNG 40000000 1 90 c2 Active Forward:;
+	DLNG 40000000 1 90 c2 Line Number:;
+	DLNG 40000000 1 90 c2 Fwd All Active:;
+	CHR#	   18 0 90 c2 Fwd All Dir Num:;
+	DLNG 40000000 1 90 c2 Fwd Busy Active:;
+	CHR#	   18 0 90 c2 Fwd Busy Dir Num:;
+	DLNG 40000000 1 90 c2 Fwd No Answer Active:;
+	CHR#	   18 0 90 c2 Fwd No Answer Dir Num:;
+}
+
+// ID = 0x91
+void Skinny::SpeedDialStatMessage()
+{
+	DLNG 40000000 0 90 c2 Speed Dial Num:;
+	CHR# 18 0 90 c2 Speed Dial Dir Num:;
+	CHR# 28 0 90 c2 Speed Dial Display Name:;
+}
+
+// ID = 0x92
+void Skinny::LineStatMessage()
+{
+	DLNG 40000000 0 90 c2 Line Number:;
+	CHR# 18 0 90 c2 Line Dir Number:;			// max length 24
+	CHR# 28 0 90 c2 Line Display Name:;			// max length 40
+	CHR# 28 0 90 c2 Line Text Label:;			// max length 40
+	HLNG 40000000 1 90 c2 Display Options:;
+	 CST#		0 1 00 14 Skinny::DisplayOptions_Str;
+}
+
+str# Skinny::DisplayOptions_Str;
+	0x0001	| Original Dialed Number (ODN);
+	0x0002	| Redirected Dialed Number (RDN);
+	0x0004	| Calling Line ID (CLID);
+	0x0008	| Calling Name ID (CNID);
+
+// ID = 0x93
+void Skinny::ConfigStatMessage()
+{
+	Skinny::StationIdentifier();
+	CHR# 28 0 90 c2 User Name:;
+	CHR# 28 0 90 c2 Server Name:;
+	DLNG 40000000 1 90 c2 Number of Lines:;
+	DLNG 40000000 1 90 c2 Number of Speed Dials:;
+}
+
+void Skinny::StationIdentifier()
+{
+	CHR# 10 0 90 c2 Device Name:;
+	DLNG 40000000 1 90 c2 StationUserId:;
+	DLNG 40000000 1 90 c2 StationInstance:;
+}
+
+// ID = 0x94
+void Skinny::DefineTimeDate()
+{
+	DLNG 40000000 1 90 c2 Year:;
+	DLNG 40000000 1 90 c2 Month:;
+	DLNG 40000000 1 90 c2 Day of Week:;
+	DLNG 40000000 1 90 c2 Day:;
+	DLNG 40000000 1 90 c2 Hour:;
+	DLNG 40000000 1 90 c2 Minute:;
+	DLNG 40000000 1 90 c2 Seconds:;
+	DLNG 40000000 1 90 c2 Milliseconds:;
+	DLNG 40000000 1 90 c2 Time Stamp:;
+}
+
+// ID = 0x95
+void Skinny::StartSessionTransmission()
+{
+	IPLG 0 1 90 c2 Remote IP Address:;
+	DLNG 40000000 1 90 c2 Session Type:;
+	 CST#		0 1 00 12 Skinny::SessionType_Str;
+}
+
+// ID = 0x96
+void Skinny::StopSessionTransmission()
+{
+	IPLG 0 0 90 c2 Remote IP Address:;
+	DLNG 40000000 1 90 c2 Session Type:;
+	 CST#		0 1 00 12 Skinny::SessionType_Str;
+}
+
+str# Skinny::SessionType_Str;
+	0x01	| Chat;
+	0x02	| WhiteBoard;
+	0x04	| Application Sharing;
+	0x08	| File Transfer;
+	0x10	| Video;
+
+// ID = 0x97
+void Skinny::ButtonTemplateMessage()
+{
+	DLNG 40000000 0 90 c2 Button Offset:;
+	DLNG 40000000 0 90 c2 Button Count:;
+	DLNG 40000000 0 90 c2 Total Button Count:;
+	g[4] = 42;			// StationMaxButtonTemplateSize
+	while (g[4] > 0)
+	{
+		// ButtonDefinition
+		HBYT 0 0 90 c9 Instance Number:;
+		HBYT 0 1 90 c2 Button Definition:;
+		CST# 0 1 00 14 Skinny::ButtonDefinition_Str;
+		LABL 0 0 0 c8;
+		g[4] -= 1;
+	}
+}
+
+str# Skinny::ButtonDefinition_Str;
+	0x01 | Last Number Redial;
+	0x02 | Speed Dial;
+	0x03 | Hold;
+	0x04 | Transfer;
+	0x05 | Forward All;
+	0x06 | Forward Busy;
+	0x07 | Forward No Answer;
+	0x08 | Display;
+	0x09 | Line;
+	0x0a | T120 Chat;
+	0x0b | T120 Whiteboard;
+	0x0c | T120 Application Sharing;
+	0x0d | T120 File Transfer;
+	0x0e | Video;
+	0x0f | Voice Mail;
+	0x10 | Answer Release;
+	0x11 | Auto Answer;
+	0x12 | Select;
+	0x13 | Privacy;
+	0x14 | Service URL;
+	0x1B | Malicious Call;
+	0x21 | Generic App B1;
+	0x22 | Generic App B2;
+	0x23 | Generic App B3;
+	0x24 | Generic App B4;
+	0x25 | Generic App B5;
+	0x7b | Meet Me Conference;
+	0x7d | Conference;
+	0x7e | Call Park;
+	0x7f | Call Pickup;
+	0x80 | Group Call Pickup;
+	0xFF | Undefined;
+
+// ID = 0x98
+void Skinny::VersionMessage()
+{
+	CHR# 14 0 90 c2 Version:;
+}
+
+// ID = 0x99
+void Skinny::DisplayTextMessage()
+{
+	CHR# 21 0 90 c2 Message:;
+}
+
+// ID = 0x9a
+void Skinny::ClearDisplay;
+	TRTS;
+
+// ID = 0x9b
+void Skinny::CapabilitiesReqMessage;
+	TRTS;
+
+// ID = 0x9c
+void Skinny::EnunciatorCommandMessage;
+	TRTS;
+
+// ID = 0x9d
+void Skinny::RegisterRejectMessage()
+{
+	CHR# 21 0 90 c2 Message:;
+}	
+
+// ID = 0x9e
+void Skinny::ServerResMessage()
+{
+	DLNG 40000000 1 90 c2 Server:;		//array of a maximum of 5 servers
+	CHR# 30 0 90 c2 Server Name:;		//max length 48
+	DLNG 40000000 0 90 c2 TcpListenPort:;
+	IPLG		0 0 90 c2 Server Ip Addr:;
+}
+
+// ID = 0x9f
+void Skinny::Reset()
+{
+	DLNG 40000000 1 90 c2 Reset Type:;
+	 CEQU 1 1 0 14 Reset;
+	 CEQU 2 1 0 14 Restart;
+}
+
+// ID = 0x100
+void Skinny::KeepAliveAckMessage;
+	TRTS;
+
+// ID = 0x101
+void Skinny::StartMulticastMediaReception()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 0 0 90 c2 Multicast IP Addr:;
+	DLNG 40000000 0 90 c2 Multicast Port:;
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	Skinny::QualifierIn();
+}
+
+void Skinny::QualifierIn()
+{
+	DLNG 40000000 1 90 c2 MediaEchoCancellation:;
+	 CEQU		0 1 00 14 Off;
+	 CEQU		1 1 00 14 On;
+	
+	DLNG 40000000 1 90 c2 Media G.723 Bit Rate:;
+	 CEQU		1 1 00 14 5.3 Kbps;
+	 CEQU		2 1 00 14 6.4 Kbps;
+}
+
+// ID = 0x102
+void Skinny::StartMulticastMediaTransmission()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 0 0 90 c2 Multicast IP Addr:;
+	DLNG 40000000 0 90 c2 Multicast Port:;
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	Skinny::QualifierOut();
+}
+
+// ID = 0x103
+void Skinny::StopMulticastMediaReception()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 Pass Thru Party ID:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+}
+
+// ID = 0x104
+void Skinny::StopMulticastMediaTransmission()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 Pass Thru Party ID:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+}
+
+// ID: 0x105
+void Skinny::OpenReceiveChannel()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+	g[20] -= 4;
+	DLNG 40000000 1 90 c2 Pass Thru Party ID:;
+	g[20] -= 4;
+	DLNG 40000000 1 90 c2 ms Packet Size:;
+	g[20] -= 4;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+		CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	g[20] -= 4;
+	
+		
+	if (g[20]!= 0)
+	{	
+		Skinny::QualifierIn();
+		g[20] -= 8;			
+		if (g[20]!= 0)
+		{	
+			DLNG 40000000 0 90 c2 Call Reference:;
+			Skinny::MediaEncryptionKeyInfo();
+			DLNG 40000000 1 90 c2 StreamPassThrough ID:;
+			DLNG 40000000 1 90 c2 AssociatedStream ID:;
+			DLNG 40000000 1 90 c2 RFC2833Payload Type:;
+			g[20] -= 16;
+		}
+	}
+}
+
+// ID = 0x106
+void Skinny::CloseReceiveChannel()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 PassThruPartyID:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+	Skinny::PortHandling();
+}
+
+// ID = 0x107
+void Skinny::ConnectionStatisticsReq()
+{
+	CHR#	   18 0 90 c2 Directory Number:;
+	DLNG 40000000 0 90 c2 Call Identifier:;
+	DLNG 40000000 1 90 c2 Stats Processing Type:;
+	CEQU		0 1 00 14 Clear Stats;
+	CEQU 		1 00 14 Do Not Clear Stats;
+}
+
+// ID = 0x108
+void Skinny::SoftKeyTemplateResMessage()
+{
+	DLNG 40000000 1 90 c2 SoftKey Offset:;
+	DLNG 40000000 3 90 c2 SoftKey Count:;
+	DLNG 40000000 1 90 c2 Total SoftKey Count:;
+	g[4] = 32;
+	while (g[4] > 0)
+	{
+		Skinny::Soft_Key_Label();
+		DLNG 40000000 1 90 c2 SoftKey Event:;
+		CST# 0 1 0 14 Skinny::Soft_Key_Event_Str;
+		g[4] -= 1;
+	}
+//	DLNG 40000000 1 90 c2 Applicaton ID:;
+}
+
+void Skinny::Soft_Key_Label()
+{
+	l[1] = pb[0];
+	if (l[1] == 0x80)
+	{
+		DBYT 0 1 5 c2 SoftKey Label:;
+		LABL 0 0 0 50 \200\;
+		DBYT 0 1 0 0;
+		CHR# E 0 0 0;
+		CST# 0 1 0 14 Skinny::Soft_Key_Event_Str;
+		TRTS;
+	}
+	CHR# 10 0 90 c2 Soft Key Label:;
+}
+
+str# Skinny::Soft_Key_Event_Str;
+	0	| Undefined;
+	1	| Redial;
+	2	| New Call;
+	3	| Hold;
+	4	| Transfer;
+	5	| CFwd All;
+	6	| CFwd Busy;
+	7	| CFwd No Answer;
+	8	| Back Space;
+	9	| End Call;
+	10	| Resume;
+	11	| Answer;
+	12	| Info;
+	13	| Confrn;
+	14	| Park;
+	15	| Join;
+	16	| Meet Me Confrn;
+	17	| Call Pickup;
+	18	| Group Call Pickup;
+	19	| Your current options;
+	20	| Off Hook;
+	21	| On Hook;
+	22	| Ring out;
+	23	| From;
+	24	| Connected;
+	25 | Busy;
+	26 | Line In Use;
+	27 | Call Waiting;
+	28 | Call Transfer;
+	29 | Call Park;
+	30 | Call Proceed;
+	31 | In Use Remote;
+	32 | Enter Number;
+	33 | Call Park At;
+	34 | Primary Only;
+	35 | Temp Fail;
+	36 | You Have VoiceMail;
+	37 | Forwarded To;
+	38 | Can Not Complete Conference;
+	39 | No Conference Bridge;
+	40 | Can Not Hold Primary Control;
+	41 | Invalid Conference Participant;
+	42 | In Conference Already;
+	43 | No Participant Info;
+	44 | Exceed Maximum Parties;
+	45 | Key Is Not Active;
+	46 | Error No License;
+	47 | Error DBConfig;
+	48 | Error Database;
+	49 | Error Pass Limit;
+	50 | Error Unknown;
+	51 | Error Mismatch;
+	52 | Conference;
+	53 | Park Number;
+	54 | Private;
+	55 | Not Enough Bandwidth;
+	56 | Unknown Number;
+	57 | RmLstC;
+	58 | Voicemail;
+	59 | ImmDiv;
+	60 | Intrcpt;
+	61 | SetWtch;
+	62 | TrnsfVM;
+	63 | DND;
+	64 | DivAll;
+	65 | CallBack;
+	66 | Network Congestion, Rerouting;
+	67 | Barge;
+	68 | Failed to Setup Barge;
+	69 | Another Barge Exists;
+	70 | Incompatible Device Type;
+	71 | No Park Number Available;
+	72 | CallPark Reversion;
+	73 | Service is Not Active;
+	74 | High Traffic Try Again Later;
+	75 | QRT;
+
+str# Skinny::SoftKeyInfoIndex_Str;
+	301 | Redial;
+	302 | New Call;
+	303 | Hold;
+	304 | Trnsfer;
+	305 | CFwd All;
+	306 | CFwd Busy;
+	307 | CFwd No Answer;
+	308 | Back Space;
+	309 | End Call;
+	310 | Resume;
+	311 | Answer;
+	312 | Info;
+	313 | Confrn;
+	314 | Park;
+	315 | Join;
+	316 | Meet Me Confrn;
+	317 | Call Pick Up;
+	318 | Grp Call Pick Up;
+	319 | Drop Last Confee;
+	320 | Call Back;
+	321 | Barge;
+
+// ID: 0x109
+void Skinny::SoftKeySetResMessage()
+{
+	DLNG 40000000 1 90 c2 SoftKey Offset:;
+	DLNG 40000000 3 90 c2 SoftKey Count:;
+	DLNG 40000000 1 90 c2 Total SoftKey Count:;
+	g[4] = 0;
+	while (g[4] < 16)
+	{
+		LABL 0 0 90 c9 SoftKey Set:;
+		CST# 0 4 00 14 Skinny::SelectSoftKeysMessage::SoftKeySet;
+		g[5] = 16;
+		while (g[5] > 0)
+		{
+			DBYT 0 1 90 c2 SoftKey Temp Index:;	
+			CST# 0 1 0 14 Skinny::Soft_Key_Event_Str;
+			g[5] -= 1;
+		}
+		g[5] = 16;
+		while (g[5] > 0)
+		{
+			DWRD 40000000 1 90 c2 SoftKey Info Index:;
+			CST#		0 1 00 14 Skinny::SoftKeyInfoIndex_Str;
+			g[5] -= 1;
+		}
+		g[4] += 1;
+		LABL 0 0 0 c8;
+	}
+}
+
+// ID: 0x110
+void Skinny::SelectSoftKeysMessage;
+	DLNG 40000000 1 90 c2 Line Instance:;
+	DLNG 40000000 1 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 SoftKeySet:;
+	CST#		0 1 00 14 Skinny::SelectSoftKeysMessage::SoftKeySet;
+	BLNG 40000000 1 90 c9 SoftKeyMap:;
+	CBIT	   1f 1 00 d4 1....... ........ ........ ........ Soft Key 31: Show;
+	CLSE		0 0 00 d4 0....... ........ ........ ........ Soft Key 31: Do Not Show;
+	CBIT	   1e 1 00 d4 .1...... ........ ........ ........ Soft Key 30: Show;
+	CLSE		0 0 00 d4 .0...... ........ ........ ........ Soft Key 30: Do Not Show;
+	CBIT	   1d 1 00 d4 ..1..... ........ ........ ........ Soft Key 29: Show;
+	CLSE		0 0 00 d4 ..0..... ........ ........ ........ Soft Key 29: Do Not Show;
+	CBIT	   1c 1 00 d4 ...1.... ........ ........ ........ Soft Key 28: Show;
+	CLSE		0 0 00 d4 ...0.... ........ ........ ........ Soft Key 28: Do Not Show;
+	CBIT	   1b 1 00 d4 ....1... ........ ........ ........ Soft Key 27: Show;
+	CLSE		0 0 00 d4 ....0... ........ ........ ........ Soft Key 27: Do Not Show;
+	CBIT	   1a 1 00 d4 .....1.. ........ ........ ........ Soft Key 26: Show;
+	CLSE		0 0 00 d4 .....0.. ........ ........ ........ Soft Key 26: Do Not Show;
+	CBIT	   19 1 00 d4 ......1. ........ ........ ........ Soft Key 25: Show;
+	CLSE		0 0 00 d4 ......0. ........ ........ ........ Soft Key 25: Do Not Show;
+	CBIT	   18 1 00 d4 .......1 ........ ........ ........ Soft Key 24: Show;
+	CLSE		0 0 00 d4 .......0 ........ ........ ........ Soft Key 24: Do Not Show;
+	CBIT	   17 1 00 d4 ........ 1....... ........ ........ Soft Key 23: Show;
+	CLSE		0 0 00 d4 ........ 0....... ........ ........ Soft Key 23: Do Not Show;
+	CBIT	   16 1 00 d4 ........ .1...... ........ ........ Soft Key 22: Show;
+	CLSE		0 0 00 d4 ........ .0...... ........ ........ Soft Key 22: Do Not Show;
+	CBIT	   15 1 00 d4 ........ ..1..... ........ ........ Soft Key 21: Show;
+	CLSE		0 0 00 d4 ........ ..0..... ........ ........ Soft Key 21: Do Not Show;
+	CBIT	   14 1 00 d4 ........ ...1.... ........ ........ Soft Key 20: Show;
+	CLSE		0 0 00 d4 ........ ...0.... ........ ........ Soft Key 20: Do Not Show;
+	CBIT	   13 1 00 d4 ........ ....1... ........ ........ Soft Key 19: Show;
+	CLSE		0 1 00 d4 ........ ....0... ........ ........ Soft Key 19: Do Not Show;
+	CBIT	   12 1 00 d4 ........ .....1.. ........ ........ Soft Key 18: Show;
+	CLSE		0 0 00 d4 ........ .....0.. ........ ........ Soft Key 18: Do Not Show;
+	CBIT	   11 1 00 d4 ........ ......1. ........ ........ Soft Key 17: Show;
+	CLSE		0 0 00 d4 ........ ......0. ........ ........ Soft Key 17: Do Not Show;
+	CBIT	   10 1 00 d4 ........ .......1 ........ ........ Soft Key 16: Show;
+	CLSE		0 0 00 d4 ........ .......0 ........ ........ Soft Key 16: Do Not Show;
+	CBIT		f 1 00 d4 ........ ........ 1....... ........ Soft Key 15: Show;
+	CLSE		0 0 00 d4 ........ ........ 0....... ........ Soft Key 15: Do Not Show;
+	CBIT		e 1 00 d4 ........ ........ .1...... ........ Soft Key 14: Show;
+	CLSE		0 0 00 d4 ........ ........ .0...... ........ Soft Key 14: Do Not Show;
+	CBIT		d 1 00 d4 ........ ........ ..1..... ........ Soft Key 13: Show;
+	CLSE		0 0 00 d4 ........ ........ ..0..... ........ Soft Key 13: Do Not Show;
+	CBIT		c 1 00 d4 ........ ........ ...1.... ........ Soft Key 12: Show;
+	CLSE		0 0 00 d4 ........ ........ ...0.... ........ Soft Key 12: Do Not Show;
+	CBIT		b 1 00 d4 ........ ........ ....1... ........ Soft Key 11: Show;
+	CLSE		0 0 00 d4 ........ ........ ....0... ........ Soft Key 11: Do Not Show;
+	CBIT		a 1 00 d4 ........ ........ .....1.. ........ Soft Key 10: Show;
+	CLSE		0 0 00 d4 ........ ........ .....0.. ........ Soft Key 10: Do Not Show;
+	CBIT		9 1 00 d4 ........ ........ ......1. ........ Soft Key 9: Show;
+	CLSE		0 0 00 d4 ........ ........ ......0. ........ Soft Key 9: Do Not Show;
+	CBIT		8 1 00 d4 ........ ........ .......1 ........ Soft Key 8: Show;
+	CLSE		0 0 00 d4 ........ ........ .......0 ........ Soft Key 8: Do Not Show;
+	CBIT		7 1 00 d4 ........ ........ ........ 1....... Soft Key 7: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ 0....... Soft Key 7: Do Not Show;
+	CBIT		6 1 00 d4 ........ ........ ........ .1...... Soft Key 6: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ .0...... Soft Key 6: Do Not Show;
+	CBIT		5 1 00 d4 ........ ........ ........ ..1..... Soft Key 5: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ ..0..... Soft Key 5: Do Not Show;
+	CBIT		4 1 00 d4 ........ ........ ........ ...1.... Soft Key 4: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ ...0.... Soft Key 4: Do Not Show;
+	CBIT		3 1 00 d4 ........ ........ ........ ....1... Soft Key 3: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ ....0... Soft Key 3: Do Not Show;
+	CBIT		2 1 00 d4 ........ ........ ........ .....1.. Soft Key 2: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ .....0.. Soft Key 2: Do Not Show;
+	CBIT		1 1 00 d4 ........ ........ ........ ......1. Soft Key 1: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ ......0. Soft Key 1: Do Not Show;
+	CBIT		0 1 00 d4 ........ ........ ........ .......1 Soft Key 0: Show;
+	CLSE		0 0 00 d4 ........ ........ ........ .......0 Soft Key 0: Do Not Show;
+	LABL		0 0 00 c8;
+	TRTS;
+
+str# Skinny::SelectSoftKeysMessage::SoftKeySet;
+	0	| On Hook;
+	1	| Connected;
+	2	| On Hold;
+	3	| Ring In;
+	4	| Off Hook;
+	5	| Connected with Transfer;
+	6	| Digits After Dialing First Digit;
+	7	| Connected with Conference;
+	8	| Ring Out;
+	9	| Off Hook with Features;
+	10	| Remote In Use;
+
+// ID: 0x111
+void Skinny::CallStateMessage()
+{
+	while( g[20] > 0)
+	{
+		DLNG 40000000 1 90 c2 Call State:;
+		g[20] -= 4;
+		CST#		0 1 00 14 Skinny::CallState_Str;
+		DLNG 40000000 0 90 c2 Line Instance:;
+		g[20] -= 4;
+		DLNG 40000000 0 90 c2 Call Reference:;
+		g[20] -= 4;
+		if (g[20] != 0)
+		{
+			DLNG 40000000 0 90 c2 Privacy:;
+			g[20] -= 4;
+			if (g[20] != 0)
+			{
+				Skinny::Precedence();
+			}
+		}
+	}
+	TRTS;
+}
+
+str# Skinny::CallState_Str;
+	 1 | Off Hook;
+	 2 | On Hook;
+	 3 | Ring Out;
+	 4 | Ring In;
+	 5 | Connected;
+	 6 | Busy;
+	 7 | Congestion;
+	 8 | Hold;
+	 9 | Call Waiting;
+	10 | Call Transfer;
+	11 | Call Park;
+	12 | Proceed;
+	13 | Call Remote Multiline;
+	14 | Invalid Number;
+
+void Skinny::Precedence()
+{
+	DLNG 40000000 1 90 c2 Precedence Level:;
+	g[20] -= 4;
+	 CST#		0 1 00 14 Skinny::Precedence_Str;
+	DLNG 40000000 0 90 c2 Precedence Domain:;
+	g[20] -= 4;
+}
+
+str# Skinny::Precedence_Str;
+	0	| Flash Override;
+	1	| Flash;
+	2	| Immediate;
+	3	| Priority;
+	4	| Routine;
+	5	| Default;	
+
+// ID: 0x112
+void Skinny::DisplayPromptStatusMessage()
+{
+	DLNG 40000000 0 90 c2 Timeout Value:;
+	LABL		0 0 00 14 seconds;
+	l[1] = pb[0];
+	
+	if( l[1] == 0x80 )
+	{
+		//if the first byte is 0x80 then this is an index into a locale dictionary
+		INCR 1 0 0 0;	//the second byte is the tag (tag + 100 = dictionary index)
+		DBYT 0 0 90 c2 Phrase Dictionary Tag:;
+		INCR 1e 0 0 0;	//skip the rest of the 30 bytes in the string array
+	}
+	
+	if( l[1] < 0x80 )
+	{
+		CHR# 20 0 90 c2 Prompt Status String:;
+	}
+	
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x113
+void Skinny::ClearPromptStatusMessage()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x114
+void Skinny::DisplayNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 TimeOut Value:;
+	LABL		0 0 00 14 seconds;
+	CHR# 20 0 90 c2 Message:;
+}
+
+// ID: 0x115
+void Skinny::ClearNotifyMessage;
+	TRTS;
+
+// ID: 0x116
+void Skinny::ActivateCallPlaneMessage()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+}
+
+// ID: 0x117
+void Skinny::DeactivateCallPlaneMessage;
+	TRTS;
+
+// ID: 0x118
+void Skinny::UnregisterAckMessage()
+{
+	DLNG 40000000 1 90 c2 Unregister Status:;
+	 CST# 0 1 0 14 Skinny::UnregisterStatus_Str;
+}
+
+str# Skinny::UnregisterStatus_Str;
+	0	| Ok;
+	1	| Error;
+	2	| NAK;
+
+// ID: 0x119
+void Skinny::BackSpaceReqMessage()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x11a
+void Skinny::RegisterTokenAck;
+	TRTS;
+
+// ID: 0x11b
+void Skinny::RegisterTokenReject()
+{
+	DLNG 40000000 1 90 c2 WaitTimeBeforeNextReq:;
+}
+
+// ID = 0x11c
+void Skinny::StartMediaFailureDetection()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	DLNG 40000000 1 90 c2 Compression Type:;
+	 CST#		0 1 00 14 Skinny::Payload_Capability_Str;
+	Skinny::QualifierIn();
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x11d
+void Skinny::DialedNumberMessage()
+{
+	CHR# 18 0 90 c2 Called Party:;	//max length = 24
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID: 0x11e
+void Skinny::UserToDeviceDataMessage()
+{
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	CHR#		0 4 90 c2 Data:;
+}
+
+// ID: 0x11f
+void Skinny::FeatureStatMessage()
+{
+	DLNG 40000000 0 90 c2 Feature Index:;
+	DLNG 40000000 0 90 c2 Feature ID:;
+	CHR# 28 0 90 c2 FeatureTextLabel:;		// max length 40
+	DLNG 40000000 0 90 c2 Feature Status:;
+}
+
+// ID: 0x120
+void Skinny::DisplayPriNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 Timeout Value:;
+	DLNG 40000000 0 90 c2 Priority:;
+	CHR#	   20 0 90 c2 Notify:;
+}
+
+// ID: 0x121
+void Skinny::ClearPriorityNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 Priority:;
+}
+
+// ID = 0x122
+void Skinny::StartAnnouncementMessage()
+{
+	Skinny::AnnPlayList();
+	DLNG 40000000 1 90 c2 End Of Ann Ack:;
+	 CEQU		0 1 00 14 No Ann Ack Required;
+	 CEQU		1 1 00 14 Ann Ack Required;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	HLNG 40000000 0 90 c2 Matrix Conf Party ID:;
+	HLNG 40000000 0 90 c2 HearingConfPartyMask:;
+	//Bit0 = matrixConfPartyID[0], Bit1 = matrixConfPartiID[1]
+	DLNG 40000000 1 90 c2 Ann Play Mode:;
+	 CEQU		0 1 00 14 Ann Xml Config Mode;
+	 CEQU		1 1 00 14 Ann One Shot Mode;
+	 CEQU		2 1 00 14 Ann Continuous Mode;
+}
+
+void Skinny::AnnPlayList()
+{
+	DLNG 40000000 0 90 c2 Locale:;
+	DLNG 40000000 0 90 c2 Country:;
+	HLNG 40000000 1 90 c2 Device Tone:;
+	CST#		0 1 00 14 Skinny::DeviceTone_Str;
+}
+
+// ID = 0x123
+void Skinny::StopAnnouncementMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+}
+
+// ID = 0x124
+void Skinny::AnnouncementFinishMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 1 90 c2 PlayAnnStatus:;
+	 CEQU		0 1 00 14 Playtone OK;
+	 CEQU		1 1 00 14 Playtone Err;
+}
+
+// ID = 0x127
+void Skinny::NotifyDtmfToneMessage()
+{
+	HLNG 40000000 1 90 c2 Device Tone:;
+	 CST#		0 1 00 14 Skinny::DeviceTone_Str;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x128
+void Skinny::SendDtmfToneMessage()
+{
+	HLNG 40000000 1 90 c2 Device Tone:;
+	 CST#		0 1 00 14 Skinny::DeviceTone_Str;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x129
+void Skinny::SubscribeDtmfPayloadReq()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12a
+void Skinny::SubscribeDtmfPayloadRes()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12b
+void Skinny::SubscribeDtmfPayloadErr()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12c
+void Skinny::UnSubscribeDtmfPayloadReq()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12d
+void Skinny::UnSubscribeDtmfPayloadRes()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12e
+void Skinny::UnSubscribeDtmfPayloadErr()
+{
+	DLNG 40000000 0 90 c2 Payload Dtmf:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID = 0x12f
+void Skinny::ServiceURLStatMessage()
+{
+	DLNG 40000000 0 90 c2 ServiceURLIndex:;
+	CHR# 100 0 90 c2 Service URL:;		// max length 256
+	CHR# 28 0 90 c2 URL Display Name:;	// max length 40
+}
+
+// ID = 0x130
+void Skinny::CallSelectStatMessage()
+{
+	DLNG 40000000 1 90 c2 Call Select Stat:;
+	 CEQU		0 1 00 14 False;
+	 CEQU		1 1 00 14 True;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+}
+
+// ID = 0x131
+void Skinny::OpenMultiMediaChannelMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	DLNG 0 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	Skinny::StationRTPPayloadType();
+	DLNG 0 0 90 c2 IsConferenceCreator:;
+	Skinny::Capability();
+	Skinny::MediaEncryptionKeyInfo();
+	DLNG 40000000 0 90 c2 StreamPassThroughID:;
+	DLNG 40000000 0 90 c2 AssociatedStreamID:;
+}
+
+void Skinny::StationRTPPayloadType()
+{
+	DLNG 40000000 0 90 c2 Payload RFC Number:;
+	DLNG 40000000 0 90 c2 Payload Type:;
+}
+
+void Skinny::Capability()
+{
+	Skinny::AudioIncomingParameters();
+	Skinny::AudioOutgoingParameters();
+	Skinny::ChannelVideoParameters();
+	Skinny::ChannelDataParameters();
+}
+
+void Skinny::AudioIncomingParameters()
+{
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	Skinny::QualifierIn();
+}
+
+void Skinny::AudioOutgoingParameters()
+{
+	DLNG 40000000 0 90 c2 ms Packet Size:;
+	Skinny::QualifierOut();
+}
+
+void Skinny::ChannelVideoParameters()
+{
+	DLNG 40000000 0 90 c2 Bit Rate:;
+	DLNG 40000000 4 90 c2 PictureFormatCount:;
+	while (g[4] > 0)
+	{
+		Skinny::PictureFormatSupport();
+		g[4] -= 1;
+	}
+	DLNG 40000000 0 90 c2 ConfServiceNum:;
+}
+
+void Skinny::PictureFormatSupport()
+{
+	DLNG 40000000 0 90 c2 Format:;
+	DLNG 40000000 0 90 c2 MPI:;
+}
+
+void Skinny::ChannelDataParameters()
+{
+	DLNG 40000000 0 90 c2 ProtocolDependentData:;
+	DLNG 40000000 0 90 c2 Max Bit Rate:;
+}
+
+// ID = 0x132
+void Skinny::StartMultiMediaTransmission()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 1 90 c2 Payload Capability:;
+	 CST# 0 1  0 14 Skinny::Payload_Capability_Str;
+	IPLG 0 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	Skinny::StationRTPPayloadType();
+	// Media_AudioOutgoingParametersaudioParameters ???
+	DLNG 40000000 0 90 c2 DSCP Value:;
+	Skinny::MediaEncryptionKeyInfo();
+	DLNG 40000000 0 90 c2 StreamPassThroughID:;
+	DLNG 40000000 0 90 c2 AssociatedStreamID:;
+}
+
+// ID = 0x133
+void Skinny::StopMultiMediaTransmission()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	Skinny::PortHandling();
+}
+
+// ID = 0x134
+void Skinny::MiscellaneousCommandMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	// MiscCommanTypecommand;
+	Skinny::MiscCommand();
+}
+
+void Skinny::MiscCommand()
+{
+	DLNG 40000000 0 90 c2 None:;
+	Skinny::VideoFastUpdateGOB();
+	Skinny::VideoFastUpdateMB();
+	Skinny::PictureReference();
+	Skinny::LostPartialPicture();
+	Skinny::PictureReferenceValues();
+	DLNG 40000000 0 90 c2 Temp.SpatialTradeOff:;
+}
+
+void Skinny::VideoFastUpdateGOB()
+{
+	DLNG 40000000 0 90 c2 First GOB:;
+	DLNG 40000000 0 90 c2 Num of GOBs:;
+}
+
+void Skinny::VideoFastUpdateMB()
+{
+	DLNG 40000000 0 90 c2 First GOB:;
+	DLNG 40000000 0 90 c2 First MB:;
+	DLNG 40000000 0 90 c2 Num of MBs:;
+}
+
+void Skinny::PictureReference()
+{
+	DLNG 40000000 0 90 c2 Picture Number:;
+	DLNG 40000000 0 90 c2 LongTermPictureIndex:;
+}
+
+void Skinny::LostPartialPicture()
+{
+	Skinny::PictureReference();
+	DLNG 40000000 0 90 c2 First MB:;
+	DLNG 40000000 0 90 c2 Num of MBs:;
+}
+
+void Skinny::PictureReferenceValues()
+{
+	DLNG 40000000 4 90 c2 Picture Count:;
+	while (g[4] > 0)
+	{
+		Skinny::PictureReference();
+		g[4] -= 1;
+	}
+}
+
+// ID = 0x135
+void Skinny::FlowControlCommand()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Maximum Bit Rate:;
+}
+
+// ID = 0x136
+void Skinny::CloseMultiMediaReceiveChannel()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThruPartyID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	Skinny::PortHandling();
+}
+
+// ID = 0x137
+void Skinny::CreateConferenceReqMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Reserved Participants:;
+	Skinny::ResourceType();
+	DLNG 40000000 0 90 c2 App ID:;
+	CHR# 14 0 90 c2 App Conf ID:;			// max length 20
+	CHR# 18 0 90 c2 App Data:;				// max length 24
+	DLNG 40000000 4 90 c2 Data Length:;
+	CHR# 0 4 90 c2 PassThru Data:;
+}
+
+void Skinny::ResourceType()
+{
+	DLNG 40000000 1 90 c2 Resource Type:;
+	 CEQU		0 1 00 14 RT_Conference;
+	 CEQU		1 1 00 14 RT_IVR;
+}
+
+// ID = 0x138
+void Skinny::DeleteConferenceReq()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+}
+
+// ID = 0x139
+void Skinny::ModifyConferenceReq()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Reserved Participants:;
+	DLNG 40000000 0 90 c2 App ID:;
+	CHR# 20 0 90 c2 App Conf ID:;			// max length 32
+	CHR# 18 0 90 c2 App Data:;				// max length 24
+	DLNG 40000000 4 90 c2 Data Length:;
+	CHR# 0 4 90 c2 PassThru Data:;
+}
+
+// ID = 0x13a
+void Skinny::AddParticipantReqMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	HLNG 40000000 1 90 c2 Restrict Info Type:;
+	 CST#		0 1 00 14 Skinny::RestrictInformationType_Str;
+	CHR# 28 0 90 c2 Participant Name:;		// max length 40
+	CHR# 18 0 90 c2 Participant Number:;	// max length 24
+	CHR# 20 0 90 c2 Conference Name:;		// max length 32
+}
+
+// ID = 0x13b
+void Skinny::DropParticipantReqMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+}
+
+// ID = 0x13c
+void Skinny::AuditConferenceReqMessage;
+	TRTS;
+
+// ID = 0x13d
+void Skinny::AuditParticipantReqMessage()
+{
+	DLNG 40000000 1 90 c2 Conference ID:;
+}
+
+// ID = 0x13e
+void Skinny::ChangeParticipantReqMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	HLNG 40000000 1 90 c2 Restrict Info Type:;
+	 CST#		0 1 00 14 Skinny::RestrictInformationType_Str;
+	CHR# 28 0 90 c2 Participant Name:;		// max length 40
+	CHR# 18 0 90 c2 Participant Number:;	// max length 24
+	CHR# 20 0 90 c2 Conference Name:;		// max length 32
+}
+
+// ID: 0x13f
+void Skinny::UserToDeviceDataVersion1()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 4 90 c2 Data Length:;
+	Skinny::SequenceFlag();
+	DLNG 40000000 0 90 c2 Display Priority:;
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Application ID:;
+	DLNG 40000000 0 90 c2 Routing ID:;
+	CHR#		0 4 90 c2 Data:;
+}
+
+// ID: 0x140
+void Skinny::VideoDisplayCommandMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Layout ID:;
+}
+
+// ID: 0x141
+void Skinny::FlowControlNotifyMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Maximum Bit Rate:;
+}
+
+// ID: 0x142
+void Skinny::ConfigStatV2Message()
+{
+	Skinny::StationIdentifier();
+	DLNG 40000000 0 90 c2 Number of Lines;
+	DLNG 40000000 0 90 c2 Num of Speed Dials:;
+	CHR# 28 0 90 c2 Server Name:;		// max length 121
+	CHR# 28 0 90 c2 User Name:;			// max length 121
+}
+
+// ID: 0x143
+void Skinny::DisplayNotifyV2Message()
+{
+	DLNG 40000000 0 90 c2 Time Out Value:;
+	CHR# 61 0 90 c2 Notify:;			// max length 97
+}
+
+// ID: 0x144
+void Skinny::DisplayPriNotifyV2()
+{
+	DLNG 40000000 0 90 c2 Time Out Value:;
+	DLNG 40000000 0 90 c2 Priority:;
+	CHR# 61 0 90 c2 Notify:;			// max length 97
+}
+
+// ID: 0x145
+void Skinny::DisplayPromptStatusV2()
+{
+	DLNG 40000000 0 90 c2 Time Out Value:;
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	l[1] = g[2];	//g[2] holds the number of bytes in the message
+	l[1] -= 0x10;	//we have read 16 bytes so far (4 4-byte fields)
+	l[2] = pb[0];
+	
+	if( l[2] == 0x80 )
+	{
+		//if the first byte is 0x80 then this is an index into a locale dictionary
+		INCR 1 0 0 0;			//the second byte is the tag (tag + 100 = dictionary index)
+		DBYT 0 0 90 c2 Phrase Dictionary Tag:;
+		l[1] -= 0x02;			//we have read 2 more bytes
+		INCR( 0, l[1], 0, 0);	//skip the rest of the unread bytes in the string array
+	}
+	
+	if( l[2] < 0x80 )
+	{
+		CHR#( 0, l[1], 90, c2, Prompt Status:);			// the rest of the packet data should be a string
+	}
+}
+
+// ID: 0x146
+void Skinny::FeatureStatV2Message()
+{
+	DLNG 40000000 0 90 c2 Feature Index:;
+	HLNG 40000000 0 90 c2 Feature ID:;
+	DLNG 40000000 0 90 c2 Feature Status:;
+	CHR# 79 0 90 c2 Feature Text Label:;		// max length 121
+}
+
+// ID: 0x147
+void Skinny::LineStatV2Message()
+{
+	DLNG 40000000 0 90 c2 Line Number:;
+	DLNG 40000000 0 90 c2 Line Display Options:;
+	Skinny::Char();
+	CHR# 0 3 90 c2 Line Dir Number:;					// max length 25
+	Skinny::Char();
+	CHR# 0 3 90 c2 Line Display Name:;					// max length 121
+	CHR# 79 0 90 c2 Line Text Label:;					// max length 121
+}
+
+// ID: 0x148
+void Skinny::ServiceURLStatV2Message()
+{
+	DLNG 40000000 0 90 c2 Service URL Index:;
+	CHR# 100 0 90 c2 Service URL:;						// max length 256
+	CHR# 79 0 90 c2 ServiceURLDisplayName:;				// max length 121
+}
+
+// ID: 0x149
+void Skinny::SpeedDialStatV2Message()
+{
+	DLNG 40000000 0 90 c2 Speed Dial Number:;
+	CHR# 19 0 90 c2 SpeedDialDirNumber:;				// max length 25
+	CHR# 79 0 90 c2 SpeedDialDisplayName:;				// max length 121
+}
+
+// ID: 0x14a
+void Skinny::CallInfoV2Message()
+{
+	DLNG 40000000 0 90 c2 Line Instance:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 1 90 c2 Call Type:;
+	 CEQU 1 1 0 14 InBound Call;
+	 CEQU 2 1 0 14 OutBound Call;
+	 CEQU 3 1 0 14 Forward Call;
+	DLNG 40000000 0 90 c2 Orig Cdpn Redirect Rsn:;
+	DLNG 40000000 0 90 c2 Last Redirecting Rsn:;
+	DLNG 40000000 0 90 c2 Call Instance:;
+	DLNG 40000000 1 90 c2 Call Security Status:;
+	 CST#		0 1 00 14 Skinny::CallSecurityStatusType_Str;
+	HLNG 40000000 1 90 c2 Restrict Info Type:;
+	 CST#		0 1 00 14 Skinny::RestrictInformationType_Str;
+	LABL 0 0 0 c9 Party Number;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 Calling Party:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 Called Party:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 Orig Called Party:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 LastRedirectParty:;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Voice Mailbox;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 CgpnVoiceMailbox:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 CdpnVoiceMailbox:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 OrigCdpnVoiceMailbox:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 RedirectVoiceMailbox:;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Party Name;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 Calling Party Name:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 Called Party Name:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 OrigCalled Party Name:;
+	Skinny::Char();
+	CHR#	   0 3 90 c2 LastRedirectPartyName:;
+	LABL 0 0 0 c8;
+}
+
+// ID: 0x14b
+void Skinny::PortReqMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	Skinny::MediaTransportType();
+}
+
+void Skinny::MediaTransportType()
+{
+	DLNG 40000000 1 90 c2 TransportType:;
+	 CEQU		1 1 00 14 RTP;
+	 CEQU		2 1 00 14 UDP;
+	 CEQU		3 1 00 14 TCP;
+}
+
+// ID: 0x14c
+void Skinny::PortCloseMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+}
+
+// ID: 0x14d
+void Skinny::QoSListenMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 Reservation Style:;
+	 CST#		0 1 00 14 Skinny::RSVPReservation_Style_Str;
+	DLNG 40000000 1 90 c2 Max Retry Number:;
+	 CEQU		0 1 00 14 No Retries;
+	DLNG 40000000 0 90 c2 Retry Timer:;
+	DLNG 40000000 0 90 c2 Preemption Priority:;
+	DLNG 40000000 0 90 c2 Defending Priority:;
+	DLNG 40000000 1 90 c2 Compression Type:;
+	 CST#		0 1 00 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 1 90 c2 Average Bit Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	DLNG 40000000 1 90 c2 Burst Size:;
+	LABL		0 0 00 14 bytes;
+	DLNG 40000000 1 90 c2 Peak Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	Skinny::RSVPApplicationID();
+}
+
+str# Skinny::RSVPReservation_Style_Str;
+	1	| Fixed-Filter (FF);
+	2	| Shared-Explicit (SE);
+	3	| Wildcard-Filter (WF);
+
+void Skinny::RSVPApplicationID()
+{
+	CHR# 10 0 90 c2 Vendor ID:;
+	CHR# 20 0 90 c2 Version:;
+	CHR# 20 0 90 c2 App Name:;
+	CHR# 20 0 90 c2 SubApp ID:;
+}
+
+// ID: 0x14e
+void Skinny::QoSPathMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 Reservation Style:;
+	 CST#		0 1 00 14 Skinny::RSVPReservation_Style_Str;
+	DLNG 40000000 1 90 c2 Max Retry Num:;
+	 CEQU		0 1 00 14 No Retries;
+	DLNG 40000000 0 90 c2 Retry Timer:;
+	DLNG 40000000 0 90 c2 Preemption Priority:;
+	DLNG 40000000 0 90 c2 Defending Priority:;
+	DLNG 40000000 1 90 c2 Compression Type:;
+	 CST#		0 1 00 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 1 90 c2 Average Bit Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	DLNG 40000000 1 90 c2 Burst Size:;
+	LABL		0 0 00 14 bytes;
+	DLNG 40000000 1 90 c2 Peak Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	DLNG 40000000 1 90 c2 Peak Rate:;
+	Skinny::RSVPApplicationID();
+}
+
+// ID: 0x14f
+void Skinny::QoSTearDownMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG		0 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 RSVP Direction:;
+	 CEQU		1 1 00 14 Send;
+	 CEQU		2 1 00 14 Receive;
+	 CEQU		3 1 00 14 Send and Receive;
+}
+
+// ID: 0x150
+void Skinny::UpdateDSCPMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 PassThru Party ID:;
+	IPLG 0 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 DSCP Value:;
+	 CEQU		88 1 00 14 Audio Only - (Expedite Forwarding);
+	 CEQU		b8 1 00 14 Video Calls - (Assured Forwarding));
+}
+
+// ID: 0x151
+void Skinny::QoSModifyMessage()
+{
+	DLNG 40000000 0 90 c2 Conference ID:;
+	DLNG 40000000 0 90 c2 Call Reference:;
+	DLNG 40000000 0 90 c2 Pass Thru Party ID:;
+	IPLG 40000000 0 90 c2 Remote IP Address:;
+	DLNG 40000000 0 90 c2 Remote Port Num:;
+	DLNG 40000000 1 90 c2 RSVP Direction:;
+	 CEQU		1 1 00 14 Send;
+	 CEQU		2 1 00 14 Receive;
+	DLNG 40000000 1 90 c2 Compression Type:;
+	 CST#		0 1 00 14 Skinny::Payload_Capability_Str;
+	DLNG 40000000 0 90 c2 Average Bit Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	DLNG 40000000 0 90 c2 Burst Size:;
+	LABL		0 0 00 14 bytes;
+	DLNG 40000000 0 90 c2 Peak Rate:;
+	LABL		0 0 00 14 kbits/sec;
+	DLNG 40000000 0 90 c2 Peak Rate:;
+	Skinny::RSVPApplicationID();
+}
+
+// ID: 0x152
+void Skinny::SubscriptionStatMessage()
+{
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 1 90 c2 Feature ID:;
+	 CEQU		1 1 00 14 SfBLF;
+	DLNG 40000000 0 90 c2 Timer:;
+	DLNG 40000000 1 90 c2 SubscribeCause:;
+	 CST#		0 1 00 14 Skinny::StationSubscribeCause_Str;
+}
+
+str# Skinny::StationSubscribeCause_Str;
+	0	| Ok;
+	1	| Route Fail;
+	2	| Auth Fail;
+	3	| Timeout;
+	4	| Trunk Term;
+	5	| Trunk Forbidden;
+	6	| Throttle;
+
+// ID: 0x153
+void Skinny::NotificationMessage()
+{
+	DLNG 40000000 0 90 c2 Transaction ID:;
+	DLNG 40000000 1 90 c2 Feature ID:;
+	 CEQU		1 1 00 14 SfBLF;
+	DLNG 40000000 0 90 c2 Status:;
+	CHR# 61 0 90 c2 Text:;					// max length 97
+}
+
+// Skinny Client Control Protocol - SubFunctions
+str# Skinny::MessageTypesList;
+	0x0000 | Keep Alive Message;
+	0x0001 | Register Message;
+	0x0002 | IP Port Message;
+	0x0003 | Keypad Button Message;
+	0x0004 | Enbloc Call Message;
+	0x0005 | Stimulus Message;
+	0x0006 | Off Hook Message;
+	0x0007 | On Hook Message;
+	0x0008 | Hook Flash Message;
+	0x0009 | Forward Stat Req Message;
+	0x000a | Speed Dial Stat Req Message;
+	0x000b | Line Stat Req Message;
+	0x000c | Config Stat Req Message;
+	0x000d | Time Date Req Message;
+	0x000e | Button Template Req Message;
+	0x000f | Version Req Message;
+	0x0010 | Capabilities Res Message;
+	0x0011 | Media Port List Message;
+	0x0012 | Server Req Message;
+	0x0020 | Alarm Message;
+	0x0021 | Multicast Media Reception Ack;
+	0x0022 | Open Receive Channel Ack;
+	0x0023 | Connection Statistics Response;
+	0x0024 | Off Hook With Calling Party Number;
+	0x0025 | Soft Key Set Req Message;
+	0x0026 | Soft Key Event Message;
+	0x0027 | Unregister Message;
+	0x0028 | Soft Key Template Req Message;
+	0x0029 | Register Token Req;
+	0x002a | Media Transmission Failure;
+	0x002b | Headset Status Message;
+	0x002c | Media Resource Notification;
+	0x002d | Register Available Lines Message;
+	0x002e | Device To User Data Message;
+	0x002f | Device To User Data Response Message;
+	0x0030 | Update Capabilities Message;
+	0x0031 | Open Multi Media Receive Channel Ack Message;
+	0x0032 | Clear Conference Message;
+	0x0033 | Service URL Stat Req Message;
+	0x0034 | Feature Stat Req Message;
+	0x0035 | Create Conference Res Message;
+	0x0036 | Delete Conference Res Message;
+	0x0037 | Modify Conference Res Message;
+	0x0038 | Add Participant Res Message;
+	0x0039 | Audit Conference Res Message;
+	0x0040 | Audit Participant Res Message;
+	0x0041 | Device To User Data Version 1 Message;
+	0x0042 | Device To User Data Response Version 1 Message;
+	0x0043 | Update Capabilities V2;
+	0x0044 | Update Capabilities V3;
+	0x0045 | Port Res Message;
+	0x0046 | QoS Resv Notify Message;
+	0x0047 | QoS Error Notify Message;
+	0x0048 | Subscription Stat Req Message;
+	0x0049 | Media Path Event Message;
+	0x004A | Media Path Capability Message;
+	0x004B | Call Reject Message;
+	0x0081 | Register Ack Message;
+	0x0082 | Start Tone Message;
+	0x0083 | Stop Tone Message;
+	0x0085 | Set Ringer Message;
+	0x0086 | Set Lamp Message;
+	0x0087 | Set Hook Flash Detect Message;
+	0x0088 | Set Speaker Mode Message;
+	0x0089 | Set Microphone Mode Message;
+	0x008a | Start Media Transmission;
+	0x008b | Stop Media Transmission;
+	0x008c | Start Media Reception;
+	0x008d | Stop Media Reception;
+	0x008e | Reserved;
+	0x008f | Call Info Message;
+	0x0090 | Forward Status Message;
+	0x0091 | Speed Dial Status Message;
+	0x0092 | Line Status Message;
+	0x0093 | Config Status Message;
+	0x0094 | Define Time Date Message;
+	0x0095 | Start Session Transmission;
+	0x0096 | Stop Session Transmission;
+	0x0097 | Button Template Message;
+	0x0098 | Version Message;
+	0x0099 | Display Text Message;
+	0x009a | Clear Display;
+	0x009b | Capabilities Req Message;
+	0x009c | Enunciator Command Message;
+	0x009d | Register Reject Message;
+	0x009e | Server Respond Message;
+	0x009f | Reset Message;
+	0x0100 | Keep Alive Ack Message;
+	0x0101 | Start Multicast Media Reception;
+	0x0102 | Start Multicast Media Transmission;
+	0x0103 | Stop Multicast Media Reception;
+	0x0104 | Stop Multicast Media Transmission;
+	0x0105 | Open Receive Channel;
+	0x0106 | Close Receive Channel;
+	0x0107 | Connection Statistics Req;
+	0x0108 | Soft Key Template Res Message;
+	0x0109 | Soft Key Set Res Message;
+	0x0110 | Select Soft Keys Message;
+	0x0111 | Call State Message;
+	0x0112 | Display Prompt Status Message;
+	0x0113 | Clear Prompt Status Message;
+	0x0114 | Display Notify Message;
+	0x0115 | Clear Notify Message;
+	0x0116 | Activate Call Plane Message;
+	0x0117 | Deactivate Call Plane Message;
+	0x0118 | Unregister Ack Message;
+	0x0119 | Back Space Req Message;
+	0x011a | Register Token Ack;
+	0x011b | Register Token Reject;
+	0x011c | Start Media Failure Detection;
+	0x011d | Dialed Number Message;
+	0x011e | User To Device Data Message;
+	0x011f | Feature Stat Message ID;
+	0x0120 | Display Priority Notify Message;
+	0x0121 | Clear Priority Notify Message;
+	0x0122 | Start Announcement Message;
+	0x0123 | Stop Announcement Message;
+	0x0124 | Announcement Finish Message;
+	0x0125 | Reserved for Record/Monitor;
+	0x0126 | Reserved for Record/Monitor;
+	0x0127 | Notify Dtmf Tone Message;
+	0x0128 | Send Dtmf Tone Message;
+	0x0129 | Subscribe Dtmf Payload Req Message;
+	0x012a | Subscribe Dtmf Payload Res Message;
+	0x012b | Subscribe Dtmf Payload Err Message;
+	0x012c | UnSubscribe Dtmf Payload Req Message;
+	0x012d | UnSubscribe Dtmf Payload Res Message;
+	0x012e | UnSubscribe Dtmf Payload Err Message;
+	0x012f | Service URL Stat Message;
+	0x0130 | Call Select Stat Message;
+	0x0131 | Open Multi Media Channel Message;
+	0x0132 | Start Multi Media Transmission;
+	0x0133 | Stop Multi Media Transmission;
+	0x0134 | Miscellaneous Command Message;
+	0x0135 | Flow Control Command Message;
+	0x0136 | Close Multi Media Receive Channel;
+	0x0137 | Create Conference Req Message;
+	0x0138 | Delete Conference Req Message;
+	0x0139 | Modify Conference Req Message;
+	0x013a | Add Participant Req Message;
+	0x013b | Drop Participant Req Message;
+	0x013c | Audit Conference Req Message;
+	0x013d | Audit Participant Req Message;
+	0x013e | Change Participant Req Message;
+	0x013f | User To Device Data Version 1;
+	0x0140 | Video Display Command Message;
+	0x0141 | Flow Control Notify Message;
+	0x0142 | Config Stat V2 Message;
+	0x0143 | Display Notify V2 Message;
+	0x0144 | Display Pri Notify V2;
+	0x0145 | Display Prompt Status V2;
+	0x0146 | Feature Stat V2 Message;
+	0x0147 | Line Stat V2 Message;
+	0x0148 | Service URL Stat V2 Message;
+	0x0149 | Speed Dial Stat V2 Message;
+	0x014a | Call Info V2 Message;
+	0x014b | Port Req Message;
+	0x014c | Port Close Message;
+	0x014d | QoS Listen Message;
+	0x014e | QoS Path Message;
+	0x014f | QoS Teardown Message;
+	0x0150 | Update DSCP Message;
+	0x0151 | QoS Modify Message;
+	0x0152 | Subscription Stat Message;
+	0x0153 | Notification Message;
+
+str# Skinny::MessageTypesFunc;
+	0x0000 | Skinny::KeepAliveMessage;
+	0x0001 | Skinny::RegisterMessage;
+	0x0002 | Skinny::IpPortMessage;
+	0x0003 | Skinny::KeypadButtonMessage;
+	0x0004 | Skinny::EnblocCallMessage;
+	0x0005 | Skinny::StimulusMessage;
+	0x0006 | Skinny::OffHookMessage;
+	0x0007 | Skinny::OnHookMessage;
+	0x0008 | Skinny::HookFlashMessage;
+	0x0009 | Skinny::ForwardStatReqMessage;
+	0x000a | Skinny::SpeedDialStatReqMessage;
+	0x000b | Skinny::LineStatReqMessage;
+	0x000c | Skinny::ConfigStatReqMessage;
+	0x000d | Skinny::TimeDateReqMessage;
+	0x000e | Skinny::ButtonTemplateReqMessage;
+	0x000f | Skinny::VersionReqMessage;
+	0x0010 | Skinny::CapabilitiesResMessage;
+	0x0011 | Skinny::MediaPortListMessage;
+	0x0012 | Skinny::ServerReqMessage;
+	0x0020 | Skinny::AlarmMessage;
+	0x0021 | Skinny::MulticastMediaReceptionAck;
+	0x0022 | Skinny::OpenReceiveChannelAck;
+	0x0023 | Skinny::ConnectionStatisticsRes;
+	0x0024 | Skinny::OffHookWithCgpnMessage;
+	0x0025 | Skinny::SoftKeySetReqMessage;
+	0x0026 | Skinny::SoftKeyEventMessage;
+	0x0027 | Skinny::UnregisterMessage;
+	0x0028 | Skinny::SoftKeyTemplateReqMessage;
+	0x0029 | Skinny::RegisterTokenReq;
+	0x002a | Skinny::MediaTransmissionFailure;
+	0x002b | Skinny::HeadsetStatusMessage;
+	0x002c | Skinny::MediaResourceNotification;
+	0x002d | Skinny::RegisterAvailableLinesMessage;
+	0x002e | Skinny::DeviceToUserData;
+	0x002f | Skinny::DeviceToUserDataResponse;
+	0x0030 | Skinny::UpdateCapabilities;
+	0x0031 | Skinny::OpenMultiMediaReceiveChannelAck;
+	0x0032 | Skinny::ClearConferenceMessage;
+	0x0033 | Skinny::ServiceURLStatReqMessage;
+	0x0034 | Skinny::FeatureStatReqMessage;
+	0x0035 | Skinny::CreateConferenceResMessage;
+	0x0036 | Skinny::DeleteConferenceRes;
+	0x0037 | Skinny::ModifyConferenceRes;
+	0x0038 | Skinny::AddParticipantRes;
+	0x0039 | Skinny::AuditConferenceRes;
+	0x0040 | Skinny::AuditParticipantResMessage;
+	0x0041 | Skinny::DeviceToUserDataVersion1;
+	0x0042 | Skinny::DeviceToUserDataResponseVersion1;
+	0x0043 | Skinny::UpdateCapabilitiesV2;
+	0x0044 | Skinny::UpdateCapabilitiesV3;
+	0x0045 | Skinny::PortResMessage;
+	0x0046 | Skinny::QoSResvNotifyMessage;
+	0x0047 | Skinny::QoSErrorNotifyMessage;
+	0x0048 | Skinny::SubscriptionStatReqMessage;
+	0x0049 | Skinny::MediaPathEventMessage;
+	0x004A | Skinny::MediaPathCapabilityMessage;
+	0x004B | Skinny::CallRejectMessage;
+	0x0081 | Skinny::RegisterAckMessage;
+	0x0082 | Skinny::StartToneMessage;
+	0x0083 | Skinny::StopToneMessage;
+	0x0085 | Skinny::SetRingerMessage;
+	0x0086 | Skinny::SetLampMessage;
+	0x0087 | Skinny::SetHkFDetectMessage;
+	0x0088 | Skinny::SetSpeakerModeMessage;
+	0x0089 | Skinny::SetMicroModeMessage;
+	0x008a | Skinny::StartMediaTransmission;
+	0x008b | Skinny::StopMediaTransmission;
+	0x008c | Skinny::StartMediaReception;
+	0x008d | Skinny::StopMediaReception;
+	0x008e | ;
+	0x008f | Skinny::CallInfoMessage;
+	0x0090 | Skinny::ForwardStatMessage;
+	0x0091 | Skinny::SpeedDialStatMessage;
+	0x0092 | Skinny::LineStatMessage;
+	0x0093 | Skinny::ConfigStatMessage;
+	0x0094 | Skinny::DefineTimeDate;
+	0x0095 | Skinny::StartSessionTransmission;
+	0x0096 | Skinny::StopSessionTransmission;
+	0x0097 | Skinny::ButtonTemplateMessage;
+	0x0098 | Skinny::VersionMessage;
+	0x0099 | Skinny::DisplayTextMessage;
+	0x009a | Skinny::ClearDisplay;
+	0x009b | Skinny::CapabilitiesReqMessage;
+	0x009c | Skinny::EnunciatorCommandMessage;
+	0x009d | Skinny::RegisterRejectMessage;
+	0x009e | Skinny::ServerResMessage;
+	0x009f | Skinny::Reset;
+	0x0100 | Skinny::KeepAliveAckMessage;
+	0x0101 | Skinny::StartMulticastMediaReception;
+	0x0102 | Skinny::StartMulticastMediaTransmission;
+	0x0103 | Skinny::StopMulticastMediaReception;
+	0x0104 | Skinny::StopMulticastMediaTransmission;
+	0x0105 | Skinny::OpenReceiveChannel;
+	0x0106 | Skinny::CloseReceiveChannel;
+	0x0107 | Skinny::ConnectionStatisticsReq;
+	0x0108 | Skinny::SoftKeyTemplateResMessage;
+	0x0109 | Skinny::SoftKeySetResMessage;
+	0x0110 | Skinny::SelectSoftKeysMessage;
+	0x0111 | Skinny::CallStateMessage;
+	0x0112 | Skinny::DisplayPromptStatusMessage;
+	0x0113 | Skinny::ClearPromptStatusMessage;
+	0x0114 | Skinny::DisplayNotifyMessage;
+	0x0115 | Skinny::ClearNotifyMessage;
+	0x0116 | Skinny::ActivateCallPlaneMessage;
+	0x0117 | Skinny::DeactivateCallPlaneMessage;
+	0x0118 | Skinny::UnregisterAckMessage;
+	0x0119 | Skinny::BackSpaceReqMessage;
+	0x011a | Skinny::RegisterTokenAck;
+	0x011b | Skinny::RegisterTokenReject;
+	0x011c | Skinny::StartMediaFailureDetection;
+	0x011d | Skinny::DialedNumberMessage;
+	0x011e | Skinny::UserToDeviceDataMessage;
+	0x011f | Skinny::FeatureStatMessage;
+	0x0120 | Skinny::DisplayPriNotifyMessage;
+	0x0121 | Skinny::ClearPriorityNotifyMessage;
+	0x0122 | Skinny::StartAnnouncementMessage;
+	0x0123 | Skinny::StopAnnouncementMessage;
+	0x0124 | Skinny::AnnouncementFinishMessage;
+	0x0125 | ;
+	0x0126 | ;
+	0x0127 | Skinny::NotifyDtmfToneMessage;
+	0x0128 | Skinny::SendDtmfToneMessage;
+	0x0129 | Skinny::SubscribeDtmfPayloadReq;
+	0x012a | Skinny::SubscribeDtmfPayloadRes;
+	0x012b | Skinny::SubscribeDtmfPayloadErr;
+	0x012c | Skinny::UnSubscribeDtmfPayloadReq;
+	0x012d | Skinny::UnSubscribeDtmfPayloadRes;
+	0x012e | Skinny::UnSubscribeDtmfPayloadErr;
+	0x012f | Skinny::ServiceURLStatMessage;
+	0x0130 | Skinny::CallSelectStatMessage;
+	0x0131 | Skinny::OpenMultiMediaChannelMessage;
+	0x0132 | Skinny::StartMultiMediaTransmission;
+	0x0133 | Skinny::StopMultiMediaTransmission;
+	0x0134 | Skinny::MiscellaneousCommandMessage;
+	0x0135 | Skinny::FlowControlCommand;
+	0x0136 | Skinny::CloseMultiMediaReceiveChannel;
+	0x0137 | Skinny::CreateConferenceReqMessage;
+	0x0138 | Skinny::DeleteConferenceReq;
+	0x0139 | Skinny::ModifyConferenceReq;
+	0x013a | Skinny::AddParticipantReqMessage;
+	0x013b | Skinny::DropParticipantReqMessage;
+	0x013c | Skinny::AuditConferenceReqMessage;
+	0x013d | Skinny::AuditParticipantReqMessage;
+	0x013e | Skinny::ChangeParticipantReqMessage;
+	0x013f | Skinny::UserToDeviceDataVersion1;
+	0x0140 | Skinny::VideoDisplayCommandMessage;
+	0x0141 | Skinny::FlowControlNotifyMessage;
+	0x0142 | Skinny::ConfigStatV2Message;
+	0x0143 | Skinny::DisplayNotifyV2Message;
+	0x0144 | Skinny::DisplayPriNotifyV2;
+	0x0145 | Skinny::DisplayPromptStatusV2;
+	0x0146 | Skinny::FeatureStatV2Message;
+	0x0147 | Skinny::LineStatV2Message;
+	0x0148 | Skinny::ServiceURLStatV2Message;
+	0x0149 | Skinny::SpeedDialStatV2Message;
+	0x014a | Skinny::CallInfoV2Message;
+	0x014b | Skinny::PortReqMessage;
+	0x014c | Skinny::PortCloseMessage;
+	0x014d | Skinny::QoSListenMessage;
+	0x014e | Skinny::QoSPathMessage;
+	0x014f | Skinny::QoSTearDownMessage;
+	0x0150 | Skinny::UpdateDSCPMessage;
+	0x0151 | Skinny::QoSModifyMessage;
+	0x0152 | Skinny::SubscriptionStatMessage;
+	0x0153 | Skinny::NotificationMessage;
+
+void Skinny::H264VideoCapability()
+{
+	DLNG 40000000 0 90 c2 Profile:;
+	DLNG 40000000 0 90 c2 Level:;
+	DLNG 40000000 0 90 c2 Custom Max MBPS:;
+	DLNG 40000000 0 90 c2 Custom Max FS:;
+	DLNG 40000000 0 90 c2 Custom Max DPB:;
+	DLNG 40000000 0 90 c2 CustomMaxBRandCPB:;
+}
+
+void Skinny::Char()
+{
+	MOVE 0 3;
+	GSTR 20000000  3;
+	g[3] += 1;
+}
+

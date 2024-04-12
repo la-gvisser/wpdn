@@ -1,0 +1,290 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <!-- After this page loads, the title of the dialog box is set to  -->
+    <!-- the title of the web page. -->
+    <title>EmailCaptureOE</title>
+    <script type="text/javascript">
+      function xmlGetPreamble(xml) {
+        var begin = xml.indexOf('<?');
+        if (begin == -1) return '';
+
+        var end = xml.indexOf('?>', (begin + 2));
+        if (end == -1) return '';
+
+        return xml.substring(begin, (end + 2));
+      }
+
+      function xmlGetTag(xml) {
+        var begin = xml.indexOf('<');
+        if (begin == -1) return '';
+        begin++;
+
+        var end = xml.indexOf('>', begin);
+        if (end == -1) return '';
+
+        var space = xml.indexOf(' ', begin);
+        if (space > 0 && space < end) end = space - 1;
+
+        return xml.substring(begin, end);
+      }
+
+      function xmlTagName(xml) {
+        var end = xml.indexOf(' ');
+        if (end == -1) {
+          end = xml.length;
+        }
+
+        return xml.substring(0, end);
+      }
+
+      function xmlTagAttribute(xml, attrib) {
+        var begin = xml.indexOf(' ');
+        if (begin == -1) return '';
+        begin++;
+
+        var end = xml.indexOf('>');
+        if (end < 0) return '';
+
+        while (begin < end) {
+          var sep = xml.indexOf('=', begin)
+          if (sep == -1) return '';
+
+          var token = xml.substring(begin, sep);
+          var next = xml.indexOf('"', sep + 2);
+          if (next == -1) return '';
+          if (token == attrib) {
+            // Don't include the double-quotes.
+            return xml.substring(sep + 2, next);
+          }
+          begin = next + 2;
+        }
+        return '';
+      }
+
+      function xmlGetValue(xml, tag, opt) {
+        // opt is used to iterate through a list of tags with the same name.
+        // var opt = {'offset' : 0}
+        // var value1 = xmlGetValue(xml, 'item', opt)
+        // var value2 = xmlGetValue(xml, 'item', opt)
+        var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+        var begin = xml.indexOf(tag, offset);
+        if (begin == -1) return '';
+        begin++;
+
+        var begin = xml.indexOf('>', begin);
+        if (begin == -1) return '';
+        begin++;
+
+        var tagEnd = '</' + tag;
+        end = xml.indexOf(tagEnd, begin);
+        if (end == -1) return '';
+
+        if (typeof opt != 'undefined') opt['offset'] = xml.indexOf('>', end);
+        return xml.substring(begin, end);
+      }
+
+      function xmlGetNode(xml, tag, opt) {
+        var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+        var begin = xml.indexOf('<', offset);
+        if (begin == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+
+        var end = xml.indexOf('>', (begin + 1));
+        if (end == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+
+        var tagEnd = '</' + tag + '>';
+        end = xml.indexOf(tagEnd, (end + 1));
+        if (end == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+        end += tagEnd.length;
+
+        if (typeof opt != 'undefined') opt['offset'] = end;
+        return xml.substring(begin, end);
+      }
+    </script>
+
+    <script type="text/javascript">
+      // Called after this page has been loaded.
+      // Return the desired width and height in pixels as decimal values.
+      // Remove this function to use the entire tab window.
+      function GetDisplayProperties() {
+        var props;
+        props = "600 650";
+
+        return props;
+      }
+
+      // Called when this web page requested to send a message.
+      // Must be XML.
+      // Return the message as XML text.
+      function GetMessage() {
+        var oForm = document.forms['tab_form'];
+        var msg;
+        msg =
+          '<Tab>' +
+            '<Message>' +
+              oForm.elements["msg_message"].value +
+            '</Message>' +
+          '</Tab>';
+
+        return msg;
+      }
+
+      // Called with the plugin's response to the message.
+      // The response is Xml.
+      // If the plugin was not created with the OmniEngine Plugin Wizard
+      //   note that the response from ProcessPluginMessage() must
+      //   structured:
+      //     unsigned long long  bytecountTextData;    // 64-bit
+      //     unsigned long long  bytecountBinaryData;  // 64-bit
+      //     char                ayText[bytecountTextData];
+      //     unsigned char       ayBinary[bytecoutnBinaryData];
+      function PutResponse(xml) {
+        // Root node: Tag
+        var tagRoot = xmlGetTag(xml);
+        var nameRoot = xmlTagName(tagRoot);
+        var valRoot = xmlGetValue(xml,nameRoot);
+
+        // Message node: Message
+        var tagMessage = xmlGetTag(valRoot);
+        var nameMessage = xmlTagName(tagMessage);
+        var valMessage = xmlGetValue(valRoot,nameMessage);
+
+        var oForm = document.forms['tab_form'];
+        oForm.elements["msg_response"].value = valMessage;
+      }
+    </script>
+
+    <script type="text/javascript">
+      // Called when user clicks Browse button: app:browse
+      // Return unsigned integer with flags:
+      //   0x0002 : Hide the 'Show Hidden' control.
+      //   0x0004 : Initially show hidden files.
+      //   0x0008 : Show the files pane. User must select a file.
+      function GetRemoteBrowserFlags() {
+        // If the Path has a file name, then set the show files checkbox.
+        var oForm = document.forms['browse_form'];
+
+        var flags = 0;
+        if ( oForm.elements["hidehiddenctrl"].checked ) {
+          flags = flags | 0x02;
+        }
+        if ( oForm.elements["showhiddenfiles"].checked ) {
+          flags = flags | 0x04;
+        }
+        if ( oForm.elements["showfiles"].checked ) {
+          flags = flags | 0x08;
+        }
+        flags = flags | 0x10;
+
+        return flags;
+      }
+
+      // Called when users clicks Ok to the Remote File Browser.
+      // inPath is a fully qualified file name.
+      function PutRemoteBrowserPath(inPath) {
+        var oForm = document.forms['browse_form'];
+        oForm.elements["path"].value = inPath;
+      }
+
+      // Called when user clicks Get File button: app:getremote
+      //                 or the Send File button: app:sendlocal
+      // return the fully qualified file name.
+      function GetRemoteBrowserPath() {
+        var oForm = document.forms['browse_form'];
+
+        var path;
+        path = oForm.elements["path"].value;
+
+        return path;
+      }
+
+      // Called when user clicks Send File button: app:sendlocal
+      // return the file contents as a Unicode String.
+      function GetFileContent() {
+        var oForm = document.forms['browse_form'];
+
+        var filetext;
+        filetext = oForm.elements["filetext"].value;
+
+        var content;
+        if (document.getElementById('pcfile').checked) {
+          content = filetext.replace(/\n/g, '\r\n');
+        }
+        else {
+          content = filetext;
+        }
+
+        return content;
+      }
+
+      // Called after file transfer has been completed.
+      //     inFlags : 1 - file has been retrieved.
+      //               2 - file has been sent.
+      //   inContent : the Unicode String contents of the file retrieved.
+      function PutTransferComplete(inFlags, inContent) {
+        var oForm = document.forms['browse_form'];
+        oForm.elements["filetext"].value = inContent;
+        document.getElementById('pcfile').checked = inContent.match(/\r/g);
+      }
+    </script>
+  </head>
+  <body>
+    <div id="demo_form" align=center>
+      <bold>EmailCaptureOE Capture Tab</bold><br><br>
+      Copyright 2016 Savvius, Inc.<br>
+      Version 1.0.0.0<br>
+      All Rights Reserved.<br>
+      <br>
+    </div>
+    <div>
+      <form id="tab_form" name="tab_demo" action="">
+        <fieldset>
+          Message:&nbsp;
+          <textarea id="msg_message" name="message" cols="60" rows="1" wrap="off"></textarea>
+          <br>
+          Response:&nbsp;
+          <textarea id="msg_response" name="response" cols="60" rows="1" wrap="off"></textarea>
+          <br>
+          <br>
+          <a href="app:message">Message</a>
+        </fieldset>
+      </form>
+    </div>
+    <div>
+      <form id="browse_form" name="browser" action="">
+        <fieldset>
+          Path:&nbsp;<input type="text" name="path" size="60" value="" class="text-input" /><br>
+          <input type="checkbox" name="showfiles" checked>Show Files<br>        
+          <input type="checkbox" name="showhiddenfiles">Show hidden files<br>        
+          <input type="checkbox" name="hidehiddenctrl">Hide 'Hidden Files' control<br>        
+          <br>
+          <textarea id="filetext" name="filetext" cols="60" rows="10" wrap="off"></textarea>
+          <br>
+          <!-- The Remote Browser intercepts the app:browse command then calls GetRemoteBrowserFlags -->
+          <!-- and GetRemoteBrowserFolder then displays the Remote Browser Dialog.                   -->
+          <!-- If the user clicks OK, then PutRemoteBrowserPath is called.                           -->
+          <a href="app:browse">Browse</a>&nbsp;&nbsp;&nbsp;
+          <!-- The Remote Browser intercepts the app:getremote command, then calls GetRemoteBrowserFlags -->
+          <!-- and GetRemoteBrowserFolder then retrieves the file specified.                             -->
+          <!-- Once the file has been retrieved PutTransferComplete is called.                           -->
+          <a href="app:getremote">Get Remote File</a>&nbsp;&nbsp;&nbsp;
+          <!-- The Remote Browser intercepts the app:sendlocal command, then calls GetRemoteBrowserFlags, -->
+          <!-- GetRemoteBrowserFolder and GetFileContents then sends the file specified.                  -->
+          <a href="app:sendlocal">Send Local File</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <input class="browse-checkbox" type="checkbox" id="pcfile" name="pcfile">
+          <label class="browse-label" for="pcfile">PC File Format</label>
+        </fieldset>
+      </form>
+    </div>
+  </body>
+</html>

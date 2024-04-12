@@ -1,0 +1,273 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CLayerEthernet Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CLayerEthernet Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        The CLayerEthernet class provides access to Ethernet layer properties.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px; margin-bottom:0px">
+        class CLayerEthernet
+    </p>
+    <p class="codeG" style="margin-left:50px; margin-top:0px; margin-bottom:0px">
+        :&nbsp;&nbsp;&nbsp;public CLayer
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerEthernet::CLayerEthernet">CLayerEthernet</a>
+            </td>
+            <td>
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerEthernet::GetDestination">GetDestination</a>
+            </td>
+            <td>
+                Returns the destination Ethernet address in the header.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerEthernet::GetHeader">GetHeader</a>
+            </td>
+            <td>
+                Returns the Ethernet header as an object.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerEthernet::GetProtocolType">GetProtocolType</a>
+            </td>
+            <td>
+                Returns the protocol type of the payload.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerEthernet::GetSource">GetSource</a>
+            </td>
+            <td>
+                Returns the source Ethernet address in the header.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsNotValid</a>
+            </td>
+            <td>
+                Returns true if this object is not valid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsValid</a>
+            </td>
+            <td>
+                Returns true if this object is valid.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CLayerEthernet Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CLayerEthernet::CLayerEthernet"></a>CLayerEthernet::CLayerEthernet</h3>
+    <p class="onlyP">
+        Constructs a CLayerEthernet object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CLayerEthernet();</td>
+        </tr>
+        <tr>
+            <td colspan="3">CLayerEthernet(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket*</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inHeader</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet that this layer belongs to.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inType</em></dt>
+        <dd>The layer type.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inHeader</em></dt>
+        <dd>The header of the layer.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inData</em></dt>
+        <dd>The payload or data of the layer.</dd>
+    </dl>
+
+    <!-- GetDestination details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerEthernet::GetDestination"></a>CLayerEthernet::GetDestination
+    </h3>
+    <p class="onlyP">
+        Get the destination Ethernet address of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CEthernetAddress GetDestination() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The destination Ethernet Address.
+    </p>
+
+    <!-- GetHeader details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerEthernet::GetHeader"></a>CLayerEthernet::GetHeader
+    </h3>
+    <p class="onlyP">
+        Get the layer's header as an CEthernetHeader.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                const CEthernetHeader& GetHeader() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A reference to a CEthernetHeader object.
+    </p>
+
+    <!-- GetProtocolType details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerEthernet::GetProtocolType"></a>CLayerEthernet::GetProtocolType
+    </h3>
+    <p class="onlyP">
+        Get the protocol type of the payload.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetProtocolType() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The protocol type of the payload.
+    </p>
+
+    <!-- GetSource details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerEthernet::GetSource"></a>CLayerEthernet::GetSource
+    </h3>
+    <p class="onlyP">
+        The source Ethernet address of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CEthernetAddress GetSource() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The source Ethernet address.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

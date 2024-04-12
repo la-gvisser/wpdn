@@ -1,0 +1,164 @@
+* EGP - Exterior Gateway Protocol
+
+void EGP;
+	LABL 0 0 0 b1 EGP - Exterior Gateway Protocol\EGP:;
+	DBYT 0 1 90 c2 Version:;
+	DBYT 0 1 90 c2 Type:;
+	CST# 0 1 0 14 EGP Types;
+	TST# 0 1 0 4 EGP Type Jumps;
+	LABL 0 0 0 14 Unrecognized EGP Type;
+	DUMP 0 10 90 c2 EGP Data:;
+
+void EGP URIM;
+	DBYT 0 1 90 c2 Code:;
+	HBYT 0 1 90 c2 Status:;
+	CBIT 7 1 0 14 Unsolicited Message;
+	ANDG 7f 1;
+	CEQU 0 1 0 14 Indeterminate;
+	CEQU 1 1 0 14 Up State;
+	CEQU 2 1 0 14 Down State;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Autonomous Systems Num:;
+	DWRD 0 1 90 c2 Sequence Number:;
+	DBYT 0 1 90 c2 # Of Interior Gateways:;
+	DBYT 0 2 90 c2 # Of Exterior Gateways:;
+	IPLG 0 0 90 c2 IP Source Network:;
+	MOVE 1 6;
+	MOVE 1 7;
+	TNXT -RUM Gateway Loop;
+
+void RUM Gateway Loop;
+	SEQU 0 1;
+	SKIP 6;
+	DGLB 0 6 4 b4 Interior Gateway #;
+	ADDG 1 6;
+	HEX# 3 0 90 c2 Gateway IP Address:;
+	DBYT 0 3 90 c2 # Distances:;
+	SUBG 1 1;
+	TNXT -RUM Distance Loop;
+	SEQU 0 2;
+	SKIP 6;
+	DGLB 0 7 4 b4 Exterior Gateway #;
+	ADDG 1 7;
+	HEX# 3 0 90 c2 Gateway IP Address:;
+	DBYT 0 3 90 c2 # Distances:;
+	SUBG 1 2;
+	TNXT -RUM Distance Loop;
+
+void RUM Distance Loop;
+	SEQU 0 3;
+	SKIP 5;
+	DBYT 0 4 90 c2 Distance:;
+	DBYT 0 4 90 c2 # Nets At This Dist:;
+	RUM Network Loop;
+	SUBG 1 3;
+	TNXT -RUM Distance Loop;
+	TNXT -RUM Gateway Loop;
+
+void RUM Network Loop;
+	SEQU 0 4;
+	SKIP 3;
+	HEX# 3 0 90 c2 Net #:;
+	SUBG 1 4;
+	TNXT -RUM Network Loop;
+	TRTS;
+
+void EGP PCM;
+	DBYT 0 1 90 c2 Code:;
+	CEQU 0 1 0 14 HELLO Request Message;
+	CEQU 1 1 0 14 I HEARD YOU Response;
+	DBYT 0 1 90 c2 Status:;
+	CEQU 0 1 0 14 Indeterminate;
+	CEQU 1 1 0 14 Up State;
+	CEQU 2 1 0 14 Down State;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Autonomous Systems Num:;
+	DWRD 0 1 90 c2 Sequence Number:;
+	HWRD 0 1 90 c2 Reserved:;
+	IPLG 0 1 90 c2 IP Source Network:;
+
+void EGP NAM;
+	DBYT 0 1 90 c2 Code:;
+	CST# ffffffff 1 0 14 NAM Code;
+	DBYT 0 1 90 c2 Status:;
+	CST# ffffffff 1 0 14 NAM Status;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Autonomous Systems Num:;
+	DWRD 0 1 90 c2 Sequence Number:;
+	DWRD 0 1 90 c2 Hello Interval:;
+	DWRD 0 1 90 c2 Poll Interval:;
+
+void EGP NRM;
+	DBYT 0 1 90 c2 Code:;
+	CEQU 0 1 0 14 HELLO Request Message;
+	CEQU 1 1 0 14 I HEARD YOU Response;
+	DBYT 0 1 90 c2 Status:;
+	CEQU 0 1 0 14 Indeterminate;
+	CEQU 1 1 0 14 Up State;
+	CEQU 2 1 0 14 Down State;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Autonomous Systems Num:;
+	DWRD 0 1 90 c2 Sequence Number:;
+
+void EGP ERIM;
+	DBYT 0 1 90 c2 Code:;
+	HBYT 0 1 90 c2 Status:;
+	CBIT 7 1 0 14 Unsolicited Message;
+	ANDG 7f 1;
+	CEQU 0 1 0 14 Indeterminate;
+	CEQU 1 1 0 14 Up State;
+	CEQU 2 1 0 14 Down State;
+	HWRD 0 1 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Autonomous Systems Num:;
+	DWRD 0 1 90 c2 Sequence Number:;
+	DWRD 0 1 90 c2 Reason:;
+	CST# ffffffff 1 0 14 EGP ERIM Reasons;
+	LABL 0 0 0 80;
+	LABL 0 0 0 b4 EGP header of packet that caused error follows.;
+	TNXT -EGP;
+
+
+str# EGP Types;
+	Update Response/Indication Message;
+	Poll Command Message;
+	Neighbor Acquisition Message;
+	;
+	Neighbor Reachability Messages;
+	;
+	;
+	Error Response/Indication Message;
+
+str# EGP Type Jumps;
+	EGP URIM;
+	EGP PCM;
+	EGP NAM;
+	;
+	EGP NRM;
+	;
+	;
+	EGP ERIM;
+
+str# EGP ERIM Reasons;
+	Unspecified;
+	Bad EGP Header Format;
+	Bad EGP Data Field Format;
+	Reachability Info Unavailable;
+	Excessive Polling Rate;
+	No Response;
+
+str# NAM Code;
+	Request Command;
+	Confirm Response;
+	Refuse Response;
+	Cease Command;
+	Cease-Ack Response;
+
+str# NAM Status;
+	Unspecified;
+	Active Mode;
+	Passive Mode;
+	Insufficient Resources;
+	Administratively Prohibited;
+	Going Down;
+	Parameter Problem;
+	Protocol Violation;

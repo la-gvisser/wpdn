@@ -1,0 +1,19 @@
+
+
+
+
+
+str# UDP::Ports_Str;
+	5555	|	aruba_erm;
+
+
+void aruba_erm()
+{
+	LABL( 0, 0, 0, 0xb1, "Aruba Encapsulated Remote Monitoring");
+	TIME( 5, 0, 0xa0, 0xc2, "Packet Capture Timestamp:");
+	INCR 4;
+	DLNG( 0, 1, 0xa0, 0xc2, "Packet Captured Length:");
+	DLNG( 0, 2, 0xa0, 0xc2, "Packet Length:\");
+	802_11::Main2();
+
+}

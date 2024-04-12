@@ -1,0 +1,1581 @@
+* Decoder version: 5.0.1.0
+  
+void AARP;
+	LABL 0 0 0 b1 AARP - AppleTalk Address Resolution Protocol\AARP:;
+	DWRD 0 1 a0 c2 Hardware Type:\Hardware:;
+	CEQU 1 1 0 14 Ethernet;
+* skip if it was Ethernet 
+	SKIP 2;
+	CEQU 2 1 0 14 Token Ring;
+	CLSE 0 1 0 14 Invalid Type;
+	PRTO 1 1 a0 c2 Protocol Type:\Proto:;
+	SKIP 1;
+	CEQU 809b 1 0 14 AppleTalk;
+	DBYT 0 1 a0 c2 Hardware Address Length:\;
+	DBYT 0 2 a0 c2 Protocol Address Length:\;
+	DWRD 0 3 a0 c2 AARP Function:\Func:;
+	CEQU 1 3 0 14 Request;
+	CEQU 2 3 0 14 Response;
+	CEQU 3 3 0 14 Probe;
+	ETHR 0 0 a0 c2 Source Hardware Address:\Src MAC Addr:;
+	ATLG 0 0 a0 c2 Source AppleTalk Address:\Src ATalk Addr:;
+	TEQU 1 3 0 0 AARP_Request;
+	TEQU 2 3 0 0 AARP_Response;
+	TEQU 3 3 0 0 AARP_Probe;
+
+void AARP_Request;
+	ETHR 0 0 a0 c2 Target MAC Address:\Target MAC Addr;
+	ATLG 0 0 a0 c2 Target AppleTalk Address:\Target ATalk Addr:;
+
+void AARP_Response;
+	ETHR 0 0 a0 c2 Dest MAC Address:\Dst MAC Addr:;
+	ATLG 0 0 a0 c2 Dest AppleTalk Address:\Dst Atalk Addr:;
+
+void AARP_Probe;
+	ETHR 0 0 a0 c2 Dest MAC Address:\Dst MAC Addr::;
+	ATLG 0 0 a0 c2 Dest AppleTalk Address:\Dst ATalk Addr:;
+
+void ADSP;
+	LABL 0 0 0 b1 ADSP Header - AppleTalk Data Stream Protocol\ADSP:;
+	DWRD 0 0 90 c2 Source ConnID:;
+	HLNG 0 0 90 c2 PktFirstByteSeq:;
+	HLNG 0 0 90 c2 PktNextRcvSeq:;
+	DWRD 0 0 90 c2 PktRecvWindow:;
+	HBYT 0 3 90 c2 ADSP Descriptor:;
+*   rewind that byte   
+	DECR 1;
+	BBIT 4 1 4 14 "(";
+	BBIT 4 2 4 4 ") (";
+	LABL 0 0 0 4 ")";
+	CBIT 3 1 0 e4 Control;
+	CLSE 0 0 0 e4 Data;
+	CBIT 2 1 0 e4 Ack Request;
+	CBIT 1 1 0 e4 End of Message;
+	CBIT 0 1 0 e4 Attention;
+	TBIT 3 1 0 0 ADSP Control;
+	TBIT 0 1 0 0 ADSP Attention;
+	TEQU 0 10 0 0 AFP The End;
+*   unsigned < 0   	
+	TLTE 5dc 10 0 0 AFP The End;
+	DUMP 1  0 90 c2 ADSP Data:;
+
+void ADSP Control;
+	TBIT 0 1 0 0 ADSP Control Attention;
+	SLTE 9 2;
+	CGTE f 82 0 e4 Reserved - Invalid - Ignore;
+	TTST -ADSP Control Data;
+	SNEQ 0 2;
+	SKIP 3;
+	CBIT 2 1 0 e4 Probe;
+	CLSE 0 0 0 e4 Acknowledgment;
+	TNXT -ADSP Control Data;
+	CST# ffffffff 2 0 e4 ADSP Control Codes;
+	TEQU 81 3 0 0 ADSP Open Connection;
+	TNXT -ADSP Control Data;
+
+void ADSP Control Attention;
+	CNEQ 0 2 0 e4 Invalid - Discard;
+	TNXT -ADSP Control Data;
+
+void ADSP Open Connection;
+	HWRD 0 0 90 c2 ADSP Version:;
+	DWRD 0 0 90 c2 Destination ConnID:;
+	HLNG 0 0 90 c2 PktAttnRecvSeq:;
+	TNXT -ADSP Control Data;
+
+void ADSP Control Data;
+	TEQU 0 10 0 0 AFP The End;
+*   unsigned < 0   
+	TLTE 5dc 10 0 0 AFP The End;
+	DUMP 0 10 90 c2 Control Data:;
+
+void ADSP Attention;
+	HWRD 0 4 90 c2 AttnCode:;
+	SLTE 0 4;
+	CGTE efff 84 0 14 Client's Use;
+	CLSE 0 4 0 14 Reserved - Future Use;
+	TEQU 0 10 0 0 AFP The End;
+	TLTE 5dc 10 0 0 AFP The End;
+*   unsigned < 0   	
+	DUMP 0 10 90 c2 Attention Data:;
+
+void AEP;
+	LABL 0 0 0 b1 AEP - AppleTalk Echo Protocol\AEP:;
+	DBYT 0 1 90 c2 Echo Function:;
+	CEQU 1 1 0 14 Echo Request;
+	CEQU 0 1 0 14 Invalid Function;
+	CEQU 2 1 0 14 Echo Reply;
+
+void TCP AFP;
+	TGTE f 10 0 0 Dump Data;
+	TLTE 5dc 10 0 0 Dump Data;
+*   get the 1st 2 bytes   
+	GWRD 0 7;
+*   2nd byte only   
+	ANDG ff 7;
+*   if the command number makes no sense, there is apparently no DSI section   
+	TLTE 9 7 0 0 TCP AFP Non-DSI Reply;
+	LABL 0 0 0 b1 DSI - Data Stream Interface Header\DSI:;
+	DBYT 0 7 90 c2 Flags:;
+	CEQU 0 7 0 14 Request;
+	CLSE 0 0 0 14 Reply;
+	DBYT 0 8 90 c2 Command:;
+	CST# 0 8 0 14 DSI Cmd Types;
+	DWRD 0 0 90 c2 Request ID:;
+*   is it a request?   
+	SEQU 0 7;
+	SKIP 5;
+	DLNG 80000000 9 90 c2 Error Code:;
+	MULG ffffffff 9;
+	CST# 1387 9 0 14 AFP Err Codes;
+*   is it a request?   
+	SNEQ 0 7;
+	SKIP 1;
+	DLNG 0 0 90 c2 Offset:;
+	DLNG 0 9 90 c2 Data Length:;
+	DLNG 0 0 90 c2 Len Follow Data:;
+	TEQU 0 10 0 0 IP Null;
+	TEQU 4 8 0 0 TCP AFP Open Session;
+	TEQU 0 7 0 0 AFP Request;
+	MOVE 0 6;
+	WHOA 0 e 0 0 ASP Rsp Opt;
+	DUMP 0 10 90 c2 AFP Reply Data:;
+
+void TCP AFP Open Session;
+	LABL 0 0 0 b1 DSI Open Session;
+	HBYT 0 7 90 c2 Option Tag:;
+	CEQU 0 7 0 14 Server Request Quantum;
+	CEQU 1 7 0 14 Attention Quantum;
+	DBYT 0 7 90 c2 Option Length:;
+	TEQU 0 7 0 0 IP Null;
+	TNEQ 4 7 0 0 TCP AFP Option Data;
+	DLNG 0 0 90 c2 Max Request Size:;
+
+void TCP AFP Option Data;
+	DUMP 0 7 90 c2 Option Data:;
+
+void TCP AFP Non-DSI Reply;
+*   if the command number makes no sense, we'll assume it's a GetSrvrInfo Reply   
+	WHOA 0 e 0 0 ASP Rsp Opt;
+	LABL 0 0 0 b4 (Assuming To Be AFP GetSrvrInfo Reply);
+	TNXT -AFP GetSrvrInfo Reply;
+
+void AFP Data Reply;
+	LABL 0 0 0 b1 AFP - Data Reply;
+	LABL 0 0 0 b4 (Probably A Continuation Of A Previous Reply Packet);
+	DUMP 0 10 90 c2 AFP Data:;
+
+void ASP Request;
+	LABL 0 0 0 b1 ASP - AppleTalk Session Protocol\ASP:;
+	DBYT 0 1 a0 c2 SPFunction:;
+*  display indexed string of in ASP Types 
+	CST# 0 1 0 14 ASP Type Names;
+	TST# 0 1 0 0 ASP Types;
+	CLSE 0 1 0 14 Unknown Type;
+
+void ASP OpenSess;
+	MARK 2 e 0 0 ATP TResp Opt;
+	DBYT 0 0 a0 c2 Workstation Sess. Socket:;
+	DBYT 0 0 a0 c2 ASP Version:;
+	GBYT 0 7;
+	DIVG 100 7;
+	DGLB 0 7 0 0 .;
+	GBYT 0 7;
+	INCR 1;
+	ANDG f 7;
+	DGLB 0 7 0 0 .;
+
+void ASP OpenSessReply;
+	LABL 0 0 0 b1 ASP - OpenSessReply\OpenSessReply:;
+	ATP Basing;
+	DBYT 0 0 a0 c2 Server Session Socket:;
+	DBYT 0 0 a0 c2 Session ID:;
+	DWRD 80000000 6 a0 c2 Error Code:;
+	MULG ffffffff 6;
+*  display indexed string 
+	CST# 429 6 0 14 ASP Err Codes;
+
+void ASP CloseSession;
+	MARK 3 e 0 0 ATP TResp Opt;
+	DBYT 0 0 a0 c2 Session ID:;
+	DWRD 0 0 a0 c2 Unused:;
+
+void ASP CloseSessReply;
+	LABL 0 0 0 b1 ASP - CloseSessReply\CloseSessReply:;
+	ATP Basing;
+	HLNG 0 0 a0 c2 Unused:;
+
+void ASP GetStatus;
+	MARK 4 e 0 0 ATP TResp Opt;
+	HEX# 3 0 a0 c2 Unused:;
+
+void ASP GetStatusReply;
+	LABL 0 0 0 b1 ASP - GetStatusReply\GetStatusReply:;
+	ATP Basing;
+	ASP Cmd Result;
+	WHOA 0 e 0 0 ASP Stt Opt;
+	SKIP 80000005;
+	SGTE a 10 0 4;
+	SKIP 2;
+	LABL 0 0 0 b4 (Guessing To Be AFP);
+	MARK 1 e 0 0 ASP Stt Opt;
+	WHOA 0 e 0 0 ASP Stt Opt;
+	DUMP 0 10 a0 c2 GetStatus Reply Data:;
+
+void ASP Command;
+	MARK 5 e 0 0 ATP TResp Opt;
+	TNXT -ASP CmdWrt;
+
+void ASP CmdReply;
+	LABL 0 0 0 b1 ASP - CmdReply\CmdReply:;
+	ATP Basing;
+	ASP Cmd Result;
+	WHOA 0 e 0 0 ASP Rsp Opt;
+	DUMP 0 10 90 c2 Command Reply Data:;
+
+void ASP Write;
+	MARK 6 e 0 0 ATP TResp Opt;
+	TNXT -ASP CmdWrt;
+
+void ASP CmdWrt;
+	DBYT 0 0 a0 c2 Session ID:;
+	DWRD 0 0 a0 c2 Sequence Number:;
+	WHOA 0 e 0 0 ASP Req Opt;
+*  only path here if nothing has been previously set or cancel hit 
+	SKIP 80000002;
+	AFP Guessing;
+
+*  see if any MARK was set trying the 2nd time 
+	WHOA 0 e 0 0 ASP Req Opt;
+	DUMP 0 10 a0 c2 Command Block:;
+
+void ASP WriteReply;
+	LABL 0 0 0 b1 ASP - WriteReply\WriteReply:;
+	ATP Basing;
+	ASP Cmd Result;
+	WHOA 0 e 0 0 ASP Wrt Opt;
+	SKIP 80000003;
+	LABL 0 0 0 b4 (Guessing To Be AFP);
+	MARK 1 e 0 0 ASP Wrt Opt;
+	WHOA 0 e 0 0 ASP Wrt Opt;
+	DUMP 0 10 90 c2 Write Reply Data:;
+
+void ASP WriteContinue;
+	MARK 7 e 0 0 ATP TResp Opt;
+	DBYT 0 0 a0 c2 Session ID:;
+	DWRD 0 0 a0 c2 Sequence Number:;
+	DWRD 0 0 a0 c2 Available Buffer Size:;
+
+void ASP WriteContinueReply;
+	LABL 0 0 0 b1 ASP - WriteContinueReply\WriteContinueReply:;
+	ATP Basing;
+	HLNG 0 0 a0 c2 Unused:;
+	DUMP 0 10 a0 c2 Write Data:;
+
+void ASP Tickle;
+	DBYT 0 0 a0 c2 Session ID:;
+	DWRD 0 0 a0 c2 Sequence Number:;
+
+void ASP Attention;
+	MARK 8 e 0 0 ATP TResp Opt;
+	DBYT 0 0 a0 c2 Session ID:;
+	WHOA 0 e 0 0 ASP Att Opt;
+	SKIP 80000003;
+	LABL 0 0 0 b4 (Guessing To Be AFP);
+	MARK 1 e 0 0 ASP Att Opt;
+	WHOA 0 e 0 0 ASP Att Opt;
+	DWRD 0 0 a0 c2 Attention Code:;
+
+void ASP AttentionReply;
+	LABL 0 0 0 b1 ASP - AttentionReply\AttentionReply:;
+	ATP Basing;
+	DLNG 0 0 a0 c2 Unused:;
+
+void AFP Guessing;
+*  get 1st byte of cmd block 
+	GBYT 0 7;
+*  1st byte zero? 
+	SNEQ 0 7;
+	SKIP 1;
+*  not afp if zero 
+	TRTS;
+*  1st byte <= 58? 
+	SGTE 3a 7;
+	SKIP 3;
+*  1st byte == 192? 
+	SEQU c0 7;
+	SKIP 1;
+*  not afp if >58 & !=192 
+	TRTS;
+	TEQU f 7 0 0 Assume AFP Req;
+	TEQU 10 7 0 0 Assume AFP Req;
+	TEQU 14 7 0 0 Assume AFP Req;
+	INCR 1;
+	GBYT 0 6;
+	DECR 1;
+*  xfer if MapID 
+	TEQU 15 7 0 0 Maybe AFP MapID;
+*  xfer if MapName 
+	TEQU 16 7 0 0 Maybe AFP MapName;
+*  if zero probably afp 
+	TEQU 0 6 0 0 Assume AFP Req;
+*  xfer if ByteRangeLock 
+	TEQU 1 7 0 0 Maybe OK Bits;
+*  xfer if CreateFile 
+	TEQU 7 7 0 0 Maybe OK Bits;
+*  xfer if OpenFork 
+	TEQU 1a 7 0 0 Maybe OK Bits;
+*  xfer if Write 
+	TEQU 21 7 0 0 Maybe OK Bits;
+*  xfer if GetUserInfo 
+	TEQU 25 7 0 0 Maybe OK Bits;
+*  xfer if Login 
+	TEQU 12 7 0 0 Guess AFP Req;
+	TRTS;
+
+void Maybe AFP MapID;
+*  subfunction field is ok 
+	TEQU 1 6 0 0 Assume AFP Req;
+*  subfunction field is ok 
+	TEQU 2 6 0 0 Assume AFP Req;
+	TRTS;
+
+void Maybe AFP MapName;
+*  subfunction field is ok 
+	TEQU 3 6 0 0 Assume AFP Req;
+*  isubfunction field is ok 
+	TEQU 4 6 0 0 Assume AFP Req;
+	TRTS;
+
+void Maybe OK Bits;
+*  strip hi & lo bits 
+	ANDG 7e 6;
+*  if zero probably afp 
+	TEQU 0 6 0 0 Assume AFP Req;
+	TRTS;
+
+void Assume AFP Req;
+	MARK 1 e 0 0 ASP Req Opt;
+	LABL 0 0 0 b4 (Assuming To Be AFP);
+	TRTS;
+
+void Guess AFP Req;
+	MARK 1 e 0 0 ASP Req Opt;
+	LABL 0 0 0 b4 (Guessing To Be AFP);
+	TRTS;
+
+void ASP Cmd Result;
+	DLNG 80000000 6 90 c2 CmdResult:;
+	CEQU 0 6 0 14 NoErr;
+	TTST -ASP Cmd Result Rtn;
+	TLTE fffffbd7 6 0 0 ASP Cmd Result Rtn;
+*  error <= -1076? 
+	SGTE fffffbcc 6;
+	SKIP 4;
+	MULG ffffffff 6;
+*  display indexed string 
+	CST# 429 6 0 14 ASP Err Codes;
+	LABL 0 0 0 4  (ASP);
+	TRTS;
+	TLTE ffffec79 6 0 0 ASP Cmd Result Rtn;
+	TGTE ffffec4b 6 0 0 ASP Cmd Result Rtn;
+	MULG ffffffff 6;
+*  display indexed string 
+	CST# 1387 6 0 14 AFP Err Codes;
+	LABL 0 0 0 4  (AFP);
+	TRTS;
+
+void ASP Cmd Result Rtn;
+	TRTS;
+
+void ATP;
+	LABL 0 0 0 b1 ATP Header - AppleTalk Transaction Protocol\ATP:;
+	DBIT 2 c a0 c2 Function Code:\Code:;
+	CEQU 1 c 0 14 TReq;
+	CEQU 2 c 0 14 TResp;
+	CEQU 3 c 0 14 TRel;
+	CEQU 0 c 0 14 Invalid Type;
+	BBIT 3 2 a0 c2 Control Information:\Ctrl Info:;
+	CBIT 2 2 0 14 XO;
+	CLSE 0 2 0 14 ALO;
+	CBIT 1 2 0 14 EOM;
+	CBIT 0 2 0 14 STS;
+	BBIT 3 3 a0 c2 TRel Timeout Indicator:\TRel:;
+	CEQU 0 3 0 14 30 seconds;
+	CEQU 1 3 0 14 1 minutes;
+	CEQU 2 3 0 14 2 minutes;
+	CEQU 3 3 0 14 4 minutes;
+	CEQU 4 3 0 14 8 minutes;
+	TEQU 1 c 0 0 ATP TReq;
+	TEQU 2 c 0 0 ATP TResp;
+	TEQU 3 c 0 0 ATP TRel;
+	CLSE 3 c 0 14 Illegal ATP Packet;
+
+void ATP TReq;
+	BBYT 0 4 a0 c2 Bitmap:;
+	TEQU 0 4 0 0 ATP Common;
+	LABL 0 0 0 14 Need Packet(s) ;
+	CBIT 0 4 0 4 0 ;
+	CBIT 1 4 0 4 1 ;
+	CBIT 2 4 0 4 2 ;
+	CBIT 3 4 0 4 3 ;
+	CBIT 4 4 0 4 4 ;
+	CBIT 5 4 0 4 5 ;
+	CBIT 6 4 0 4 6 ;
+	CBIT 7 4 0 4 7;
+	MOVE 0 4;
+	TNXT -ATP Common;
+
+void ATP TResp;
+	DBYT 0 4 a0 c2 Sequence Number:;
+	CEQU 0 4 0 14 Here is Packet 0;
+	CEQU 1 4 0 14 Here is Packet 1;
+	CEQU 2 4 0 14 Here is Packet 2;
+	CEQU 3 4 0 14 Here is Packet 3;
+	CEQU 4 4 0 14 Here is Packet 4;
+	CEQU 5 4 0 14 Here is Packet 5;
+	CEQU 6 4 0 14 Here is Packet 6;
+	CEQU 7 4 0 14 Here is Packet 7;
+	TNXT -ATP Common;
+
+void ATP TRel;
+	DBYT 0 4 a0 c2 Unused:;
+	MOVE 0 4;
+	TNXT -ATP Common;
+
+void ATP Common;
+	DWRD 0 e a0 c2 Transaction ID:;
+	TLTE 1 4 0 0 ATP_Continuation_Data;
+	TEQU 6 a 0 0 GetZone;
+	TEQU 6 b 0 0 GetZoneReply;
+	TEQU 1 c 0 0 ATP TReq Options;
+	TEQU 2 c 0 0 ATP TResp Options;
+	HLNG 0 0 a0 c2 User Bytes:;
+
+void ATP_Continuation_Data;
+	LABL 0 0 0 b1 Continuation Data;
+	DUMP 0 10 90 c2 Data From Prev Pkts:;
+	TRTS;
+
+void ATP TReq Options;
+	WHOA 0 e 0 c2 ATP TReq Opt;
+*  only path here if nothing has been previously set or cancel hit
+*  skip if cancel hit 
+	SKIP 80000003;
+*  show request auto eval 
+	MOVE 0 8;
+	ATP Auto Eval;
+	WHOA 0 e 0 c2 ATP TReq Opt;
+	LABL 0 0 0 b4 Further Decoding Options Available;
+	HLNG 0 0 a0 c2 User Bytes:;
+	DUMP 0 10 a0 c2 ATP Data:;
+
+void ATP TResp Options;
+*  see if anything is already pre-set with an earlier MARK 
+	WHOA 0 e 0 2 ATP TResp Opt;
+*  only gets here if cancel hit or no previous MARK... try figuring it out 
+*  skip if cancel hit 
+	SKIP 80000003;
+*  show response auto eval 
+	MOVE 1 8;
+	ATP Auto Eval;
+*  see if any MARK was set trying the 2nd time 
+	WHOA 0 e 0 2 ATP TResp Opt;
+	LABL 0 0 0 b4 Further Decoding Options Available;
+	HLNG 0 0 a0 c2 User Bytes:;
+	DUMP 0 10 a0 c2 ATP Data:;
+
+void ATP Auto Eval;
+*	Try to guess the ATP request type based upon some things we know, namely:
+*		ASP req packets must have the 1st byte between 1 and 8.
+*		PAP req packets must have the 2nd byte equal to 1, 3, 5, 6, or 8.
+*		MacIP must have bytes 3 and 4 equal to zero and bytes 1 and 2 not greater
+*			than, say 15 (arbitrary, but useful), but not both zero.
+*	We use negative logic here, eliminating what it can't be, leaving what it
+*	might be and hoping we are left with only one choice for what it is.
+*	Algorithm is copyright © 1992, The AG Group, Inc. and T. McCreery, 9/14/92
+*  get 1st thru 4th bytes 
+	GLNG 0 7;
+*  is this a response evaluation? 
+	SEQU 1 8;
+	SKIP 3;
+*  br if it's ASP GetStatus 
+	TEQU 3000000 7 0 0 ATP Auto Req ASP;
+*  br if it's PAP SendStatus 
+	TEQU 80000 7 0 0 ATP Auto Req PAP;
+	SKIP 1;
+*  br if it's PAP Status 
+	TEQU 90000 7 0 0 ATP Auto Resp PAP;
+*  can be any of them 
+	MOVE 7 6;
+*  get 1st & 2nd bytes 
+	GWRD 0 7;
+*  both zero? 
+	SNEQ 0 7;
+*  skip if not 
+	SKIP 1;
+*  can't be MacIP 
+	ANDG 6 6;
+*  * ASP tests * 
+*  get 1st byte 
+	GBYT 0 7;
+	INCR 1;
+*  1st byte zero? 
+	SNEQ 0 7;
+*  skip if not 
+	SKIP 1;
+*  can't be ASP 
+	ANDG 3 6;
+*  1st byte <= 8? 
+	SGTE 8 7;
+*  skip if not 
+	SKIP 1;
+*  can't be ASP 
+	ANDG 3 6;
+*  * 2nd MacIP test * 
+*  1st byte <= 15? 
+	SGTE f 7;
+*  skip if not 
+	SKIP 1;
+*  can't be MacIP 
+	ANDG 6 6;
+*  * PAP tests (egad!) * 
+*  get 2nd byte 
+	GBYT 0 7;
+	INCR 1;
+*  2nd byte zero? 
+	SNEQ 0 7;
+*  skip if not 
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte <= 8? 
+	SGTE 8 7;
+*  skip if not 
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  is this a response evaluation? 
+	SEQU 1 8;
+*  skip if so 
+	SKIP 2;
+	ATP Auto Req;
+*  skip if so 
+	SKIP 1;
+	ATP Auto Resp;
+*  * 3rd MacIP test * 
+*  1st byte <= 15? 
+	SGTE f 7;
+*  skip if not 
+	SKIP 1;
+*  can't be MacIP 
+	ANDG 6 6;
+*  * last MacIP test * 
+*  get 3rd & 4th bytes 
+	GWRD 0 7;
+*  set pointer back to beginning 
+	INCR fffffffe;
+*  both zero? 
+	SEQU 0 7;
+*  skip if they are 
+	SKIP 1;
+*  can't be MacIP 
+	ANDG 6 6; 
+*  * analyze the results * 
+*  is this a request evaluation? 
+	SEQU 0 8;
+*  skip if so 
+	SKIP 4;
+	TEQU 4 6 0 0 ATP Auto Resp ASP;
+	TEQU 2 6 0 0 ATP Auto Resp PAP;
+	TEQU 1 6 0 0 ATP Auto Resp MacIP;
+	TRTS;
+	TEQU 4 6 0 0 ATP Auto Req ASP;
+	TEQU 2 6 0 0 ATP Auto Req PAP;
+	TEQU 1 6 0 0 ATP Auto Req MacIP;
+	TBIT 2 6 0 0 ATP ASP Guessing;
+	TRTS;
+
+
+void ATP Auto Req;
+*  2nd byte = 2? 
+	SNEQ 2 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 4? 
+	SNEQ 4 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 7? 
+	SNEQ 7 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 7? 
+	SNEQ 9 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+	TRTS;
+void ATP Auto Resp;
+*  2nd byte = 2? 
+	SNEQ 1 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 4? 
+	SNEQ 3 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 7? 
+	SNEQ 5 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 7? 
+	SNEQ 6 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+*  2nd byte = 7? 
+	SNEQ 8 7;
+	SKIP 1;
+*  can't be PAP 
+	ANDG 5 6;
+	TRTS;
+
+
+void ATP ASP Guessing;
+*  Possibly MacIP also? 
+	SNEQ 5 6;
+	SKIP 5;
+*  get 1st byte again 
+	GBYT 0 7;
+*  is it asp tickle? 
+	SNEQ 5 7;
+	SKIP 2;
+	MARK 1 e 0 0 ATP TReq Opt;
+	LABL 0 0 0 b4 (Guessing To Be ASP);
+	TRTS;
+
+void ATP Auto Req ASP;
+	MARK 1 e 0 0 ATP TReq Opt;
+	LABL 0 0 0 b4 (Assuming To Be ASP);
+	TRTS;
+
+void ATP Auto Resp ASP;
+	LABL 0 0 0 b4 (Probably Some Form Of ASP);
+	TRTS;
+
+void ATP Auto Req PAP;
+	MARK 2 e 0 0 ATP TReq Opt;
+	LABL 0 0 0 b4 (Assuming To Be PAP);
+	TRTS;
+
+void ATP Auto Resp PAP;
+	MARK 1 e 0 0 ATP TResp Opt;
+	LABL 0 0 0 b4 (Assuming To Be PAP);
+	TRTS;
+
+void ATP Auto Req MacIP;
+	MARK 3 e 0 0 ATP TReq Opt;
+	LABL 0 0 0 b4 (Assuming To Be MacIP);
+	TRTS;
+
+void ATP Auto Resp MacIP;
+	MARK 9 e 0 0 ATP TResp Opt;
+	LABL 0 0 0 b4 (Assuming To Be MacIP);
+	TRTS;
+
+void ATP Basing;
+	CEQU 0 6 0 14  (User Selected Decode);
+	TRTS;
+
+void EtherTalk;
+	LABL 0 0 0 b1 AppleTalk Header\AppleTalk:;
+	AT01 0 0 90 c2 AppleTalk Destination:;
+	AT01 0 0 90 c2 AppleTalk Source:;
+	HBYT 0 1 90 c2 AppleTalk Type:;
+	CEQU 1 1 0 14 Short DDP;
+	TTST -Short DDP;
+	CEQU 2 1 0 14 Long DDP;
+	TTST -Long DDP;
+*  display indexed string of in LocalTalk Types 
+	CST# 80 1 20 14 LocalTalk Types;
+	CLSE 0 0 0 14 Unknown Type;
+
+void Common DDP;
+	DBYT 0 a 90 c2 Dest. Socket:\DSock:;
+*  display indexed string 
+	CST# 0 a 0 14 DDP Sockets;
+	DBYT 0 b 90 c2 Source Socket:\SSock:;
+	CST# 0 b 0 14 DDP Sockets;
+	DBYT 0 1 90 c2 DDP Type:;
+*  experimental MacIP type 
+	TEQU 16 1 0 0 MacIP;
+	CST# 0 1 0 14 DDP Type Names;
+	TST# 0 1 0 40 DDP Type Names;
+*  if DDP Type != 1,2,3,4,5,6,7,8,9 then unknown type 
+	CLSE 0 0 0 14 Unknown;
+*  if DDP Type != 1,2,3,4,5,6,7 then unknown type 
+	DUMP 0 10 90 c2 DDP Data:;
+
+void Short DDP;
+	LABL 0 0 0 b1 Short DDP Header - Datagram Delivery Protocol\SDDP:;
+	BBIT 6 0 90 c2 Unused:;
+	DBIT a 10 90 c2 Datagram Length:\Len:;
+	SUBG 2 10;  *subtract unused/length
+	TNXT -Common DDP;
+
+void Long DDP;
+	LABL 0 0 0 b1 Long DDP Header - Datagram Delivery Protocol\LDDP:;
+	BBIT 2 0 90 c2 Unused:\;
+	BBIT 4 0 90 c2 Hop Count:\;
+	DBIT a 10 90 c2 Datagram Length:\;
+	SUBG 2 10;  *subtract unused/hopcount/length
+	HWRD 0 0 90 c2 DDP Checksum:\;
+	CKSM 1 0 24 14 Checksum invalid. Should be: ;
+	DWRD 0 0 90 c2 Dest. Network:\DNet:;
+	DWRD 0 0 90 c2 Source Network:\SNet:;
+	AT01 1 0 90 c2 Dest Node:\DNode:;
+	AT01 2 0 90 c2 Source Node:\SNode:;
+	TNXT -Common DDP;
+
+void MacIP;
+	LABL 0 0 0 14 MacIP;
+	TNXT -IP;
+
+void ABP;
+	LABL 0 0 0 b1 ABP - AppleTalk Broadcast Protocol\ABP:;
+	DLNG 0 0 b0 c2 Broadcast Protocol Subtype:;
+	DUMP 0 10 b0 c2 ABP Data:;
+
+void NBP;
+	LABL 0 0 0 b1 NBP - Name Binding Protocol\NBP:;
+	DBIT 4 1 90 c2 Function:;
+	CEQU 1 1 0 14 BrRq - Broadcast Request;
+	CEQU 0 1 0 14 Invalid Function;
+	CEQU 2 1 0 14 LkUp - Lookup;
+	CEQU 3 1 0 14 LkUp-Reply;
+	CEQU 4 1 0 14 FwdReq - Forward Request;
+	DBIT 4 2 90 c2 Tuple Count:;
+	DBYT 0 0 90 c2 NBP ID:;
+	LSTS 0 2 0 b1 NBP Tuple #;
+	AT03 0 0 90 c2 Node Address:;
+	DBYT 0 0 90 c2 Socket Number:;
+	DBYT 0 0 90 c2 Enumerator:;
+	PSTR 0 0 90 c2 NBP Object:;
+	PSTR 0 0 90 c2 NBP Type:;
+	PSTR 0 0 90 c2 NBP Zone:;
+	LSTE 0 2 0 80;
+
+void PAP Request;
+	LABL 0 0 0 b1 PAP - Printer Access Protocol\PAP:;
+	DBYT 0 0 90 c2 ConnID:;
+	DBYT 0 1 90 c2 Function:;
+	MARK 1 e 0 0 ATP TResp Opt;
+*  display indexed string of in PAP Types 
+	CST# 0 1 0 14 PAP Type Names;
+	TST# 0 1 0 0 PAP Types;
+	CLSE 0 1 0 14 Unknown Type;
+
+void PAP Reply;
+	LABL 0 0 0 b1 PAP - Printer Access Protocol\PAP:;
+	ATP Basing;
+	DBYT 0 0 90 c2 ConnID:;
+	DBYT 0 1 90 c2 Function:;
+*  display indexed string of in PAP Types 
+	CST# 0 1 0 14 PAP Type Names;
+	TST# 0 1 0 0 PAP Types;
+	CLSE 0 1 0 14 Unknown Type;
+
+void PAP OpenConn;
+	DWRD 0 0 90 c2 Unused:;
+	DBYT 0 0 90 c2 ATP Responding Socket:;
+	DBYT 0 0 90 c2 Flow Quantum:;
+	DWRD 0 0 90 c2 Wait Time:;
+
+void PAP OpenConnReply;
+	DWRD 0 0 90 c2 Unused:;
+	DBYT 0 0 90 c2 ATP Responding Socket:;
+	DBYT 0 0 90 c2 Flow Quantum:;
+	DWRD 0 0 90 c2 Result:;
+	PSTR 0 0 90 c2 Status String:;
+
+void PAP SendData;
+	DWRD 0 0 90 c2 PAP Sequence Number:;
+
+void PAP Data;
+	DBYT 0 0 90 c2 EOF:;
+	DBYT 0 0 90 c2 Unused:;
+	DUMP 0 10 90 c2 PAP Data:;
+
+void PAP Std;
+	DWRD 0 0 90 c2 Unused:;
+
+void PAP StatusReply;
+	DWRD 0 0 90 c2 Unused:;
+	DLNG 0 0 90 c2 Unused:;
+	PSTR 0 0 90 c2 Status:;
+
+void RTMP Response or Data;
+	LABL 0 0 0 b1 RTMP - Routing Table Maintenance Protocol\RTMP:;
+	DWRD 0 0 90 c2 Router's Net:;
+	DBYT 0 1 90 c2 ID Length:;
+	TEQU 30 1 80 42 Enet Node ID;
+	TNXT -Reg Node ID;
+
+void Reg Node ID;
+	TLTE 9 1 0 0 Long Node ID Pre;
+	DBYT 0 2 90 c2 Router's Node ID:;
+	*ADDG fffffffc 10 0 82;
+	TNXT -Begin Tuples;
+
+void Long Node ID Pre;
+	HBYT 0 2 90 c2 Router's Node ID:;
+	*ADDG fffffffc 10 0 82;
+	ADDG fffffff8 1 0 82;
+	TNXT -Long Node ID;
+
+void Long Node ID;
+	HBYT 80000000 0 0 2;
+	*ADDG ffffffff 10 0 82;
+	ADDG fffffff8 1 0 82;
+	TGTE 0 1 0 0 Begin Tuples;
+	TNXT -Long Node ID;
+
+void Enet Node ID;
+	ETHR 0 0 90 c2 Router's Node ID:;
+	*ADDG fffffff7 10 0 82;
+	TNXT -Begin Tuples;
+
+void Begin Tuples;
+	GLNG 0 1;
+	DIVG 100 1;
+	TEQU 82 1 0 0 Nonext Net;
+	TGTE 0 10 0 0 No Tuples;
+	TNXT -RTMP Tuples;
+
+void Nonext Net;
+	DWRD 0 0 90 c2 Unused:;
+	HBYT 0 0 90 c2 Version:;
+	*ADDG fffffffd 10 0 82;
+	TGTE 0 10 0 0 No Tuples;
+	TNXT -RTMP Tuples;
+
+void RTMP Tuples;
+	LSTS 0 10 0 b7 RTMP Tuple #;
+	GLNG 0 1;
+	SBIT f 1;
+	SKIP 80000002;
+	Ext Tuple;
+	SKIP 4;
+	DWRD 0 0 90 c2 Network Number:;
+	BBIT 3 0 90 c2 Range Flag:;
+	LABL 0 0 0 14 Nonextended;
+	DBIT 5 0 90 c2 Distance:;
+	*ADDG fffffffd 10 0 80;
+	LABL 0 0 0 b8;
+	LSTZ 0 10 0 80;
+
+void Ext Tuple;
+	DWRD 0 0 90 c2 Range Start:;
+	BBIT 3 0 90 c2 Range Flag:;
+	LABL 0 0 0 14 Extended;
+	DBIT 5 0 90 c2 Distance:;
+	DWRD 0 0 90 c2 Range End:;
+	HBYT 0 0 90 c2 Version:;
+	TRTS;
+
+void No Tuples;
+	LABL 0 0 0 b1 No RTMP Tuples;
+
+void RTMP Request;
+	DBYT 0 1 90 c2 RTMP Function:;
+	CEQU 1 1 0 14 Find Bridge;
+	CEQU 2 1 0 14 RDR - RTMP Route Data Request (Split Horizon Processed);
+	CEQU 3 1 0 14 RDR - RTMP Route Data Request (No Split Horizon Processing);
+
+void ZIP;
+	LABL 0 0 0 b1 ZIP - Zone Information Protocol\ZIP:;
+	DBYT 0 1 a0 c2 ZIP Function:;
+	CST# 0 1 0 14 ZIP Functions;
+	TST# 0 1 0 0 ZIP Functions;
+	CLSE 0 0 0 14 Unknown Zip Packet;
+	DUMP 0 10 a0 c2 Zip Data:;
+
+void ZIP Query;
+	DBYT 0 2 a0 c2 Network Count:;
+	LSTS 0 2 0 b1 Network #;
+	DWRD 0 0 a0 c2 Network:;
+	LSTE 0 2 0 80;
+
+void ZIP Reply;
+	DBYT 0 2 a0 c2 Network Count:;
+	LSTS 0 2 0 b1 Zones List #;
+	DWRD 0 0 a0 c2 Network:;
+	PSTR 0 3 a0 c2 Zone Name:;
+*  net # plus pstr len 
+	LSTZ 0 10 0 80;
+
+void ZIP Reply Extended;
+	TNXT -ZIP Reply;
+
+void GetNetInfo Request;
+	HEX# 5 0 a0 c2 Unused:;
+	PSTR 0 0 a0 c2 Zone Name:;
+
+void GetNetInfo Reply;
+	BBYT 5 2 a0 c2 Flags:;
+	CBIT 7 2 0 e4 1... .... Zone Invalid: True;
+	CLSE 0 0 0 e4 0... .... Zone Invalid: False;
+	CBIT 6 2 0 e4 .1.. .... Use Broadcast: True;
+	CLSE 0 0 0 e4 .0.. .... Use Broadcast: False;
+	CBIT 5 2 0 e4 ..1. .... Only One Zone: True;
+	CLSE 0 0 0 e4 ..0. .... Only One Zone: False;
+	LABL 0 0 0 e4 ...x xxxx Reserved;
+	DWRD 0 0 a0 c2 Net Number Range Start:;
+	DWRD 0 0 a0 c2 Net Number Range End:;
+	PSTR 0 0 a0 c2 Zone Name:;
+	DBYT 0 4 a0 c2 Multicast Address Length:;
+	TNEQ 6 4 0 f4 Non-Std Multicast;
+	ETHR 0 0 a0 c2 Multicast Address:;
+	TBIT 7 2 0 f4 Zone Invalid;
+
+void Non-Std Multicast;
+	HEX# 0 4 a0 c2 Multicast Address:;
+	TBIT 7 2 0 f4 Zone Invalid;
+
+void Zone Invalid;
+	PSTR 0 0 a0 c2 Default Zone Name:;
+
+void ZIP Notify;
+	BBYT 5 2 a0 c2 Flags:;
+	CBIT 7 2 0 f4 Zone Invalid;
+	CBIT 6 2 0 f4 Use Broadcast;
+	CBIT 5 2 0 f4 Only One Zone;
+	DLNG 0 0 a0 c2 Unused:;
+	PSTR 0 0 a0 c2 Old Zone Name:;
+	DBYT 0 4 a0 c2 Multicast Address Length:;
+	TNEQ 6 4 0 f4 Non-Std New Multicast;
+	ETHR 0 0 a0 c2 New Multicast Address:;
+	PSTR 0 0 a0 c2 New Zone Name:;
+
+void Non-Std New Multicast;
+	HEX# 0 4 a0 c2 New Multicast Address:;
+	PSTR 0 0 a0 c2 New Zone Name:;
+
+void GetZone;
+	LABL 0 0 0 b1 ZIP - Zone Information Protocol\ZIP:;
+	DBYT 0 1 a0 c2 Function:;
+	CEQU 7 1 0 14 GetMyZone;
+	CEQU 8 1 0 14 GetZoneList;
+	CEQU 9 1 0 14 GetLocalZones;
+	DBYT 0 0 a0 c2 Unused:;
+	DWRD 0 0 a0 c2 Start Index:;
+
+void GetZoneReply;
+	LABL 0 0 0 b1 ZIP - Zone Information Protocol\ZIP:;
+	DBYT 0 0 a0 c2 Last Flag:;
+	DBYT 0 0 a0 c2 Unused:;
+	DWRD 0 2 a0 c2 Number of Zones:;
+	LSTS 0 2 0 80;
+	PSTR 0 0 a0 c2 Zone:;
+	LSTE 0 2 0 80;
+
+void ATIP;
+	GWRD 0 1 0 80;
+	TEQU 701 1 0 14 Maybe Ext DDP Header;
+	TEQU 100 1 0 14 Maybe Ext DDP Header;
+	TNXT -Long DDP;
+
+void Maybe Ext DDP Header;
+*  global_1 might be the 1st two bytes of a DDP header. check against UDP length 
+*  only the DDP length part 
+	ANDG 3ff 1;
+	MULG ffffffff 1;
+*  if lengths are exactly 8 apart, then 
+	ADDG f 81;
+*  probably not a DI 
+	TEQU 0 1 0 14 Long DDP;
+	TNXT -Extended DDP Header;
+
+void Extended DDP Header;
+	LABL 0 0 0 b1 AppleTalk Tunnelling Through IP;
+	LABL 0 0 0 c2 Destination Domain Indicator:;
+	ATIP DI;
+	LABL 0 0 0 c2 Source Domain Indicator:;
+	ATIP DI;
+	HWRD 0 0 90 c2 Version:;
+	HWRD 0 0 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Packet Type:;
+	CEQU 1 1 0 14 Short DDP;
+	TTST -Short DDP;
+	CEQU 2 1 0 14 Long DDP;
+	TTST -Long DDP;
+	CEQU 3 1 0 14 AURP;
+	TTST -AURP;
+	CLSE 0 0 0 14 Unknown Type;
+	DUMP 0 2 90 c2 Unknown Data:;
+
+void ATIP DI;
+*  decrease length correctly 
+	GBYT 0 3 0 80;
+	MULG ffffffff 3 0 80;
+*  adds global_3 to global_16 
+	ADDG 3 90 0 80;
+*  donÕt forget the length byte too 
+	ADDG ffffffff 10 0 80;
+	DBYT 0 2 90 d2 Length:;
+	HBYT 0 1 90 d2 Authority:;
+	ADDG ffffffff 2;
+	CEQU 0 1 0 14 Null;
+	TTST -ATIP Rts;
+	CEQU 1 1 0 14 IP Address;
+	TTST -IP DI;
+	LABL 0 0 0 14 Unknown;
+	DUMP 0 2 90 c2 Unknown DI Data:;
+	TRTS;
+
+void ATIP Rts;
+	TRTS;
+
+void IP DI;
+	HWRD 0 0 90 d2 Distinguisher:;
+	IPLG 0 0 90 d2 Address:;
+	TRTS;
+
+void AURP;
+	LABL 0 0 0 b1 AURP - AppleTalk Update-based Routing Protocol\AURP:;
+	HWRD 0 0 90 c2 Connection ID:;
+	HWRD 0 0 90 c2 Sequence Number:;
+	DWRD 0 1 90 c2 Command:;
+*  display indexed string 
+	CST# 0 1 0 14 AURP Command Types;
+	HWRD 0 2 90 c2 Flags:;
+*  donÕt forget the length byte too 
+	ADDG fffffff8 10 0 80;
+*  transfer to indexed string 
+	TST# 0 1 0 14 AURP Command Types;
+
+void Routing Information Request;
+	SUI flags;
+
+void SUI flags;
+	CBIT e 2 0 14 NA event (SUI);
+	CBIT d 2 0 14 ND & NRC event (SUI);
+	CBIT c 2 0 14 NDC event (SUI);
+	CBIT b 2 0 14 ZC event (SUI);
+	TRTS;
+
+void Routing Information Response;
+	CBIT f 2 0 14 Last;
+	Environment flags;
+	TNXT -RTMP Tuples;
+
+void Environment flags;
+	CBIT e 2 0 14 Remapping active;
+	CBIT d 2 0 14 Hop count reduction active;
+	CBIT c 2 0 14 Reserved (bit 12);
+	CBIT b 2 0 14 Reserved (bit 11);
+	TRTS;
+
+void Routing Information Acknowledgment;
+	CBIT e 2 0 14 SZI;
+
+void Routing Information Update;
+	TNXT -Event Tuples;
+
+void Event Tuples;
+	LSTS 0 10 0 b1 Event Tuple #;
+	DBYT 0 1 90 c2 Event Code:;
+*  display indexed string 
+	CST# ffffffff 1 0 14 Event Tuple Types;
+*  is it the Null Event? 
+	SNEQ 0 1;
+	SKIP 2;
+*  is it the Null Event? 
+	SEQU 0 1;
+	SKIP 6;
+	GLNG 0 1;
+	TBIT f 1 0 0 Ext Event Tuple;
+	DWRD 0 0 90 c2 Network Number:;
+	BBIT 3 0 90 c2 Range Flag:;
+	LABL 0 0 0 14 Nonextended;
+	DBIT 5 0 90 c2 Distance:;
+	LSTZ 0 10 0 80;
+
+void Ext Event Tuple;
+	DWRD 0 0 90 c2 Range Start:;
+	BBIT 3 0 90 c2 Range Flag:;
+	LABL 0 0 0 14 Extended;
+	DBIT 5 0 90 c2 Distance:;
+	DWRD 0 0 90 c2 Range End:;
+	TLTE 1 10 0 80 Event Tuples;
+void Router Down Packet;
+	HWRD 0 0 90 c2 Error Code:;
+void Zone Request;
+	DWRD 0 1 90 c2 Subcode:;
+*  display indexed string 
+	CST# 0 1 0 14 Zone Request Subcodes;
+*  transfer to indexed string 
+	TST# 0 1 0 0 Zone Request Subcodes;
+void Zone Information Request;
+	LSTS 0 10 0 c2 Network ;
+	DWRD 0 1 90 2  - Number:;
+	LSTZ 0 10;
+void Zone Response;
+	DWRD 0 1 90 c2 Subcode:;
+	CST# 0 1 0 14 Zone Response Subcodes;
+	TST# 0 1 0 0 Zone Response Subcodes;
+void Zone Information Response;
+	DWRD 0 3 90 c2 Number of Tuples:;
+	MOVE 1 4;
+	TNXT -ZIResp Tuple;
+void ZIResp Tuple;
+	DGLB 0 4 1 b1 Zone Tuple #;
+	DWRD 0 0 90 c2 Network Number:;
+	GBYT 0 5;
+	TBIT 7 5 0 0 Opt ZIResp Tuple;
+	PSTR 0 0 90 c2 Zone Name:;
+	MULG ffffffff 5;
+*  don't forget the length byte 
+	ADDG 1 4;
+	ADDG ffffffff 3;
+	TLTE 1 10 0 0 ZIResp Tuple;
+	TNXT -ZIResp Tuple Strings;
+void Opt ZIResp Tuple;
+	BBIT 1 0 90 c2 Optimized Format:;
+	DBIT f 0 90 c2 Zone Name Offset:;
+	ADDG 1 4;
+	ADDG ffffffff 3;
+	TLTE 1 10 0 0 ZIResp Tuple;
+	TNXT -ZIResp Tuple Strings;
+void ZIResp Tuple Strings;
+	TGTE 0 10 0 0 Tickle;
+	MOVE 0 4;
+	TNXT -ZIResp String Loop;
+void ZIResp String Loop;
+	TGTE 0 10 0 0 Tickle;
+	DGLB 0 4 1 b1 String at Offset #;
+	GBYT 0 5;
+	PSTR 0 0 90 c2 Zone Name:;
+	ADDG 5 84;
+*  don't forget the length byte 
+	ADDG 1 4;
+	MULG ffffffff 5;
+*  don't forget the length byte 
+	TNXT -ZIResp String Loop;
+void GetDomainZoneList Request;
+	DWRD 0 0 90 c2 Start Index:;
+void GetDomainZoneList Response;
+	DWRD 0 0 90 c2 Start Index:;
+	LSTS 0 0 0 80;
+	GBYT 0 4 90 2;
+	MULG ffffffff 4;
+	PSTR 0 0 90 c2 Zone Name:;
+	LSTZ 0 10;
+void GetNetZones Request;
+	PSTR 0 0 90 c2 Zone Name:;
+void GetNetZones Response;
+	GBYT 0 5;
+	PSTR 0 0 90 c2 Zone Name:;
+	DWRD 0 0 90 c2 Number of Tuples:;
+	MULG ffffffff 5;
+	TNXT -RTMP Tuples;
+void Open Request;
+	SUI flags;
+	HWRD 0 0 90 c2 Version:;
+	TNXT -Option Tuples;
+void Option Tuples;
+*  see if any option stuff is there 
+	TEQU 0 10 0 10 Tickle;
+	DBYT 0 4 90 c2 Option Count:;
+*  see if any option stuff is there 
+	TEQU 0 4 0 10 AFP The End;
+	LSTS 0 4 0 b1 Option Tuple #;
+	DBYT 0 5 90 c2 Option Tuple Length:;
+	Option Data;
+	LSTE 0 4 0 80;
+void Option Data;
+	TGTE 0 5 0 10 Option Data Return;
+	DBYT 0 6 90 c2 Option Tuple Type:;
+	CST# 0 6 0 14 Option Tuple Types;
+	ADDG ffffffff 5;
+	TGTE 0 5 0 10 Option Data Return;
+	DUMP 0 5 90 c2 Option Tuple Data:;
+	TRTS;
+void Option Data Return;
+	TRTS;
+void Open Response;
+	SUI flags;
+	GWRD 0 1;
+*  decr for error or update rate 
+	TLTE 0 1 0 10 Open-Rsp Valid;
+	DWRD 0 0 90 c2 Error Code:;
+	TNXT -Option Tuples;
+void Open-Rsp Valid;
+	DWRD 0 0 90 c2 Update Rate:;
+	LABL 0 0 0 10 (in 10 sec. multiples);
+	TNXT -Option Tuples;
+void Tickle;
+void Tickle Ack;
+str# ADSP Control Codes;
+	Probe or Ack;
+	Open Conn Request;
+	Open Conn Ack;
+	Open Conn Req & Ack;
+	Open Conn Denial;
+	Close Conn Advice;
+	Forward Reset;
+	Forward Reset Ack;
+	Retransmit Advice;
+str# AFP Req Types;
+	ByteRangeLock;
+	CloseVol;
+	CloseDir;
+	CloseFork;
+	CopyFile;
+	CreateDir;
+	CreateFile;
+	Delete;
+	Enumerate;
+	Flush;
+	FlushFork;
+	;
+	;
+	GetForkParms;
+	GetSrvrInfo;
+	GetSrvrParms;
+	GetVolParms;
+	Login;
+	LoginCont;
+	AFP Logout;
+	MapID;
+	MapName;
+	MoveAndRename;
+	OpenVol;
+	OpenDir;
+	OpenFork;
+	Read;
+	Rename;
+	SetDirParms;
+	SetFileParms;
+	SetForkParms;
+	SetVolParms;
+	Write;
+	GetFileDirParms;
+	SetFileDirParms;
+	ChangePassword;
+	GetUserInfo;
+	GetSrvrMsg;
+	CreateID;
+	DeleteID;
+	ResolveID;
+	ExchangeFiles;
+	CatSearch;
+	;
+	;
+	;
+	;
+	OpenDT;
+	CloseDT;
+	;
+	GetIcon;
+	GetIconInfo;
+	AddAPPL;
+	RmvAPPL;
+	GetAPPL;
+	AddComment;
+	RmvComment;
+	GetComment;
+	ByteRangeLockExt;
+	ReadExt;
+	WriteExt;
+	GetAuthMethods;
+	LoginExt;
+	GetSessionToken;
+	DisconnectOldSession;
+	EnumerateExt;
+	CatSearchExt;
+	EnumerateExt2;
+
+str# ASP Rsp Opt;
+*   >>> ORDERING IS IMPORTANT <<< must correspond to ASPtypes.r   	
+	AFP AddAPPL Reply;
+	AFP AddComment Reply;
+	AFP AddIcon Reply;
+	AFP ByteRangeLock Reply;
+	AFP CatSearch Reply;
+	AFP ChangePassword Reply;
+	AFP CloseDir Reply;
+	AFP CloseDT Reply;
+	AFP CloseFork Reply;
+	AFP CloseVol Reply;
+	AFP CopyFile Reply;
+	AFP CreateDir Reply;
+	AFP CreateFile Reply;
+	AFP CreateID Reply;
+	AFP Data Reply;
+	AFP Delete Reply;
+	AFP DeleteID Reply;
+	AFP Enumerate Reply;
+	AFP ExchangeFiles Reply;
+	AFP Flush Reply;
+	AFP FlushFork Reply;
+	AFP GetAPPL Reply;
+	AFP GetComment Reply;
+	AFP GetFileDirParms Reply;
+	AFP GetForkParms Reply;
+	AFP GetIcon Reply;
+	AFP GetIconInfo Reply;
+	AFP GetSrvrInfo Reply;
+	AFP GetSrvrMsg Reply;
+	AFP GetSrvrParms Reply;
+	AFP GetUserInfo Reply;
+	AFP GetVolParms Reply;
+	AFP Login Reply;
+	AFP LoginCont Reply;
+	AFP Logout Reply;
+	AFP MapID Reply;
+	AFP MapName Reply;
+	AFP MoveAndRename Reply;
+	AFP OpenDir Reply;
+	AFP OpenDT Reply;
+	AFP OpenFork Reply;
+	AFP OpenVol Reply;
+	AFP Read Reply;
+	AFP Rename Reply;
+	AFP ResolveID Reply;
+	AFP RmvAPPL Reply;
+	AFP RmvComment Reply;
+	AFP SetDirParms Reply;
+	AFP SetFileDirParms Reply;
+	AFP SetFileParms Reply;
+	AFP SetForkParms Reply;
+	AFP SetVolParms Reply;
+	AFP Write Reply;
+	AFP ByteRangeLockExt Reply;			*si: from here on, they are new
+	AFP ReadExt Reply;
+	AFP WriteExt Reply;
+	AFP GetAuthMethods Reply;
+	AFP GetSessionToken Reply;
+	AFP DisconnectOldSession Reply;
+	AFP EnumerateExt Reply;
+	AFP CatSearchExt Reply;
+	AFP LogInExt Reply;
+	AFP Sleep Reply;
+str# AFP Net Addr Types;
+	Reserved;
+	Basic IP Address;
+	IP Address With Port Num;
+	DDP Address;
+	DNS Name;
+	IP Address With Port Num;
+str# DSI Cmd Types;
+	Close Session;
+	User Command;
+	Get Status;
+	Open Session;
+	Tickle;
+	User Write;
+	Write Continue;
+	Attention;
+*  these last 4 apparently undocumented 
+*  but were contained in a decoder that 
+*  was developed by an Apple person. 
+*  instruction #5 in void #2970 uses 9 as fixed number 
+	Get Request;
+	Get Params;
+	Get Session;
+	Send Reply;
+str# ASP Type Names;
+	CloseSession;
+	Command;
+	GetStatus;
+	OpenSess;
+	Tickle;
+	Write;
+	WriteContinue;
+	Attention;
+str# ASP Types;
+	ASP CloseSession;
+	ASP Command;
+	ASP GetStatus;
+	ASP OpenSess;
+	ASP Tickle;
+	ASP Write;
+	ASP WriteContinue;
+	ASP Attention;
+str# ASP Req Opt;
+	AFP Request;
+str# ASP Stt Opt;
+	AFP GetSrvrInfo Reply;
+str# ASP Wrt Opt;
+	AFP Write Reply;
+	AFP AddIcon Reply;
+str# ASP Att Opt;
+	AFP UserBytes;
+str# ASP Err Codes;
+	BadVersNum;
+	BufTooSmall;
+	NoMoreSessions;
+	NoServers;
+	ParamErr;
+	ServerBusy;
+	SessClosed;
+	SizeErr;
+	TooManyClients;
+	NoAck;
+str# AFP Err Codes;
+	AccessDenied;
+	AuthContinue;
+	BadUAM;
+	BadVersNum;
+	BitmapErr;
+	CantMove;
+	DenyConflict;
+	DirNotEmpty;
+	DiskFull;
+	EOFErr;
+	FileBusy;
+	FlatVol;
+	ItemNotFound;
+	LockErr;
+	MiscErr;
+	NoMoreLocks;
+	NoServer;
+	ObjectExists;
+	ObjectNotFound;
+	ParamErr;
+	RangeNotLocked;
+	RangeOverlap;
+	SessClosed;
+	UserNotAuth;
+	CallNotSupported;
+	ObjectTypeErr;
+	TooManyFilesOpen;
+	ServerGoingDown;
+	CantRename;
+	DirNotFound;
+	IconTypeError;
+	VolLocked;
+	ObjectLocked;
+	;
+	IDNotFound;
+	IDExists;
+	DiffVol;
+	CatalogChanged;
+	SameObjectErr;
+	BadIDErr;
+	PwdSameErr;
+	PwdTooShort;
+	PwdExpired;
+	InsideSharedErr;
+	InsideTrashErr;
+str# ATP TReq Opt;
+	ASP Request;
+	PAP Request;
+	MacIP ConfigQuery;
+str# ATP TResp Opt;
+	PAP Reply;
+	ASP OpenSessReply;
+	ASP CloseSessReply;
+	ASP GetStatusReply;
+	ASP CmdReply;
+	ASP WriteReply;
+	ASP WriteContinueReply;
+	ASP AttentionReply;
+	MacIP ConfigReply;
+str# LocalTalk Types;
+	lapENQ;
+	lapACK;
+	lap???;
+	lapRTS;
+	lapCTS;
+str# DDP Type Names;
+	RTMP Response or Data;
+	NBP;
+	ATP;
+	AEP;
+	RTMP Request;
+	ZIP;
+	ADSP;
+	SNMP;
+	ABP;
+str# DDP Sockets;
+	RTMP;
+	Name Information;
+	Apple Reserved;
+	Echoer;
+	Broadcast;
+	Zone Information;
+str# PAP Type Names;
+	OpenConn;
+	OpenConnReply;
+	SendData;
+	Data;
+	Tickle;
+	CloseConn;
+	CloseConnReply;
+	SendStatus;
+	StatusReply;
+str# PAP Types;
+	PAP OpenConn;
+	PAP OpenConnReply;
+	PAP SendData;
+	PAP Data;
+	PAP Std;
+	PAP Std;
+	PAP Std;
+	PAP Std;
+	PAP StatusReply;
+str# ZIP Functions;
+	ZIP Query;
+	ZIP Reply;
+	;
+	;
+	GetNetInfo Request;
+	GetNetInfo Reply;
+	ZIP Notify;
+	ZIP Reply Extended;
+str# AURP Command Types;
+	Routing Information Request;
+	Routing Information Response;
+	Routing Information Acknowledgment;
+	Routing Information Update;
+	Router Down Packet;
+	Zone Request;
+	Zone Response;
+	Open Request;
+	Open Response;
+	;
+	;
+	;
+	;
+	Tickle;
+	Tickle Ack;
+str# Event Tuple Types;
+	Null;
+	Network Added;
+	Network Deleted;
+	Network Route Change;
+	Network Distance Change;
+	Zone Change;
+str# Zone Request Subcodes;
+	Zone Information Request;
+	;
+	GetNetZones Request;
+	GetDomainZoneList Request;
+str# Zone Response Subcodes;
+	Zone Information Response;
+	Zone Information Response;
+	GetNetZones Response;
+	GetDomainZoneList Response;
+str# Option Tuple Types;
+	Authentication;
+	Vendor-specific Info;
+

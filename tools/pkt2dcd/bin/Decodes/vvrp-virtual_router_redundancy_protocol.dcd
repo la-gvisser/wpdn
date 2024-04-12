@@ -1,0 +1,19 @@
+// VRRP - Virtual Router Redundancy Protocol
+
+void VRRP;
+	LABL 0 0 0 b1 Virtual Router Redundancy Protocol;
+	DBIT 4 0 90 c2 Version:;
+	DBIT 4 0 90 c2 Type:;
+	DBYT 0 0 90 c2 Virtual Router Id:;
+	DBYT 0 0 90 c2 Priority:;
+	DBYT 0 14 90 c2 Count IP Addr:;
+	DBYT 0 4 90 c2 Authentication Type:;
+	DBYT 0 0 90 c2 Advertisement Interval:;
+	HWRD 0 0 90 c2 Checksum:;
+	// it would be good to add in a checksum thing here...!
+	Count IP Addr g[20];
+	if (g[4] != 0)
+	{
+		CHR# 4 0 90 c2 Auth Data (1);
+		CHR# 4 0 90 c2 Auth Data (2);
+	}

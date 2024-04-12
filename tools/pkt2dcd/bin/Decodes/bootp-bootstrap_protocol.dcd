@@ -1,0 +1,67 @@
+
+void BOOTP;
+	LABL 0 0  0 b1 BootP - Bootstrap Protocol\BOOTP:;
+	DBYT 0 2 b0 c2 Operation:;
+	CEQU 1 2  0 14 Boot Request;
+	CEQU 2 2  0 14 Boot Reply;
+	DBYT 0 2 b0 c2 Hardware Address Type:;
+	CST# 0 2  0 14 HW Types;
+	DBYT 0 3 b0 c2 Hardware Address Length:;
+	LABL 0 0  0 10 bytes;
+	DBYT 0 0 b0 c2 Hops:;
+	DLNG 0 0 b0 c2 Transaction ID:;
+	DWRD 0 0 b0 c2 Seconds Since Boot Start:;
+	HWRD 0 4 b0 c2 BootP Flags:;
+	CBIT f 4  0 14 Broadcast;
+	IPLG 0 4 b0 c2 IP Address Known By Client:;
+	CEQU 0 4  0 14 IP Address Not Known By Client;
+	IPLG 0 4 b0 c2 Client IP Addr Given By Srvr:;
+	IPLG 0 0 b0 c2 Server IP Address:;
+	IPLG 0 4 b0 c2 Gateway IP Address:;
+	TEQU 6 3  0 0 HWAddr Len 6;
+	TLSE 0 0  0 0 Other Adds;
+
+void HWAddr Len 6;
+	ETHR 0 0 b0 c2 Client Hardware Addr:;
+	HEX# a  0 b0 c2 Unused:;
+	TNXT -BootP End;
+
+void Other Adds;
+	HEX# 0 3 b0 c2 Client Hardware Addr:;
+	l[1] = 16;
+	l[1] -= g[3];
+	if (l[1] > 0)
+	{
+		HEX# 0 41 b0 c2 Unused:;
+	}
+	TNXT -BootP End;
+
+void BootP End;
+	//SUBG 10 3 ;
+	MULG ffffffff 3;
+	*HEX# 0  3 b0 c2 Unused:;
+	MOVE 80 2 ;
+	MOVE 40 3 ;
+	CHR# 40 0 b0 c2 Server Host Name:;
+	CHR# 80 0 b0 c2 Boot File Name:;
+	GLNG 0  3 ;
+	TEQU 63825363 3 0 0 DHCP Start;
+	XLSE 0 3 0 0 BootP Dump;
+	
+void BootP Dump;
+	DUMP 0  10 b0 c2 Vendor Specified Data:;
+
+str# HW Types;
+	Ethernet (10Mb);
+	Experimental Ethernet (3Mb);
+	Amateur Radio AX.25;
+	Proteon ProNET Token Ring;
+	Chaos;
+	IEEE 802 Networks;
+	ARCNET;
+	Hyperchannel;
+	Lanstar;
+	Autonet Short Address;
+	LocalTalk;
+	LocalNet (IBM PCNet or SYTEK LocalNet);
+

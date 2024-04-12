@@ -1,0 +1,28 @@
+//HP ProCurve ERSPAN 
+
+//to work the protocol wants a defined port or being loaded over the Alternate Decoder List
+//!!!HERE!!!
+//
+/*
+str# UDP::Ports_Str;
+7777	|	HP_Encapsulated_Remote_Mirroring;
+9999	|	HP_Encapsulated_Remote_Mirroring;
+*/
+//------------------------------------
+
+void HP_Encapsulated_Remote_Mirroring()
+{
+	LABL( 0, 0, 0, 0xb1, "HP Encapsulated Remote Mirroring" );
+		HEX#( 8, 0, 0x90, 0xc2, "Unknown1:");
+		BBIT( 8, l[1], 0x90, 0xc2, "Unknown2:");
+		BBIT( 3, l[1], 0x90, 0xc2, "Version:");
+			CEQU( 1, l[1], 0, 0x14, "Type II");
+			CEQU( 2, l[1], 0, 0x14, "Type III");
+		BBIT( 1, l[1], 0x90, 0xc2, "CFI:");
+		DBIT( 12, 0, 0x90, 0xc2, "Vlan:"); 	
+		DBIT( 3, l[2], 0x90, 0xc2, "Priority:");
+		BBIT( 8, 0, 0x90, 0xc2, "Unknown3:");
+		LABL 0 0 00 b8;
+		Ether::Branching;	
+	LABL( 0, 0, 0, 0xb8 );
+}

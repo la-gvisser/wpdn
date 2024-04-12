@@ -1,0 +1,10 @@
+* IMAP - Internet Message Access Protocol
+
+void IMAP;
+	TEQU 0  10  0  0 RETURN; 
+	GBYT 0   1;
+	TEQU 0   1  0  0 RETURN; 
+	LABL 0   0  0 b1 IMAP - Internet Message Access Protocol;
+	MOVE 0  1e  0  0 statement length;
+	Display Fields And Lines;
+	TRTS;

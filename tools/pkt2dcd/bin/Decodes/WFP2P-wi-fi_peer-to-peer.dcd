@@ -1,0 +1,484 @@
+// WFP2P - Wi-Fi Peer-to-peer (Wi-Fi Direct)
+// Spec: Version 1.5
+// 02/01/2016
+// 
+
+void 802_11::IE_WFP2P()
+{
+	HBYT 0 0 90 c2 OUI Type:;
+	LABL 0 0 0 14 Wi-Fi Direct;
+	g[2] -= 4; // 3-byte OUI + 1 byte type.
+	while (g[2] > 0)
+	{
+		802_11::WFP2P::Attributes();
+	}
+}
+
+void 802_11::WFP2P::PublicAction()
+{
+	DBYT 0 3 90 c2 OUI Subtype:;
+	CST# 0 3 0 14 802_11::WFP2P::PublicActionFrameTypes;
+	DBYT 0 0 90 c2 Dialog Token:;
+	802_11::Information_Element_Loop();
+}
+
+void 802_11::WFP2P::Attributes()
+{
+	LABL 0 0 0 b7 P2P Attribute;
+	DBYT 0 3 90 c2 ID:;
+	CST# 0 3 0 14 802_11::WFP2P::AttributeNames;
+	DWRD 40000000 4 90 c2 Length:;
+	TSB# 0 3 0 0 802_11::WFP2P::AttributeFuncs;
+	SKIP 1;
+	TSUB -802_11::WFP2P::DefaultAttribute;
+	LABL 0 0 0 b8;
+	g[2] -= 3;	  // ID and Length (3 bytes).
+	g[2] -= g[4]; // Attribute length.
+}
+
+void 802_11::WFP2P::Status()
+{
+	DBYT 0 41 90 c2 Status Code:;
+	CST# 0 41 0 14 802_11::WFP2P::StatusCodes;
+}
+
+void 802_11::WFP2P::MinorReasonCode()
+{
+	DBYT 0 41 90 c2 Status Code:;
+	CST# 0 41 0 14 802_11::WFP2P::MinorReasonCodes;
+}
+
+void 802_11::WFP2P::P2PCapability()
+{
+	802_11::WFP2P::DeviceCapability();
+	
+	BBYT 0 7 90 b9 Group Capability:;
+	 CBIT 7 7 0 d4 1... .... IP Address Allocation - supported in EAPOL key frame;
+	 CLSE 0 0 0 d4 0... .... IP Address Allocation - Not supported in EAPOL key frame;
+	 CBIT 6 7 0 d4 .1.. .... Group Formation - Owner;
+	 CLSE 0 0 0 d4 .0.. .... Group Formation - Not Owner;
+	 CBIT 5 7 0 d4 ..1. .... Persistent Reconnect supported;
+	 CLSE 0 0 0 d4 ..0. .... Persistent Reconnect not supported;
+	 CBIT 4 7 0 d4 ...1 .... Cross Connection supported;
+	 CLSE 0 0 0 d4 ...0 .... Cross Connection not supported;
+	 CBIT 3 7 0 d4 .... 1... Intra-BSS Distribution supported;
+	 CLSE 0 0 0 d4 .... 0... Intra-BSS Distribution not supported;
+	 CBIT 2 7 0 d4 .... .1.. P2P Group Limit set;
+	 CLSE 0 0 0 d4 .... .0.. P2P Group Limit not set;
+	 CBIT 1 7 0 d4 .... ..1. Persistent P2P Group set;
+	 CLSE 0 0 0 d4 .... ..0. Persistent P2P Group not set;
+	 CBIT 0 7 0 d4 .... ...1 P2P Group Owner set;
+	 CLSE 0 0 0 d4 .... ...0 P2P Group Owner not set;
+	LABL 0 0 0 b8;
+}
+
+void 802_11::WFP2P::P2PDeviceID()
+{
+	ETHR 0 0 90 c2 Device Address:;
+}
+
+void 802_11::WFP2P::GroupOwnerIntent()
+{
+	LABL 0 0 0 b7 GO Intent;
+	DBIT 7 0 90 c2 Intent:;
+	DBIT 1 0 90 c2 Tie Breaker:;
+	LABL 0 0 0 b8;
+}
+
+void 802_11::WFP2P::ConfigurationTimeout()
+{
+	DBYT 0 41 90 c2 GO Config Timeout:;
+	l[1] *= 10;
+	DGLB 0 41 4 14 "(";
+	LABL 0 0 0 4 " msec)";
+	DBYT 0 41 90 c2 Client Config Timeout:;
+	l[1] *= 10;
+	DGLB 0 41 4 14 "(";
+	LABL 0 0 0 4 " msec)";
+}
+
+void 802_11::WFP2P::ListenChannel()
+{
+	802_11::WFP2P::CountryCode();
+	DBYT 0 0 90 c2 Operating Class:;
+	DBYT 0 0 90 c2 Channel Number:;
+}
+
+void 802_11::WFP2P::P2PGroupBSSID()
+{
+	ETHR 0 0 90 c2 P2P Group BSSID:;
+}
+
+void 802_11::WFP2P::ExtendedListenTiming()
+{
+	DWRD 40000000 0 90 c2 Availability Period:;
+	LABL 0 0 0 4 " msec";
+	DWRD 40000000 0 90 c2 Availability Interval:;
+	LABL 0 0 0 4 " msec";
+}
+
+void 802_11::WFP2P::IntendedP2PInterfaceAddress()
+{
+	ETHR 0 0 90 c2 Interface Address:;
+}
+
+void 802_11::WFP2P::P2PManageability()
+{
+	BBYT 0 7 90 b9 Manageability Bitmap:;
+		LABL 0 7 0 d4 xxxx x... Reserved;
+		CBIT 2 7 0 d4 .... .1.. Coexistence Optional: yes;
+		CLSE 0 0 0 d4 .... .0.. Coexistence Optional: no;
+		CBIT 1 7 0 d4 .... ..1. Cross Connection Permitted: yes;
+		CLSE 0 0 0 d4 .... ..0. Cross Connection Permitted: no;
+		CBIT 0 7 0 d4 .... ...1 P2P Device Management: yes;
+		CLSE 0 0 0 d4 .... ...0 P2P Device Management: no;
+	LABL 0 0 0 b8;
+}
+
+void 802_11::WFP2P::ChannelList()
+{
+	802_11::WFP2P::CountryCode();
+	
+	l[1] = g[4];	// G4 has attribute length.
+	l[1] -= 3;
+	
+	while( l[1] > 0 )
+	{
+		DBYT 0 0 90 c2 Operating Class:;
+		DBYT 0 42 90 c2 Channels:;
+		l[1] -= 2;
+		
+		LABL 0 0 0 4 " ";
+		
+		while( l[2] > 0 )
+		{
+			DBYT 0 0 4 14;
+			l[2]--;
+			l[1]--;
+			if( l[2] > 0 ) 
+			{
+				LABL 0 0 0 4 ", ";
+			}
+		}
+	}	
+}
+
+void 802_11::WFP2P::NoticeofAbsence()
+{
+	DBYT 0 0 90 c2 Index:;
+	BBIT 1 7 90 c2 OppPS:;
+		CBIT 0 7 0 14 Opportunistic Power Save ON;
+		CLSE 0 7 0 14 Opportunistic Power Save OFF;
+	DBIT 7 7 90 c2 CTWindow:;
+	DBYT 0 0 90 c2 Count/Type:;
+	DLNG 40000000 0 90 c2 Duration:;
+	DLNG 40000000 0 90 c2 Interval:;
+	DLNG 40000000 0 90 c2 Start Time:;
+}
+
+void 802_11::WFP2P::P2PDeviceInfo()
+{
+	ETHR 0 0 90 c2 Device Address:;
+	802_11::WFP2P::ConfigMethods();
+	802_11::IE_WPS_Primary_Device_Type();
+	DBYT 0 41 90 c2 Secondary Device Types:;
+	while( l[1] > 0 ) 
+	{
+		// These are actually "secondary device types", and I don't 
+		// know if that's the same as primary.  Don't have packets
+		// to exercise it.
+		802_11::IE_WPS_Primary_Device_Type();
+		l[1]--;
+	}
+	HWRD 0 0 5 0;		// Attribute (should be 1101)
+	DWRD 0 41 5 0;		// Length
+	CHR# 0 41 90 c2 Device Name:;
+}
+
+void 802_11::WFP2P::P2PGroupInfo()
+{
+	DBYT 0 41 90 c2 Client Info Descriptor Length:;
+	while( l[1] > 0 )
+	{
+		ETHR 0 0 90 c2 Device Address:;					// 6 bytes
+		ETHR 0 0 90 c2 Interface Address:;				// 6 bytes
+		802_11::WFP2P::DeviceCapability();				// 1 byte
+		802_11::WFP2P::ConfigMethods();					// 2 bytes
+		802_11::IE_WPS_Primary_Device_Type();			// 8 bytes
+		DBYT 0 42 90 c2 Secondary Devices:;				// 1 byte
+		l[1] -= 26;										// = 26 bytes
+		while( l[2] > 0 ) 
+		{
+			// These are actually "secondary device types", and I don't 
+			// know if that's the same as primary.  Don't have packets
+			// to exercise it.
+			802_11::IE_WPS_Primary_Device_Type();
+			l[2]--;
+			l[1] -= 8;
+		}
+		HWRD 0 0 5 0;		// Attribute (should be 1101)
+		DWRD 0 43 5 0;		// Length
+		CHR# 0 43 90 c2 Device Name:;
+		l[1] -= 4;
+		l[1] -= l[3];
+	}
+}
+
+void 802_11::WFP2P::P2PGroupID()
+{
+	ETHR 0 0 90 c2 Device Address:;
+	l[1] = g[4];	// G4 has attribute length.
+	l[1] -= 6;
+	CHR# 0 41 90 c2 SSID:;
+}
+
+void 802_11::WFP2P::P2PInterface()
+{
+	ETHR 0 0 90 c2 Device Address:;
+	DBYT 0 41 90 c2 Addresses:;
+	while( l[1] > 0 )
+	{
+		ETHR 0 0 90 c2 Interface Address:;
+		l[1]--;
+	}
+}
+
+void 802_11::WFP2P::DefaultAttribute()
+{
+	// Length had better be in g4.
+	DUMP 0 4 90 c2 Data:;
+}
+
+void 802_11::WFP2P::ConfigMethods()
+{
+	HWRD 0 7 90 b9 Config Methods:;
+		LABL 0 7 0 d4 xxxx xxx. .... .... Reserved;
+		CBIT 8 7 0 d4 .... ...1 .... .... Keypad: yes;
+		CLSE 0 0 0 d4 .... ...0 .... .... Keypad: no;
+		CBIT 7 7 0 d4 .... .... 1... .... Pushbutton: yes;
+		CLSE 0 0 0 d4 .... .... 0... .... Pushbutton: no;
+		CBIT 6 7 0 d4 .... .... .1.. .... NFC Interface: yes;
+		CLSE 0 0 0 d4 .... .... .0.. .... NFC Interface: no;	 
+		CBIT 5 7 0 d4 .... .... ..1. .... Integrated NFC Token: yes;
+		CLSE 0 0 0 d4 .... .... ..0. .... Integrated NFC Token: no;
+		CBIT 4 7 0 d4 .... .... ...1 .... External NFC Token: yes;
+		CLSE 0 0 0 d4 .... .... ...0 .... External NFC Token: no;	 
+		CBIT 3 7 0 d4 .... .... .... 1... Display: yes;
+		CLSE 0 0 0 d4 .... .... .... 0... Display: no;
+		CBIT 2 7 0 d4 .... .... .... .1.. Label: yes;
+		CLSE 0 0 0 d4 .... .... .... .0.. Label: no;
+		CBIT 1 7 0 d4 .... .... .... ..1. Ethernet: yes;
+		CLSE 0 0 0 d4 .... .... .... ..0. Ethernet: no;	 
+		CBIT 0 7 0 d4 .... .... .... ...1 USBA (Flash Drive): yes;
+		CLSE 0 0 0 d4 .... .... .... ...0 USBA (Flash Drive): no;	 
+	LABL 0 0 0 b8;
+}
+
+void 802_11::WFP2P::DeviceCapability()
+{
+	BBYT 0 7 90 b9 Device Capability:;
+		LABL 7 7 0 d4 xx.. .... Reserved;
+		CBIT 5 7 0 d4 ..1. .... Processes Invitation Procedure;
+		CLSE 0 0 0 d4 ..0. .... Does not process Invitation Procedure;
+		CBIT 4 7 0 d4 ...1 .... Device Limit set;
+		CLSE 0 0 0 d4 ...0 .... Device Limit not set;
+		CBIT 3 7 0 d4 .... 1... Infrastructure Managed set;
+		CLSE 0 0 0 d4 .... 0... Infrastructure Managed not set;
+		CBIT 2 7 0 d4 .... .1.. Concurrent Operation supported;
+		CLSE 0 0 0 d4 .... .0.. Concurrent Operation not supported;
+		CBIT 1 7 0 d4 .... ..1. P2P Client Discovery supported;
+		CLSE 0 0 0 d4 .... ..0. P2P Client Discovery not supported;
+		CBIT 0 7 0 d4 .... ...1 Service Discovery supported;
+		CLSE 0 0 0 d4 .... ...0 Service Discovery not supported;
+	LABL 0 0 0 b8;
+}
+
+void 802_11::WFP2P::CountryCode()
+{
+	CHR# 2 0 90 c2 Country String:;
+	LABL 0 0 90 12 /;
+	HBYT 0 0 90 12;
+}
+
+void 802_11::WFP2P::InvitationFlags()
+{
+	BBYT 0 7 90 b9 Invitation Flags Bitmap:;
+		LABL 7 7 0 d4 xxxx xxx. Reserved;
+		CBIT 0 7 0 d4 .... ...1 Invitation Type - P2P Invitation Request to re-invoke a Persistent Group;
+		CLSE 0 0 0 d4 .... ...0 Invitation Type - P2P Invitation Request to join an active P2P Group;
+}
+
+void 802_11::WFP2P::Out-of-BandGroupOwnerNegotiationChannel()
+{
+	802_11::WFP2P::CountryCode();
+	DBYT 0 0 90 c2 Operating Class:;
+	DBYT 0 0 90 c2 Channel Number:;
+	HBYT 0 41 90 c2 Role indication:;
+		CEQU 0 41 0 14 Indicate that the P2P device is not in a group;
+		CEQU 1 41 0 14 Indicate that the P2P device is a Group Client;
+		CEQU 2 41 0 14 Indicate that the P2P device is a Group Owner;
+		CLSE 0 0 0 14 Reserved;
+}
+
+void 802_11::WFP2P::Unused-Shallnotbeused()
+{
+	CHR# 0 4 90 c2 Unknown Subelement Data:;
+}
+
+void 802_11::WFP2P::ServiceHash()
+{
+	while (g[4] != 0)
+	{
+		HEX# 6 0 90 c2 Service Hash:;
+		g[4] -= 6;
+	}
+}
+
+void 802_11::WFP2P::SessionInformationDataInfo()
+{
+	802_11::WFP2P::Unused-Shallnotbeused;
+}
+
+void 802_11::WFP2P::ConnectionCapabilityInfo()
+{
+	802_11::WFP2P::Unused-Shallnotbeused;
+}
+
+void 802_11::WFP2P::Advertisement_IDInfo()
+{
+	HLNG 0 0 90 c2 Advertisement ID:;
+	ETHR 0 0 90 c2 Service MAC Address:;
+}
+
+void 802_11::WFP2P::Advertised ServiceInfo()
+{
+	while (g[4] != 0)
+	{
+		HLNG 0 0 90 c2 Advertisement ID:;
+		DWRD 0 0 90 c2 Service Config Methods:;
+		DBYT 0 41 90 c2 Service Name Length:;
+		g[4] -= 7;
+		CHR# 0 41 90 c2 Service Name:;
+		g[4] -= l[1];
+	}
+}
+
+void  802_11::WFP2P::SessionIDInfo()
+{
+	HLNG 0 0 90 c2 Session ID:;
+	ETHR 0 0 90 c2 Session MAC Address:;
+}
+
+void  802_11::WFP2P::FeatureCapability()
+{
+	802_11::WFP2P::Unused-Shallnotbeused;
+}
+
+void 802_11::WFP2P::PersistentGroupInfo()
+{
+	ETHR 0 0 90 c2 P2P device Address:;
+	g[4] -= 6;
+	CHR# 0 4 90 c2 SSID:;
+}
+
+//	221 | 802_11::WFP2P::VendorSpecific()
+//{
+	
+//}
+
+str# 802_11::WFP2P::AttributeNames;
+0 | Status;
+1 | Minor Reason Code;
+2 | P2P Capability;
+3 | P2P Device ID;
+4 | Group Owner Intent;
+5 | Configuration Timeout;
+6 | Listen Channel;
+7 | P2P Group BSSID;
+8 | Extended Listen Timing;
+9 | Intended P2P Interface Address;
+10 | P2P Manageability;
+11 | Channel List;
+12 | Notice of Absence;
+13 | P2P Device Info;
+14 | P2P Group Info;
+15 | P2P Group ID;
+16 | P2P Interface;
+17 | Operating Channel;
+18 | Invitation Flags;
+19 | Out-of-Band Group Owner Negotiation Channel;
+20 | Unused - Shall not be used!;
+21 | Service Hash;
+22 | Session Information Data Info;
+23 | Connection Capability Info;
+24 | Advertisement_ID Info;
+25 | Advertised Service Info;
+26 | Session ID Info;
+27 | Feature Capability;
+28 | Persistent Group Info;
+221 | Vendor Specific;
+
+str# 802_11::WFP2P::AttributeFuncs;
+0 | 802_11::WFP2P::Status;
+1 | 802_11::WFP2P::MinorReasonCode;
+2 | 802_11::WFP2P::P2PCapability;
+3 | 802_11::WFP2P::P2PDeviceID;
+4 | 802_11::WFP2P::GroupOwnerIntent;
+5 | 802_11::WFP2P::ConfigurationTimeout;
+6 | 802_11::WFP2P::ListenChannel;
+7 | 802_11::WFP2P::P2PGroupBSSID;
+8 | 802_11::WFP2P::ExtendedListenTiming;
+9 | 802_11::WFP2P::IntendedP2PInterfaceAddress;
+10 | 802_11::WFP2P::P2PManageability;
+11 | 802_11::WFP2P::ChannelList;
+12 | 802_11::WFP2P::NoticeofAbsence;
+13 | 802_11::WFP2P::P2PDeviceInfo;
+14 | 802_11::WFP2P::P2PGroupInfo;
+15 | 802_11::WFP2P::P2PGroupID;
+16 | 802_11::WFP2P::P2PInterface;
+17 | 802_11::WFP2P::ListenChannel;	// It's operating channel, but same exact format as ListenChanel
+18 | 802_11::WFP2P::InvitationFlags;
+19 | 802_11::WFP2P::Out-of-BandGroupOwnerNegotiationChannel;
+20 | 802_11::WFP2P::Unused-Shallnotbeused;
+21 | 802_11::WFP2P::ServiceHash;
+22 | 802_11::WFP2P::SessionInformationDataInfo;
+23 | 802_11::WFP2P::ConnectionCapabilityInfo;
+24 | 802_11::WFP2P::Advertisement_IDInfo;
+25 | 802_11::WFP2P::Advertised ServiceInfo;
+26 | 802_11::WFP2P::SessionIDInfo;
+27 | 802_11::WFP2P::FeatureCapability;
+28 | 802_11::WFP2P::PersistentGroupInfo;
+//	221 | 802_11::WFP2P::VendorSpecific;
+
+str# 802_11::WFP2P::PublicActionFrameTypes;
+0 | GO Negotiation Request;
+1 | GO Negotiation Response;
+2 | GO Negotiation Confirmation;
+3 | P2P Inviation Request;
+4 | P2P Invitation Response;
+5 | Device Discoverability Request;
+6 | Device Discoverability Response;
+7 | Provision Discovery Request;
+8 | Provision Discovery Response;
+
+str# 802_11::WFP2P::StatusCodes;
+0 | Success;
+1 | Fail - information unavailable;
+2 | Fail - incompatible parameters;
+3 | Fail - limit reached;
+4 | Fail - invalid parameters;
+5 | Fail - unable to accomodate request;
+6 | Fail - previous protocol error or disruptive behavior;
+7 | Fail - no common channels;
+8 | Fail - unknown P2P Group;
+9 | Fail - both P2P Devices indicated an Intent of 15 in Group Owner Negotiation;
+10 | Fail - incompatible provisioning method;
+11 | Fail - rejected by user;
+12 | Success - Accepted by user;
+
+str# 802_11::WFP2P::MinorReasonCodes;
+0	|	Reserved;
+1	|	Disass./deauth. from the WLAN AP because the Cross Connection cap. bit is 1;
+2	|	Disass./deauth. from the WLAN AP because the P2P Infrastructure Managed bit is 0;
+3	|	Disass./deauth. from the WLAN because a P2P Concurrent Device is not setting P2P Coexistence Parameters within the IT defined policy;
+4	|	Disass./deauth. from the WLAN AP because the P2P Device has included the P2P IE with the P2P Infrastructure Managed bit set to 1;

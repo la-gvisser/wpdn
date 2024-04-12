@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="CaptureFile">
+      <UniqueIdentifier>{e0537c38-2dc0-47dc-becf-20049277e8a1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="compare.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="merge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureFile\CaptureFile.cpp">
+      <Filter>CaptureFile</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureFile\GPSInfo.cpp">
+      <Filter>CaptureFile</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureFile\PCapCaptureFile.cpp">
+      <Filter>CaptureFile</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureFile\PeekCaptureFile.cpp">
+      <Filter>CaptureFile</Filter>
+    </ClCompile>
+    <ClCompile Include="readerlist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CaptureFile\PCapNgCaptureFile.cpp">
+      <Filter>CaptureFile</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="compare.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="merge.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\CaptureFile.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\GPSInfo.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\MediaTypes.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\PCapCaptureFile.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\PeekCaptureFile.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\tagfile.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\wppoppack.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\wppushpack.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\WPTypes.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+    <ClInclude Include="readerlist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="fileitem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CaptureFile\PCapNgCaptureFile.h">
+      <Filter>CaptureFile</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="pktman.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

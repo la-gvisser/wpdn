@@ -1,0 +1,526 @@
+// RTPS Decoder
+// Last Edited 2007-5-7
+// version 1.0b
+// -v
+// g[1]~g[5] is used
+
+void RTPS()
+{
+	 RTPS::HeaderTest;   // test again
+	 LABL 0 0 0 b1 RTPS (Real-Time Publish Subscribe Wire Protocol);
+	 HLNG 0 0 c0 c2 RTPS Signature:;
+	 DBYT 0 0 c0 c2 RTPS Version:;
+	 DBYT 0 0 0 0 .;
+	 HWRD 40000000 2 c0 c2 VendorId:;
+	 CST# 0 2 0 24 RTPS::VendorId_str;
+	 RTPS::DisplayHostAppId;
+
+	 BREM 0 3;
+	 while (g[3]>4)
+	 {
+	 		                                    // g[5] stores current header offset
+	 		LABL 0 0 c0 c8;
+	 		LABL 0 0 c0 c7 RTPS SubMessage:;
+	 		DBYT 0 4 c0 c2 SubMessageId:;
+	 		CST# 0 4 0 24 RTPS::SubMessageId_str;
+
+	 		BBYT 0 2 c0 c2 SubMessage Flag:;					      //g[2] stores flag;
+	 		l[1] = g[2];
+	 		l[1] &= 1;
+	 		if (l[1] == 1) 
+	 		{
+	 				LABL 0 0 0 24 little-endian;
+	 		}
+	 		if (l[1] == 0)
+	 		{
+	 				LABL 0 0 0 24 big-endian;
+	 		}
+			DWRD 40000000 6 c0 c2 Octets to next header:;  //g[6] stores offset to next header;
+			if (g[6]!=0)
+			{
+					BYTO 0 5 ; 
+					g[5] += g[6];
+					TSB# 0 4 -RTPS::SubMessages;
+					SKIP 1;
+					DUMP 1 6 c0 c2 MessageData:;
+					BYTO 0 7;
+				  
+					g[5] -= g[7];
+					if (g[5] > 0)
+					{
+							INCR 0 5;
+					}
+					 BREM 0 3;
+			}
+			if (g[6]==0)
+			{
+					if (g[4]==0)
+					{
+					}
+			}
+	 }
+}
+		 
+void RTPS::DisplayHostAppId;
+	 HLNG 0 2 c0 c2 HostID:;
+	 if (g[2] == 0)
+	 {
+	 			LABL 0 0 0 24 Unknown HostID;
+	 }
+	 
+	 LABL 0 0 c0 c9 AppID :;
+	 g[2] = pl[0];
+	 if (g[2] == 0)
+	 {
+	 		LABL 0 0 0 24 Unknown AppID;
+	 }
+	 HEX# 3 0 c0 c2 instanceId:;
+	 HBYT 0 2 c0 c2 appKind:;
+	 if (g[2] == 1)
+	 {
+	 		LABL 0 0 0 24 ManagedApplication;
+	 }
+	 if (g[2] == 2)
+	 {
+	 	  LABL 0 0 0 24 Manager;
+	 }
+	 LABL 0 0 0 b8;		 
+		 
+		 
+//-------------------------------------------------------------		 
+//		 SUB Message Parser Part                                 
+// Submessage parser should not modify g[3], g[5], g[6], g[2]
+// -v
+//-------------------------------------------------------------
+void RTPS::DisplayObject;
+		 
+		 l[2] = pl[0];
+		 CST# 0 42 0 24 RTPS::PredefineObjects_str;
+		 HEX# 3 0 c0 c2 ObjectId:;
+		 BBYT 0 7 c0 c2 objKind:;
+		 l[1] = g[7];
+		 l[2] = g[7];
+		 ANDG F 7;
+		 CST# 0 7 0 24 RTPS::objKind_str;
+		 l[1] &= 0x80;
+		 if (l[1] == 0x80) 
+		 {
+		 		LABL 0 0 c0 d4 " 1... ....   Meta Bit Set";
+		 		
+		 }	
+
+		 l[2] &= 0x40;
+		 if (l[2] == 0x40) 
+		 {		 
+		 		LABL 0 0 c0 d4 " .1.. ....   Reserved Bit Set";
+		 }
+
+str# RTPS::PredefineObjects_str;
+	 0x00000000 | Unknown;
+	 0x000001c1 | ApplicationSelf;
+	 0x000008c2 | writerApplicationsSelf;
+	 0x000001c2 | writerApplications;
+	 0x000001c7 | readerApplications;
+	 0x000007c2 | writerManagers;
+	 0x000007c7 | readerManagers;
+	 0x000003c2 | writerPublications;
+	 0x000003c7 | readerPublications;
+	 0x000004c2 | writerSubscriptions;
+	 0x000004c7 | readerSubscriptions;
+		
+str# RTPS::objKind_str;
+	0	| Unknown;
+	1	| Application;
+	2	| CSTWriter;
+	3	| Publication;
+	4	| Subscription;
+	7	| CSTReader;
+
+void RTPS::DisplayReaderWriterId;
+	 LABL 0 0 c0 c9 Reader Object ID:;
+	 RTPS::DisplayObject; 
+	 LABL 0 0 0 b8;
+	 LABL 0 0 c0 c9 Writer Object ID:;
+	 RTPS::DisplayObject;
+	 LABL 0 0 0 b8;
+//------------------------------------		 
+void RTPS::SubMessage::Pad;
+
+
+//------------------------------------		
+void RTPS::SubMessage::Var;
+		RTPS::DisplayReaderWriterId;
+			l[1] = g[2];
+			l[1] &= 8;
+
+      if (l[1] == 8)
+      {
+      		RTPS::DisplayHostAppId;
+			}
+		 LABL 0 0 c0 c9 Object ID:;
+		 RTPS::DisplayObject;
+		 LABL 0 0 0 b8;
+
+		 LABL 0 0 c0 c2 Writer Sequence:;
+			RTPS::DisplaySeqNum;
+		 	l[1] = g[2];
+			l[1] &= 2;
+      if (l[1] == 2)
+      {
+      		//DUMP 0 6 c0 c2 Parameters:;
+      	  LABL 0 0 c0 c7 Parameters:;    	
+      	  BYTO 0 48;
+      	  l[9]=g[5];
+      	  l[9] -= l[8];
+      		while (l[9] > 7)  // not end of the message and at least hold a parameter head
+      		{
+      				LABL  0 0 c0 c7 Parameter Block:;
+      				DWRD  40000000 1 c0 c2 Parameter Id:;
+      				CST# 0 1 0 24 RTPS::Parameter_str;
+      				DWRD 40000000 8 c0 c2 Parameter Length:;
+      				TSB# 0 1 0 0 RTPS::ParameterProcess;	
+      				LABL 0 0 0 c8;	
+      				l[9] -= g[8];	//deduct Parameter Length;
+      				l[9] -= 8;  // deduct header
+      		}
+   		  LABL 0 0 0 c8;
+        		
+			}
+			
+void	RTPS::Parameter::PID_PAD;
+		
+
+void	RTPS::Parameter::PID_SENTINEL;
+
+void	RTPS::Parameter::PID_EXPIRATION_TIME;
+			HEX# 8 0 c0 c2 App Expiration Time:;
+			
+			
+void	RTPS::Parameter::PID_PERSISTENCE;
+			HEX# 8 0 c0 c2 Publication Persistence Time:;
+			
+void	RTPS::Parameter::PID_MINIMUM_SEPARATION;
+			HEX# 8 0 c0 c2 Subscription Time:;
+			
+void	RTPS::Parameter::PID_TOPIC;
+			CHR# FF 0 c0 c2 Publication Topic:;
+			CHR# FF 0 c0 c2 Subscription Topic:;
+			
+void	RTPS::Parameter::PID_STRENGTH;
+			DLNG 40000000 0 c0 c2 Strength:;
+void	RTPS::Parameter::PID_TYPE_NAME;
+			CHR# FF 0 c0 c2 Publication Type Name:;
+			CHR# FF 0 c0 c2 Subscription Type Name:;
+
+void	RTPS::Parameter::PID_TYPE_CHECKSUM;
+			HLNG 0 0 c0 c2 Publication Checksum:;
+			HLNG 0 0 c0 c2 Subscription Checksum:;
+			
+
+void	RTPS::Parameter::RTPS_PID_TYPE2_NAME;
+			if (g[8] != 0)
+			{
+					INCR 0 8;
+			}
+
+
+void	RTPS::Parameter::RTPS_PID_TYPE2_CHECKSUM;
+			if (g[8] != 0)
+			{
+					INCR 0 8;
+			}
+			
+void	RTPS::Parameter::PID_METATRAFFIC_MULTICAST_IPADDRESS;
+			l[4] = g[8];
+			LABL 0 0 c0 c2 "MultiCast IP Address(es):";
+			while (l[4]>0) 
+			{
+					
+					IPLG 0 0 c0 24 " ";
+					l[4] -=4;
+					if l[4] > 0
+					{
+							LABL 0 0 c0 c2 "                           ";
+					}
+			}
+
+void	RTPS::Parameter::PID_APP_IPADDRESS;
+			l[4] = g[8];
+			LABL 0 0 c0 c2 "Application IP Address(es):";
+			while (l[4]>0) 
+			{
+					
+					IPLG 0 0 c0 24 " ";
+					l[4] -=4;
+					if l[4] > 0
+					{
+							LABL 0 0 c0 c2 "                           ";
+					}
+					
+			}
+			
+void	RTPS::Parameter::PID_METATRAFFIC_UNICAST_PORT;
+			DLNG 40000000 0 c0 c2 Meta Traffic Unicast Port:;
+			
+void	RTPS::Parameter::PID_USERDATA_UNICAST_PORT;
+			DLNG 40000000 0 c0 c2 UserData Traffic Unicast Port:;
+			
+void	RTPS::Parameter::PID_EXPECTS_ACK;
+			DBYT 0 43 c0 c2 Expect ACK:;
+			if (l[3] == 1)
+			{
+				 LABL 0 0 0 24 True;	
+			}
+			if (l[3] == 0)
+			{
+				LABL 0 0 0 24 False;
+			}
+			INCR 3;
+			
+void	RTPS::Parameter::PID_USERDATA_MULTICAST_IPADDRESS;
+			l[4] = g[8];
+			LABL 0 0 c0 c2 "User Data Multicast IP Address(es):   ";
+			while (l[4]>0) 
+			{
+					
+					IPLG 0 0 c0 24 " ";
+					l[4] -=4;
+					if l[4] > 0
+					{
+							LABL 0 0 c0 c2 "                           ";
+					}
+					
+			}
+void	RTPS::Parameter::PID_MANAGER_KEY;
+			l[4] = g[8];
+			LABL 0 0 c0 c2 Manager Key(s):;
+			while (l[4]>0) 
+			{
+					
+					DLNG 40000000 0 c0 24 " ";
+					l[4] -=4;
+					if l[4] > 0
+					{
+							LABL 0 0 c0 c2 "                           ";
+					}
+					
+			}
+void	RTPS::Parameter::PID_SEND_QUEUE_SIZE;
+			DLNG 40000000 0 c0 24 Send Queue Size:;
+			
+void	RTPS::Parameter::PID_PROTOCOL_VERSION;
+		 DBYT 0 0 c0 c2 RTPS Protocol Version:;
+		 DBYT 0 0 0 2 .;
+		 INCR 2;
+
+void	RTPS::Parameter::PID_VENDOR_ID;
+			HWRD 40000000 2 c0 c2 VendorId:;
+		 	CST# 0 2 0 24 RTPS::VendorId_str;
+		 	INCR 2;
+
+void	RTPS::Parameter::PID_VARGAPPS_SEQUENCE_NUMBER_LAST;
+			LABL 0 0 c0 c2 Apps Last Sequence Number:;
+			RTPS::DisplaySeqNum;
+			
+void	RTPS::Parameter::PID_RECV_QUEUE_SIZE;
+			DLNG 40000000 0 c0 c2 Receive Queue Size:;
+
+void	RTPS::Parameter::PID_RELIABILITY_OFFERED;
+			DLNG 40000000 0 c0 c2 Reliability Offered:;
+			
+void	RTPS::Parameter::PID_RELIABILITY_REQUESTED;
+			DLNG 40000000 0 c0 c2 Reliability Requested;
+			
+str#  RTPS::ParameterProcess;	
+	0x0000	|	RTPS::Parameter::PID_PAD;
+	0x0001	|	RTPS::Parameter::PID_SENTINEL;
+	0x0002	|	RTPS::Parameter::PID_EXPIRATION_TIME;
+	0x0003	|	RTPS::Parameter::PID_PERSISTENCE;
+	0x0004	|	RTPS::Parameter::PID_MINIMUM_SEPARATION;
+	0x0005	|	RTPS::Parameter::PID_TOPIC;
+	0x0006	|	RTPS::Parameter::PID_STRENGTH;
+	0x0007	|	RTPS::Parameter::PID_TYPE_NAME;
+	0x0008	|	RTPS::Parameter::PID_TYPE_CHECKSUM;
+	0x0009	|	RTPS::Parameter::RTPS_PID_TYPE2_NAME;
+	0x000a	|	RTPS::Parameter::RTPS_PID_TYPE2_CHECKSUM;
+	0x000b	|	RTPS::Parameter::PID_METATRAFFIC_MULTICAST_IPADDRESS;
+	0x000c	|	RTPS::Parameter::PID_APP_IPADDRESS;
+	0x000d	|	RTPS::Parameter::PID_METATRAFFIC_UNICAST_PORT;
+	0x000e	|	RTPS::Parameter::PID_USERDATA_UNICAST_PORT;
+	0x0010	|	RTPS::Parameter::PID_EXPECTS_ACK;
+	0x0011	|	RTPS::Parameter::PID_USERDATA_MULTICAST_IPADDRESS;
+	0x0012	|	RTPS::Parameter::PID_MANAGER_KEY;
+	0x0013	|	RTPS::Parameter::PID_SEND_QUEUE_SIZE;
+	0x0015	|	RTPS::Parameter::PID_PROTOCOL_VERSION;
+	0x0016	|	RTPS::Parameter::PID_VENDOR_ID;
+	0x0017	|	RTPS::Parameter::PID_VARGAPPS_SEQUENCE_NUMBER_LAST;
+	0x0018	|	RTPS::Parameter::PID_RECV_QUEUE_SIZE;
+	0x0019	|	RTPS::Parameter::PID_RELIABILITY_OFFERED;
+	0x001a	|	RTPS::Parameter::PID_RELIABILITY_REQUESTED;
+
+
+str#  RTPS::Parameter_str;		
+	0x0000	|	PID_PAD;
+	0x0001	|	PID_SENTINEL;
+	0x0002	|	PID_EXPIRATION_TIME;
+	0x0003	|	PID_PERSISTENCE;
+	0x0004	|	PID_MINIMUM_SEPARATION;
+	0x0005	|	PID_TOPIC;
+	0x0006	|	PID_STRENGTH;
+	0x0007	|	PID_TYPE_NAME;
+	0x0008	|	PID_TYPE_CHECKSUM;
+	0x0009	|	RTPS_PID_TYPE2_NAME;
+	0x000a	|	RTPS_PID_TYPE2_CHECKSUM;
+	0x000b	|	PID_METATRAFFIC_MULTICAST_IPADDRESS;
+	0x000c	|	PID_APP_IPADDRESS;
+	0x000d	|	PID_METATRAFFIC_UNICAST_PORT;
+	0x000e	|	PID_USERDATA_UNICAST_PORT;
+	0x0010	|	PID_EXPECTS_ACK;
+	0x0011	|	PID_USERDATA_MULTICAST_IPADDRESS;
+	0x0012	|	PID_MANAGER_KEY;
+	0x0013	|	PID_SEND_QUEUE_SIZE;
+	0x0015	|	PID_PROTOCOL_VERSION;
+	0x0016	|	PID_VENDOR_ID;
+	0x0017	|	PID_VARGAPPS_SEQUENCE_NUMBER_LAST;
+	0x0018	|	PID_RECV_QUEUE_SIZE;
+	0x0019	|	PID_RELIABILITY_OFFERED;
+	0x001a	|	PID_RELIABILITY_REQUESTED;
+			
+			
+//------------------------------------		
+void RTPS::SubMessage::Issue;		
+		 RTPS::DisplayReaderWriterId;
+		 LABL 0 0 c0 c2 Issue Sequence Number:;
+		 RTPS::DisplaySeqNum;
+			l[1] = g[2];
+			l[1] &= 2;
+      if (l[1] == 2)
+      {
+      		HEX# 8 0 c0 c2 Parameters:;
+      	
+      }
+			DUMP 1 6 c0 c2 Issue Data:;
+			
+//------------------------------------				 
+void RTPS::SubMessage::Ack;
+		 	l[1] = g[2];
+			l[1] &= 2;
+      if (l[1] == 2)
+      {
+      		LABL 0 0 0 24 Final Bits Set;
+      }
+		 RTPS::DisplayReaderWriterId;
+
+		 
+		 
+			//BYTO 0 7;
+			//g[7] -= g[5];
+			DUMP 1 6 c0 c2 Bitmap:;
+		 
+		 
+//------------------------------------				 
+void RTPS::SubMessage::Heart;
+			RTPS::DisplayReaderWriterId;
+			LABL 0 0 c0 c2 First Sequence Number:;
+			RTPS::DisplaySeqNum;		
+			
+			LABL 0 0 c0 c2 Last Sequence Number:;
+			RTPS::DisplaySeqNum;	
+			
+			
+void RTPS::DisplaySeqNum;
+		 l[2] = pl[0];
+		 l[3] = pl[1];
+		 LABL 0 0 c0 24 "       ";
+		 if (l[2] != 0 ) 
+		 {
+		   	HGLB(0x0, l[2], 0 ,0x24, "");
+		   	HGLB(0x80, l[3],0, 0x04);
+		 }
+		 if (l[2] == 0)
+		 {
+		 		DGLB (0x80, l[3],0, 0x24, "");
+		 }
+		 INCR 8;
+//------------------------------------		
+void RTPS::SubMessage::GAP;
+		DUMP 8 0 c0 c2 First SequnceNumber:;
+		DUMP 1 6 c0 c2 Bitmap:;
+		 
+//------------------------------------				
+void RTPS::SubMessage::Info_TS;
+
+		l[1] = g[2];
+		l[1] &= 2;
+
+		if (l[1] == 0)
+		{
+	 			HEX# 8 0 c0 c2 RTPS NTP TimeStamp:;
+		}
+
+
+//------------------------------------		
+void RTPS::SubMessage::Info_Src;
+		IPLG 0 0 c0 c2 App IP Address:;
+		DWRD 40000000 0 c0 c2 Protocol Version:;
+		HWRD 40000000 2 c0 c2 Vendor Id:;
+		CST# 0 2 0 24 RTPS::VendorId_str;
+		RTPS::DisplayHostAppId;	 
+
+//------------------------------------		
+void  RTPS::SubMessage::Info_Reply;
+		IPLG 0 0 c0 c2 Unicast Reply IP Address:;
+		DWRD 40000000 0 c0 c2 Unicast Reply Port:;
+		l[1] = g[2];
+		l[1] &= 2;
+		if (l[1] == 2)
+		{
+				IPLG 0 0 c0 c2 Multicast Reply IP Address:;
+				DWRD 40000000 0 c0 c2 Multicast Reply Port:;
+		}
+
+
+//------------------------------------		
+void  RTPS::SubMessage::Info_Dst;
+		RTPS::DisplayHostAppId;	 
+		 
+
+str# RTPS::VendorId_str;
+ 0x0101 | Real-Time Innovations, Inc., CA, USA;		 
+//------------------------------------				 
+str# RTPS::SubMessages;
+  0x1 | RTPS::SubMessage::Pad;
+  0x2 | RTPS::SubMessage::Var;
+  0x3 | RTPS::SubMessage::Issue;		 
+  0x6 | RTPS::SubMessage::Ack;
+  0x7 | RTPS::SubMessage::Heart;
+  0x8 | RTPS::SubMessage::GAP;
+  0x9 | RTPS::SubMessage::Info_TS;
+  0x0c | RTPS::SubMessage::Info_Src;
+  0x0d | RTPS::SubMessage::Info_Reply;
+  0x0e | RTPS::SubMessage::Info_Dst;
+
+//------------------------------------				 
+str# RTPS::SubMessageId_str;
+	0x1		| PAD;
+	0x2		| VAR;
+	0x3		| ISSUE;
+	0x6		| ACK;
+	0x7		| HEARTBEAT;
+	0x8		| GAP;
+	0x9		| INFO_TS;
+	0x0c	| INFO_SRC;
+	0x0d	| INFO_REPLY;
+	0x0e	| INFO_DST;
+//------------------------------------
+//  SubMessage Part Complete
+//
+//------------------------------------					 
+void RTPS::HeaderTest;
+	 l[1] = pl[0];
+	 if (l[1] != 0x52545053)
+	 {
+	 		TRTS;
+	 }
+
+

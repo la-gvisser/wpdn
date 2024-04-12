@@ -1,0 +1,168 @@
+Adding Dropped Packet reporting to HSP Adapter
+
+RemoteAdapter.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class HE_NO_VTABLE CRemoteAdapter
+	:	public HeLib::CHeObjRoot<HeLib::CHeMultiThreadModel>
+	,	public HeLib::CHeClass<CRemoteAdapter>
+	,	public IAdapterInitialize
+	,	public IAdapter
+	,	public IPacketProvider
+	,	public ICapturePackets
+	,	public IPluginAdapter                                               <---- Add
+	,	public INdisAdapter
+#ifdef IMPLEMENT_SUMMARY
+	,	public IUpdateSummaryStats
+#endif	// IMPLEMENT_SUMMARY
+	,	public Helium::IHePersistXml
+	,	public IHeObjectWithSiteImpl<CRemoteAdapter>
+{
+
+
+	HE_INTERFACE_MAP_BEGIN(CRemoteAdapter)
+		HE_INTERFACE_ENTRY_IID(IAdapterInitialize_IID,IAdapterInitialize)
+		HE_INTERFACE_ENTRY_IID(IAdapter_IID,IAdapter)
+		HE_INTERFACE_ENTRY_IID(IPacketProvider_IID,IPacketProvider)
+		HE_INTERFACE_ENTRY_IID(ICapturePackets_IID,ICapturePackets)
+		HE_INTERFACE_ENTRY_IID(IPluginAdapter_IID, IPluginAdapter)
+		HE_INTERFACE_ENTRY_IID(INdisAdapter_IID,INdisAdapter)               <---- Add
+#ifdef IMPLEMENT_SUMMARY
+		HE_INTERFACE_ENTRY_IID(IUpdateSummaryStats_IID,IUpdateSummaryStats)
+#endif	// IMPLEMENT_SUMMARY
+		HE_INTERFACE_ENTRY_IID(HE_IHEPERSIST_IID,IHePersist)
+		HE_INTERFACE_ENTRY_IID(HE_IHEPERSISTXML_IID,IHePersistXml)
+		HE_INTERFACE_ENTRY_IID(HE_IHEOBJECTWITHSITE_IID,IHeObjectWithSite)
+	HE_INTERFACE_MAP_END()
+
+
+
+	// IPluginAdapter
+public:
+	HE_IMETHOD DeleteAdapter( const Helium::HeID& adapterID );
+
+	// INdisAdapter                                                         <---- Add
+public:                                                                     <---- Add
+	HE_IMETHOD GetRingBufferSize(UInt32* pulRingBufferSize);                <---- Add
+	HE_IMETHOD SetRingBufferSize(UInt32 ulRingBufferSize);                  <---- Add
+	HE_IMETHOD GetPacketsDropped(UInt64* pullPacketsDropped);               <---- Add
+
+
+
+
+RemoteAdapter.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+// ----------------------------------------------------------------------------
+//		IPluginAdapter::DeleteAdapter
+// ----------------------------------------------------------------------------
+
+HE_IMETHODIMP
+CRemoteAdapter::DeleteAdapter(
+	const Helium::HeID&	adapterID )
+{
+	// Pass the request off to the Remote Plugin.
+	return m_spPluginAdapter->DeleteAdapter( adapterID );
+}
+
+
+VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV Begin Add
+// ----------------------------------------------------------------------------
+//		INdisAdapter::GetRingBufferSize
+// ----------------------------------------------------------------------------
+
+HE_IMETHODIMP
+CRemoteAdapter::GetRingBufferSize(
+	UInt32* pulRingBufferSize )
+{
+	*pulRingBufferSize = m_nRingBufferSize;
+	return HE_S_OK;
+}
+
+
+// ----------------------------------------------------------------------------
+//		INdisAdapter::SetRingBufferSize
+// ----------------------------------------------------------------------------
+
+HE_IMETHODIMP
+CRemoteAdapter::SetRingBufferSize(
+	UInt32 ulRingBufferSize )
+{
+	ulRingBufferSize = m_nRingBufferSize;
+	return HE_S_OK;
+}
+
+
+// ----------------------------------------------------------------------------
+//		INdisAdapter::GetPacketsDropped
+// ----------------------------------------------------------------------------
+
+HE_IMETHODIMP
+CRemoteAdapter::GetPacketsDropped(
+	UInt64* pulPacktesDropped )
+{
+	_ASSERTE( pulPacktesDropped != nullptr );
+	if ( pulPacktesDropped == nullptr ) return HE_E_NULL_POINTER;
+
+	_ASSERTE( m_OmniAdapter.IsValid() );
+	if ( m_OmniAdapter.IsNotValid() ) return HE_E_FAIL;
+
+	*pulPacktesDropped  = m_OmniAdapter.GetDroppedPackets();
+	return HE_S_OK;
+}
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ End Add
+
+
+
+
+OmniAdapter.h
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+protected:
+	CGlobalId			m_Id;
+	CPluginAdapterInfo	m_AdapterInfo;
+	CPeekString			m_strName;
+	CChannelManager		m_ChannelManager;
+	UInt64				m_nDroppedPackets;                                                  <---- Add
+
+<snip>
+
+    bool*						GetCapturingPtr() { return &m_bCapturing; }
+	UInt64						GetDroppedPackets() const { return m_nDroppedPackets; }     <---- Add
+	UInt32						GetFwdParams();
+
+
+
+
+OmniAdapter.cpp
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+COmniAdapter::COmniAdapter(
+	const CGlobalId&	inId,
+	bool				inNavl )
+	:	m_Id( inId )
+	,	m_nRunningCaptures( 0 )
+	,	m_nDroppedPackets( 0 )                                                      <---- Add
+	,	m_HeaderBytes( 0 )
+
+
+bool
+COmniAdapter::Initialize(
+	CAdapterInfo		inInfo,
+	CPeekEngineProxy	inEngineProxy )
+{
+<snip>
+	m_strName = m_AdapterInfo.GetDescription();
+
+	m_nDroppedPackets = 0;                                                          <---- Add (suggested)
+
+
+int
+COmniAdapter::OnUpdateSummaryStats(
+	CSnapshot inSnapshot )
+{
+<snip>
+	m_Stats.DropStat.Stat.Value.IntValue = m_nDroppedPackets;                       <---- Add
+
+	inSnapshot.UpdateSummaryStat( m_ParentStat, m_Stats.PacketStat, 0, false );
+	inSnapshot.UpdateSummaryStat( m_ParentStat, m_Stats.DropStat, 0, false );

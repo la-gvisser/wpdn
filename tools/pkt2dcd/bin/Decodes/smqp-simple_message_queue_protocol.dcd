@@ -1,0 +1,20 @@
+// SMQP - Simple Message Queue Protocol 
+
+/*
+ notes:
+ tt6752
+ server port: 720
+ client port: 721
+*/
+
+
+// -------------------------------------------------------
+//  SMQP Main
+//		For now, just have a placeholder showing all lines
+// -------------------------------------------------------
+void SMQP()
+{
+	LABL 0 0 0 b1 SMQP - Simple Message Queue Protocol/SMQP;
+	Display All Lines No Init;
+}
+

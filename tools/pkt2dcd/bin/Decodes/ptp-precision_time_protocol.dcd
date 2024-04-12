@@ -1,0 +1,1038 @@
+* PTP - precision-time-protocol
+* IEC61588v1 and IEC61588v2
+* PTPv1 docu attached to TT
+* PTPv2 coded from docu attached to TT
+
+
+str# UDP::Ports_Str;
+	319 | PTP;
+	320	| PTP;
+	
+str# Ether::Branching_3_Str;
+0x88F7	|	PTP;
+
+str# EProto::Names_Str;
+0x88F7	|	precision-time-protocol;
+ 
+void PTP()
+{
+	LABL( 0, 0, 0, 0xb1, "Precision Time Protocol\PTP" );
+	GBYT( 1, l[2]);
+	l[2] &= 0xf;
+	LABL( 0, 0, 0, 0x01, " - Version: " );
+	DGLB( 0, l[2], 0x01, 0x01 );
+	GBYT( 0, l[1]);
+	l[1] &= 0xf;
+	LABL( 0, 0, 0, 0x01, " - " );
+	CST#( 0, l[1], 0x01, 0x01 , PTPv2::MessageTypes );
+	CLSE( 0, 0, 0, 0x01, "reserved" );
+	//Header
+	
+	if (l[2] == 1)
+	{
+		LABL( 0, 0, 0,0x01, " - PTPv1 is currently not supported" );
+		
+		TRTS;
+	}
+	if (l[2] == 2)
+	{
+		BBIT( 4, 0, 0x90, 0xc2, "transportSpecific:" );
+		BBIT( 4, l[1], 0x90, 0xc2, "messageType:" );
+			CST#( 0, l[1], 0, 0x14, PTPv2::MessageTypes );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+		DBIT( 4, l[2], 0x90, 0xc2, "versionPTP:" );
+		DWRD( 0, l[3], 0x90, 0xc2, "messageLength:" );
+		DWRD( 0, l[4], 0x90, 0xc2, "subdomainNumber:" );
+		BWRD( 0, l[5], 0x90, 0xc9, "flagsField:" );
+			CBIT( 0xf, l[5], 0, 0xd4, "1....... ........ Security: set" );
+			CLSE( 0, l[5], 0, 0xd4, "0....... ........ Security: not set" );
+			CBIT( 0xe, l[5], 0, 0xd4, ".1...... ........ PTPprofileSpecific2: set" );
+			CLSE( 0, l[5], 0, 0xd4, ".0...... ........ PTPprofileSpecific2: not set" );
+			CBIT( 0xd, l[5], 0, 0xd4, "..1..... ........ PTPprofileSpecific1: set" );
+			CLSE( 0, l[5], 0, 0xd4, "..0..... ........ PTPprofileSpecific1: not set" );
+			CBIT( 0xa, l[5], 0, 0xd4, ".....1.. ........ unicastFlag: set" );
+			CLSE( 0, l[5], 0, 0xd4, ".....0.. ........ unicastFlag: not set" );
+			CBIT( 9, l[5], 0, 0xd4, "......1. ........ twoStepFlag: set" );
+			CLSE( 0, l[5], 0, 0xd4, "......0. ........ twoStepFlag: not set" );
+			CBIT( 8, l[5], 0, 0xd4, ".......1 ........ alternateMasterFlag: set" );
+			CLSE( 0, l[5], 0, 0xd4, ".......0 ........ alternateMasterFlag: not set" );
+			CLSE( 0, l[5], 0, 0xd4, ".......0 ........ alternateMasterFlag: not set" );
+			
+			CBIT( 7, l[5], 0, 0xd4, "........ 1....... reserved: set" );
+			CLSE( 0, l[5], 0, 0xd4, "........ 0....... reserved: not set" );
+			CBIT( 6, l[5], 0, 0xd4, "........ .1...... reserved: set" );
+			CLSE( 0, l[5], 0, 0xd4, "........ .0...... reserved: not set" );
+			CBIT( 0x5, l[5], 0, 0xd4, "........ ..1..... frequencyTraceable: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ ..0..... frequencyTraceable: not set" );
+			CBIT( 0x4, l[5], 0, 0xd4, "........ ...1.... timeTraceable: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ ...0.... timeTraceable: not set" );
+			CBIT( 0x3, l[5], 0, 0xd4, "........ ....1... ptpTimescale: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ ....0... ptpTimescale: not set" );
+			CBIT( 0x2, l[5], 0, 0xd4, "........ .....1.. currentUtcOffsetValid: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ .....0.. currentUtcOffsetValid: not set" );
+			CBIT( 0x1, l[5], 0, 0xd4, "........ ......1. leap59: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ ......0. leap59: not set" );
+			CBIT( 0x0, l[5], 0, 0xd4, "........ .......1 leap61: set" );
+			CLSE( 0x0, l[5], 0, 0xd4, "........ .......0 leap61: not set" );
+		LABL( 0, 0, 0, 0xb8 );	
+		D64B( 0, l[6], 0x90, 0xc2, "correctionField:" );
+			LABL( 0, 0, 0, 0x14, "nanoseconds" );
+		HLNG( 0, l[7], 0x90, 0xc2, "reserved:" );		
+		//LABL( 0, 10, 0x90, 0xc9, "sourcePortID:" );
+			D64B( 0, l[6], 0x90, 0xc2, "clockIdentity:" );
+			DWRD( 0, 0, 0x90, 0xc2, "sourcePortIdentity:" );
+		//LABL( 0, 0, 0, 0xb8 );
+		DWRD( 0, 0, 0x90, 0xc2, "sequenceID:" ); 
+		DBIT( 8, l[8], 0x90, 0xc2, "controlField:" );
+			CST#( 0, l[8], 0, 0x14, PTPv2::Header::controlField );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DBIT( 8, l[9], 0x90, 0xc2, "logMessageInterval:" );
+			//CST#( 0, l[9], 0, 0x14, PTPv2::Header::logMessageInterval );
+		TSB#( 0, l[1], 0, 0x14, PTPv2::MessageTypes::Ldr );
+		l[2] = 2;
+	}
+	if (l[2] != 2)
+	{
+		LABL( 0, 0, 0, 0x01, " - This version is currently not supported" );
+		TRTS;
+	}
+}
+
+str# PTPv2::MessageTypes;
+0x0	|	Sync (Event);
+0x1	|	Delay_Req (Event);
+0x2	|	Pdelay_Req (Event);
+0x3	|	Pdelay_Resp (Event);
+0x8	|	Follow_Up (General);
+0x9	|	Delay_Resp (General);
+0xa	|	Pdelay_Resp_Follow_Up (General);
+0xb	|	Announce (General);
+0xc	|	Signaling (General);
+0xd	|	Management (General);
+0xe	|	Reserved;
+
+str# PTPv2::MessageTypes::Ldr;
+0x0	|	PTPv2::MT::Sync;
+0x1	|	PTPv2::MT::Sync;
+0x2	|	PTPv2::MT::Pdelay_Req;
+0x3	|	PTPv2::MT::Pdelay_Resp;
+0x8	|	PTPv2::MT::Follow_Up;
+0x9	|	PTPv2::MT::Delay_Resp;
+0xa	|	PTPv2::MT::Pdelay_Resp_Follow_Up;
+0xb	|	PTPv2::MT::Announce;
+0xc	|	PTPv2::MT::Signaling;
+0xd	|	PTPv2::MT::Management;
+
+str# PTPv2::Header::controlField;
+0x00	|	Sync;
+0x01	|	Delay_Req;
+0x02	|	Follow_Up;
+0x03	|	Delay_Resp;
+0x04	|	Management;
+0x05	|	All others;
+
+void PTPv2::MT::Pdelay_Resp_Follow_Up()
+{
+	DLNG( 0, l[1], 0x05, 0xc2, "responseOriginTimestamp (seconds):" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "OriginTimestamp (seconds):" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "responseOriginTimestamp (seconds):" );
+	DLNG( 0, 0, 0x90, 0xc2, "responseOriginTimestamp (nanoseconds):" );
+	D64B( 0, l[6], 0x90, 0xc2, "responseclockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "responsePortIdentity:" );
+}
+
+void PTPv2::MT::Announce()
+{
+	DLNG( 0, l[1], 0x05, 0xc2, "Origin Timestamp (seconds):" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "Origin Timestamp (seconds):" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "Origin Timestamp (seconds):" );
+	DLNG( 0, 0, 0x90, 0xc2, "Origin Timestamp (nanoseconds):" );
+	DWRD( 0, 0, 0x90, 0xc2, "currentUtcOffset:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DBYT( 0, 0, 0x90, 0xc2, "grandmasterPriority1:" );
+	DLNG( 0, 0, 0x90, 0xc9, "grandmasterClockQuality:" );
+	DECR 4;
+		DBYT( 0, l[5], 0x90, 0xc2, "grandmasterClockClass:" );
+			CST#( 0, l[5], 0, 0x14, PTPv2::clockClass );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DBYT( 0, l[6], 0x90, 0xc2, "grandmasterClockAccuracy:" );
+			CST#( 0, l[6], 0, 0x14, PTPv2::clockAccuracy );
+			CLSE( 0, l[6], 0, 0x14, "For use by alternate PTP profiles" );
+		DWRD( 0, l[7], 0x90, 0xc2, "grandmasterClockVariance:" );
+	LABL( 0, 0, 0, 0xb8 );
+	DBYT( 0, 0, 0x90, 0xc2, "grandmasterPriority2:" );
+	D64B( 0, 0, 0x90, 0xc2, "grandmasterIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "stepsRemoved:" );
+	HBYT( 0, l[9], 0x90, 0xc2, "timeSource:" );
+		CST#( 0, l[9], 0, 0x14, PTPv2::TimeSource );
+		CLSE( 0, l[9], 0, 0x14, "For use by alternate PTP profiles" );
+	PTPv2::TLVLoop;
+}
+
+str# PTPv2::clockClass;
+0	| Reserved to enable compatibility with future versions;
+//1-5 Reserved.
+6	| Shall designate a clock that is synchronized to a primary reference time source;
+7	| Shall designate a clock that has previously been designated as clockClass 6 but that has lost the ability to synchronize to a primary reference time source and is in holdover mode and within holdover specifications;
+//8 Reserved.
+//9–10 Reserved to enable compatibility with future versions.
+//11–12 Reserved.
+13	| Shall designate a clock that is synchronized to an application-specific source of time;
+14	| Shall designate a clock that has previously been designated as clockClass 13 but that has lost the ability to synchronize to an application-specific source of time and is in holdover mode and within holdover specifications;
+//15–51 Reserved.
+52 	|	Degradation alternative A for a clock of clockClass 7 that is not within holdover specification and shall not be a slave to another clock in the domain;
+//53–57 Reserved.
+58	|	 Degradation alternative A for a clock of clockClass 14 that is not within holdover specification and shall not be a slave to another clock in the domain;
+//59–67 Reserved.
+//68–122 For use by alternate PTP profiles.
+//123–127 Reserved.
+//128–132 Reserved.
+//133–170 For use by alternate PTP profiles.
+//171–186 Reserved.
+187	|	Degradation alternative B for a clock of clockClass 7 that is not within holdover specification and may be a slave to another clock in the domain;
+//188–192 Reserved.
+193	|	Degradation alternative B for a clock of clockClass 14 that is not within holdover specification and may be a slave to another clock in the domain;
+//194–215 Reserved.
+//216–232 For use by alternate PTP profiles.
+//233–247 Reserved.
+248	|	Default (This clockClass shall be used if none of the other clockClass definitions apply);
+//249–250 Reserved.
+251	|	Reserved for version 1 compatibility;
+//252–254 Reserved.
+255	|	Shall be the clockClass of a slave-only clock;
+
+str# PTPv2::clockAccuracy;
+0x20	|	The time is accurate to within 25 ns;
+0x21	|	The time is accurate to within 100 ns;
+0x22	|	The time is accurate to within 250 ns;
+0x23	|	The time is accurate to within 1 micros;
+0x24	|	The time is accurate to within 2.5 micros;
+0x25	|	The time is accurate to within 10 micros;
+0x26	|	The time is accurate to within 25 micros;
+0x27	|	The time is accurate to within 100 micros;
+0x28	|	The time is accurate to within 250 micros;
+0x29	|	The time is accurate to within 1 ms;
+0x2A	|	The time is accurate to within 2.5 ms;
+0x2B	|	The time is accurate to within 10 ms;
+0x2C	|	The time is accurate to within 25 ms;
+0x2D	|	The time is accurate to within 100 ms;
+0x2E	|	The time is accurate to within 250 ms;
+0x2F	|	The time is accurate to within 1 s;
+0x30	|	The time is accurate to within 10 s;
+0x31	|	The time is accurate to >10 s;
+0xFE	|	Unknown;
+
+str# PTPv2::TimeSource;
+0x10	|	ATOMIC_CLOCK;
+0x20	|	GPS;
+0x30	|	TERRESTRIAL_RADIO;
+0x40	|	PTP;
+0x50	|	NTP;
+0x60	|	HAND_SET;
+0x90	|	OTHER;
+0xA0	|	INTERNAL_OSCILLATOR;
+//F0–FE For use by alternate PTP profiles
+0xFF	|	Reserved;
+
+void PTPv2::TLVLoop()
+{
+	if (g[16] > 4)
+	{
+		while (g[16] > 4)
+		{
+			GWRD( 0, l[1] );
+				CST#( 0, l[1], 0, 0xb7, PTPv2::Signaling::TLVType );
+				CLSE( 0, 0, 0, 0xb7, "Unknown" );
+			DWRD( 0, l[1], 0x90, 0xc2, "tlvType:" );
+				CST#( 0, l[1], 0, 0x14, PTPv2::Signaling::TLVType );
+				CLSE( 0, 0, 0, 0x14, "unknown" );
+			DWRD( 0, g[5], 0x90, 0xc2, "lengthField:" );
+			TSB#( 0, l[1], 0, 0, PTPv2::Signaling::TLVType::Ldr );
+			SKIP 1; //if found skip standard data dump
+			DUMP( 0, g[5], 0x90, 0xc2, "Data:" );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+	}
+}
+
+void PTPv2::MT::Sync()
+{
+	DLNG( 0, l[1], 0x05, 0xc2, "Origin Timestamp (seconds):" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "Origin Timestamp (seconds):" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "Origin Timestamp (seconds):" );
+	DLNG( 0, 0, 0x90, 0xc2, "Origin Timestamp (nanoseconds):" );
+	PTPv2::TLVLoop;
+}
+
+void PTPv2::MT::Follow_Up()
+{
+	DLNG( 0, l[1], 0x05, 0xc2, "Origin Timestamp (seconds):" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "Origin Timestamp (seconds):" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "Origin Timestamp (seconds):" );
+	DLNG( 0, 0, 0x90, 0xc2, "Precise Origin Timestamp (nanoseconds):" );
+	PTPv2::TLVLoop;
+}
+
+void PTPv2::MT::Delay_Resp()
+{
+	HEX#( 0, 10, 0x90, 0xc2, "receiveTimestamp:" );
+	D64B( 0, l[6], 0x90, 0xc2, "requestingclockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "requestingPortIdentity:" );
+	PTPv2::TLVLoop;
+}
+
+void PTPv2::MT::Pdelay_Req()
+{
+	HEX#( 0, 10, 0x90, 0xc2, "originTimestamp:" );
+	HEX#( 0, 10, 0x90, 0xc2, "reserved:" );
+	PTPv2::TLVLoop;
+}
+
+void PTPv2::MT::Pdelay_Resp()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "requestclockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "requestPortIdentity:" );
+	D64B( 0, l[6], 0x90, 0xc2, "requestingclockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "requestingPortIdentity:" );
+	PTPv2::TLVLoop;
+}
+
+void PTPv2::MT::Signaling()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "targetClockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "targetPortIdentity:" );
+	PTPv2::TLVLoop;
+}
+
+str# PTPv2::Signaling::TLVType;
+0x0000	|	Reserved;
+0x0001	|	MANAGEMENT;						//Standard TLVs 
+0x0002	|	MANAGEMENT_ERROR_STATUS;		//Standard TLVs 
+0x0003	|	ORGANIZATION_EXTENSION;			//Standard TLVs
+0x0004	|	REQUEST_UNICAST_TRANSMISSION;	//Optional unicast message negotiation TLVs 
+0x0005	|	GRANT_UNICAST_TRANSMISSION;		//Optional unicast message negotiation TLVs 
+0x0006	|	CANCEL_UNICAST_TRANSMISSION;	//Optional unicast message negotiation TLVs 
+0x0007	|	ACKNOWLEDGE_CANCEL_UNICAST_TRANSMISSION; //Optional unicast message negotiation TLVs 
+0x0008	|	PATH_TRACE;		//Optional path trace mechanism TLV
+0x0009	|	ALTERNATE_TIME_OFFSET_INDICATOR;		//Optional alternate timescale TLV
+//000A – 1FFF —Reserved for standard TLVs
+0x2000	|	AUTHENTICATION;			//Security TLVs 
+0x2001	|	AUTHENTICATION_CHALLENGE;		//Security TLVs 
+0x2002	|	SECURITY_ASSOCIATION_UPDATE;	//Security TLVs
+0x2003	|	CUM_FREQ_SCALE_FACTOR_OFFSET;	//Cumulative frequency scale factor offset Annex L
+//2004 – 3FFF —Reserved for Experimental TLVs
+//4000 – FFFF — Reserved
+
+str# PTPv2::Signaling::TLVType::Ldr;
+//0x0000	|	Reserved;
+//0x0001	|	PTPv2::Signaling::TLVType::MANAGEMENT;						//Standard TLVs 
+0x0002	|	PTPv2::Signaling::TLVType::MANAGEMENT_ERROR_STATUS;		//Standard TLVs 
+0x0003	|	PTPv2::Signaling::TLVType::ORGANIZATION_EXTENSION;			//Standard TLVs
+0x0004	|	PTPv2::Signaling::TLVType::REQUEST_UNICAST_TRANSMISSION;	//Optional unicast message negotiation TLVs 
+0x0005	|	PTPv2::Signaling::TLVType::GRANT_UNICAST_TRANSMISSION;		//Optional unicast message negotiation TLVs 
+0x0006	|	PTPv2::Signaling::TLVType::CANCEL_UNICAST_TRANSMISSION;	//Optional unicast message negotiation TLVs 
+0x0007	|	PTPv2::Signaling::TLVType::ACKNOWLEDGE_CANCEL_UNICAST_TRANSMISSION; //Optional unicast message negotiation TLVs 
+0x0008	|	PTPv2::Signaling::TLVType::PATH_TRACE;		//Optional path trace mechanism TLV
+0x0009	|	PTPv2::Signaling::TLVType::ALTERNATE_TIME_OFFSET_INDICATOR;		//Optional alternate timescale TLV
+//000A – 1FFF —Reserved for standard TLVs
+0x2000	|	PTPv2::Signaling::TLVType::AUTHENTICATION; 					//Security TLVs 
+0x2001	|	PTPv2::Signaling::TLVType::AUTHENTICATION_CHALLENGE;		//Security TLVs 
+0x2002	|	PTPv2::Signaling::TLVType::SECURITY_ASSOCIATION_UPDATE;			//Security TLVs
+0x2003	|	PTPv2::Signaling::TLVType::CUM_FREQ_SCALE_FACTOR_OFFSET;
+
+void PTPv2::Signaling::TLVType::MANAGEMENT()
+{
+
+}
+
+void PTPv2::Signaling::TLVType::MANAGEMENT_ERROR_STATUS()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "managementErrorId:" );
+		CST#( 0, l[1], 0, 0x14, PTPv2::Signaling::TLVType::MANAGEMENT_ERROR_STATUS::managementErrorId );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DWRD( 0, l[2], 0x90, 0xc2, "managementId:" );
+		CST#( 0, l[2], 0, 0x14, PTPv2::Management::TLVType );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	DLNG( 0, 0, 0x90, 0xc2, "reserved:" );
+	g[5] -= 8;
+	CHR#( 0, g[5], 0x90, 0xc2, "displayData:" );
+	g[5] -= g[5];
+}
+
+str# PTPv2::Signaling::TLVType::MANAGEMENT_ERROR_STATUS::managementErrorId;
+0x0000	|	Reserved;
+0x0001	|	RESPONSE_TOO_BIG;
+0x0002	|	NO_SUCH_ID;
+0x0003	|	WRONG_LENGTH;
+0x0004	|	WRONG_VALUE;
+0x0005	|	NOT_SETABLE;
+0x0006	|	NOT_SUPPORTED;
+
+void PTPv2::Signaling::TLVType::ORGANIZATION_EXTENSION()
+{
+	//HEX#( 0, 3, 0x90, 0xc2, "organizationId:" ); 
+	802_11::Print_OUI;
+	HEX#( 0, 3, 0x90, 0xc2, "organizationSubType:" );
+	g[5] -= 6;
+	DUMP( 0, g[5], 0x90, 0xc2, "Data:" );
+	g[5] -= g[5];
+	//TRTS;
+}
+
+void PTPv2::Signaling::TLVType::REQUEST_UNICAST_TRANSMISSION()
+{
+	DBIT( 4, l[1], 0x90, 0xc2, "messageType:" );
+	CST#( 0, l[1], 0, 0x14, PTPv2::MessageTypes );
+	DBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	DBYT( 0, 0, 0x90, 0xc2, "logInterMessagePeriod:" );
+	DLNG( 0, 0, 0x90, 0xc2, "durationField:" );
+}
+
+void PTPv2::Signaling::TLVType::GRANT_UNICAST_TRANSMISSION()
+{
+	PTPv2::Signaling::TLVType::REQUEST_UNICAST_TRANSMISSION;
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	DBIT( 1, l[1], 0x90, 0xc2, "Renewal Invited:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+}
+
+void PTPv2::Signaling::TLVType::CANCEL_UNICAST_TRANSMISSION()
+{
+	DBIT( 4, l[1], 0x90, 0xc2, "messageType:" );
+	CST#( 0, l[1], 0, 0x14, PTPv2::MessageTypes );
+	DBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Signaling::TLVType::ACKNOWLEDGE_CANCEL_UNICAST_TRANSMISSION()
+{
+	PTPv2::Signaling::TLVType::CANCEL_UNICAST_TRANSMISSION;
+}
+
+void PTPv2::Signaling::TLVType::PATH_TRACE()
+{
+	HEX#( 0, g[5], 0x90, 0xc2, "pathSequence:" );
+}
+
+void PTPv2::Signaling::TLVType::ALTERNATE_TIME_OFFSET_INDICATOR()
+{
+	HBYT( 0, 0, 0x90, 0xc2, "keyField:" );
+	DLNG( 0, 0, 0x90, 0xc2, "currentOffset:" );
+	DLNG( 0, 0, 0x90, 0xc2, "jumpSeconds:" );
+	DLNG( 0, l[1], 0x05, 0xc2, "timeOfNextJump:" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "timeOfNextJump:" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "timeOfNextJump:" );
+	LABL( 0, 0, 0, 0x14, "(seconds)" );
+	g[5] -= 15;
+	CHR#( 0, g[5], 0x90, 0xc2, "displayName:" );
+}
+
+void PTPv2::Signaling::TLVType::AUTHENTICATION()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "lifetimeId:" );
+	DLNG( 0, 0, 0x90, 0xc2, "replayCounter:" );
+	DWRD( 0, 0, 0x90, 0xc2, "keyId:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "algorithmId:" );
+		CEQU( 0, l[1], 0x90, 0xc2, "Null" );
+		CEQU( 1, l[1], 0x90, 0xc2, "HMAC-SHA1-96" );
+		CEQU( 2, l[1], 0x90, 0xc2, "HMAC-SHA256-96" );
+		CLSE( 0, l[1], 0x90, 0xc2, "reserved" );
+	DBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	g[5] -= 10;
+	if (l[1] < 1)
+	{
+		HEX#( 0, 4, 0x90, 0xc2, "pad:" );
+	}
+	if (g[5] != 0)
+	{
+		DUMP( 0, g[5], 0x90, 0xc2, "ICV (Integrity Check Value)" );
+	}
+}
+
+void PTPv2::Signaling::TLVType::AUTHENTICATION_CHALLENGE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "challengeType:" );
+		CEQU( 0, l[1], 0x90, 0xc2, "challengeRequest" );
+		CEQU( 1, l[1], 0x90, 0xc2, "challengeResponseRequest" );
+		CEQU( 2, l[1], 0x90, 0xc2, "challengeResponse" );
+		CLSE( 0, l[1], 0x90, 0xc2, "reserved" );
+	DBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DLNG( 0, 0, 0x90, 0xc2, "requestNonce:" );
+	DLNG( 0, 0, 0x90, 0xc2, "responseNonce:" );
+}
+
+void PTPv2::Signaling::TLVType::SECURITY_ASSOCIATION_UPDATE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "addressType:" );
+		CEQU( 0, l[1], 0x90, 0xc2, "All" );
+		CEQU( 1, l[1], 0x90, 0xc2, "Multicast" );
+		CEQU( 2, l[1], 0x90, 0xc2, "P-Multicast" );
+		CEQU( 3, l[1], 0x90, 0xc2, "P-Unicast" );
+		CLSE( 0, l[1], 0x90, 0xc2, "reserved" );
+	DBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DWRD( 0, 0, 0x90, 0xc2, "nextKeyId:" );
+	DWRD( 0, 0, 0x90, 0xc2, "nextLifetimeId:" );
+}
+
+void PTPv2::Signaling::TLVType::CUM_FREQ_SCALE_FACTOR_OFFSET()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "cumulativeFrequencyScaleFactorOffset:" );
+}
+
+void PTPv2::MT::Management()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "targetClockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "targetPortIdentity:" );
+	DBYT( 0, 10, 0x90, 0xc2, "startingBoundaryHops:" );
+	DBYT( 0, 10, 0x90, 0xc2, "boundaryHops:" );
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 4, l[3], 0x90, 0xc2, "actionField:" );
+		CEQU( 0, l[3], 0, 0x14, "GET" );
+		CEQU( 1, l[3], 0, 0x14, "SET" );
+		CEQU( 2, l[3], 0, 0x14, "RESPONSE" );
+		CEQU( 3, l[3], 0, 0x14, "COMMAND" );
+		CEQU( 4, l[3], 0, 0x14, "ACKNOWLEDGE" );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	if (g[16] < 4)
+	{
+		DWRD( 0, l[1], 0x90, 0xc2, "tlvType:" );
+			//CST#( 0, l[1], 0, 0x14, PTPv2::Management::TLVType );
+			//CLSE( 0, 0, 0, 0x14, "unknown" );
+		DWRD( 0, l[2], 0x90, 0xc2, "lengthField:" );
+		g[5] = l[2];
+		DWRD( 0, 0, 0x90, 0xc2, "managementId:" ); 
+			CST#( 0, l[1], 0, 0x14, PTPv2::Management::TLVType );
+			CLSE( 0, 0, 0, 0x14, "unknown" );
+		DUMP( 0, l[2], 0x90, 0xc2, "Data:" );
+	}
+}
+
+str# PTPv2::Management::TLVType;
+0x0000	|	NULL_MANAGEMENT;
+0x0001	|	CLOCK_DESCRIPTION;
+0x0002	|	USER_DESCRIPTION;
+0x0003	|	SAVE_IN_NON_VOLATILE_STORAGE;
+0x0004	|	RESET_NON_VOLATILE_STORAGE;
+0x0005	|	INITIALIZE;
+0x0005	|	FAULT_LOG;
+0x0006	|	FAULT_LOG_RESET;
+0x2000	|	DEFAULT_DATA_SET;
+0x2001	|	CURRENT_DATA_SET;
+0x2002	|	PARENT_DATA_SET;
+0x2003	|	TIME_PROPERTIES_DATA_SET;
+0x2004	|	PORT_DATA_SET;
+0x2005	|	PRIORITY1;
+0x2006	|	PRIORITY2;
+0x2007	|	DOMAIN;
+0x2008	|	SLAVE_ONLY;
+0x2009	|	LOG_ANNOUNCE_INTERVAL;
+0x200A	|	ANNOUNCE_RECEIPT_TIMEOUT;
+0x200B	|	LOG_SYNC_INTERVAL;
+0x200C	|	VERSION_NUMBER;
+0x200D	|	ENABLE_PORT;
+0x200E	|	DISABLE_PORT;
+0x200F	|	TIME;
+0x2010	|	CLOCK_ACCURACY;
+0x2011	|	UTC_PROPERTIES;
+0x2012	|	TRACEABILITY_PROPERTIES;
+0x2013	|	TIMESCALE_PROPERTIES;
+0x2014	|	UNICAST_NEGOTIATION_ENABLE;
+0x2015	|	PATH_TRACE_LIST;
+0x2016	|	PATH_TRACE_ENABLE;
+0x2017	|	GRANDMASTER_CLUSTER_TABLE;
+0x2018	|	UNICAST_MASTER_TABLE;
+0x2019	|	UNICAST_MASTER_MAX_TABLE_SIZE;
+0x201a	|	ACCEPTABLE_MASTER_TABLE;
+0x201b	|	ACCEPTABLE_MASTER_TABLE_ENABLED;
+0x201c	|	ACCEPTABLE_MASTER_MAX_TABLE_SIZE;
+0x201D	|	ALTERNATE_MASTER;
+0x201E	|	ALTERNATE_TIME_OFFSET_ENABLE;
+0x201F	|	ALTERNATE_TIME_OFFSET_NAME;
+0x2020	|	ALTERNATE_TIME_OFFSET_MAX_KEY;
+0x2021	|	ALTERNATE_TIME_OFFSET_PROPERTIES;
+0x4000	|	TRANSPARENT_CLOCK_DEFAULT_DATA_SET;
+0x4001	|	TRANSPARENT_CLOCK_PORT_DATA_SET;
+0x4002	|	PRIMARY_DOMAIN;
+0x6000	|	DELAY_MECHANISM;
+0x6001	|	LOG_MIN_PDELAY_REQ_INTERVAL;
+
+
+str# PTPv2::Management::TLV::LDR;
+//0x0000	|	NULL_MANAGEMENT;						*is empty
+0x0001	|	PTPv2::Management::TLV::LDR::CLOCK_DESCRIPTION;
+0x0002	|	PTPv2::Management::TLV::LDR::USER_DESCRIPTION;
+//0x0003	|	SAVE_IN_NON_VOLATILE_STORAGE;			*is empty
+//0x0004	|	RESET_NON_VOLATILE_STORAGE;				*is empty
+0x0005	|	PTPv2::Management::TLV::LDR::INITIALIZE;
+0x0005	|	PTPv2::Management::TLV::LDR::FAULT_LOG;
+//0x0006	|	FAULT_LOG_RESET;						*is empty
+0x2000	|	PTPv2::Management::TLV::LDR::DEFAULT_DATA_SET;
+0x2001	|	PTPv2::Management::TLV::LDR::CURRENT_DATA_SET;
+0x2002	|	PTPv2::Management::TLV::LDR::PARENT_DATA_SET;
+0x2003	|	PTPv2::Management::TLV::LDR::TIME_PROPERTIES_DATA_SET;
+0x2004	|	PTPv2::Management::TLV::LDR::PORT_DATA_SET;
+0x2005	|	PTPv2::Management::TLV::LDR::PRIORITY1;
+0x2006	|	PTPv2::Management::TLV::LDR::PRIORITY2;
+0x2007	|	PTPv2::Management::TLV::LDR::DOMAIN;
+0x2008	|	PTPv2::Management::TLV::LDR::SLAVE_ONLY;
+0x2009	|	PTPv2::Management::TLV::LDR::LOG_ANNOUNCE_INTERVAL;
+0x200A	|	PTPv2::Management::TLV::LDR::ANNOUNCE_RECEIPT_TIMEOUT;
+0x200B	|	PTPv2::Management::TLV::LDR::LOG_SYNC_INTERVAL;
+0x200C	|	PTPv2::Management::TLV::LDR::VERSION_NUMBER;
+//0x200D	|	ENABLE_PORT;							*is empty
+//0x200E	|	DISABLE_PORT;							*is empty
+0x200F	|	PTPv2::Management::TLV::LDR::TIME;
+0x2010	|	PTPv2::Management::TLV::LDR::CLOCK_ACCURACY;
+0x2011	|	PTPv2::Management::TLV::LDR::UTC_PROPERTIES;
+0x2012	|	PTPv2::Management::TLV::LDR::TRACEABILITY_PROPERTIES;
+0x2013	|	PTPv2::Management::TLV::LDR::TIMESCALE_PROPERTIES;
+0x2014	|	PTPv2::Management::TLV::LDR::UNICAST_NEGOTIATION_ENABLE;
+0x2015	|	PTPv2::Management::TLV::LDR::PATH_TRACE_LIST;
+0x2016	|	PTPv2::Management::TLV::LDR::PATH_TRACE_ENABLE;
+0x2017	|	PTPv2::Management::TLV::LDR::GRANDMASTER_CLUSTER_TABLE;
+0x2018	|	PTPv2::Management::TLV::LDR::UNICAST_MASTER_TABLE;
+0x2019	|	PTPv2::Management::TLV::LDR::UNICAST_MASTER_MAX_TABLE_SIZE;
+0x201a	|	PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_TABLE;
+0x201b	|	PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_TABLE_ENABLED;
+0x201c	|	PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_MAX_TABLE_SIZE;
+0x201D	|	PTPv2::Management::TLV::LDR::ALTERNATE_MASTER;
+0x201E	|	PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_ENABLE;
+0x201F	|	PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_NAME;
+0x2020	|	PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_MAX_KEY;
+0x2021	|	PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_PROPERTIES;
+0x4000	|	PTPv2::Management::TLV::LDR::TRANSPARENT_CLOCK_DEFAULT_DATA_SET;
+0x4001	|	PTPv2::Management::TLV::LDR::TRANSPARENT_CLOCK_PORT_DATA_SET;
+0x4002	|	PTPv2::Management::TLV::LDR::PRIMARY_DOMAIN;
+0x6000	|	PTPv2::Management::TLV::LDR::DELAY_MECHANISM;
+0x6001	|	PTPv2::Management::TLV::LDR::LOG_MIN_PDELAY_REQ_INTERVAL;
+
+void PTPv2::Management::TLV::LDR::CLOCK_DESCRIPTION()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "ClockType:" );
+		CST#( 0, l[1], 0, 0x14, PTPv2::Management::TLV::LDR::CLOCK_DESCRIPTION::Clock_Type );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	HEX#( 0, 32, 0x90, 0xc2, "physicalLayerProtocol:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "physicalAddressLength :" );
+	HEX#( 0, l[2], 0x90, 0xc2, "physicalAddress:" );
+	HEX#( 0, 0, 0x90, 0xc2, "protocolAddress:" );
+	HEX#( 0, 3, 0x90, 0xc2, "manufacturerIdentity:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "reserved:" );
+	HEX#( 0, 0, 0x90, 0xc2, "productDescription:" );
+	HEX#( 0, 0, 0x90, 0xc2, "revisionData:" );
+	HEX#( 0, 0, 0x90, 0xc2, "userDescription:" );
+	HEX#( 0, 0, 0x90, 0xc2, "profileIdentity:" );
+	HEX#( 0, 0, 0x90, 0xc2, "pad:" );
+}
+
+str# PTPv2::Management::TLV::LDR::CLOCK_DESCRIPTION::Clock_Type;
+0	|	The node implements an ordinary clock;
+1	|	The node implements a boundary clock;
+2	|	The node implements a peer-to-peer transparent clock;
+3	|	The node implements an end-to-end transparent clock;
+4	|	The node implements a management node;
+
+void PTPv2::Management::TLV::LDR::USER_DESCRIPTION()
+{
+	HEX#( 0, g[5], 0x90, 0xc2, "userDescription:" );
+	g[5] -= g[5];
+}
+
+void PTPv2::Management::TLV::LDR::INITIALIZE()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "initializationKey:" );
+		CEQU( 0, l[1], 0,0x14, "INITIALIZE_EVENT" );
+	if (l[1] >= 0x0001)
+	{
+		if (l[1] <= 0x7FFF)
+		{
+			LABL( 0, 0, 0, 0x14, "Reserved" );
+		}
+	}
+	if (l[1] >= 0x8000)
+	{
+		if (l[1] <= 0xFFFF)
+		{
+			LABL( 0, 0, 0, 0x14, "Implementation-specific" );
+		}
+	}
+}
+
+void PTPv2::Management::TLV::LDR::FAULT_LOG()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "numberOfFaultRecords:" );
+	while(l[1] >= 0)
+	{
+		HWRD( 0, l[2], 0x90, 0xc2, "severityCode:" );
+			CST#( 0, l[2], 0, 0x14, PTPv2::Management::TLV::LDR::FAULT_LOG::severityCode  );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		l[1] -= 1;
+	}
+	
+}
+
+str# PTPv2::Management::TLV::LDR::FAULT_LOG::severityCode;
+00	|	Emergency: system is unusable;
+01	|	Alert: immediate action needed;
+02	|	Critical: critical conditions;
+03	|	Error: error conditions;
+04	|	Warning: warning conditions;
+05	|	Notice: normal but significant condition;
+06	|	Informational: informational messages;
+07	|	Debug: debug-level messages;
+
+void PTPv2::Management::TLV::LDR::TIME()
+{
+	HEX#( 0, 10, 0x90, 0xc2, "currentTime:" );
+}
+
+void PTPv2::Management::TLV::LDR::CLOCK_ACCURACY()
+{
+	BBYT( 0, 0, 0x90, 0xc2, "clockAccuracy:" );
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::DEFAULT_DATA_SET()
+{
+	BBIT( 6, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, 0, 0x90, 0xc2, "SO:" );
+	BBIT( 1, 0, 0x90, 0xc2, "TSC:" );
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DWRD( 0, 0, 0x90, 0xc2, "numberPorts:" );
+	BBYT( 0, 0, 0x90, 0xc2, "priority1:" );
+	DLNG( 0, 0, 0x90, 0xc2, "clockQuality:" );
+	BBYT( 0, 0, 0x90, 0xc2, "priority2:" );
+	D64B( 0, 0, 0x90, 0xc2, "clockIdentity:" );
+	BBYT( 0, 0, 0x90, 0xc2, "domainNumber:" );	 
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::PRIORITY1()
+{
+	BBYT( 0, 0, 0x90, 0xc2, "priority1:" );	 
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::PRIORITY2()
+{
+	BBYT( 0, 0, 0x90, 0xc2, "priority2:" );	 
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::DOMAIN()
+{
+	BBYT( 0, 0, 0x90, 0xc2, "domainNumber:" );	 
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::SLAVE_ONLY()
+{
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "SlaveOnly:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::CURRENT_DATA_SET()
+{
+	HWRD( 0, 0, 0x90, 0xc2, "stepsRemoved:" );	 
+	D64B( 0, 0, 0x90, 0xc2, "offsetFromMaster:" );
+	D64B( 0, 0, 0x90, 0xc2, "meanPathDelay:" );
+}
+
+void PTPv2::Management::TLV::LDR::PARENT_DATA_SET()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "parentClockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "parentPortIdentity:" );
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "ParentStats:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	DWRD( 0, 0, 0x90, 0xc2, "observedParentOffsetScaledLogVariance:" );
+	DLNG( 0, 0, 0x90, 0xc2, "observedParentClockPhaseChangeRate:" );
+	BBYT( 0, 0, 0x90, 0xc2, "grandmasterPriority1:" );
+	DLNG( 0, 0, 0x90, 0xc9, "grandmasterClockQuality:" );
+	DECR 4;
+		DBYT( 0, l[5], 0x90, 0xc2, "grandmasterClockClass:" );
+			CST#( 0, l[5], 0, 0x14, PTPv2::clockClass );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DBYT( 0, l[6], 0x90, 0xc2, "grandmasterClockAccuracy:" );
+			CST#( 0, l[6], 0, 0x14, PTPv2::clockAccuracy );
+			CLSE( 0, l[6], 0, 0x14, "For use by alternate PTP profiles" );
+		DWRD( 0, l[7], 0x90, 0xc2, "grandmasterClockVariance:" );
+	LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, 0, 0x90, 0xc2, "grandmasterPriority2:" );
+	D64B( 0, 0, 0x90, 0xc2, "grandmasterIdentity:" );
+}
+
+void PTPv2::Management::TLV::LDR::TIME_PROPERTIES_DATA_SET()
+{
+	HWRD( 0, 0, 0x90, 0xc2, "currentUtcOffset:" );
+	BBIT( 2, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "frequencyTraceable:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "timeTraceable:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "ptpTimescale:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "currentUtcOffsetValid:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "leap59:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "leap61:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	HBYT( 0, l[9], 0x90, 0xc2, "timeSource:" );
+		CST#( 0, l[9], 0, 0x14, PTPv2::TimeSource );
+		CLSE( 0, l[9], 0, 0x14, "For use by alternate PTP profiles" );
+}
+
+void PTPv2::Management::TLV::LDR::UTC_PROPERTIES()
+{
+	HWRD( 0, 0, 0x90, 0xc2, "currentUtcOffset:" );
+	BBIT( 5, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "currentUtcOffsetValid:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "leap59:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, l[1], 0x90, 0xc2, "leap61:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::TRACEABILITY_PROPERTIES()
+{
+	BBIT( 2, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, 0, 0x90, 0xc2, "frequencyTraceable:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 1, 0, 0x90, 0xc2, "timeTraceable:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::TIMESCALE_PROPERTIES()
+{
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "ptpTimescale:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	BBIT( 3, 0, 0x90, 0xc2, "reserved:" );
+	HBYT( 0, l[9], 0x90, 0xc2, "timeSource:" );
+		CST#( 0, l[9], 0, 0x14, PTPv2::TimeSource );
+		CLSE( 0, l[9], 0, 0x14, "For use by alternate PTP profiles" );
+}
+
+void PTPv2::Management::TLV::LDR::PORT_DATA_SET()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "parentClockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "parentPortIdentity:" );
+	DBYT( 0, 0, 0x90, 0xc2, "portState:" );
+	DBYT( 0, 0, 0x90, 0xc2, "logMinDelayReqInterval:" );
+	D64B( 0, 0, 0x90, 0xc2, "peerMeanPathDelay:" );
+	DBYT( 0, 0, 0x90, 0xc2, "logAnnounceInterval:" );
+	DBYT( 0, 0, 0x90, 0xc2, "announceReceiptTimeout:" );
+	DBYT( 0, 0, 0x90, 0xc2, "logSyncInterval:" );
+	DBYT( 0, 0, 0x90, 0xc2, "delayMechanism:" );
+	DBYT( 0, 0, 0x90, 0xc2, "logMinPdelayReqInterval :" );
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	DBIT( 4, l[1], 0x90, 0xc2, "versionNumber:" );
+}
+
+void PTPv2::Management::TLV::LDR::LOG_ANNOUNCE_INTERVAL()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logAnnounceInterval:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::ANNOUNCE_RECEIPT_TIMEOUT()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "announceReceiptTimeout:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::LOG_SYNC_INTERVAL()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logSyncInterval:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::DELAY_MECHANISM()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "delayMechanism:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::LOG_MIN_PDELAY_REQ_INTERVAL()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logMinPdelayReqInterval:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::VERSION_NUMBER()
+{
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	DBIT( 4, l[1], 0x90, 0xc2, "versionNumber:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::UNICAST_NEGOTIATION_ENABLE()
+{
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "EN:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );	
+}
+
+void PTPv2::Management::TLV::LDR::PATH_TRACE_LIST()
+{
+	HEX#( 0, g[5], 0x90, 0xc2, "pathSequence:" );
+}
+
+void PTPv2::Management::TLV::LDR::PATH_TRACE_ENABLE()
+{
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "EN:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+}
+
+void PTPv2::Management::TLV::LDR::GRANDMASTER_CLUSTER_TABLE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logQueryInterval:" );
+	DBYT( 0, 0, 0x90, 0xc2, "tableSize:" );
+	g[5] -= 2;
+	HEX#( 0, g[5], 0x90, 0xc2, "grandmasterClusterMembers:" );
+}
+
+void PTPv2::Management::TLV::LDR::UNICAST_MASTER_TABLE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logQueryInterval:" );
+	DWRD( 0, 0, 0x90, 0xc2, "tableSize:" );
+	g[5] -= 3;
+	HEX#( 0, g[5], 0x90, 0xc2, "grandmasterClusterMembers:" );
+}
+
+void PTPv2::Management::TLV::LDR::UNICAST_MASTER_MAX_TABLE_SIZE()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "maxTableSize:" );
+}
+
+void PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_TABLE()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "TableSize:" );
+	g[5] -= 2;
+	HEX#( 0, g[5], 0x90, 0xc2, "acceptableMasterTable:" );
+}
+
+void PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_MAX_TABLE_SIZE()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "maxTableSize:" );
+}
+
+void PTPv2::Management::TLV::LDR::ACCEPTABLE_MASTER_TABLE_ENABLED()
+{
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "EN:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::ALTERNATE_MASTER()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "logAlternateMulticastSyncInterval:" );
+	DBYT( 0, 0, 0x90, 0xc2, "numberOfAlternateMasters:" );
+	DBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_ENABLE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "keyField:" );
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "EN:" );
+		CEQU( 0, l[1], 0, 0x14, "FALSE" );
+		CEQU( 1, l[1], 0, 0x14, "TRUE" );
+}
+
+void PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_NAME()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "keyField:" );
+	g[5] -= 1;
+	CHR#( 0, 0, 0x90, 0xc2, "displayName" );
+	g[5] -= g[5];
+}
+
+void PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_MAX_KEY()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "maxKey:" );
+	DBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}
+
+void PTPv2::Management::TLV::LDR::ALTERNATE_TIME_OFFSET_PROPERTIES()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "keyField:" );
+	DLNG( 0, 0, 0x90, 0xc2, "currentOffset:" );
+	DLNG( 0, 0, 0x90, 0xc2, "jumpSeconds:" );
+	DLNG( 0, l[1], 0x05, 0xc2, "timeOfNextJump:" );
+	SHFL( 16, l[1] );
+	DWRD( 0, l[2], 0x05, 0x05, "timeOfNextJump:" );
+	l[1] += l[2];
+	DGLB( 0, l[1], 0x90, 0x05, "timeOfNextJump:" );
+	LABL( 0, 0, 0, 0x14, "(seconds)" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+	//g[5] -= 15;
+}
+
+void PTPv2::Management::TLV::LDR::TRANSPARENT_CLOCK_DEFAULT_DATA_SET()
+{
+	D64B( 0, 0, 0x90, 0xc2, "clockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "numberPorts:" );
+	DBYT( 0, 0, 0x90, 0xc2, "delayMechanism:" );
+	DBYT( 0, 0, 0x90, 0xc2, "primaryDomain:" );
+}
+
+void PTPv2::Management::TLV::LDR::TRANSPARENT_CLOCK_PORT_DATA_SET()
+{
+	D64B( 0, l[6], 0x90, 0xc2, "ClockIdentity:" );
+	DWRD( 0, 0, 0x90, 0xc2, "PortIdentity:" );
+	BBIT( 7, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, l[3], 0x90, 0xc2, "FLT:" );
+		CEQU( 0, l[3], 0, 0x14, "FALSE" );
+		CEQU( 1, l[3], 0, 0x14, "TRUE" );
+
+	DBYT( 0, 10, 0x90, 0xc2, "logMinPdelayReqInterval:" );
+	D64B( 0, 10, 0x90, 0xc2, "peerMeanPathDelay:" );
+}
+
+void PTPv2::Management::TLV::LDR::primaryDomain()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "primaryDomain:" );
+	HBYT( 0, 0, 0x90, 0xc2, "reserved:" );
+}

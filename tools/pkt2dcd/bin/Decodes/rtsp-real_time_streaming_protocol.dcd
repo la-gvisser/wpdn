@@ -1,0 +1,55 @@
+* RTSP - Real Time Streaming Protocol
+
+void RTSP;
+	TEQU 0  10  0   0 RETURN;
+	GBYT 0   1;
+	TEQU 0   1  0   0 RETURN;
+	LABL 0   0  0  b1 RTSP - Real Time Streaming Protocol\RTSP:;
+	MOVE 0   1e;
+	MOVE 0   2;
+	RTSP Parse Header;
+	Parse Fields;
+    INCR 4;
+    SDP::1;
+	TRTS;
+
+void RTSP Parse Header;
+	RTSP Parse Request;
+	SEQU 1   2;
+	SKIP 80000005;
+	HTTP Print Request;
+	HTTP Parse URI;
+	HTTP Parse Version;
+	MOVE 1   2;
+	TRTS;
+	RTSP Parse Response;
+	TEQU 0   2  0  0  RETURN;
+	HTTP Parse Version Response;
+	HTTP Parse Status;
+	HTTP Parse Reason;
+	MOVE 1   2;
+	TRTS;
+
+void RTSP Parse Request;
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 44455343 1 0 0 RETURN; 	*DESCRIBE
+	TEQU 414e4e4f 1 0 0 RETURN; 	*ANNOUNCE
+	TEQU 4745545f 1 0 0 RETURN; 	*GET_PARAMETER
+	TEQU 4f505449 1 0 0 RETURN; 	*OPTIONS
+	TEQU 50415553 1 0 0 RETURN; 	*PAUSE
+	TEQU 504c4159 1 0 0 RETURN; 	*PLAY
+	TEQU 5245434f 1 0 0 RETURN; 	*RECORD
+	TEQU 52454449 1 0 0 RETURN; 	*REDIRECT
+	TEQU 53455455 1 0 0 RETURN; 	*SETUP
+	TEQU 5345545f 1 0 0 RETURN; 	*SET_PARAMETER
+	TEQU 54454152 1 0 0 RETURN; 	*TEARDOWN
+	MOVE 0   2;
+	TRTS;
+
+void RTSP Parse Response;
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 52545350 1 0 0 RETURN; * RTSP
+	MOVE 0   2;
+	TRTS;

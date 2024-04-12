@@ -1,0 +1,1996 @@
+// TDS - Tabular Data Stream [aka sybase]
+
+//notes:
+// look in tds_initialize to see what globals are used for what
+// yeah...this is really messed up...sigh... it started very organized...
+// and now it's hack on top of a hack on top of a hack on top of a hack
+
+
+str# TDS::Ports;
+	|	TDS_Find_DeLIMITER;
+	
+void Test_TDS()
+{
+	WHOA  0 2 0 0 TDS::Ports;
+	
+	//Block MQTT-Port
+	if (g[1] == 1883)
+	{
+		WHOA  0 2 0 0 MQTT::Ports;
+		TRTS;
+	
+	if (g[2] == 1883)
+	{
+		WHOA  0 2 0 0 MQTT::Ports;
+		TRTS;
+	}
+	//test for potential MQTT Length
+	GWRD( 2 , l[1] );
+	if (l[1] == 4)
+	{
+		//Test for an M
+		GBYT( 0 , l[2] );
+		
+		if (l[2] == 0x4d)
+		{
+			TRTS;
+		}
+	}
+	if (l[1] == 5)
+	{
+		//Test for an M
+		GBYT( 0 , l[2] );
+		
+		if (l[2] == 0x4d)
+		{
+			TRTS;
+		}
+	}
+	if (l[1] == 6)
+	{
+		//Test for an M
+		GBYT( 0 , l[2] );
+		
+		if (l[2] == 0x4d)
+		{
+			TRTS;
+		}
+	}
+	//Block H.323/H.245
+	if (g[1] == 1718)
+	{
+		TRTS;
+	}
+	if (g[1] == 1719)
+	{
+		TRTS;
+	}
+	if (g[1] == 1720)
+	{
+		TRTS;
+	}
+	if (g[1] == 1721)
+	{
+		TRTS;
+	}
+	if (g[2] == 1718)
+	{
+		TRTS;
+	}
+	if (g[2] == 1719)
+	{
+		TRTS;
+	}
+	if (g[2] == 1720)
+	{
+		TRTS;
+	}
+	if (g[2] == 1721)
+	{
+		TRTS;
+	}
+	//get the length of potential TDS Content
+	GWRD 2 12;
+	//g[20] holds IP frame length from [IP], minus IP and TCP Headers = Length of potential TDS Content, this could be a problem when header is greater than 40
+	g[20] -= 40;
+	//DGLB( 0, g[20], 0x90, 0xc2, "sa:" );
+	//DGLB( 0, g[18], 0x90, 0xc2, "sa18:" );
+	
+	if (g[18] != g[20])
+	{
+		TRTS;
+	}
+	if (g[18] == g[20])
+	{
+		MARK 0 2 0 0 TDS::Ports;
+		TNXT -TDS;
+	}
+	
+}
+
+void Test_TDS2()
+{
+	WHOA  0 2 0 0 TDS::Ports;
+	//BUGFIX for TT30551
+	//if Ports == H.225/H.323 don't do this tests to avoid false ID
+	//NOTE: every protocol uses the structure MsgLngth at Offset 2 in Payload could crash this detection
+	if (g[1] == 1718)
+	{
+		TRTS;
+	}
+	if (g[1] == 1719)
+	{
+		TRTS;
+	}
+	if (g[1] == 1720)
+	{
+		TRTS;
+	}
+	if (g[1] == 1721)
+	{
+		TRTS;
+	}
+	if (g[2] == 1718)
+	{
+		TRTS;
+	}
+	if (g[2] == 1719)
+	{
+		TRTS;
+	}
+	if (g[2] == 1720)
+	{
+		TRTS;
+	}
+	if (g[2] == 1721)
+	{
+		TRTS;
+	}
+	//get the length of potential TDS Content
+	GWRD 2 12;
+	//g[20] holds IP frame length from [IP], minus IP and TCP Headers = Length of potential TDS Content, this could be a problem when header is greater than 40
+	g[20] -= 40;
+	//Compare the both lengths to see if it could be
+	if (g[18] != g[20])
+	{
+		TRTS;
+	}
+	if (g[18] == g[20])
+	{
+		//si: the header is 8bytes long
+		TGTE 8 10 0 0 RETURN;
+		//si: check the message type
+		GBYT 0 41;
+		 //it must be <= 18
+		TLTE 13 41 0 0 RETURN;
+		INCR 1;
+		//si: check the status field
+		GBYT 0 42;
+		DECR 1;
+		//must be <= 4 
+		TLTE 20 42 0 0 RETURN;		
+		//BUGFIX for TT30551
+		//get RPC Command Length it should not 0
+		GBYT 8 43;
+		TEQU 0 43 0 0 RETURN;
+		//RPC Command Length should not be greater than left over bytes 
+		BREM 0 44;
+		if (l[3] >= l[4])
+		{
+			RETURN;
+		}
+		l[4] = g[16];
+		if (l[3] <= l[4])
+		{
+			l[33] = l[3];
+			l[33] *= 2;
+			l[33] += 12;
+			
+			INCR( 0, l[33] );
+			l[5] = g[16];
+			DECR( 0, l[33] );
+			
+			l[33] += l[5];
+			
+			if (l[33] != l[5])
+			{
+				RETURN;
+			}
+			if (l[33] == l[4])
+			{
+				//check the content of a potential RPC Command "should not be no text"
+				GBYT( 10, l[6]);
+				GBYT( 12, l[7]);
+				if ( l[6] >= 0x41)
+				{
+					if ( l[6] <= 0x7a)
+					{
+						if ( l[7] >= 0x41)
+						{
+							if ( l[7] <= 0x7a)
+							{
+								MARK 0 2 0 0 TDS::Ports;
+								TNXT -TDS;
+							}
+						}
+					}
+				}
+				if ( l[6] <= 0x41)
+				{
+					RETURN;
+				}
+				if ( l[6] >= 0x7a)
+					{
+						RETURN;
+					}
+			}
+		}
+		GBYT( 10, l[6]);
+		GBYT( 12, l[7]);
+		if ( l[6] >= 0x41)
+		{
+			if ( l[6] <= 0x7a)
+			{
+				if ( l[7] >= 0x41)
+				{
+					if ( l[7] <= 0x7a)
+					{
+						MARK 0 2 0 0 TDS::Ports;
+						TNXT -TDS;
+					}
+				}
+			}
+		}
+	//	MARK 0 2 0 0 TDS::Ports;
+	//	TNXT -TDS; 
+	}
+	WHOA  0 2 0 0 TDS::Ports;
+}
+
+void TDS;
+	LABL 0 0  0 b1 TDS - Tabular Data Stream\TDS:;
+	TDS_Initialize;
+	TDS_Check_Header;
+	 TGTE 0 10 0 0 RETURN;
+	 TEQU 1 9 0 0 RETURN;
+	TDS_Header;
+	LABL 0 0  0 b8;
+	
+	TRTS;
+
+void TDS_Initialize;			//SI: clear out the globabls
+	MOVE 0 1;
+	MOVE 0 2;					// g2 holds the message type
+	MOVE 0 3;					// g3 holds the message length
+	MOVE 0 4;
+	MOVE 0 5;					// g5 holds the token bytes remaining
+	MOVE 0 6;					// g6 holds the token column nums
+	MOVE 0 7;					// g7 holds if the data is continuation data
+	MOVE 0 8;					// g4 holds the status type
+	MOVE 0 9;					// g9 holds how many unknown commands we have
+
+void TDS_Find_DeLIMITER()
+{
+	LABL 0 0  0 b1 TDS - Tabular Data Stream\TDS:;
+	TDS_Initialize;
+	//TDS_Check_Header;
+	l[2] = g[16];
+	l[1] = 0;
+	//DGLB( 0, l[1], 0x90, 0xc2, "l1:" );
+	//DGLB( 0, l[2], 0x90, 0xc2, "l2:" );
+	while (l[2] != 0)
+	{
+	GBYT( l[1], l[3] );
+		if (l[3] == 0xd1)
+		{
+			CHR#( 0, l[1], 0x90, 0xc2, "Possible continuation Data:" );
+			TDS_Response_Command_D1_Check_Helper;
+		}
+		l[2] -= 1;
+		l[1] += 1;
+	}
+	LABL 0 0  0 b8;
+}
+
+void TDS_Check_Header;
+	GBYT 0 1;
+	TEQU 0 1 0 0 TDS_Response_Command_D1_Check;		//si: there's no 0 message type ... so we're gonna check this too
+	SGTE 1a 1;					//si: if it's >= 1a then we know that it's an invalid value
+	SKIP 2;
+	 TDS_Response_Command_D1_Check;				//most likely it's row continuation data
+	 MOVE 1 9;
+	TRTS;
+
+
+void TDS_Header;
+	LABL 0 0  0 b7 TDS Header;
+	DBYT 0 2 90 c2 Message Type:;				//SI: SAVE THIS!!!!
+	CST# 0 2  0 14 TDS_Message_Types;
+	HBYT 0 8 90 c2 Status:;						//SI: SAVE THIS!!!!
+	 CEQU 1 8 0 14 Last buffer in request or response;
+	 CEQU 2 8 0 14 Acknowledgment of last received attn message;
+	 CEQU 3 8 0 14 Attention request message;
+	 CEQU 4 8 0 14 Event notification message;
+	DWRD 0 3 90 c2 Message Length:;				//SI: SAVE THIS!!!!!
+	DWRD 0 1 90 c2 Channel:;
+	DBYT 0 1 90 c2 Packet Number:;
+	LABL 0 1  0 14 expressed in modulo 256;
+	DBYT 0 1 90 c2 Window:;
+	LABL 0 1  0 14 # windows sent before ack message recvd;
+	LABL 0 0  0 b8;
+
+	SUBG 8 3;									*SI: we've eaten 8 bytes...so sub from length
+	SLTE 0 3;
+	SKIP 3;
+	 LABL 0 0 0 14 Zero Message Length;
+	 LABL 0 0 0 c2;
+	 TNXT -RETURN;								*SI: no message length == return
+	TST# 0 2  0  0 TDS_Message_Types_Func;		*SI: jump to function depending on message type
+
+void TDS_Message_Language_Command;					*TDS_Message_Type: 1 
+	LABL 0 0 0 b7 TDS Message;					*SI: takes in g3 for message length
+	SLTE 40 3;
+	 SKIP 2;
+	 	TNXT -TDS_Message_Language_Command_End;
+		TRTS;
+	INCR 1;
+	GBYT 0 1;
+	DECR 1;
+	SNEQ 0 1;
+	SKIP 5;
+	 TDS_Language_Command_Helper_U;
+	 SGTE 0 3;
+	  SKIP 1;
+	  CHR# 40000000 3 90 c2;
+	 TRTS;
+
+	TDS_Language_Command_Helper;
+	SGTE 0 3;
+	 SKIP 1;
+	 CHR#  0 3 90 c2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TDS_Message_Language_Command_End;
+	INCR 1;
+	GBYT 0 1;
+	DECR 1;
+	SNEQ 0 1;
+	 SKIP 3;
+	 CHR# 40000000 3 90 c2;
+	 MOVE 0 3;
+	 TRTS;
+	CHR# 0 3 90 c2;
+	MOVE 0 3;
+	TRTS;
+
+void TDS_Language_Command_Helper;
+	TGTE 40 10  0  0 RETURN;
+	TGTE 40  3  0  0 RETURN;
+	CHR# 40  0 90 c2;
+	SUBG 40  3;
+	TNXT -TDS_Language_Command_Helper;
+
+void TDS_Language_Command_Helper_U;
+	TGTE 40 10  0  0 RETURN;
+	TGTE 40  3  0  0 RETURN;
+	CHR# 40000040  0 90 c2;
+	SUBG 40  3;
+	TNXT -TDS_Language_Command_Helper_U;
+
+void TDS_Message_Login_Record;						*TDS_Message_Type: 2
+	LABL  0 0  0 b7 TDS Login Record;				*SI: never been able to test this...no packets...argh
+	CHR# 1e 0 90 c2 Host name:;
+	DBYT  0 1 90 c2 Host name length:;
+	CHR# 1e 0 90 c2 User name:;
+	DBYT  0 1 90 c2 User name length:;
+	CHR# 1e 0 90 c2 Password:;
+	DBYT  0 1 90 c2 Password length:;
+	CHR# 1e 0 90 c2 Process identifier:;
+	DBYT  0 1 90 c2 Process ID Length:;
+	DBYT  0 1 90 c2 2-byte int byte order:;
+	 CEQU 2 1 0 14 <MSB,LSB>;
+	 CEQU 3 1 0 14 <LSB,MSB>;
+	DBYT 0 1 90 c2 4-byte int byte order:;
+	 CEQU 0 1 0 14 <MSB,LSB>;
+	 CEQU 1 1 0 14 <LSB,MSB>;
+	DBYT 0 1 90 c2 Char representation:;
+	 CEQU 6 1 0 14 ASCII;
+	 CEQU 7 1 0 14 EBCDIC;
+	DBYT 0 1 90 c2 8-byte floating point format:;
+	 CEQU  4 1 0 14 IEEE<MSB,...,LSB>;
+	 CEQU  5 1 0 14 VAX ‘D’;
+	 CEQU 10 1 0 14 IEEE<LSB,...,MSB>;
+	 CEQU 11 1 0 14 ND5000;
+	DBYT 0 1 90 c2 8-byte data format:;
+	 CEQU 8 1 0 14 <MSB,...,LSB>;
+	 CEQU 9 1 0 14 <LSB,...,MSB>;
+	HBYT 0 1 90 c2 Use Database:;
+	HBYT 0 1 90 c2 Allow dump/load:;
+	HBYT 0 1 90 c2 Interface spare:;
+	HBYT 0 1 90 c2 Dialog type:;
+	 CEQU 0 1  0 14 Unspecified;
+	 CEQU 1 1  0 14 Server-to-Server;
+	 CEQU 2 1  0 14 Remote user;
+	DLNG  0 1 90 c2 Network buffer size:;
+	INCR  3;								* Currently unused
+	CHR# 1e 0 90 c2 App name:;
+	DBYT  0 1 90 c2 App name length:;
+	CHR# 1e 0 90 c2 Server name:;
+	DBYT  0 1 90 c2 Server name length:;
+	DUMP ff 0 90 c2 Remote user ID/PW:;
+	DBYT  0 1 90 c2 Remote user ID/PW length:;
+	LABL  0 1 90 c2 TDS version number:;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	CHR#  a 0 90 c2 Client prog name:;
+	DBYT  0 1 90 c2 Client prog name length:;
+	LABL  0 1 90 c2 Client lib vers num:;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	DBYT  0 1 90 c2 Automatic conversion?;
+	 CEQU 0 1  0 14 Do not convert;
+	 CEQU 1 1  0 14 Convert;
+	DBYT  0 1 90 c2 4-byte floating point rep:;
+	 CEQU 12 1  0 14 IEEE<MSB,...,LSB>;
+	 CEQU 13 1  0 14 IEEE<LSB,...,MSB>;
+	 CEQU 14 1  0 14 VAX ‘D’;
+	 CEQU 15 1  0 14 ND5000;
+	DBYT 0 1 90 c2 4-byte data format:;
+	 CEQU 16 1  0 14 <MSB,...,LSB>;
+	 CEQU 17 1  0 14 <LSB,...,MSB>;
+	CHR# 1e 0 90 c2 Requested national lang:;
+	DBYT  0 1 90 c2 National language length:;
+	DBYT  0 1 90 c2 Notify lang changes?;
+	 CEQU 0 1  0 14 Do not notify;
+	 CEQU 1 1  0 14 Notify;
+	INCR 2;									* Not used (was used by original secure SQL Server)
+	HBYT 0 1 90 c2 Negotiated login mask:;
+	 CEQU 1 1 0 14 Encrypted;
+	 CEQU 2 1 0 14 Challenge\Response;
+	 CEQU 4 1 0 14 Use security labels;
+	 CEQU 8 1 0 14 Application defined;
+	DBYT 0 1 90 c2 Security bit mask for bulk copy:;
+	INCR 9;									* Currently unused
+	CHR# 1e 0 90 c2 Character set name requested by client:;
+	DBYT  0 1 90 c2 Character set name length:;
+	DBYT  0 1 90 c2 Notify char set changes?;
+	 CEQU 0 1 0 14 Do not notify;
+	 CEQU 1 1 0 14 Notify;
+	DUMP  6 0 90 c2 Pkt size requested by client:;			*SI: CRAPPY WAY TO DO THIS...lazy ... very lazy
+	DBYT  0 1 90 c2 Pkt size length:;
+	LABL  0 0  0 b8;
+	TRTS;
+
+void TDS_Message_RPC_Command;							*TDS_Message_Type: 3
+	LABL		0 0  0 b7 TDS RPC Command;
+	DBYT		0 1 90 c2 RPC Command Length:;			*THIS IS NOT DONE!!!!!!!!!!!!!!
+	GBYT		0 2;
+	SNEQ		0 2;
+	SKIP		2;
+	 INCR		1;
+	 SUBG		1 3;			*SI: DUMP
+	MULG		2 1;
+	CHR# 40000000 1 90 c2 RPC Command:;
+	SUBG 1 3;					*SI: DUMP
+	SUBG 1 83;					*SI: DUMP
+	DUMP 0 3 90 c2 RPC Data:;	*SI: DUMP
+	LABL		0 0 0 b8;
+	TRTS;
+
+void TDS_Message_Response_Command;						*TDS_Message_Type: 4
+	LABL 0 0 0 b7 TDS Response to a Command;
+	TDS_Response_Command_Helper;
+	*TEQU 1 8 0 0 TDS_Message_Response_Command_Continuation_Data;	*SI: i got g4 from the header!
+	*SEQU 0 9;
+	*SKIP 2;
+	*LABL 0 0 0 c4 Possibly TDS Continuation Data;
+	*TDS_Message_Response_Command_Continuation_Data;
+	*LABL 0 0 0 c4 UNKNOWN TDS COMMAND;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TDS_Message_Response_Command_Continuation_Data;
+	DUMP 0 10 90 c2 Continutation Data:;
+	LABL		0 0 0 b8;
+	TRTS;
+
+void TDS_Response_Command_Helper;
+	TNEQ 0  9 0 0 RETURN;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SNEQ 0 1;
+	SKIP 3;
+	INCR 1;
+	MOVE 10 8a;				*si: loop catch...possible infinite loop - found by checking this later
+	TNXT -TDS_Response_Command_Helper;		
+	GBYT 0 1; * 90 b9 Token Type:;				*SI: SAVE THIS!!! ... pass this to the helper!
+	MOVE 10 8a;
+	TDS_Response_Command_Jumper;
+	LABL 0 0 0 b8;
+	TGTE 0 10 0 0 RETURN;
+	SNEQ 10 8a;
+	SKIP 3;
+	TGTE 0 10 0 0 RETURN;
+	DUMP 0 10 90 c2 TDS Data:;
+	TRTS;
+	if (g[16] <= 4 )
+	{
+		LABL 0 0 0 b8;
+	}
+	TNXT -TDS_Response_Command_Helper;
+
+void TDS_Response_Command_Jumper;
+	MOVE 1 84;
+	SNEQ 21 1;
+	 SKIP 2;
+	  TDS_Token_Language_Request;
+	  TRTS;
+	*CEQU 60 1 0 0 
+	SGTE 70 1;		*71-86
+	 SKIP 7;
+	 SLTE 87 1;
+	  SKIP 5;
+	  SUBG 70 4;
+	  HBYT 0 1 90 b9 Token Type:;
+	  CST# 0 4 0 14 TDS_Token_Types_List_set1;
+	  TST# 0 4 0 0 TDS_Token_Types_set1;
+	  TRTS;
+	SGTE 9f 1;		*a0-af
+	 SKIP 7;
+	 SLTE b0 1;
+	  SKIP 5;
+	  SUBG 9f 4;
+	  HBYT 0 1 90 b9 Token Type:;
+	  CST# 0 4 0 14 TDS_Token_Types_List_set2;
+	  TST# 0 4 0 0 TDS_Token_Types_set2;
+	  TRTS;
+	SGTE c9 1;		*ca-ff
+	 SKIP 7;
+	 SLTE 100 1;
+	  SKIP 5;
+	  SUBG c9 4;
+	  HBYT 0 1 90 b9 Token Type:;
+	  CST# 0 4 0 14 TDS_Token_Types_List_set3;
+	  TST# 0 4 0 0 TDS_Token_Types_set3;
+	  TRTS;
+	  
+	SNEQ 0 9;
+	SKIP 1;
+	TNXT -TDS_Response_Command_D1_Check;
+	
+	ADDG 1 9;
+	//LABL 0 0 0 b8;
+	TRTS;
+
+void TDS_Response_Command_D1_Check;
+	TGTE 0 10 0 0 RETURN;
+	
+	GBYT 0 4;
+	TEQU d1 4 0 0 RETURN;			*si: you know, instead of this crap, you should really put in a all tds func check!
+	
+	SGTE 40 1;
+	 SKIP;
+	  SLTE 7b 1;
+	  SKIP;
+	   ADDG 1 9;
+	   LABL 0 0 0 b9 Possibly Row Continuation Data;
+	   GSTR a 4;
+	   CHR# 0 4 90 c2 Row Data:;
+	   LABL 0 0  0 b8;
+	   MOVE 10 8a;											*SI: jump outta the check helper after 10 bytes
+	   SUBG a a;
+	   *TNXT -TDS_Response_Commnad_D1_Row_Continuation;
+	   TNXT -TDS_Response_Command_D1_Check_Helper;
+	  ENDS;
+	 ENDS;
+	SEQU 0 9;
+	SKIP 1;
+	 LABL 0 0 0 b8;
+	MOVE 10 8a;
+	SUBG a a;
+	TNXT -TDS_Response_Command_D1_Check_Helper;
+	
+	
+	*TGTE 40 1 0 0 TDS_Response_Command_D1_Check_Helper;		*RETURN;			*si: must be betwen 41-7a
+	*TLTE 7b 1 0 0 TDS_Response_Command_D1_Check_Helper;		*RETURN;
+	
+	*ADDG 1 9;
+	*LABL 0 0 0 b9 Possibly Row Continuation Data;
+	**DECR 1;
+	*GSTR 4000000a 4;
+	*CHR# 0 4 90 c2 Row Data:;
+	*LABL 0 0  0 b8;
+	*TNXT -TDS_Response_Command_D1_Check_Helper;
+	**TNXT -TDS_Response_Command_Helper;
+	
+void TDS_Response_Command_D1_Check_Helper;
+	SNEQ 10 8a;
+	 SKIP 2;
+	  ADDG 1 9;
+	  TNXT -TDS_Response_Command_D1_Check_Helper_End;
+	GBYT 0 4;
+	SNEQ d1 4;			*TEQU d1 4 0 0 RETURN;
+	SKIP 2;
+	 MOVE 0 9;
+	 TNXT -TDS_Response_Command_Helper;
+	TGTE 0 10 0 0 RETURN;
+	INCR 1;
+	TNXT -TDS_Response_Command_D1_Check_Helper;
+	 
+void TDS_Response_Command_D1_Check_Helper_End;
+	DECR a;
+	TRTS;
+
+*void TDS_Response_Commnad_D1_Row_Continuation;
+*	DBYT 0 a 5 5;
+*	if (g[0xa] == 0xd1)
+*	{
+*	 DECR 1;
+*	 MOVE 0 9;											*SI: reset the counter
+*	 TNXT -TDS_Response_Command_Helper;
+*	}
+*	GSTR 0 b;
+*	if (g[0xa] == g[0xb])
+*	{
+*	 LABL 0 0 0 b9 Possibly Row Continuation Data;
+*	 DECR 1;
+*	 DBYT 0 1 90 c2 Row Data Length:;
+*	 CHR# 0 1 90 c2 Row Data:;
+*	 LABL 0 0 0 b8;
+*	 TNXT -TDS_Response_Commnad_D1_Row_Continuation;
+*	}
+*	TRTS;
+
+
+void TDS_Message_Non-Expedited_Attn_Request;			*TDS_Message_Type: 6
+	LABL 0 0 0 b7 TDS Non-Expedited Attn Request;
+	DUMP 0 3 90 c2 TDS Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TDS_Message_Normal_Request_Response;				*TDS_Message_Type: 15
+	LABL 0 0 0 b7 TDS Message Normal Request Response;
+	*HBYT 0 1 90 b9 Token Type:;				*SI: SAVE THIS!!! ... pass this to the helper!
+	TDS_Response_Command_Helper;
+	*TSUB -TDS_Response_Command_List;
+	*TSUB -TDS_Response_Command_Jumper;
+	LABL 0 0 0 b8;
+	*TNXT -TDS_Response_Command_Helper;
+	TRTS;
+	
+void TDS_Message_Urgent_Request_Response()
+{				//TDS_Message_Type: 16
+	LABL 0 0 0 b7 TDS7 Login;
+	DLNG 40000000 41 90 c2 Total Packet Length:;
+	HLNG 40000000 42 90 c2 TDS Version:;
+	if (l[2] == 0x71000001)
+	{
+	DLNG 40000000 41 90 c2 Packet Size:;
+	DLNG 40000000 41 90 c2 Client Version:;
+	DLNG 40000000 41 90 c2 Client PID:;
+	DLNG 40000000 41 90 c2 Connection ID:;
+	BBYT 0 44 90 c2 Option Flags 1:;
+	BBYT 0 44 90 c2 Option Flags 2:;
+	BBYT 0 44 90 c2 SQL Type Flags:;
+	BBYT 0 45 90 c2 Reserved Flags:;
+	DLNG 40000000 41 90 c2 Time Zone:;
+	DLNG 40000000 41 90 c2 Collation:;
+	LABL 0 0 0 b7 Lengths and Offsets:;
+	DWRD 40000000 50 90 c2 Client Name Offset:;
+	DWRD 40000000 51 90 c2 Client Name Length:;
+	DWRD 40000000 52 90 c2 Username Offset:;
+	DWRD 40000000 53 90 c2 Username Length:;
+	DWRD 40000000 54 90 c2 Password Offset:;
+	DWRD 40000000 55 90 c2 Password Length:;
+	DWRD 40000000 56 90 c2 App Name Offset:;
+	DWRD 40000000 57 90 c2 App Name Length:;
+	DWRD 40000000 58 90 c2 Server Name Offset:;
+	DWRD 40000000 59 90 c2 Server Name Length:;
+	DWRD 40000000 5a 90 c2 Unknown1 Offset:;
+	DWRD 40000000 5b 90 c2 Unknown1 Length:;
+	DWRD 40000000 5c 90 c2 Libary Name Offset:;
+	DWRD 40000000 5d 90 c2 Libary Name Length:;
+	DWRD 40000000 5e 90 c2 Locale Offset:;
+	DWRD 40000000 5f 90 c2 Locale Length:;
+	DWRD 40000000 60 90 c2 Database Name Offset:;
+	DWRD 40000000 61 90 c2 Database Name Length:;	
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b7 Names:;
+	INCR e;
+	
+	MULG( 2, l[17]);
+	MULG( 2, l[19]);
+	MULG( 2, l[21]);
+	MULG( 2, l[23]);
+	MULG( 2, l[25]);
+	MULG( 2, l[27]);
+	MULG( 2, l[29]);
+	MULG( 2, l[31]);
+	MULG( 2, l[33]);
+	if (l[17] != 0)
+	{
+		CHR# 40000000 51 90 c2 Client Name:;
+	}
+	if (l[19] != 0)
+	{
+		CHR# 40000000 53 90 c2 Username:;
+	}
+	if (l[21] != 0)
+	{
+		HEX#( 0, l[21], 0x90, 0xc2, "Password:" );
+	}
+	if (l[23] != 0)
+	{
+		CHR# 40000000 57 90 c2 App name:;
+	}
+	if (l[25] != 0)
+	{
+		CHR# 40000000 59 90 c2 Server name:;
+	}
+	if (l[27] != 0)
+	{
+		CHR# 40000000 5b 90 c2 Unknown1:;
+	}
+	if (l[29] != 0)
+	{
+		CHR# 40000000 5d 90 c2 Libary Name:;
+	}
+	if (l[31] != 0)
+	{
+		CHR# 40000000 5f 90 c2 Locale Name:;
+	}
+	if (l[33] != 0)
+	{
+		CHR# 40000000 61 90 c2 Database Name:;
+	}
+	LABL 0 0 0 b8;
+	}
+	if (l[2] != 0x71000001)
+	{
+		DUMP 0 3 90 c2 TDS Data:;
+	}
+	LABL 0 0 0 b8;
+}
+void TDS_NODECODE;							*TDS_Message_Type: unknown
+	LABL 0 0 0 b7 TDS Not Decoded;
+	DUMP 0 3 90 c2 TDS Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void TDS_Not_Specified;							*TDS_Message_Type: unknown
+	LABL 0 0 0 b7 TDS Not Specified;
+	DUMP 0 3 90 c2 TDS Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+* TDS Message Types - function list
+str# TDS_Message_Types_Func;
+	TDS_Message_Language_Command;					*SI: list starts at 1
+	TDS_Message_Login_Record;						* not specified means that i haven't done it / couldn't find info
+	TDS_Message_RPC_Command;
+	TDS_Message_Response_Command;
+	TDS_Not_Specified;						*5
+	TDS_Message_Non-Expedited_Attn_Request;
+	TDS_Not_Specified;
+	TDS_Not_Specified;
+	TDS_Not_Specified;
+	TDS_Not_Specified;						*10
+	TDS_Not_Specified;
+	TDS_Not_Specified;
+	TDS_Not_Specified;
+	TDS_Not_Specified;
+	TDS_Message_Normal_Request_Response;	*15
+	TDS_Message_Urgent_Request_Response;
+
+* TDS Message Types - string list
+str# TDS_Message_Types;
+	A language command, not necessarily SQL;		*SI: this starts at 1... do i need to adjust?
+	TDS login record;
+	Remote procedure call;
+	Response to a command;
+	Raw, unformatted data;													*5
+	Non-expedited attention request;
+	Bulk binary data;
+	Protocol request to set up an additional logical channel;
+	Protocol request to close a logical channel;
+	Resource error detected during setup or use of a logical channel;		*10
+	Protocol acknowledgment of logical channel;
+	Protocol request to echo data in message;
+	Protocol request to logout logical channel;
+	Undefined;
+	Normal tokenized request or response;									*15
+	TDS7 Login;
+	SSPI;
+	Pre-Login;
+
+
+* TDS Tokens for Response Commands
+
+void TDS_Token_Language_Request;						* 0x21
+	HBYT 0 1 90 b9 Token Type:;
+	DLNG 0 1 90 c2 Message Length:;
+	INCR 3;
+	GBYT 0 2;
+	DECR 3;
+	SEQU 0 2;
+	SKIP 3;
+	 CHR# 0 1 90 c2 Message:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG 2 1;
+	  CHR# 40000000 1 90 c2 Message:;
+	TRTS;
+
+void TDS_Token_Logout;									* 0x71
+	DBYT 0 1 90 c2 Logout:;
+	TRTS;
+
+void TDS_Token_Keyword_Offset;							* 0x75
+	DLNG 0 1 90 c2 Offset of Keyword:;			*use 40000000
+	TRTS;
+
+void TDS_Token_Return_Status;							* 0x79
+	DBYT 0 1 90 c2 Length:;
+	//DLNG 0 1 90 c2 Return Status:;
+	HEX# 0 1 90 c2 Return Status:;
+	TRTS; 
+
+void TDS_Token_Process_ID;								* 0x7c
+	D64B 40000000 1 90 c2 Process Number:;
+	TRTS;
+
+void TDS_Token_Cur_Delete;								* 0x81
+	DBYT 0 6 90 c2 # Columns:;		*SI: This doesn't seem correct for some pkts...
+	*MOVE 6 87;						*SI: SAVE THIS ... used in 0xD1
+	DBYT 0 1 90 c2 Column Info:;
+	MOVE 0 2;
+	TNXT -TDS_Token_Cur_Delete_Helper;
+
+void TDS_Token_Cur_Delete_Helper;
+	TGTE 0 6  0  0 RETURN;
+	SUBG 1 6;
+	ADDG 1 2;
+	LABL 0 0  0 b9 Column - ;
+	DGLB 0 2  0 14;
+	DWRD 0 1 90 c2 Reserved:\Rsvrd:;
+	DWRD 0 1 90 c2 Reserved:\Rsvrd:;
+	DBYT 0 1 90 c2 Type:;
+	TGTE 81 1 0 0 TDS_Token_Cur_Delete_Helper2;			*>128 SI: CRAP....UGH....HOW DO YOU FIND OUT WHICH TO USE?!
+	DLNG 0 1 90 c2 Size:;
+	DBYT 0 1 90 c2 Precision:;
+	DBYT 0 1 90 c2 Scale:;
+	INCR 1;
+	DBYT 0 1 90 c2 Name Length:;
+	SEQU 0 1;
+	SKIP 2;
+	 MULG 2 1;
+	 CHR# 40000000 1 90 c2 Name:;
+	LABL 0 0  0 b8;
+	TNXT -TDS_Token_Cur_Delete_Helper;
+	
+void TDS_Token_Cur_Delete_Helper2;
+	SNEQ 26 1;
+	SKIP 1;
+	 INCR 1;						*SI: i don't know why, but that type always has an extra space
+	DBYT 0 1 90 c2 Name Length:;
+	MULG 2 1;
+	CHR# 40000000 1 90 c2 Name:;
+	LABL 0 0  0 b8;
+	TNXT -TDS_Token_Cur_Delete_Helper;
+
+void TDS_ROWFMT;										*??
+	LABL		0 0  0 b7 TDS_ROWFMT;
+	DWRD		0 1 90 c2 Token Bytes Remaining:;
+	DWRD		0 6 90 c2 # of Columns:;
+	DBYT 40000000 1 90 c2 Column Name Length:;
+	CHR#		0 1 90 c2 Column Name:;
+	HBYT		0 1 90 c2 Status:;
+	DLNG		0 1 90 c2 User Type:;
+	DBYT		0 1 90 c2 Data Type:;
+	*Length:;
+	LABL		0 0  0 b8;
+	SEQU 0 6;
+	SKIP 2;
+	 SUBG 1 6;
+	 TNXT -TDS_ROWFMT;
+	TRTS;
+
+void TDS_Token_Cur_Delete_Key;		*bogus
+	DBYT		0 1 90 c2 Length:;
+	SUBG		1 1;
+	CHR#		0 1 90 c2 Data:;
+	*TNXT -TDS_Token_Row_Data;
+	TRTS;
+
+void TDS_Token_Column_Names;							* 0xA0
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;		*SI: SAVE
+	MOVE 0 6;
+	TNXT -TDS_Token_Column_Names_Helper;
+	
+void TDS_Token_Column_Names_Helper;	
+	TGTE 0 10  0  0 RETURN;
+	ADDG 1  6;
+	DBYT 0  1 90 c2 Column Name Length:;
+	SUBG 1  5;
+	SEQU 0  1;
+	 SKIP 2;
+	  CHR# 0  1 90 c2 Column Name:;
+	  SUBG 1 85;
+	TGTE 0  5  0  0 RETURN;
+	TNXT -TDS_Token_Column_Names_Helper;
+
+void TDS_Token_Column_Formats;							* 0xA1
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;		*SI: SAVE
+	TNXT -TDS_Token_Column_Formats_Helper;
+
+void TDS_Token_Column_Formats_Helper;
+	TGTE        0 10  0  0 RETURN;
+	TGTE		0  5  0  0 RETURN;
+	DLNG 40000000  1 90 c2 User DataType:;
+	SUBG		4  5;
+	TGTE		0  5  0  0 RETURN;
+	HBYT        0  1 90 c2 TDS DataType:;
+	*TDS_DataType_Byte;
+	SUBG		1  5;
+	TGTE		0  5  0  0 RETURN;
+	DBYT        0  1 90 c2 Maximum Length:;
+	SUBG		1  5;
+	TGTE		0  5  0  0 RETURN;
+	TNXT -TDS_Token_Column_Formats_Helper;
+
+void TDS_Token_Alt_Name;								* 0xA7
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DWRD		0 1 90 c2 ID:;
+	DBIT		4 1 90 c2 Name Length:;
+	INCR 1;
+	MULG 2 1;
+	GBYT 0 2;
+	SNEQ 0 2;
+	SKIP 2;
+	 INCR 1;
+	 SUBG 1 1;
+	CHR# 40000000 1 90 c2 Name:;
+	TRTS;
+
+void TDS_Token_ALTFMT;									* 0xA8
+	DWRD 0 5 90 c2 Token Bytes Remaining:;
+	DWRD 0 1 90 c2 ID:;
+	DBYT 0 1 90 c2 Num of Operators:;
+	HBYT 0 1 90 c2 Operator Type:;
+	 CEQU 4f 1 0 14 Average value;
+	 CEQU 4b 1 0 14 Summary count value;
+	 CEQU 4d 1 0 14 Maximum value;
+	 CEQU 52 1 0 14 Minimum value;
+	 CEQU 51 1 0 14 Sum value;
+	DBYT 0 1 90 c2 Operator Column Num:;
+	DLNG 0 1 90 c2 User-defined DataType:;
+	DBYT 0 1 90 c2 DataType:;
+	*? DataType Length:;				??????????????????????????????
+	
+void TDS_Token_Order_By;								* 0xA9
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	CHR#		0 5 90 c2 Magic:;
+	TRTS;
+
+void TDS_Token_Error_Message;							* 0xAA
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DLNG 40000000 1 90 c2 SQL Server Error Num:;
+	DBYT		0 1 90 c2 Error State:;
+	DBYT		0 1 90 c2 Error Class/Severity:;
+	DWRD 40000000 1 90 c2 Error Message Length:;
+	INCR 1;			*SI: if the next byte == 0, means unicode so double the length field
+	GBYT		0 2;
+	DECR 1;
+	SEQU		0 2;
+	SKIP 3;
+	 CHR#		0 1 90 c2 Error Message:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG 2 1;
+	  CHR# 40000000 1 90 c2 Error Message:;
+	
+	DBYT 40000000 1 90 c2 Server Name Length:;
+	SEQU 0 1;
+	SKIP 7;
+	 SEQU		0 2;
+	 SKIP 3;
+	  CHR#		0 1 90 c2 Server Name:;
+	  SNEQ 0 2;
+	  SKIP 2;
+	   MULG		2 1;
+	   CHR# 40000000 1 90 c2 Server Name:;
+	  
+	DBYT 0 1 90 c2 Procedure Length:;
+	SEQU 0 1;
+	SKIP 7;
+	 SEQU		0 2;
+	 SKIP 3;
+	  CHR#		0 1 90 c2 Procedure:;
+	  SNEQ 0 2;
+	  SKIP 2;
+	   MULG		2 1;
+	   CHR# 40000000 1 90 c2 Procedure:;
+
+	DWRD 40000000 1 90 c2 Line Number:;
+	TRTS;
+
+void TDS_Token_Info;									* 0xAB
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DLNG 40000000 1 90 c2 SQL Server Info Num:;
+	DBYT		0 1 90 c2 Information State:;
+	DBYT		0 1 90 c2 Information Class:;
+	
+	DWRD 40000000 1 90 c2 Message Length:;
+	INCR 1;
+	GBYT		0 2;
+	DECR 1;
+	SEQU		0 2;
+	SKIP 3;
+	 CHR#		0 1 90 c2 Message:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG		2 1;
+	  CHR# 40000000 1 90 c2 Message:;
+	
+	DBYT		0 1 90 c2 Server Name Length:;
+	SEQU 0 1;										*SI: if the length == 0, don't display name
+	SKIP 7;
+	SEQU		0 2;
+	SKIP 3;
+	 CHR#		0 1 90 c2 Server Name:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG		2 1;
+	  CHR# 40000000 1 90 c2 Server Name:;
+
+	DBYT		0 1 90 c2 Procedure Length:;
+	SEQU 0 1;
+	SKIP 7;											*SI: if the length == 0, don't display name
+	SEQU		0 2;
+	SKIP 3;
+	 CHR#		0 1 90 c2 Procedure:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG		2 1;
+	  CHR# 40000000 1 90 c2 Procedure:;
+	  
+	DWRD 40000000 1 90 c2 Line Number:;
+	TRTS;
+
+void TDS_Token_LoginAck;								* 0xAD
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	HBYT		0 1 90 c2 Login Status:;
+	 CEQU 5 1 0 14 Login request completed successfully;
+	 CEQU 6 1 0 14 Login request failed;
+	 CEQU 7 1 0 14 Client must complete a negotiation before completing login request;
+	LABL  0 1 90 c2 TDS vers num:;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	DBYT		0 1 90 c2 Program Name Length:;
+	INCR 1;
+	GBYT		0 2;
+	DECR 1;
+	SEQU		0 2;
+	SKIP 3;
+	 CHR#		0 1 90 c2 Program Name:;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  MULG        2 1;
+	  CHR# 40000000 1 90 c2 Program Name:;
+	LABL  0 1 90 c2 Server vers num:;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	 LABL 0 0 90 4 .;
+	 DBYT 0 1 90 4;
+	TRTS;
+
+void TDS_Token_Describe_User_Control;					* 0xAE
+	GWRD		0 1;
+	SLTE	   10 1;
+	SKIP		2;
+	 DWRD		0 1 90 c2 Token Bytes Remaining:;
+	 TNXT -TDS_Token_Describe_User_Control_Helper;
+	DWRD 40000000 1 90 c2 Token Bytes Remaining:;		*si: how do you tell if it's either or?
+	TNXT -TDS_Token_Describe_User_Control_Helper;
+	
+void TDS_Token_Describe_User_Control_Helper;	
+	DUMP		0 1 90 c2 Bytes Remaining:;
+	TRTS;
+
+void TDS_Token_DataStream_KeyData;						* 0xCA
+	GBYT 0 1;											*SI: NOT DONE
+	SNEQ 0 1;
+	SKIP 1;
+	 INCR 1;
+	DBYT 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Data:;
+	TRTS;
+
+
+void TDS_Token_Row_Data;								* 0xD1
+														* SI: doesn't work correctly
+	*TEQU 0 7 0 0 RETURN;	*SI: in order for this to be called, you needed to have gone to 0x81 first ... or at least that's what it seems like
+	*SUBG 1 7;
+		
+	GBYT 0 1;
+
+	SNEQ  0 1;
+	SKIP 4;
+	 GLNG 0 4;
+	 TEQU 0 4 0 0 TDS_Token_Row_Data1;
+	 INCR 1;
+	 TNXT -TDS_Token_Row_Data;
+
+	SNEQ FF 1;
+	SKIP 2;
+	 INCR 1;
+	 TNXT -TDS_Token_Row_Data;
+
+	SNEQ D1 1;
+	SKIP 4;
+	 INCR 1;
+	 LABL 0 0  0 b8;
+	 LABL 0 0 90 c7 Row Token;
+	 TNXT -TDS_Token_Row_Data;
+	
+	TNXT -TDS_Token_Row_Data1;
+
+void TDS_Token_Row_Data1;	
+	DBYT 0 1 90 c2 Row Data Length:;
+	
+	GBYT 0 2;		*SI: see if there's a 0 as the first byte
+	 SNEQ 0 2;
+	 SKIP 1;
+	  INCR 1;
+	  
+	  SUBG 1 1;
+
+	  GBYT 0 2;
+	  SNEQ 0 2;		*SI: if the next one is a 00 byte as well, then go back.... this seems to mess things up
+	  SKIP 1;
+	   DECR 1;
+		
+	INCR 1;			*SI: see if it's unicode
+	GBYT 0 2;
+	DECR 1;
+	SEQU 0 2;
+	SKIP 2;
+	//DGLB 0 1 90 c2 lgnth:;
+	 CHR# 0 1 90 c2 Row Data1:;
+	 TNXT -TDS_Token_Row_Data_FF_00_Killer;		*TRTS; *TNXT -TDS_Token_Row_Data;
+	
+	*MULG 2 1;
+	CHR# 0 1 90 c2 Row Data2:;
+	TNXT -TDS_Token_Row_Data_FF_00_Killer;		*TRTS; *TNXT -TDS_Token_Row_Data;
+
+void TDS_Token_Row_Data_Helper;
+	GBYT 0 2;
+	SEQU 0 2;
+	SKIP 1;
+	 TRTS;
+	INCR 1;
+	TNXT -TDS_Token_Row_Data_Helper;
+
+void TDS_Token_Row_Data_FF_00_Killer;
+	TGTE  0 10 0 0 RETURN;
+	GBYT  0 3;
+	
+	SNEQ  0 3;
+	SKIP 2;
+	 INCR 1;
+	 TNXT -TDS_Token_Row_Data_FF_00_Killer;
+	
+	SNEQ FF 3;
+	SKIP 9;
+	 INCR 1;
+	 
+	 GBYT 0 3;
+	 SEQU FF 3;
+	 SKIP 4;
+	  SEQU D1 3;
+	  SKIP 1;
+	   DECR 1;
+	  TRTS;
+	 
+	 TNXT -TDS_Token_Row_Data_FF_00_Killer;
+
+	SNEQ D1 3;
+	SKIP 2;
+	 LABL 0 0 0 b8;
+	 TNXT -TDS_Response_Command_Helper;
+
+	TDS_Token_Row_Data_Func_Jump_Check;
+	SNEQ 1 a;
+	SKIP 2;
+	 LABL 0 0 0 b8;
+	 TNXT -TDS_Response_Command_Helper;
+	 *TEQU 1 a 0 0 TDS_Response_Command_Helper;			*SI::::HOLY CRAP!!!!!! check this out!
+	TNXT -TDS_Token_Row_Data1;
+	
+	
+	*---------------------------------
+void TDS_Token_Row_Data_Func_Jump_Check;			*si: if it hits one of these, then it'll return 1 in a
+	GBYT 0 1 90 b9;
+	MOVE 0 a;
+	MOVE 1 84;
+	*CEQU 21 1 0 0
+	*CEQU 60 1 0 0
+
+	*NEW CRAP
+	TEQU 71 1 0 0 TDS_Token_Row_Data_Func_Jump_Check_Helper;
+	TEQU 75 1 0 0 TDS_Token_Row_Data_Func_Jump_Check_Helper;
+	TEQU 79 1 0 0 TDS_Token_Row_Data_Func_Jump_Check_Helper;
+	TEQU 7c 1 0 0 TDS_Token_Row_Data_Func_Jump_Check_Helper;
+	*END NEW CRAP
+	
+	SGTE 7f 1;		*80-86
+	 SKIP 5;
+	 SLTE 87 1;
+	  SKIP 3;
+	  SUBG 70 4;
+	  MOVE 1 a;
+	  TRTS;
+	SGTE 9f 1;		*a0-af
+	 SKIP 5;
+	 SLTE b0 1;
+	  SKIP 3;
+	  SUBG 9f 4;
+	  MOVE 1 a;
+	  TRTS;
+	SGTE c9 1;		*ca-ff
+	 SKIP 5;
+	 SLTE 100 1;
+	  SKIP 3;
+	  SUBG c9 4;
+	  MOVE 1 a;
+	  TRTS;
+	TRTS;
+
+void TDS_Token_Row_Data_Func_Jump_Check_Helper;
+	  SUBG 70 4;
+	  MOVE 1 a;
+	  TRTS;
+
+
+void TDS_Token_Row_Data_Helper2;
+	GBYT 0 2;
+	SEQU 0 2;
+	SKIP 1;
+	 TRTS;
+	INCR 1;
+	TNXT -TDS_Token_Row_Data_Helper2;
+
+
+
+void TDS_Token_Capability_Packet;						* 0xE2
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DUMP        0 5 90 c2 Capabilities:;					*SI: this is crappy
+	TRTS;
+
+void TDS_Token_Environment_Change;						* 0xE3
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	HBYT        0 1 90 c2 Environment Variable:;
+	 CEQU 1 1 0 14 The Current Database;
+	 CEQU 2 1 0 14 The Current National Language;
+	 CEQU 3 1 0 14 The Current Character Set;
+	 CEQU 4 1 0 14 The Current Packet Size (in bytes);
+	DBYT		0 1 90 c2 New Value Length:;
+	SEQU 0 1;
+	SKIP a;
+	 INCR 1;
+	 GBYT		0 2;
+	 DECR 1;
+	 SEQU		0 2;
+	 SKIP 3;
+	  CHR#		0 1 90 c2 New Value:;
+	  SNEQ 0 2;
+	  SKIP 2;
+	   MULG		2 1;
+	   CHR# 40000000 1 90 c2 New Value:;
+	
+	DBYT		0 1 90 c2 Old Value Length:;
+	SEQU 0 1;
+	SKIP a;
+	 INCR 1;
+	 GBYT		0 2;
+	 DECR 1;
+	 SEQU		0 2;
+	 SKIP 3;
+	  CHR#		0 1 90 c2 Old Value:;
+	  SNEQ 0 2;
+	  SKIP 2;
+	   MULG		2 1;
+	   CHR# 40000000 1 90 c2 Old Value:;
+	TRTS;
+
+void TDS_Token_Return_Text_Message;						* 0xE5
+	DWRD 0 5 90 c2 Token Bytes Remaining:;				* SI: NOT DONE
+	DLNG 0 1 90 c2 SQL Server Info Num:;
+	DBYT 0 1 90 c2 Information State:;
+	DBYT 0 1 90 c2 Information Class:;
+	DBYT 0 1 90 c2 SQL State Argument Length:;
+	CHR# 0 1 90 c2 SQL State Argument:;
+	DBYT 0 1 90 c2 Extended Error Status:;
+	DWRD 0 1 90 c2 Current Transaction State:;
+	DWRD 0 1 90 c2 Message Length:;
+	*SI: .... ummm... what else?
+
+void TDS_Token_Database_RPC_Request;					* 0xE6
+	DWRD 0 5 90 c2 Token Bytes Remaining:;
+	DBYT 0 1 90 c2 RPC Name Length:;
+	CHR# 0 1 90 c2 RPC Name:;
+	*RPC Option Values:;						*NOT DONE
+
+void TDS_Token_Dynamic;									* 0xE7
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	HBYT		0 1 90 c2 Type:;
+	 CEQU  1 1 0 14 Request to prepare stmt;
+	 CEQU  2 1 0 14 Request to execute a prepared statement;
+	 CEQU  4 1 0 14 Request to deallocate a prepared statement;
+	 CEQU  8 1 0 14 Request to prepare and execute stmt immediately;
+	 CEQU 20 1 0 14 Acknoledge a dynamic command;
+	 CEQU 40 1 0 14 Send input format description;
+	 CEQU 80 1 0 14 Send output format description;
+	DBYT		0 1 90 c2 Status:;
+	 CEQU 0 1 0 14 No status associated with this dynamic command;
+	 CEQU 1 1 0 14 Parmeter data stream follows the dynamic command;
+	DBIT		4 1 90 c2 ID Length:;
+	SEQU 0 1;
+	SKIP 8;
+	 MULG 2 1;
+	 INCR 1;												*SI: incr to the next full byte
+	 GBYT 0 2;
+	 SNEQ 0 2;
+	 SKIP 2;
+	  INCR 1;
+	  SUBG 1 1;	
+	 CHR# 40000000 1 90 c2 ID:;
+	DBYT 0 1 90 c2 Statement Length:;
+	SEQU 0 1;
+	SKIP 1;
+	 CHR# 0 1 90 c2 Statement:;
+
+void TDS_Token_Row_Description;							* 0xEE
+	DWRD 0 5 90 c2 Token Bytes Remaining:;
+	DWRD 0 6 90 c2 Num Of Columns:;						*SI: SAVE!
+	MOVE 1 4;											*SI: clear g4
+	TNXT -TDS_Token_Row_Description_Helper;
+
+void TDS_Token_Row_Description_Helper;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 90 c9 Column #:;
+	DGLB 0 4  0 20;
+	DBYT 0 1 90 c2 Col Name Length:;
+	SEQU 0 1;
+	SKIP 1;
+	 CHR# 0 1 90 c2 Column Name:;
+	HBYT 0 1 90 c2 Status:;
+	 CEQU  1 1 0 14 Hidden Column;
+	 CEQU  2 1 0 14 Column is a Key;
+	 CEQU  4 1 0 14 Part of the version key;
+	 CEQU 10 1 0 14 Updatable Column;
+	 CEQU 20 1 0 14 Allows Nulls;
+	 CEQU 40 1 0 14 Identity Column;
+	 CEQU 80 1 0 14 Padded with blank characters;
+	HLNG 0 1 90 c2 User Type:;
+	TDS_DataType_Byte;
+	LABL 0 0 0 c8;
+	
+	ADDG 1 4;
+ 	SUBG 1 6;											*SI: we've gone through once, so sub 1 from the amt of cols
+	TGTE 0 6 0 0 RETURN;
+	TNXT -TDS_Token_Row_Description_Helper;
+
+
+
+	 
+
+
+void TDS_Token_Command_Completion;						* 0xFD
+	MOVE 1 42;											*SI: to test the count arg
+	HWRD 0 1 90 b9 Completion Status:;
+	 CBIT 6 1  0 d4 .1.. .... Part of event notification;
+	 CLSE 0 0  0 d4 .0.. .... Not part of event notification;
+	 CBIT 5 1  0 d4 ..1. .... Part of attn command;
+	 CLSE 0 0  0 d4 ..0. .... Not part of attn command;
+	 CBIT 4 1  0 d4 ...1 .... Valid count argument;
+	 CLSE 0 0  0 d4 ...0 .... Invalid count argument;
+	 CBIT 3 1  0 d4 .... 1... Result of stored procedure;
+	 CLSE 0 0  0 d4 .... 0... Not a result of a stored procedure;
+	 CBIT 2 1  0 d4 .... .1.. Transaction in progress;
+	 CLSE 0 0  0 d4 .... .0.. No transaction in progress;
+	 CBIT 1 1  0 d4 .... ..1. Errors occurred;
+	 CLSE 0 0  0 d4 .... ..0. No errors occurred;
+	 CBIT 0 1  0 d4 .... ...1 More results to follow;
+	 CLSE 0 0  0 d4 .... ...0 Final result - command completed successfully;
+	LABL 0 0 0 b8;
+	SBIT 4 1;
+	SKIP 1;
+	 MOVE 0 42;
+	DWRD 40000000 1 90 c2 Transaction State:;
+	 CEQU 0 1 0 14 Not currently in a transaction;
+	 CEQU 1 1 0 14 Request caused transaction to complete successfully;
+	 CEQU 2 1 0 14 A transaction is still in progress on this dialog;
+	 CEQU 3 1 0 14 Request caused a statement abort to occur;
+	 CEQU 4 1 0 14 Request caused transaction to abort;
+	SNEQ 0 42;
+	SKIP 1;
+	 DLNG 40000000 1 90 c2 Num Rows Affected:;
+	TRTS;
+
+void TDS_Token_Done_In_Proc;							* 0xFF
+	HWRD 0 1 90 c9 Status:;
+	 CBIT 6 1  0 d4 .1.. .... Part of event notification;
+	 CLSE 0 0  0 d4 .0.. .... Not part of event notification;
+	 CBIT 5 1  0 d4 ..1. .... Part of attn command;
+	 CLSE 0 0  0 d4 ..0. .... Not part of attn command;
+	 CBIT 4 1  0 d4 ...1 .... Valid count argument;
+	 CLSE 0 0  0 d4 ...0 .... Invalid count argument;
+	 CBIT 3 1  0 d4 .... 1... Result of stored procedure;
+	 CLSE 0 0  0 d4 .... 0... Not a result of a stored procedure;
+	 CBIT 2 1  0 d4 .... .1.. Transaction in progress;
+	 CLSE 0 0  0 d4 .... .0.. No transaction in progress;
+	 CBIT 1 1  0 d4 .... ..1. Errors occurred;
+	 CLSE 0 0  0 d4 .... ..0. No errors occurred;
+	 CBIT 0 1  0 d4 .... ...1 More results to follow;
+	 CLSE 0 0  0 d4 .... ...0 Final result - command completed successfully;
+	 LABL 0 0  0 c8;
+	HWRD 0 1 90 c2 Transaction State:;
+	 CEQU 0 1 0 14 Not currently in a transaction;
+	 CEQU 1 1 0 14 Request caused transaction to complete successfully;
+	 CEQU 2 1 0 14 Transaction is still in progress;
+	 CEQU 3 1 0 14 Request caused a statement abort to occur;
+	 CEQU 4 1 0 14 Request caused transaction to abort;
+	DLNG 40000000 1 90 c2 Count:;
+	TRTS;
+
+
+void TDS_Token_Unspecified_length2;
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DUMP		0 5 90 c2 Token Data:;
+	TRTS;
+
+void TDS_Token_Unspecified_length4;
+	DLNG 40000000 5 90 c2 Token Bytes Remaining:;
+	DUMP		0 5 90 c2 Token Data:;
+	TRTS;
+
+void TDS_Token_Unspecified_length8;
+	D64B 40000000 5 90 c2 Token Bytes Remaining:;
+	DUMP		0 5 90 c2 Token Data:;
+	TRTS;
+
+
+//0xac TDS_RETURN_Para
+void TDS_RETURN_Para()
+{
+	DWRD 40000000 5 90 c2 Token Bytes Remaining:;
+	DUMP		0 5 90 c2 Token Data:;
+	TRTS;
+}
+*-------------------- NOT DONE!
+str# TDS_Token_Types_set1;
+	TDS_Token_Logout;					*0x71-
+	;
+	;
+	;
+	TDS_Token_Keyword_Offset;			*0x75-
+	;
+	;
+	;
+	TDS_Token_Return_Status;			*0x79-
+	;
+	;
+	TDS_Token_Process_ID;				*0x7C-
+	;
+	;
+	;
+	;*0x80-
+	TDS_Token_Cur_Delete;				*0x81-
+	;*0x82-
+	;*0x83-
+	;*0x84-
+	;*0x85-
+	;*0x86-
+
+str# TDS_Token_Types_set2;
+	TDS_Token_Column_Names;				*0xA0-
+	TDS_Token_Column_Formats;			*0xA1-
+	;									*0xA2-
+	;
+	;									*0xA4-
+	;									*0xA5-
+	;									*0xA6-
+	TDS_Token_Alt_Name;					*0xA7-
+	;									*0xA8-
+	TDS_Token_Order_By;					*0xA9-
+	TDS_Token_Error_Message;			*0xAA-
+	TDS_Token_Info;						*0xAB
+	//;									*0xAB
+	TDS_RETURN_Para;					*0xAC-
+	//;									*0xAC-
+	TDS_Token_LoginAck;					*0xAD-
+	TDS_Token_Describe_User_Control;	*0xAE-
+	;									*0xAF-
+
+str# TDS_Token_Types_set3;
+	TDS_Token_DataStream_KeyData;		*0xCA-
+	;									*0xCB
+	;									*0xCC
+	;									*0xCD
+	;									*0xCE
+	;									*0xCF
+	;									*0xD0
+	TDS_Token_Row_Data;					*0xD1-
+	;
+	;	*0xD3-
+	;
+	;
+	;
+	;	*0xD7-
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;	*0xE0-
+	;
+	TDS_Token_Capability_Packet;		*0xE2-
+	TDS_Token_Environment_Change;		*0xE3-
+	;
+	TDS_Token_Return_Text_Message;*0xE5-
+	TDS_Token_Database_RPC_Request;		*0xE6-
+	TDS_Token_Dynamic;					*0xE7-
+	;
+	;
+	;
+	;
+	;	*0xEC-
+	;
+	TDS_Token_Row_Description;	*0xEE-
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	TDS_Token_Command_Completion;		*0xFD-
+	TDS_Token_Done_In_Proc;				*0xFE-
+	TDS_Token_Done_In_Proc;				*0xFF-
+
+
+* list of known token types
+str# TDS_Token_Types_List_set1;
+	Client logout request;														*0x71
+	;
+	;
+	;
+	Returns the offset of the specified keyword in the language command;		*0x75
+	;
+	;
+	;
+	Describes the token which is used to return status information to a client;	*0x79
+	;
+	;
+	Returns process identification;												*0x7C
+	;
+	;
+	;
+	Describes the cursor close data stream;								*0x80
+	TDS for deleting a row through a cursor;							*0x81
+	TDS for sending a fetch command to a server;						*0x82
+	TDS for describing cursor characteristics and state;				*0x83
+	TDS for cursor open;												*0x84
+	TDS for updating a row through a cursor;							*0x85
+	TDS for declaring a cursor;											*0x86
+
+str# TDS_Token_Types_List_set2;
+	TDS for describing column names;									*0xA0
+	TDS for describing column formats;									*0xA1
+	TDS for sending a notice that an event has been raised;				*0xA2
+	;
+	TDS for naming tables referenced in a result set;					*0xA4
+	TDS used to provide column information for browse mode;				*0xA5
+	Clear, set, and report options;										*0xA6
+	Describes the number and name of COMPUTE clause;					*0xA7
+	TDS for describing data type, length, and status of COMPUTE data;	*0xA8
+	Describes the columns in an order by clause of a select;			*0xA9
+	TDS which contains an error message;								*0xAA
+	TDS which contains an information message;							*0xAB
+	Return parameter information to a client;							*0xAC
+	The response token to a login request;								*0xAD
+	Describes the user control or format for columns;					*0xAE
+	TDS for describing aggregate results;								*0xAF
+
+str# TDS_Token_Types_List_set3;
+	The datastream for key data;					*0xCA
+	;	*B
+	;	*C
+	;	*D
+	;	*E
+	;	*F
+	;	*0
+	TDS for a row of data;							*0xD1
+	;
+	TDS for a row of data for a COMPUTE clause;		*0xD3
+	;
+	;
+	;
+	The token for parameter data;					*0xD7
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	TDS which contains an RPC request;										*0xE0
+	;
+	Exchange client and server capabilities during dialog establishment;	*0xE2
+	Notify receiver of a change in the environment variables;				*0xE3
+	;
+	Return a text message to a client;										*0xE5
+	TDS which contains a database RPC request;								*0xE6
+	Request to prepare or execute a dynamic SQL statement;					*0xE7
+	;
+	;
+	;
+	;
+	Describes the type, length, and status of PARAMS data;					*0xEC
+	;
+	Describes the data type, length, and status of row data;				*0xEE
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	Indicates completion status of a command;						*0xFD
+	Indicates completion status of a stored procedure command;		*0xFE
+	Indicates completion status of a stored procedure command;		*0xFF
+
+
+* TDS DataTypes Main Func
+void TDS_DataType_Byte;
+	HBYT 0 1 90 c9 DataType:;
+	SUBG 1f 1;				*si: list starts at 20
+	CST# 0 1 0 14 TDS_DataTypes_List;
+	TST# 0 1 0 0 TDS_DataTypes_List;
+	LABL 0 0 0 c8;			*SI: just in case it doesn't hit a datatype
+	TRTS;
+
+* TDS DataTypes List
+str# TDS_DataTypes_List;
+	;
+	;
+	TDS_DataType_IMAGE;		*0x22
+	TDS_DataType_TEXT; 		*0x23
+	TDS_DataType_BLOB; 		*0x24
+	TDS_DataType_VARBINARY;	*0x25
+	TDS_DataType_INTN; 		*0x26
+	TDS_DataType_VARCHAR; 	*0x27
+	;
+	;
+	;		*0x2a
+	;
+	;
+	TDS_DataType_BINARY; 	*0x2D
+	;
+	TDS_DataType_CHAR; 		*0x2F
+	TDS_DataType_INT1; 		*0x30
+	;
+	TDS_DataType_BIT; 		*0x32
+	;
+	TDS_DataType_INT2; 		*0x34
+	;
+	;
+	;
+	TDS_DataType_INT4; 		*0x38
+	;
+	TDS_DataType_SHORTDATE; *0x3A
+	TDS_DataType_FLT4; 		*0x3B
+	TDS_DataType_MONEY; 	*0x3C
+	TDS_DataType_DATETIME; 	*0x3D
+	TDS_DataType_FLT8; 		*0x3E
+	;
+	TDS_DataType_UINT1; 	*0x40
+	TDS_DataType_UINT2; 	*0x41
+	TDS_DataType_UINT4; 	*0x42
+	TDS_DataType_UINT8; 	*0x43
+	TDS_DataType_UINTN; 	*0x44
+	;
+	;
+	;
+	;
+	;
+	;		*0x4a
+	;
+	;
+	;
+	;
+	;
+	;		*0x50
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;		*0x5a
+	;
+	;
+	;
+	;
+	;
+	;		*0x60
+	;
+	;
+	;
+	;
+	;
+	;
+	TDS_DataType_SENSITIVITY;	*0x67
+	TDS_DataType_BOUNDARY; 		*0x68
+	;
+	TDS_DataType_DECN; 			*0x6A
+	;
+	TDS_DataType_NUMN;			*0x6C
+	TDS_DataType_FLTN;			*0x6D
+	TDS_DataType_MONEYN;		*0x6E
+	TDS_DataType_DATETIMEN;		*0x6F
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	TDS_DataType_SHORTMONEY;	*0x7A
+
+
+* TDS DataTypes Functions
+void TDS_DataType_IMAGE;			*0x22
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Image;
+	LABL 0 0  0 c8;
+void TDS_DataType_TEXT;				*0x23
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Text;
+	LABL 0 0  0 c8;
+void TDS_DataType_BLOB;				*0x24
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Serialized Object;
+	LABL 0 0  0 c8;
+void TDS_DataType_VARBINARY;		*0x25
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Binary;
+	LABL 0 0  0 c8;
+void TDS_DataType_INTN;				*0x26
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_VARCHAR;			*0x27
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Character;
+	INCR 2;										*?!?!!?!??!?!
+	LABL 0 0  0 c8;
+	
+void TDS_DataType_BINARY;			*0x2D
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Binary;
+	INCR 2 0;									*!!!!
+	LABL 0 0  0 c8;
+void TDS_DataType_CHAR;				*0x2F
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Character;
+	LABL 0 0  0 c8;
+void TDS_DataType_INT1;				*0x30
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_BIT;				*0x32
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Bit;
+	LABL 0 0  0 c8;
+void TDS_DataType_INT2;				*0x34
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_INT4;				*0x38
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Integer;
+	INCR 1 0;									*!!!!
+	LABL 0 0  0 c8;
+void TDS_DataType_SHORTDATE;		*0x3A
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Date/time;
+	LABL 0 0  0 c8;
+void TDS_DataType_FLT4;				*0x3B
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Float;
+	LABL 0 0  0 c8;
+void TDS_DataType_MONEY;			*0x3C
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Money;
+	LABL 0 0  0 c8;
+void TDS_DataType_DATETIME;			*0x3D
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Date/time;
+	LABL 0 0  0 c8;
+void TDS_DataType_FLT8;				*0x3E
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Float;
+	LABL 0 0  0 c8;
+void TDS_DataType_UINT1;			*0x40
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Unsigned Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_UINT2;			*0x41
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Unsigned Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_UINT4;			*0x42
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Unsigned Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_UINT8;			*0x43
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Unsigned Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_UINTN;			*0x44
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Unsigned Integer;
+	LABL 0 0  0 c8;
+void TDS_DataType_SENSITIVITY;		*0x67
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Sensitivity;
+	LABL 0 0  0 c8;
+void TDS_DataType_BOUNDARY;			*0x68
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Boundary;
+	LABL 0 0  0 c8;
+void TDS_DataType_DECN;				*0x6A
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Decimal;
+	LABL 0 0  0 c8;
+void TDS_DataType_NUMN;				*0x6C
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Numeric;
+	LABL 0 0  0 c8;
+void TDS_DataType_FLTN;				*0x6D
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Float;
+	LABL 0 0  0 c8;
+void TDS_DataType_MONEYN;			*0x6E
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Money;
+	LABL 0 0  0 c8;
+void TDS_DataType_DATETIMEN;		*0x6F
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Date/time;
+	LABL 0 0  0 c8;
+void TDS_DataType_SHORTMONEY;		*0x7A
+	LABL 0 0 90 d4 Fixed Length;
+	LABL 0 0 90 d4 Not Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Money;
+	LABL 0 0  0 c8;
+void TDS_DataType_LONGCHAR;			*0xAF
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Converted; 
+	LABL 0 0 90 d4 Character;
+	LABL 0 0  0 c8;
+	
+void TDS_DataType_LONGBINARY;		*0xE1
+	LABL 0 0 90 d4 Not a Fixed Length;
+	LABL 0 0 90 d4 Nullable;
+	LABL 0 0 90 d4 Not Converted; 
+	LABL 0 0 90 d4 Binary;
+	LABL 0 0  0 c8;
+
+
+* TDS [end]

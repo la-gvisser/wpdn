@@ -1,0 +1,461 @@
+
+// H.264/MPEG 4 Part 10 Video
+// Date: 7/9/2007
+
+void H.264()
+{
+	LABL 0 0 0 b1 H.264/MPEG 4 Part 10 Video\H.264:;
+
+	GBYT 0 a;
+	l[1] = g[0xa];
+	ANDG 1f 41;
+	CST# 0 41 90 c9 H264::NALU_Type_List_Str;
+
+	 BBYT 0 a 90 c2 Header:;
+     LABL 0 0 90 c2 Forbidden_zero_bit:;
+	 CBIT 7 a 0 54 1... .... (F) NAL unit type octet and payload may contain bit errors or other syntax violations;
+	 CLSE 0 0 0 54 0... .... (F) NAL unit type octet and payload should not contain bit errors or other syntax violations;
+	 l[1] = g[0xa];
+	 ANDG 60 41;
+     LABL 0 0 90 c2 Nal Ref Idc:;
+	    CEQU 00 41 0 54 .00. .... The content of the NAL unit is not used to reconstruct reference pictures;
+        CEQU 20 41 0 54 .01. .... The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+        CEQU 40 41 0 54 .10. .... The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+        CEQU 60 41 0 54 .11. .... The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+     l[1] = g[0xa];
+     LABL 0 0 90 c2 Header Type:;
+     ANDG 1f 41;
+         CEQU 1f 41 0 54 ...1 1111 Undefined;
+         CEQU 1e 41 0 54 ...1 1110 Undefined;
+         CEQU 1d 41 0 54 ...1 1101 FU-B (Fragmentation Unit);
+         CEQU 1c 41 0 54 ...1 1100 FU-A (Fragmentation Unit);
+         CEQU 1b 41 0 54 ...1 1011 MTAP24 (Multi-time Aggregation Packet);
+         CEQU 1a 41 0 54 ...1 1010 MTAP16 (Multi-time Aggregation Packet);
+         CEQU 19 41 0 54 ...1 1001 STAP-B (Single-time Aggregation Packet);
+         CEQU 18 41 0 54 ...1 1000 STAP-A (Single-time Aggregation Packet);
+         CEQU 17 41 0 54 ...1 0111 NAL unit(Single NAL unit packet per H.264);
+         CEQU 16 41 0 54 ...1 0110 NAL unit(Single NAL unit packet per H.264);
+         CEQU 15 41 0 54 ...1 0101 NAL unit(Single NAL unit packet per H.264);
+         CEQU 54 41 0 54 ...1 0100 Coded slice in scalable extension;
+         CEQU 13 41 0 54 ...1 0011 Coded slice of an auxiliary coded picture without partitioning;
+         CEQU 12 41 0 54 ...1 0010 NAL unit(Single NAL unit packet per H.264);
+         CEQU 11 41 0 54 ...1 0001 NAL unit(Single NAL unit packet per H.264);
+         CEQU 10 41 0 54 ...1 0000 NAL unit(Single NAL unit packet per H.264);
+         CEQU 0f 41 0 54 ...0 1111 Subset sequence parameter set;
+         CEQU 0e 41 0 54 ...0 1110 Prefix NAL unit in scalable extension;
+         CEQU 0d 41 0 54 ...0 1101 Sequence parameter set extension;
+         CEQU 0c 41 0 54 ...0 1100 Filler data;
+         CEQU 0b 41 0 54 ...0 1011 End of stream;
+         CEQU 0a 41 0 54 ...0 1010 End of sequence;
+         CEQU 09 41 0 54 ...0 1001 Access unit delimiter;
+         CEQU 08 41 0 54 ...0 1000 Picture parameter set;
+         CEQU 07 41 0 54 ...0 0111 Sequence parameter set;
+         CEQU 06 41 0 54 ...0 0110 Supplemental enhancement information (SEI);
+         CEQU 05 41 0 54 ...0 0101 Coded slice of an IDR picture;
+         CEQU 04 41 0 54 ...0 0100 Coded slice data partition C;
+         CEQU 03 41 0 54 ...0 0011 Coded slice data partition B;
+         CEQU 02 41 0 54 ...0 0010 Coded slice data partition A;
+         CEQU 01 41 0 54 ...0 0001 Coded slice of a non-IDR picture;
+         CEQU 00 41 0 54 ...0 0000 Undefined;
+	LABL 0 0 0 b8;
+
+	TST# 0 41 0 0 H264::NALU_Type_List;
+    DUMP 1 0 b0 c2 H.264 Payload:;
+}
+
+str# H264::NALU_Type_List;
+	0x00 | H264::Undefined;
+	0x01 | H264::slice_layer;
+	0x02 | H264::NAL Unit;
+	0x03 | H264::NAL Unit;
+	0x04 | H264::NAL Unit;
+	0x05 | H264::slice_layer;
+	0x06 | H264::SEI_RBSP;
+	0x07 | H264::NAL Unit;
+	0x08 | H264::NAL Unit;
+	0x09 | H264::NAL Unit;
+	0x0a | H264::NAL Unit;
+	0x0b | H264::NAL Unit;
+	0x0c | H264::NAL Unit;
+	0x0d | H264::NAL Unit;
+	0x0e | H264::NAL Unit;
+	0x0f | H264::NAL Unit;
+	0x10 | H264::NAL Unit;
+	0x11 | H264::NAL Unit;
+	0x12 | H264::NAL Unit;
+	0x13 | H264::slice_layer;
+	0x14 | H264::NAL Unit;
+	0x15 | H264::NAL Unit;
+	0x16 | H264::NAL Unit;
+	0x17 | H264::NAL Unit;
+	0x18 | H264::STAP-A;
+	0x19 | H264::STAP-B;
+	0x1a | H264::MTAP16;
+	0x1b | H264::MTAP24;
+	0x1c | H264::FU-A;
+	0x1d | H264::FU-B;
+	0x1e | H264::Undefined;
+    0x1f | H264::Undefined;
+
+str# H264::NALU_Type_List_Str;
+	0x00 | Undefined;
+	0x01 | NAL Unit;
+	0x02 | NAL Unit;
+	0x03 | NAL Unit;
+	0x04 | NAL Unit;
+	0x05 | NAL Unit;
+	0x06 | NAL Unit;
+	0x07 | NAL Unit;
+	0x08 | NAL Unit;
+	0x09 | NAL Unit;
+	0x0a | NAL Unit;
+	0x0b | NAL Unit;
+	0x0c | NAL Unit;
+	0x0d | NAL Unit;
+	0x0e | NAL Unit;
+	0x0f | NAL Unit;
+	0x10 | NAL Unit;
+	0x11 | NAL Unit;
+	0x12 | NAL Unit;
+	0x13 | NAL Unit;
+	0x14 | NAL Unit;
+	0x15 | NAL Unit;
+	0x16 | NAL Unit;
+	0x17 | NAL Unit;
+	0x18 | Single-Time Aggregation Packet-A (STAP-A);
+	0x19 | Single-Time Aggregation Packet-B (STAP-B);
+	0x1a | Multi-time Aggregation Packet16 (MTAP16);
+	0x1b | Multi-time Aggregation Packet24 (MTAP24);
+	0x1c | Fragmentation Unit-A (FU-A);
+	0x1d | Fragmentation Unit-B (FU-B);
+	0x1e | Undefined;
+    0x1f | Undefined;
+
+void H264::STAP-A()
+{
+    // g[5]   NAL Ref IDC
+    // g[6]   NAL Unit Type
+    g[2] = g[0x10];
+	g[3] = 0;
+	while (g[2] > 5)
+	{
+       H264::NAL Unit And Length;
+	}
+}
+
+str# H264::NAL_Type_Func;
+    5 | H264::NAL Unit And Length;
+
+void H264::NAL Unit And Length()
+{
+	g[3] += 1;
+	DGLB 0 3 9 c9 NALU Unit ;
+	DWRD 0 a 90 c2 NAL Unit Length:;
+	H264::NAL Unit;
+}
+
+void H264::NAL Unit()
+{
+	BYTO 0 49;
+
+	l[3] = g[3];
+
+	//DGLB 0 43 0 c2 NALU ;
+	BBYT 0 b a0 c9 NAL Unit Header:;
+	LABL 0 0 90 c2 Forbidden_zero_bit:;
+	CBIT 7 b 0 54 1... .... (F) Forbidden Zero Bit: NAL unit type octet and payload may contain bit errors or other syntax violations;
+	CLSE 0 0 0 54 0... .... (F) Forbidden Zero Bit: NAL unit type octet and payload should not contain bit errors or other syntax violations;
+	g[5] = g[0xb];
+	ANDG 60 5;
+	LABL 0 0 90 c2 NAL Ref Idc:;
+	CEQU 00 5 0 54 .00. .... (NRI) The content of the NAL unit is not used to reconstruct reference pictures;
+	CEQU 20 5 0 54 .01. .... (NRI) The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+	CEQU 40 5 0 54 .10. .... (NRI) The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+	CEQU 60 5 0 54 .11. .... (NRI) The decoding of the NAL unit is required to maintain the integrity of the reference pictures;
+	g[6] = g[0xb];       //Type of NAL
+	ANDG 1f 6;
+	LABL 0 0 90 c2 NAL Unit type:;
+	CEQU 1f 6 0 54 ...1 1111 Unspecified;
+	CEQU 1e 6 0 54 ...1 1110 Unspecified;
+	CEQU 1d 6 0 54 ...1 1101 Unspecified;
+	CEQU 1c 6 0 54 ...1 1100 Unspecified;
+	CEQU 1b 6 0 54 ...1 1011 Unspecified;
+	CEQU 1a 6 0 54 ...1 1010 Unspecified;
+	CEQU 19 6 0 54 ...1 1001 Unspecified;
+	CEQU 18 6 0 54 ...1 1000 Unspecified;
+	CEQU 17 6 0 54 ...1 0111 Reserved;
+	CEQU 16 6 0 54 ...1 0110 Reserved;
+	CEQU 15 6 0 54 ...1 0101 Reserved;
+	CEQU 14 6 0 54 ...1 0100 Reserved;
+	CEQU 13 6 0 54 ...1 0011 Coded slice of an auxiliary coded picture without partitioning;
+	CEQU 12 6 0 54 ...1 0010 Reserved;
+	CEQU 11 6 0 54 ...1 0001 Reserved;
+	CEQU 10 6 0 54 ...1 0000 Reserved;
+	CEQU 0f 6 0 54 ...0 1111 Reserved;
+	CEQU 0e 6 0 54 ...0 1110 Reserved;
+	CEQU 0d 6 0 54 ...0 1101 Sequence parameter set extension;
+	CEQU 0c 6 0 54 ...0 1100 Filter data;
+	CEQU 0b 6 0 54 ...0 1011 End of stream;
+	CEQU 0a 6 0 54 ...0 1010 End of sequence;
+	CEQU 09 6 0 54 ...0 1001 Access unit delimiter;
+	CEQU 08 6 0 54 ...0 1000 Picture parameter set;
+	CEQU 07 6 0 54 ...0 0111 Sequence parameter set;
+	CEQU 06 6 0 54 ...0 0110 Supplemental enhancement information (SEI);
+	CEQU 05 6 0 54 ...0 0101 Coded slice of an IDR picture;
+	CEQU 04 6 0 54 ...0 0100 Coded slice data partition C;
+	CEQU 03 6 0 54 ...0 0011 Coded slice data partition B;
+	CEQU 02 6 0 54 ...0 0010 Coded slice data partition A;
+	CEQU 01 6 0 54 ...0 0001 Coded Slice of a non-IDR picture;
+	CEQU 00 6 0 54 ...0 0000 Unspecified;
+
+	//DGLB 0 43 0 c2 NALU ;
+	//  LABL 0 0 0 c8;
+	l[1] = pb[0];
+	while (l[1] == 0)
+	{
+	  INCR 1;
+	  l[1] = pb[0];
+	}
+
+	H264::slice_layer;
+	BYTO 0 4a;
+	//DGLB 0 49 90 c2 l[9]:;
+	//DGLB 0 4a 90 c2 l[10]:;
+
+	l[10] -= l[9];
+	//DGLB 0 a 90 c2 g[10] :;
+	//DGLB 0 4a 90 c2 l[10]:;
+	g[0xa] -= l[10];
+	//g[0xa] += 2;
+
+	DUMP 0 a 90 c2 Continuous NAL Unit Data:;
+	LABL 0 0 0 c8;
+	//INCR 0 a;
+
+	g[2] -= g[0xa];
+	g[2] -= 3;
+	//DECR 1;
+}
+
+void H264::SEI_RBSP()
+{
+	l[1] = 0;	// payload type
+	l[2]] = 0;	// payload size
+	
+	l[3] = pb[0];
+	
+	while( l[3] == 0xFF )
+	{
+		INCR 1 0 0 0;
+		l[1] += 255;
+		
+		l[3] = pb[0];
+	}
+	
+	l[1] += l[3];
+	
+	INCR 1 0 0 0;
+	
+	l[3] = pb[0];
+	
+	while( l[3] == 0xFF )
+	{
+		INCR 1 0 0 0;
+		l[2] += 255;
+		
+		l[3] = pb[0];
+	}
+	
+	l[2] += l[3];
+	
+	INCR 1 0 0 0;
+	
+	CST# 0	41	0 b7 H264::sei_payload_types;
+	SKIP 1;
+	LABL	0	0	0	b7 Reserved SEI Message;
+	DUMP 0 42 90 c2 SEI Data:;
+	LABL	0	0	0	b8;
+}
+
+str# H264::sei_payload_types;
+	0x00 | Buffering Period;
+	0x01 | Pic Timing;
+	0x02 | Pan Scan Rect;
+	0x03 | Filler Payload;
+	0x04 | User Data Registered ITU-T T35;
+	0x05 | User Data Unregistered;
+	0x06 | Recovery Point;
+	0x07 | Dec Ref Pic Marking Repetition;
+	0x08 | Spare Pic;
+	0x09 | Scene Info;
+	0x0a | Sub Seq Info;
+	0x0b | Sub Seq Layer Characteristics;
+	0x0c | Sub Seq Characteristics;
+	0x0d | Full Frame Freeze;
+	0x0e | Full Frame Freeze Release;
+	0x0f | Full Frame Snapshot;
+	0x10 | Progressive Refinement Segment Start;
+	0x11 | Progressive Refinement Segment End;
+	0x12 | Motion Constrained Slice Group Set;
+	0x13 | Film Grain Characterstics;
+	0x14 | Deblocking Filter Display Preference;
+	0x15 | Stereo Video Info;
+	0x16 | Post Filter Hint;
+	0x17 | Tone Mapping Info;
+	0x18 | Scalability Info;
+	0x19 | Sub Pic Scalable Layer;
+	0x1a | Non Required Layer Rep;
+	0x1b | Priority Layer Info;
+	0x1c | Layers Not Present;
+	0x1d | Layer Dependency Change;
+	0x1e | Scalable Nesting;
+	0x1f | Base Layer Temporal Hrd;
+	0x20 | Quality Layer Integrity Check;
+	0x21 | Redundant Pic Property;
+	0x22 | T10 Picture Index;
+	0x23 | T1 Switching Point;
+
+void H264::slice_layer()
+{
+    LABL 0 0 90 b9 Slice Layer;
+    H264::slice_header;
+    H264::slice_data;
+    H264::rbsp_slice_trailing_bits;
+    LABL 0 0 0 b8;
+}
+
+void H264::slice_header()
+{
+	LABL 0 0 0 b9 Slice Header;
+	LABL 0 0 90 b2 First_mb_in_slice:;
+	H264::DisplayColumbusBits;
+	LABL 0 0 90 b2 Slice Type:;
+	H264::DisplayColumbusBits;
+	CST# 0 4 0 24 H264::SliceType_str;
+	LABL 0 0 90 b2 Pic Parameter Set id:;
+	H264::DisplayColumbusBits;
+	DBIT 5 0 90 b2 Frame Number:;             // Actually need to get length from Sequence Parameter Set
+	if (g[29] == 1)
+	{
+	 DBIT 1 41 90 b2 Field Pic Flag:;
+	 if (l[1] > 0)
+	 {
+		DBIT 1 41 90 b2 Bottom Field Flag:;
+	 }
+	}
+
+	if (g[6] == 5)
+	{
+	LABL 0 0 0 b2 Idr pic id:;
+	H264::DisplayColumbusBits;
+
+	}
+	DBIT 7 0 90 b2 Pic order cnt lsb:;    // Actually need to get length from Sequence Parameter Set
+
+	LABL 0 0 90 c2 ...;
+	LABL 0 0 0 b8;
+
+	TRTS;
+}
+
+str# H264::SliceType_str;
+	0 | P Slice;
+	1 | B Slice;
+	2 | I Slice;
+	3 | SP Slice;
+	4 | SI Slice;
+	5 | P Slice;
+	6 | B Slice;
+	7 | I Slice;
+	8 | SP Slice;
+	9 | SI Slice;
+
+void  H264::DisplayColumbusBits;
+	l[1] = 0;      //Leading Zero Bits
+	l[2] = 0;
+	while (l[2] == 0)
+	{
+	l[1] += 1;
+	DBIT 1 42 5 5;
+	//l[2] += l[3];
+	}
+	l[1] -= 1;
+	l[3] = 1;
+	l[4] = 0;
+	//l[1] += 1;
+	while (l[3] <= l[1])
+	{
+	 MULG 2 42;
+	 l[3] +=1;
+	 DBIT 1 45 5 5;
+	 SHFL 1 44;
+	 l[4] += l[5];
+	}
+	l[2] -= 1;
+	l[4] += l[2];
+	DGLB 0 44 90 50;
+	g[4] = l[4];
+	TRTS;
+
+void H264::slice_data;
+	TRTS;
+
+void H264::rbsp_slice_trailing_bits;
+	TRTS;
+
+void H264::rbsp_trailing_bits;
+	TRTS;
+
+void H264::STAP-B()
+{
+	DWRD 0 0 90 c2 Decoding Order Num:;
+    H264::STAP-A();
+}
+
+void H264::MTAP16()
+{
+    DBYT 0 0 90 c2 MTAP16 NAL HDR:;
+    DWRD 0 0 90 c2 DON Base:;
+    g[2] = g[0x10];
+	g[3] = 0;
+	while (g[2] > 5)
+	{
+        DWRD 0 a 90 c2 NAL Unit Size:;
+        DBIT 8 0 90 c2 DOND:;
+        DWRD 0 0 90 c2 TS Offset:;
+        H264::NAL Unit;
+	}
+}
+
+void H264::MTAP24()
+{
+    DBYT 0 0 90 c2 MTAP16 NAL HDR:;
+    DWRD 0 0 90 c2 DON Base:;
+    g[2] = g[0x10];
+	g[3] = 0;
+	while (g[2] > 5)
+	{
+        DWRD 0 a 90 c2 NAL Unit Size:;
+        DBIT 8 0 90 c2 DOND:;
+        DBIT 18 0 90 c2 TS Offset:;
+        H264::NAL Unit;
+    }
+}
+
+void H264::FU-A()
+{
+    DBYT 0 0 90 c2 FU indicator:;
+    DBYT 0 0 90 c2 FU Header:;
+    DUMP 1 0 90 c2 FU Payload:;
+}
+
+void H264::FU-B()
+{
+    DBYT 0 0 90 c2 FU Indicator:;
+    DBYT 0 0 90 c2 FU Header:;
+    DWRD 0 0 90 c2 DON:;
+    DUMP 1 0 90 c2 FU Payload:;
+}
+
+void H264::Undefined;
+	TRTS;

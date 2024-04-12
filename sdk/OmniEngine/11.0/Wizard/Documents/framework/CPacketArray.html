@@ -1,0 +1,852 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CPacketArray Class</title>
+</head>
+<body>
+    <h1>CPacketArray Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        The CPacketArray is an unsorted collection of CPackets.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CPacketArray<br>
+        &nbsp;&nbsp;&nbsp;: public CAtlArray<CPacket>
+        </CPacket>
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::CPacketArray">CPacketArray</a>
+            </td>
+            <td>
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Operators</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::operator_assign">operator =</a>
+            </td>
+            <td valign="top">
+                Returns the object as an operation.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Add">Add</a>
+            </td>
+            <td valign="top">
+                Copies the packet to the end of the collection.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Append">Append</a>
+            </td>
+            <td valign="top">
+                Copies the packets from the other collection to the end of this collection.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Copy">Copy</a>
+            </td>
+            <td valign="top">
+                Copies the other collection to this collection.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Detach">Detach</a>
+            </td>
+            <td valign="top">
+                Detaches all of the attached packets in the collection.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::GetType">GetType</a>
+            </td>
+            <td valign="top">
+                Returns the type of collection: mixed, attached or detached.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Insert">Insert</a>
+            </td>
+            <td valign="top">
+                Inserts a copy of the packet to the index.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::IsAttached">IsAttached</a>
+            </td>
+            <td valign="top">
+                Returns true if all of the packets in the collection are attached.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::IsDetached">IsDetached</a>
+            </td>
+            <td valign="top">
+                Returns true if all of the packets in the collection are detached.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::IsMixed">IsMixed</a>
+            </td>
+            <td valign="top">
+                Returns true if the collection contains both attached and detached packets.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::Load">Load</a>
+            </td>
+            <td valign="top">
+                Adds all of the packets from the file.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacketArray::ReplacePacket">ReplacePacket</a>
+            </td>
+            <td valign="top">
+                Replaces the packet at the index with a copy of the packet.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CPacketArray Public Member Functions</h2>
+    <!-- method details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacketArray::CPacketArray"></a>CPacketArray::CPacketArray</h3>
+    <p class="onlyP">
+        Constructs a CPacketArray object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPacketArray(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>type</td>
+            <td><em>parameter</em> = default</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>parameter</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- operator_assign details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::operator_assign"></a>CPacketArray::operator =
+    </h3>
+    <p class="onlyP">
+        operator = description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type operator =(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Add details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Add"></a>CPacketArray::Add
+    </h3>
+    <p class="onlyP">
+        Add description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Add(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Append details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Append"></a>CPacketArray::Append
+    </h3>
+    <p class="onlyP">
+        Append description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Append(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Copy details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Copy"></a>CPacketArray::Copy
+    </h3>
+    <p class="onlyP">
+        Copy description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Copy(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Detach details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Detach"></a>CPacketArray::Detach
+    </h3>
+    <p class="onlyP">
+        Detach description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Detach(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetType details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::GetType"></a>CPacketArray::GetType
+    </h3>
+    <p class="onlyP">
+        GetType description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type GetType(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Insert details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Insert"></a>CPacketArray::Insert
+    </h3>
+    <p class="onlyP">
+        Insert description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Insert(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsAttached details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::IsAttached"></a>CPacketArray::IsAttached
+    </h3>
+    <p class="onlyP">
+        IsAttached description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type IsAttached(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsDetached details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::IsDetached"></a>CPacketArray::IsDetached
+    </h3>
+    <p class="onlyP">
+        IsDetached description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type IsDetached(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsMixed details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::IsMixed"></a>CPacketArray::IsMixed
+    </h3>
+    <p class="onlyP">
+        IsMixed description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type IsMixed(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Load details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::Load"></a>CPacketArray::Load
+    </h3>
+    <p class="onlyP">
+        Load description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type Load(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- ReplacePacket details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPacketArray::ReplacePacket"></a>CPacketArray::ReplacePacket
+    </h3>
+    <p class="onlyP">
+        ReplacePacket description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                type ReplacePacket(
+            </td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">
+                &nbsp;
+            </td>
+            <td>
+                type
+            </td>
+            <td>
+                <em>parameter</em> = default
+            </td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                );
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left: 25px;">
+        <dt><em>parameter</em></dt>
+        <dd>
+            parameter description.
+        </dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

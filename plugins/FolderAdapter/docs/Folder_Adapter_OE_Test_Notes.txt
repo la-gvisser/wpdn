@@ -1,0 +1,57 @@
+Folder Adapter OE Test Notes
+v1.10.0.0 
+
+
+Capture-1-24-1.pcap           427,408		 0:01:55		  427,408
+Capture-1-24-2.pcap           349,999		 0:00:35		  777,407
+Capture-1-24-3.pcap           346,723		 0:00:30		1,124,130
+Capture-1-24-4.pcap           355,470		 0:00:41		1,479,600
+Capture-1-24-5.pcap           440,741		 0:01:41		1,920,341
+
+Total						1,920,341		 0:03:61
+
+
+660nodes.pcap				  310,063		 0:30:50
+all-1304349-packets.pcap	1,304,349		15:02:07
+evidence03.pcap				    1,778		 0:02:51
+fortworth101.pcap			    3,190		 0:00:54		6,380  9,570,	12,760
+local-HTTP.pcap				  119,392		 0:00:42
+malspam-1.pcap				       50		 0:00:33
+ubuntu16.04.pcap                4,474
+
+packet_example_1_2-3.pcapng - 1015 packets
+
+packet_examples_1.pcapng    - 1515 packets
+packet_examples_1_1.pcapng  -  500 packets
+packet_examples_1_2.pcapng  -  500 packets
+packet_examples_1_3.pcapng  -  515 packets
+packet_examples_2.pcapng    - 5320 packets
+packet_examples_2_1.pcapng  - 1000 packets
+packet_examples_2_2.pcapng  - 1000 packets
+packet_examples_2_3.pcapng  - 1000 packets
+packet_examples_2_4.pcapng  - 1000 packets
+packet_examples_2_5.pcapng  - 1320 packets
+packet_examples_3.pcapng    -   81 packets
+packet_examples_4.pcapng    -   49 packets
+packet_examples_5.pcapng    -  186 packets
+packet_examples_5_1.pcapng  -   90 packets
+packet_examples_5_2.pcapng  -   96 packets
+packet_examples_6.pcapng    -  131 packets
+packet_examples_6_1.pcapng  -   20 packets
+packet_examples_6_2.pcapng  -  111 packets
+packet_examples_7.pcapng    -  115 packets
+packet_examples_7_1.pcapng  -  114 packets
+packet_examples_7_2.pcapng  -    1 packets
+packet_examples_8.pcapng    -   82 packets
+packet_examples_9.pcapng    -  577 packets
+packet_examples_9_1.pcapng  -  100 packets
+packet_examples_9_2.pcapng  -  100 packets
+packet_examples_9_3.pcapng  -  100 packets
+packet_examples_9_4.pcapng  -  100 packets
+packet_examples_9_5.pcapng  -  177 packets
+packet_examples_10.pcapng   -   15 packets
+packet_examples_11.pcapng   -   10 packets
+------------------------------------------
+                            15,925 packets
+
+TestFile01.pcapng           - 5000 packets

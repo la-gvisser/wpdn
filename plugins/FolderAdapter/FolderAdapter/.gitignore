@@ -1,0 +1,12 @@
+CMakeFiles
+_CPack_Packages
+cmake_install.cmake
+CMakeCache.txt
+CPackConfig.cmake
+CPackSourceConfig.cmake
+install_manifest.txt
+Makefile
+FolderAdapterOE-*.deb
+FolderAdapterOE.so
+FolderAdapterOE-*.zip
+FolderAdapterOE-*.gz

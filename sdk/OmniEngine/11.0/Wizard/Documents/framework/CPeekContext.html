@@ -1,0 +1,286 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CPeekContext Class</title>
+</head>
+<body>
+    <h1>CPeekContext Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        The CPeekContext description.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CPeekContext
+    </p>
+
+    <!-- Class Member Overview -->
+    <!-- Constructor Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekContext::CPeekContext">CPeekContext</a>
+            </td>
+            <td>
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+
+    <!-- Member Functions Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetOptions">GetOptions</a>
+            </td>
+            <td valign="top">
+                Get this object's Options (preferences or settings).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnContextPrefs">OnContextPrefs</a>
+            </td>
+            <td valign="top">
+                The Context Preferences handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnCreateContext">OnCreateContext</a>
+            </td>
+            <td valign="top">
+                The Create Context handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnDisposeContext">OnDisposeContext</a>
+            </td>
+            <td valign="top">
+                The Dispose Context (delete or close) handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::SetOptions">SetOptions</a>
+            </td>
+            <td valign="top">
+                The Set Options handler.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CPeekContext Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPeekContext::CPeekContext"></a>CPeekContext::CPeekContext</h3>
+    <p class="onlyP">
+        Constructs a CPeekContext object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPeekContext(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CGlobalId&</td>
+            <td><em>inId</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CRemotePlugin*</td>
+            <td><em>inPlugin</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CUnknown</td>
+            <td><em>inSite</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inId</em></dt>
+        <dd>The context id.</dd>
+        <dt><em>inPlugin</em></dt>
+        <dd>The CRemotePlugin object that owns this context.</dd>
+        <dt><em>inSite</em></dt>
+        <dd>The Site for this context.</dd>
+    </dl>
+
+    <!-- GetOptions details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetOptions"></a>CPeekEngineContext::GetOptions
+    </h3>
+    <p class="onlyP">
+        Get the Options (preferences / settings) of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">const COptions& GetOptions();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A constant reference to this contexts COptions object.
+    </p>
+
+    <!-- OnContextPrefs details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnContextPrefs"></a>CPeekEngineContext::OnContextPrefs
+    </h3>
+    <p class="onlyP">
+        The Context Preferences handler for this context. Use the supplied Data Modeler
+        to get or set the preferences (options / settings) of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnContextPrefs(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>COmniDataModeler&</td>
+            <td><em>ioPrefs</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>ioPrefs</em></dt>
+        <dd>The Data Modeler used to get or set this context's preferences.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnCreateContext details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnCreateContext"></a>CPeekEngineContext::OnCreateContext
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when this context is being created.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnCreateContext();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnDisposeContext details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnDisposeContext"></a>CPeekEngineContext::OnDisposeContext
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when this context is being destroyed (disposed of).
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnDisposeContext();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- SetOptions details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::SetOptions"></a>CPeekEngineContext::SetOptions
+    </h3>
+    <p class="onlyP">
+        The framework calls this method with new options (preferences / settings). The context
+        should replace its current preferences with the COptions provided.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int SetOptions(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const COptions&</td>
+            <td><em>inOptions</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inOptions</em></dt>
+        <dd>A const references to the new options (preferences / settings).</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

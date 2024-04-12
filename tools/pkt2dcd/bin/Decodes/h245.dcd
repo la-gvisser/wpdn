@@ -1,0 +1,8530 @@
+*********************************************************************
+*
+* Protocol: ITU-T H.245 Control Protocol For Multimedia Communcations
+*
+* Specification: ITU-T H.245 version 8
+*
+*********************************************************************
+
+void H245;
+	*DGLB	0	10	90	c2  g[10]; for testing
+	TEQU    0   10  0   30  IP Null;
+	
+	// anything < 2 bytes is not h245
+	if (g[16] < 2)
+	{
+		TRTS;
+	}
+	
+	// anything where the first two bytes == 0 is not H245
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+	
+    *+ handle TPKT
+    GWRD    0   5;
+    SNEQ    300 5;
+    SKIP;
+		INCR 2;  *validate length
+		GWRD 0  5;
+		DECR 2;
+		SGTE 4	5;*additional check (1stcis.pkt 144)
+		SKIP;
+			SUBG 1  5;
+			SLTE 10 85;
+			SKIP;
+				TPKT;
+			ENDS;
+		ENDS;
+	ENDS;
+    *-
+
+	TEQU    0   10  0   30  IP Null;
+	ASN1_Init;
+	ASN1_DisableEnum;
+
+	LABL    0   0   0   b1  H.245;
+
+	H245_MultiMediaSystemControlMessage;
+	H245_Align;
+
+	TGTE    0   10  0   0   RETURN;
+
+	* Let's say we need at least one byte to do another one
+	TLTE    2   10  0   0   H245;
+
+	TGTE    0   10  0   0   RETURN;
+	DUMP    0   10  90  c2  Remaining H.245 Data:;	
+
+void H245_tunneled()
+{
+	TEQU    0   10  0   30  IP Null;
+	
+	// anything < 2 bytes is not tunneled h245
+	if (g[16] < 2)
+	{
+		TRTS;
+	}
+	
+	// anything where the first two bytes == 0 is not H245
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+	
+	ASN1_Init;
+	ASN1_DisableEnum;
+
+	H245_MultiMediaSystemControlMessage;
+	H245_Align;
+}
+
+void H245_MultiMediaSystemControlMessage;
+	LABL    0   0   0   b7  Multi Media System Control Message;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT    2   1   90  c2  Message Type:;
+	CST# ffffffff 1 0   b7  H245_MultiMediaSystemControlMessageNames;
+	TSB# ffffffff 1 -H245_MultiMediaSystemControlMessageFuncs;
+	LABL    0   0   0   b8;
+	LABL    0   0   0   b8;
+
+str# H245_MultiMediaSystemControlMessageNames;
+	Request Message;
+	Response Message;
+	Command Message;
+	Indication Message;
+
+str# H245_MultiMediaSystemControlMessageFuncs;
+	H245_RequestMessage;
+	H245_ResponseMessage;
+	H245_CommandMessage;
+	H245_IndicationMessage;
+
+
+void H245_RequestMessage;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Request Message Type:;
+	    CST# ffffffff 1 0   b7  H245_RequestMessageNames_base;
+	    TSB# ffffffff 1 -H245_RequestMessageFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Request Message Type:;
+	CST# ffffffff 41 0   b7  H245_RequestMessageNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_RequestMessageFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+void H245_ResponseMessage;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    5   1   90  c2  Response Message Type:;
+	    CST# ffffffff 1 0   b7  H245_ResponseMessageNames_base;
+	    TSB# ffffffff 1 -H245_ResponseMessageFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Response Message Type:;
+	CST# ffffffff 41 0   b7  H245_ResponseMessageNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_ResponseMessageFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+void H245_CommandMessage;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Command Message Type:;
+	    CST# ffffffff 1 0   b7  H245_CommandMessageNames_base;
+	    TSB# ffffffff 1 -H245_CommandMessageFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Command Message Type:;
+	CST# ffffffff 41 0   b7  H245_CommandMessageNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_CommandMessageFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+void H245_IndicationMessage;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Indication Message Type:;
+	    CST# ffffffff 1 0   b7  H245_IndicationMessageNames_base;
+	    TSB# ffffffff 1 -H245_IndicationMessageFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Indication Message Type:;
+	CST# ffffffff 41 0   b7  H245_IndicationMessageNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_IndicationMessageFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+
+str# H245_RequestMessageNames_base;
+	Non Standard Message;
+	Master Slave Determination;
+	Terminal Capability Set;
+	Open Logical Channel;
+	Close Logical Channel;
+	Request Channel Close;
+	Multiplex Entry Send;
+	Request Multplex Entry;
+	Request Mode;
+	Round Trip Delay Request;
+	Maintenance Loop Request;
+
+str# H245_RequestMessageNames_ext;
+	Communication Mode Request;
+	Conference Request;
+	Multilink Request;
+	Logical Channel Rate Request;
+
+str# H245_RequestMessageFuncs_base;
+	H245_NonStandardMessage;
+	H245_MasterSlaveDetermination;
+	H245_TerminalCapabilitySet;
+	H245_OpenLogicalChannel;
+	H245_CloseLogicalChannel;
+	H245_RequestChannelClose;
+	H245_MultiplexEntrySend;
+	H245_RequestMultiplexEntry;
+	H245_RequestMode;
+	H245_RoundTripDelayRequest;
+	H245_MaintenanceLoopRequest;
+
+str# H245_RequestMessageFuncs_ext;
+	H245_CommunicationModeRequest;
+	H245_ConferenceRequest;
+	H245_MultilinkRequest;
+	H245_LogicalChannelRateRequest;
+
+
+str# H245_ResponseMessageFuncs_base;
+	H245_NonStandardMessage;
+	H245_MasterSlaveDeterminationAck;
+	H245_MasterSlaveDeterminationReject;
+	H245_TerminalCapabilitySetAck;
+	H245_TerminalCapabilitySetReject;
+	H245_OpenLogicalChannelAck;
+	H245_OpenLogicalChannelReject;
+	H245_CloseLogicalChannelAck;
+	H245_RequestChannelCloseAck;
+	H245_RequestChannelCloseReject;
+	H245_MultiplexEntrySendAck;
+	H245_MultiplexEntrySendReject;
+	H245_RequestMultiplexEntryAck;
+	H245_RequestMultiplexEntryReject;
+	H245_RequestModeAck;
+	H245_RequestModeReject;
+	H245_RoundTripDelayResponse;
+	H245_MaintenanceLoopAck;
+	H245_MaintenanceLoopReject;
+
+str# H245_ResponseMessageFuncs_ext;
+	H245_CommunicationModeResponse;
+	H245_ConferenceResponse;
+	H245_MultilinkResponse;
+    H245_LogicalChannelRateAcknowledge;
+    H245_LogicalChannelRateReject;
+
+str# H245_ResponseMessageNames_base;
+	Non Standard Message;
+	Master Slave Determination Ack;
+	Master Slave Determination Reject;
+	Terminal Capability Set Ack;
+	Terminal Capability Set Reject;
+	Open Logical Channel Ack;
+	Open Logical Channel Reject;
+	Close Logical Channel Ack;
+	Request Channel Close Ack;
+	Request Channel Close Reject;
+	Multiplex Entry Send Ack;
+	Multiplex Entry Send Reject;
+	Request Multiplex Entry Ack;
+	Request Multiplex Entry Reject;
+	Request Mode Ack;
+	Request Mode Reject;
+	Round Trip Delay Response;
+	Maintenance LoopAck;
+	Maintenance LoopReject;
+
+str# H245_ResponseMessageNames_ext;
+	Communication Mode Response;
+	Conference Response;
+	Multi Link Response;
+    Logical Channel Rate Acknowledge;
+    Logical Channel Rate Reject;
+
+str# H245_CommandMessageFuncs_base;
+	H245_NonStandardMessage;
+	H245_MaintenanceLoopOffCommand;
+	H245_SendTerminalCapabilitySet;
+	H245_EncryptionCommand;
+	H245_FlowControlCommand;
+	H245_EndSessionCommand;
+	H245_MiscellaneousCommand;
+
+str# H245_CommandMessageFuncs_ext;
+	H245_CommunicationModeCommand;
+	H245_ConferenceCommand;
+	H245_H223MultiplexReconfiguration;
+	H245_NewATMVCCommand;
+    H245_MobileMultilinkReconfigurationCommand;
+
+str# H245_CommandMessageNames_base;
+	Non Standard Message;
+	Maintenance Loop Off Command;
+	Send Terminal Capability Set;
+	Encryption Command;
+	Flow Control Command;
+	End Session Command;
+	Miscellaneous Command;
+
+str# H245_CommandMessageNames_ext;
+	Communication Mode Command;
+	Conference Command;
+	H.223 Multiplex Reconfiguration;
+	New ATM VC Command;
+    Mobile Multilink Reconfiguration Command;
+
+str# H245_IndicationMessageFuncs_base;
+	H245_NonStandardMessage;
+	H245_FunctionNotUnderstood;
+	H245_MasterSlaveDeterminationRelease;
+	H245_TerminalCapabilitySetRelease;
+	H245_OpenLogicalChannelConfirm;
+	H245_RequestChannelCloseRelease;
+	H245_MultiplexEntrySendRelease;
+	H245_RequestMultiplexEntryRelease;
+	H245_RequestModeRelease;
+	H245_MiscellaneousIndication;
+	H245_JitterIndication;
+	H245_H223SkewIndication;
+	H245_NewATMVCIndication;
+	H245_UserInputIndication;
+
+str# H245_IndicationMessageFuncs_ext;
+	H245_H2250MaximumSkewIndication;
+	H245_MCLocationIndication;
+	H245_ConferenceIndication;
+	H245_VendorIdentification;
+	H245_FunctionNotSupported;
+	H245_MultilinkIndication;
+    H245_LogicalChannelRateRelease;
+    H245_FlowControlIndication;
+    H245_MobileMultilinkReconfigurationIndication;
+
+str# H245_IndicationMessageNames_base;
+	Non Standard Message;
+	Function Not Understood;
+	Master Slave Determination Release;
+	Terminal Capability Set Release;
+	Open Logical Channel Confirm;
+	Request Channel Close Release;
+	Multiplex Entry Send Release;
+	Request Multiplex Entry Release;
+	Request Mode Release;
+	Miscellaneous Indication;
+	Jitter Indication;
+	H.223 Skew Indication;
+	New ATM VC Indication;
+	User Input Indication;
+
+str# H245_IndicationMessageNames_ext;
+	H.225.0 Maximum Skew Indication;
+	MC Location Indication;
+	Conference Indication;
+	Vendor Identification;
+	Function Not Supported;
+	Multi Link Indication;
+    Logical Channel Rate Release;
+    Flow Control Indication;
+    Mobile Multilink Reconfiguration Indication;
+
+
+void H245_SequenceNumber;
+	H245_Align;
+	DBYT 0 0 90 c2 Sequence Number:;
+
+void H245_NonStandardMessage;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_NonStandardParameter;
+	TRTS;
+	
+void H245_NonStandardParameter_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Non Standard Parameter;
+	H245_NonStandardParameter;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_NonStandardParameter_SeqOf;
+
+void H245_NonStandardParameter;
+	H245_NonStandardIdentifier;
+	H245_Align;
+	DBYT	1	1	90	c2	data Length:;
+	HEX#	0	1	90	c2	data:;
+	TRTS;
+
+void H245_NonStandardIdentifier;
+	DBIT	1	1	90	c2	NonStandardIdentifier Type:;
+	CEQU	0	1	0	14	object;
+	CEQU	1	1	0	14	h221NonStandard;
+	SNEQ	0	1;
+	SKIP;
+		LABL	0	0	0	b7 Protocol Identifier;
+		ObjectIdentifier_BER;
+		LABL	0	0	0	b8;
+		TRTS;
+	ENDS;
+	LABL	0	0	0	b7 H.221 Non Standard;
+	H245_Align;
+	DBYT	0   0	90	c2	T.35 Country Code:;
+	DBYT	0	0	90	c2	T.35 Extension:;
+	DWRD	0	0	90	c2	Manufacturer Code:;
+	LABL	0	0	0	b8;
+	TRTS;
+
+void H245_MasterSlaveDetermination;
+	BBIT    1   41  5  5; //Extension Bit
+	H245_Align;
+	DBYT	0	0	90	c2	Terminal Type:;
+    LABL    0   0   0   b7	Status Determination Number;
+	H245_LargeInt;
+    LABL    0   0   0   b8	;
+	TRTS;
+	
+void H245_MasterSlaveDeterminationAck;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT	1	1	90	c2	Decision:;
+	CEQU	0	1	0	14	master;
+	CEQU	1	1	0	14	slave;
+	TRTS;
+
+void H245_MasterSlaveDeterminationReject;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Cause;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	90	c2	identicalNumbers:;
+	LABL	0	0	0	b8;
+	TRTS;
+
+void H245_MasterSlaveDeterminationRelease;
+	
+void H245_TerminalCapabilitySet;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+
+	H245_SequenceNumber;
+
+	H245_ProtocolIdentifier;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		H245_MultiplexCapability;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	8;
+		ADDG	1	8;
+		LABL 0 0 0 b7 Capability Table;
+		DGLB	0	8	90	c2	Capability Table Count:;
+		INCR	1;
+		H245_CapabilityTableEntry_SeqOf;
+		LABL 0 0 0 b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	8;
+		ADDG	1	8;
+		LABL 0 0 0 b7 Capability Descriptors;
+		DGLB	0	8	90	c2	Capability Descriptor Count:;
+		INCR	1;
+		H245_CapabilityDescriptor_SeqOf;
+		LABL 0 0 0 b8;
+
+	ENDS;
+	TRTS;
+
+
+void H245_CapabilityTableEntry_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7	Capability Table Entry;
+	H245_CapabilityTableEntry;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CapabilityTableEntry_SeqOf;
+
+
+void H245_CapabilityTableEntry;
+	BBIT	1	42	5  5; //Options Bits
+	H245_CapabilityTableEntryNumber;
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Capability;
+	ENDS;
+	TRTS;
+
+void H245_CapabilityDescriptor_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Capability Descriptor;
+	H245_CapabilityDescriptor;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CapabilityDescriptor_SeqOf;
+
+void H245_CapabilityDescriptor;
+	BBIT	1	42	5  5; //Options Bits
+	H245_CapabilityDescriptorNumber;
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	b;
+		ADDG	1	b;
+		DGLB	0	b	90	c2	Simultaneous Capabilities Count:;
+		INCR	1;
+		H245_AlternativeCapabilitySet_SeqOf;
+	ENDS;
+	TRTS;
+
+void H245_AlternativeCapabilitySet_SeqOf;
+	TGTE	0	b	0	0	RETURN;
+	LABL	0	0	0	b7  Alternative Capability Set;
+	H245_AlternativeCapabilitySet;
+	LABL	0	0	0	b8;
+	SUBG	1	b;
+	TNXT -H245_AlternativeCapabilitySet_SeqOf;
+
+void H245_AlternativeCapabilitySet;
+	H245_Align;
+	GBYT	0	9;
+	ADDG	1	9;
+	DGLB	0	9	90	c2	Alternative Capability Set Count:;
+	INCR	1;
+	H245_CapabilityTableEntryNumber_SeqOf;
+	TRTS;
+
+void H245_CapabilityTableEntryNumber_SeqOf;
+	TGTE	0	9	0	0	RETURN;
+	LABL	0	0	0	b7  Capability Table Entry Number;
+	H245_CapabilityTableEntryNumber;
+	LABL	0	0	0	b8;
+	SUBG	1	9;
+	TNXT -H245_CapabilityTableEntryNumber_SeqOf;
+	
+void H245_CapabilityTableEntryNumber;
+	H245_Align;
+	GWRD	0	1;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	Capability Table Entry Number:;
+	INCR	2;
+	TRTS;
+
+void H245_CapabilityDescriptorNumber_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Capability Descriptor Number;
+	H245_CapabilityDescriptorNumber;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CapabilityDescriptorNumber_SeqOf;
+
+void H245_CapabilityDescriptorNumber;
+	H245_Align;
+	//DBYT	0	1	90	c2	Capability Descriptor Number:;
+	LABL 0 0 0 0 " ";
+	DBYT	0	1	0	7; //	Capability Descriptor Number:;
+	TRTS;
+
+void H245_TerminalCapabilitySetAck;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+	TRTS;
+
+void H245_tableEntryCapacityExceeded;
+	DBIT	1	1 	90	c2	Table Entry Capacity Exceeded Type:;
+	CEQU	0	1	0	14	highestEntryNumberProcessed;
+	CEQU	1	1	0	14	noneProcessed;
+
+	SNEQ	0	1;
+	SKIP;
+		H245_CapabilityTableEntryNumber;
+		TRTS;
+	ENDS;
+	TRTS;
+
+void H245_TerminalCapabilitySetReject;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+	LABL	0	0	0	b7	Cause;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	2	1 	90	c2	Cause Type:;
+	CEQU	0	1	0	14	unspecified;
+	CEQU	1	1	0	14	undefinedTableEntryUsed;
+	CEQU	2	1	0	14	descriptorCapacityExceeded;
+	CEQU	3	1	0	14	tableEntryCapacityExceeded;
+	LABL	0	0	0	b8;
+
+	SNEQ	3	1;
+	SKIP;
+		H245_tableEntryCapacityExceeded;
+	ENDS;
+	TRTS;
+
+void H245_TerminalCapabilitySetRelease;
+	BBIT    1   1   5  5; //Extension Bit
+	TRTS;
+
+void H245_Capability;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_CapabilityNames_base;
+	    TSB# ffffffff 1 -H245_CapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Capability Type:;
+	CST# ffffffff 41 0   b7  H245_CapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_CapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_CapabilityNames_base;
+	Non Standard Parameter;
+	Receive Video Capability;
+	Transmit Video Capability;
+	Receive And Transmit Video Capability;
+	Receive Audio Capability;
+	Transmit Audio Capability;
+	Receive And Transmit Audio Capability;
+	Receive Data Application Capability;
+	Rransmit Data Application Capability;
+	Receive And Transmit Data Application Capability;
+	H.233 Encryption Transmit Capability;
+	H.233 Encryption Receive Capability;
+
+str# H245_CapabilityNames_ext;
+	Conference Capability;
+	H.235 Security Capability;
+	Max Pending Replacement For;
+	Receive User Input Capability;
+	Transmit User Input Capability;
+	Receive And Transmit User Input Capability;
+	Generic Control Capability;
+	Receive Multiplexed Stream Capability;
+	Transmit Multiplexed Stream Capability;
+	Receive And Transmit Multiplexed Stream Capability;
+	Receive RTP Audio Telephony Event Capability;
+	Receive RTP Audio Tone Capability;
+
+str# H245_CapabilityFuncs_base;
+	H245_NonStandardParameter;
+	H245_VideoCapability;
+	H245_VideoCapability;
+	H245_VideoCapability;
+	H245_AudioCapability;
+	H245_AudioCapability;
+	H245_AudioCapability;
+	H245_DataApplicationCapability;
+	H245_DataApplicationCapability;
+	H245_DataApplicationCapability;
+	H245_h233EncryptionTransmitCapability;
+	H245_h233EncryptionReceiveCapability;
+
+str# H245_CapabilityFuncs_ext;
+	H245_ConferenceCapability;
+	H245_H235SecurityCapability;
+	H245_maxPendingReplacementFor;
+	H245_UserInputCapability;
+	H245_UserInputCapability;
+	H245_UserInputCapability;
+	H245_GenericCapability;
+	H245_MultiplexedStreamCapability;
+	H245_MultiplexedStreamCapability;
+	H245_MultiplexedStreamCapability;
+	H245_AudioTelephonyEventCapability;
+	H245_AudioToneCapability;
+
+void H245_h233EncryptionTransmitCapability;
+	LABL	0	0	90	c2	H.233 Encryption Transmit Capability:;
+	PER_Boolean;
+	TRTS;
+
+
+void H245_h233EncryptionReceiveCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_Align;
+	DBYT	0	0	90	c2	H.233 IV Response Time (in msec):;
+	TRTS;
+
+void H245_maxPendingReplacementFor;
+	H245_Align;
+	DBYT	0	0	90	c2	Max Pending Replacement For:;
+	TRTS;
+
+void H245_H235SecurityCapability;
+	BBIT    1   41   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Encryption Authentication And Integrity;
+    H245_EncryptionAuthenticationAndIntegrity;
+    LABL    0   0   0   b8  ;
+
+	H245_CapabilityTableEntryNumber;
+    TRTS;    
+
+void H245_MultiplexCapability;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Multiplex Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_MultiplexCapabilityNames_base;
+	    TSB# ffffffff 1 -H245_MultiplexCapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Multiplex Capability Type:;
+	CST# ffffffff 41 0   b7  H245_MultiplexCapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_MultiplexCapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_MultiplexCapabilityNames_base;
+	Non Standard Parameter;
+	H.222 Capability;
+	H.223 Capability;
+	V.76 Capability;
+
+str# H245_MultiplexCapabilityNames_ext;
+	H.225.0 Capability;
+	Generic Multiplex Capability;
+
+str# H245_MultiplexCapabilityFuncs_base;
+	H245_NonStandardParameter;
+	H245_H222Capability;
+	H245_H223Capability;
+	H245_V76Capability;
+
+str# H245_MultiplexCapabilityFuncs_ext;
+	H245_H2250Capability;
+	H245_GenericCapability;
+
+void H245_H222Capability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	H245_Align;
+	DBYT	0	1	5;
+    ADDG    1   1;
+    DGLB    0   1   90 	c2	Number Of VCs:;
+
+    DBYT    0   8   90  c2  VC Capability Count:;
+    H245_VCCapability_SeqOf;
+    TRTS;
+
+void H245_VCCapability_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  VC Capability;
+	H245_VCCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_VCCapability_SeqOf;
+
+void H245_VCCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7  AAL1;
+		H245_VCCapability_aal1;
+    	LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7  AAL5;
+		H245_VCCapability_aal5;
+    	LABL	0	0	0	b8;
+	ENDS;
+    
+    LABL    0   0   90  c2  Transport Stream:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Program Stream:;
+    PER_Boolean;
+
+    H245_availableBitRates;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		H245_aal1ViaGateway;
+	ENDS;
+	H245_Align;
+    TRTS;
+
+void H245_VCCapability_aal1;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   90  c2  Null Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  SRTS Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Adaptive Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Null Error Correction:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Long Interleaver:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Short Interleaver:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Error Correction Only:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Structured Data Transfer:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Partially Filled Cells:;
+    PER_Boolean;
+    TRTS;
+
+void H245_VCCapability_aal5;
+	BBIT    1   41  5  5; //Extension Bit
+
+    PER_Align;
+    DWRD    0   0   90  c2  Forward Maximum SDU Size:;
+    DWRD    0   0   90  c2  Backward Maximum SDU Size:;
+    TRTS;
+
+
+void H245_availableBitRates;
+	BBIT    1   41  5  5; //Extension Bit
+    BBIT    1   42  90  c2  Available Bit Rate Type:;
+    SNEQ    0   42;
+    SKIP;
+        LABL    0   0   0   14  Single Bit Rate;
+        H245_Align;
+        DWRD    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Value:;
+    ENDS;
+
+    LABL    0   0   0   14  Range Of Bit Rates;
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Lower Bit Rate:;
+
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Higher Bit Rate:;
+    TRTS;
+
+
+void H245_aal1ViaGateway;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   90  c2  Null Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  SRTS Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Adaptive Clock Recovery:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Null Error Correction:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Long Interleaver:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Error Correction Only:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Structured Data Transfer:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Partially Filled Cells:;
+    PER_Boolean;
+    TRTS;
+
+
+void H245_H223Capability;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   90  c2  Transport With I-frames:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Video With AL1:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Video With AL2:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Video With AL2:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Audio With AL1:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Audio With AL2:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Audio With AL3:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Data With AL1:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Data With AL2:;
+    PER_Boolean;
+
+    LABL    0   0   90  c2  Data With AL3:;
+    PER_Boolean;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Maximum AL2 SDU Size:;
+    DWRD    0   0   90  c2  Maximum AL3 SDU Size:;
+    DWRD    0   0   90  c2  Maximum Delay Jitter:;
+
+    H245_h223MultiplexTableCapability;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 5;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	5	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   90  c2  Max MUX PDU Size Capability:;
+        PER_Boolean;
+	ENDS;
+
+	SBIT	4	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   90  c2  NSRP Support:;
+        PER_Boolean;
+	ENDS;
+
+	SBIT    3	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  Mobile Operation Transmit Capability;
+        BBIT    1   0   5  5; //Extension Bit
+        LABL    0   0   90  c2  Mode Change Capability:;
+        PER_Boolean;
+        LABL    0   0   90  c2  H.223 Annex A:;
+        PER_Boolean;
+        LABL    0   0   90  c2  H.223 Annex A Double Flag:;
+        PER_Boolean;
+        LABL    0   0   90  c2  H.223 Annex B:;
+        PER_Boolean;
+        LABL    0   0   90  c2  H.223 Annex B with Header:;
+        PER_Boolean;
+        LABL    0   0   0   b8 ;
+	ENDS;
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  H.223 Annex C Capability;
+        H245_H223AnnexCCapability;
+        LABL    0   0   0   b8 ;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        DWRD    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Bit Rate:;
+	ENDS;
+
+	SBIT    0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  Mobile Multilink Frame Capability;
+        BBIT    1   0   5  5; //Extension Bit
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Maximum Sample Size:;
+        DWRD    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Maximum Payload Length:;
+        LABL    0   0   0   b8 ;
+	ENDS;
+	H245_Align;
+    TRTS;
+
+void H245_h223MultiplexTableCapability;
+    BBIT    1   1   90  c2  H.223 Multiplex Table Capability Type:;
+    SNEQ    0   1;
+    SKIP;
+        LABL    0   0   0   14  Basic;
+        TRTS;
+    ENDS;
+
+    LABL    0   0   0   14  Enhanced;
+	BBIT    1   41  5  5; //Extension Bit
+    BBIT    4   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Maximum Nesting Depth:;
+
+    BBIT    8   1   5;
+    ADDG    2   1;
+    DGLB    0   1   90  c2  Maximum Element List Size:;
+
+    BBIT    8   1   5;
+    ADDG    2   1;
+    DGLB    0   1   90  c2  Maximum Sub Element List Size:;
+    TRTS;
+
+void H245_H223AnnexCCapability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Video With AL1M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Video With AL2M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Video With AL3M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio With AL1M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio With AL2M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio With AL3M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Data With AL1M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Data With AL2M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Data With AL3M:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ALPDU Interleaving:;
+	PER_Boolean;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Maximum AL1M PDU Size:;
+    DWRD    0   0   90  c2  Maximum AL2M PDU Size:;
+    DWRD    0   0   90  c2  Maximum AL3M PDU Size:;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   90  c2  RS Code Capability:;
+        PER_Boolean;
+	ENDS;
+	H245_Align;
+    TRTS;
+
+void H245_V76Capability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Suspend Resume Capability with Address:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Suspend Resume Capability without Address:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Rej Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	SRej Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	MRej Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	CRC 8bit Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	CRC 16bit Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	CRC 32bit Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	UIH Capability:;
+	PER_Boolean;
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    2   1;
+    DGLB    0   1   90  c2  Num Of DLCS:;
+	LABL	0	0	90	c2	Two Octet Address Field Capability:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Loopback Test Capability:;
+	PER_Boolean;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  N401 Capability;
+    BBIT    7   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Max Window Size Capability:;
+    H245_V75Capability;
+    TRTS;
+
+void H245_V75Capability;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	90	c2	Audio Header:;
+	PER_Boolean;
+    TRTS;
+
+void H245_H2250Capability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	H245_Align;
+	DWRD	0	0	90	c2	Maximum Audio Delay Jitter (in msec):;
+
+	LABL	0	0	0	b7	Receive Multipoint Capability;
+	H245_MultipointCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7	Transmit Multipoint Capability;
+	H245_MultipointCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7	Receive And Transmit Multipoint Capability;
+	H245_MultipointCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7	MC Capability;
+	BBIT    1   0   5  5; //Extension Bit
+	LABL	0	0	90	c2	Centralized Conference MC:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Decentralized Conference MC:;
+	PER_Boolean;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	90	c2	RTCP Video Control Capability:;
+	PER_Boolean;
+
+	LABL	0	0	0	b7	Media Packetization Capability;
+	H245_MediaPacketizationCapability;
+	LABL	0	0	0	b8;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 3;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	3	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		H245_TransportCapability;
+	ENDS;
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	Redundancy Encoding Capability Count:;
+		INCR	1;
+		H245_RedundancyEncodingCapability_SeqOf;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Logical Channel Switching Capability:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	T.120 Dynamic Port Capability:;
+		PER_Boolean;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+void H245_RedundancyEncodingCapability_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Redundancy Encoding Capability;
+	H245_RedundancyEncodingCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_RedundancyEncodingCapability_SeqOf;
+
+
+void H245_MediaPacketizationCapability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	H.261A Video Packetization:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	RTP Payload Type Count:;
+        INCR    1;
+		H245_RTPPayloadType_SeqOf;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_RSVPParameters;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	6	42	5  5; //Options Bits
+
+	SBIT	5	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	QOS Mode;
+		H245_QOSMode;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Token Rate;
+		H245_LargeInt;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Bucket Size;
+		H245_LargeInt;
+		LABL	0	0	0	b8;
+	ENDS;
+	
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Peak Rate;
+		H245_LargeInt;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Min Policed;
+		H245_LargeInt;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Max Pkt Size;
+		H245_LargeInt;
+		LABL	0	0	0	b8;
+	ENDS;
+	TRTS;
+	
+void H245_QOSMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_QOSModeNames_base;
+        TRTS;
+    ENDS;
+
+str# H245_QOSModeNames_base;
+    Guaranteed QOS;
+    Controlled Load;
+
+
+void H245_ATMParameters;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   0   90  c2  Max NTU Size:;
+	LABL	0	0	90	c2	ATM UBR:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ATM rtVBR:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ATM nrtVBR:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ATM ABR:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ATM CBR:;
+	PER_Boolean;
+    TRTS;
+
+void H245_QOSCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Non Standard Data;
+		H245_NonStandardParameter;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	RSVP Parameters;
+		H245_RSVPParameters;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	ATM Parameters;
+		H245_ATMParameters;
+		LABL	0	0	0	b8;
+	ENDS;
+	TRTS;
+
+void H245_MediaTransportType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Media Transport Type:;
+	    CST# ffffffff 1 0   b7  H245_MediaTransportTypeNames_base;
+	    LABL	0	0	0	b8;
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Media Transport Type:;
+	CST# ffffffff 41 0   b7  H245_MediaTransportTypeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_MediaTransportTypeFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_MediaTransportTypeNames_base;
+	IP-UDP;
+	IP-TCP;
+	ATM-AAL5-UNIDIR;
+	ATM-AAL5-BIDIR;
+
+str# H245_MediaTransportTypeNames_ext;
+	ATM-AAL5-Compressed;
+
+str# H245_MediaTransportTypeFuncs_ext;
+	H245_atm_AAL5_compressed;
+
+
+void H245_atm_AAL5_compressed;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	90	c2	Variable-Delta:;
+	PER_Boolean;
+	TRTS;
+
+void H245_MediaChannelCapability_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Media Channel Capability;
+	H245_MediaChannelCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MediaChannelCapability_SeqOf;
+
+void H245_MediaChannelCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Transport;
+		H245_MediaTransportType;
+		LABL	0	0	0	b8;
+	ENDS;
+	TRTS;
+
+void H245_TransportCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Non Standard;
+		H245_NonStandardParameter;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	QOS Capabilities Count:;
+		INCR	1;
+		H245_QOSCapability_SeqOf;
+	ENDS;
+	
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	Media Channel Capabilities Count:;
+		INCR	1;
+		H245_MediaChannelCapability_SeqOf;
+	ENDS;
+	TRTS;
+
+void H245_QOSCapability_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  QOS Capability;
+	H245_QOSCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_QOSCapability_SeqOf;
+
+
+void H245_RedundancyEncodingCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7  Redundancy Encoding Method;
+    H245_RedundancyEncodingMethod;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Primary Encoding;
+    H245_CapabilityTableEntryNumber;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Secondary Encoding;
+	    H245_Align;
+	    DBYT	0	9   5;
+	    ADDG	1	9;
+	    DGLB	0	9	90	c2	Secondary Encoding Count:;
+	    H245_CapabilityTableEntryNumber_SeqOf;
+		LABL	0	0	0	b8;
+	ENDS;
+	TRTS;
+
+void H245_RedundancyEncodingMethod;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Redundancy Encoding Method Type:;
+	    CST# ffffffff 1 0   b7  H245_RedundancyEncodingMethodNames_base;
+	    TSB# ffffffff 1 -H245_RedundancyEncodingMethodFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Redundancy Encoding Method Type:;
+	CST# ffffffff 41 0   b7  H245_RedundancyEncodingMethodNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_RedundancyEncodingMethodFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_RedundancyEncodingMethodNames_base;
+    Non Standard;
+    RTP Audio Redundancy Encoding;
+
+str# H245_RedundancyEncodingMethodFuncs_base;
+    H245_NonStandardParameter;
+    PER_Null;
+
+str# H245_RedundancyEncodingMethodNames_ext;
+    RTP H.263 Video Redundancy Encoding;
+
+str# H245_RedundancyEncodingMethodFuncs_ext;
+    H245_RTPH263VideoRedundancyEncoding;
+
+
+void H245_RTPH263VideoRedundancyEncoding;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    BBIT    4   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Number Of Threads:;
+
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Frames Between Sync Points:;
+
+	LABL	0	0	0	b7  Frame To Thread Mapping;
+    H245_frameToThreadMapping;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Contained Threads;
+	    H245_Align;
+	    DBYT	0	8   5;
+	    ADDG	1	8;
+	    DGLB	0	8	90	c2	Contained Threads Count:;
+	    H245_containedThreads_SeqOf;
+		LABL	0	0	0	b8;
+	ENDS;
+	TRTS;
+
+void H245_frameToThreadMapping;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_frameToThreadMappingNames_base;
+	    TSB# ffffffff 1 -H245_frameToThreadMappingFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_frameToThreadMappingNames_base;
+    Roundrobin;
+    Custom;
+
+str# H245_frameToThreadMappingFuncs_base;
+    PER_Null;
+    H245_Custom;
+
+void H245_containedThreads_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Contained Threads;
+	H245_containedThreads;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_containedThreads_SeqOf;
+
+void H245_containedThreads;
+    BBIT    4   0   90  c2  Thread:;
+    TRTS;
+
+void H245_Custom;
+	H245_Align;
+	DBYT	0	8 	5;
+    ADDG    1   8;
+    DGLB    0   8   90	c2	Custom Count:;
+	H245_RTPH263VideoRedundancyFrameMapping_SeqOf;
+	TRTS;
+
+void H245_RTPH263VideoRedundancyFrameMapping_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  RTP H.263 Video Redundancy Frame Mapping;
+	H245_RTPH263VideoRedundancyFrameMapping;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_RTPH263VideoRedundancyFrameMapping_SeqOf;
+
+void H245_RTPH263VideoRedundancyFrameMapping;
+	BBIT    1   1   5  5; //Extension Bit
+    BBIT    4   0   90  c2  Thread Number:;
+	H245_Align;
+	DBYT	0	8 	5;
+    ADDG    1   8;
+    DGLB    0   8   90	c2	Frame Sequence Count:;
+	H245_frameSequence_SeqOf;
+    TRTS;
+
+void H245_frameSequence_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Frame Sequence;
+	H245_frameSequence;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_frameSequence_SeqOf;
+
+void H245_frameSequence;
+    DBYT    0   0   90  c2  Frame Sequence:;
+    TRTS;
+
+void H245_MultipointCapability;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Multicast Capability:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	MultiUnicast Conference:;
+	PER_Boolean;
+
+	H245_Align;
+	DBYT	0	8 	90	c2	Media Distribution Capability Count:;
+	H245_MediaDistributionCapability_SeqOf;
+	TRTS;
+
+void H245_MediaDistributionCapability_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Media Distribution Capability;
+	H245_MediaDistributionCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MediaDistributionCapability_SeqOf;
+
+
+void H245_MediaDistributionCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	LABL	0	0	90	c2	Centralized Control:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Distributed Control:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Centralized Audio:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Distributed Audio:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Centralized Video:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Distributed Video:;
+	PER_Boolean;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	9  	90	c2	Centralized Data Count:;
+		H245_DataApplicationCapability_SeqOf;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	9  	90	c2	Distributed Data Count:;
+		H245_DataApplicationCapability_SeqOf;
+	ENDS;
+	TRTS;
+
+void H245_VideoCapability;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3	1   90  c2  Video Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_VideoCapabilityNames_base;
+	    TSB# ffffffff 1 -H245_VideoCapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Video Capability Type:;
+	CST# ffffffff 41 0   b7  H245_VideoCapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_VideoCapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_VideoCapabilityNames_base;
+	Non Standard;
+	H.261 Video Capability;
+	H.262 Video Capability;
+	H.263 Video Capability;
+	IS-11172 Video Capability;
+
+str# H245_VideoCapabilityFuncs_base;
+	H245_NonStandardParameter;
+	H245_H261VideoCapability;
+	H245_H262VideoCapability;
+	H245_H263VideoCapability;
+	H245_IS11172VideoCapability;
+
+str# H245_VideoCapabilityNames_ext;
+	Generic Video Capability;
+
+str# H245_VideoCapabilityFuncs_ext;
+	H245_GenericCapability;
+
+
+void H245_H261VideoCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+		GBIT	2	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	qcifMPI (units 1/29.97 Hz):;
+		BBIT	2	0	5	5;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		GBIT	2	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	cifMPI (units 1/29.97 Hz):;
+		BBIT	2	0	5	5;
+	ENDS;
+
+	LABL	0	0	90	c2	Temporal Spatial Trade Off Capability:;
+	PER_Boolean;
+
+	H245_Align;
+	DWRD	0	1	5   5;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	Max Bit Rate (units 100 bit/s):;
+
+	LABL	0	0	90	c2	Still Image Transmission:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Video Bad MBs Cap:;
+    	PER_Boolean;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+void H245_H262VideoCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	6	42	5  5; //Options Bits
+
+	LABL	0	0	90	c2	Profile And Level - SpatML:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - MpatLL:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - MpatML:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - MpatH-14:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - MpatHL:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - SNRatLL:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - SNRatML:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - SpatialatH-14:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - HpatML:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - HpatML-14:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Profile And Level - HpatHL:;
+	PER_Boolean;
+
+	SBIT	5	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  Video Bit Rate:;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  VBV Buffer Size:;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		DWRD    0   0   90  c2  Samples Per Line:;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		DWRD    0   0   90  c2  Lines Per Frame:;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		DBIT    4   0   90  c2  Frames Per Second:;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  Luminance Sample Rate:;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Video Bad MBs Cap:;
+    	PER_Boolean;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+void H245_H263VideoCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	7	42	5  5; //Options Bits
+
+	SBIT	6	42;
+	SKIP	80000000;
+		GBIT	5	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	sqcifMPI (units 1/29.97 Hz):;
+		BBIT	5	0	5	5;
+	ENDS;
+
+	SBIT	5	42;
+	SKIP	80000000;
+		GBIT	5	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	qcifMPI (units 1/29.97 Hz):;
+		BBIT	5	0	5	5;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+		GBIT	5	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	cifMPI (units 1/29.97 Hz):;
+		BBIT	5	0	5	5;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		GBIT	5	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	cif4MPI (units 1/29.97 Hz):;
+		BBIT	5	0	5	5;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		GBIT	5	43;
+		ADDG	1	43;
+		DGLB	0	43 	90	c2	cif16MPI (units 1/29.97 Hz):;
+		BBIT	5	0	5	5;
+	ENDS;
+
+	H245_MaximumBitRate;
+
+	LABL	0	0	90	c2	Unrestricted Vector:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Arithmetic Coding:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Advanced Prediction:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	PB Frames:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Temporal Spatial Trade Off Capability:;
+	PER_Boolean;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  HRD-B (units 128 bits):;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DWRD	0	0	90	c2	BPP Max Kb (units 1024 bits):;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+
+	g[12] = l[1];
+	g[2] = 7;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	7	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		DWRD 0	0	90	c2	Slow Sqcif MPI (units seconds/frame);
+	ENDS;
+
+	SBIT	6	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		DWRD 0	0	90	c2	Slow Qcif MPI (units seconds/frame);
+	ENDS;
+
+	SBIT	5	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		DWRD 0	0	90	c2	Slow Cif MPI (units seconds/frame);
+	ENDS;
+
+	SBIT	4	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		DWRD 0	0	90	c2	Slow Cif4 MPI (units seconds/frame);
+	ENDS;
+
+	SBIT	3	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		DWRD 0	0	90	c2	Slow Cif16 MPI (units seconds/frame);
+	ENDS;
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Error Compensation:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   0   b7  Enhancement Layer Info:;
+		H245_EnhancementLayerInfo;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   0   b7  H.263 Options:;
+		H245_H263Options;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+void H245_EnhancementLayerInfo;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+
+	LABL	0	0	90	c2	Base Bit Rate Constrained:;
+	PER_Boolean;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		BBIT	4	8   5;
+		ADDG	1	8;
+		DGLB	0	8 	90	c2	SNR Enhancement Count:;
+        H245_EnhancementOptions_SeqOf;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		BBIT	4	8   5;
+		ADDG	1	8;
+		DGLB	0	8 	90	c2	Spatial Enhancement Count:;
+        H245_EnhancementOptions_SeqOf;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		BBIT	4	8   5;
+		ADDG	1	8;
+		DGLB	0	8 	90	c2	BPicture Enhancement Count:;
+        H245_BEnhancementParameters_SeqOf;
+	ENDS;
+	TRTS;
+
+void H245_EnhancementOptions_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Enhancement Options;
+	H245_EnhancementOptions;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_EnhancementOptions_SeqOf;
+
+void H245_BEnhancementParameters_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  BEnhancement Parameters;
+	H245_BEnhancementParameters;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_BEnhancementParameters_SeqOf;
+
+void H245_BEnhancementParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	0	b7  Enhancement Options;
+	H245_EnhancementOptions;
+	LABL	0	0	0	b8;
+
+    BBIT    6   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Number Of BPictures:;
+    TRTS;
+
+void H245_EnhancementOptions;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	b	42	5  5; //Options Bits
+
+	SBIT	a	42;
+	SKIP	80000000;
+		BBIT	5	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	sqcifMPI (units 1/29.97 Hz):;
+	ENDS;
+
+	SBIT	9	42;
+	SKIP	80000000;
+		BBIT	5	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	qcifMPI (units 1/29.97 Hz):;
+	ENDS;
+
+	SBIT	8	42;
+	SKIP	80000000;
+		BBIT	5	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	cifMPI (units 1/29.97 Hz):;
+	ENDS;
+
+	SBIT	7	42;
+	SKIP	80000000;
+		BBIT	5	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	cif4MPI (units 1/29.97 Hz):;
+	ENDS;
+
+	SBIT	6	42;
+	SKIP	80000000;
+		BBIT	5	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	cif16MPI (units 1/29.97 Hz):;
+	ENDS;
+
+	H245_MaximumBitRate;
+
+	LABL	0	0	90	c2	Unrestricted Vector:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Arithmetic Coding:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Temporal Spatial Trade Off Capability:;
+	PER_Boolean;
+
+	SBIT	5	42;
+	SKIP	80000000;
+        H245_Align;
+		DWRD	0	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	slowSqcifMPI (units seconds/frame):;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        H245_Align;
+		DWRD	0	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	slowQcifMPI (units seconds/frame):;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+        H245_Align;
+		DWRD	0	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	slowCifMPI (units seconds/frame):;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+        H245_Align;
+		DWRD	0	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	slowCif4MPI (units seconds/frame):;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        H245_Align;
+		DWRD	0	1   5;
+		ADDG	1	1;
+		DGLB	0	1 	90	c2	slowCif16MPI (units seconds/frame):;
+	ENDS;
+
+	LABL	0	0	90	c2	Error Compensation:;
+	PER_Boolean;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  H.263 Options;
+		H245_H263Options;
+		LABL    0   0   0   b8	;        
+	ENDS;
+    TRTS;
+
+void H245_H263Options;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	42	5  5; //Options Bits
+
+	LABL	0	0	90	c2	Advanced Intra Coding Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Deblocking Filter Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Improved PB Frames Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Unlimited Motion Vectors:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Full Picture Freeze:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Partial Picture Freeze And Release:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Resizing Part Pic Freeze And Release:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Full Picture Snapshot:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Partial Picture Snapshot:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Video Segment Tagging:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Progressive Refinement:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Picture Resizing By Four:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Picture Resizing Sixteenth Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Warping Half Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Warping Sixteenth Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Independent Segment Decoding:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices In Order-NonRect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices In Order-Rect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices No Order-NonRect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices No Order-Rect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Alternate Inter VLC Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Modified Quantization Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Reduced Resolution Update:;
+	PER_Boolean;
+
+	SBIT	4	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  Transparency Parameters;
+	    H245_TransparencyParameters;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	LABL	0	0	90	c2	Separate Video Back Channel:;
+	PER_Boolean;
+
+	SBIT	3	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  Ref Picture Selection;
+	    H245_RefPictureSelection;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  ;
+        BBIT    4   8   5;
+        ADDG    1   8;
+        DGLB    0   8   90  c2  Custom Picture Clock Frequency Count:;
+	    H245_CustomPictureClockFrequency_SeqOf;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  ;
+        BBIT    4   8   5;
+        ADDG    1   8;
+        DGLB    0   8   90  c2  Custom Picture Format Count:;
+	    H245_CustomPictureFormat_SeqOf;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  ;
+        BBIT    4   8   5;
+        ADDG    1   8;
+        DGLB    0   8   90  c2  H.263 Video Mode Combos Count:;
+	    H245_H263VideoModeCombos_SeqOf;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Video Bad MBs Cap:;
+	    PER_Boolean;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL    0   0   0   b7  H.263 Version 3 Options;
+        H245_H263Version3Options;
+	    LABL    0   0   0   b8  ;
+	ENDS;
+
+    H245_Align;
+    TRTS;
+
+void H245_TransparencyParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Presentation Order:;
+
+    LABL    0   0   0   b7  Offset-X:;
+	H245_LargeInt;
+    LABL    0   0   0   b8	;
+
+    LABL    0   0   0   b7  Offset-Y:;
+	H245_LargeInt;
+    LABL    0   0   0   b8	;
+
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Scale-X:;
+
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Scale-Y:;
+
+    TRTS;
+
+void H245_RefPictureSelection;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  Additional Picture Memory;
+	    H245_additionalPictureMemory;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+
+	LABL	0	0	90	c2	Video Mux:;
+	PER_Boolean;
+
+	LABL    0   0   0   b7  Video Back Channel Send;
+	H245_videoBackChannelSend;
+	LABL    0   0   0   b8	;        
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL    0   0   0   b7  Enhanced Reference Pic Select;
+        H245_enhancedReferencePicSelect;
+	    LABL    0   0   0   b8  ;
+	ENDS;
+
+    H245_Align;
+    TRTS;
+
+void H245_additionalPictureMemory;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	6	42	5  5; //Options Bits
+
+	SBIT	5	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  sqcif Additional Picture Memory:;
+    ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  qcif Additional Picture Memory:;
+    ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif Additional Picture Memory:;
+    ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif4 Additional Picture Memory:;
+    ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif16 Additional Picture Memory:;
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  bigCpf Additional Picture Memory:;
+    ENDS;
+    TRTS;
+
+void H245_videoBackChannelSend;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Video Back Channel Send Type:;
+	    CST# ffffffff 1 0   14  H245_videoBackChannelSendNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_videoBackChannelSendNames_base;
+    None;
+    Ack Message Only;
+    Nack Message Only;
+    Ack or Nack Message Only;
+    Ack and Nack Message;
+
+void H245_enhancedReferencePicSelect;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL    0   0   0   b7  Sub Picture Removal Parameters;
+	    H245_subPictureRemovalParameters;
+	    LABL    0   0   0   b8	;        
+    ENDS;
+	TRTS;
+
+void H245_subPictureRemovalParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    DBIT    7   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  MPU Horiz MBs:;
+
+    DBIT    7   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  MPU Vert MBs:;
+
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  MPU Total Number:;
+    TRTS;
+    
+void H245_CustomPictureClockFrequency_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Custom Picture Clock Frequency;
+	H245_CustomPictureClockFrequency;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CustomPictureClockFrequency_SeqOf;
+
+
+void H245_CustomPictureClockFrequency;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	42	5  5; //Options Bits
+
+    DBIT    1   1   5;    
+    ADDG    3e8 1;*1000
+    DGLB    0   1   90  c2  Clock Conversion Code:;
+
+    DBIT    7   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Clock Divisor:;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  sqcif MPI:;
+    ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  qcif MPI:;
+    ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif MPI:;
+    ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif4 MPI:;
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  cif16 MPI:;
+    ENDS;
+    TRTS;
+
+void H245_CustomPictureFormat_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Custom Picture Format;
+	H245_CustomPictureFormat;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CustomPictureFormat_SeqOf;
+
+void H245_CustomPictureFormat;
+	BBIT    1   41   5  5; //Extension Bit
+
+    H245_Align;
+    DWRD    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Max Custom Picture Width:;
+
+    DWRD    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Max Custom Picture Height:;
+
+    DWRD    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Min Custom Picture Width:;
+
+    DWRD    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Min Custom Picture Height:;
+
+	LABL	0	0	0	b7  MPI;
+	H245_mPI;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Pixel Aspect Information;
+	H245_pixelAspectInformation;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_mPI;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+        DBIT    5   1   5;    
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Standard MPI:;
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL	0	0	0	b7  Custom PCF;
+        DBIT    4   8   5;    
+        ADDG    1   8;
+        DGLB    0   8   90  c2  Custom PCF Count:;
+	    H245_customPCF_SeqOf;
+	    LABL	0	0	0	b8;
+    ENDS;
+    TRTS;
+
+void H245_customPCF_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Custom PCF;
+	H245_customPCF;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_customPCF_SeqOf;
+
+void H245_customPCF;
+    DBIT    1   1   5;    
+    ADDG    3e8 1;*1000
+    DGLB    0   1   90  c2  Clock Conversion Code:;
+
+    DBIT    7   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Clock Divisor:;
+
+    H245_Align;
+    DWRD    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Custom MPI:;
+    TRTS;
+
+void H245_pixelAspectInformation;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_pixelAspectInformationNames_base;
+	    TSB# ffffffff 1 -H245_pixelAspectInformationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_pixelAspectInformationNames_base;
+    Any Pixel Aspect Ratio;
+    Pixel Aspect Code;
+    Extended PAR;
+
+str# H245_pixelAspectInformationFuncs_base;
+    PER_Boolean;
+    H245_pixelAspectCode;
+    H245_extendedPAR;
+
+void H245_pixelAspectCode;
+    DBIT    4   8   5;    
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Pixel Aspect Code Count:;
+	H245_pixelAspectCode_SeqOf;
+    TRTS;
+    
+void H245_pixelAspectCode_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Pixel Aspect Code;
+	H245_pixelAspectCode_Value;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_pixelAspectCode_SeqOf;
+
+void H245_pixelAspectCode_Value;
+    DBIT    4   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Pixel Aspect Code:;
+    TRTS;
+    
+void H245_extendedPAR;
+    DBYT    0   8   5;    
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Extended PAR Count:;
+	H245_extendedPAR_SeqOf;
+    TRTS;
+
+void H245_extendedPAR_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Extended PAR;
+	H245_extendedPAR_Value;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_extendedPAR_SeqOf;
+
+void H245_extendedPAR_Value;
+	BBIT    1   1   5  5; //Extension Bit
+    DBYT    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Width:;
+    DBYT    0   1   5;    
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Height:;
+    TRTS;
+
+void H245_H263VideoModeCombos_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  H.263 Video Mode Combos;
+	H245_H263VideoModeCombos;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_H263VideoModeCombos_SeqOf;
+
+void H245_H263VideoModeCombos;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL    0   0   0   b7  H.263 Mode Combo Flags;
+	H245_H263ModeComboFlags;
+	LABL    0   0   0   b8	;        
+
+    DBIT    4   8   5;    
+    ADDG    1   8;
+    DGLB    0   8   90  c2  H.263 Video Coupled Modes Count:;
+	H245_H263ModeComboFlags_SeqOf;
+    TRTS;
+
+void H245_H263ModeComboFlags_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  H.263 Mode Combo Flags;
+	H245_H263ModeComboFlags;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_H263ModeComboFlags_SeqOf;
+
+void H245_H263ModeComboFlags;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Unrestricted Vector:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Arithmetic Coding:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Advanced Prediction:;
+	PER_Boolean;
+	LABL	0	0	90	c2	PB Frames:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Advanced Intra Coding Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Deblocking Filter Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Unlimited Motion Vectors:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices In Order-NonRect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices In Order-Rect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices No Order-NonRect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Slices No Order-Rect:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Improved PB Frames Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Reference Pic Select:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Picture Resizing By Four:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Picture Resizing Sixteenth Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Warping Half Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Dynamic Warping Sixteenth Pel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Reduced Resolution Update:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Independent Segment Decoding:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Alternate Inter VLC Mode:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Modified Quantization Mode:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Enhanced Reference Pic Select:;
+	    PER_Boolean;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL    0   0   0   b7  H.263 Version 3 Options;
+        H245_H263Version3Options;
+	    LABL    0   0   0   b8  ;
+	ENDS;
+
+    H245_Align;
+    TRTS;
+
+void H245_H263Version3Options;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Data Partitioned Slices:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Fixed Point IDCT0:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Interlaced Fields:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Current Picture Header Repetition:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Previous Picture Header Repetition:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Next Picture Header Repetition:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Picture Number:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Spare Reference Pictures:;
+	PER_Boolean;
+    TRTS;
+
+void H245_IS11172VideoCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	6	42	5  5; //Options Bits
+
+	LABL	0	0	90	c2	Constrained Bitstream:;
+	PER_Boolean;
+
+	SBIT	5	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Video Bit Rate:;
+	    H245_LargeInt;
+        LABL    0   0   0   b8	;
+    ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  VBV Buffer Size:;
+	    H245_LargeInt;
+        LABL    0   0   0   b8	;
+    ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   0   90  c2  Samples Per Line:;
+    ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+        H245_Align;
+        DWRD    0   0   90  c2  Lines Per Frame:;
+    ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        DBIT    4   0   90  c2  Picture Rate:;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Luminance Sample Rate:;
+	    H245_LargeInt;
+        LABL    0   0   0   b8	;
+    ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Video Bad MBs Cap:;
+	    PER_Boolean;
+	ENDS;
+    H245_Align;
+    TRTS;
+
+void H245_AudioCapability;
+	BBIT    1   1   5  5;  //AudioCap Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Audio Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_AudioCapabilityNames_base;
+	    TSB# ffffffff 1 -H245_AudioCapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Audio Capability Type:;
+	CST# ffffffff 41 0   b7  H245_AudioCapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_AudioCapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_AudioCapabilityNames_base;
+	Non Standard;
+	G.711 A-law 64k;
+	G.711 A-law 56k;
+	G.711 U-law 64k;
+	G.711 U-law 56k;
+	G.722 64k;
+	G.722 56k;
+	G.722 48k;
+	G.723.1;	
+	G.728;
+	G.729;
+	G.729 AnnexA;
+	IS-11172 Audio Capability;
+	IS-13818 Audio Capability;
+
+str# H245_AudioCapabilityFuncs_base;
+	H245_NonStandardParameter;
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapability_g7231;			
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_IS11172AudioCapability;
+	H245_IS13818AudioCapability;
+
+str# H245_AudioCapabilityNames_ext;
+	G.729 with AnnexB;
+	G.729 AnnexA with AnnexB;
+	G.723.1 AnnexC Capability;
+	GSM Full Rate;
+	GSM Half Rate;
+	GSM Enhanced Full Rate;
+	Generic Audio Capability;
+	G.729 Extensions;
+
+str# H245_AudioCapabilityFuncs_ext;
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_G7231AnnexCCapability;
+	H245_GSMAudioCapability;
+	H245_GSMAudioCapability;
+	H245_GSMAudioCapability;
+	H245_GenericCapability;
+	H245_G729Extensions;
+
+void H245_AudioCapabilityInteger;
+	H245_Align;
+	GBYT	0	1;
+	ADDG	1	1;
+	DGLB	0	1	90	c2 Parameter Value:;
+	DBYT	0	1	5;
+	TRTS;
+
+void H245_AudioCapability_g7231;
+	H245_Align;
+	GBYT	0	1;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	MaxAl-SDU Audio Frames:;
+	DBYT	0	1	5;
+	LABL	0	0	90	c2	Silence Suppression:;
+	PER_Boolean;
+	
+void H245_G729Extensions;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+        H245_Align;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Audio Unit:;
+    ENDS;
+
+	LABL	0	0	90	c2	Annex A:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex B:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex C:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex D:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex E:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex F:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex G:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Annex H:;
+	PER_Boolean;
+    TRTS;
+
+void H245_G7231AnnexCCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Max Al-SDU Audio Frames:;
+
+	LABL	0	0	90	c2	Silence Suppression:;
+	PER_Boolean;
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL	0	0	0	b7  G.723 Annex C Audio Mode;
+	    H245_g723AnnexCAudioMode;
+	    LABL	0	0	0	b8;
+    ENDS;
+    TRTS;
+
+void H245_g723AnnexCAudioMode;
+	BBIT    1   1   5  5; //Extension Bit
+
+    DBIT    6   1   5;
+    ADDG    1b  1; *27
+    DGLB    0   1   90  c2  High Rate Mode 0:;
+
+    DBIT    6   1   5;
+    ADDG    1b  1; *27
+    DGLB    0   1   90  c2  High Rate Mode 1:;
+
+    DBIT    6   1   5;
+    ADDG    17  1; *23
+    DGLB    0   1   90  c2  Low Rate Mode 0:;
+
+    DBIT    6   1   5;
+    ADDG    17  1; *23
+    DGLB    0   1   90  c2  Low Rate Mode 1:;
+
+    DBIT    4   1   5;
+    ADDG    6   1;
+    DGLB    0   1   90  c2  Sid Mode 0:;
+
+    DBIT    4   1   5;
+    ADDG    6   1;
+    DGLB    0   1   90  c2  Sid Mode 1:;
+    TRTS;
+
+
+void H245_IS11172AudioCapability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Audio Layer 1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Layer 2:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Layer 3:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 32k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 44k1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 48k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Single Channel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Two Channels:;
+	PER_Boolean;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Bit Rate (kbit/s):;
+    TRTS;
+
+void H245_IS13818AudioCapability;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Audio Layer 1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Layer 2:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Layer 3:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 16k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 22k05:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 24k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 32k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 44k1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Audio Sampling 48k:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Single Channel:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Two Channels:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Three Channels 2-1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Three Channels 3-0:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Four Channels 2-0-2-0:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Four Channels 2-2:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Four Channels 3-1:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Five Channels 3-0-2-0:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Five Channels 3-2:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Low Frequency Enhancement:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Multilingual:;
+	PER_Boolean;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Bit Rate (kbit/s):;
+    TRTS;
+
+void H245_GSMAudioCapability;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Audio Unit Size:;
+	LABL	0	0	90	c2	Comfort Noise:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Scrambled:;
+	PER_Boolean;
+    TRTS;
+
+void H245_DataApplicationCapability_application;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Application Type:;
+	    CST# ffffffff 1 0   b7  H245_ApplicationNames_base;
+	    TSB# ffffffff 1 -H245_ApplicationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Application Type:;
+	CST# ffffffff 41 0   b7  H245_ApplicationNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_ApplicationFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ApplicationNames_base;
+	Non Standard;
+	T.120;
+	DSM-CC;
+	User Data;
+	T.84;
+	T.434;
+	H.224;
+	NLPID;
+	DSVD Control;
+	H.222 Data Partitioning;
+
+str# H245_ApplicationFuncs_base;
+	H245_NonStandardParameter;
+	H245_DataProtocolCapability;
+	H245_DataProtocolCapability;
+	H245_DataProtocolCapability;
+	H245_t84;
+	H245_DataProtocolCapability;
+	H245_DataProtocolCapability;
+	H245_nlpid;
+	PER_Null;
+	H245_DataProtocolCapability;
+
+str# H245_ApplicationNames_ext;
+	T.30 Fax;
+	T.140;
+	T.38 Fax;
+	Generic Data Capability;
+
+str# H245_ApplicationFuncs_ext;
+	H245_DataProtocolCapability;
+	H245_DataProtocolCapability;
+	H245_t38fax;
+	H245_GenericCapability;
+
+void H245_t84;
+	LABL	0	0	0	b7  T.84 Protocol;
+	H245_DataProtocolCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  T.84 Profile;
+	H245_T84Profile;
+	LABL	0	0	0	b8;
+	
+	TRTS;	
+
+void H245_nlpid;
+	LABL	0	0	0	b7  NLPID Protocol;
+	H245_DataProtocolCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  NLPID Data;
+	H245_Align;
+	DBYT	1	1	90	c2	Data Length:;
+	HEX#	0	1	90	c2	Data:;
+	LABL	0	0	0	b8;
+
+	TRTS;
+
+void H245_DataApplicationCapability_SeqOf;
+	TGTE	0	9 	0	0	RETURN;
+	LABL	0	0	0	b7  Data Application Capability;
+	H245_DataApplicationCapability;
+	LABL	0	0	0	b8;
+	SUBG	1	9;
+	TNXT -H245_DataApplicationCapability_SeqOf;
+
+void H245_DataApplicationCapability;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_DataApplicationCapability_application;
+	H245_MaximumBitRate;
+	TRTS;
+
+void H245_DataProtocolCapability;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Data Protocol Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_DataProtocolCapabilityNames_base;
+	    TSB# ffffffff 1 -H245_DataProtocolCapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Data Protocol Capability Type:;
+	CST# ffffffff 41 0   b7  H245_DataProtocolCapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_DataProtocolCapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_DataProtocolCapabilityNames_base;
+	Non Standard;
+	V.14 Buffered;
+	V.42 LAPM;
+	HDLC Frame Tunnelling;
+	H.310 Separate VC Stack;
+	H.310 Single VC Stack;
+	Transparent;
+
+str# H245_DataProtocolCapabilityFuncs_base;
+	H245_NonStandardParameter;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+
+str# H245_DataProtocolCapabilityNames_ext;
+	Segmentation And Reassembly;
+	HDLC Frame Tunneling with SAR;
+	V.120;
+	Separate LAN Stack;
+	V.76 with Compression;
+	TCP;
+	UDP;
+
+str# H245_DataProtocolCapabilityFuncs_ext;
+	PER_Null_Ext;
+	PER_Null_Ext;
+	PER_Null_Ext;	
+	PER_Null_Ext;
+	H245_v76wCompression;
+	PER_Null_Ext;
+	PER_Null_Ext;
+
+void H245_v76wCompression;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_v76wCompressionNames_base;
+	    TSB# ffffffff 1 -H245_v76wCompressionFuncs_base;
+		LABL	0	0	0	b8	;	
+    ENDS;
+	TRTS;
+    
+str# H245_v76wCompressionNames_base;
+    Transmit Compression;
+    Receive Compression;
+    Transmit And Receive Compression;
+
+str# H245_v76wCompressionFuncs_base;
+    H245_CompressionType;
+    H245_CompressionType;
+    H245_CompressionType;
+
+void H245_CompressionType;
+	BBIT    1   41  5  5; //Extension Bit
+    SNEQ    0   41;
+    SKIP;
+        LABL    0   0   0   b7  V.42bis;
+        H245_V42bis;
+        LABL    0   0   0   b8  ;
+    ENDS;
+    TRTS;
+
+void H245_V42bis;
+	BBIT    1   41  5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Number Of Codewords:;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Maximum String Length:;
+    TRTS;
+
+void H245_T84Profile;
+    DBIT    1   42  90  c2  Type:;
+	CST# ffffffff 42 0  14  H245_T84ProfileNames_base;
+	TEQU	0	42	0	0	RETURN;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	90	c2	qcif:;
+	PER_Boolean;
+	LABL	0	0	90	c2	cif:;
+	PER_Boolean;
+	LABL	0	0	90	c2	ccir601Prog:;
+	PER_Boolean;
+	LABL	0	0	90	c2	hdtvSeq:;
+	PER_Boolean;
+	LABL	0	0	90	c2	hdtvProg:;
+	PER_Boolean;
+	LABL	0	0	90	c2	g3FacsMH200x100:;
+	PER_Boolean;
+	LABL	0	0	90	c2	g3FacsMH200x200:;
+	PER_Boolean;
+	LABL	0	0	90	c2	g4FacsMMR200x100:;
+	PER_Boolean;
+	LABL	0	0	90	c2	g4FacsMMR200x200:;
+	PER_Boolean;
+	LABL	0	0	90	c2	jbig200x200Seq:;
+	PER_Boolean;
+	LABL	0	0	90	c2	jbig200x200Prog:;
+	PER_Boolean;
+	LABL	0	0	90	c2	jbig300x300Seq:;
+	PER_Boolean;
+	LABL	0	0	90	c2	jbig300x300Prog:;
+	PER_Boolean;
+	LABL	0	0	90	c2	digPhotoLow:;
+	PER_Boolean;
+	LABL	0	0	90	c2	digPhotoMedSeq:;
+	PER_Boolean;
+	LABL	0	0	90	c2	digPhotoMedProg:;
+	PER_Boolean;
+	LABL	0	0	90	c2	digPhotoHighSeq:;
+	PER_Boolean;
+	LABL	0	0	90	c2	digPhotoHighProg:;
+	PER_Boolean;
+    TRTS;
+    
+str# H245_T84ProfileNames_base;
+    T.84 Unrestricted;
+    T.84 Restricted;
+
+
+void H245_T38FaxProfile;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	90	c2	Fill Bit Removal:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Transcoding JBIG:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Transcoding MMR:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 3;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	3	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        DBYT    0   0   90  c2  version:;
+	ENDS;
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        H245_T38FaxRateManagement;
+	ENDS;
+	
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        H245_T38FaxUdpOptions;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        H245_T38FaxTcpOptions;
+	ENDS;
+
+    H245_Align;
+	TRTS;
+
+void H245_T38FaxRateManagement;
+    LABL    0   0   0   b7  T.38 Fax Rate Management;
+	BBIT    1   41  5  5; //Extension Bit
+    DBIT    1   42  90  c2  Type:;
+	CST# ffffffff 42 0  14  H245_T38FaxRateManagementNames_base;
+	LABL	0	0	0	b8;
+	TRTS;
+
+str# H245_T38FaxRateManagementNames_base;
+    Local TCF;
+    Transferred TCF;
+
+void H245_T38FaxUdpOptions;
+    LABL    0   0   0   b7  T.38 Fax Udp Options;
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  T.38 Fax Max Buffer:;
+	    H245_LargeInt;
+        LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  T.38 Fax Max Datagram:;
+	    H245_LargeInt;
+        LABL    0   0   0   b8	;
+	ENDS;
+
+    LABL    0   0   0   b7  T.38 Fax Udp EC;
+	BBIT	1	41	5  5; //Extension Bit
+    DBIT    1   42  90  c2  Type:;
+	CST# ffffffff 42 0  14  H245_t38FaxUdpECNames_base;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	TRTS;
+
+str# H245_t38FaxUdpECNames_base;
+    T.38 UDP FEC;
+    T.38 UDP Redundancy;
+
+void H245_T38FaxTcpOptions;
+    LABL    0   0   0   b7  T.38 Fax Tcp Options;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	90	c2	T.38 TCP Bidirectional Mode:;
+	PER_Boolean;
+	LABL	0	0	0	b8;
+	TRTS;
+
+void H245_t38fax;
+	LABL	0	0	0	b7	T.38 Fax Protocol;
+	H245_DataProtocolCapability;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7	T.38 Fax Profile;
+	H245_T38FaxProfile;
+	LABL	0	0	0	b8;
+
+	TRTS;
+
+void H245_EncryptionAuthenticationAndIntegrity;
+    LABL    0   0   0   b7  Encryption Authentication And Integrity;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+
+	SBIT	2	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Encryption Capability;
+        H245_EncryptionCapability;
+    	LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Authentication Capability;
+        H245_AuthenticationCapability;
+    	LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Integrity Capability;
+        H245_IntegrityCapability;
+    	LABL	0	0	0	b8;
+	ENDS;
+
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_EncryptionCapability;
+    H245_Align;
+	DBYT	0	8 	5	5;
+	ADDG	1	8;
+	DGLB	0	8	90	c2	Encryption Capability Count:;
+	H245_MediaEncryptionAlgorithm_SeqOf;
+
+void H245_MediaEncryptionAlgorithm_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Media Encryption Algorithm;
+	H245_MediaEncryptionAlgorithm;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MediaEncryptionAlgorithm_SeqOf;
+
+void H245_MediaEncryptionAlgorithm;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Media Encryption Algorithm Type:;
+	    BBIT 6 41 5 5;	// extra bit padding - align offset
+	    CST# ffffffff 1 0   b7  H245_MediaEncryptionAlgorithmNames_base;
+	    TSB# ffffffff 1 -H245_MediaEncryptionAlgorithmFuncs_base;
+		LABL	0	0	0	b8	;
+        TRTS;
+    ENDS;
+
+str# H245_MediaEncryptionAlgorithmNames_base;
+    Non Standard;
+    Algorithm;
+
+str# H245_MediaEncryptionAlgorithmFuncs_base;
+    H245_NonStandardParameter;
+    ObjectIdentifier_BER;
+    
+void H245_AuthenticationCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Non Standard;
+        H245_NonStandardParameter;
+    	LABL	0	0	0	b8;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Anti Spam Algorithm;
+		ObjectIdentifier_BER;
+    	LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+    TRTS;
+
+void H245_IntegrityCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Non Standard;
+        H245_NonStandardParameter;
+    	LABL	0	0	0	b8;
+	ENDS;
+    TRTS;
+
+void H245_UserInputCapability;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  User Input Capability Type:;
+	    CST# ffffffff 1 0   b7  H245_UserInputCapabilityNames_base;
+	    TSB# ffffffff 1 -H245_UserInputCapabilityFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  User Input Capability Type:;
+	CST# ffffffff 41 0   b7  H245_UserInputCapabilityNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_UserInputCapabilityFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8;
+    TRTS;
+
+str# H245_UserInputCapabilityNames_base;
+	Non Standard;
+	Basic String;
+	IA5 String;
+	General String;
+	DTMF;
+	Hook flash;
+
+str# H245_UserInputCapabilityFuncs_base;
+	H245_UserInputCapability_NSP;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+
+str# H245_UserInputCapabilityNames_ext;
+	Extended Alphanumeric;
+
+str# H245_UserInputCapabilityFuncs_ext;
+	PER_Null_Ext;
+
+
+void H245_UserInputCapability_NSP;
+	BBIT	4	8 	5	5;
+	ADDG	1	8;
+	DGLB	0	8	90	c2	Non Standard Count:;
+	H245_NonStandardParameter_SeqOf;
+	
+void H245_ConferenceCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT 0	8	90	c2	Non Standard COUNT;
+		H245_NonStandardParameter_SeqOf;
+	ENDS;
+
+	LABL	0	0	90	c2	Chair Control Capability:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Video Indicate Mixing Capability:;
+	    PER_Boolean;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	90	c2	Multipoint Visualization Capability:;
+	    PER_Boolean;
+	ENDS;
+
+    H245_Align;
+    TRTS;
+
+void H245_GenericCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	42	5  5; //Options Bits
+
+    H245_CapabilityIdentifier;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        H245_MaximumBitRate;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7	Collapsing;
+        DBYT    0   8   90  c2  Collapsing Count:;
+   	    H245_GenericParameter_SeqOf;
+        LABL	0	0	0	b8	;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7	Non Collapsing;
+        DBYT    0   8   90  c2  Non Collapsing Count:;
+   	    H245_GenericParameter_SeqOf;
+        LABL	0	0	0	b8	;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7	Non Collapsing Raw;
+		H245_Align;
+        DBYT    0   1   90  c2  Non Collapsing Raw Length:;
+        HEX#    0   1   90  c2  Non Collapsing Raw Data:;
+    	LABL	0	0	0	b8	;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7	Transport;
+        H245_DataProtocolCapability;
+    	LABL	0	0	0	b8	;
+	ENDS;
+	TRTS;
+
+void H245_CapabilityIdentifier;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_CapabilityIdentifierNames_base;
+	    TSB# ffffffff 1 -H245_CapabilityIdentifierFuncs_base;
+	    LABL    0   0   0   b8  ;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_CapabilityIdentifierNames_base;
+    Standard;
+    H.221 Non Standard;
+    UUID;
+    Domain Based;
+
+str# H245_CapabilityIdentifierFuncs_base;
+    ObjectIdentifier_BER;
+    H245_NonStandardParameter;
+    H245_uuid;
+    H245_domainBased;
+
+void H245_uuid;
+    H245_Align;
+    HEX#    10  0   90  c2  UUID:;
+    TRTS;
+
+void H245_domainBased;
+    BBIT    6   41  5   5   ;
+    ADDG    1   41;
+    DGLB    0   41  90  c2  Domain Based Length:;
+    H245_Align;
+    CHR#    0   41  90  c2  Domain Based:;
+    TRTS;
+
+void H245_GenericParameter_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Generic Parameter;
+	H245_GenericParameter;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_GenericParameter_SeqOf;
+
+void H245_GenericParameter;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7  Parameter Identifier;
+	H245_ParameterIdentifier;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Parameter Value;
+    H245_ParameterValue;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+    	LABL	0	0	0	b7	Supersedes;
+        H245_Align;
+        DBYT    0   8   90  c2  Supersedes Count:;
+   	    H245_ParameterIdentifier_SeqOf;
+        LABL	0	0	0	b8	;
+	ENDS;
+    TRTS;
+
+void H245_ParameterIdentifier_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Parameter Identifier;
+	H245_ParameterIdentifier;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_ParameterIdentifier_SeqOf;
+
+void H245_ParameterIdentifier;
+    BBIT 1 41 5 5;	//ext bit
+    
+    if( l[1] == 0 )
+    {
+		BBIT 2 42 5 5;
+		CST# ffffffff 42 0   c7  H245_CapabilityIdentifierNames_base;	//parameteridentifier has the same names as capabilityidentifier
+		TSB# 0 42 -H245_ParameterIdentifierFuncs_base;
+		SKIP;
+			//we handle the standard option on our own
+			l[1] = g[8];
+			g[8] = 128;	//127 - 0 + 1
+			PER_Integer;
+			DGLB 0 8 90 c2 Value:;
+			g[8] = l[1];
+		ENDS;
+		
+	    LABL    0   0   0   c8  ;
+    }
+    
+    TRTS;
+
+str# H245_ParameterIdentifierFuncs_base;
+    1	|	H245_NonStandardParameter;
+    2	|	H245_uuid;
+    3	|	H245_domainBased;
+    
+void H245_ParameterValue;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Parameter Value Type:;
+	    CST# ffffffff 1 0   b7  H245_ParameterValueNames_base;
+	    TSB# ffffffff 1 -H245_ParameterValueFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_ParameterValueNames_base;
+    Logical;
+    Boolean Array;
+    Unsigned Min;
+    Unsigned Max;
+    Unsigned 32 Min;
+    Unsigned 32 Max;
+    Octet String;
+    Generic Parameter;
+
+str# H245_ParameterValueFuncs_base;
+    PER_Null;
+    H245_booleanArray;
+    H245_unsignedMin_Max;
+    H245_unsignedMin_Max;
+    H245_unsigned32Min_Max;
+    H245_unsigned32Min_Max;
+    H245_octetString;
+    H245_genericParameter;
+
+void H245_booleanArray;
+    H245_Align;
+    DBYT    0   0   90  c2  Value:;
+    TRTS;
+    
+void H245_unsignedMin_Max;
+    H245_Align;
+    DWRD    0   0   90  c2  Value:;
+    TRTS;
+
+void H245_unsigned32Min_Max;
+    LABL    0   0   0   b7  Value:;
+	H245_LargeInt;
+    LABL    0   0   0   b8	;
+	TRTS;
+    
+void H245_octetString;
+    DBYT    0   1   90  c2  Octet String Length:;
+    H245_Align;
+    HEX#    0   1   90  c2  Octet String:;
+    TRTS;
+
+void H245_genericParameter;
+    DBYT    0   8   90  c2  Generic Parameter Count:;
+    H245_GenericParameter_SeqOf;
+    TRTS;
+
+void H245_MultiplexedStreamCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+    
+    H245_MultiplexFormat;
+
+    LABL    0   0   90  c2  Control On Mux Stream:;
+    PER_Boolean;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		GBYT	0	b;
+		ADDG	1	b;
+		DGLB	0	b	90	c2	Capability On Mux Stream Count:;
+		INCR	1;
+		H245_AlternativeCapabilitySet_SeqOf;
+	ENDS;
+    TRTS;
+
+void H245_MultiplexFormat;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Multiplex Format Type:;
+	    CST# ffffffff 1 0   b7  H245_MultiplexFormatNames_base;
+	    TSB# ffffffff 1 -H245_MultiplexFormatFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_MultiplexFormatNames_base;
+    Non Standard;
+    H.222 Capability;
+    H.223 Capability;
+
+str# H245_MultiplexFormatFuncs_base;
+    H245_NonStandardParameter;
+    H245_H222Capability;
+    H245_H223Capability;
+
+void H245_AudioTelephonyEventCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	1	5;
+	ADDG	60	1;
+	DGLB	0	1	90	c2	Dynamic RTP Payload Type:;
+	H245_Align;	
+    DBYT    0   1   90  c2  Audio Telephone Event Length:;
+    CHR#    0   1   90  c2  Audio Telephone Event Data:;
+    TRTS;
+
+void H245_AudioToneCapability;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	1	5;
+	ADDG	60	1;
+	DGLB	0	1	90	c2	Dynamic RTP Payload Type:;	
+    TRTS;
+
+void H245_OpenLogicalChannel;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7 Forward Logical Channel Parameters;
+	H245_OLC_FLCP;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7 Reverse Logical Channel Parameters;
+		H245_OLC_RLCP;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Separate Stack;
+		H245_NetworkAccessParameters;
+		LABL	0	0	0	b8	;	
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Encryption Sync;
+		H245_EncryptionSync;
+		LABL	0	0	0	b8	;	
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_OLC_FLCP;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DWRD	0	0	90	c2	Port Number:;
+	ENDS;
+
+	H245_DataType;
+
+	H245_OLC_FLCP_MP;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	Forward Logical Channel Dependency;
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	Replacement For;
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_OLC_FLCP_MP;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c9  Multiplex Parameters Type:;
+	    CST# ffffffff 1 0   c2  H245_OLC_FLCP_MP_Names_base;
+	    TSB# ffffffff 1 -H245_OLC_FLCP_MP_Funcs_base;
+		LABL	0	0	0	c8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c9  Multiplex Parameters Type:;
+	CST# ffffffff 41 0   c2  H245_OLC_FLCP_MP_Names_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    if( g[2] > 0 )
+    {
+		TSB# ffffffff 41 -H245_OLC_FLCP_MP_Funcs_ext;
+		H245_Align;
+	}
+	LABL	0	0	0	c8;
+    TRTS;
+	
+
+str# H245_OLC_FLCP_MP_Names_base;
+	H.222 Logical Channel Parameters;
+	H.223 Logical Channel Parameters;
+	V.76 Logical Channel Parameters;
+
+str# H245_OLC_FLCP_MP_Funcs_base;
+	H245_H222LogicalChannelParameters;
+	H245_H223LogicalChannelParameters;
+	H245_V76LogicalChannelParameters;
+
+str# H245_OLC_FLCP_MP_Names_ext;
+	H.225.0 Logical Channel Parameters:;
+	None:;
+
+str# H245_OLC_FLCP_MP_Funcs_ext;
+	H245_H2250LogicalChannelParameters;
+	H245_OLC_FLCP_MP_None;
+
+void H245_OLC_FLCP_MP_None()
+{
+	PER_Null_Ext;
+}
+
+void H245_OLC_RLCP;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	H245_DataType;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_OLC_RLCP_MP;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	Reverse Logical Channel Dependency;
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	Replacement For;
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_OLC_RLCP_MP;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Multiplex Parameters Type:;
+	    CST# ffffffff 1 0   b7  H245_OLC_RLCP_MP_Names_base;
+	    TSB# ffffffff 1 -H245_OLC_RLCP_MP_Funcs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Multiplex Parameters Type:;
+	CST# ffffffff 41 0   b7  H245_OLC_RLCP_MP_Names_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_OLC_RLCP_MP_Funcs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+	
+
+str# H245_OLC_RLCP_MP_Names_base;
+	H.223 Logical Channel Parameters;
+	V.76 Logical Channel Parameters;
+
+str# H245_OLC_RLCP_MP_Funcs_base;
+	H245_H223LogicalChannelParameters;
+	H245_V76LogicalChannelParameters;
+
+str# H245_OLC_RLCP_MP_Names_ext;
+	H.225.0 Logical Channel Parameters;
+
+str# H245_OLC_RLCP_MP_Funcs_ext;
+	H245_H2250LogicalChannelParameters;
+
+
+void H245_LogicalChannelNumber;
+	H245_Align;
+	DWRD	0	1	5;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	Logical Channel Number:;
+	TRTS;
+
+void H245_NetworkAccessParameters;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_distribution;
+	ENDS;
+
+	H245_NetworkAddress;
+
+	LABL	0	0	90	c2	Associate Conference:;
+	PER_Boolean;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	1	5;
+		ADDG	1	1;
+		HEX#	0	1	90	c2	External Reference:;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	T.120 Setup Procedure;
+    	BBIT    1   41  5  5; //Extension Bit
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_t120SetupProcedureNames_base;
+	    LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+str# H245_t120SetupProcedureNames_base;
+    Originate Call;
+    Wait For Call;
+    Issue Query;
+
+void H245_distribution;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	1	90	c2	Distribution Type:;
+	CEQU	0	1	0	14	unicast;
+	CEQU	1	1	0	14	multicast;
+	TRTS;
+
+void H245_NetworkAddress;
+	BBIT    1   41  5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Network Address Type:;
+	    CST# ffffffff 1 0   b7  H245_NetworkAddressNames_base;
+	    TSB# ffffffff 1 -H245_NetworkAddressFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+
+str# H245_NetworkAddressNames_base;
+	Q.2931 Address;
+	E.164 Address;
+	Local Area Address;
+
+str# H245_NetworkAddressFuncs_base;
+	H245_Q2931Address;
+	H245_E164Address;
+	H245_TransportAddress;
+
+void H245_E164Address;
+    DBIT    7   41   5;
+    ADDG    1   41;
+    DGLB    0   41  90  c2  E.164 Address Length:;
+    H245_Align;
+    CHR#    0   41  90  c2  E.164 Address:;
+    TRTS;
+
+void H245_MediaPacketization;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    LABL    0   0   90  c2  Type: H.261a Video Packetization;
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   b7  H245_mediaPacketizationNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_mediaPacketizationFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_mediaPacketizationNames_ext;
+    RTP Payload Type;
+
+str# H245_mediaPacketizationFuncs_ext;
+    H245_RTPPayloadType;
+
+void H245_Q2931Address;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    LABL    0   0   0   b7  Address:;
+    H245_Q2931Address_address;
+    LABL    0   0   0   b8  ;
+        
+	SBIT	0	42;
+	SKIP	80000000;
+		BBIT    5   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Subaddress Length:;
+        H245_Align;
+        HEX#    0   1   90  c2  Subaddress:;
+	ENDS;
+	TRTS;
+
+void H245_Q2931Address_address;
+	BBIT    1   41  5  5; //Extension Bit
+    BBIT    0   1   90  c2  Type:;
+    SNEQ    0   1;
+    SKIP;
+        BBIT    4   8   5;
+        ADDG    1   8;
+        DGLB    0   8   90  c2  International Number Length:;
+        H245_internationalNumber;
+        TRTS;
+    ENDS;
+    
+    H245_NSAP;
+    TRTS;
+        
+void H245_internationalNumber;
+	TGTE	0	8	0	0	RETURN;
+    BBIT    4   0   90  c2  Number Digit:;
+	SUBG	1	8;
+	TNXT -H245_internationalNumber;
+
+void H245_V75Parameters;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	90	c2	Audio Header Present:;
+	PER_Boolean;
+    TRTS;
+
+void H245_DataType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c9  DataType Type:;
+	    CST# ffffffff 1 0   c2  H245_DataTypeNames_base;
+	    TSB# ffffffff 1 -H245_DataTypeFuncs_base;
+		LABL	0	0	0	c8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c9  DataType Type:;
+	CST# ffffffff 41 0   c2  H245_DataTypeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_DataTypeFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	c8	;	
+    TRTS;
+
+str# H245_DataTypeNames_base;
+	Non Standard:;
+	Null Data:;
+	Video Data:;
+	Audio Data:;
+	Data:;
+	Encryption Data:;
+
+str# H245_DataTypeFuncs_base;
+	H245_NonStandardParameter;
+	PER_Null;
+	H245_VideoCapability;
+	H245_AudioCapability;
+	H245_DataApplicationCapability;
+	H245_EncryptionMode;
+
+str# H245_DataTypeNames_ext;
+	H.235 Control;
+	H.235 Media;
+	Multiplexed Stream;
+
+str# H245_DataTypeFuncs_ext;
+	H245_NonStandardParameter;
+	H245_H235Media;
+	H245_MultiplexedStreamParameter;
+
+
+void H245_H235Media;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Encryption Authentication And Integrity;
+    H245_EncryptionAuthenticationAndIntegrity;
+    LABL    0   0   0   b8  ;
+
+	BBIT    1   1   5  5;  //Media Type Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_mediaTypeNames_base;
+	    TSB# ffffffff 1 -H245_mediaTypeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_mediaTypeNames_base;
+    Non Standard;
+    Video Data;
+    Audio Data;
+    Data;
+
+str# H245_mediaTypeFuncs_base;
+    H245_NonStandardParameter;
+    H245_VideoCapability;
+    H245_AudioCapability;
+    H245_DataApplicationCapability;
+
+void H245_MultiplexedStreamParameter;
+	BBIT    1   41  5  5; //Extension Bit
+    H245_MultiplexFormat;
+    LABL    0   0   90  c2  Control On Mux Stream:;
+    PER_Boolean;
+    TRTS;
+
+void H245_H222LogicalChannelParameters;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	3	42	5  5; //Options Bits
+    
+    H245_Align;
+    DWRD    0   0   90  c2  Resource ID:;
+    DWRD    0   0   90  c2  Sub Channel ID:;
+
+	SBIT	2	42;
+	SKIP	80000000;
+        DWRD    0   0   90  c2  PCR PID:;
+    ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        DBYT    0   1   90  c2  Program Descriptors Length:;
+        HEX#    0   1   90  c2  Program Descriptors:;
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        DBYT    0   1   90  c2  Stream Descriptors Length:;
+        HEX#    0   1   90  c2  Stream Descriptors:;
+    ENDS;
+    TRTS;
+
+void H245_H223LogicalChannelParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Adaptation Layer Type;
+    H245_adaptationLayerType;
+    LABL    0   0   0   b8  ;
+
+	LABL	0	0	90	c2	Segmentable Flag:;
+	PER_Boolean;
+    TRTS;
+
+void H245_adaptationLayerType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_adaptationLayerTypeNames_base;
+	    TSB# ffffffff 1 -H245_adaptationLayerTypeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   b7  H245_adaptationLayerTypeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_adaptationLayerTypeFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_adaptationLayerTypeNames_base;
+    Non Standard;
+    AL1 Framed;
+    AL1 Not Framed;
+    AL2 Without Sequence Numbers;
+    AL2 With Sequence Numbers;
+    AL3;
+
+str# H245_adaptationLayerTypeFuncs_base;
+    H245_NonStandardParameter;
+    PER_Null;
+    PER_Null;
+    PER_Null;
+    PER_Null;
+    H245_al3;
+
+str# H245_adaptationLayerTypeNames_ext;
+    H.223 AL1M Parameters;
+    H.223 AL2M Parameters;
+    H.223 AL3M Parameters;
+
+str# H245_adaptationLayerTypeFuncs_ext;
+    H245_H223AL1MParameters;
+    H245_H223AL2MParameters;
+    H245_H223AL3MParameters;
+
+void H245_al3;
+    BBIT    2   0   90  c2  Control Field Octets:;
+    LABL    0   0   0   b7  Send Buffer Size:;
+    H245_LargeInt;
+    LABL    0   0   0   b8 ;
+    TRTS;
+
+void H245_H223AL1MParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Transfer Mode;
+    H245_transferMode;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Header FEC;
+    H245_headerFEC;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  CRC Length;
+    H245_crcLength;
+    LABL    0   0   0   b8  ;
+
+    BBIT    5   1   5;
+    ADDG    8   1;
+    DGLB    0   1   90  c2  RCPC Code Rate:;
+
+    LABL    0   0   0   b7  ARQ Type;
+    H245_arqType;
+    LABL    0   0   0   b8  ;
+
+	LABL	0	0	90	c2	ALPDU Interleaving:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	ALPDU Splitting:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		BBIT    0   0   90  c2  RS Code Correction:;
+	ENDS;
+    H245_Align;
+    TRTS;
+
+void H245_transferMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_transferModeNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_transferModeNames_base;
+    Framed;
+    Unframed;
+
+void H245_headerFEC;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_headerFECNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_headerFECNames_base;
+    sebch16-7;
+    golay24-12;
+
+void H245_crcLength;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_crcLengthNames_base;
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   14  H245_crcLengthNames_ext;
+    H245_Align;
+    DBYT    0   2    5  5; //   Ext Length
+	H245_Align;
+    TRTS;
+
+str# H245_crcLengthNames_base;
+    crc4bit;
+    crc12bit;
+    crc20bit;
+    crc28bit;
+
+str# H245_crcLengthNames_ext;
+    crc8bit;
+    crc16bit;
+    crc32bit;
+    crcNotUsed;
+
+void H245_arqType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_arqTypeNames_base;
+	    TSB# ffffffff 1 -H245_arqTypeFuncs_base;
+		LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_arqTypeNames_base;
+    noArq;
+    typeIArq;
+    typeIIArq;
+
+str# H245_arqTypeFuncs_base;
+    PER_Null;
+    H245_H223AnnexCArqParameters;
+    H245_H223AnnexCArqParameters;
+
+
+void H245_H223AL2MParameters;
+	BBIT    1   41  5  5; //Extension Bit
+    LABL    0   0   0   b7  Header FEC;
+    H245_headerFEC;
+    LABL    0   0   0   b8  ;
+
+	LABL	0	0	90	c2	ALPDU Interleaving:;
+	PER_Boolean;
+    TRTS;
+
+void H245_H223AL3MParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Header Format;
+    H245_headerFEC;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  CRC Length;
+    H245_crcLength;
+    LABL    0   0   0   b8  ;
+
+    BBIT    5   1   5;
+    ADDG    8   1;
+    DGLB    0   1   90  c2  RCPC Code Rate:;
+
+    LABL    0   0   0   b7  ARQ Type;
+    H245_arqType;
+    LABL    0   0   0   b8  ;
+
+	LABL	0	0	90	c2	ALPDU Interleaving:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		BBIT    0   0   90  c2  RS Code Correction:;
+	ENDS;
+    H245_Align;
+    TRTS;
+
+void H245_H223AnnexCArqParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Number Of Retransmissions;
+    H245_numberOfRetransmissions;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Send Buffer Size;
+    H245_LargeInt;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_numberOfRetransmissions;
+	BBIT    1   41  5  5; //Extension Bit
+
+    BBIT    1   1   90  c2  Type:;
+    SNEQ    0   1;
+    SKIP;
+        BBIT    4   0   90  c2  Finite:;
+    ENDS;
+    LABL    0   0   0   14  Infinite;
+    TRTS;
+
+void H245_V76LogicalChannelParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  V.76 HDLC Parameters;
+    H245_V76HDLCParameters;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Suspend Resume;
+    H245_suspendResume;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Mode;
+    H245_mode;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  V.75 Parameters;
+    H245_V75Parameters;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_suspendResume;
+	BBIT    1   41  5  5; //Extension Bit
+    SNEQ    0   41;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_suspendResumeNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_suspendResumeNames_base;
+    No Suspend Resume;
+    Suspend Resume with Address;
+    Suspend Resume without Address;
+
+
+void H245_mode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_modeNames_base;
+	    TSB# ffffffff 1 -H245_modeFuncs_base;
+		LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_modeNames_base;
+    ERM;
+    UNERM;
+
+str# H245_modeFuncs_base;
+    H245_eRM;
+    PER_Null;
+
+void H245_eRM;
+	BBIT    1   41  5  5; //Extension Bit
+    BBIT    7   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Window Size:;
+    LABL    0   0   0   b7  Recovery;
+    H245_recovery;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_recovery;
+	BBIT    1   41  5  5; //Extension Bit
+    SNEQ    0   41;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_recoveryNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_recoveryNames_base;
+    REJ;
+    SREJ;
+    MSREJ;
+
+void H245_V76HDLCParameters;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  CRC Length;
+    H245_CRCLength;
+    LABL    0   0   0   b8  ;
+
+    H245_Align;
+    DWRD    0   0   90  c2  N401:;
+
+	LABL	0	0	90	c2	Loopback Test Procedure:;
+	PER_Boolean;
+    TRTS;
+
+void H245_CRCLength;
+	BBIT    1   41  5  5; //Extension Bit
+    SNEQ    0   41;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_CRCLengthNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_CRCLengthNames_base;
+    crc8bit;
+    crc16bit;
+    crc32bit;
+
+void H245_H2250LogicalChannelParameters;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	a	42	5  5; //Options Bits
+
+	SBIT	9	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT 0	8	90	c2	Non Standard COUNT;
+		H245_NonStandardParameter_SeqOf;
+	ENDS;
+
+	H245_Align;
+	DBYT	0	0	90	c2	Session ID:;
+
+	SBIT	8	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	0	90	c2	Associated Session ID:;
+	ENDS;
+
+	SBIT	7	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	6	42;
+	SKIP	80000000;
+		LABL	0	0	90	c2	Media Guaranteed Delivery:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	5	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Control Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+		LABL	0	0	90	c2	Media Control Guaranteed Delivery:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		LABL	0	0	90	c2	Silence Suppression:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0   b7  Destination;
+		H245_TerminalLabel;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		BBIT	5	1	5;
+		ADDG	60	1;
+		DGLB	0	1	90	c2	Dynamic RTP Payload Type:;	
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	0 	b7	Media Packetization;
+		H245_MediaPacketization;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 2;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		H245_TransportCapability;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	Redundancy Encoding Capability Count:;
+		INCR	1;
+		H245_RedundancyEncodingCapability_SeqOf;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Source:;
+		H245_TerminalLabel;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+void H245_RTPPayloadType_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  RTP Payload Type;
+	H245_RTPPayloadType;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_RTPPayloadType_SeqOf;
+
+void H245_RTPPayloadType;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+    
+    LABL    0   0   0   b7  Payload Descriptor;
+    H245_payloadDescriptor;
+    LABL    0   0   0   b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		BBIT    7	0	90	c2	Payload Type:;
+	ENDS;
+	TRTS;
+
+
+void H245_payloadDescriptor;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   b7  H245_payloadDescriptorNames_base;
+	TSB# ffffffff 1 -H245_payloadDescriptorFuncs_base;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_payloadDescriptorNames_base;
+    Non Standard Identifier;
+    RFC-Number;
+    OID;
+
+str# H245_payloadDescriptorFuncs_base;
+    H245_NonStandardParameter;
+    H245_rfc_number;
+    ObjectIdentifier_BER;
+
+void H245_rfc_number;
+	BBIT    1   41  5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  RFC Number:;
+    TRTS;    
+
+void H245_RedundancyEncoding;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+    
+    LABL    0   0   0   b7  Redundancy Encoding Method;
+    H245_RedundancyEncodingMethod;
+    LABL    0   0   0   b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Secondary Encoding;
+        H245_DataType;
+        LABL    0   0   0   b8;
+	ENDS;
+    TRTS;
+    
+void H245_TransportAddress;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT    1   1   90  c2  Transport Address Type:;
+	CST# ffffffff 1 0   b7  H245_TransportAddressNames_base;
+	TSB# ffffffff 1 -H245_TransportAddressFuncs_base;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_TransportAddressNames_base;
+	Unicast address;
+	Multicast address;
+
+str# H245_TransportAddressFuncs_base;
+	H245_UnicastAddress;
+	H245_MulticastAddress;
+
+void H245_UnicastAddress;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Unicast Address Type:;
+	    CST# ffffffff 1 0   b7  H245_UnicastAddressNames_base;
+	    TSB# ffffffff 1 -H245_UnicastAddressFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Unicast Address Type:;
+	CST# ffffffff 41 0   b7  H245_UnicastAddressNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_UnicastAddressFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_UnicastAddressNames_base;
+	IP Address;
+	IPX Address;
+	IP6 Address;
+	NetBios;
+	IP Source Route Address;
+
+str# H245_UnicastAddressFuncs_base;
+	H245_IPAddress;
+	H245_IPXAddress;
+	H245_IP6Address;
+	H245_NetBios;
+	H245_IPSourceRouteAddress;
+
+str# H245_UnicastAddressNames_ext;
+	NSAP;
+	Non Standard Address;
+
+str# H245_UnicastAddressFuncs_ext;
+	H245_NSAP;
+	H245_NonStandardParameter;
+
+
+void H245_IPAddress;
+	BBIT    1   1   5  5; //Extension Bit
+
+	H245_Align;
+	IPLG	0	0	90	c2	Network:;
+	DWRD	0	0	90	c2	TSAP Identifier:;
+	TRTS;
+
+void H245_IPXAddress;
+	BBIT    1   1   5  5; //Extension Bit
+
+    H245_Align;
+    HEX#    6   0   90  c2  Node:;
+    DLNG    0   0   90  c2  Netnum:;
+	DWRD	0	0	90	c2	TSAP Identifier:;
+	TRTS;
+
+void H245_IP6Address;
+	BBIT    1   1   5  5; //Extension Bit
+
+	H245_Align;
+	IPV6	0	0	90	c2	Network:;
+	DWRD	0	0	90	c2	TSAP Identifier:;
+	TRTS;
+
+void H245_NetBios;
+    H245_Align;
+    HEX#    10  0   90  c2  NetBios:;
+    TRTS;
+
+void H245_IPSourceRouteAddress;
+	BBIT    1   1   5  5; //Extension Bit
+    BBIT    1   1   90  c2  Routing Type:;
+	CEQU	0	1	0	14	Strict;
+	CEQU	1	1	0	14	Loose;
+    H245_Align;
+    DLNG    0   0   90  c2  Network:;
+	DWRD	0	0	90	c2	TSAP Identifier:;
+    
+    DBYT    0   8   90  c2  Route Count:;
+    H245_Route_SeqOf;
+    TRTS;
+
+void H245_Route_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Route;
+	H245_Route;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_Route_SeqOf;
+
+void H245_Route;
+    H245_Align;
+    DLNG    0   0   90  c2  Route:;
+    TRTS;
+
+void H245_NSAP;
+	BBIT    5   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  NSAP Address Length:;
+    H245_Align;
+    HEX#    0   1   90  c2  NSAP Address:;
+    TRTS;
+
+void H245_MulticastAddress;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Multicast Address Type:;
+	    CST# ffffffff 1 0   b7  H245_MulticastAddressNames_base;
+	    TSB# ffffffff 1 -H245_MulticastAddressFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Multicast Address Type:;
+	CST# ffffffff 41 0   b7  H245_MulticastAddressNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_MulticastAddressFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_MulticastAddressNames_base;
+	IP Address;
+	IP6 Address;
+
+str# H245_MulticastAddressFuncs_base;
+	H245_IPAddress;
+	H245_IP6Address;
+
+str# H245_MulticastAddressNames_ext;
+	NSAP;
+	Non Standard Address;
+
+str# H245_MulticastAddressFuncs_ext;
+	H245_NSAP;
+	H245_NonStandardParameter;
+
+void H245_EncryptionSync;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_NonStandardParameter;
+	ENDS;
+    
+    H245_Align;
+    DBYT    0   0   90  c2  Synch Flag:;
+
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  H.235 Key Length:;
+    HEX#    0   1   90  c2  H.235 Key:;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		DBYT    0   8   5;
+		ADDG    1   8;
+		DGLB    0   8   90  c2  Escrow Entry Count:;
+		H245_escrowentry_SeqOf;
+	ENDS;
+	TRTS;
+
+void H245_escrowentry_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Escrow Data;
+	H245_EscrowData;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_escrowentry_SeqOf;
+
+void H245_EscrowData;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	0	b7  Escrow ID;
+	ObjectIdentifier_BER;
+	LABL	0	0	0	b8;
+
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Escrow Value Length:;
+    DIVG    8   1;
+    HEX#    0   1   90  c2  Escrow Value:;
+    TRTS;
+    
+void H245_OpenLogicalChannelAck;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_OLCA_RLCP;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 2;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Separate Stack;
+		H245_NetworkAccessParameters;
+		LABL	0	0	0	b8	;	
+	ENDS;
+	
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Forward Multiplex Ack Parameters;
+		H245_OLCA_FMAP;
+		LABL	0	0	0	b8	;	
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	0	b7	Encryption Sync;
+		H245_EncryptionSync;
+		LABL	0	0	0	b8	;	
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_OLCA_RLCP;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7	Reverse Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		DWRD	0	0	90	c2	Port Number:;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_OLCA_RLCP_MP;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+	    LABL	0	0	0	b7	Replacement For;
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_OLCA_RLCP_MP;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+		H245_H222LogicalChannelParameters;
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c9  Multiplex Parameters Type:;
+	CST# ffffffff 41 0   c2  H245_OLCA_RLCP_MP_Names_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	TSB# ffffffff 41 -H245_OLCA_RLCP_MP_Funcs_ext;
+	H245_Align;
+	LABL	0	0	0	c8;
+    TRTS;
+	
+
+str# H245_OLCA_RLCP_MP_Names_ext;
+	H.225.0 Logical Channel Parameters;
+
+str# H245_OLCA_RLCP_MP_Funcs_ext;
+	H245_H2250LogicalChannelParameters;
+
+
+void H245_OLCA_FMAP;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+		H245_H2250LogicalChannelAckParameters;
+        TRTS;
+    ENDS;
+	TRTS;
+
+void H245_OLCR_cause;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Cause Type:;
+	    CST# ffffffff 1 0   b7  H245_OLCR_CauseNames_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Cause Type:;
+	CST# ffffffff 41 0   b7  H245_OLCR_CauseNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_OLCR_CauseNames_base;
+	Unspecified;
+	Unsuitable Reverse Parameters;
+	DataType Not Supported;
+	DataType Not Available;
+	Unknown DataType;
+	DataType AL Combination Not Supported;
+
+str# H245_OLCR_CauseNames_ext;
+	Multicast Channel Not Allowed;
+	Insufficient Bandwidth;
+	Separate Stack Establishment Failed;
+	Invalid Session ID;
+	Master Slave Conflict;
+	Wait For Communication Mode;
+	Invalid Dependent Channel;
+	Replacement For Rejected;
+
+void H245_OpenLogicalChannelReject;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+	H245_OLCR_cause;
+	TRTS;
+
+void H245_OpenLogicalChannelConfirm;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+	TRTS;
+
+void H245_H2250LogicalChannelAckParameters;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	5	42	5  5; //Options Bits
+
+	SBIT	4	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT 0	8	90	c2	Non Standard COUNT;
+		H245_NonStandardParameter_SeqOf;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	0	90	c2	Session ID:;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Control Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+	
+	SBIT	0	42;
+	SKIP	80000000;
+		BBIT	5	1	5;
+		ADDG	60	1;
+		DGLB	0	1	90	c2	Dynamic RTP Payload Type:;	
+	ENDS;
+	
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Flow Control To Zero:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        DWRD    0   0   90  c2  Port Number:;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_CloseLogicalChannel;
+	BBIT    1   41  5  5; //Extension Bit
+
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	DBIT	1	1	90	c2	Source:;
+	CEQU	0	1	0	14	User;
+	CEQU	1	1	0	14	LCSE;
+
+	TEQU	0	41	0	0	RETURN;
+
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		BBIT    1   42  5  5; //Extension Bit
+		DBIT	2	1	90	c2	Reason:;
+		CEQU	0	1	0	14	Unknown;
+		CEQU	1	1	0	14	Re-open;
+		CEQU	2	1	0	14	Reservation Failure;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_CloseLogicalChannelAck;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestChannelClose;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 1;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  QOS Capability;
+        H245_QOSCapability;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  Reason;
+    	BBIT    1   1   5  5; //Extension Bit
+        DBIT    2   1   90  c2  Reason:;
+        CEQU    0   1   0   14  Unknown;
+        CEQU    1   1   0   14  Normal;
+        CEQU    2   1   0   14  Reopen;
+        CEQU    3   1   0   14  Reservation Failure;
+	    LABL	0	0	0	b8;
+	ENDS;
+    H245_Align;
+    TRTS;
+
+void H245_RequestChannelCloseAck;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestChannelCloseReject;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    LABL    0   0   0   b7  Cause;
+    BBIT    1   1   5  5; //Extension Bit
+	LABL    0   0   90  c2  Unspecified;
+    LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestChannelCloseRelease;
+	BBIT    1   41  5  5; //Extension Bit
+	LABL	0	0	0	b7	Forward Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_MultiplexEntrySend;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+    LABL    0   0   0   b7  Multiplex Entry Descriptors;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Multiplex Entry Descriptors Count:;
+    H245_MultiplexEntryDescriptor_SeqOf;
+    LABL    0   0   0   b8  ;
+    TRTS;
+      
+void H245_MultiplexEntryDescriptor_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Multiplex Entry Descriptor;
+	H245_MultiplexEntryDescriptor;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MultiplexEntryDescriptor_SeqOf;
+
+void H245_MultiplexEntryDescriptor;
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7  Multiplex Table Entry Number;
+	H245_MultiplexTableEntryNumber;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Element List;
+        H245_Align;
+        DBYT    0   9   5;
+        ADDG    1   9;
+        DGLB    0   9   90  c2  Element List Count:;
+        H245_MultiplexElement_SeqOf;
+    	LABL	0	0	0	b8;
+	ENDS;
+    TRTS;
+
+void H245_MultiplexElement_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Multiplex Element;
+	H245_MultiplexElement;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MultiplexElement_SeqOf;
+
+void H245_MultiplexElement;
+	DBIT    1   1   90  c2  Type:;
+	CST# ffffffff 1 0   b7  H245_MultiplexElementNames_base;
+	TSB# ffffffff 1 -H245_MultiplexElementFuncs_base;
+	LABL	0	0	0	b8	;	
+    
+	DBIT    1   1   90  c2  Repeat Count:;
+	CST# ffffffff 1 0   b7  H245_MultiplexElementRCNames_base;
+	TSB# ffffffff 1 -H245_MultiplexElementRCFuncs_base;
+	LABL	0	0	0	b8	;	
+	TRTS;
+    
+str# H245_MultiplexElementNames_base;
+    Logical Channel Number;
+    Sub Element List;
+
+str# H245_MultiplexElementFuncs_base;
+    H245_LogicalChannelNumber;
+    H245_subElementList;
+
+str# H245_MultiplexElementRCNames_base;
+    Finite;
+    Until Closing Flag;
+
+str# H245_MultiplexElementRCFuncs_base;
+    H245_finite;
+    PER_Null;
+
+void H245_subElementList;
+    H245_Align;
+    DBYT    0   b   5;
+    ADDG    2   b;
+    DGLB    0   b   90  c2  Sub Element List Count:;
+    H245_MultiplexElement_SeqOf_b;
+    TRTS;
+
+void H245_MultiplexElement_SeqOf_b;
+	TGTE	0	b	0	0	RETURN;
+	LABL	0	0	0	b7  Multiplex Element;
+	H245_MultiplexElement;
+	LABL	0	0	0	b8;
+	SUBG	1	b;
+	TNXT -H245_MultiplexElement_SeqOf;
+
+void H245_finite;
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Finite Value:;
+    TRTS;
+
+void H245_MultiplexTableEntryNumber;
+    BBIT    4   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Multiplex Table Entry Number:;
+    TRTS;
+
+void H245_MultiplexEntrySendAck;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+    LABL    0   0   0   b7  Multiplex Table Entry Number;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Multiplex Table Entry Number Count:;
+    H245_MultiplexTableEntryNumber_SeqOf;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_MultiplexTableEntryNumber_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	H245_MultiplexTableEntryNumber;
+	SUBG	1	8;
+	TNXT -H245_MultiplexTableEntryNumber_SeqOf;
+
+
+void H245_MultiplexEntrySendReject;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+    LABL    0   0   0   b7  Rejection Descriptions;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Rejection Descriptions Count:;
+    H245_MultiplexEntryRejectionDescriptions_SeqOf;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_MultiplexEntryRejectionDescriptions_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Multiplex Entry Rejection Descriptions;
+	H245_MultiplexEntryRejectionDescriptions;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_MultiplexEntryRejectionDescriptions_SeqOf;
+
+void H245_MultiplexEntryRejectionDescriptions;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_MultiplexTableEntryNumber;
+
+    LABL    0   0   0   b7  Cause;
+	BBIT    1   1   5  5; //Extension Bit
+    BBIT    1   1   90  12  Type:;
+    CEQU    0   1   0   14  Unspecified Cause;
+    CEQU    1   1   0   14  Descriptor Too Complex;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_MultiplexEntrySendRelease;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   0   0   b7  Multiplex Table Entry Number;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Multiplex Table Entry Number Count:;
+    H245_MultiplexTableEntryNumber_SeqOf;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestMultiplexEntry;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   0   0   b7  Entry Numbers;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Entry Numbers Count:;
+    H245_MultiplexTableEntryNumber_SeqOf;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestMultiplexEntryAck;
+    H245_RequestMultiplexEntry;
+    TRTS;
+
+void H245_RequestMultiplexEntryReject;
+    H245_RequestMultiplexEntry;
+    LABL    0   0   0   b7  Rejection Descriptions;
+    BBIT    4   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Rejection Descriptions Count:;
+    H245_RequestMultiplexEntryRejectionDescriptions_SeqOf;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestMultiplexEntryRejectionDescriptions_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Request Multiplex Entry Rejection Descriptions;
+	H245_RequestMultiplexEntryRejectionDescriptions;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_RequestMultiplexEntryRejectionDescriptions_SeqOf;
+
+void H245_RequestMultiplexEntryRejectionDescriptions;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_MultiplexTableEntryNumber;
+
+    LABL    0   0   0   b7  Cause;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   1   0   14  Unspecified Cause;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RequestMultiplexEntryRelease;
+    H245_RequestMultiplexEntry;
+    TRTS;
+
+void H245_RequestMode;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+	H245_Align;
+	GBYT	0	8;
+	ADDG	1	8;
+	DGLB	0	8	90	c2	Requested Modes Count:;
+	INCR	1;
+	H245_ModeDescription_SeqOf;
+
+void H245_ModeDescription_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Mode Description;
+	H245_ModeDescription;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_ModeDescription_SeqOf;
+
+
+void H245_RequestModeAck;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	1	1	90	c2	Response:;
+	CEQU	0	1	0	14	Will Transmit Most Preferred Mode;
+	CEQU	1	1	0	14	Will Transmit Less Preferred Mode;
+	TRTS;
+
+void H245_RequestModeReject;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	2	1	90	c2	Cause:;
+	CEQU	0	1	0	14	Mode Unavailable;
+	CEQU	1	1	0	14	Multipoint Constraint;
+	CEQU	2	1	0	14	Request Denied;
+	TRTS;
+
+
+void H245_RequestModeRelease;
+	BBIT    1   1   5  5; //Extension Bit
+    TRTS;
+
+void H245_ModeDescription;
+	H245_Align;
+	GBYT	0	9;
+	ADDG	1	9;
+	DGLB	0	9	90	c2	Mode Element Count:;
+	INCR	1;
+	H245_ModeElement_SeqOf;
+
+void H245_ModeElement_SeqOf;
+	TGTE	0	9	0	0	RETURN;
+	LABL	0	0	0	b7  Mode Element;
+	H245_ModeElement;
+	LABL	0	0	0	b8;
+	SUBG	1	9;
+	TNXT -H245_ModeElement_SeqOf;
+
+void H245_ModeElement;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	H245_ModeElement_Type;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_H223ModeParameters;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 3;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	3	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  V.76 Mode Parameters;
+        H245_V76ModeParameters;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  H.225.0 Mode Parameters;
+        H245_H2250ModeParameters;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  Generic Mode Parameters;
+        H245_GenericCapability;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+        LABL    0   0   0   b7  Multiplexed Stream Mode Parameters;
+        H245_MultiplexedStreamModeParameters;
+	    LABL	0	0	0	b8;
+	ENDS;
+	H245_Align;
+	TRTS;
+
+void H245_ModeElement_Type;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Mode Element Type:;
+	    CST# ffffffff 1 0   b7  H245_ModeElementNames_base;
+	    TSB# ffffffff 1 -H245_ModeElementFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Mode Element Type:;
+	CST# ffffffff 41 0   b7  H245_ModeElementNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_ModeElementFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+	
+str# H245_ModeElementNames_base;
+	Non Standard;
+	Video Mode;
+	Audio Mode;
+	Data Mode;
+	Encryption Mode;
+
+str# H245_ModeElementFuncs_base;
+	H245_NonStandardParameter;
+	H245_VideoMode;
+	H245_AudioMode;
+	H245_DataMode;
+	H245_EncryptionMode;
+
+
+str# H245_ModeElementNames_ext;
+	H.235 Mode;
+	Multiplexed Stream Mode;
+
+str# H245_ModeElementFuncs_ext;
+	H245_H235Mode;
+	H245_MultiplexedStreamParameter;
+
+void H245_H235Mode;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Encryption Authentication And Integrity;
+    H245_EncryptionAuthenticationAndIntegrity;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Media Mode;
+    H245_mediaMode;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_mediaMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Media Mode Type:;
+	    CST# ffffffff 1 0   b7  H245_mediaModeNames_base;
+	    TSB# ffffffff 1 -H245_mediaModeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_mediaModeNames_base;
+    Non Standard;
+    Video Mode;
+    Audio Mode;
+    Data Mode;
+
+str# H245_mediaModeFuncs_base;
+    H245_NonStandardParameter;
+    H245_VideoMode;
+    H245_AudioMode;
+    H245_DataMode;
+
+void H245_MultiplexedStreamModeParameters;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_LogicalChannelNumber;
+    TRTS;
+
+void H245_H223ModeParameters;
+    H245_H223LogicalChannelParameters;
+    TRTS;
+
+void H245_V76ModeParameters;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_V76ModeParametersNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_V76ModeParametersNames_base;
+    Suspend Resume with Address;
+    Suspend Resume without Address;
+
+void H245_H2250ModeParameters;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Redundancy Encoding Mode;
+		H245_RedundancyEncodingMode;
+        LABL    0   0   0   b8  ;
+	ENDS;
+	TRTS;
+
+void H245_RedundancyEncodingMode;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    LABL    0   0   0   b7  Redundancy Encoding Method;
+	H245_RedundancyEncodingMethod;
+    LABL    0   0   0   b8  ;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Secondary Encoding;
+    	BBIT    1   1   5  5; //Extension Bit
+		DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_secondaryEncodingNames_base;
+	    TSB# ffffffff 1 -H245_secondaryEncodingFuncs_base;
+        LABL    0   0   0   b8  ;
+        LABL    0   0   0   b8  ;
+	ENDS;
+	TRTS;
+
+str# H245_secondaryEncodingNames_base;
+    Non Standard;
+    Audio Data;
+
+str# H245_secondaryEncodingFuncs_base;
+    H245_NonStandardParameter;
+    H245_AudioMode;
+
+void H245_VideoMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Video Mode Type:;
+	    CST# ffffffff 1 0   b7  H245_VideoModeNames_base;
+	    TSB# ffffffff 1 -H245_VideoModeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Video Mode Type:;
+	CST# ffffffff 41 0   b7  H245_VideoModeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_VideoModeFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_VideoModeNames_base;
+	Non Standard;
+	H.261 Video Mode;
+	H.262 Video Mode;
+	H.263 Video Mode;
+	IS-11172 Video Mode;
+
+str# H245_VideoModeFuncs_base;
+	H245_NonStandardParameter;
+	H245_H261VideoMode;
+	H245_H262VideoMode;
+	H245_H263VideoMode;
+	H245_IS11172VideoMode;
+
+str# H245_VideoModeNames_ext;
+	Generic Video Mode;
+
+str# H245_VideoModeFuncs_ext;
+	H245_GenericCapability;
+
+
+void H245_H261VideoMode;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	1	1	90	c2	Resolution:;
+	CEQU	0	1	0	14	qcif;
+	CEQU	1	1	0	14	cif;
+
+	H245_Align;
+	DWRD	0	1	5   5;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	Bit Rate (units 100 bit/s):;
+
+	LABL	0	0	90	c2	Still Image Transmission:;
+	PER_Boolean;
+	TRTS;
+
+void H245_H262VideoMode;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	6	42	5  5; //Options Bits
+
+    LABL    0   0   0   b7  Profile And Level;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	4	1	90	c2	Type:;
+    CST# ffffffff 1 0   14  H245_profileAndLevelNames_base;
+    LABL    0   0   0   b8  ;
+    
+	SBIT	5	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Video Bit Rate;
+		H245_LargeInt;
+        LABL    0   0   0   b8  ;
+	ENDS;
+
+	SBIT	4	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  VBV Buffer Size;
+		H245_LargeInt;
+        LABL    0   0   0   b8  ;
+	ENDS;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		DWRD    0   0   90  c2  Samples Per Line:;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		DWRD    0   0   90  c2  Lines Per Frame:;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		DBIT    4   0   90  c2  Frames Per Second:;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7  Luminance Sample Rate:;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+    TRTS;
+
+str# H245_profileAndLevelNames_base;
+	SPatML;
+	MPatLL;
+    MPatML;
+    MPatH-14;
+    MPatHL;
+    SNRatLL;
+    SNRatML;
+    SpatialatH-14;
+    HpatML;
+    HPatH-14;
+    HPatHL;
+
+void H245_H263VideoMode;
+	BBIT    1   41  5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Resolution;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	3	1	90	c2	Type:;
+    CST# ffffffff 1 0   14  H245_resolutionNames_base;
+    LABL    0   0   0   b8  ;
+    
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Bit Rate:;
+
+	LABL	0	0	90	c2	Unrestricted Vector:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Arithmetic Coding:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	Advanced Prediction:;
+	PER_Boolean;
+
+	LABL	0	0	90	c2	PB Frames:;
+	PER_Boolean;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 2;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Error Compensation:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   0   b7  Enhancement Layer Info:;
+		H245_EnhancementLayerInfo;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   0   b7  H.263 Options:;
+		H245_H263Options;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+str# H245_resolutionNames_base;
+    sqcif;
+    qcif;
+    cif;
+    cif4;
+    cif16;
+
+void H245_IS11172VideoMode;
+    H245_IS11172VideoCapability;
+    TRTS;
+
+void H245_AudioMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Audio Mode Type:;
+	    CST# ffffffff 1 0   b7  H245_AudioModeNames_base;
+	    TSB# ffffffff 1 -H245_AudioModeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Audio Mode Type:;
+	CST# ffffffff 41 0   b7  H245_AudioModeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_AudioModeFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_AudioModeNames_base;
+	Non Standard;
+	G.711 A-law 64k;
+	G.711 A-law 56k;
+	G.711 U-law 64k;
+	G.711 U-law 56k;
+	G.722 64k;
+	G.722 56k;
+	G.722 48k;
+	G.728;
+	G.729;
+	G.729 AnnexA;
+	G.723.1;	
+	IS-11172 Audio Mode;
+	IS-13818 Audio Mode;
+
+str# H245_AudioModeFuncs_base;
+	H245_NonStandardParameter;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	H245_AudioMode_g7231;
+	H245_IS11172AudioMode;
+	H245_IS13818AudioMode;
+
+str# H245_AudioModeNames_ext;
+	G.729 with AnnexB;
+	G.729 AnnexA with AnnexB;
+	G.723.1 Annex C Capability;
+	GSM Full Rate;
+	GSM Half Rate;
+	GSM Enhanced Full Rate;
+	Generic Audio Mode;
+	G.729 Extensions;
+
+str# H245_AudioModeFuncs_ext;
+	H245_AudioCapabilityInteger; 
+	H245_AudioCapabilityInteger; 
+	H245_G7231AnnexCMode;
+	H245_GSMAudioCapability;
+	H245_GSMAudioCapability;
+	H245_GSMAudioCapability;
+	H245_GenericCapability;
+	H245_G729Extensions;
+
+void H245_AudioMode_g7231;
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_g7231Names_base;
+    TRTS;
+
+str# H245_g7231Names_base;
+    No Silence Suppression Low Rate;
+    No Silence Suppression High Rate;
+    Silence Suppression Low Rate;
+    Silence Suppression High Rate;
+
+void H245_IS11172AudioMode;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Audio Layer;
+    H245_audioLayer;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Audio Sampling;
+    H245_IS11172_audioSampling;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Multichannel Type;
+    H245_IS11172_multichannelType;
+    LABL    0   0   0   b8  ;
+    
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Bit Rate:;
+    TRTS;
+
+void H245_audioLayer;
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_audioLayerNames_base;
+    TRTS;
+
+str# H245_audioLayerNames_base;
+    Audio Layer 1;
+    Audio Layer 2;
+    Audio Layer 3;
+
+void H245_IS11172_audioSampling;
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_IS11172_audioSamplingNames_base;
+    TRTS;
+
+str# H245_IS11172_audioSamplingNames_base;
+    32k;
+    44k1;
+    48k;
+
+void H245_IS11172_multichannelType;
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_IS11172_multichannelTypeNames_base;
+    TRTS;
+
+str# H245_IS11172_multichannelTypeNames_base;
+    Single Channel;
+    Two Channel Stereo;
+    Two Channel Dual;
+
+void H245_IS13818AudioMode;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Audio Layer;
+    H245_audioLayer;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Audio Sampling;
+    H245_IS13818_audioSampling;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Multichannel Type;
+    H245_IS13818_multichannelType;
+    LABL    0   0   0   b8  ;
+    
+	LABL	0	0	90	c2	Low Frequency Enhancement:;
+	PER_Boolean;
+	LABL	0	0	90	c2	Multilingual:;
+	PER_Boolean;
+
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Bit Rate:;
+    TRTS;
+
+void H245_IS13818_audioSampling;
+	DBIT    3   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_IS13818_audioSamplingNames_base;
+    TRTS;
+
+str# H245_IS13818_audioSamplingNames_base;
+    16k;
+    22k05;
+    24k;
+    32k;
+    44k1;
+    48k;
+
+void H245_IS13818_multichannelType;
+	DBIT    4   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_IS13818_multichannelTypeNames_base;
+    TRTS;
+
+str# H245_IS13818_multichannelTypeNames_base;
+    Single Channel;
+    Two Channel Stereo;
+    Two Channel Dual;
+    Three Channels 2-1;
+    Three Channels 3-0;
+    Four Channels 2-0-2-0;
+    Four Channels 2-2;
+    Four Channels 3-1;
+    Five Channels 3-0-2-0;
+    Five Channels 3-2;
+
+void H245_G7231AnnexCMode;
+	BBIT    1   1   5  5; //Extension Bit
+
+	H245_Align;
+	GBYT	0	1;
+	ADDG	1	1;
+	DGLB	0	1	90	c2	MaxAl-SDU Audio Frames:;
+	DBYT	0	1	5;
+	LABL	0	0	90	c2	Silence Suppression:;
+	PER_Boolean;
+
+	LABL	0	0	0	b7  G.723 Annex C Audio Mode;
+	H245_g723AnnexCAudioMode;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_DataMode;
+    H245_DataApplicationCapability;
+    TRTS;
+
+void H245_EncryptionMode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_EncryptionModeNames_base;
+	    TSB# ffffffff 1 -H245_EncryptionModeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_EncryptionModeNames_base;
+    Non Standard;
+    H.233 Encryption;
+
+str# H245_EncryptionModeFuncs_base;
+    H245_NonStandardParameter;
+    PER_Null;
+
+void H245_RoundTripDelayRequest;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+	TRTS;
+
+void H245_RoundTripDelayResponse;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_SequenceNumber;
+	TRTS;
+
+void H245_MaintenanceLoopRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_MaintenanceLoopNames_base;
+	    TSB# ffffffff 1 -H245_MaintenanceLoopFuncs_base;
+		LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_MaintenanceLoopNames_base;
+    System Loop;
+    Media Loop;
+    Logical Channel Loop;
+
+str# H245_MaintenanceLoopFuncs_base;
+    PER_Null;
+    H245_LogicalChannelNumber;
+    H245_LogicalChannelNumber;
+
+void H245_MaintenanceLoopAck;
+    H245_MaintenanceLoopRequest;
+    TRTS;
+
+void H245_MaintenanceLoopReject;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_MaintenanceLoopNames_base;
+	    TSB# ffffffff 1 -H245_MaintenanceLoopFuncs_base;
+		LABL	0	0	0	b8	;	
+    ENDS;
+
+	BBIT    1   1   0  5;  //Cause Extension Bit
+    SNEQ    0   1;
+    SKIP;
+        LABL    0   0   0   b7  Cause;
+        LABL    0   0   0   14  Can Not Perform Loop;
+        LABL    0   0   0   b8  ;
+    ENDS;
+    TRTS;
+
+void H245_MaintenanceLoopOffCommand;
+	BBIT    1   1   5  5; //Extension Bit
+    TRTS;
+
+void H245_CommunicationModeCommand;
+	BBIT    1   1   5  5; //Extension Bit
+
+    H245_Align;
+    DBYT    0   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Communication Mode Table Count:;
+    H245_CommunicationModeTableEntry_SeqOf;
+    TRTS;
+
+void H245_CommunicationModeRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    TRTS;
+
+void H245_CommunicationModeResponse;
+    H245_CommunicationModeCommand;
+    TRTS;
+
+void H245_CommunicationModeTableEntry_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Communication Mode Table Entry;
+	H245_CommunicationModeTableEntry;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CommunicationModeTableEntry_SeqOf;
+
+void H245_CommunicationModeTableEntry;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	7	42	5  5; //Options Bits
+	
+    SBIT	6	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT 0	8	90	c2	Non Standard COUNT;
+		H245_NonStandardParameter_SeqOf;
+	ENDS;
+    
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Session ID:;
+
+    SBIT	5	42;
+	SKIP	80000000;
+        H245_Align;
+        DBYT    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Associated Session ID:;
+	ENDS;
+
+    SBIT	4	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Terminal Label;
+		H245_TerminalLabel;
+		LABL	0	0	0	b8;
+    ENDS;
+
+    BBIT    7   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Session Description Length:;
+    MULG    2   1;
+    CHR#    0   1   90  c2  Session Description:;
+
+	LABL	0	0	0	b7  Data Type;
+	H245_dataType;
+	LABL	0	0	0	b8;
+
+	SBIT	3	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	90	c2	Media Guaranteed Delivery:;
+		PER_Boolean;
+	ENDS;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Media Control Channel;
+		H245_TransportAddress;
+		LABL	0	0	0	b8;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL	0	0	90	c2	Media Control Guaranteed Delivery:;
+		PER_Boolean;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 2;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	2	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		H245_RedundancyEncoding;
+	ENDS;
+
+	SBIT	1	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		GBYT	0	8;
+		ADDG	1	8;
+		DGLB	0	8	90	c2	Session Dependency:;
+		INCR	1;
+	ENDS;
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL	0	0	90	c2	Destination:;
+		H245_TerminalLabel;
+	ENDS;
+
+	H245_Align;
+	TRTS;
+
+
+void H245_dataType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    BBIT	5	41	05	05;
+	    CST# ffffffff 1 0   b7  H245_dataTypeNames_base;
+	    TSB# ffffffff 1 -H245_dataTypeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_dataTypeNames_base;
+    Video Data;
+    Audio Data;
+    Data;
+
+str# H245_dataTypeFuncs_base;
+    H245_VideoCapability;
+    H245_AudioCapability;
+    H245_DataApplicationCapability;
+
+
+void H245_ConferenceRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Conference Request Type:;
+	    CST# ffffffff 1 0   b7  H245_ConferenceRequestNames_base;
+	    TSB# ffffffff 1 -H245_ConferenceRequestFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Conference Request Type:;
+	CST# ffffffff 41 0   b7  H245_ConferenceRequestNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_ConferenceRequestFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ConferenceRequestNames_base;
+	Terminal List Request;
+	Make Me Chair;
+	Cancel Make Me Chair;
+	Drop Terminal;
+	Request Terminal ID;
+	Enter H.243 Password;
+	Enter H.243 Terminal ID;
+	Enter H.243 Conference ID;
+
+str# H245_ConferenceRequestFuncs_base;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	H245_TerminalLabel;
+	H245_TerminalLabel;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+
+str# H245_ConferenceRequestNames_ext;
+	Enter Extension Address;
+	Request Chair Token Owner;
+	Request Terminal Certificate;
+	Broadcast My Logical Channel;
+	Make Terminal Broadcaster;
+	Send This Source;
+	Request All Terminal IDs;
+	Remote MC Request;
+
+str# H245_ConferenceRequestFuncs_ext;
+	PER_Null_Ext;
+	PER_Null_Ext;
+	H245_RequestTerminalCertificate;
+	H245_LogicalChannelNumber;
+	H245_TerminalLabel;
+	H245_TerminalLabel;
+	PER_Null_Ext;
+	H245_RemoteMCRequest;
+
+void H245_RequestTerminalCertificate;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	3	42	5  5; //OPTIONAL Bitmask
+	
+    SBIT	2	42;
+	SKIP	80000000;
+		LABL	0	0	0	b7	Terminal Label;
+		H245_TerminalLabel;
+		LABL	0	0	0	b8;
+	ENDS;
+
+    SBIT	1	42;
+	SKIP	80000000;
+        BBIT    4   8   5;
+        ADDG    1   8;
+		DGLB	0	8	90	c2	CertSelectionCriteria Count:;
+		H245_CertSelectionCriteria_SeqOf;
+	ENDS;
+    
+    SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  S Random;
+        H245_LargeInt;
+		LABL	0	0	0	b8;
+    ENDS;
+    TRTS;
+
+void H245_CertSelectionCriteria_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Criteria;
+	H245_Criteria;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_CertSelectionCriteria_SeqOf;
+
+void H245_Criteria;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	0	b7  Field;
+    ObjectIdentifier_BER;
+	LABL	0	0	0	b8;
+
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Value Length:;
+    HEX#    0   1   90  c2  Value:;
+    TRTS;
+
+void H245_TerminalLabel_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Terminal Label;
+	H245_TerminalLabel;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_TerminalLabel_SeqOf;
+
+void H245_TerminalLabel;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	8	0	90	c2	MCU Number:;
+	DBIT	8	0	90	c2	Terminal Number:;
+	TRTS;
+
+
+void H245_ConferenceResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_ConferenceResponseNames_base;
+	    TSB# ffffffff 1 -H245_ConferenceResponseFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   b7  H245_ConferenceResponseNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_ConferenceResponseFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ConferenceResponseNames_base;
+    MC Terminal ID Response;
+    Terminal ID Response;
+    Conference ID Response;
+    Password Response;
+    Terminal List Response;
+    Video Command Reject;
+    Terminal Drop Reject;
+    Make Me Chair Response;
+
+str# H245_ConferenceResponseFuncs_base;
+    H245_mCTerminalIDResponse;
+    H245_terminalIDResponse;
+    H245_conferenceIDResponse;
+    H245_passwordResponse;
+    H245_terminalListResponse;
+    PER_Null;
+    PER_Null;
+    H245_makeMeChairResponse;
+
+str# H245_ConferenceResponseNames_ext;
+    Extension Address Response;
+    Chair Token Owner Response;
+    Terminal Certificate Response;
+    Broadcast My Logical Channel Response;
+    Make Terminal Broadcaster Response;
+    Send This Source Response;
+    Request All Terminal IDs Response;
+    Remote MC Response;
+
+str# H245_ConferenceResponseFuncs_ext;
+    H245_extensionAddressResponse;
+    H245_chairTokenOwnerResponse;
+    H245_terminalCertificateResponse;
+    H245_broadcastMyLogicalChannelResponse;
+    H245_makeTerminalBroadcasterResponse;
+    H245_sendThisSourceResponse;
+    H245_RequestAllTerminalIDsResponse;
+    H245_RemoteMCResponse;
+
+void H245_mCTerminalIDResponse;
+	LABL	0	0	0   b7	Terminal Label;
+	H245_TerminalLabel;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0 	b7	Terminal ID;
+	H245_TerminalID;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_terminalIDResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_mCTerminalIDResponse;
+    TRTS;
+
+void H245_conferenceIDResponse;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0   b7	Terminal Label;
+	H245_TerminalLabel;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0	b7	Conference ID;
+	H245_ConferenceID;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_passwordResponse;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0	b7	Terminal Label;
+	H245_TerminalLabel;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0   b7  Password;
+	H245_Password;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_terminalListResponse;
+    H245_Align;
+    DBYT    0   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Terminal List Response Count:;
+    H245_TerminalLabel_SeqOf;
+    TRTS;
+
+void H245_makeMeChairResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_makeMeChairResponseNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_makeMeChairResponseNames_base;
+    Granted Chair Token;
+    Denied Chair Token;
+
+void H245_extensionAddressResponse;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0 	b7	Extension Address;
+	H245_TerminalID;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_chairTokenOwnerResponse;
+    H245_terminalIDResponse;
+    TRTS;
+
+void H245_terminalCertificateResponse;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+	
+    SBIT	1	42;
+	SKIP	80000000;
+	    LABL	0	0	0	b7	Terminal Label;
+	    H245_TerminalLabel;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+    SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Certificate Response;
+		H245_Align;
+		DWRD	0	1   5;
+        ADDG    1   1;
+        DGLB    0   1   90	c2	Certificate Response Length:;
+        HEX#    0   1   90  c2  Certificate Response Data:;
+        LABL    0   0   0   b8  ;
+	ENDS;
+    TRTS;
+
+void H245_broadcastMyLogicalChannelResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_broadcastMyLogicalChannelResponseNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_broadcastMyLogicalChannelResponseNames_base;
+    Granted Broadcast My Logical Channel;
+    Denied Broadcast My Logical Channel;
+
+void H245_makeTerminalBroadcasterResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_makeTerminalBroadcasterResponseNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_makeTerminalBroadcasterResponseNames_base;
+    Granted Make Terminal Broadcaster;
+    Denied Make Terminal Broadcaster;
+
+void H245_sendThisSourceResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_sendThisSourceResponseNames_base;
+        TRTS;
+    ENDS;
+    TRTS;
+
+str# H245_sendThisSourceResponseNames_base;
+    Granted Send This Source;
+    Denied Send This Source;
+
+
+void H245_TerminalID;
+    BBIT    7   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Terminal ID Length:;
+    HEX#    0   1   90  c2  Terminal ID:;
+    TRTS;
+
+void H245_ConferenceID;
+    BBIT    5   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Conference ID Length:;
+    HEX#    0   1   90  c2  Conference ID:;
+    TRTS;
+
+void H245_Password;
+    BBIT    5   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Password Length:;
+    HEX#    0   1   90  c2  Password ID:;
+    TRTS;
+
+void H245_RequestAllTerminalIDsResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    DBYT    0   8   90  c2  Terminal Information Count:;
+    H245_TerminalInformation_SeqOf;
+    TRTS;
+
+void H245_TerminalInformation_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Terminal Information;
+	H245_TerminalInformation;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_TerminalInformation_SeqOf;
+
+void H245_TerminalInformation;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	0   b7	Terminal Label;
+	H245_TerminalLabel;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0 	b7	Terminal ID;
+	H245_TerminalID;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_RemoteMCRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_RemoteMCRequestNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_RemoteMCRequestNames_base;
+    Master Activate;
+    Slave Activate;
+    DeActivate;
+
+void H245_RemoteMCResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_RemoteMCResponseNames_base;
+	    TSB# ffffffff 1 -H245_RemoteMCResponseFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_RemoteMCResponseNames_base;
+    Accept;
+    Reject;
+
+str# H245_RemoteMCResponseFuncs_base;
+    PER_Null;
+    H245_reject;
+
+void H245_reject;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_rejectNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_rejectNames_base;
+    Unspecified;
+    Function Not Supported;
+
+
+void H245_MultilinkRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_MultilinkRequestNames_base;
+	    TSB# ffffffff 1 -H245_MultilinkRequestFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_MultilinkRequestNames_base;
+    Non Standard;
+    Call Information;
+    Add Connection;
+    Remove Connection;
+    Maximum Header Interval;
+
+str# H245_MultilinkRequestFuncs_base;
+    H245_NonStandardMessage;
+    H245_callInformation_Req;
+    H245_addConnection_Req;
+    H245_removeConnection;
+    H245_maximumHeaderInterval_Req;
+
+void H245_removeConnection;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   0   0   b7  Connection Identifier;
+    H245_ConnectionIdentifier;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_callInformation_Req;
+	BBIT    1   1   5  5; //Extension Bit
+    
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Max Number Of Additional Connections:;
+    TRTS;
+
+void H245_addConnection_Req;
+	BBIT    1   1   5  5; //Extension Bit
+
+    H245_SequenceNumber;
+
+    LABL    0   0   0   b7  Dialling Information;
+    H245_DiallingInformation;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_maximumHeaderInterval_Req;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Request Type;
+    H245_requestType;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_requestType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_requestTypeNames_base;
+	    TSB# ffffffff 1 -H245_requestTypeFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_requestTypeNames_base;
+    Current Interval Information;
+    Requested Interval;
+
+str# H245_requestTypeFuncs_base;
+    PER_Null;
+    H245_requestedInterval;
+
+void H245_requestedInterval;
+    H245_Align;
+    DWRD    0   0   90  c2  Requested Interval (msec):;
+    TRTS;
+
+void H245_MultilinkResponse;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_MultilinkResponseNames_base;
+	    TSB# ffffffff 1 -H245_MultilinkResponseFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_MultilinkResponseNames_base;
+    Non Standard;
+    Call Information;
+    Add Connection;
+    Remove Connection;
+    Maximum Header Interval;
+
+str# H245_MultilinkResponseFuncs_base;
+    H245_NonStandardMessage;
+    H245_callInformation_Res;
+    H245_addConnection_Res;
+    H245_removeConnection;
+    H245_maximumHeaderInterval_Res;
+
+void H245_callInformation_Res;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Dialling Information;
+    H245_DiallingInformation;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Call Association Number;
+    H245_LargeInt;
+    LABL    0   0   0   b8  ;
+
+    TRTS;
+
+void H245_addConnection_Res;
+	BBIT    1   1   5  5; //Extension Bit
+
+    H245_SequenceNumber;
+
+    LABL    0   0   0   b7  Response Code;
+    H245_responseCode;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_responseCode;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_responseCodeNames_base;
+	    TSB# ffffffff 1 -H245_responseCodeFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_responseCodeNames_base;
+    Accepted;
+    Rejected;
+
+str# H245_responseCodeFuncs_base;
+    PER_Null;
+    H245_rejected;
+
+void H245_rejected;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_rejectedNames_base;
+    ENDS;
+    TRTS;
+
+str# H245_rejectedNames_base;
+    Connections Not Available;
+    User Rejected;
+
+void H245_maximumHeaderInterval_Res;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   0   90  c2  Current Interval (msec):;
+    TRTS;
+
+void H245_MultilinkIndication;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_MultilinkIndicationNames_base;
+	    TSB# ffffffff 1 -H245_MultilinkIndicationFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_MultilinkIndicationNames_base;
+    Non Standard;
+    CRC Desired;
+    Excessive Error;
+
+str# H245_MultilinkIndicationFuncs_base;
+    H245_NonStandardMessage;
+    H245_crcDesired;
+    H245_excessiveError;
+
+void H245_crcDesired;
+	BBIT    1   1   5  5; //Extension Bit
+    TRTS;
+
+void H245_excessiveError;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   0   0   b7  Connection Identifier;
+    H245_ConnectionIdentifier;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_DiallingInformation;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_DiallingInformationNames_base;
+	    TSB# ffffffff 1 -H245_DiallingInformationFuncs_base;
+	    LABL	0	0	0	b8	;	
+    ENDS;
+    TRTS;
+
+str# H245_DiallingInformationNames_base;
+    Non Standard;
+    Differential;
+    Info Not Available;
+
+str# H245_DiallingInformationFuncs_base;
+    H245_NonStandardMessage;
+    H245_differential;
+    H245_infoNotAvailable;
+
+void H245_differential;
+    H245_Align;
+    DWRD    0   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Differential Count:;
+    H245_DiallingInformationNumber_SeqOf;
+    TRTS;
+
+void H245_infoNotAvailable;
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Value:;
+    TRTS;
+
+void H245_DiallingInformationNumber_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Dialling Information Number;
+	H245_DiallingInformationNumber;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_DiallingInformationNumber_SeqOf;
+
+void H245_DiallingInformationNumber;
+	BBIT    1   1   5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    BBIT    6   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Network Address Length:;
+    H245_networkAddress;
+	
+    SBIT	0	42;
+	SKIP	80000000;
+        BBIT    6   41  5   5   ;
+        ADDG    1   41;
+        DGLB    0   41  90  c2  Subaddress Length:;
+        H245_Align;
+        CHR#    0   41  90  c2  Subaddress:;
+        TRTS;
+	ENDS;
+
+    H245_Align;
+    DBYT    0   8   5;
+    ADDG    1   8;
+    DGLB    0   8   90  c2  Network Type Count:;
+    H245_DiallingInformationNetworkType_SeqOf;
+    TRTS;
+
+void H245_networkAddress;
+	TGTE	0	8	0	0	RETURN;
+    BBIT    4   0   90  c2  Number Digit:;
+	SUBG	1	8;
+	TNXT -H245_networkAddress;
+
+void H245_DiallingInformationNetworkType_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Dialling Information Network Type;
+	H245_DiallingInformationNetworkType;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_DiallingInformationNetworkType_SeqOf;
+
+void H245_DiallingInformationNetworkType;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_DiallingInformationNetworkTypeNames_base;
+	    TSB# ffffffff 1 -H245_DiallingInformationNetworkTypeFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   14  H245_DiallingInformationNetworkTypeNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TRTS;
+
+str# H245_DiallingInformationNetworkTypeNames_base;
+    Non Standard;
+    N-ISDN;
+    GSTN;
+
+str# H245_DiallingInformationNetworkTypeFuncs_base;
+    H245_NonStandardMessage;
+    PER_Null;
+    PER_Null;
+
+str# H245_DiallingInformationNetworkTypeNames_ext;
+    Mobile;
+
+void H245_ConnectionIdentifier;
+	BBIT    1   1   5  5; //Extension Bit
+
+    LABL    0   0   0   b7  Channel Tag;
+    H245_LargeInt;
+    LABL    0   0   0   b8  ;
+
+    LABL    0   0   0   b7  Sequence Number;
+    H245_LargeInt;
+    LABL    0   0   0   b8  ;
+    TRTS;
+
+void H245_LogicalChannelRateRequest;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_SequenceNumber;
+    H245_LogicalChannelNumber;
+    H245_MaximumBitRate;
+    TRTS;
+
+void H245_LogicalChannelRateAcknowledge;
+    H245_LogicalChannelRateRequest;
+    TRTS;
+
+void H245_LogicalChannelRateReject;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+	
+    H245_SequenceNumber;
+    H245_LogicalChannelNumber;
+
+	LABL	0	0	0	b7	Logical Channel Rate Reject Reason;
+	H245_LogicalChannelRateRejectReason;
+	LABL	0	0	0	b8;
+    
+    SBIT	0	42;
+	SKIP	80000000;
+        H245_MaximumBitRate;
+	ENDS;
+
+void H245_LogicalChannelRateRejectReason;
+	BBIT    1   41  5  5; //Extension Bit
+    BBIT    1   42  90  c2  Reason:;
+    CEQU    0   42  0   14  Undefined Reason;
+    CEQU    0   42  0   14  Insufficient Resources;
+    TRTS;
+
+void H245_LogicalChannelRateRelease;
+  	BBIT    1   41  5  5; //Extension Bit
+    TRTS;
+
+void H245_SendTerminalCapabilitySet;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_SendTerminalCapabilitySetNames_base;
+	    TSB# ffffffff 1 -H245_SendTerminalCapabilitySetFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_SendTerminalCapabilitySetNames_base;
+    Specific Request;
+    Generic Request;
+
+str# H245_SendTerminalCapabilitySetFuncs_base;
+    H245_specificRequest;
+    PER_Null;
+
+void H245_specificRequest;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+	
+    LABL    0   0   90  c2  Multiplex Capability:;
+    PER_Boolean;
+
+    SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		DWRD	0	9   5;
+		ADDG	1	9;
+		DGLB	0	9	90	c2	Capability Table Entry Count:;
+		H245_CapabilityTableEntryNumber_SeqOf;
+	ENDS;
+
+    SBIT	0	42;
+	SKIP	80000000;
+	    H245_Align;
+	    DBYT	0	8   5;
+	    ADDG	1	8;
+	    DGLB	0	8	90	c2	Capability Descriptor Number Count:;
+	    H245_CapabilityDescriptorNumber_SeqOf;
+	ENDS;
+    TRTS;
+
+void H245_EncryptionCommand;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_EncryptionCommandNames_base;
+	    TSB# ffffffff 1 -H245_EncryptionCommandFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_EncryptionCommandNames_base;
+    Encryption SE;
+    Encryption IV Request;
+    Encryption Algorithm ID;
+
+str# H245_EncryptionCommandFuncs_base;
+    H245_encryptionSE;
+    PER_Null;
+    H245_encryptionAlgorithmID;
+
+void H245_encryptionSE;
+    H245_Align;
+    DBYT    0   1   90  c2  Encryption SE Length:;
+    HEX#    0   1   90  c2  Encryption SE;
+    TRTS;
+
+void H245_encryptionAlgorithmID;
+	LABL	0	0	0	b7  H.233 Algorithm Identifier;
+    H245_SequenceNumber;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b7  Associated Algorithm;
+    H245_NonStandardParameter;
+	LABL	0	0	0	b8;
+    TRTS;
+
+
+void H245_FlowControlCommand;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_Scope;
+	H245_Restriction;
+	TRTS;
+
+void H245_Scope;
+	DBIT    2   1   90  c2  Scope Type:;
+	CST# ffffffff 1 0   b7  H245_ScopeNames;
+	TSB# ffffffff 1 -H245_ScopeFuncs;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ScopeNames;
+	Logical Channel Number;
+	Resource ID;
+	Whole Multiplex;
+
+str# H245_ScopeFuncs;
+	H245_LogicalChannelNumber;
+	H245_ResourceID;
+	PER_Null;
+
+void H245_ResourceID;
+	H245_Align;
+	DWRD	0	0	90	c2	Resource ID:;
+	TRTS;
+
+void H245_Restriction;
+	DBIT    1   1   90  c2  Restriction Type:;
+	CST# ffffffff 1 0   b7  H245_RestrictionNames;
+	TSB# ffffffff 1 -H245_RestrictionFuncs;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_RestrictionNames;
+	Maximum Bit Rate;
+	No Restriction;
+
+str# H245_RestrictionFuncs;
+	H245_MaximumBitRate;
+	PER_Null;
+
+void H245_MaximumBitRate;
+    LABL    0   0   0   b7  Maximum Bit Rate (units 100 bit/s):;
+	H245_LargeInt;
+    LABL    0   0   0   b8	;
+	TRTS;
+
+
+void H245_EndSessionCommand;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  End Session Command Type:;
+	    CST# ffffffff 1 0   b7  H245_EndSessionCommandNames_base;
+	    TSB# ffffffff 1 -H245_EndSessionCommandFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  End Session Command Type:;
+	CST# ffffffff 41 0   b7  H245_EndSessionCommandNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_EndSessionCommandFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_EndSessionCommandNames_base;
+	Non Standard;
+	Disconnect;
+	GSTN Options;
+
+str# H245_EndSessionCommandFuncs_base;
+	H245_NonStandardParameter;
+	PER_Null;
+	H245_gstnOptions;
+
+str# H245_EndSessionCommandNames_ext;
+	ISDN Options;
+
+str# H245_EndSessionCommandFuncs_ext;
+	H245_isdnOptions;
+
+void H245_gstnOptions;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT    3   1   90  c2  GSTN Options Type:;
+	CST# ffffffff 1 0   14  H245_gstnOptionsNames_base;
+    TRTS;
+
+str# H245_gstnOptionsNames_base;
+    Telephony Mode;
+    V.8bis;
+    V.34 DSVD;
+    V.34 Duplex FAX;
+    V.34 H.324;
+
+void H245_isdnOptions;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT    2   1   90  c2  ISDN Options Type:;
+	CST# ffffffff 1 0   14  H245_isdnOptionsNames_base;
+    TRTS;
+
+str# H245_isdnOptionsNames_base;
+    Telephony Mode;
+    V.140;
+    Terminal On Hold;
+
+
+void H245_ConferenceCommand;
+	BBIT    1   41  5  5; //Extension Bit
+	H245_LogicalChannelNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    3   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_ConferenceCommandNames_base;
+	    TSB# ffffffff 1 -H245_ConferenceCommandFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   b7  H245_ConferenceCommandNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_ConferenceCommandFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ConferenceCommandNames_base;
+    Broadcast My Logical Channel;
+    Cancel Broadcast My Logical Channel;
+    Make Terminal Broadcaster;
+    Cancel Make Terminal Broadcaster;
+    Send This Source;
+    Cancel Send This Source;
+    Drop Conference;
+
+str# H245_ConferenceCommandFuncs_base;
+    H245_LogicalChannelNumber;
+    H245_LogicalChannelNumber;
+    H245_TerminalLabel;
+    PER_Null;
+    H245_TerminalLabel;
+    PER_Null;
+    PER_Null;
+
+str# H245_ConferenceCommandNames_ext;
+    SubstituteConferenceIDCommand;
+
+str# H245_ConferenceCommandFuncs_ext;
+    H245_SubstituteConferenceIDCommand;
+
+
+void H245_SubstituteConferenceIDCommand;
+	BBIT    1   41  5  5; //Extension Bit
+
+    H245_Align;
+    HEX#    10  0   90  c2  Conference Identifier:;
+    TRTS;
+
+void H245_MiscellaneousCommand;
+	BBIT    1   41  5  5; //Extension Bit
+	H245_LogicalChannelNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Miscellaneous Command Type:;
+	    CST# ffffffff 1 0   b7  H245_MiscellaneousCommandNames_base;
+	    TSB# ffffffff 1 -H245_MiscellaneousCommandFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Miscellaneous Command Type:;
+	CST# ffffffff 41 0   b7  H245_MiscellaneousCommandNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_MiscellaneousCommandFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_MiscellaneousCommandNames_base;
+	Equalise Delay;
+	Zero Delay;
+	Multipoint Mode Command;
+	Cancel Multipoint Mode Command;
+	Video Freeze Picture;
+	Video Fast Update Picture;
+	Video Fast Update GOB;
+	Video Temporal SpatialTradeOff;
+	Video Send Sync Every GOB;
+	Video Send Sync Every GOB Cancel;
+
+str# H245_MiscellaneousCommandFuncs_base;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	H245_videoFastUpdateGOB;
+	H245_videoTemporalSpatialTradeOff;
+	PER_Null;
+	PER_Null;
+
+str# H245_MiscellaneousCommandNames_ext;
+	Video Fast Update MB;
+	Max H223 MUX PDU size;
+	Encryption Update;
+	Encryption Update Request;
+	Switch Receive Media Off;
+	Switch Receive Media On;
+	Progressive Refinement Start;
+	Progressive Refinement Abort One;
+	Progressive Refinement Abort Continuous;
+	Video Bad MBs;
+	Lost Picture;
+	Lost Partial Picture;
+	Recovery Reference Picture;
+
+str# H245_MiscellaneousCommandFuncs_ext;
+	H245_videoFastUpdateMB;
+	H245_maxH223MUXPDUsize;
+	H245_EncryptionSync;
+	H245_EncryptionUpdateRequest;
+	PER_Null_Ext;
+	PER_Null_Ext;
+	H245_progressiveRefinementStart;
+	PER_Null_Ext;
+	PER_Null_Ext;
+	H245_videoBadMBs;
+	H245_lostPicture;
+	H245_lostPartialPicture;
+	H245_recoveryReferencePicture;
+
+void H245_videoFastUpdateGOB;
+    BBIT    0   0   90  c2  First GOB:;
+    DBIT    5   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Number Of GOBs:;
+    TRTS;
+
+void H245_videoFastUpdateMB;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+	
+    SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	0	90	c2	First GOB:;
+	ENDS;
+
+    SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		GWRD	0	1;
+        ADDG    1   1;
+        DGLB    0   1   90	c2	First MB:;
+        INCR    2;
+	ENDS;
+
+	H245_Align;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	Number Of MBs:;
+    INCR    2;
+    TRTS;
+
+void H245_maxH223MUXPDUsize;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	Max H.223 MUX PDU size:;
+    INCR    2;
+    TRTS;
+
+void H245_progressiveRefinementStart;
+	BBIT    1   41  5  5; //Extension Bit
+    LABL    0   0   0   b7  Repeat Count;
+	BBIT    1   41  5  5; //Extension Bit
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   14  H245_progressiveRefinementStartNames_base;
+    LABL    0   0   0   b8  ;
+	TRTS;
+
+str# H245_progressiveRefinementStartNames_base;
+    Do One Progression;
+    Do Continuous Progressions;
+    Do One Independent Progression;
+    Do Continuous Independent Progressions;
+
+void H245_videoBadMBs;
+	BBIT    1   41  5  5; //Extension Bit
+
+	H245_Align;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	First MB:;
+    INCR    2;
+
+	H245_Align;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	Number Of MBs:;
+    INCR    2;
+
+	H245_Align;
+    DWRD    0   1   90	c2	Temporal Reference:;
+    TRTS;
+
+void H245_lostPicture;
+	H245_Align;
+	DBYT	0	8  	90	c2	Lost Picture Count:;
+	H245_PictureReference_SeqOf;
+    TRTS;
+
+void H245_lostPartialPicture;
+	BBIT    1   41  5  5; //Extension Bit
+
+    H245_PictureReference;
+
+	H245_Align;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	First MB:;
+    INCR    2;
+
+	H245_Align;
+	GWRD	0	1;
+    ADDG    1   1;
+    DGLB    0   1   90	c2	Number Of MBs:;
+    INCR    2;
+    TRTS;
+
+void H245_recoveryReferencePicture;
+	H245_Align;
+	DBYT	0	8  	90	c2	Recovery Reference Picture Count:;
+	H245_PictureReference_SeqOf;
+    TRTS;
+
+void H245_KeyProtectionMethod;
+	BBIT    1   1   5  5; //Extension Bit
+    LABL    0   0   90  c2  Secure Channel:;
+    PER_Boolean;
+    LABL    0   0   90  c2  Shared Secret:;
+    PER_Boolean;
+    LABL    0   0   90  c2  Cert Protected Key:;
+    PER_Boolean;
+    TRTS;
+
+void H245_EncryptionUpdateRequest;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+    SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Key Protection Method;
+        H245_KeyProtectionMethod;
+        LABL    0   0   0   b8  ;
+	ENDS;
+	TRTS;
+
+
+void H245_PictureReference_SeqOf;
+	TGTE	0	8	0	0	RETURN;
+	LABL	0	0	0	b7  Picture Reference;
+	H245_PictureReference;
+	LABL	0	0	0	b8;
+	SUBG	1	8;
+	TNXT -H245_PictureReference_SeqOf;
+
+void H245_PictureReference;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Picture Reference Type:;
+	    CST# ffffffff 1 0   b7  H245_PictureReferenceNames_base;
+	    TSB# ffffffff 1 -H245_PictureReferenceFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_PictureReferenceNames_base;
+    Picture Number;
+    Long Term Picture Index;
+
+str# H245_PictureReferenceFuncs_base;
+    H245_pictureNumber;
+    H245_longTermPictureIndex;
+
+void H245_pictureNumber;
+    H245_Align;
+    DWRD    0   0   90  c2  Picture Number:;
+    TRTS;
+
+void H245_longTermPictureIndex;
+    H245_Align;
+    DWRD    0   0   90  c2  Long Term Picture Index:;
+    TRTS;
+
+void H245_H223MultiplexReconfiguration;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_H223MultiplexReconfigurationNames_base;
+	    TSB# ffffffff 1 -H245_H223MultiplexReconfigurationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_H223MultiplexReconfigurationNames_base;
+    H.223 Mode Change;
+    H.223 Annex A Double Flag;
+
+str# H245_H223MultiplexReconfigurationFuncs_base;
+    H245_h223ModeChange;
+    H245_h223AnnexADoubleFlag;
+
+void H245_h223ModeChange;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_h223ModeChangeNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_h223ModeChangeNames_base;
+    To Level 0;
+    To Level 1;
+    To Level 2;
+    To Level 2 With Optional Header;
+
+void H245_h223AnnexADoubleFlag;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_h223AnnexADoubleFlagNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_h223AnnexADoubleFlagNames_base;
+    Start;
+    Stop;
+
+
+void H245_NewATMVCCommand;
+  	BBIT    1   41  5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   0   90  c2  Resource ID:;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Bit Rate:;
+    LABL    0   0   90  c2  Bit Rate Locked To PCR Clock:;
+    PER_Boolean;
+    LABL    0   0   90  c2  Bit Rate Locked To Network Clock:;
+    PER_Boolean;
+
+	LABL	0	0	0	b7  AAL;
+    H245_aal;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Multiplex;
+    H245_multiplex;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Reverse Parameters;
+    H245_reverseParameters;
+	LABL	0	0	0	b8;
+    TRTS;
+
+
+void H245_aal;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_aalNames_base;
+	    TSB# ffffffff 1 -H245_aalFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_aalNames_base;
+    AAL1;
+    AAL5;
+
+str# H245_aalFuncs_base;
+    H245_aal1;
+    H245_aal5;
+
+void H245_aal1;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0	b7  Clock Recovery;
+	H245_clockRecovery;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b7  Error Correction;
+	H245_errorCorrection;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	90	c2  Structured Data Transfer:;
+	PER_Boolean;
+	LABL	0	0	90	c2  Partially Filled Cells:;
+	PER_Boolean;
+    TRTS;
+
+void H245_clockRecovery;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_clockRecoveryNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_clockRecoveryNames_base;
+    Null Clock Recovery;
+    Srts Clock Recovery;
+    Adaptive Clock Recovery;
+
+void H245_errorCorrection;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_errorCorrectionNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_errorCorrectionNames_base;
+    Null Error Correction;
+    Long Interleaver;
+    Short Interleaver;
+    Error Correction Only;
+
+void H245_aal5;
+	BBIT    1   41  5  5; //Extension Bit
+
+    H245_Align;
+    DWRD    0   0   90  c2  Forward Maximum SDU Size:;
+    DWRD    0   0   90  c2  Backward Maximum SDU Size:;
+    TRTS;
+
+void H245_multiplex;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_multiplexNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_multiplexNames_base;
+    No Multiplex;
+    Transport Stream;
+    Program Stream;
+
+void H245_reverseParameters;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Bit Rate:;
+    LABL    0   0   90  c2  Bit Rate Locked To PCR Clock:;
+    PER_Boolean;
+    LABL    0   0   90  c2  Bit Rate Locked To Network Clock:;
+    PER_Boolean;
+	LABL	0	0	0	b7  Multiplex;
+    H245_multiplex;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_MobileMultilinkReconfigurationCommand;
+	BBIT    1   41  5  5; //Extension Bit
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Sample Size:;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Samples Per Frame:;
+   	LABL	0	0	0	b7  Status;
+	H245_status;
+	LABL	0	0	0	b8;
+    TRTS;
+
+void H245_status;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   14  H245_statusNames_base;
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_statusNames_base;
+    Synchronized;
+    Reconfiguration;
+
+void H245_FunctionNotUnderstood;
+	DBIT    2   1   90  c2  Type:;
+	CST# ffffffff 1 0   b7  H245_FunctionNotUnderstoodNames_base;
+	TSB# ffffffff 1 -H245_FunctionNotUnderstoodFuncs_base;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_FunctionNotUnderstoodNames_base;
+    Request;
+    Response;
+    Command;
+
+str# H245_FunctionNotUnderstoodFuncs_base;
+    H245_RequestMessage;
+	H245_ResponseMessage;
+	H245_CommandMessage;
+
+void H245_FunctionNotSupported;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	2	1	90	c2	Cause:;
+	CEQU	0	1	0	14	Syntax Error;
+	CEQU	1	1	0	14	Semantic Error;
+	CEQU	2	1	0	14	Unknown Function;
+
+    SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+        DBYT    0   1   90  c2  Returned Function Length:;
+        HEX#    0   1   90  c2  Returned Function:;
+	ENDS;
+	TRTS;
+
+void H245_ConferenceIndication;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Conference Indication Type:;
+	    CST# ffffffff 1 0   b7  H245_ConferenceIndicationNames_base;
+	    TSB# ffffffff 1 -H245_ConferenceIndicationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Conference Indication Type:;
+	CST# ffffffff 41 0   b7  H245_ConferenceIndicationNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_ConferenceIndicationFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_ConferenceIndicationNames_base;
+	Sbe Number;
+	Terminal Number Assign;
+	Terminal Joined Conference;
+	Terminal Left Conference;
+	Seen By At Least One Other;
+	Cancel Seen By At Least One Other;
+	Seen By All;
+	Cancel Seen By All;
+	Terminal You Are Seeing;
+	Request For Floor;
+
+str# H245_ConferenceIndicationFuncs_base;
+	H245_sbeNumber;
+	H245_TerminalLabel;
+	H245_TerminalLabel;
+	H245_TerminalLabel;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	H245_TerminalLabel;
+	PER_Null;
+
+str# H245_ConferenceIndicationNames_ext;
+	Withdraw Chair Token;
+	Floor Requested;
+	Terminal You Are Seeing In Sub Picture Number;
+	Video Indicate Compose;
+
+str# H245_ConferenceIndicationFuncs_ext;
+	PER_Null_Ext;
+	H245_TerminalLabel;
+	H245_TerminalYouAreSeeingInSubPictureNumber;
+	H245_VideoIndicateCompose;
+
+void H245_sbeNumber;
+	DBIT	0	0	90	c2	Sbe Number:;
+	TRTS;
+
+void H245_TerminalYouAreSeeingInSubPictureNumber;
+	BBIT    1   1   5  5; //Extension Bit
+	DBIT	8	0	90	c2	Terminal Number:;
+    H245_Align;
+    DBYT    0   0   90  c2  Sub Picture Number:;
+    TRTS;
+
+void H245_VideoIndicateCompose;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DBYT    0   0   90  c2  Composition Number:;
+    TRTS;
+
+
+void H245_MiscellaneousIndication;
+	BBIT    1   1   5  5; //Extension Bit
+	H245_LogicalChannelNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    4   1   90  c2  Miscellaneous Indication Type:;
+	    CST# ffffffff 1 0   b7  H245_MiscellaneousIndicationNames_base;
+	    TSB# ffffffff 1 -H245_MiscellaneousIndicationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Miscellaneous Indication Type:;
+	CST# ffffffff 41 0   b7  H245_MiscellaneousIndicationNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_MiscellaneousIndicationFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_MiscellaneousIndicationNames_base;
+	Logical Channel Active;
+	Logical Channel Inactive;
+	Multipoint Conference;
+	Cancel Multipoint Conference;
+	Multipoint Zero Comm;
+	Cancel Multipoint Zero Comm;
+	Multipoint Secondary Status;
+	Cancel Multipoint Secondary Status;
+	Video Indicate Ready To Activate;
+	Video Temporal Spatial TradeOff;
+
+str# H245_MiscellaneousIndicationFuncs_base;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	PER_Null;
+	H245_videoTemporalSpatialTradeOff;
+
+str# H245_MiscellaneousIndicationNames_ext;
+	videoNotDecodedMBs;
+	transportCapability;
+
+str# H245_MiscellaneousIndicationFuncs_ext;
+	H245_videoNotDecodedMBs;
+	H245_TransportCapability;
+
+
+void H245_videoTemporalSpatialTradeOff;
+	DBIT	5	0	90	c2	Current TradeOff:;
+	TRTS;
+
+void H245_videoNotDecodedMBs;
+	BBIT    1   1   5  5; //Extension Bit
+    H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  First MB:;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Number Of MBs:;
+    DBYT    0   1   90  c2  Temporal Reference:;
+    TRTS;
+
+void H245_JitterIndication;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7  Scope;
+	H245_Scope;
+	LABL	0	0	0	b8;
+
+    DBIT    2   0   90  c2  Estimated Received Jitter Mantissa:;
+    DBIT    3   0   90  c2  Estimated Received Jitter Exponent:;
+
+	SBIT	1	42;
+	SKIP	80000000;
+        DBIT    4   0   90  c2  Skipped Frame Count:;
+    ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+        LABL    0   0   0   b7  Additional Decoder Buffer;
+        H245_LargeInt;
+	    LABL	0	0	0	b8;
+    ENDS;
+    TRTS;
+
+void H245_H223SkewIndication;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0	b7  Logical Channel Number 1;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0	b7  Logical Channel Number 2;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Skew:;
+    TRTS;
+    
+void H245_H2250MaximumSkewIndication;
+	BBIT    1   1   5  5; //Extension Bit
+
+	LABL	0	0	0	b7  Logical Channel Number 1;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+    
+	LABL	0	0	0	b7  Logical Channel Number 2;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+    H245_Align;
+    DWRD    0   0   90  c2  Maximum Skew:;
+    TRTS;
+    
+void H245_MCLocationIndication;
+	BBIT    1   1   5  5; //Extension Bit
+	LABL	0	0	0	b7	Signal Address;
+	H245_TransportAddress;
+	LABL	0	0	0	b8;
+	TRTS;
+
+void H245_VendorIdentification;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7	Vendor;
+	H245_NonStandardIdentifier;
+	LABL	0	0	0	b8;
+
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	43	5;
+		ADDG	1	43;
+		HEX#	0	43	90	c2	Product Number:;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_Align;
+		DBYT	0	43	5;
+		ADDG	1	43;
+		HEX#	0	43	90	c2	Version Number:;
+	ENDS;
+
+	TRTS;
+
+void H245_NewATMVCIndication;
+    H245_NewATMVCCommand;
+    TRTS;
+
+void H245_UserInputIndication;
+	//BBIT    1   1   5  5; //Extension Bit
+	//H245_LogicalChannelNumber;
+
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    1   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_UserInputIndicationNames_base;
+	    TSB# ffffffff 1 -H245_UserInputIndicationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+
+    DBIT    7   41   90  c2  Type:;
+	CST# ffffffff 41 0   b7  H245_UserInputIndicationNames_ext;
+    H245_Align;
+    DBYT    0   2   5  5; //   Ext Length
+    TSB# ffffffff 41 -H245_UserInputIndicationFuncs_ext;
+	H245_Align;
+	LABL	0	0	0	b8	;	
+    TRTS;
+
+str# H245_UserInputIndicationNames_base;
+    Non Standard;
+    Alphanumeric;
+
+str# H245_UserInputIndicationFuncs_base;
+    H245_NonStandardParameter;
+    H245_GeneralString;
+
+str# H245_UserInputIndicationNames_ext;
+    userInputSupportIndication;
+    Signal;
+    SignalUpdate;
+    Extended Alphanumeric;
+
+str# H245_UserInputIndicationFuncs_ext;
+    H245_userInputSupportIndication;
+    H245_signal;
+    H245_signalUpdate;
+    H245_extendedAlphanumeric;
+
+void H245_GeneralString;
+    DBYT    0   1   90  c2  General String Length:;
+    H245_Align;
+    HEX#    0   1   90  c2  General String:;
+    TRTS;
+
+void H245_userInputSupportIndication;
+	BBIT    1   1   5  5; //Extension Bit
+    SNEQ    0   1;
+    SKIP;
+	    DBIT    2   1   90  c2  Type:;
+	    CST# ffffffff 1 0   b7  H245_userInputSupportIndicationNames_base;
+	    TSB# ffffffff 1 -H245_userInputSupportIndicationFuncs_base;
+		LABL	0	0	0	b8	;	
+        TRTS;
+    ENDS;
+	TRTS;
+
+str# H245_userInputSupportIndicationNames_base;
+    Non Standard;
+    Basic String;
+    IA5 String;
+    General String;
+
+str# H245_userInputSupportIndicationFuncs_base;
+    H245_NonStandardParameter;
+    PER_Null;
+    PER_Null;
+    PER_Null;
+
+// si: we need to add the dec42 character which is a star, but it kills the str...
+str# H245_IA5string;
+	33 |	!;
+	35 |	#;
+	48 |	0;
+	49 |	1;
+	50 |	2;
+	51 |	3;
+	52 |	4;
+	53 |	5;
+	54 |	6;
+	55 |	7;
+	56 |	8;
+	57 |	9;
+	65 |	A;
+	66 |	B;
+	67 |	C;
+	68 |	D;
+
+void H245_signal;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+    DBIT    8  49   5	c2  Signal Type:;
+    CST#	0  49	0	50	H245_IA5string;
+    H245_Align;
+    
+	SBIT	1	42;
+	SKIP	80000000;
+		H245_Align;
+        DWRD    0   1   5;
+        ADDG    1   1;
+        DGLB    0   1   90  c2  Duration (msec):;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL	0	0	0	b7  RTP;
+	    H245_rtp;
+	    LABL	0	0	0	b8;
+	ENDS;
+
+	TEQU	0	41	0	0	RETURN;
+	g[12] = l[1];
+	g[2] = 0;
+	H245_Seq_ExtBitMask;
+	l[1] = g[12];
+
+	SBIT	0	41;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   90  c2  RTP Payload Indication;
+	ENDS;
+
+	H245_Align;
+    TRTS;
+
+void H245_rtp;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	2	42	5  5; //Options Bits
+
+	SBIT	1	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7	Timestamp;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		LABL    0   0   0   b7	Expiration Time;
+		H245_LargeInt;
+		LABL    0   0   0   b8	;
+	ENDS;
+
+	LABL	0	0	0	b7	Logical Channel Number;
+	H245_LogicalChannelNumber;
+	LABL	0	0	0	b8;
+
+	TRTS;
+
+
+void H245_signalUpdate;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	H245_Align;
+    DWRD    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Duration (msec):;
+
+	SBIT	0	42;
+	SKIP	80000000;
+	    LABL	0	0	0	b7  RTP;
+    	BBIT    1   41  5  5; //Extension Bit
+	    H245_LogicalChannelNumber;
+	    LABL	0	0	0	b8;
+	ENDS;
+    TRTS;
+
+void H245_extendedAlphanumeric;
+	BBIT    1   41  5  5; //Extension Bit
+	BBIT	1	42	5  5; //Options Bits
+
+	LABL	0	0	0	b7  Alphanumeric;
+    H245_GeneralString;
+	LABL	0	0	0	b8;
+
+	SBIT	0	42;
+	SKIP	80000000;
+		H245_SeqExtLen;
+		LABL    0   0   90  c2  RTP Payload Indication;
+	ENDS;
+    TRTS;
+
+void H245_FlowControlIndication;
+	H245_FlowControlCommand;
+    TRTS;
+
+void H245_MobileMultilinkReconfigurationIndication;
+	BBIT    1   41  5  5; //Extension Bit
+    H245_Align;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Sample Size:;
+    DBYT    0   1   5;
+    ADDG    1   1;
+    DGLB    0   1   90  c2  Samples Per Frame:;
+    TRTS;
+
+*------------------
+* end H245
+*------------------
+
+
+void H245_Align;
+    BITO	0	1;
+    *DGLB	0	1	90	c2	H245_Align g[1]:;
+    SEQU	0	1;
+    SKIP;
+		MOVE 8	2;
+		SUBG 1	82;
+		*DGLB 0	2	90	c2	g[2];
+		SNEQ 1	2;
+		SKIP 2;
+			BBIT	1	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 2	2;
+		SKIP 2;
+			BBIT	2	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 3	2;
+		SKIP 2;
+			BBIT	3	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 4	2;
+		SKIP 2;
+			BBIT	4	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 5	2;
+		SKIP 2;
+			BBIT	5	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 6	2;
+		SKIP 2;
+			BBIT	6	0	5 5;  //Alignment Bits
+			TRTS;
+		SNEQ 7	2;
+		SKIP 2;
+			BBIT	7	0	5 5;  //Alignment Bits
+			TRTS;
+	ENDS;
+    TRTS;
+
+void H245_SeqExtLen;
+	H245_Align;
+    GBIT    1   1;
+    SEQU    1   1;			*msb == 1 ?;
+    SKIP;
+		DBYT    0   1   5  5; //   Ext Length
+		TRTS;
+	ENDS;
+    BBIT    2   0   5   5;
+    DBIT    e   1   5  5; //   Ext Length
+    TRTS;
+
+void H245_Seq_ExtBitMask;
+	BITO	0	a;
+	ADDG	1	a;
+	PER_Seq_ExtBitMask;
+	TRTS;
+
+void H245_ProtocolIdentifier;
+	H245_Align;
+	LABL	0	0	0	b7	Protocol Identifier;
+	DBYT	0	2	90	c2	Length:;
+	LABL	0	0	90	c2	OID:;
+	ASN1_OID;
+	LABL	0	0	0	b8;
+	TRTS;
+
+
+void H245_LargeInt;
+    BBIT    2   41	5;
+    ADDG    1   41;
+	H245_Align;
+
+    SNEQ    1   41;			*1 byte;
+    SKIP;
+		DBYT    0   1   90  c2	Integer Value:;
+    ENDS;
+
+    SNEQ    2   41;			*2 bytes;
+    SKIP;
+		DWRD    0   1   90  c2	Integer Value:;
+    ENDS;
+
+    SNEQ    3   41;			*3 bytes;
+    SKIP;
+		DWRD	0	1   5;* DBIT 18 does NOT work, so break into two parts 
+		DBYT	0	2	5;
+		MULG	100 1;  * shift g1 by 1 byte
+		ADDG	2	81;  * g1 = g2 + g1;
+		DGLB	0	1	90  c2	Integer Value:;
+    ENDS;
+
+    SNEQ    4   41;			*4 bytes;
+    SKIP;
+		DLNG    0   1   90  c2	Integer Value:;
+	ENDS;
+
+	TRTS;
+
+
+*------------ Q931->H245 Fast Start ---------
+
+void H245_FastStart_SEQ_OF_OpenLogicalChannel;
+	l[1] = g[12];*save
+
+	LABL	0	0	0	b7	H.245 Fast Start;
+	H245_Align;
+	DBYT	0	21	90	c2	Fast Start Count:;
+	H245_OpenLogicalChannel_SeqOf;
+	LABL	0	0	0	b8	;	
+
+	g[12] = l[1];*restore
+
+	H245_Align;
+	MOVE	1	a;
+	TRTS;
+
+
+void H245_OpenLogicalChannel_SeqOf;
+	TGTE	0	21	0	0	RETURN;
+	LABL	0	0	0	b7  Open Logical Channel;
+	DBYT	0	0	90	c2	Length:;
+	H245_OpenLogicalChannel;
+	H245_Align;
+	LABL	0	0	0	b8;
+	SUBG	1	21;
+	TNXT -H245_OpenLogicalChannel_SeqOf;

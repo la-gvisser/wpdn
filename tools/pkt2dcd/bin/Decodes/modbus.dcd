@@ -1,0 +1,847 @@
+// -----------------------------------------------------------
+//  MODBUS
+//	
+//	globals i use:
+//		g[5] = length
+//		g[6] = function code
+// -----------------------------------------------------------
+
+// -----------------------------------------------------------
+// TCP Framing
+// comes in via port 502
+
+void Modbus;
+	g[1] = pw[2];
+	if (g[1] != 0)
+	{
+		TRTS;		//si: the protocol identifier must be 0
+	}
+	LABL 0 0 00 b1 Modbus/TCP;
+	HWRD 0 1 90 c2 Trans. Identifier:;
+	HWRD 0 1 90 c2 Protocol Identifier:;
+	DWRD 0 5 90 c2 Length:;
+	
+	LABL 0 0 00 b7 Modbus;
+	DBYT 0 1 90 c2 Unit Identifier:;
+	DBYT 0 6 90 c2 Function Code:;
+	g[1] = 0;
+	if (g[6] > 0x80)
+	{
+		g[6] -= 128;
+		g[1] = 1;
+		DGLB 0 1 04 14 -;
+	}
+	CST# 0 6 00 14 Modbus::Commands::List;
+	if (g[1] == 1)
+	{
+		g[6] += 128;
+	}
+	
+	// srcPort
+	if (g[26] == 502)
+	{
+		LABL 0 0 00 14 Response;
+		TSB# 0 6 00 00 Modbus::Commands::Func::RES;
+		// si: error codes are function code + 0x80
+		if (g[6] > 0x80)
+		{
+			Modbus::Commands::Error;
+		}
+	}
+	// dstPort
+	if (g[27] == 502)
+	{
+		LABL 0 0 00 14 Request;
+		TSB# 0 6 00 00 Modbus::Commands::Func::REQ;
+		// si: error codes are function code + 0x80
+		if (g[6] > 0x80)
+		{
+			Modbus::Commands::Error;
+		}
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# Modbus::Commands::List;
+	  1 | Read Coils;						// class 1
+	  2 | Read Discrete Inputs;				// class 1
+	  3 | Read Holding Registers;			// class 0
+	  4 | Read Input Registers;				// class 1
+	  5 | Write Single Coil;				// class 1
+	  6 | Write Single Register;			// class 1
+	  7 | Read Exception Status;			// class 1
+	  8 | Diagnostics;						// machine - vendor specific
+	  9 | Program (484);					// machine - vendor specific
+	 10 | Poll (484);						// machine - vendor specific
+	 11 | Get Comm Event Counters;			// machine - vendor specific
+	 12 | Get Comm Event Log;				// machine - vendor specific
+	 13 | Program (584/984);				// machine - vendor specific
+	 14 | Poll (584/984);					// machine - vendor specific
+	 15 | Write Multiple Coils;				// class 2
+	 16 | Write Multiple Registers;			// class 0
+	 17 | Report Slave ID;					// machine - vendor specific
+	 18 | Program (884/u84);				// machine - vendor specific
+	 19 | Reset Comm Link (884/u84);		// machine - vendor specific
+	 20 | Read File Reference;				// class 2
+	 21 | Write File Reference;				// class 2
+	 22 | Mask Write Register;				// class 2
+	 23 | Read/Write Registers;				// class 2
+	 24 | Read FIFO Queue;					// class 2
+	 40 | Program (ConCept);				// machine - vendor specific
+	 43 | Encapsulated Interface Transport;
+	125 | Firmware Replacement;				// machine - vendor specific
+	126 | Program (584/984);				// machine - vendor specific
+	127 | Report Local Address;				// machine - vendor specific
+
+str# Modbus::Commands::Func::REQ;
+	  1 | Modbus::Commands::001::REQ;
+	  2 | Modbus::Commands::002::REQ;
+	  3 | Modbus::Commands::003::REQ;
+	  4 | Modbus::Commands::004::REQ;
+	  5 | Modbus::Commands::005::REQ;
+	  6 | Modbus::Commands::006::REQ;
+	  7 | Modbus::Commands::007::REQ;
+	  8 | Modbus::Commands::008::REQ;
+	  9 | Modbus::Commands::009::REQ;
+	 10 | Modbus::Commands::010::REQ;
+	 11 | Modbus::Commands::011::REQ;
+	 12 | Modbus::Commands::012::REQ;
+	 13 | Modbus::Commands::013::REQ;
+	 14 | Modbus::Commands::014::REQ;
+	 15 | Modbus::Commands::015::REQ;
+	 16 | Modbus::Commands::016::REQ;
+	 17 | Modbus::Commands::017::REQ;
+	 18 | Modbus::Commands::018::REQ;
+	 19 | Modbus::Commands::019::REQ;
+	 20 | Modbus::Commands::020::REQ;
+	 21 | Modbus::Commands::021::REQ;
+	 22 | Modbus::Commands::022::REQ;
+	 23 | Modbus::Commands::023::REQ;
+	 24 | Modbus::Commands::024::REQ;
+	 40 | Modbus::Commands::040::REQ;
+	 43 | Modbus::Commands::043::REQ;
+	125 | Modbus::Commands::125::REQ;
+	126 | Modbus::Commands::126::REQ;
+	127 | Modbus::Commands::127::REQ;
+
+str# Modbus::Commands::Func::RES;
+	  1 | Modbus::Commands::001::RES;
+	  2 | Modbus::Commands::002::RES;
+	  3 | Modbus::Commands::003::RES;
+	  4 | Modbus::Commands::004::RES;
+	  5 | Modbus::Commands::005::RES;
+	  6 | Modbus::Commands::006::RES;
+	  7 | Modbus::Commands::007::RES;
+	  8 | Modbus::Commands::008::RES;
+	  9 | Modbus::Commands::009::RES;
+	 10 | Modbus::Commands::010::RES;
+	 11 | Modbus::Commands::011::RES;
+	 12 | Modbus::Commands::012::RES;
+	 13 | Modbus::Commands::013::RES;
+	 14 | Modbus::Commands::014::RES;
+	 15 | Modbus::Commands::015::RES;
+	 16 | Modbus::Commands::016::RES;
+	 17 | Modbus::Commands::017::RES;
+	 18 | Modbus::Commands::018::RES;
+	 19 | Modbus::Commands::019::RES;
+	 20 | Modbus::Commands::020::RES;
+	 21 | Modbus::Commands::021::RES;
+	 22 | Modbus::Commands::022::RES;
+	 23 | Modbus::Commands::023::RES;
+	 24 | Modbus::Commands::024::RES;
+	 40 | Modbus::Commands::040::RES;
+	 43 | Modbus::Commands::043::RES;
+	125 | Modbus::Commands::125::RES;
+	126 | Modbus::Commands::126::RES;
+	127 | Modbus::Commands::127::RES;
+
+//---------------------------------------------------------------------------
+
+void Modbus::Commands::001::REQ;			// Read Coils				v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Coils:;
+	TRTS;
+
+void Modbus::Commands::001::RES;			// Read Coils				v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Coil Status:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::002::REQ;			// Read Discrete Inputs		v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Inputs:;
+	TRTS;
+
+void Modbus::Commands::002::RES;			// Read Discrete Inputs		v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Input Status:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::003::REQ;			// Read Holding Registers	v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Registers:;
+	TRTS;
+
+void Modbus::Commands::003::RES;			// Read Holding Registers	v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Register Value:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::004::REQ;			// Read Input Registers		v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Input Regs:;
+	TRTS;
+
+void Modbus::Commands::004::RES;			// Read Input Registers		v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Register Value:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::005::REQ;			// Write Single Coil		v1.1
+	DWRD 0 1 90 c2 Output Address:;
+	HWRD 0 1 90 c2 Output Value:;
+	TRTS;
+
+void Modbus::Commands::005::RES;			// Write Single Coil		v1.1
+	DWRD 0 1 90 c2 Output Address:;
+	HWRD 0 1 90 c2 Output Value:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::006::REQ;			// Write Single Register	v1.1
+	HWRD 0 1 90 c2 Register Address:;
+	HWRD 0 1 90 c2 Register Value:;
+	TRTS;
+
+void Modbus::Commands::006::RES;			// Write Single Register	v1.1
+	HWRD 0 1 90 c2 Register Address:;
+	HWRD 0 1 90 c2 Register Value:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::007::REQ;			// Read Exception Status	v1.1
+	// no information in the request...should be 0
+	TRTS;
+
+void Modbus::Commands::007::RES;			// Read Exception Status	v1.1
+	DBYT 0 1 90 c2 Output Data:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::008::REQ;			// Diagnostics				v1.1
+	DWRD 0 2 90 c2 Sub-Function:;
+	CST# 0 2 00 14 Modbus::Commands::008::SubFunctions::List;
+	HWRD 0 0 90 c2 Data:;
+	TRTS;
+
+void Modbus::Commands::008::RES;			// Diagnostics				v1.1
+	DWRD 0 2 90 c2 Sub-Function:;
+	CST# 0 2 00 14 Modbus::Commands::008::SubFunctions::List;
+	HWRD 0 0 90 c2 Data:;
+	TRTS;
+
+str# Modbus::Commands::008::SubFunctions::List;
+	 0 | Return Query Data;
+	 1 | Restart Communications Option;
+	 2 | Return Diagnostic Register;
+	 3 | Change ASCII Input Delimiter;
+	 4 | Force Listen Only Mode;
+	10 | Clear Counters and Diagnostic Register;
+	11 | Return Bus Message Count;
+	12 | Return Bus Communication Error Count;
+	13 | Return Bus Exception Error Count;
+	14 | Return Slave Message Count;
+	15 | Return Slave No Response Count;
+	16 | Return Slave NAK Count;
+	17 | Return Slave Busy Count;
+	18 | Return Bus Character Overrun Count;
+	19 | PRIVATE;
+	20 | PRIVATE;
+
+// -----------------------------------------------------------
+void Modbus::Commands::009::REQ;
+void Modbus::Commands::009::RES;
+void Modbus::Commands::010::REQ;
+void Modbus::Commands::010::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::011::REQ;			// Get Comm Event Counter	v1.1
+	// no data
+	TRTS;
+void Modbus::Commands::011::RES;			// Get Comm Event Counter	v1.1
+	HWRD 0 1 90 c2 Status:;
+	HWRD 0 1 90 c2 Event Count:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::012::REQ;			// Get Comm Event Log		v1.1
+	// no data
+	TRTS;
+
+void Modbus::Commands::012::RES;			// Get Comm Event Log		v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	HWRD 0 1 90 c2 Status:;
+	DWRD 0 2 90 c2 Event Count:;
+	DWRD 0 1 90 c2 Message Count:;
+	HWRD 0 2 90 c2 Events:;				//???
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::013::REQ;
+void Modbus::Commands::013::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::014::REQ;
+void Modbus::Commands::014::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::015::REQ;			// Write Multiple Coils		v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Outputs:;
+	DBYT 0 1 90 c2 Byte Count:;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Data to be Written:;
+	}
+	TRTS;
+
+void Modbus::Commands::015::RES;			// Write Multiple Coils		v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Outputs:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::016::REQ;			// Write Multiple Registers	v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Registers:;
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Register Values:;
+	TRTS;
+
+void Modbus::Commands::016::RES;			// Write Multiple Registers	v1.1
+	DWRD 0 1 90 c2 Starting Address:;
+	DWRD 0 1 90 c2 Qty of Registers:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::017::REQ;			// Report Slave ID			v1.1
+	// no data
+	TRTS;
+	
+void Modbus::Commands::017::RES;			// Report Slave ID			v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Data:;
+	//Slave ID:;
+	//Run Indicator Status:;
+	//Additional Data:;
+
+// -----------------------------------------------------------
+void Modbus::Commands::018::REQ;
+void Modbus::Commands::018::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::019::REQ;
+void Modbus::Commands::019::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::020::REQ;			// Read General Reference		v1.1
+	DBYT 0 2 90 c2 Byte Count:;
+	g[2] /= 7;
+	while (g[2] > 0)
+	{
+		LABL 0 0 00 b7 SubRequest;
+		HBYT 0 1 90 c2 Reference Type:;
+		DWRD 0 1 90 c2 File Number:;
+		DWRD 0 1 90 c2 Record Number:;
+		DWRD 0 1 90 c2 Register Length:;
+		LABL 0 0 00 b8;
+		g[2] -= 1;
+	}
+	TRTS;
+
+void Modbus::Commands::020::RES;			// Read General Reference		v1.1
+	DBYT 0 2 90 c2 Resp Length:;
+	while (g[2] > 0)
+	{
+		LABL 0 0 00 b7 Sub Request;
+		DBYT 0 1 90 c2 File Resp Len:;
+		DBYT 0 0 90 c2 Reference Type:;
+		g[1] -= 1;
+		DUMP 0 1 90 c2 Record Data:;
+		LABL 0 0 00 b8;
+		g[2] -= 2;
+		g[2] -= g[1];
+	}
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::021::REQ;			// Write File Record			v1.1
+	DBYT 0 2 90 c2 Data Length:;
+	while (g[2] > 0)
+	{
+		LABL 0 0 00 b7 SubRequest;
+		HBYT 0 1 90 c2 Reference Type:;
+		DWRD 0 1 90 c2 File Number:;
+		DWRD 0 1 90 c2 Record Number:;
+		DWRD 0 1 90 c2 Record Length:;
+		g[1] *= 2;
+		DUMP 0 1 90 c2 Record Data:;
+		LABL 0 0 00 b8;
+		g[2] -= 7;
+		g[2] -= g[1];
+	}
+	TRTS;
+
+void Modbus::Commands::021::RES;			// Write File Record			v1.1
+	DBYT 0 2 90 c2 Data Length:;
+	while (g[2] > 0)
+	{
+		LABL 0 0 00 b7 SubRequest;
+		HBYT 0 1 90 c2 Reference Type:;
+		DWRD 0 1 90 c2 File Number:;
+		DWRD 0 1 90 c2 Record Number:;
+		DWRD 0 1 90 c2 Record Length:;
+		g[1] *= 2;
+		DUMP 0 1 90 c2 Record Data:;
+		LABL 0 0 00 b8;
+		g[2] -= 7;
+		g[2] -= g[1];
+	}
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::022::REQ;			// Mask Write Register			v1.1
+	DWRD 0 1 90 c2 Reference Address:;
+	DWRD 0 1 90 c2 And_Mask:;
+	DWRD 0 1 90 c2 Or_Mask:;
+	TRTS;
+
+void Modbus::Commands::022::RES;			// Mask Write Register			v1.1
+	DWRD 0 1 90 c2 Reference Address:;
+	DWRD 0 1 90 c2 And_Mask:;
+	DWRD 0 1 90 c2 Or_Mask:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::023::REQ;			// Read/Write Multiple registers	v1.1
+	HWRD 0 1 90 c2 Read Starting Addr:;
+	DWRD 0 1 90 c2 Qty to Read:;
+	HWRD 0 1 90 c2 Write Starting Addr:;
+	DWRD 0 1 90 c2 Qty to Write:;
+	DBYT 0 1 90 c2 Write Byte Count:;
+	DUMP 0 1 90 c2 Write Registers Val:;
+	TRTS;
+
+void Modbus::Commands::023::RES;			// Read/Write Multiple registers	v1.1
+	DBYT 0 1 90 c2 Byte Count:;
+	DUMP 0 1 90 c2 Read Registers Val:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::024::REQ;			// Read FIFO Queue					v1.1
+	HWRD 0 1 90 c2 FIFO Pointer Addr:;
+	TRTS;
+
+void Modbus::Commands::024::RES;			// Read FIFO Queue					v1.1
+	DWRD 0 1 90 c2 Byte Count:;
+	DWRD 0 1 90 c2 FIFO Count:;
+	g[1] *= 2;
+	DUMP 0 1 90 c2 FIFO Val Register:;
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::040::REQ;
+void Modbus::Commands::040::RES;
+
+// -----------------------------------------------------------
+void Modbus::Commands::043::REQ;			// Encapsulated Interface Transport	v1.1
+	DBYT 0 1 90 c2 MEI Type:;
+	//MEI Type Data:;
+	if (g[1] == 14)
+	{
+		LABL 0 0 0 14 Read Device Identification;
+		DBYT 0 1 90 c2 Read Device ID Code:;
+		CST# 0 1 00 14 Modbus::Commands::043::Device_ID;
+		DBYT 0 1 90 c2 Object ID:;
+		CST# 0 1 00 14 Modbus::Commands::043::Obj_ID;
+	}
+	TRTS;
+
+str# Modbus::Commands::043::Obj_ID;
+	0x00 | Vendor Name;
+	0x01 | Product Code;
+	0x02 | Major/Minor Revision;
+	0x03 | Vendor Url;
+	0x04 | Product Name;
+	0x05 | Model Name;
+	0x06 | User Application Name;
+
+str# Modbus::Commands::043::Device_ID;
+	01 | request to get the basic device id;
+	02 | request to get the regular device id;
+	03 | request to get the extended device id;
+	04 | request to get one specific id obj;
+
+str# Modbus::Commands::043::Conformity_Level;
+	01 | basic identification;
+	02 | regular identification;
+	03 | extended identification;
+	81 | basic identification;
+	82 | regular identification;
+	83 | extended identification;
+
+void Modbus::Commands::043::RES;			// Encapsulated Interface Transport	v1.1
+	DBYT 0 1 90 c2 MEI Type:;
+	//MEI Type Data:;
+	if (g[1] == 14)
+	{
+		DBYT 0 1 90 c2 Read Device ID Code:;
+		CST# 0 1 00 14 Modbus::Commands::043::Device_ID;
+		DBYT 0 1 90 c2 Conformity Level:;
+		CST# 0 1 00 14 Modbus::Commands::043::Conformity_Level;
+		DBYT 0 1 90 c2 More Follows:;
+		CEQU 0 1 00 14 No more objects are available;
+		CLSE 0 0 00 14 Other identification Object are available;
+		DBYT 0 1 90 c2 Next Obj ID:;
+		DBYT 0 2 90 c2 Num of Objs:;
+		while (g[2] > 0)
+		{
+			LABL 0 0 0 b7 Object;
+			DBYT 0 0 90 c2 Object ID:;
+			DBYT 0 1 90 c2 Object Length:;
+			CHR# 0 1 90 c2 Object Value:;
+			LABL 0 0 0 b8;
+			g[1] -= 1;
+		}
+	}
+	TRTS;
+
+// -----------------------------------------------------------
+void Modbus::Commands::125::REQ;
+void Modbus::Commands::125::RES;
+// -----------------------------------------------------------
+void Modbus::Commands::126::REQ;
+void Modbus::Commands::126::RES;
+// -----------------------------------------------------------
+void Modbus::Commands::127::REQ;
+void Modbus::Commands::127::RES;
+
+
+// -----------------------------------------------------------
+//	Error Codes
+//		error codes are function code + 0x80
+
+void Modbus::Commands::Error;
+	DBYT 0 1 90 c2 Exception Code:;
+	CST# 0 1 00 14 Modbus::Commands::Error::List;
+	TRTS;
+
+str# Modbus::Commands::Error::List;
+	 01	| Illegal function;
+	 02	| Illegal data address;
+	 03	| Illegal data value;
+	 04	| Server failure;
+	 05	| Acknowledge;
+	 06	| Server busy;
+	 08	| Memory parity error;
+	 10	| Gateway path unavailable;
+	 11	| Gateway target device failed to respond;
+	255	| Extended exception response;
+
+
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+//---------------------------------------------------------------------------
+
+// si: all of the stuff below is TO BE DONE...
+
+
+// -----------------------------------------------------------
+// ASCII Framing
+// starts with a colon [0x3a] ... ends with 0x0d 0x0a
+// -----------------------------------------------------------
+
+void Modbus::ASCII::Main;
+	LABL 0 0 00 b1 Modbus - ASCII;
+	HBYT 0 1 90 c2 Header:;
+	CHR# 2 0 90 c2 Slave Address:;
+	CHR# 2 0 90 c2 Function:;
+	//DATA
+	CHR# 2 0 90 c2 LRC Check:;
+	HWRD 0 1 90 c2 End Marker:;			// 0x0d0a
+
+// -----------------------------------------------------------
+// RTU Framing
+// si: ummm, TBD
+
+void Modbus::RTU::Main;
+	LABL 0 0 0 b1 Modbus - RTU;
+	//Header:;
+	HBYT 0 1 90 c2 Slave Address:;
+	CEQU 0 1 00 14 Broadcast Query;
+	if (g[1] > 247) 
+	{
+		LABL 0 0 0 14 Invalid Address;
+	}
+	HBYT 0 a 90 c2 Function:;
+	CST# 0 a 00 14 Modbus::RTU::str::Func_Names;
+	//TSB# 0 a 00 00 Modbus::RTU::str::Func;
+	//DATA
+	HWRD 0 1 90 c2 CRC Check:;
+	//End Marker:;
+	TRTS;
+
+/*
+str# Modbus::RTU::str::Func;
+	0x01 | Modbus::RTU::Func::01;
+	0x02 | Modbus::RTU::Func::02;
+	0x03 | Modbus::RTU::Func::03;
+	0x04 | Modbus::RTU::Func::04;
+	0x05 | Modbus::RTU::Func::05;
+	0x06 | Modbus::RTU::Func::06;
+	0x08 | Modbus::RTU::Func::08;
+	0x0b | Modbus::RTU::Func::0b;
+	0x0c | Modbus::RTU::Func::0c;
+	0x0f | Modbus::RTU::Func::0f;
+	0x10 | Modbus::RTU::Func::10;
+	0x11 | Modbus::RTU::Func::11;
+*/
+
+str# Modbus::RTU::str::Func_Names;
+	0x01 | Read Coil Status;
+	0x02 | Read Input Status;
+	0x03 | Read Holding Register;
+	0x04 | Read Input Register;
+	0x05 | Force Single Coil;
+	0x06 | Preset Single Register;
+	0x08 | Diagnostics;
+	0x0b | Fetch Communication Event Counter;
+	0x0c | Fetch Communication Event Log;
+	0x0f | Force Multiple Coils;
+	0x10 | Preset Multiple Registers;
+	0x11 | Report Slave ID;
+
+str# Modbus::RTU::str::Func::Diagnostics;
+	0x00 | Return Query Data;
+	0x01 | Restart Communications Option;
+	0x04 | Force Listen Only Mode;
+	0x0a | Clear Counters and Diagnostic Register;
+	0x0b | Return Bus Message Count;
+	0x0c | Return Bus Communication Error Count;
+	0x0d | Return Bus Exception Error Count;
+	0x0e | Return Slave Message Count;
+	0x0f | Return Slave No Response Count;
+	0x11 | Return Slave Busy Count;
+	0x12 | Return Bus Character Overrun Count;
+
+
+// -----------------------------------------------------------
+
+void Modbus::RTU::Func::01Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::02Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::03Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::04Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::05Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::06Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	HBYT 0 1 90 c2 # of Registers Hi:;
+	HBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::08Q;
+	HBYT 0 1 90 c2 Subfunction Hi:;
+	HBYT 0 1 90 c2 Subfunction Lo:;
+	HBYT 0 1 90 c2 Data Hi:;
+	HBYT 0 1 90 c2 Data Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::0bQ;
+	// none
+
+void Modbus::RTU::Func::0cQ;
+	// none
+
+void Modbus::RTU::Func::0fQ;
+	HBYT 0 1 90 c2 Coil Address Hi:;
+	HBYT 0 1 90 c2 Coil Address Lo:;
+	DBYT 0 1 90 c2 Quantity of Coils Hi:;
+	DBYT 0 1 90 c2 Quantity of Coils Lo:;
+	DBYT 0 2 90 c2 Byte Count:;
+	while (g[2] > 1)
+	{
+		HBYT 0 1 90 c2 Force Data Hi:;
+		HBYT 0 1 90 c2 Force Data Lo:;
+		g[2] -= 2;
+	}
+	TRTS;
+
+void Modbus::RTU::Func::10Q;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	DBYT 0 1 90 c2 # of Registers Hi:;
+	DBYT 0 1 90 c2 # of Registers Lo:;
+	DBYT 0 2 90 c2 Byte Count:;
+	while (g[2] > 1)
+	{
+		HBYT 0 1 90 c2 Data Hi:;
+		HBYT 0 1 90 c2 Data Lo:;
+		g[2] -= 2;
+	}
+	
+void Modbus::RTU::Func::11Q;
+	// none
+
+
+// -----------------------------------------------------------
+//  Responses...
+
+void Modbus::RTU::Func::01R;
+	DBYT 0 2 90 c2 Byte Count:;		// si: expects 5
+	if (g[2] != 5)
+	{
+		DUMP 0 2 90 c2 Data:;
+	}
+	if (g[2] == 5)
+	{
+		HBYT 0 1 90 c2 Data 1:;
+		HBYT 0 1 90 c2 Data 2:;
+		HBYT 0 1 90 c2 Data 3:;
+		HBYT 0 1 90 c2 Data 4:;
+		HBYT 0 1 90 c2 Data 5:;
+	}
+	TRTS;
+
+void Modbus::RTU::Func::02R;
+	DBYT 0 2 90 c2 Byte Count:;		// si: expects 3
+	if (g[2] != 3)
+	{
+		DUMP 0 2 90 c2 Data:;
+	}
+	if (g[2] == 3)
+	{
+		HBYT 0 1 90 c2 Data 1:;
+		HBYT 0 1 90 c2 Data 2:;
+		HBYT 0 1 90 c2 Data 3:;
+	}
+	TRTS;
+
+void Modbus::RTU::Func::03R;
+	DBYT 0 2 90 c2 Byte Count:;
+	while (g[2] > 1)
+	{
+		HBYT 0 1 90 c2 Data Hi:;
+		HBYT 0 1 90 c2 Data Lo:;
+		g[2] -= 2;
+	}
+	TRTS;
+
+void Modbus::RTU::Func::04R;
+	DBYT 0 2 90 c2 Byte Count:;
+	while (g[2] > 1)
+	{
+		HBYT 0 1 90 c2 Data Hi:;
+		HBYT 0 1 90 c2 Data Lo:;
+		g[2] -= 2;
+	}
+	TRTS;
+
+void Modbus::RTU::Func::05R;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	DBYT 0 1 90 c2 # of Registers Hi:;
+	DBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::06R;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	DBYT 0 1 90 c2 # of Registers Hi:;
+	DBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::08R;
+	HBYT 0 1 90 c2 Subfunction Hi:;
+	HBYT 0 1 90 c2 Subfunction Lo:;
+	HBYT 0 1 90 c2 Data Hi:;
+	HBYT 0 1 90 c2 Data Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::0bR;
+	HBYT 0 1 90 c2 Status Hi:;
+	HBYT 0 1 90 c2 Status Lo:;
+	HBYT 0 1 90 c2 Event Count Hi:;
+	HBYT 0 1 90 c2 Event Count Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::0cR;						// SI: ?!?
+	HBYT 0 1 90 c2 Status Hi:;
+	HBYT 0 1 90 c2 Status Lo:;
+	DBYT 0 1 90 c2 Event Count Hi:;
+	DBYT 0 1 90 c2 Event Count Lo:;
+	DBYT 0 1 90 c2 Message Count Hi:;
+	DBYT 0 1 90 c2 Message Count Lo:;
+	HBYT 0 1 90 c2 Event 0:;
+	HBYT 0 1 90 c2 Event 1:;
+	TRTS;
+
+void Modbus::RTU::Func::0fR;
+	HBYT 0 1 90 c2 Coil Address Hi:;
+	HBYT 0 1 90 c2 Coil Address Lo:;
+	HBYT 0 1 90 c2 Quantity of Coils Hi:;
+	HBYT 0 1 90 c2 Quantity of Coils Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::10R;
+	HBYT 0 1 90 c2 Starting Address Hi:;
+	HBYT 0 1 90 c2 Starting Address Lo:;
+	DBYT 0 1 90 c2 # of Registers Hi:;
+	DBYT 0 1 90 c2 # of Registers Lo:;
+	TRTS;
+
+void Modbus::RTU::Func::11R;
+	//Byte Count:;
+	//Slave ID:;
+	//RUN Indicator Status:;
+	//Additional Data:;
+
+
+// -----------------------------------------------------------
+// -----------------------------------------------------------
+
+

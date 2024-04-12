@@ -1,0 +1,297 @@
+// capwap - contains fix for function name collision (TT22199)
+
+str# UDP::Ports_Str;
+	5246 | CAPWAP::Check;
+	
+str# UDP::Ports_Str;	
+	5247 | CAPWAP::Check;
+
+void CAPWAP::Check()
+{
+	// CAPWAP Preamble begins with version and type.
+	// Version must be zero.  Type must be 0 or 1.
+	// So said the spec.
+	// http://tools.ietf.org/html/draft-ietf-capwap-protocol-specification-15
+	// 
+	// 0
+	// 0 1 2 3 4 5 6 7
+	// +-+-+-+-+-+-+-+-+
+	// |Version| Type  |
+	// +-+-+-+-+-+-+-+-+
+	//save the ports
+	g[20] = g[1];
+	g[21] = g[2];
+	
+	l[1] = pb[0];
+	if( l[1] == 0x00 )
+	{
+		CAPWAP::Main();
+	}
+	if( l[1] == 0x01 )
+	{
+		CAPWAP::Main();
+	}
+}
+
+void CAPWAP::Main()
+{	
+	LABL( 0, 0, 0, 0xb1, "CAPWAP" );
+	DBIT( 4, g[1], 0x90, 0xc2, "Version:\V:" );
+	DBIT( 4, g[2], 0x90, 0xc2, "Type:\T:" );
+
+	CST#( 0, g[2], 0, 0x14, CAPWAP::HeaderStr );
+	TSB#( 0, g[2], 0, 0, CAPWAP::HeaderFuncs );
+	
+}
+
+str# CAPWAP::HeaderFuncs;
+	0 | CAPWAP::Header;
+	1 | CAPWAP::DTLSHeader;
+
+str# CAPWAP::HeaderStr;
+	0 | Header;
+	1 | DTLS Header;
+
+str# CAPWAP::WBIDnames;
+	0	|	Reserved;
+	1	|	IEEE 802.11;
+	2	|	Reserved;
+	3	|	EPCGlobal;
+
+void CAPWAP::Header()
+{
+	DBIT( 5, g[3], 0x90, 0xc2, "Header Length:\HLEN" );
+	DBIT( 5, g[4], 0x90, 0xc2, "Radio ID Number:\RID:" );
+	BGLB( 0, g[4], 0x04, 0x14, " " );
+	DBIT( 5, g[5], 0x90, 0xc2, "Wireless Binding ID:\WBID:" );
+		CST#( 0, g[5], 0, 0x14, CAPWAP::WBIDnames );
+	DBIT( 1, g[6], 0x90, 0xc2, "Frame Type Bit:\T:" );
+		CEQU( 0, g[6], 0, 0x14, "IEEE 802.3 Frame" );
+		CEQU( 1, g[6], 0, 0x14, "native frame format of " );
+		if(g[6] == 1)
+		{
+			CST#( 0, g[5], 0, 0x04, CAPWAP::WBIDnames );
+		}
+	DBIT( 1, g[7], 0x90, 0xc2, "Fragment Bit:\F:" );
+		CEQU( 0, g[7], 0, 0x14, "not fragmented" );
+		CEQU( 1, g[7], 0, 0x14, "fragmented" );
+	DBIT( 1, g[8], 0x90, 0xc2, "Last Fragment Bit:\L:" );
+		CEQU( 0, g[8], 0, 0x14, "not the last fragment" );
+		CEQU( 1, g[8], 0, 0x14, "the last fragment" );
+	DBIT( 1, g[9], 0x90, 0xc2, "Wireless Info Bit:\W:" );
+		CEQU( 0, g[9], 0, 0x14, "the optional Wireless Specific Information field is not present" );
+		CEQU( 1, g[9], 0, 0x14, "the optional Wireless Specific Information field is present" );
+	DBIT( 1, g[10], 0x90, 0xc2, "Radio MAC Bit:\M:" );
+		CEQU( 0, g[10], 0, 0x14, "the Radio MAC Address optional header is not present" );
+		CEQU( 1, g[10], 0, 0x14, "the Radio MAC Address optional header is present" );
+	DBIT( 1, g[11], 0x90, 0xc2, "Keep-alive Bit:\K:" );	
+		CEQU( 0, g[11], 0, 0x14, "the packet is a not Data Channel Keep-Alive packet" );
+		CEQU( 1, g[11], 0, 0x14, "the packet is a Data Channel Keep-Alive packet" );
+	DBIT( 3, g[12], 0x90, 0xc2, "Reserved Flags:\Flags:" );
+	DWRD( 1, g[13], 0x90, 0xc2, "Fragment ID:\FI:" );
+	DBIT( 13, g[14], 0x90, 0xc2, "Fragment Offset:\FO:" );
+	DBIT( 3, g[24], 0x90, 0xc2, "Reserved:\?:" );
+	//Radio MAC Address
+	if (g[10] == 1)
+	{
+		l[1] = g[16];
+		LABL( 0, 0, 0, 0xb7, "Radio MAC Address" );
+		DBYT( 0, g[1], 0x90, 0xc2, "Length:" );
+		DUMP( 13, g[15], 0x90, 0xc2, "MAC Address:" );
+		LABL( 0, 0, 0, 0xb8 );
+		l[2] = g[16];
+		l[1] -= l[2];
+		// l[1] = g[1];
+		l[1] %= 4;
+		l[2] = 4;
+		l[2] -= l[1];
+		DUMP( 0, l[2], 0x90, 0xc2, "Padding:" );
+	}
+	//Wireless Specific Information field
+	if (g[9] == 1)
+	{
+		l[1] = g[16];
+		LABL( 0, 0, 0, 0xb7, "Wireless Specification Information" );
+		DBYT( 0, g[1], 0x90, 0xc2, "Length:" );
+		//DBYT( 0, g[1], 0x90, 0xc2, "Wireless Data:" );
+		DBYT( 0, 0, 0x90, 0xc2, "802.11 RSSI (dBm):" );
+		DBYT( 0, 0, 0x90, 0xc2, "802.11 SNR (dB):" );
+		DWRD( 0, 0, 0x90, 0xc2, "802.11 Data Rate (Mbps):" );
+		//BWRD( 0, 0, 0x90, 0xc2, "WLAN ID bitmap:" );
+		//DWRD( 0, 0, 0x90, 0xc2, "Reserved" );
+		l[2] = g[16];
+		l[1] -= l[2];
+		// l[1] = g[1];
+		l[1] %= 4;
+		l[2] = 4;
+		l[2] -= l[1];
+		DUMP( 0, l[2], 0x90, 0xc2, "Padding:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	l[1] = 0;
+	
+	//clear out g[0xd] or the 802_11 functions will not work
+	g[0xd] = 0;
+			//DGLB( 0, g[6], 0x90, 0xc2, "Reserved" );
+			//DGLB( 0, g[5], 0x90, 0xc2, "Reserved" );
+
+	// keep-alive is off
+	if (g[11] == 0)
+	{
+		if (g[6] == 0)
+		{
+			l[1] = 1;
+			Ether::Branching();
+		}
+		// USE WBID
+		if (g[6] == 1)
+		{
+			if (g[5] == 1)
+			{
+				l[1] = 1;
+				//INCR(6);
+				CAPWAP::802_11();
+			}
+		}
+	}
+	
+	// keep-alive is on	
+	if (g[11] == 1)
+	{
+		DWRD 40000000 45 90 c2 Message Element Length:;
+		DUMP( 0, l[5], 0x90, 0xc2, "Message Element Data:" );
+	}
+	
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb1, "CAPWAP Payload" );
+		DUMP( 0, g[16], 0x90, 0xc2, "Data:" );
+	}
+}
+
+void CAPWAP::802_11()
+{
+	LABL 0 0 0 b1 802.11 MAC Header;
+	GBIT 4 e;
+	GBIT 6 6;
+	ANDG 3 6;
+	MULG 10 6;
+	GBIT 4 2;
+	ADDG 2 86;
+	INCR(1);
+	DBIT 20000002 0 90 c2 Version:;
+	BBIT 20000002 a 90 c2 Type:;
+	CST# ffffffff a 0 14 802_11::Type;
+
+	BBIT 20000004 6 90 c2 Subtype:;
+
+	CST# ffffffff 6 0 14 802_11::Subtype;
+
+	DECR(2);
+	
+	BBYT 0 7 90 b9 Frame Control Flags:;
+	 CBIT 7 7 0 d4 1... .... Frames Must Be Strictly Ordered;
+	 CLSE 0 0 0 d4 0... .... Non-strict order;
+	 CBIT 6 7 0 d4 .1.. .... Protected Frame;
+	 CLSE 0 0 0 d4 .0.. .... Non-Protected Frame;
+	 CBIT 5 7 0 d4 ..1. .... More Data;
+	 CLSE 0 0 0 d4 ..0. .... No More Data;
+	 CBIT 4 7 0 d4 ...1 .... Power Management - power save mode;
+	 CLSE 0 0 0 d4 ...0 .... Power Management - active mode;
+	 CBIT 3 7 0 d4 .... 1... This is a Re-Transmission;
+	 CLSE 0 0 0 d4 .... 0... This is not a Re-Transmission;
+	 CBIT 2 7 0 d4 .... .1.. More Fragments to Follow;
+	 CLSE 0 0 0 d4 .... .0.. Last or Unfragmented Frame;
+	 CBIT 1 7 0 d4 .... ..1. Exit from the Distribution System;
+	 CLSE 0 0 0 d4 .... ..0. Not an Exit from the Distribution System;
+	 CBIT 0 7 0 d4 .... ...1 To the Distribution System;
+	 CLSE 0 0 0 d4 .... ...0 Not to the Distribution System;
+	LABL 0 0 0 b8;
+	
+	INCR(1);
+
+	TEQU 2 a 0 0 CAPWAP::802_11::Data;
+	TEQU 1 a 0 0 802_11::Control;
+	TEQU 0 a 0 0 802_11::Mgmt;
+}
+	
+void CAPWAP::802_11::Data()
+{
+	DWRD 40000000 0 90 c2 Duration:;
+	LABL 0 0 0 14 Microseconds;
+
+	MOVE 7 88;
+
+	ANDG 3 7;
+	g[c] = g[7];
+	TEQU 0 7 0 0 802_11::Data IBSS;
+	TEQU 1 7 0 0 CAPWAP::802_11::Data To the AP;
+	TEQU 2 7 0 0 CAPWAP::802_11::Data From the AP;
+	TEQU 3 7 0 0 CAPWAP::802_11::Data Wireless DS;
+}
+
+void CAPWAP::802_11::Data To the AP()
+{
+	ETHR 0 0 90 c2 BSSID:;
+	ETHR 0 0 90 c2 Source:;
+	ETHR 0 0 90 c2 Destination:;
+	CAPWAP::802_11::Sequence Control;
+	TGTE 0 10 0 0 RETURN;
+	CAPWAP::FindAAAA();
+	802_11::Data Payload;
+}
+
+
+void CAPWAP::802_11::Data From the AP()
+{
+	ETHR 0 0 90 c2 Destination:;
+	ETHR 0 0 90 c2 BSSID:;
+	ETHR 0 0 90 c2 Source:;
+	CAPWAP::802_11::Sequence Control;
+	TGTE 0 10 0 0 RETURN;
+	CAPWAP::FindAAAA();
+	802_11::Data Payload;
+}
+
+void CAPWAP::802_11::Data Wireless DS()
+{
+	ETHR 0 0 90 c2 Receiver:;
+	ETHR 0 0 90 c2 Transmitter:;
+	ETHR 0 0 90 c2 Destination:;
+	CAPWAP::802_11::Sequence Control;
+	TGTE 0 10 0 0 RETURN;
+	ETHR 0 0 90 c2 Source:;
+	CAPWAP::FindAAAA();
+	802_11::Data Payload;
+}
+
+
+void CAPWAP::802_11::Sequence Control()
+{
+	DBIT 4000000C 0 90 c2 Seq Number:;
+	DECR 1;
+ 
+	DBIT 20000004 d 90 c2 Frag Number:;
+	INCR 2;
+	
+	// [CBB] Clear this out or we will not decode the next layer
+	g[0xd] = 0;
+}
+
+void CAPWAP::FindAAAA()
+{
+	l[1] = pw[0];
+	while (l[1] != 0xaaaa)
+	{
+		INCR(1);
+		l[1] = pw[0];
+	}
+}
+
+void CAPWAP::DTLSHeader()
+{
+	DUMP( 0, 3, 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xb1, "CAPWAP DTLS Header" );
+	
+
+}

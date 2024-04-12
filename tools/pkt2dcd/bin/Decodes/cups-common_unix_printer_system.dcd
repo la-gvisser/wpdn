@@ -1,0 +1,286 @@
+// CUPS - COmmon UNIX Printing System
+// port 631
+//	this is what the pkt looks like:
+//		type SP state SP uri SP "location" SP "info" SP "make-and-model" NL
+//		http://www.cups.org/idd.html
+
+
+// ----------------------------------------------------
+//	main
+
+void CUPS;
+	LABL 0 0 0 b1 Common UNIX Printing System\CUPS=;
+	CUPS::Converter;
+	HGLB 0 3 90 c9 Type:;
+	 LABL 00 0 0 d4 xxxx xxxx xxxx xx.. .... .... .... .... Reserved;
+	 CBIT 11 3 0 d4 .... .... .... ..1. .... .... .... .... Default printer;
+	 CLSE  0 0 0 d4 .... .... .... ..0. .... .... .... .... Not default printer;
+	 CBIT 10 3 0 d4 .... .... .... ...1 .... .... .... .... Implicit class;
+	 CLSE  0 0 0 d4 .... .... .... ...0 .... .... .... .... Explicit class;
+	 CBIT  f 3 0 d4 .... .... .... .... 1... .... .... .... Can print variable sizes;
+	 CLSE  0 0 0 d4 .... .... .... .... 0... .... .... .... Can not print variable sizes;
+	 CBIT  e 3 0 d4 .... .... .... .... .1.. .... .... .... Can print up to 36x48 inches;
+	 CLSE  0 0 0 d4 .... .... .... .... .0.. .... .... .... Can not print up to 36x48 inches;
+	 CBIT  d 3 0 d4 .... .... .... .... ..1. .... .... .... Can print up to 18x24 inches;
+	 CLSE  0 0 0 d4 .... .... .... .... ..0. .... .... .... Can not print up to 18x24 inches;
+	 CBIT  c 3 0 d4 .... .... .... .... ...1 .... .... .... Can print up to 9x14 inches;
+	 CLSE  0 0 0 d4 .... .... .... .... ...0 .... .... .... Can not print up to 9x14 inches;
+	 CBIT  b 3 0 d4 .... .... .... .... .... 1... .... .... Can sort;
+	 CLSE  0 0 0 d4 .... .... .... .... .... 0... .... .... Can not sort;
+	 CBIT  a 3 0 d4 .... .... .... .... .... .1.. .... .... Can bind;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .0.. .... .... Can not bind;
+	 CBIT  9 3 0 d4 .... .... .... .... .... ..1. .... .... Can cover;
+	 CLSE  0 0 0 d4 .... .... .... .... .... ..0. .... .... Can not cover;
+	 CBIT  8 3 0 d4 .... .... .... .... .... ...1 .... .... Can punch holes;
+	 CLSE  0 0 0 d4 .... .... .... .... .... ...0 .... .... Can not punch holes;
+	 CBIT  7 3 0 d4 .... .... .... .... .... .... 1... .... Can do fast collating;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... 0... .... Can not do fast collating;
+	 CBIT  6 3 0 d4 .... .... .... .... .... .... .1.. .... Can do fast copies;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... .0.. .... Can not do fast copies;
+	 CBIT  5 3 0 d4 .... .... .... .... .... .... ..1. .... Can staple;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... ..0. .... Can not staple;
+	 CBIT  4 3 0 d4 .... .... .... .... .... .... ...1 .... Can duplex;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... ...0 .... Can not duplex;
+	 CBIT  3 3 0 d4 .... .... .... .... .... .... .... 1... Can print color;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... .... 0... Can not print color;
+	 CBIT  2 3 0 d4 .... .... .... .... .... .... .... .1.. Can print B;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... .... .0.. Can not print B;
+	 CBIT  1 3 0 d4 .... .... .... .... .... .... .... ..1. Remote;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... .... ..0. Local;
+	 CBIT  0 3 0 d4 .... .... .... .... .... .... .... ...1 Class;
+	 CLSE  0 0 0 d4 .... .... .... .... .... .... .... ...0 Printer;
+	LABL 0 0 0 c8;
+	INCR 1;							//si: go past the space
+	
+	g[1] = pb[0];
+	CUPS::AtoH;
+	CHR# 2 0 90 c2 State:;			//si: include the space
+	CST# 0 1 00 14 CUPS::State_List;
+
+	GSTR 20000020 1;
+	g[1] += 1;
+	CHR# 0 1 90 c2 URI:;
+	
+	INCR 1;
+	CUPS::Find_Quote;
+	DECR 1;
+	g[2] += 3;
+	CHR# 0 2 90 c2 Location:;
+	
+	INCR 1;
+	CUPS::Find_Quote;
+	DECR 1;
+	g[2] += 3;
+	CHR# 0 2 90 c2 Information:;
+	
+	INCR 1;
+	CUPS::Find_Quote;
+	DECR 1;
+	g[2] += 2;
+	CHR# 0 2 90 c2 Make and Model:;
+	
+	INCR 1;							//si: end marker
+	
+	TRTS;
+
+// ----------------------------------------------------
+
+//	100000		= 1048576
+//	10000		= 65536
+//	1000		= 4096
+//	100			= 256
+//	10			= 16
+//	1			= 1
+
+
+void CUPS::Converter;
+	g[1] = pb[0];
+	g[2] = 0;
+	while (g[1] != 0x20)
+	{
+		g[2] += 1;
+		INCR 1;
+		g[1] = pb[0];
+	}
+	//DGLB 0 2 90 C2 G[2]:;
+	DECR 0 2;
+	g[1] = 0;
+	g[3] = 0;
+	
+	while (g[2] > 0)
+	{
+		g[1] = pb[0];
+		CUPS::AtoH;
+		if (g[2] == 6)
+		{
+			g[1] *= 1048576;
+		}
+		if (g[2] == 5)
+		{
+			g[1] *= 65536;
+		}
+		if (g[2] == 4)
+		{
+			g[1] *= 4096;
+		}
+		if (g[2] == 3)
+		{
+			g[1] *= 256;
+		}
+		if (g[2] == 2)
+		{
+			g[1] *= 16;
+		}
+		if (g[2] == 1)
+		{
+			g[1] *= 1;
+		}
+		g[3] += g[1];
+		//HGLB 0 1 90 C2 G[1]:;
+		//HGLB 0 3 90 C2 G[3]:;
+		g[2] -= 1;
+		INCR 1;
+	}
+	TRTS;
+
+
+// ----------------------------------------------------
+
+void CUPS::AtoH;
+	if (g[1] == 0x30)
+	{
+		g[1] = 0;
+		TRTS;
+	}
+	if (g[1] == 0x31)
+	{
+		g[1] = 1;
+		TRTS;
+	}
+	if (g[1] == 0x32)
+	{
+		g[1] = 2;
+		TRTS;
+	}
+	if (g[1] == 0x33)
+	{
+		g[1] = 3;
+		TRTS;
+	}
+	if (g[1] == 0x34)
+	{
+		g[1] = 4;
+		TRTS;
+	}
+	if (g[1] == 0x35)
+	{
+		g[1] = 5;
+		TRTS;
+	}
+	if (g[1] == 0x36)
+	{
+		g[1] = 6;
+		TRTS;
+	}
+	if (g[1] == 0x37)
+	{
+		g[1] = 7;
+		TRTS;
+	}
+	if (g[1] == 0x38)
+	{
+		g[1] = 8;
+		TRTS;
+	}
+	if (g[1] == 0x39)
+	{
+		g[1] = 9;
+		TRTS;
+	}
+	if (g[1] == 0x61)
+	{
+		g[1] = 0xa;
+		TRTS;
+	}
+	if (g[1] == 0x62)
+	{
+		g[1] = 0xb;
+		TRTS;
+	}
+	if (g[1] == 0x63)
+	{
+		g[1] = 0xc;
+		TRTS;
+	}
+	if (g[1] == 0x64)
+	{
+		g[1] = 0xd;
+		TRTS;
+	}
+	if (g[1] == 0x65)
+	{
+		g[1] = 0xe;
+		TRTS;
+	}
+	if (g[1] == 0x66)
+	{
+		g[1] = 0xf;
+		TRTS;
+	}	
+	if (g[1] == 0x41)
+	{
+		g[1] = 0xA;
+		TRTS;
+	}
+	if (g[1] == 0x42)
+	{
+		g[1] = 0xB;
+		TRTS;
+	}
+	if (g[1] == 0x43)
+	{
+		g[1] = 0xC;
+		TRTS;
+	}
+	if (g[1] == 0x44)
+	{
+		g[1] = 0xD;
+		TRTS;
+	}
+	if (g[1] == 0x45)
+	{
+		g[1] = 0xE;
+		TRTS;
+	}
+	if (g[1] == 0x46)
+	{
+		g[1] = 0xF;
+		TRTS;
+	}
+	TRTS;
+
+// ----------------------------------------------------
+
+void CUPS::Find_Quote;
+	g[1] = 0;
+	g[2] = 0;
+	g[1] = pb[0];
+	while (g[1] != 0x22)
+	{
+		g[2] += 1;
+		INCR 1;
+		g[1] = pb[0];
+	}
+	DECR 0 2;
+	TRTS;
+
+
+// ----------------------------------------------------
+
+str# CUPS::State_List;
+	3 | idle;
+	4 | processing;
+	5 | stopped;
+
+
+

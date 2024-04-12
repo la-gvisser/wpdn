@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CLayerUDP Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CLayerUDP Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        The CLayerUDP provides access to UDP layer properties.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px; margin-bottom:0px">
+        class CLayerUDP
+    </p>
+    <p class="codeG" style="margin-left:50px; margin-top:0px; margin-bottom:0px">
+        :&nbsp;&nbsp;&nbsp;public CLayer
+    </p>
+
+    <!-- Class Member Overview -->
+    <!-- Constructor Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2 class="breakNone">Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerUDP::CLayerUDP">CLayerUDP</a>
+            </td>
+            <td>
+                Constructs a CLayerUDP object.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Member Functions Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2 class="breakNone">Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerUDP::GetDestination">GetDestination</a>
+            </td>
+            <td>
+                Returns the destination UDP port.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerUDP::GetHeader">GetHeader</a>
+            </td>
+            <td>
+                Returns the UDP header as an object.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerUDP::GetPayloadLength">GetPayloadLength</a>
+            </td>
+            <td>
+                Returns the number of bytes in the payload.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerUDP::GetSource">GetSource</a>
+            </td>
+            <td>
+                Returns the source UDP port.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsNotValid</a>
+            </td>
+            <td>
+                Returns true if this object is not valid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayerIP::IsValid">IsValid</a>
+            </td>
+            <td>
+                Returns true if this object is valid.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CLayerUDP Public Member Functions</h2>
+
+    <!-- method details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CLayerUDP::CLayerUDP"></a>CLayerUDP::CLayerUDP</h3>
+    <p class="onlyP">
+        Constructs a CLayerUDP object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CLayerUDP();</td>
+        </tr>
+        <tr>
+            <td colspan="3">CLayerUDP(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket*</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inHeader</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet that this layer belongs to.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inType</em></dt>
+        <dd>The layer type.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inHeader</em></dt>
+        <dd>The header of the layer.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inData</em></dt>
+        <dd>The payload or data of the layer.</dd>
+    </dl>
+
+    <!-- GetDestination details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerUDP::GetDestination"></a>CLayerUDP::GetDestination
+    </h3>
+    <p class="onlyP">
+        Get the destination UDP port.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetDestination() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The destination UDP port.
+    </p>
+
+    <!-- GetHeader details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerUDP::GetHeader"></a>CLayerUDP::GetHeader
+    </h3>
+    <p class="onlyP">
+        Get the layer's header as an CUdpHeader.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                const CUdpHeader& GetHeader() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A reference to a CUdpHeader object.
+    </p>
+
+    <!-- GetPayloadLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerUDP::GetPayloadLength"></a>CLayerUDP::GetPayloadLength
+    </h3>
+    <p class="onlyP">
+        Get the length of the payload.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetPayloadLength() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the payload.
+    </p>
+
+    <!-- GetSource details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayerUDP::GetSource"></a>CLayerUDP::GetSource
+    </h3>
+    <p class="onlyP">
+        Get the source UDP Port.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetSource() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The source UDP port.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

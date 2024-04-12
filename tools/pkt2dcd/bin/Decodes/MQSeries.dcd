@@ -1,0 +1,665 @@
+// IBM WebSphere MQSeries
+// documentation: http://publib.boulder.ibm.com/infocenter/wmqv6/v6r0/index.jsp?topic=/com.ibm.mq.csqzak.doc/mqxqh.htm
+
+// g[6] = 1.big / 2.little endian 
+// g[5] = segment type
+
+
+void MQSeries;
+	LABL 0 0 00 b1 IBM WebSphere MQ;
+	GLNG 0 1;
+	if (g[1] != 0x54534820)
+	{
+		LABL 0 0 00 c4 Continuation Data;
+		Display Fields And Lines;
+		TRTS;
+	}
+	MQSeries::TSH;
+	TGTE 0 10 00 00 RETURN;
+	MQSeries::API;
+	TGTE 0 10 00 00 RETURN;
+	MQSeries::MD;
+	GLNG 0 1;
+	TST# 0 1 00 00 MQSeries::DataTypes;
+
+str# MQSeries::DataTypes;
+	0x41495220 | MQSeries::DataType::AIR;
+	0x424f2020 | MQSeries::DataType::BO;
+	0x43494820 | MQSeries::DataType::CIH;
+	0x434e4f20 | MQSeries::DataType::CNO;
+	0x43535020 | MQSeries::DataType::CSP;
+	0x44482020 | MQSeries::DataType::DH;
+	0x444c4820 | MQSeries::DataType::DLH;
+	0x45504820 | MQSeries::DataType::EPH;
+	0x474d4f20 | MQSeries::DataType::GMO;	// tested
+	0x49494820 | MQSeries::DataType::IIH;
+	0x4d442020 | MQSeries::DataType::MD;
+	0x4d444520 | MQSeries::DataType::MDE;
+	0x4f442020 | MQSeries::DataType::OD;
+	0x4f522020 | MQSeries::DataType::OR;
+	0x504d4f20 | MQSeries::DataType::PMO;	// tested
+	0x504d5220 | MQSeries::DataType::PMR;
+	0x52464820 | MQSeries::DataType::RFH;
+	0x52464832 | MQSeries::DataType::RFH2;
+	0x524d4820 | MQSeries::DataType::RMH;
+	0x52522020 | MQSeries::DataType::RR;
+	0x53434f20 | MQSeries::DataType::SCO;
+	0x544d2020 | MQSeries::DataType::TM;
+	0x544d4332 | MQSeries::DataType::TMC2;
+	0x57494820 | MQSeries::DataType::WIH;
+	0x58502020 | MQSeries::DataType::XP;
+	0x58514820 | MQSeries::DataType::XQH;
+
+void MQSeries::API;
+	LABL 0 0 00 b7 API Header;
+	DLNG 0 0 90 c2 Reply Length:;
+	DLNG 0 0 90 c2 Completion Code:;
+	DLNG 0 0 90 c2 Reason Code:;
+	HLNG 0 0 90 c2 Object Handle:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void MQSeries::MD;
+	LABL 0 0 00 b7 Message Descriptor;
+	CHR# 4 0 90 c2 Struct ID:;
+	DLNG 0 0 90 c2 Version:;
+	DLNG 0 0 90 c2 Report:;
+	DLNG 0 0 90 c2 Message Type:;
+	DLNG 80000000 0 90 c2 Expiry:;
+	DLNG 0 0 90 c2 Feedback:;
+	DLNG 0 0 90 c2 Encoding:;
+	DLNG 0 0 90 c2 Character Set:;
+	CHR# 8 0 90 c2 Format:;
+	DLNG 80000000 0 90 c2 Priority:;
+	DLNG 00 0 90 c2 Persistence:;
+	HEX# 18 0 90 c2 Message ID:;
+	HEX# 18 0 90 c2 Correlation ID:;
+	DLNG 00 0 90 c2 Backount Count:;
+	CHR# 30 0 90 c2 ReplyTo Q:;
+	CHR# 30 0 90 c2 ReplyTo Q Mgr:;
+	CHR# 0c 0 90 c2 User ID:;
+	HEX# 20 0 90 c2 Accounting Token:;
+	CHR# 20 0 90 c2 Application ID Data:;
+	DLNG 00 0 90 c2 Put Application Type:;
+	HEX# 1c 0 90 c2 Put Application Name:;
+	CHR# 08 0 90 c2 Put Date:;
+	CHR# 08 0 90 c2 Put Time:;
+	HEX# 04 0 90 c2 Application Orig Data:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::TSH;
+	LABL 0 0 00 b7 Transmission Segment Header;
+ 	CHR# 4 0 90 c2 Struct ID:;
+	DLNG 0 0 90 c2 MQ Segment Length:;
+	DBYT 0 6 90 c2 Byte Order:;
+	CEQU 1 6 00 14 Big Endian;
+	CEQU 2 6 00 14 Little Endian;
+	HBYT 0 5 90 c2 Segment Type:;
+	CST# 0 5 00 14 MQSeries::SegmentType;
+	BBYT 0 1 90 c9 Control Flags:;
+		CBIT 7 1 00 d4 1... .... DLQ Used;
+		CLSE 0 0 00 d4 0... .... DLQ Not Used;
+		CBIT 6 1 00 d4 .1.. .... Request Accepted;
+		CLSE 0 0 00 d4 .0.. .... Request Rejected;
+		CBIT 5 1 00 d4 ..1. .... Last: Set;
+		CLSE 0 0 00 d4 ..0. .... Last: Not Set;
+		CBIT 4 1 00 d4 ...1 .... First: Set;
+		CLSE 0 0 00 d4 ...0 .... First: Not Set;
+		CBIT 3 1 00 d4 .... 1... Close Channel: Set;
+		CLSE 0 0 00 d4 .... 0... Close Channel: Not Set;
+		CBIT 2 1 00 d4 .... .1.. Request Close: Set;
+		CLSE 0 0 00 d4 .... .0.. Request Close: Not Set;
+		CBIT 1 1 00 d4 .... ..1. Error;
+		CLSE 0 0 00 d4 .... ..0. Not an Error;
+		CBIT 0 1 00 d4 .... ...1 Confirm Request;
+		CLSE 0 0 00 d4 .... ...0 Request Not Confirmed;
+		LABL 0 0 00 c8;
+	HBYT 0 0 90 c2 Reserved:;
+	HEX# 8 0 90 c2 LUN of Work ID:;
+	DLNG 0 0 90 c2 Encoding:;
+	DWRD 0 0 90 c2 Character Set:;
+	HWRD 0 0 90 c2 Padding:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// ----------------------------------------------------------------------
+//		Data Types
+
+void MQSeries::DataType::AIR;
+	LABL 00 0 00 b7 Authentication Information Record;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 1 90 c2 Version:;
+	HLNG 00 0 90 c2 Auth Info Type:;
+	CHR# 108 0 90 c2 Auth Info Conn Name:;			// ?? um, is char-ing out that many possible??
+	HLNG 00 0 90 c2 LDAP Username Ptr:;			// ??
+	DLNG 00 0 90 c2 LDAP Username Offset:;
+	DLNG 00 0 90 c2 LDAP Username Len:;
+	CHR# 20 0 90 c2 LDAP Password:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::BO;
+	LABL 00 0 00 b7 Begin Options;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 1 90 c2 Version:;
+	HLNG 00 0 90 c2 Options:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::CIH;
+	LABL 00 0 00 b7 CICS Bridge Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struc Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	DLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	DLNG 00 0 90 c2 Flags:;
+	DLNG 00 0 90 c2 Return Code:;
+	DLNG 00 0 90 c2 Comp Code:;
+	DLNG 00 0 90 c2 Reason:;
+	DLNG 00 0 90 c2 UoW Control:;
+	DLNG 00 0 90 c2 GetWait Interval:;
+	DLNG 00 0 90 c2 Link Type:;
+	DLNG 00 0 90 c2 Output Data Len:;
+	DLNG 00 0 90 c2 Facility Keep Time:;
+	DLNG 00 0 90 c2 ADS Descriptor:;
+	HLNG 00 0 90 c2 Conversational Task:;
+	HLNG 00 0 90 c2 Task End Status:;
+	HEX# 08 0 90 c2 Facility:;
+	HLNG 00 0 90 c2 Function:;
+	HLNG 00 0 90 c2 Abend Code:;
+	CHR# 08 0 90 c2 Authenticator:;
+	HEX# 08 0 90 c2 Reserved1:;
+	CHR# 08 0 90 c2 ReplyTo Format:;
+	HLNG 00 0 90 c2 Remote Sys ID:;
+	HLNG 00 0 90 c2 Remote Trans ID:;
+	CHR# 04 0 90 c2 Transaction ID:;
+	HEX# 04 0 90 c2 Facility Like:;
+	HLNG 00 0 90 c2 Attention ID:;
+	CHR# 04 0 90 c2 Start Code:;
+	CHR# 04 0 90 c2 Cancel Code:;
+	CHR# 04 0 90 c2 Next Transaction ID:;
+	HLNG 00 0 90 c2 Reserved2:;
+	HLNG 00 0 90 c2 Reserved3:;
+	// Only for version 2 and up
+	if (g[4] >= 2)
+	{
+		HLNG 00 0 90 c2 Cursor Position:;
+		HLNG 00 0 90 c2 Error Offset:;
+		HLNG 00 0 90 c2 Input Item:;
+		HLNG 00 0 90 c2 Reserved4:;
+	}
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::CNO;
+	LABL 00 0 00 b7 Connect Options;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Options:;
+	if (g[4] > 1)
+	{
+		HLNG 0 0 90 c2 Client Conn Offset:;
+		//Client Conn Ptr:;			//ergh!?
+	}
+	if (g[4] > 2)
+	{
+		// Conn Tag:;				// 128 byte something
+	}
+	if (g[4] > 3)
+	{
+		//SSL Config Ptr:;
+		//SSL Config Offset:;
+	}
+	if (g[4] > 4)
+	{
+		//Connection ID:;
+		//Security Params Offset:;
+		//Security Params Ptr:;
+	}
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::CSP;
+	LABL 00 0 00 b7 Security Parameters;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Authentication Type:;
+	HLNG 00 0 90 c2 Reserved1:;
+	//HEX# 00 0 90 c2 CSP User ID Ptr:;
+	DLNG 00 0 90 c2 CSP User ID Offset:;
+	DLNG 00 0 90 c2 CSP User ID Length:;
+	HEX# 08 0 90 c2 Reserved2:;
+	//HEX# 00 0 90 c2 CSP Password Ptr:;
+	DLNG 00 0 90 c2 CSP Password Offset:;
+	DLNG 00 0 90 c2 CSP Pasword Length:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::DH;
+	LABL 00 0 00 b7 Distribution Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	HLNG 00 0 90 c2 Put Msg Rec Fields:;
+	HLNG 00 0 90 c2 Recs Present:;
+	HLNG 00 0 90 c2 Object Rec Offset:;
+	HLNG 00 0 90 c2 Put Msg Rec Offset:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::DLH;
+	LABL 00 0 00 b7 Dead Letter Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Reason:;
+	CHR# 30 0 90 c2 Dest Queue Name:;
+	CHR# 30 0 90 c2 Dest Queue Mgr:;
+	HLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Put Applic Type:;
+	CHR# 1c 0 90 c2 Put Applic Name:;
+	CHR# 08 0 90 c2 Put Date:;
+	CHR# 08 0 90 c2 Put Time:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::EPH;
+	LABL 00 0 00 b7 Embedded PCF Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	//PCH Header
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::GMO;
+	LABL 00 0 00 b7 Get Message Options;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 0 90 c2 Version:;
+	HLNG 00 0 90 c2 Options:;
+	DLNG 00 0 90 c2 Wait Interval:;
+	HLNG 00 0 90 c2 Signal 1:;
+	HLNG 00 0 90 c2 Signal 2:;
+	CHR# 30 0 90 c2 Resolved Queue Name:;
+	LABL 00 0 00 b8;
+	if (g[16] >= 4)
+	{
+		MQSeries::DataType::GetPutData;
+	}
+	TRTS;
+
+void MQSeries::DataType::IIH;
+	LABL 00 0 00 b7 IMS Information Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	CHR# 08 0 90 c2 LTerminal Override:;
+	CHR# 08 0 90 c2 MFS Map Name:;
+	CHR# 08 0 90 c2 ReplyTo Format:;
+	HBYT 00 0 90 c2 Authenticator:;
+	HEX# 10 0 90 c2 Trans Instance ID:;
+	HBYT 00 0 90 c2 Transaction State:;
+	HBYT 00 0 90 c2 Commit Mode:;
+	HBYT 00 0 90 c2 Security Scope:;
+	HBYT 00 0 90 c2 Reserved:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::MD;
+	LABL 00 0 00 b7 Message Descriptor;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Report:;
+	HLNG 00 0 90 c2 Message Type:;
+	DLNG 00 0 90 c2 Message Lifetime:;
+	HLNG 00 0 90 c2 Feedback:;
+	HLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Msg Priority:;
+	HLNG 00 0 90 c2 Msg Persistence:;
+	HEX# 18 0 90 c2 Message ID:;
+	HEX# 18 0 90 c2 Correlation ID:;
+	DLNG 00 0 90 c2 Backout Counter:;
+	CHR# 30 0 90 c2 ReplyTo Queue:;
+	CHR# 30 0 90 c2 ReplyTo Queue Mgr:;
+	CHR# 0c 0 90 c2 User Identifier:;
+	HEX# 20 0 90 c2 Accounting Token:;
+	CHR# 20 0 90 c2 Appl Identity Data:;
+	HLNG 00 0 90 c2 Put Appl Type:;
+	CHR# 1c 0 90 c2 Put Appl Name:;
+	CHR# 08 0 90 c2 Put Date:;
+	CHR# 08 0 90 c2 Put Time:;
+	CHR# 04 0 90 c2 Appl Origin Data:;
+	HEX# 18 0 90 c2 Group ID:;
+	DLNG 00 0 90 c2 Msg Seq Number:;
+	DLNG 00 0 90 c2 Offset:;
+	HLNG 00 0 90 c2 Msg Flags:;
+	DLNG 00 0 90 c2 Orig Length:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::MDE;
+	LABL 00 0 00 b7 Message Descriptor Extension;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	HEX# 18 0 90 c2 Group ID:;
+	DLNG 00 0 90 c2 MSg Seq Num:;
+	DLNG 00 0 90 c2 Offset:;
+	HLNG 00 0 90 c2 Msg Flags:;
+	DLNG 00 0 90 c2 Orig Length:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::OD;
+	LABL 00 0 00 b7 Object Descriptor;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Object Type:;
+	CHR# 30 0 90 c2 Object Name:;
+	CHR# 30 0 90 c2 Object Q Mgr Name:;
+	CHR# 30 0 90 c2 Dynamic Q Name:;
+	CHR# 0c 0 90 c2 Alternate User ID:;
+	if (g[4] > 1)
+	{
+		DLNG 00 0 90 c2 Recs Present:;
+		DLNG 00 0 90 c2 Known Dest Count:;
+		DLNG 00 0 90 c2 Unknown Dest Count:;
+		DLNG 00 0 90 c2 Invalid Dest Count:;
+		DLNG 00 0 90 c2 Object Rec Offset:;
+		DLNG 00 0 90 c2 Response Rec Offset:;
+		//Object Rec Ptr:;
+		//Response Rec Ptr:;
+	}
+	if (g[4] > 2)
+	{
+		CHR# 28 0 90 c2 Alt Security ID:;
+		CHR# 30 0 90 c2 Resolved Q Name:;
+		CHR# 30 0 90 c2 Resolved Q Mgr Name:;
+	}
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::OR;
+	LABL 00 0 00 b7 Object Record;
+	CHR# 04 0 90 c2 Struct ID:;			// ???
+	CHR# 30 0 90 c2 Object Name:;
+	CHR# 30 0 90 c2 Object Q Mgr Name:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::PMO;
+	LABL 00 0 00 b7 Put Message Options;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Options:;
+	DLNG 80000000 0 90 c2 Timeout:;
+	HLNG 00 0 90 c2 Context:;
+	DLNG 00 0 90 c2 Known Dest Count:;
+	DLNG 00 0 90 c2 UnKnown Dest Count:;
+	DLNG 00 0 90 c2 Invalid Dest Count:;
+	CHR# 30 0 90 c2 Resolved Queue Name:;
+	CHR# 30 0 90 c2 Resolved QMgr Name:;
+	// The rest of these fields are ignored if less than version 2
+	if (g[4] > 1)
+	{
+		DLNG 00 0 90 c2 Recs Present:;
+		DLNG 00 0 90 c2 Put Msgs Rec Fields:;		// these are flags
+		//MQPMRF_MSG_ID				Message-identifier field is present. 
+		//MQPMRF_CORREL_ID			Correlation-identifier field is present. 
+		//MQPMRF_GROUP_ID				Group-identifier field is present. 
+		//MQPMRF_FEEDBACK				Feedback field is present. 
+		//MQPMRF_ACCOUNTING_TOKEN		Accounting-token field is present.
+		//MQPMRF_NONE
+		DLNG 00 0 90 c2 Put Msg Rec Offset:;
+		DLNG 00 0 90 c2 Rsp Rec Offset:;
+		//Put Msgs Rec Ptr:;		??
+		//Rsp Rec Ptr:;				??
+	}
+	LABL 00 0 00 b8;
+	if (g[16] >= 4)
+	{
+		MQSeries::DataType::GetPutData;
+	}
+	TRTS;
+
+// this is for GMO & PMO
+void MQSeries::DataType::GetPutData;
+	LABL 00 0 00 b7 MQPut/MQGet;
+	DLNG 00 0 90 c2 Data Length:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::PMR;
+	LABL 00 0 00 b7 Put Message Record;
+	CHR# 18 0 90 c2 Message ID:;
+	CHR# 18 0 90 c2 Correlation ID:;
+	CHR# 18 0 90 c2 Gropu ID:;
+	HLNG 00 0 90 c2 Feedback:;
+	HEX# 20 0 90 c2 Accounting Token:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::RFH;
+	LABL 00 0 00 b7 Rules and Formatting Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::RFH2;
+	LABL 00 0 00 b7 Rules and Formatting Header 2;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	HLNG 00 0 90 c2 Name Value CCSID:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::RMH;
+	LABL 00 0 00 b7 Reference Message Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	HLNG 00 0 90 c2 Object Type:;
+	CHR# 18 0 90 c2 Object Instance ID:;
+	DLNG 00 0 90 c2 Src Env Length:;
+	DLNG 00 0 90 c2 Src Env Offset:;
+	DLNG 00 0 90 c2 Src Name Length:;
+	DLNG 00 0 90 c2 Src Name Offset:;
+	DLNG 00 0 90 c2 Dest Env Length:;
+	DLNG 00 0 90 c2 Dest Env Offset:;
+	DLNG 00 0 90 c2 Dest Name Length:;
+	DLNG 00 0 90 c2 Dest Name Offset:;
+	DLNG 00 0 90 c2 Data Logical Len:;
+	DLNG 00 0 90 c2 Data Logical Offset:;
+	DLNG 00 0 90 c2 Data Logical Offset2:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::RR;
+	LABL 00 0 00 b7 Response Record;
+	CHR# 04 0 90 c2 Struct ID:;		// ???
+	//DLNG 00 4 90 c2 Version:;
+	HLNG 00 0 90 c2 Completion Code:;
+	HLNG 00 0 90 c2 Reason:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::SCO;
+	LABL 00 0 00 b7 SSL Configuration Options;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	CHR# 100 0 90 c2 Key Repository:;
+	CHR# 100 0 90 c2 Crypto Hardware:;
+	DLNG 00 0 90 c2 Auth Info Rec Count:;
+	DLNG 00 0 90 c2 Auth Info Rec Offset:;
+	//Auth Info Rec Ptr:;		// PMQAIR
+	if (g[4] > 1)
+	{
+		DLNG 00 0 90 c2 Key Reset Count:;
+		HLNG 00 0 90 c2 Fips Required:;
+	}
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::TM;
+	LABL 00 0 00 b7 Trigger Message;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	CHR# 30 0 90 c2 Queue Name:;
+	CHR# 30 0 90 c2 Process Name:;
+	CHR# 40 0 90 c2 Trigger Data:;
+	HLNG 00 0 90 c2 Application Type:;
+	CHR# 100 0 90 c2 Application ID:;
+	CHR# 80 0 90 c2 Environment Data:;
+	CHR# 80 0 90 c2 User Data:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::TMC2;
+	LABL 00 0 00 b7 Trigger Message 2;
+	CHR# 04 0 90 c2 Struct ID:;
+	CHR# 00 4 90 c2 Version:;
+	CHR# 30 0 90 c2 Queue Name:;
+	CHR# 30 0 90 c2 Process Name:;
+	CHR# 40 0 90 c2 Trigger Data:;
+	HLNG 00 0 90 c2 Application Type:;
+	CHR# 100 0 90 c2 Application ID:;
+	CHR# 80 0 90 c2 Environment Data:;
+	CHR# 80 0 90 c2 User Data:;
+	CHR# 30 0 90 c2 Queue Mgr Name:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::WIH;
+	LABL 00 0 00 b7 Work Information Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Struct Length:;
+	DLNG 00 0 90 c2 Encoding:;
+	HLNG 00 0 90 c2 Coded CharSet ID:;
+	CHR# 08 0 90 c2 Format:;
+	HLNG 00 0 90 c2 Flags:;
+	CHR# 20 0 90 c2 Service Name:;
+	CHR# 08 0 90 c2 Service Step:;
+	HEX# 10 0 90 c2 Msg Token:;
+	CHR# 20 0 90 c2 Reserved:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::XP;
+	LABL 00 0 00 b7 Exit Parameter Block;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	DLNG 00 0 90 c2 Exit ID:;
+	DLNG 00 0 90 c2 Exit Reason:;
+	DLNG 00 0 90 c2 Exit Response:;
+	DLNG 00 0 90 c2 Exit Command:;
+	HLNG 00 0 90 c2 Exit Parm Count:;
+	HEX# 10 0 90 c2 Exit User Area:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+void MQSeries::DataType::XQH;
+	LABL 00 0 00 b7 Transmission-Queue Header;
+	CHR# 04 0 90 c2 Struct ID:;
+	DLNG 00 4 90 c2 Version:;
+	CHR# 30 0 90 c2 Remote Queue Name:;
+	CHR# 30 0 90 c2 Remote Queue Mgr Name:;
+	//Msg Desc:;
+	LABL 00 0 00 b8;
+	TRTS;
+
+	
+str# MQSeries::SegmentType;
+0x01	| INITIAL_DATA;
+0x02	| RESYNC_DATA;
+0x03	| RESET_DATA;
+0x04	| MESSAGE_DATA;
+0x05	| STATUS_DATA;
+0x06	| SECURITY_DATA;
+0x07	| PING_DATA;
+0x08	| USERID_DATA;
+0x09	| HEARTBEAT;
+0x81	| MQCONN;
+0x82	| MQDISC;
+0x83	| MQOPEN;
+0x84	| MQCLOSE;
+0x85	| MQGET;
+0x86	| MQPUT;
+0x87	| MQPUT1;
+0x88	| MQSET;
+0x89	| MQINQ;
+0x8A	| MQCMIT;
+0x8B	| MQBACK;
+0x8C	| SPI;
+0x91	| MQCONN_REPLY;
+0x92	| MQDISC_REPLY;
+0x93	| MQOPEN_REPLY;
+0x94	| MQCLOSE_REPLY;
+0x95	| MQGET_REPLY;
+0x96	| MQPUT_REPLY;
+0x97	| MQPUT1_REPLY;
+0x98	| MQSET_REPLY;
+0x99	| MQINQ_REPLY;
+0x9A	| MQCMIT_REPLY;
+0x9B	| MQBACK_REPLY;
+0x9C	| SPI_REPLY;
+0xA1	| XA_START;
+0xA2	| XA_END;
+0xA3	| XA_OPEN;
+0xA4	| XA_CLOSE;
+0xA5	| XA_PREPARE;
+0xA6	| XA_COMMIT;
+0xA7	| XA_ROLLBACK;
+0xA8	| XA_FORGET;
+0xA9	| XA_RECOVER;
+0xAA	| XA_COMPLETE;
+0xB1	| XA_START_REPLY;
+0xB2	| XA_END_REPLY;
+0xB3	| XA_OPEN_REPLY;
+0xB4	| XA_CLOSE_REPLY;
+0xB5	| XA_PREPARE_REPLY;
+0xB6	| XA_COMMIT_REPLY;
+0xB7	| XA_ROLLBACK_REPLY;
+0xB8	| XA_FORGET_REPLY;
+0xB9	| XA_RECOVER_REPLY;
+0xBA	| XA_COMPLETE_REPLY;
+  
+ 

@@ -1,0 +1,1015 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <!-- The title of this configure adapter dialog box can be set to the string specified in a "Title" message to Peek -->
+        <title>Folder Adapter-OE Options</title>
+        <style>
+            body, input, label {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+            }
+
+            .path-label {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline-block;
+                vertical-align: baseline;
+                width: 10em;
+                text-align: right;
+            }
+
+            .path-input {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline;
+                vertical-align: baseline;
+                width: 95%;
+                margin-left: 7px;
+                margin-top: 3px;
+                border: 1px solid;
+            }
+
+            .browse-button {
+                position: absolute;
+                right: 2em;
+            }
+
+            .browse-label {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 10pt;
+                vertical-align: middle;
+            }
+
+            .browse-checkbox {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 10pt;
+                vertical-align: middle;
+            }
+
+            .rate-label {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline-block;
+                vertical-align: baseline;
+                width: 10em;
+                text-align: right;
+            }
+
+            .rate-input {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline;
+                vertical-align: baseline;
+                width: 10em;
+				border: 1px solid;
+            }
+
+            .save-input {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline;
+                vertical-align: baseline;
+                margin-left: 4px;
+                margin-top: 3px;
+                width: 98%;
+				border: 1px solid;
+            }
+
+            .status-input {
+                font-family: verdana,arial,helvetica,sans-serif;
+                font-size: 9pt;
+                display: inline;
+                vertical-align: baseline;
+                width: 35em;
+                border: none;
+				border: 1px solid;
+            }
+        </style>
+        <script type="text/javascript">
+            function xmlGetPreamble(xml) {
+              var begin = xml.indexOf("<?");
+              if (begin == -1) return "";
+
+              var end = xml.indexOf("?>", (begin + 2));
+              if (end == -1) return "";
+
+              return xml.substring(begin, (end + 2));
+            }
+
+            function xmlGetTag(xml) {
+              var begin = xml.indexOf("<");
+              if (begin == -1) return "";
+              begin++;
+
+              var end = xml.indexOf(">", begin);
+              if (end == -1) return "";
+
+              var space = xml.indexOf(" ", begin);
+              if (space > 0 && space < end) end = space;
+
+              return xml.substring(begin, end);
+            }
+
+            function xmlGetAttribute(xml, attrib) {
+                var begin = xml.indexOf(" ");
+                if (begin == -1) return "";
+                begin++;
+
+                var end = xml.indexOf(">");
+                if (end < 0) return "";
+
+                while (begin < end) {
+                    var sep = xml.indexOf("=", begin)
+                    if (sep == -1) return "";
+
+                    var token = xml.substring(begin, sep);
+                    var next = xml.indexOf('"', sep + 2);
+                    if (next == -1) return "";
+                    if (token == attrib) {
+                        // don't include the double-quotes.
+                        return xml.substring(sep + 2, next);
+                    }
+                    begin = next + 2;
+                }
+                return "";
+            }
+
+            function xmlGetValue(xml, tag, opt) {
+                // opt is used to iterate through a list of tags with the same name.
+                // var opt = {"offset" : 0}
+                // var value1 = xmlGetValue(xml, "item", opt)
+                // var value2 = xmlGetValue(xml, "item", opt)
+                var offset = (typeof opt == "undefined") ? 0 : opt["offset"];
+
+                var begin = xml.indexOf("<" + tag + ">", offset);
+                if (begin == -1) {
+                    begin = xml.indexOf("<" + tag + " ", offset);
+                    if (begin == -1) return "";
+                }
+                begin++;
+
+                begin = xml.indexOf(">", begin);
+                if (begin == -1) return "";
+                begin++;
+
+                var tagEnd = "</" + tag;
+                end = xml.indexOf(tagEnd, begin);
+                if (end == -1) return "";
+
+                if (typeof opt != "undefined") opt["offset"] = xml.indexOf(">", end);
+                return xml.substring(begin, end);
+            }
+
+            function xmlGetElement(xml, tag, opt) {
+                var offset = (typeof opt == "undefined") ? 0 : opt["offset"];
+
+                var begin = xml.indexOf("<" + tag + ">", offset);
+                if (begin == -1) {
+                    begin = xml.indexOf("<" + tag + " ", offset);
+                    if (begin == -1) {
+                        if (typeof opt != "undefined") opt["offset"] = -1;
+                        return "";
+                    }
+                }
+
+                var tagEnd = "</" + tag + ">";
+                end = xml.indexOf(tagEnd, begin + 1);
+                if (end == -1) {
+                    if (typeof opt != "undefined") opt["offset"] = -1;
+                    return "";
+                }
+                end += tagEnd.length;
+
+                if (typeof opt != "undefined") opt["offset"] = end;
+                return xml.substring(begin, end);
+            }
+
+            function xmlEscape(xml) {
+                xml = xml.split("&quot;").join("\"");
+                xml = xml.split("&apos;").join("\"");
+                xml = xml.split("&lt;").join("<");
+                xml = xml.split("&gt;").join(">");
+                xml = xml.split("&amp;").join("&");
+                xml = xml.split("&#0009;").join("\t");
+                xml = xml.split("&#x0009;").join("\t");
+                xml = xml.split("&#0010;").join("\n");
+                xml = xml.split("&#x000a;").join("\n");
+                xml = xml.split("&#x000A;").join("\n");
+                xml = xml.split("&#0013;").join("\r");
+                xml = xml.split("&#x000d;").join("\r");
+                xml = xml.split("&#x000D;").join("\r");
+                return xml;
+            }
+        </script>
+        <script type="text/javascript">
+            // Messages from this module to Peek.
+
+            // Sends a message to Peek to display the Remote Browser dialog which
+            // will allow the user to browse the file system of the engine.
+            //
+            // Message Format:
+            //  {
+            //      data: {
+            //          flags: <flags>,
+            //          path: <path>
+            //      },
+            //      message: "BrowseRemote"
+            //  }
+            //
+            //  <flags> = number
+            //            A bitmask of preferences for the Remote Browser dialog:
+            //            0x0002 -> Hide the "Show Hidden" control in the Remote
+            //                      Browser dialog, which allows the user to toggle
+            //                      whether hidden files or folders are visible.
+            //            0x0004 -> Initially show hidden files and folders in the files pane.
+            //            0x0008 -> Show the files pane, which will require the user to
+            //                      select a file. Without this flag the user will only
+            //                      see the folders pane and be required to select a folder.
+            //  <path> = string
+            //           The initial folder path to display in the Remote Browser
+            //           dialog. The folder path is expected to terminate with a forward
+            //           slash or back slash, otherwise a file path is assumed. If a file
+            //           path is given, the Remote Browser will use the folder path
+            //           containing the file.
+            function SendBrowseRemote(flags, path) {
+                if (window.parent) {
+                    var wpmBrowseRemote = {
+                        data: {
+                            flags: flags,
+                            path: path
+                        },
+                        message: "BrowseRemote"
+                    };
+                    window.parent.postMessage(wpmBrowseRemote, "*");
+                }
+            }
+
+            // Sends a message to Peek requesting it perform a command.
+            //
+            // Message Format:
+            //  {
+            //      data: <command>,
+            //      message: "CommandMessage"
+            //  }
+            //
+            // <command> = display a dialog box with a message
+            //              {
+            //                  flags: 0,
+            //                  id: 2,
+            //                  message: <message>,
+            //                  title: <title>,
+            //                  transid: <transid>
+            //              }
+            //
+            //              <message> = string
+            //                          The message to display in the dialog box.
+            //              <title> = string
+            //                        The title to display in the dialog box.
+            //              <transid> = number
+            //                          An identifier for this command request, which must be
+            //                          unique among all command requests.
+            function SendCommandMessage(command) {
+                if (window.parent) {
+                    var wpmCommandMessage = {
+                        data: command,
+                        message: "CommandMessage"
+                    };
+                    window.parent.postMessage(wpmCommandMessage, "*");
+                }
+            }
+
+            // Sends a message to Peek indicating the desired size of this configure adapter dialog.
+            //
+            // Message Format:
+            //  {
+            //      data: {
+            //          height: <height>,
+            //          width: <width>
+            //      },
+            //      message: "DisplayProperties"
+            //  }
+            //
+            // <height> = string
+            //            The desired height of this configure adapter dialog.
+            // <width> = string
+            //           The desired width of this configure adapter dialog.
+            function SendDisplayProperties(height, width) {
+                if (window.parent) {
+                    var wpmDisplayProperties = {
+                        data: {
+                            height: height,
+                            width: width
+                        },
+                        message: "DisplayProperties"
+                    };
+                    window.parent.postMessage(wpmDisplayProperties, "*");
+                }
+            }
+
+            // Sends a message to Peek requesting the contents of a file on the engine.
+            //
+            // Message Format:
+            //  {
+            //      data: <path>,
+            //      message: "GetRemoteFile"
+            //  }
+            //
+            // <path> = string
+            //          The full path of the file to retrieve. If a full path is not provided,
+            //          the data directory is used for the base path.
+            function SendGetRemoteFile(path) {
+                if (window.parent) {
+                    var wpmGetRemoteFile = {
+                        data: path,
+                        message: "GetRemoteFile"
+                    };
+                    window.parent.postMessage(wpmGetRemoteFile, "*");
+                }
+            }
+
+            // Sends a message to Peek requesting that it send the provided plugin message to
+            // the plugin.
+            //
+            // Message Format:
+            //  {
+            //      data: {
+            //          data: <data>,
+            //          message: <message>
+            //      },
+            //      message: "PluginMessage"
+            //  }
+            //
+            // <data> = string
+            //          Binary data to send to the plugin.
+            // <message> = string
+            //             Data to send to the plugin.
+            function SendPluginMessage(msg) {
+                if (window.parent) {
+                    var wpmPluginMessage = {
+                        data: {
+                            data: "",
+                            message: msg
+                        },
+                        message: "PluginMessage"
+                    };
+                    window.parent.postMessage(wpmPluginMessage, "*");
+                }
+            }
+
+            // Sends a message to Peek indicating whether this configure adapter dialog is ready to close.
+            //
+            // Message Format:
+            //  {
+            //      data: <ready>,
+            //      message: "ReadyToClose"
+            //  }
+            //
+            // <ready> = boolean
+            //           Informs Peek if this configure adapter dialog is ready to close. If so, the
+            //           submit button for this configure adapter dialog will be enabled, otherwise
+            //           the submit button will be disabled.
+            function SendReadyToClose(readyToClose) {
+                if (window.parent) {
+                    var wpmReadyToClose = {
+                        data: readyToClose,
+                        message: "ReadyToClose"
+                    };
+                    window.parent.postMessage(wpmReadyToClose, "*");
+                }
+            }
+
+            // Sends a message to Peek requesting that the contents of the specified file
+            // on the engine be modified to the specified content.
+            // 
+            // Message Format:
+            //  {
+            //      data: {
+            //          content: <content>,
+            //          path: <path>
+            //      },
+            //      message: "SetRemoteFile"
+            //  }
+            //
+            // <content> = string
+            //             The new contents of the specified file.
+            // <path> = string
+            //          The full path of the file to modify. If a full path is not provided,
+            //          the data directory is used for the base path.
+            function SendSetRemoteFile(content, path) {
+                if (window.parent) {
+                    var wpmSetRemoteFile = {
+                        data: {
+                            content: content,
+                            path: path
+                        },
+                        message: "SetRemoteFile"
+                    };
+                    window.parent.postMessage(wpmSetRemoteFile, "*");
+                }
+            }
+
+            // Sends a message to Peek specifying the title of this configure adapter dialog.
+            //
+            // Message Format:
+            //  {
+            //      data: <title>,
+            //      message: "Title"
+            //  }
+            //
+            // <title> = string
+            //           The desired title of the configure adapter dialog.
+            function SendTitle(title) {
+                if (window.parent) {
+                    var wpmTitle = {
+                        data: title,
+                        message: "Title"
+                    };
+                    window.parent.postMessage(wpmTitle, "*");
+                }
+            }
+        </script>
+        <script type="text/javascript">
+            var adapter_id = "";
+            var browsetarget = "monitor_folder";
+            var oldsavefolder = "";
+            var monitorFolder = "";
+
+            // Send a request to show the remote browser modal
+            function BrowseRemoteResponse(inTarget) {
+                browsetarget = inTarget;
+                var path = document.getElementById(browsetarget).value;
+                if ((path.length > 0) && !path.endsWith("/") && !path.endsWith("\\")) {
+                    path += "\\"
+                }
+                SendBrowseRemote(GetRemoteBrowserFlags(), path);
+            }
+
+            // Set the path field to the specified path.
+            function BrowseRemoteRequest(inPath) {
+                var path = inPath;
+                if ((path.length > 0) && (path.endsWith("/") || path.endsWith("\\"))) {
+                    path = path.slice(0, path.length - 1)
+                }
+                document.getElementById(browsetarget).value = path;
+                InputChange();
+            }
+
+            function ConfigAdapter(cmd) {
+                var monitor = document.getElementById("monitor_folder").value;
+                var tl = document.getElementById("type_list");
+                var mask = tl.options[tl.selectedIndex].value;
+
+                var rl = document.getElementById("rate_list");
+                var rl_value = rl.options[rl.selectedIndex].value;
+                var speed = "-1"; // Max Speed
+                if (rl_value == "pps") {
+                    speed = document.getElementById("packet_rate").value;
+                }
+                else if (rl_value == "recorded") {
+                    speed = 0;
+                }
+
+                var save = ""
+                if (document.getElementById("save_files").checked) {
+                    save = document.getElementById("save_folder").value;
+                    if (save.length == 0) {
+                        window.alert("A Save Folder must be specified if Save is checked.");
+                        return;
+                    }
+                }
+
+                // build the AdapterConfig XML
+                var configadapter =
+                    "<" + cmd + ">" +
+                        "<FolderAdapter>" +
+                            "<Id>" + adapter_id + "</Id>" +
+                            "<Monitor>" + monitor + "</Monitor>" +
+                            "<Mask>" + mask + "</Mask>" +
+                            "<Speed>" + speed + "</Speed>" +
+                            "<Save>" + save + "</Save>" +
+                        "</FolderAdapter>" +
+                    "</" + cmd + ">";
+                document.getElementById("activity_status").value = "";
+
+                // send the message to the plugin
+                SendReadyToClose(false);
+                SendPluginMessage(configadapter);
+            }
+
+            function CreateAdapter() {
+                ConfigAdapter("CreateAdapter");
+                Reset();
+            }
+
+            function GetAdapter(id) {
+                var getadapter =
+                    "<GetAdapter>" +
+                        "<FolderAdapter>" +
+                            "<Id>" + id + "</Id>" +
+                        "</FolderAdapter>" +
+                    "</GetAdapter>";
+
+                // send the message to the plugin
+                SendReadyToClose(false);
+                SendPluginMessage(getadapter);
+            }
+
+            // Return a bitmask of preferences for the Remote File Browser dialog:
+            //
+            // 0x0002 -> Hide the "Show Hidden" control in the Remote File
+            //           Browser dialog, which allows the user to toggle
+            //           whether hidden files are visible.
+            // 0x0004 -> Initially show hidden files in the files pane.
+            // 0x0008 -> Show the files pane, which will require the user to
+            //           select a file. Without this flag the user will only
+            //           see the folders pane and be required to select a folder.
+            function GetRemoteBrowserFlags() {
+                return 0x00;
+            }
+
+            function InputChange() {
+                var monitor = document.getElementById("monitor_folder").value;
+                if (monitor.length != 0) {
+                    monitorFolder = monitor;
+                }
+                
+                var buttonState = (
+                    (document.getElementById("monitor_folder").value != "") && 
+                    (!document.getElementById("save_files").checked || (document.getElementById("save_folder").value != ""))
+                    );
+                document.getElementById("create_button").disabled = !buttonState;
+                document.getElementById("modify_button").disabled = !buttonState;
+            }
+
+            function ModifyAdapter() {
+                ConfigAdapter("ModifyAdapter");
+            }
+
+            // Receives the result of a plugin message and performs the desired action.
+            function PluginMessageRequest(xml) {
+                var tagRoot = xmlGetTag(xml);
+                var valRoot = xmlGetValue(xml, tagRoot);
+
+                if (tagRoot == "CreateAdapter") {
+                    ProcessCreateAdapter(xml);
+                    SendReadyToClose(true);
+                }
+                else if (tagRoot == "GetAdapter") {
+                    ProcessGetAdapter(xml);
+                    SendReadyToClose(true);
+                }
+                else if (tagRoot == "ModifyAdapter") {
+                    ProcessModifyAdapter(xml);
+                    SendReadyToClose(true);
+                }
+                InputChange();
+            }
+
+            function ProcessCreateAdapter(xml) {
+                // Root node: CreateAdapter
+                var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+                var valResult = xmlGetValue(valRoot, "Result");
+
+                if (valResult == 0) {
+                    document.getElementById("activity_status").value = "Created adapter: " + monitorFolder;
+                    SetDefaults();
+                }
+                else {
+                    window.alert("The folder is already being monitored.\nOnly one adapter per folder is allowed.");
+                }
+            }
+
+            function ProcessGetAdapter(xml) {
+                // Root node: GetAdapter
+                var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+                var valAdapter = xmlGetValue(valRoot, "FolderAdapter");
+                adapter_id = xmlGetValue(valAdapter, "Id");
+                document.getElementById("monitor_folder").value = xmlGetValue(valAdapter, "Monitor");
+                document.getElementById("type_list").value = xmlGetValue(valAdapter, "Mask");
+                var speed = xmlGetValue(valAdapter, "Speed");
+                if (speed < 0) {
+                    document.getElementById("rate_list").value = "full";
+                    document.getElementById("packet_rate").style.display = "none";
+                }
+                else if (speed == 0) {
+                    document.getElementById("rate_list").value = "recorded";
+                    document.getElementById("packet_rate").style.display = "none";
+                }
+                else {
+                    document.getElementById("rate_list").value = "pps";
+                    document.getElementById("packet_rate").style.display = "inline";
+                }
+                document.getElementById("packet_rate").value = speed;
+                var save = xmlGetValue(valAdapter, "Save");
+                document.getElementById("save_folder").value = save;
+                var checked = (save.length > 0);
+                document.getElementById("save_files").checked = checked;
+                document.getElementById("save_browse").style.display = (checked) ? "inline" : "none";
+
+                document.getElementById("create_button").style.display = "none";
+                document.getElementById("modify_button").style.display = "inline"
+            }
+
+            function ProcessModifyAdapter(xml) {
+                // Root node: ModifyAdapter
+                var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+                var valResult = xmlGetValue(valRoot, "Result");
+                var monitor = document.getElementById("monitor_folder").value;
+                if (valResult == 0) {
+                    document.getElementById("activity_status").value = "Modified adapter: " + monitor;
+                }
+                else {
+                    window.alert("Failed to update the settings of adapter: " + monitor);
+                }
+            }
+
+            function RateChange() {
+                var rl = document.getElementById("rate_list");
+                var value = rl.options[rl.selectedIndex].value;
+                if (value == "pps") {
+                    document.getElementById("packet_rate").style.display = "inline";
+                    if (document.getElementById("packet_rate").value < 0) {
+                        document.getElementById("packet_rate").value = 100;
+                    }
+                }
+                else {
+                    document.getElementById("packet_rate").style.display = "none";
+                }
+            }
+
+            function Reset() {
+                document.getElementById("monitor_folder").value = "";
+                document.getElementById("type_list").value = "*.pcap";
+                document.getElementById("rate_list").value = "full";
+                document.getElementById("packet_rate").value = 100;
+                document.getElementById("save_files").checked = false;
+                document.getElementById("save_folder").value = "";
+            }
+
+            function SaveToggle() {
+                if (document.getElementById("save_files").checked) {
+                    document.getElementById("save_folder").value = oldsavefolder;
+                    document.getElementById("save_browse").style.display = "inline";
+                }
+                else {
+                    oldsavefolder = document.getElementById("save_folder").value;
+                    document.getElementById("save_folder").value = "";
+                    document.getElementById("save_browse").style.display = "none";
+                }
+                InputChange();
+            }
+
+            function SetAdapter(id, title) {
+                if (id != "{00000000-0000-0000-0000-000000000000}") {
+                    adapter_id = id;
+                    GetAdapter(id);
+                }
+            }
+
+            function SetDefaults() {
+                adapter_id = "";
+                document.getElementById("monitor_folder").value = "";
+                document.getElementById("packet_rate").value = 100;
+                document.getElementById("save_files").checked = false;
+                document.getElementById("save_folder").value = "";
+                RateChange();
+                SaveToggle();
+            }
+
+            function OnLoad() {
+                // listen to messages from Peek
+                window.addEventListener("message", OnMessage);
+
+                // send the desired dimensions of this configure adapter dialog to Peek
+                SendDisplayProperties("270px", "600px");
+
+                // send the desired title of this configure adapter dialog to Peek
+                SendTitle(document.title);
+
+                SetDefaults();
+
+                InputChange();
+            }
+
+            // Peek will send messages to this module through this message event listener.
+            //
+            // Upon loading this configure adapter dialog, Peek will send the following messages:
+            //   * "AdapterInfo"
+            //   * "EngineInfo"
+            //
+            // Upon unloading this configure adapter dialog, Peek will send the following messages:
+            //   * "PrepareToUnload"
+            function OnMessage(event) {
+                // Get the message data and verify its basic format:
+                //
+                // Basic Message Format:
+                //  {
+                //      data: <data>,
+                //      message: <message>
+                //  }
+                //
+                // <data> = The format and type of this field is dependent on the message type.
+                // <message> = string
+                //             The message type.
+                var webPluginMessage = event.data;
+                if (webPluginMessage && webPluginMessage.hasOwnProperty("data") &&
+                    webPluginMessage.hasOwnProperty("message") && typeof webPluginMessage.message === "string") {
+                    // determine which message was sent from Peek
+                    if (webPluginMessage.message === "AdapterInfo") {
+                        // Receives a message from Peek with the adapter information.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: {
+                        //          id: <id>,
+                        //          title: <title>
+                        //      },
+                        //      message: "EngineInfo"
+                        //  }
+                        //
+                        // <id> = string
+                        //        The adapter id (UUID/GUID). A new adapter has a NULL context
+                        //        id of "{00000000-0000-0000-0000-000000000000}".
+                        // <title> = string
+                        //           The adapter title.
+                        if (webPluginMessage.data &&
+                            webPluginMessage.data.hasOwnProperty("id") && typeof webPluginMessage.data.id === "string" &&
+                            webPluginMessage.data.hasOwnProperty("title") && typeof webPluginMessage.data.title === "string") {
+                            SetAdapter(webPluginMessage.data.id, webPluginMessage.data.title);
+                        }
+                    }  else if (webPluginMessage.message === "BrowseRemote") {
+                        // Receives a message from Peek indicating the file or folder
+                        // selected by the user in the Remote Browser dialog.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: <data>,
+                        //      message: "BrowseRemote"
+                        //  }
+                        //
+                        // <data> = string
+                        //          The full file path or full folder path selected by
+                        //          the user in the Remote Browser dialog.
+                        if (typeof webPluginMessage.data === "string") {
+                            BrowseRemoteRequest(webPluginMessage.data);
+                        }
+                    } else if (webPluginMessage.message === "CommandMessage") {
+                        // Receives a message from Peek with the result of a command message.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: {
+                        //          id: <id>,
+                        //          result: <result>,
+                        //          transid: <transid>
+                        //      },
+                        //      message: "CommandMessage"
+                        //  }
+                        //
+                        // <id> = number
+                        //        The number identifying the command:
+                        //          2 -> display a dialog box with a message
+                        // <result> = number
+                        //            0 indicates success, otherwise it is an error code.
+                        // <transid> = number
+                        //             An identifier for this command response, which must be
+                        //             unique among all command responses and will match the transid
+                        //             of the command request.
+                        ;
+                    } else if (webPluginMessage.message === "EngineInfo") {
+                        // Receives a message from Peek with the engine information.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: {
+                        //          address: <address>,
+                        //          dataFolder: <dataFolder>,
+                        //          domain: <domain>,
+                        //          engineType: <engineType>,
+                        //          name: <name>,
+                        //          operatingSystem: <operatingSystem>,
+                        //          port: <port>,
+                        //          user: <user>,
+                        //      },
+                        //      message: "EngineInfo"
+                        //  }
+                        //
+                        // <address> = string
+                        //             The address used to communicate with the engine.
+                        // <dataFolder> = string
+                        //                The full path to the data directory used to store packet files.
+                        // <domain> = string
+                        //            The domain of the connected user.
+                        // <engineType> = string
+                        //                The type of the engine.
+                        // <name> = string
+                        //          The name of the engine.
+                        // <operatingSystem> = string
+                        //                     The operating system of the engine.
+                        // <port> = string
+                        //          The port used to communicate with the engine.
+                        // <user> = string
+                        //          The name of the connected user.
+                        ;
+                    } else if (webPluginMessage.message === "GetRemoteFile") {
+                        // Receives a message from Peek with the contents of the specified file on
+                        // the engine. The file in question is the one specified in the latest 
+                        // "GetRemoteFile" message sent from this web module to Peek.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: <contents>,
+                        //      message: "GetRemoteFile"
+                        //  }
+                        //
+                        // <contents> = string
+                        //              The contents of the specified file on the engine.
+                        ;
+                    } else if (webPluginMessage.message === "PluginMessage") {
+                        // Receives a message from Peek with the result of a plugin message sent to
+                        // the plugin.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: {
+                        //          data: <data>,
+                        //          message: <message>,
+                        //      },
+                        //      message: "PluginMessage"
+                        //  }
+                        //
+                        // <data> = string
+                        //          Binary data received from the plugin.
+                        // <message> = string
+                        //             Data received from the plugin.
+                        if (webPluginMessage.data &&
+                            webPluginMessage.data.hasOwnProperty("data") && typeof webPluginMessage.data.data === "string" &&
+                            webPluginMessage.data.hasOwnProperty("message") && typeof webPluginMessage.data.message === "string") {
+                            if (webPluginMessage.data.message !== "") {
+                                PluginMessageRequest(webPluginMessage.data.message);
+                            }
+                        }
+                    } else if (webPluginMessage.message === "PrepareToUnload") {
+                        // Receives a message from Peek indicating that this web module is
+                        // about to be unloaded.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: null,
+                        //      message: "PrepareToUnload"
+                        //  }
+                        ;
+                    } else if (webPluginMessage.message === "SetRemoteFile") {
+                        // Receives a message from Peek with the contents of the specified file on
+                        // the engine. The file in question is the one specified in the latest 
+                        // "SetRemoteFile" message sent from this web module to Peek.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: <contents>,
+                        //      message: "SetRemoteFile"
+                        //  }
+                        //
+                        // <contents> = string
+                        //              The contents of the specified file on the engine.
+                        ;
+                    } else if (webPluginMessage.message === "Theme") {
+                        // Receives a message from Peek indicating the current theme for Peek.
+                        //
+                        // Message Format:
+                        //  {
+                        //      data: <object>,
+                        //      message: "Theme"
+                        //  }
+                        //
+                        // <object> = object
+                        //            An object containing the name of the theme in the “name” key, and a
+                        //            variety of key value pairs containing the colors that Peek is using for this
+                        //            theme. These key value pairs may be used by the web module, but they
+                        //            are subject to change so the web module is encouraged to perform the
+                        //            necessary checks before using them.
+                        if ((typeof webPluginMessage.data === "object") &&
+                            (webPluginMessage.data.name !== undefined) && (typeof webPluginMessage.data.name === "string")) {
+                            if (webPluginMessage.data.name === "Dark") {
+                                document.body.style.color = "white";
+                                document.getElementById("browse_button").style.color = "yellow";
+
+                                document.getElementById("save_browse").style.color = "yellow";
+
+                                document.getElementById("monitor_folder").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("monitor_folder").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("monitor_folder").style.color = "hsl(211,15%,77%)";
+
+                                document.getElementById("type_list").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("type_list").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("type_list").style.color = "hsl(211,15%,77%)";
+
+                                document.getElementById("rate_list").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("rate_list").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("rate_list").style.color = "hsl(211,15%,77%)";
+
+                                document.getElementById("packet_rate").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("packet_rate").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("packet_rate").style.color = "hsl(211,15%,77%)";
+
+                                document.getElementById("save_folder").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("save_folder").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("save_folder").style.color = "hsl(211,15%,77%)";
+
+                                document.getElementById("activity_status").style.backgroundColor = "hsl(211,20%,22%)";
+                                document.getElementById("activity_status").style.borderColor = "hsl(211,20%,22%)";
+                                document.getElementById("activity_status").style.color = "hsl(211,15%,77%)";
+                            }
+                            else {
+                                document.body.style.color = "black";
+                                document.getElementById("browse_button").style.color = "blue";
+
+                                document.getElementById("save_browse").style.color = "blue";
+
+                                document.getElementById("monitor_folder").style.backgroundColor = "#fff";
+                                document.getElementById("monitor_folder").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("monitor_folder").style.color = "hsl(211,26%,15%)";
+
+                                document.getElementById("type_list").style.backgroundColor = "#fff";
+                                document.getElementById("type_list").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("type_list").style.color = "hsl(211,26%,15%)";
+
+                                document.getElementById("rate_list").style.backgroundColor = "#fff";
+                                document.getElementById("rate_list").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("rate_list").style.color = "hsl(211,26%,15%)";
+
+                                document.getElementById("packet_rate").style.backgroundColor = "#fff";
+                                document.getElementById("packet_rate").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("packet_rate").style.color = "hsl(211,26%,15%)";
+
+                                document.getElementById("save_folder").style.backgroundColor = "#fff";
+                                document.getElementById("save_folder").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("save_folder").style.color = "hsl(211,26%,15%)";
+
+                                document.getElementById("activity_status").style.backgroundColor = "#fff";
+                                document.getElementById("activity_status").style.borderColor = "hsl(211,20%,87%)";
+                                document.getElementById("activity_status").style.color = "hsl(211,26%,15%)";
+                            }
+                        }
+                    }
+                }
+
+                return Promise.resolve("");
+            }
+
+            function OnUnload() {
+                // stop listening to messages from Peek
+                window.removeEventListener("message", OnMessage);
+            }
+        </script>
+    </head>
+    <body onload="OnLoad()" onunload="OnUnload()">
+        <div>
+            <p>
+                <label class="path-label" for="monitor_folder">Folder to Monitor:&nbsp;</label>
+                <a class="browse-button" id="browse_button" href="javascript:BrowseRemoteResponse('monitor_folder');">Browse</a>
+                <br />
+                <input class="path-input" type="text" id="monitor_folder" name="folder" value="" readonly />
+            </p>
+            <p>
+                <label class="path-label">File Type:</label>
+                <select id="type_list">
+                    <option value="*.pcap">*.pcap</option>
+                    <option value="*.pcap.gz">*.pcap.gz</option>
+                    <option value="*.pcapng">*.pcapng</option>
+                    <option value="*.pcapng.gz">*.pcapng.gz</option>
+                    <option value="*.pcap, *.pcap.gz, *.pcapng, *.pcapng.gz">*.pcap, *.pcap.gz, *.pcapng, *.pcapng.gz</option>
+                    <option value="*.pkt">*.pkt</option>
+                    <option value="*.*">*.*</option>
+                </select>
+            </p>
+            <p>
+                <label class="rate-label" for="packet_rate">Packet Rate:&nbsp;</label>
+                <select id="rate_list" onchange="RateChange()">
+                    <option value="full">Maximum Speed</option>
+                    <!-- <option value="recorded">Recorded</option> -->
+                    <!-- <option value="pps">Packets Per Second</option> -->
+                </select>
+                <input class="rate-input" type="text" id="packet_rate" name="rate" value="100" />
+            </p>
+            <form>
+                <fieldset>
+                    <legend>Save Processed Files</legend>
+                    <input class="browse-checkbox" type="checkbox" id="save_files" name="savefiles" onchange="SaveToggle()">
+                    <label class="browse-label" for="save_folder">Save Folder:</label>
+                    <a class="browse-button" id="save_browse" href="javascript:BrowseRemoteResponse('save_folder');">Browse</a>
+                    <br />
+                    <input class="save-input" type="text" id="save_folder" name="savefolder" value="" readonly />
+                </fieldset>
+            </form>
+            <br />
+            <button id="create_button" type="button" onclick="CreateAdapter()">Create Adapter</button>
+            <button id="modify_button" type="button" onclick="ModifyAdapter()" style="display: none">Modify Adapter</button>
+            &nbsp;&nbsp;
+            <input class="status-input" type="text" id="activity_status" name="activity_status" readonly />
+            <br />
+            <br />
+            <i>Version</i> 1.12.0.0 - FolderAdapterOE
+        </div>
+    </body>
+</html>

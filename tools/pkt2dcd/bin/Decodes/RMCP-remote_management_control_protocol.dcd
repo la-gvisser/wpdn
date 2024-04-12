@@ -1,0 +1,41 @@
+// RMCP - Remote Management Control Protocol
+
+str# TCP::Ports_Str;
+	623  | RMCP;
+
+void RMCP()
+{
+	LABL( 0, 0, 0, 0xb1 "Remote Management Control Protocol\RMCP");
+	HBYT( 0, l[1], 0x90, 0xc2, "Version:");
+		CEQU( 6, l[1], 0, 0x14, "RMCP Version 1.0");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Sequence:");
+	BBIT( 8, l[2], 0x90, 0xc2, "Class of Message:");
+	DECR 1;
+	BBIT 1 2 5 c9;
+		CEQU 0 2 0 54 0... .... Normal RMCP message;
+		CEQU 1 2 0 54 1... .... RMCP ACK message;
+	BBIT( 2, l[1], 0x5, 0xc9); 
+		CEQU( 0, l[1], 0, 0x54, ".xx. .... Reserved");
+	BBIT 5 3 5 c9;
+	 CEQU 0 3 0 54 ...0 0000 Reserved (0);
+	 CEQU 1 3 0 54 ...0 0001 Reserved (1);
+	 CEQU 2 3 0 54 ...0 0010 Reserved (2);
+	 CEQU 3 3 0 54 ...0 0011 Reserved (3);
+	 CEQU 4 3 0 54 ...0 0100 Reserved (4);
+	 CEQU 5 3 0 54 ...0 0101 Reserved (5);
+	 CEQU 6 3 0 54 ...0 0110 ASF (6);
+	 CEQU 7 3 0 54 ...0 0111 IPMI (7);
+	 CEQU 8 3 0 54 ...0 1000 OEM defined (8);
+	 if (g[3] > 8)
+	 {
+		LABL 0 0 0 14 ...x xxxx Reserved;
+	 }
+	 LABL( 0, 0, 0, 0xc8);
+	 TSB# 0 3 0 0 RMCP::MessageClass;
+}
+
+str# RMCP::MessageClass;
+//	6	| ASF;
+	7	| IPMI;
+

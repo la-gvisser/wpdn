@@ -1,0 +1,468 @@
+
+// g[21] = Outer Market Data Group;
+// g[20] = outer length;
+
+str# UDP::Ports_Str;
+	60000	|	LSEME;
+	60400	|	LSEME;
+	61010	|	LSEME;
+
+
+void LSEME()
+{
+	LABL( 0, 0, 0, 0xb1, "Millenium Exchange" );
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Length:" );
+	//DGLB( 0, g[16], 0x90, 0xc2, "Length" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Message Count:" );
+	HBYT( 0, g[21], 0x90, 0xc2, "Market Data Group:" );
+		CST#( 0, g[21], 0, 0x14, LSEME::MarketDataGroup::Names );
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Seq #:" );
+	g[20] = l[1];
+	g[20] -= 6;
+	g[23] = 0;
+	LABL( 0, 0, 0, 0xb7, "Payload # " );
+		DGLB( 0, l[2], 0x07, 0x07 );
+		LABL( 0, 0, 0, 0x07, ": " );
+		CST#( 0, g[21], 0x07, 0x07, LSEME::MarketDataGroup::Names );
+		CLSE( 0, g[21], 0x07, 0x07, "Unknown" );
+		LSEME::Alltime;
+	/* 	TSB#( 0, g[21], 0x07, 0x07, LSEME::MarketDataGroup::Procs );
+		TLSE( 0, g[21], 0, 0x07, LSEME::MarketDataGroup::Fail ); */
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void LSEME::Alltime()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Length:" );
+	HBYT( 0, l[3], 0x90, 0xc2, "Market Type1:" );
+		CST#( 0, l[3], 0, 0x14, LSEME::MarketDataGroup::Names );
+		CLSE( 0, l[3], 0, 0x14, "Unknown" );
+	if (l[3] != g[21])
+	{
+		l[2] -= 2;
+		g[20] = l[2];
+		CST#( 0, l[3], 0x07, 0xb7, LSEME::MarketDataGroup::Names );
+		TSB#( 0, l[3], 0x07, 0x07, LSEME::MarketDataGroup::Procs );		
+		TLSE( 0, l[3], 0, 0x07, LSEME::MarketDataGroup::Fail );
+	}
+	if (l[3] == g[21])
+	{
+		TSB#( 0, g[21], 0x07, 0x07, LSEME::MarketDataGroup::Procs );
+		TLSE( 0, g[21], 0, 0x07, LSEME::MarketDataGroup::Fail );
+	}
+}
+
+str# LSEME::MarketDataGroup::Names;
+0x01 	|	Login Request(Type soh);
+0x02 	|	Login Response (Type stx);
+0x03	|	Replay Request (Type etx);
+0x04	|	Replay Response (Type eot);
+0x05 	|	Logout Request (Type enq);
+0x41	|	Add Order (Type A);
+0x42	|	Trade Break (Type B);
+0x43	|	Order Executed With Price/Size (Type C);
+0x44	|	Order Deleted (Type D);
+0x45	|	Order Executed (Type E);
+0x46	|	Add Attributed Order (Type F);
+0x48	|	Symbol Status (Type H);
+0x49	|	Auction Info (Type I);
+0x50	|	Trade  (Type P);
+0x51	|	Auction Trade (Type Q);
+0x52	|	Symbol Directory (Type R);
+0x55	|	Order Modified (Type U);
+0x77	|	Statistics (Type w);
+0x78	|	Off-Book Trade (Type x);
+0x79	|	Order Book Clear (Type y);
+0x81	|	Snapshot Request (Type •);
+0x82	|	Snapshot Response (Type ‚);
+0x83	|	Snapshot Complete (Type ƒ);
+
+
+str# LSEME::MarketDataGroup::Procs;
+0x01 	|	LSEME::MarketDataGroup::LoginRequest;
+0x02 	|	LSEME::MarketDataGroup::LoginResponse;
+0x03	|	LSEME::MarketDataGroup::ReplayRequest;
+0x04	|	LSEME::MarketDataGroup::ReplayResponse;
+//0x05 	|	LSEME::MarketDataGroup::Logout Request (Type enq); /*is empty
+0x41	|	LSEME::MarketDataGroup::AddOrder;
+0x42	|	LSEME::MarketDataGroup::TradeBreak;
+0x43	|	LSEME::MarketDataGroup::OrderExecutedWithPriceSize;
+0x44	|	LSEME::MarketDataGroup::OrderDeleted;
+0x45	|	LSEME::MarketDataGroup::OrderExecuted;
+0x46	|	LSEME::MarketDataGroup::AddAttributedOrder;
+0x48	|	LSEME::MarketDataGroup::SymbolStatus;
+0x49	|	LSEME::MarketDataGroup::AuctionInfo;
+0x50 	|	LSEME::MarketDataGroup::Trade;
+0x51	|	LSEME::MarketDataGroup::AuctionTrade;
+0x52	|	LSEME::MarketDataGroup::SymbolDirectory;
+0x55	|	LSEME::MarketDataGroup::OrderModified;
+0x77	|	LSEME::MarketDataGroup::Statistics;
+0x78	|	LSEME::MarketDataGroup::Off-BookTrade;
+0x79	|	LSEME::MarketDataGroup::OrderBookClear;
+0x81	|	LSEME::MarketDataGroup::SnapshotRequest;
+0x82	|	LSEME::MarketDataGroup::SnapshotResponse;
+0x83	|	LSEME::MarketDataGroup::SnapshotComplete;
+
+void LSEME::MarketDataGroup::Fail()
+{
+	DUMP( 0, g[20], 0x90, 0xc2, "Unknown MDG/MT" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void LSEME::MarketDataGroup::LoginRequest()
+{
+	CHR#( 6, l[4], 0x90, 0xc2, "Username:" );
+	CHR#( 10, l[5], 0x90, 0xc2, "Password:" );
+}
+
+void LSEME::MarketDataGroup::LoginResponse()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, LSEME::MarketDataGroup::LoginResponse::Status );
+		CLSE( 0, l[1], 0, 0x14, "Unknown:" );
+}
+
+str# LSEME::MarketDataGroup::LoginResponse::Status;
+0x41	|	Login Accepted (A);
+0x61	|	CompID Inactive or Locked (a);
+0x62	|	Login Limit Reached (b);
+0x63	|	Service Unavailable (c);
+0x64	|	Concurrent Limit Reached (d);
+0x65	|	Failed (Other) (e);
+
+void LSEME::MarketDataGroup::ReplayRequest()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Market Data Group:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "First Message:" );
+	DWRD( 0x40000000, l[3], 0x90, 0xc2, "Count:" );
+}
+
+void LSEME::MarketDataGroup::ReplayResponse()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Market Data Group:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "First Message:" );
+	DWRD( 0x40000000, l[4], 0x90, 0xc2, "Count:" );
+	BBYT( 0, l[3], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[3], 0, 0x14, LSEME::MarketDataGroup::ReplayResponse::Status );
+		CLSE( 0, l[3], 0, 0x14, "Unknown" );
+}
+
+str# LSEME::MarketDataGroup::ReplayResponse::Status;
+0x41	|	Request Accepted (A);
+0x44	|	Request Limit Reached (D);
+0x49	|	Invalid Market Data Group (I);
+0x4F	|	Out of Range (O);
+0x55	|	Replay Unavailable (U);
+0x63	|	Concurrent limit reached (c);
+0x64	|	Unsupported message type (d);
+0x65	|	Failed (Other) (e);
+
+void LSEME::MarketDataGroup::AddOrder()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Order ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Side:" );
+		CEQU( 0x42, l[3], 0, 0x14, "Buy Order" );
+		CEQU( 0x53, l[3], 0, 0x14, "Sell Order" );
+		CLSE( 0, l[3], 0, 0x14, "Unknown" );
+	DLNG( 0x40000000, l[7], 0x90, 0xc2, "Quantity:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[11], 0x90, 0xc2, "Price:" );
+	BBYT( 0, l[12], 0x90, 0xc2, "Flags:" );
+}
+
+void LSEME::MarketDataGroup::TradeBreak()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Trade Match ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Trade Type:" );
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Instrument ID:" );
+}
+
+void LSEME::MarketDataGroup::OrderExecutedWithPriceSize()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "Executed Quantity:" );
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Display New Quantity:" );
+	D64B( 0x40000000, l[5], 0x90, 0xc2, "Trade Match ID:" );
+	CHR#( 1, l[6], 0x90, 0xc2, "Printable:" );
+	D64B( 0x40000000, l[7], 0x90, 0xc2, "Price:" );
+}
+
+void LSEME::MarketDataGroup::OrderDeleted()
+{
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[5], 0x90, 0xc2, "Order ID:" );
+	BBYT( 0, l[12], 0x90, 0xc2, "Flags:" );
+	if (g[20] >= 14 )
+	{
+		DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	}
+}
+
+void LSEME::MarketDataGroup::OrderExecuted()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "Executed Quantity:" );
+	D64B( 0x40000000, l[4], 0x90, 0xc2, "Trade Match ID:" );
+}
+
+void LSEME::MarketDataGroup::AddAttributedOrder()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Order ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Side:" );
+		CEQU( 0x42, l[3], 0, 0x14, "Buy Order" );
+		CEQU( 0x53, l[3], 0, 0x14, "Sell Order" );
+		CLSE( 0, l[3], 0, 0x14, "Unknown" );
+	DLNG( 0x40000000, l[7], 0x90, 0xc2, "Quantity:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[11], 0x90, 0xc2, "Price:" );
+	CHR#( 11, l[4], 0x90, 0xc2, "Attribution:" );
+	BBYT( 0, l[12], 0x90, 0xc2, "Flags:" );
+}
+
+void LSEME::MarketDataGroup::SymbolStatus()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+	CHR#( 1, l[5], 0x90, 0xc2, "Trading Status:" );
+		CST#( 0, l[5], 0, 0x14, LSEME::MarketDataGroup::TradingStatus );
+		CLSE( 0, l[5], 0, 0x14, "Unknown" );
+	BBYT( 0, l[6], 0x90, 0xc2, "Flags:" );
+	    LABL( 0, 0, 0, 0xd4, 	"xxxx.xxx reserved" );
+		CBIT( 4, l[6], 0, 0xd4, "....1... Firm Quote: Yes" );
+		CLSE( 0, l[6], 0, 0xd4, "....0... Firm Quote: No" );
+	CHR#( 4, l[7], 0x90, 0xc2, "Halt Reason:" );
+	DBYT( 0, l[8], 0x90, 0xc2, "Session Change Reason:" );
+		CEQU( 0, l[8], 0, 0x14, "Scheduled Transition" );
+		CEQU( 1, l[8], 0, 0x14, "Extended by Market Ops" );
+		CEQU( 2, l[8], 0, 0x14, "Shortened by Market Ops" );
+		CEQU( 3, l[8], 0, 0x14, "Market Order Imbalance" );
+		CEQU( 4, l[8], 0, 0x14, "Price Outside Range" );
+		CEQU( 9, l[8], 0, 0x14, "Unavailable (recovery service only)" );
+		CLSE( 0, l[8], 0, 0x14, "unknown" );
+	D64B( 0x40000000, l[9], 0x90, 0xc2, "New End Time:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Book type:" );
+		CEQU( 1, l[10], 0, 0x14, "On-Book" );
+		CEQU( 2, l[10], 0, 0x14, "Off-Book" );
+		CLSE( 0, l[10], 0, 0x14, "unknown" );
+}
+
+str# LSEME::MarketDataGroup::TradingStatus;
+0x48	|	Halt;
+0x54	|	Regular Trading / Start of Trade Reporting;
+0x30	|	Suspended;
+0x61	|	Opening Auction Call;
+0x62	|	Post-Close;
+0x63	|	Market Close / System Shutdown;
+0x64	|	Closing Auction Call;
+0x65	|	AESP Auction Call;
+0x66	|	Resume Auction Call;
+0x6C	|	Pause;
+0x6D	|	Pre - Mandatory;
+0x4D	|	Mandatory;
+0x6F	|	Post - Mandatory;
+0x71	|	EDSP Auction Call;
+0x72	|	Periodic Auction Call;
+0x74	|	End Trade Reporting;
+0x77	|	No Active Session;
+0x78	|	End of Post Close;
+0x76	|	Closing Price Publication;
+0x75	|	Closing Price Crossing;
+
+void LSEME::MarketDataGroup::AuctionInfo()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "Paired Quantity:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+	DLNG( 0x40000000, l[5], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[8], 0x90, 0xc2, "Price:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Auction Type:" );
+		CEQU( 0x43, l[9], 0, 0x14, "Closing Auction" );
+		CEQU( 0x4F, l[9], 0, 0x14, "Opening Auction" );
+		CEQU( 0x41, l[9], 0, 0x14, "AESP" );
+		CEQU( 0x42, l[9], 0, 0x14, "EDSP" );
+		CEQU( 0x45, l[9], 0, 0x14, "Resume auction" );
+		CEQU( 0x45, l[9], 0, 0x14, "Periodic auction" );
+		CLSE( 0, l[9], 0, 0x14, "unknown" );
+	BBYT( 0, l[6], 0x90, 0xc2, "Flags:" );
+	    LABL( 0, 0, 0, 0xd4, 	"xxxx.xxx reserved" );
+		CBIT( 4, l[6], 0, 0xd4, "....1... Firm Quote: Yes" );
+		CLSE( 0, l[6], 0, 0xd4, "....0... Firm Quote: No" );
+	CHR#( 4, l[7], 0x90, 0xc2, "Halt Reason:" );
+	DBYT( 0, l[8], 0x90, 0xc2, "Session Change Reason:" );
+		CEQU( 0, l[8], 0, 0x14, "Scheduled Transition" );
+		CEQU( 1, l[8], 0, 0x14, "Extended by Market Ops" );
+		CEQU( 2, l[8], 0, 0x14, "Shortened by Market Ops" );
+		CEQU( 3, l[8], 0, 0x14, "Market Order Imbalance" );
+		CEQU( 4, l[8], 0, 0x14, "Price Outside Range" );
+		CEQU( 9, l[8], 0, 0x14, "Unavailable (recovery service only)" );
+		CLSE( 0, l[8], 0, 0x14, "unknown" );
+	D64B( 0x40000000, l[9], 0x90, 0xc2, "New End Time:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Book type:" );
+		CEQU( 1, l[10], 0, 0x14, "On-Book" );
+		CEQU( 2, l[10], 0, 0x14, "Off-Book" );
+		CLSE( 0, l[10], 0, 0x14, "unknown" );
+}
+
+void LSEME::MarketDataGroup::Trade()
+{
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[5], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[7], 0x90, 0xc2, "Executed Quantity:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[9], 0x90, 0xc2, "Price:" );
+	D64B( 0x40000000, l[10], 0x90, 0xc2, "Trade Match ID:" );
+	BBYT( 0, l[11], 0x90, 0xc2, "Flags:" );
+}
+
+void LSEME::MarketDataGroup::AuctionTrade()
+{
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[5], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[7], 0x90, 0xc2, "Quantity:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[11], 0x90, 0xc2, "Price:" );
+	D64B( 0x40000000, l[12], 0x90, 0xc2, "Trade Match ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Auction Type:" );
+		CEQU( 0x43, l[9], 0, 0x14, "Closing Auction" );
+		CEQU( 0x4F, l[9], 0, 0x14, "Opening Auction" );
+		CEQU( 0x41, l[9], 0, 0x14, "AESP" );
+		CEQU( 0x42, l[9], 0, 0x14, "EDSP" );
+		CEQU( 0x45, l[9], 0, 0x14, "Resume auction" );
+		CEQU( 0x45, l[9], 0, 0x14, "Periodic auction" );
+		CLSE( 0, l[9], 0, 0x14, "unknown" );
+}
+
+void LSEME::MarketDataGroup::SymbolDirectory()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+	CHR#( 1, l[5], 0x90, 0xc2, "Symbol Status:" );
+	CHR#( 12, l[6], 0x90, 0xc2, "ISIN:" );
+	CHR#( 12, l[7], 0x90, 0xc2, "SEDOL:" );
+	CHR#( 6, l[8], 0x90, 0xc2, "Segment:" );
+	CHR#( 6, l[9], 0x90, 0xc2, "Underlying:" );
+	CHR#( 3, l[10], 0x90, 0xc2, "Currency:" );
+	DBYT( 0, l[11], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[12], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[13], 0x90, 0xc2, "Previous Close Price:" );
+}
+
+void LSEME::MarketDataGroup::OrderModified()
+{	
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[2], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "New Quantity:" );
+	D64B( 0x40000000, l[4], 0x90, 0xc2, "New Price:" );
+	BBYT( 0, l[12], 0x90, 0xc2, "Flags:" );
+}
+
+void LSEME::MarketDataGroup::Statistics()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Nanosecond:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+	CHR#( 1, l[5], 0x90, 0xc2, "Statistic Type:" );
+		CEQU( 0x4F, l[7], 0, 0x14, "Opening Price" );
+		CEQU( 0x43, l[7], 0, 0x14, "Closing Price" );
+		CLSE( 0, l[7], 0, 0x14, "unknown" );		
+	D64B( 0x40000000, l[6], 0x90, 0xc2, "Price:" );
+	CHR#( 1, l[7], 0x90, 0xc2, "Open/Close Price Indicator:" );
+		CEQU( 0x0a, l[7], 0, 0x14, "UT" );
+		CEQU( 0x0b, l[7], 0, 0x14, "AT" );
+		CEQU( 0x43, l[7], 0, 0x14, "Mid of BBO" );
+		CEQU( 0x44, l[7], 0, 0x14, "Last AT" );
+		CEQU( 0x45, l[7], 0, 0x14, "Last UT" );
+		CEQU( 0x46, l[7], 0, 0x14, "Manual" );
+		CEQU( 0x49, l[7], 0, 0x14, "Derived from previous close" );
+		CLSE( 0, l[7], 0, 0x14, "unknown" );
+	DBYT( 0, l[8], 0x90, 0xc2, "Reserved:" );
+}
+
+void LSEME::MarketDataGroup::Off-BookTrade()
+{
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Nanosecond:" );
+	D64B( 0x40000000, l[5], 0x90, 0xc2, "Order ID:" );
+	DLNG( 0x40000000, l[7], 0x90, 0xc2, "Executed Quantity:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	D64B( 0x40000000, l[11], 0x90, 0xc2, "Price:" );
+	D64B( 0x40000000, l[12], 0x90, 0xc2, "Trade Match ID:" );
+	CHR#( 4, l[13], 0x90, 0xc2, "Trade Type:" );
+	D64B( 0x40000000, l[14], 0x90, 0xc2, "Trade Time:" );
+	D64B( 0x40000000, l[15], 0x90, 0xc2, "Trade Date:" );
+	CHR#( 4, l[16], 0x90, 0xc2, "Traded Currency:" );
+	D64B( 0x40000000, l[17], 0x90, 0xc2, "Original Price:" );
+	CHR#( 5, l[18], 0x90, 0xc2, "Execution Venue:" );
+	BBYT( 0, l[19], 0x90, 0xc2, "Flags:" );
+		CBIT( 0x00, l[19], 0, 0x14, ".......1 Late Trade: Yes" );
+		CLSE( 0x00, l[19], 0, 0x14, ".......1 Late Trade: No" );
+		CBIT( 0x05, l[19], 0, 0x14, "...1.... Bargain Condition Indicator: Yes" );
+		CLSE( 0x05, l[19], 0, 0x14, "...0.... Bargain Condition Indicator: No" );		
+}
+
+void LSEME::MarketDataGroup::OrderBookClear()
+{
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Nanosecond:" );
+	DLNG( 0x40000000, l[8], 0x90, 0xc2, "Instrument ID:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Reserved:" );
+	BBYT( 0, l[19], 0x90, 0xc2, "Flags:" );
+		CBIT( 0x05, l[19], 0, 0x14, "...1.... Firm Quote: Yes" );
+		CLSE( 0x05, l[19], 0, 0x14, "...0.... Firm Quote: No" );		
+}
+
+void LSEME::MarketDataGroup::SnapshotRequest()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Sequence Number:" );
+	CHR#( 6, l[2], 0x90, 0xc2, "Segment:" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "Instrument ID:" );
+}
+
+void LSEME::MarketDataGroup::SnapshotResponse()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Sequence Number:" );
+	DLNG( 0x40000000, l[2], 0x90, 0xc2, "Order Count:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Status:" );
+		CEQU( 0x41, l[3], 0, 0x14, "Request Accepted" );
+		CEQU( 0x4F, l[3], 0, 0x14, "Out of Range" );
+		CEQU( 0x55, l[3], 0, 0x14, "Snapshot Unavailable" );
+		CEQU( 0x61, l[3], 0, 0x14, "Valid Segment or Symbol Not Specified" );
+		CEQU( 0x62, l[3], 0, 0x14, "Request Limit Reached" );
+		CEQU( 0x63, l[3], 0, 0x14, "Concurrent Limit Reached" );
+		CEQU( 0x64, l[3], 0, 0x14, "Unsupported message type" );
+		CEQU( 0x65, l[3], 0, 0x14, "Failed (Other)" );		
+		CLSE( 0, l[3], 0, 0x14, "unknown" );
+}
+
+void LSEME::MarketDataGroup::SnapshotComplete()
+{
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Sequence Number:" );
+	CHR#( 6, l[2], 0x90, 0xc2, "Segment:" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "Instrument ID:" );
+	BBYT( 0, l[4], 0x90, 0xc2, "Flags:" );
+		CBIT( 0x05, l[4], 0, 0x14, "...1.... Firm Quote: Yes" );
+		CLSE( 0x05, l[4], 0, 0x14, "...0.... Firm Quote: No" );		
+}

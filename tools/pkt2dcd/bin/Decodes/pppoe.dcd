@@ -1,0 +1,66 @@
+* PPPoE
+
+void PPPoE Discovery;
+	LABL 0 0 0 b1 PPP over Ethernet;
+	DBIT 4 0 90 c2 Version:;
+	DBIT 4 0 90 c2 Type:;
+	HBYT 0 19 90 c2 Code:;
+	 CEQU 9 19 0 14  Active Discovery Initiation;
+	 CEQU 7 19 0 14  Active Discovery Offer;
+	 CEQU 19 19 0 14  Active Discovery Request;
+	 CEQU 65 19 0 14  Active Discovery Session-confirmation;
+	 CEQU a7 19 0 14  Active Discovery Terminate;
+	 CEQU d3 19 0 14  Message;
+	DWRD 0 0 90 c2 Session Id:;
+	DWRD 0 19 90 c2 Length:;
+	MOVE 0 1a;
+	TNEQ 0 19 0 42 PPPoE TLV;
+
+void PPPoE TLV;
+	ADDG 1 1a;
+	LABL 0 0 0 b1 Type-Length-Value Tag #;
+	DGLB 0 1a 1 10;
+	HWRD 0 1 90 c2 Tag Type:;
+	SUBG 2 19;
+	CST# 0 1 0 14 PPPoE_TLV_Tag_Types;
+	DWRD 0 1b 90 c2 Tag Length:;
+	SUBG 2 19;
+	
+	if (g[1] == 0x102)							*si: special case - string
+	{
+	 CHR# 0 1b 90 c2 AC Name:;
+	 SUBG 1b 99;
+	 MOVE 0 1b;
+	}
+	
+	if (g[0x1b] != 0) 
+	{
+	 DUMP 0 1b 90 c2 Tag Value:;
+	 SUBG 1b 99;
+	}
+	TLTE 1 19 0 40 PPPoE TLV;
+
+void PPPoE Session;
+	LABL 0 0 0 b1 PPP over Ethernet;
+	DBIT 4 0 90 c2 Version:;
+	DBIT 4 0 90 c2 Type:;
+	HBYT 0 19 90 c2 Code:;
+	CEQU d3 19 0 14 Message ;
+	CEQU 0 19 0 14 Session;
+	DWRD 0 0 90 c2 Session Id:;
+	DWRD 0 19 90 c2 Length:;
+	TNXT -PPP;
+
+str# PPPoE_TLV_Tag_Types;
+	 0x0   | End of List;
+	 0x101 | Service Name;
+	 0x102 | Access Concentrator Name;
+	 0x103 | Host Unique;
+	 0x104 | Access Concentrator Cookie;
+	 0x105 | Vendor Specific;
+	 0x110 | Relay Session Id;
+	 0x201 | Service Name Error;
+	 0x202 | Access Concentrator System Error;
+	 0x203 | Generic Error;
+
+

@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SampleAdapter", "SampleAdapter\SampleAdapter.vcproj", "{3CE0F528-672A-4014-B898-3D9EA482D775}"
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "SampleAdapterInstaller", "SampleAdapterInstaller\SampleAdapterInstaller.vdproj", "{A711D32E-7354-4846-B9A4-A319657BF877}"
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 3
+		SccProjectUniqueName0 = SampleAdapterInstaller\\SampleAdapterInstaller.vdproj
+		SccLocalPath0 = .
+		SccProjectFilePathRelativizedFromConnection0 = SampleAdapterInstaller\\
+		SccLocalPath1 = .
+		SccProjectUniqueName2 = SampleAdapter\\SampleAdapter.vcproj
+		SccLocalPath2 = .
+		SccProjectFilePathRelativizedFromConnection2 = SampleAdapter\\
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Debug|Win32.Build.0 = Debug|Win32
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Debug|x64.ActiveCfg = Debug|x64
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Debug|x64.Build.0 = Debug|x64
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Release|Win32.ActiveCfg = Release|Win32
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Release|Win32.Build.0 = Release|Win32
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Release|x64.ActiveCfg = Release|x64
+		{3CE0F528-672A-4014-B898-3D9EA482D775}.Release|x64.Build.0 = Release|x64
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Debug|Win32.ActiveCfg = Debug
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Debug|x64.ActiveCfg = Debug
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Debug|x64.Build.0 = Debug
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Release|Win32.ActiveCfg = Release
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Release|x64.ActiveCfg = Release
+		{A711D32E-7354-4846-B9A4-A319657BF877}.Release|x64.Build.0 = Release
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

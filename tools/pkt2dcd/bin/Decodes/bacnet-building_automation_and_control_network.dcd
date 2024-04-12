@@ -1,0 +1,851 @@
+void BACnet;
+	LABL( 0, 0, 0, 0xb1, "BACnet - Building Automation and Contol Network");
+	g[1] = pb[0];
+	if (g[1] == 1)
+	{
+		LABL( 0, 0, 0, 0xb7 "No BACnet Virtual Link Control");
+		LABL( 0, 0, 0, 0xb8);
+		BACnet::Network_NPDU();
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	LABL( 0, 0, 0, 0xb7, "BACnet Virtual Link Control");
+	HBYT( 0, l[1], 0x90, 0xc2, "Type:");
+	 CEQU( 0x81, l[1], 0, 0x14, "Version BACnet/IP - (Annex J)");
+	BACnet::Check();
+	TRTS;
+
+void BACnet::Check()
+{
+	l[1] = pb[0];
+	HBYT( 0, l[1], 0x90, 0xc2, "Function:");
+	TST#( 0, l[1], 0, 0, BACnet::Check_Str);
+}
+
+void BACnet::Result()
+{
+	LABL( 0, 0, 0, 0x14, "BVLC Result");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Result Code:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Result_Str);
+	LABL( 0, 0, 0, 0xb8);
+}
+	 
+void BACnet::Write_Broadcast()
+{
+	LABL( 0, 0, 0, 0x14, "Write Broadcast Distribution Table");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::BDT_Entry();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Read_Broadcast()
+{
+	LABL( 0, 0, 0, 0x14, "Read Broadcast Distribution Table");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	INCR E;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Read_Broadcast_Ack()
+{
+	LABL( 0, 0, 0, 0x14, "Read Broadcast Distribution Table Ack");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::BDT_Entry();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Forwarded_NPDU()
+{
+	LABL( 0, 0, 0, 0x14, "Forwarded NPDU");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	IPLG( 0, l[1], 0x90, 0xc2, "IP:");
+	LABL( 0, 0, 0, 0x14, "originating device");
+	DWRD( 0, l[1], 0x90, 0xc2, "Port:");
+	BACnet::Network_NPDU();
+	LABL( 0, 0, 0, 0xc8);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Register_Foreign_Device()
+{
+	LABL( 0, 0, 0, 0x14, "Register Foreign Device");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Time to Live:");
+	LABL( 0, 0, 0, 0x14, "seconds");
+	INCR C;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Read_Foreign_Device()
+{
+	LABL( 0, 0, 0, 0x14, "Read Foreign Device Table");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	INCR E;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Read_Foreign_Device_Ack()
+{
+	LABL( 0, 0, 0, 0x14, "Read Foreign Device Table Ack");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::FDT_Entry();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Delete_Foreign_Device()
+{
+	LABL( 0, 0, 0, 0x14, "Delete Foreign Device Table Entry");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	IPLG( 0, l[1], 0x90, 0xc2, "B/IP address:");
+	LABL( 0, 0, 0, 0x14, "FDT Entry");
+	DWRD( 0, l[1], 0x90, 0xc2, "Port:");
+	INCR 8;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Distribute_Broadcast()
+{
+	LABL( 0, 0, 0, 0x14, "Distribute Broadcast to Network");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::Network_NPDU();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Original_Unicast_NPDU()
+{
+	LABL( 0, 0, 0, 0x14, "Original Unicast NPDU");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::Network_NPDU();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Original_Broadcast_NPDU()
+{
+	LABL( 0, 0, 0, 0x14, "Original Broadcast NPDU");
+	DWRD( 0, l[1], 0x90, 0xc2, "BVLC Length:");
+	BACnet::Network_NPDU();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Network_NPDU()
+{
+	LABL( 0, 0, 0, 0xb7, "BACnet NPDU");
+	HBYT( 0, l[1], 0x90, 0xc2, "Version:");
+	 CEQU( 1, l[1], 0, 0x14, "(ASHRAE 135-1995)";
+	g[1] = pb[0];
+	BACnet::Control();
+	l[1] = pl[0];
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	TST#( 0, g[1], 0, 0, BACnet::Control_Str);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Control()
+{
+	BBIT( 8, l[1], 0x90, 0xc9, "Network Control:");
+	DECR 1;
+	BBIT( 6, l[2], 5, 0);
+	BST#( 0, l[2], 0, 0xd4, BACnet::ControlBits_Str);
+	BBIT( 2, l[2], 5, 0);
+	CST#( 0, l[2], 0, 0xd4, BACnet::ControlBits_Message_Str);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::Destination()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Destination Port:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Dest MAC Addr Len:");
+	 CEQU( 0, l[1], 0, 0x14, "Broadcast");
+	HEX#( 0, l[1], 0x90, 0xc2, "Destination MAC Addr:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Hop Count:");
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	g[1] = pb[0];
+	TSB#( 0, g[1], 0, 0, BACnet::APDU_Type_Str);
+}
+
+void BACnet::Source()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Source Port:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Source MAC Addr Len:";
+	HEX#( 0, l[1], 0x90, 0xc2, "Source MAC Address:";
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	g[1] = pb[0];
+	TSB#( 0, g[1], 0, 0, BACnet::APDU_Type_Str);
+}
+
+void BACnet::Destination_Source()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Destination Port:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Dest MAC Addr Len:");
+	 CEQU( 0, l[1], 0, 0x14, "Broadcast");
+	HEX#( 0, l[1], 0x90, 0xc2, "Destination MAC Addr:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Source Port:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Source MAC Addr Len:";
+	HEX#( 0, l[1], 0x90, 0xc2, "Source MAC Address:";
+	DBYT( 0, l[1], 0x90, 0xc2, "Hop Count:");
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	g[1] = pb[0];
+	TSB#( 0, g[1], 0, 0, BACnet::APDU_Type_Str);
+}
+
+void BACnet::Message_Type()
+{
+	l[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Type:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Message_Str);
+	TST#( 0, l[1], 0, 0, BACnet::Message_Type_Str);
+}
+
+void BACnet::Message_Type1()
+{
+	BACnet::Network_Number();
+}
+
+void BACnet::Message_Type2()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Network Number:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Performance Index:");
+}
+
+void BACnet::Message_Type3()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Reject Reason:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Message_Type3_Str);
+	DWRD( 0, l[1], 0x90, 0xc2, "Network Number:");
+}
+
+void BACnet::Message_Type4()
+{
+	l[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc7, "Number of Ports:");
+	while (l[1] > 0)
+	{
+		l[1] -= 1;
+		DWRD( 0, g[2], 0x90, 0xc9, "Connected DNET:");
+		DBYT( 0, g[2], 0x90, 0xc2, "Port ID Number:");
+		 CEQU( 0, g[2], 0, 0x14, "Remove");
+		DBYT( 0, g[2], 0x90, 0xc2, "Port Info Length:");
+		CHR#( 0, g[2], 0x90, 0xc2, "Port Information:");
+		LABL( 0, 0, 0, 0xc8);
+	}
+	LABL( 0, 0, 0, 0xc8);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Message_Type5()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Network Number:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Termination Time:");
+	LABL( 0, 0, 0, 0x14, "seconds");
+}
+
+
+void BACnet::Network_Number;
+	l[1] = pw[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+	DWRD( 0, l[2], 0x90, 0xc2, "Network Number:");
+	TNXT -BACnet::Network_Number;
+
+void BACnet::BDT_Entry;
+	l[1] = pb[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+	LABL( 0, 0, 0x90, 0xc9, "BDT Entries");
+	IPLG( 0, l[1], 0x90, 0xc2, "IP:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Port:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Mask:");
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -BACnet::BDT_Entry;
+
+void BACnet::FDT_Entry;
+	l[1] = pb[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+	LABL( 0, 0, 0x90, 0xc9, "FDT Entries");
+	IPLG( 0, l[1], 0x90, 0xc2, "IP:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Port:");
+	DWRD( 0, l[1], 0x90, 0xc2, "TTL:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Timeout:");
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -BACnet::FDT_Entry;
+
+void BACnet::Control_APDU()
+{
+	l[1] = pb[0];
+	TST#( 0, l[1], 0, 0, BACnet::APDU_Type_Str);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Application_APDU()
+{
+	LABL( 0, 0, 0, 0xb8);
+	LABL( 0, 0, 0, 0xb7, "BACnet APDU");
+	HBYT( 0, l[1], 0x90, 0xc2, "APDU Type:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Application_APDU_Str);
+}
+
+void BACnet::Confirmed_Request_PDU()
+{
+	BACnet::Application_APDU();
+	HBYT( 0, l[1], 0x90, 0xc2, "Max APDU Response Size:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	l[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc2, "Service Request:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Service_Str);
+	TSB#( 0, l[1], 0, 0, BACnet::Confirmed_Str);	
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Unconfirmed_Request_PDU()
+{
+	BACnet::Application_APDU();
+	g[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc2, "Service Request:");
+	CST#( 0, l[1], 0,  0x14, BACnet::Unconfirmed_Service_Str);
+	TEQU( 2, g[1], 0, 0, BACnet::Unconfirmed_COV_Notification);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BACnet::Simple_ACK_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1] 0x90, 0xc2, "Invoke ID:");
+	DBYT( 0, l[1] 0x90, 0xc2, "Service:");
+	CST#( 0, l[1] 0, 0x14, BACnet::Service_Str);
+}
+
+void BACnet::Complex_ACK_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	l[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc2, "Service ACK:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Service_Str);
+	TSB#( 0, l[1], 0, 0, BACnet::Complex_Str);
+}
+
+void BACnet::Segment_ACK_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Actual Window Size:");
+}
+
+void BACnet::Error_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Service Error:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Service_Str);
+	g[1] = pb[0];
+	 TEQU  E 1 0 0 BACnet::Specific_Tag_0E();
+	 TEQU 91 1 0 0 BACnet::Application_Tag_91();
+}
+
+void BACnet::Reject_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Reject Reason:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Reject_Reason);
+}
+
+void BACnet::Abort_PDU()
+{
+	BACnet::Application_APDU();
+	DBYT( 0, l[1], 0x90, 0xc2, "Invoke ID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Abort Reason:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Abort_Reason);
+}
+
+void BACnet::Unconfirmed_COV_Notification()
+{
+	l[1] = pb[0];
+	while (l[1] != 0x4E);
+	{
+		TSB#( 0, l[1], 0, 0, BACnet::Specific_Tag_Str);
+		l[1] = pb[0];
+	}
+	BACnet::Specific_Tag_4E();
+	LABL( 0, 0, 0, 0xb8);
+}
+
+
+void BACnet::VT_Open()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "VT Class Enumeration:");
+	CST#( 0, l[1], 0, 0x14, BACnet::VT_Class_Enumeration_Str);
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, l[1], 0x90, 0xc9, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Local VT Session ID:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::VT_Close()
+{
+	BACnet::Application_Tag_21();
+}
+
+void BACnet::VT_Data()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "VT Session ID:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::VT_Open_Ack()
+{
+	BACnet::Application_Tag_21();
+}
+
+void BACnet::VT_Data_Ack()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	l[1] = pb[0];
+	DBYT( 0, l[1], 0x90, 0xc2, "New Data Accepted:");
+	 CEQU( 0, l[1], 0, 0x14, "False");
+	 CEQU( 1, l[1], 0, 0x14, "True");
+	LABL( 0, 0, 0, 0xc8);
+	if (l[1] == 0)
+	{
+		BACnet::Specific_Tag_19();
+	}
+}
+
+void BACnet::Specific_Tag_09()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Value:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::Specific_Tag_0E()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	BACnet::Application_Tag_91();
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::Specific_Tag_19()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	LABL( 0, 0, 0, 0x14, "Accepted Octet Count");
+	DBYT( 0, l[1], 0x90, 0xc2, "Value:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::Specific_Tag_1C()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	LABL( 0, 0, 0, 0x14, "Initiating Device Identifier");
+	DWRD( 0, l[1], 0x90, 0xc2, "Object ID:");
+	DWRD 0 1 90 c2 Instance:;
+	LABL 0 0  0 c8;
+}
+
+
+void BACnet::Specific_Tag_2C()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Specific Tag:");
+	LABL( 0, 0, 0, 0x14, "Monitor Object Identifer");
+	DWRD( 0, l[1], 0x90, 0xc2, "Object ID:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Instance:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void BACnet::Tag_Time_Remaining()
+{
+	l[1] = pb[0];
+	HBYT 0 1 90 c9 Specific Tag:;
+	if (l[1] == 0x39)
+	{
+		DBYT 0 1 90 c2 Time Remaining:;
+	}
+
+	if (l[1] == 0x3A)
+	{
+		DWRD 0 1 90 c2 Time Remaining:;
+	}
+	LABL 0 0  0 c8;
+}
+
+void BACnet::Specific_Tag_4E()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Specific Tag:");
+	LABL( 0, 0, 0, 0x14, "List Of Values - opening");
+}
+
+void BACnet::Specific_Tag_4F()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Specific Tag:");
+	LABL( 0, 0, 0, 0x14, "List Of Values - closing");
+}
+
+
+void BACnet::Application_Tag_21()
+{
+	l[1] = pb[0];
+	while (l[1] == 0x21)
+	{
+	HBYT( 0, l[1], 0x90, 0xc9, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Session ID:");
+	LABL( 0, 0, 0, 0xc8);
+	l[1] = pb[0];
+	}
+}
+
+void BACnet::Application_Tag_91()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Error Class:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Error_Class_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Application Tag:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Error Code:");
+	CST#( 0, l[1], 0, 0x14, BACnet::Error_Code_Str);
+}
+
+str# BACnet::Check_Str;
+	0 | BACnet::Result;
+	1 | BACnet::Write_Broadcast;
+	2 | BACnet::Read_Broadcast;
+	3 | BACnet::Read_Broadcast_Ack;
+	4 | BACnet::Forwarded_NPDU;
+	5 | BACnet::Register_Foreign_Device;
+	6 | BACnet::Read_Foreign_Device;
+	7 | BACnet::Read_Foreign_Device_Ack;
+	8 | BACnet::Delete_Foreign_Device;
+	9 | BACnet::Distribute_Broadcast;
+	0xA | BACnet::Original_Unicast_NPDU;
+	0xB | BACnet::Original_Broadcast_NPDU;
+
+str# BACnet::Result_Str;
+	 0 | Successful completion;
+	 0xA | Write Broadcast Distribution Table NAK;
+	 0x14 | Read Broadcast Distribution Table NAK;
+	 0x1E | Register Foreign Device NAK;
+	 0x28 | Read Foreign Device Table NAK;
+	 0x32 | Delete Foreign Device Table Entry NAK;
+	 0x3C | Distribute Broadcast To Network NAK;
+
+str# BACnet::Control_Str;
+	0 | BACnet::Control_APDU;
+	1 | BACnet::Control_APDU;
+	4 | BACnet::Control_APDU;
+	0x0A | BACnet::Source;
+	0x17 | BACnet::Control_APDU;
+	0x20 | BACnet::Destination;
+	0x21 | BACnet::Destination;
+	0x28 | BACnet::Destination_Source;
+	0x29 | BACnet::Destination_Source;
+	0x2B | BACnet::Destination_Source;
+	0x2C | BACnet::Destination_Source;
+	0x2D | BACnet::Destination_Source;
+	0x80 | BACnet::Message_Type;
+	0x84 | BACnet::Message_Type;
+	0x8C | BACnet::Message_Type;
+	0xA4 | BACnet::Message_Type;
+	0xAC | BACnet::Message_Type;
+
+str# BACnet::ControlBits_Str;
+	5 | 1... .... BACnet Network Control Message;
+	0... .... BACnet APDU;
+	4 | .1.. .... Reserved;
+	.0.. .... Reserved;
+	3 | ..1. .... Destination Specifier: DNET, DLEN and Hop Count present;
+	..0. .... Destination Specifier: DNET, DLEN and Hop Count not present;
+	2 | ...1 .... Reserved;
+	...0 .... Reserved;
+	1 | .... 1... Source Specifier: SNET, SLEN and SADR present;
+	.... 0... Source Specifier: SNET, SLEN and SADR not present;
+	0 | .... .1.. Data Expecting Reply;
+	.... .0.. No Reply Expected;
+
+str# BACnet::ControlBits_Message_Str;
+	3 | .......11 Life Safety Message;
+	2 | .......10 Critical Equipment Message;
+	1 | .......01 Urgent Message;
+	0 | .......00 Normal Message;
+
+str# BACnet::Message_Str;
+	0 | Who Is Router to Network;
+	1 | I Am Router to Network;
+	2 | I Could Be Router to Network;
+	3 | Reject Message to Network;
+	4 | Router Busy to Network;
+	5 | Router Available to Network;
+	6 | Initialize Routing Table;
+	7 | Initialize Routing Table ACK;
+	8 | Establish Connection to Network;
+	9 | Disconnect Connection to Network;
+
+str# BACnet::Message_Type_Str;
+	0 | BACnet::Message_Type1;
+	1 | BACnet::Message_Type1;
+	2 | BACnet::Message_Type2;
+	3 | BACnet::Message_Type3;
+	4 | BACnet::Message_Type1;
+	5 | BACnet::Message_Type1;
+	6 | BACnet::Message_Type4;
+	7 | BACnet::Message_Type4;
+	8 | BACnet::Message_Type5;
+	9 | BACnet::Message_Type1;
+
+str# BACnet::Message_Type3_Str;
+	0 | Other Error;
+	1 | Router not connected and cannot find a path;
+	2 | Router is busy;
+	3 | Unknown network layer message type;
+	4 | Message too long to be routed to this DNET;
+
+str# BACnet::APDU_Type_Str;
+	0 | BACnet::Confirmed_Request_PDU;
+	0x10 | BACnet::Unconfirmed_Request_PDU;
+	0x20 | BACnet::Simple_ACK_PDU;
+	0x30 | BACnet::Complex_ACK_PDU;
+	0x40 | BACnet::Segment_ACK_PDU;
+	0x41 | BACnet::Segment_ACK_PDU;
+	0x42 | BACnet::Segment_ACK_PDU;
+	0x43 | BACnet::Segment_ACK_PDU;
+	0x50 | BACnet::Error_PDU;
+	0x60 | BACnet::Reject_PDU;
+	0x70 | BACnet::Abort_PDU;
+
+str# BACnet::Application_APDU_Str;
+	0 | Confirmed Request PDU;
+	0x10 | Unconfirmed Request PDU;
+	0x20 | Simple ACK PDU;
+	0x30 | Complex ACK PDU;
+	0x40 | Segment ACK PDU (sent by client);
+	0x41 | Segment ACK PDU (sent by server);
+	0x42 | Segment ACK PDU (sent by client);
+	0x43 | Segment ACK PDU (sent by server);
+	0x50 | BACnet Error PDU;
+	0x60 | Reject PDU;
+	0x70 | Abort PDU;
+
+str# BACnet::Specific_Tag_Str;
+	9 | BACnet::Specific_Tag_09;
+	0x1C | BACnet::Specific_Tag_1C;
+	0x2C | BACnet::Specific_Tag_2C;
+	0x39 | BACnet::Tag_Time_Remaining;
+	0x3A | BACnet::Tag_Time_Remaining;
+	0x4E | BACnet::Specific_Tag_4E;
+
+str# BACnet::Service_Str;
+	0 | Acknowledge Alarm;
+	1 | Confirmed COV Notification;
+	2 | Confirmed Event Notification;
+	3 | Get Alarm Summary;
+	4 | Get Enrollment Summary;
+	5 | Subscribe COV;
+	6 | Atomic Read File;
+	7 | Atomic Write File;
+	8 | Add List Element;
+	9 | Remove List Element;
+	10 | Create Object;
+	11 | Delete Object;
+	12 | Read Property;
+	13 | Read Property Conditional;
+	14 | Read Property Multiple;
+	15 | Write Property;
+	16 | Write Property Multiple;
+	17 | Device Communication Control;
+	18 | Confirmed Private Transfer;
+	19 | Confirmed Text Message;
+	20 | Reinitilize Device;
+	21 | VT Open;
+	22 | VT Close;
+	23 | VT Data;
+	24 | Authenticate;
+	25 | Request Key;
+	26 | Read Range;
+
+str# BACnet::Unconfirmed_Service_Str;
+	0 | I Am;
+	1 | I Have;
+	2 | Unconfirmed COV Notification;
+	3 | Unconfirmed Event Notification;
+	4 | Unconfirmed Private Transfer;
+	5 | Unconfirmed Text Message;
+	6 | Time Synchronization;
+	7 | Who Has;
+	8 | Who Is;
+	9 | UTC Time Synchronization;
+
+str# BACnet::Confirmed_Str;
+	21 | BACnet::VT_Open;
+	22 | BACnet::VT_Close;
+	23 | BACnet::VT_Data;
+
+str# BACnet::Complex_Str;
+	21 | BACnet::VT_Open_Ack;
+	23 | BACnet::VT_Data_Ack;
+
+str# BACnet::Error_Class_Str;
+	0 | Device;
+	1 | Object;
+	2 | Property;
+	3 | Resources;
+	4 | Security;
+	5 | Services;
+	6 | VT;
+
+str# BACnet::Error_Code_Str;
+	0 | Other;
+	1 | Authentication Failed;
+	2 | Configuration In Progress;
+	3 | Device Busy;
+	4 | Dynamic Creation Not Supported;
+	5 | File Access Denied;
+	6 | Incompatible Security Levels;
+	7 | Inconsistent Parameters;
+	8 | Inconsistent Selection Criterea;
+	9 | Invalid Data Type;
+	10 | Invalid File Access Method;
+	11 | Invalid File Start Position;
+	12 | Invalid Operator Name;
+	13 | Invalid Parameter Data Type;
+	14 | Invalid Time Stamp;
+	15 | Key Generation Error;
+	16 | Missing Required Parameter;
+	17 | No Objects of Specified Type;
+	18 | No Space for Object;
+	19 | No Space to Add List Element;
+	20 | No Space to Write Property;
+	21 | No VT Sessions Available;
+	22 | Property is Not a List;
+	23 | Object Deletion Not Permitted;
+	24 | Object Identifier Already Exists;
+	25 | Operational Problem;
+	26 | Password Failure;
+	27 | Read Access Denied;
+	28 | Security Not Supported;
+	29 | Service Request Denied;
+	30 | Timeout;
+	31 | Unknown Object;
+	32 | Unknown Property;
+	33 | Unknown Enumeration;
+	34 | Unknown VT Class;
+	35 | Unknown VT Session;
+	36 | Unsupported Object Type;
+	37 | Value Out of Range;
+	38 | VT Session already closed;
+	39 | VT Session Termination Failure;
+	40 | Write Access Denied;
+	41 | Character Set Not Supported;
+	42 | Invalid Array Index;
+
+str# BACnet::Reject_Reason;
+	0 | Other;
+	1 | Buffer Overflow;
+	2 | Inconsistent Parameters;
+	3 | Invalid Parameter Data Type;
+	4 | Invalid Tag;
+	5 | Missing Required Tag;
+	6 | Parameter Out of Range;
+	7 | Too Many Arguements;
+	8 | Undefined Enumeration;
+	9 | Unrecognized Service;
+
+str# BACnet::Abort_Reason;
+	0 | Other;
+	1 | Buffer Overflow;
+	2 | Invalid APDU in This State;
+	3 | Preempted by Higher Priority Task;
+	4 | Segmentation Not Supported;
+
+str# BACnet::VT_Class_Enumeration_Str;
+	0 | Default Terminal class;
+	1 | ANSI X3.64 class;
+	2 | DEC VT52 class;
+	3 | DEC VT100 class;
+	4 | DEC VT220 class;
+	5 | HP 700/94 class;
+	6 | IBM 3130 class;
+
+str# BACnet::Vendor_ID;
+	0 | ASHRAE;
+	1 | NIST;
+	2 | Trane;
+	3 | McQuary;
+	4 | Polarsoft;
+	5 | Johnson Controls;
+	6 | Auto Matrix;
+	7 | Staefa;
+	8 | Delta Controls;
+	9 | Landis and GYR;
+	10 | Andover Controls;
+	11 | Siebe;
+	12 | Orion Analysis;
+	13 | Teletrol;
+	14 | Cimetrics Technology;
+	15 | Cornell University;
+	16 | Carrier;
+	17 | Honeywell;
+	18 | Alerton;
+	19 | Tour and Anderson;
+	20 | Hewlett Packard;
+	21 | Dorsette's Inc;
+	22 | Cerberus AG;
+	23 | York;
+	24 | Automatic Logic;
+	25 | Control Systems International;
+	26 | Phoenix Controls Corporation;
+	27 | Innovex;
+	28 | KMC Controls;
+	29 | Time;
+	30 | Value;
+	31 | Default Terminal Class;
+	32 | ANSI X3.64 Class;
+	33 | DEC VT52 Class;
+	34 | DEC VT100 Class;
+	35 | DEC VT220 Class;
+	36 | HP 700/94 Class;
+	37 | IBM 3130 Class;
+	38 | Local VT Session ID;
+	39 | Remote VT Session ID;
+	40 | Remote VT Address;
+	41 | Recipient;
+	42 | Monitored Property Reference;
+	43 | Issue Confirmed Notifications;
+	44 | Time Remaining;
+	45 | COV increments;
+	46 | Month;
+	47 | Week of Month;
+	48 | Day of Week;
+	49 | Invalid Day;
+	50 | Monday;
+
+
+
+
+

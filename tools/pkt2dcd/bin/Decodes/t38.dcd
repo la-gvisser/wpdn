@@ -1,0 +1,409 @@
+// ---------------------------------------------------------------------
+//	ITU - T.38
+//		ASN.1 PER 
+//		using 2004.04 spec
+//
+//		Last Updated:	SI 2005.03.24
+//
+// ---------------------------------------------------------------------
+
+// oh man... depending on udp or tcp ... 
+// if tcp --> IFPPacket
+// if udp --> UDPTL
+void T38;
+	l[1] = 0x547279;	//set to use 'Try' version
+	if (g[20] == 0x554450)
+	{
+		if (l[1] == 0x547279)
+		{
+			TNXT -T38::UDPTL_Try;
+			g[1] = 0;     // avoid later RTP parse
+			g[2] = 0;
+		}
+		TNXT -T38::UDPTL;
+	}
+	/*
+	if (g[20] != 0x554450)
+	{
+		if (l[1] == 0x547279)
+		{
+			LABL 0 0 0 b7 IFP Packet;
+			T38::IFPPacket_Try;
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		T38::IFPPacket;
+	}
+	*/
+
+void T38::Test;
+	if (g[2] == 5060)     // skip SIP port
+	{
+		TRTS;
+	}
+	if (g[2] > 1024)    // port > 1024
+	{
+		l[1] = pw[0];  // Seq Num
+		if (l[1] < 25000)  // avoid RTP misunderstanding
+		{
+			l[2] = pb[2];  //  IFP Packet Len
+			l[3] = pb[3];  //  Type of Message
+			l[4] = pb[3];  //  T30 Indicator
+			ANDG 40 43;
+			if (l[3] == 0)         // t30-indicator
+			{
+				ANDG E 44;
+				if (l[4] < 24)
+				{
+					T38;
+				}
+			}
+			if (l[3] == 64 )  //data
+			{
+				l[4] = pb[4];
+				if (l[4] < 30)
+				{
+					T38;
+				}
+			}
+		}
+	}
+	TRTS;
+
+void T38::UDPTL_Try;
+	LABL 0 0 0 b1 UDPTL - UDP Transport Layer\UDPTL;
+	DWRD 0 0 90 c2 Seq Num:;
+	LABL 0 0 0 b7 Primary IFP Packet;
+	T38::IFPPacket_Try;
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b7 Error Recovery;
+	T38::ErrorRecovery_Try;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void T38::IFPPacket_Try;
+	DBYT 0 0 90 c2 Packet Length:;
+	LABL 0 0 0 24 bytes;
+	DBIT 1 41 90 c2 Preamble:;
+	BST# 0 41 0 24 T38::IFPPacket::Preamble_Str;
+	LABL 0 0 0 b7 Type of Message;
+	DBIT 1 42 90 c2 Choice:;
+	BST# 0 42 0 24 T38::IFPPacket::Choice_Str;
+	if (l[2] == 0)
+	{
+		DBIT 4 43 90 c2 Type:;
+		CST# 0 43 0 24 T38::IFPPacket::BITS_2_TO_5_Str;
+		CST# 0 43 0 04 T38::IFPPacket::t30Type;
+		DBIT 2 43 90 c2 Padding Bits:;
+		LABL 0 43 0 24 ".... ..00";
+    }
+    if (l[2] == 1)
+    {
+		DBIT 4 43 90 c2 Data Type:;
+		CST# 0 43 0 24 T38::IFPPacket::BITS_2_TO_5_Str;
+		CST# 0 43 0 04 T38::IFPPacket::DataType;
+		DBIT 2 43 90 c2 Padding Bits:;
+		LABL 0 43 0 24 ".... ..00";
+    }
+	LABL 0 0 0 b8;
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+
+	LABL 0 0 0 b7 Data Field;
+	DBYT 0 42 90 C2 Data Counter:;
+	l[3] = 1;
+	while (l[2] > 0)
+	{
+		DGLB 0 43 2 b9 Data # ;
+		DBIT 1 41 90 c2 Preamble:;
+		BST# 0 41 0 24 T38::IFPPacket::Type_Of_Msg::Preamble_Str;
+		LABL 0 0 0 b9 Field Type;
+		DBIT 3 44 90 C2 Type:;
+		CST# 0 44 0 24 T38::IFPPacket::BITS_1_TO_3_Str;
+		CST# 0 44 0 04 T38::IFPPacket::FieldType;
+		DBIT 4 45 90 c2 Padding Bits:;
+		LABL 0 45 0 24 ".... 0000";
+		LABL 0 0 0 b8;
+		if (l[1] == 1)
+		{
+			LABL 0 0 0 b9 Field Data;
+			DWRD 0 44 90 c2 Length Indicator:;
+			LABL 0 44 04 24 bytes (Base of length is 1);
+			l[4] += 1;
+			DGLB 0 44 90 c2 Data Length:;
+			LABL 0 0 0 24 bytes (calculated);
+			if (l[4] == 1)
+			{
+				HBYT 0 0 90 c2 Data:;
+			}
+			if (l[4] > 2)
+			{
+				DUMP 0 44 90 c2 Data:;
+			}
+			LABL 0 0 0 b8;
+		}
+		LABL 0 0 0 b8;
+		l[3] += 1;
+		l[2] -= 1;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void T38::ErrorRecovery_Try;
+	DBIT 1 41 90 c2 Choice:;
+	BST# 0 41 0 24 T38::IFPPacket::ErrorRecovery::Choice_Str;
+	DBIT 7 0 90 c2 Padding Bits:;
+	LABL 0 0 0 24 ".000 0000";
+	if (l[1] == 0)
+	{
+		LABL 0 0 0 b7 Secondary IFP Packets;
+		DBYT 0 42 90 c2 Packets Counter:;
+		l[3] = 1;
+		while (l[2] > 0)
+		{
+			DGLB 0 43 1 b7 IFP Packet # ;
+			T38::IFPPacket_Try;
+			//LABL 0 0 0 b8;
+			l[3] += 1;
+			l[2] -= 1;
+		}
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+
+	LABL 0 0 0 b7 fec Info;
+	DBYT 0 2 05 05 integer length;
+	LABL 0 0 90 c2 fec nPackets:;
+	ASN1_Integer;
+
+	LABL 0 0 00 b7 fec Data;
+	DBYT 0 5 90 c2 Num of Items:;
+	while (g[5] > 0)
+	{
+		LABL 0 0 00 b7 Item:;
+		DBYT 0 1 05 05 length;
+		HEX# 80000000 1 90 c2 fec Data:;
+		LABL 0 0 00 b8;
+
+		g[5] -= 1;
+	}
+	LABL 0 0 00 b8;
+	LABL 0 0 00 b8;
+
+	TRTS;
+
+str# T38::IFPPacket::Preamble_Str;
+	0 | 1... ....  data-field present;
+		0... ....  data-field NOT present;
+
+str# T38::IFPPacket::Choice_Str;
+	0 | .1.. ....  data;
+		.0.. ....  t30-indicator;
+
+str# T38::IFPPacket::ErrorRecovery::Choice_Str;
+	0 | 1... ....  fec-info;
+		0... ....  secondary-ifp-packets;
+
+str# T38::IFPPacket::BITS_2_TO_5_Str;
+	0  | ..00 00..  ;
+	1  | ..00 01..  ;
+	2  | ..00 10..  ;
+	3  | ..00 11..  ;
+	4  | ..01 00..  ;
+	5  | ..01 01..  ;
+	6  | ..01 10..  ;
+	7  | ..01 11..  ;
+	8  | ..10 00..  ;
+	9  | ..10 01..  ;
+	10 | ..10 10..  ;
+	11 | ..10 11..  ;
+	12 | ..11 00..  ;
+	13 | ..11 01..  ;
+	14 | ..11 10..  ;
+	15 | ..11 11..  ;
+
+str# T38::IFPPacket::BITS_1_TO_3_Str;
+	0  | .000 ....  ;
+	1  | .001 ....  ;
+	2  | .010 ....  ;
+	3  | .011 ....  ;
+	4  | .100 ....  ;
+	5  | .101 ....  ;
+	6  | .110 ....  ;
+	7  | .111 ....  ;
+
+str# T38::IFPPacket::Type_Of_Msg::Preamble_Str;
+	0 | 1... ....  field-data present;
+		0... ....  field-data NOT preset;
+
+void T38::UDPTL;
+	LABL 0 0 0 b1 UDPTL - UDP Transport Layer\UDPTL;
+	ASN1_Init;
+	
+	g[2] = 2;
+	LABL 0 0 90 c2 Seq Num:;
+	ASN1_Integer;
+	
+	g[2] = 1;
+	LABL 0 0 90 c2 IFP Packet Len:;
+	ASN1_Integer;
+	
+	T38::IFPPacket;
+	T38::UDPTL::ErrorRecovery;
+	
+	TRTS;
+
+// SEQUENCE
+void T38::IFPPacket;	
+	LABL 0 0 0 b7 IFP Packet;
+	PER_ExtBit;									// ext in g[0xc]
+	DBIT 1 1 90 c2 Type of Message:;
+	CEQU 0 1 00 14 t30-indicator;
+	CEQU 1 1 00 14 data;
+	DBIT 2 0 5 5 align;
+	if (g[1] == 0)
+	{
+		DBIT 3 2 90 c2 t30 Indicator:;
+		CST# 0 2 00 14 T38::IFPPacket::t30Type;
+	}
+	if (g[1] == 1)
+	{
+		DBIT 3 2 90 c2 Data Type:;
+		CST# 0 2 00 14 T38::IFPPacket::DataType;
+	}
+	DBIT 1 0 5 5 align;
+	
+	// Is there data? check the ext bit		-- SEQUENCE OF SEQUENCE
+	if (g[0xc] == 1)
+	{
+		LABL 0 0 0 b7 Data Field;
+		DBYT 0 5 90 c2 Num of Items:;
+		while (g[5] > 0)
+		{
+			DBIT 1 41 5  5 dataFieldBit;
+			LABL 0 0 00 b7 Item;
+			DBIT 3 1 90 c2 Field Type:;
+			CST# 0 1 00 14 T38::IFPPacket::FieldType;
+			DBIT 4 0 05 05 align;
+			
+			// data field
+			if (l[1] == 1)
+			{
+				DWRD 0 1 05 05 Data Field Len:;
+				g[1] += 1;
+				HEX# 80000000 1 90 c2 Data Field:;
+			}
+			LABL 0 0 00 b8;
+			g[5] -= 1;
+		}
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# T38::IFPPacket::t30Type;
+	0 | no-signal;
+	1 | cng;
+	2 | ced;
+	3 | v21-preamble;
+	4 | v27-2400-training;
+	5 | v27-4800-training;
+	6 | v29-7200-training;
+	7 | v29-9600-training;
+	8 | v17-7200-short-training;
+	9 | v17-7200-long-training;
+	10 | v17-9600-short-training;
+	11 | v17-9600-long-training;
+	12 | v17-12000-short-training;
+	13 | v17-12000-long-training;
+	14 | v17-14400-short-training;
+	15 | v17-14400-long-training;
+	16 | ?;
+	17 | v8-ansam;
+	18 | v8-signal;
+	19 | v34-cntl-channel-1200;
+	20 | v34-pri-channel;
+	21 | v34-CC-retrain;
+	22 | v33-12000-training;
+	23 | v33-14400-training;
+
+str# T38::IFPPacket::DataType;
+	0 | v21;
+	1 | v27-2400;
+	2 | v27-4800;
+	3 | v29-7200;
+	4 | v29-9600;
+	5 | v17-7200;
+	6 | v17-9600;
+	7 | v17-12000;
+	8 | v17-14400;
+	9  | ?;
+	10 | v8;
+	11 | v34-pri-rate;
+	12 | v34-CC-1200;
+	13 | v34-pri-ch;
+	14 | v33-12000;
+	15 | v33-14400;
+
+str# T38::IFPPacket::FieldType;
+	0 | hdlc-data;
+	1 | hdlc-sig-end;
+	2 | hdlc-fcs-OK;
+	3 | hdlc-fcs-BAD;
+	4 | hdlc-fcs-OK-sig-end;
+	5 | hdlc-fcs-BAD-sig-end;
+	6 | t4-non-ecm-data;
+	7 | t4-non-ecm-sig-end;
+	8  | ?;
+	9 | cm-message;
+	10 |jm-message;
+	11 | ci-message;
+	12 | v34rate;
+
+// CHOICE
+void T38::UDPTL::ErrorRecovery;
+	LABL 0 0 0 b7 Error Recovery;
+	DBIT 1 41 90 c2 Choice:;
+	CEQU 0 41 00 14 Secondary IFP Packets;
+	CEQU 1 41 00 14 fec-info;
+	DBIT 8 00 05 05 align;
+	if (l[1] == 0)
+	{
+		DBYT 0 45 90 c2 Num of Items:;
+		while (l[5] > 0)
+		{
+			g[2] = 1;
+			LABL 0 0 90 c2 Secondary IFP Pkt Len:;
+			ASN1_Integer;
+			
+			T38::IFPPacket;
+			
+			l[5] -= 1;
+		}
+	}
+	if (l[1] == 1)
+	{
+		DBYT 0 2 05 05 integer length;
+		LABL 0 0 90 c2 fec nPackets:;
+		ASN1_Integer;
+		
+		LABL 0 0 00 b7 fec Data;
+		DBYT 0 5 90 c2 Num of Items:;
+		while (g[5] > 0)
+		{
+			LABL 0 0 00 b7 Item:;
+			DBYT 0 1 05 05 length;
+			HEX# 80000000 1 90 c2 fec Data:;
+			LABL 0 0 00 b8;
+			
+			g[5] -= 1;
+		}
+		LABL 0 0 00 b8;
+	}
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+

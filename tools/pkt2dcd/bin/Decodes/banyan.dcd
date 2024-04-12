@@ -1,0 +1,359 @@
+* Decoder version: 5.0.1.0
+
+//---------------------------
+
+void VINES::802_2()
+{
+	HBYT 0 1 90 c2 VINES Type:;
+	TEQU ba 1 0 0 VINES Internet;
+	TEQU bb 1 0 0 VINES Echo;
+	DUMP 0 0 90 c2 Unknown VINES Data:;
+}
+
+void VINES Echo;
+	LABL 0 0 0 b1 VINES Echo Protocol;
+	DUMP 0 0 90 c2 Echo Message Data:;
+	
+void VINES Internet;
+	LABL 0 0 0 b1 VINES IP - Internet Protocol\VINES-IP:;
+	HWRD 0 0 90 c2 Checksum:;
+	DWRD 0 10 90 c2 Length:;
+	SUBG 2 10;  *subtract checksum
+*   skip to dest addr 
+	INCR 6;
+*   fetch dest addr
+	GWRD 0 1 0 c0;
+*   move back to before fetch 
+	DECR 6;
+	BBIT 1 0 90 c2 Unused:;
+	TEQU ffff 1 0 0 VINES IP Broadcast;
+	BBIT 1 1 90 c2 Redirect:;
+	BBIT 1 1 90 c2 Metric:;
+	BBIT 1 1 90 c2 Error:;
+	TNXT -VINES IP Common;
+	
+void VINES IP Broadcast;
+	BBIT 3 1 90 c2 Class:;
+*   display indexed string of in DDP Types 
+	CST# ffffffff 1 20 14 VINES Class Subfield;
+	TNXT -VINES IP Common;
+	
+void VINES IP Common;
+	BBIT 4 1 90 c2 Hop Count:;
+	LABL 0 0 0 14 "(";
+	DGLB 0 1 4;
+	LABL 0 0 0 4 ")";
+	DBYT 0 1 90 c2 Protocol Type:;
+*   display indexed string 
+	CST# 0 1 20 14 VINES Protocol Types;
+	CLSE 0 0 20 14 Unknown Type;
+	HLNG 0 0 90 c2 Dest. Net Number:;
+	HWRD 0 0 90 c2 Dest. Subnet Num:;
+	HLNG 0 0 90 c2 Src. Net Number:;
+	HWRD 0 0 90 c2 Src. Subnet Num:;
+*   transfer to indexed string 
+	TST# 0 1 0 0 VINES Protocol Types;
+	LABL 0 0 0 1 Unknown Type;
+	DUMP 0 10 90 c2 Unknown Data Area:;
+	
+void VINES IPC;
+	LABL 0 0 0 b1 IPC - Interprocess Communications Protocol\IPC:;
+	IPC/SPP Header;
+	TEQU 0 1 0 0 VINES IPC Short Header;
+	TEQU 2 1 0 0 VINES IPC Error;
+	DWRD 0 2 90 c2 Length:;
+	TNEQ 1 1 0 0 VINES Done;
+	DUMP 0 2 90 c2 Reliable Message Data:;
+void VINES IPC Short Header;
+	TGTE  0 10 0 0 VINES Done;
+	DECR  1;
+	GBYT  0 1;
+	INCR  1;
+	TEQU 80 1 0 0 IP;
+	DUMP 0 10 90 c2 Unreliable Datagram Data:;
+void VINES IPC Error;
+	HWRD 0 2 90 c2 Error:;
+void IPC/SPP Header;
+	DWRD 0 0 90 c2 Source Port:;
+	DWRD 0 0 90 c2 Dest. Port:;
+	DBYT 0 1 90 c2 Packet Type:;
+*   display indexed string 
+	CST# ffffffff 1 20 14 VINES IPC Packet Types;
+	TEQU 0 1 0 0 Short IPC/SPP Header;
+	BBYT 0 2 90 c2 Control Byte:;
+	CBIT 7 2 0 14 Request Ack;
+	CBIT 6 2 0 14 End of Message;
+	CBIT 5 2 0 14 Beginning of Message;
+	CBIT 4 2 0 14 Abort Message;
+	HWRD 0 0 90 c2 Local Conn. ID:;
+	HWRD 0 0 90 c2 Remote Conn. ID:;
+	DWRD 0 0 90 c2 Sequence Number:;
+	HWRD 0 0 90 c2 Ack Number:;
+	TRTS;
+void Short IPC/SPP Header;
+*   skip padding byte 
+	INCR 1;
+	TRTS;
+void VINES SPP;
+	LABL 0 0 0 b1 SPP - Sequenced Packet Protocol\SPP:;
+	IPC/SPP Header;
+	HWRD 0 2 90 c2 Window:;
+	TNEQ 1 1 0 0 VINES Done;
+	DUMP 0 10 90 c2 SPP Message Data:;
+void VINES ARP;
+	GBYT 0 2;
+	TEQU 1 2 0 0 VINES Sequenced ARP;
+	LABL 0 0 0 b1 Non-Sequenced ARP - Address Resolution Protocol\NSARP:;
+	DWRD 0 1 90 c2 Packet Type:;
+*   display indexed string 
+	CST# ffffffff 1 20 14 VINES ARP Packet Types;
+	TNEQ 3 1 0 0 VINES Done;
+	HLNG 0 0 90 c2 Network Number:;
+	HWRD 0 0 90 c2 Subnetwork Num:;
+void VINES Sequenced ARP;
+	LABL 0 0 0 31 Sequenced ARP - Address Resolution Protocol\SARP:;
+	DBYT 0 1 90 c2 Version Number:;
+	DBYT 0 1 90 c2 Packet Type:;
+*   display indexed string 
+	CST# ffffffff 1 20 14 VINES ARP Packet Types;
+	TNEQ 3 1 0 0 VINES Done;
+	HLNG 0 0 90 c2 Network Number:;
+	HWRD 0 0 90 c2 Subnetwork Num:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DWRD 0 0 90 c2 Metric Value:;
+void VINES RTP;
+	GBYT 0 2;
+	TEQU 0 2 0 0 VINES Sequenced RTP;
+	LABL 0 0 0 b1 Non-Sequenced RTP - Routing Update Protocol\NSRTP:;
+	DBYT 0 2 90 c2 Operation Type:;
+	CST# 0 2 20 14 VINES RTP Operation Types;
+	DBYT 0 1 90 c2 Node Type:;
+	CEQU 1 1 20 14 Nonservice Node;
+	CEQU 2 1 20 14 Service Node;
+	DBYT 0 1 90 c2 Controller Type:;
+	CEQU 0 1 20 14 Default Card;
+	CEQU 1 1 20 14 Multibuffer;
+	DBYT 0 1 90 c2 Machine Type:;
+	CBIT 0 1 0 f4 Fast Bus;
+	CLSE 0 1 0 f4 Slow Bus;
+	CBIT 1 1 20 14 TCP/IP Option;
+	CLSE 0 1 20 14 No TCP/IP Option;
+	CBIT 2 1 20 14 Sequenced RTP Supported;
+	CLSE 0 1 20 14 Sequenced RTP Not Supported;
+	TGTE 1 10 0 0 VINES Done;
+	TEQU 6 2 0 0 VINES RTP Redirect;
+	TNXT -VINES Topo Entries;
+void VINES Sequenced RTP;
+	LABL 0 0 0 31 Sequenced RTP - Routing Update Protocol\SRTP:;
+	DWRD 0 1 a0 c2 Version Number:;
+	DBYT 0 2 a0 c2 Operation Type:;
+	CST# 0 2 20 14 VINES Seq RTP Op Types;
+	DBYT 0 1 a0 c2 Node Type:;
+	CEQU 1 1 20 14 Client;
+	CEQU 2 1 20 14 Router;
+	BBYT 0 1 a0 c2 Compatibility Flags:;
+	CBIT 2 1 0 f4 Neighbor Is Non-VINES-reachable Neighbor Or Auto-configured;
+	CBIT 1 1 0 f4 Neighbors Do Not Support Sequenced RTP;
+	CBIT 0 1 20 14 Version Mismatch;
+	HBYT 0 1 a0 c2 Reserved:;
+	TGTE 1 10 0 0 VINES Done;
+	TEQU 2 2 0 0 VINES RTP Update;
+	TEQU 3 2 0 0 VINES RTP Seq Redirect;
+	TEQU 4 2 0 0 VINES Done;
+	BBYT 0 2 a0 c2 Requested Info:;
+	CBIT 3 2 20 14 Simple Response Only;
+	CBIT 2 2 20 14 Full Topology;
+	CBIT 1 2 20 14 Routing Info Since Specified Time;
+	CBIT 0 2 20 14 Routing Info For Specified List;
+	HBYT 0 1 a0 c2 Reserved:;
+	TGTE 1 10 0 0 VINES Done;
+	SBIT 0 2;
+	SKIP 80000002;
+	RTP Network Info;
+	TGTE 1 10 0 0 VINES Done;
+	SBIT 1 2;
+	SKIP 80000002;
+	DLNG 0 0 a0 c2 Sequence Number:;
+	TGTE 1 10 0 0 VINES Done;
+	SBIT 3 2;
+	TLSE -VINES Done;
+	DUMP 0 10 a0 c2 Packet Header Info:;
+
+void RTP Network Info;
+	LSTS 0 10 0 b1 Information Request Spec #;
+	HLNG 0 0 80 d2 Network Number:;
+	LSTZ 0 10 0 80;
+	TRTS;
+
+void VINES Topo Entries;
+	LSTS 0 10 0 b1 Topological Entry #;
+	HLNG 0 0 90 c2 Network Number:;
+	DWRD 0 0 90 c2 Neighbor Metric:;
+	LSTZ 0 10 0 80;
+
+void VINES RTP Redirect;
+	LABL 0 0 0 b1 VINES Non-Sequenced Routing Redirect;
+	HWRD 0 0 c0 c2 Version Bytes:;
+	DBYT 0 3 c0 c2 Link Address Length:;
+	DBYT 0 4 c0 c2 Source Route Length:;
+	HLNG 0 0 c0 c2 Destination Network ID:;
+	HWRD 0 0 c0 c2 Destination Subnet ID:;
+	DWRD 0 0 c0 c2 Metric To Destination:;
+	DBYT 0 2 c0 c2 Destination Node Type:;
+	CEQU 1 2 20 14 Client Node;
+	CEQU 2 2 20 14 Router;
+	DBYT 0 2 c0 c2 Destination Machine Type:;
+	CEQU 0 2 20 14 8088 CPU;
+	CEQU 1 2 20 14 80286 Or Better CPU;
+	CEQU 2 2 20 14 TCP/IP Svr-Svr Installed;
+	CEQU 4 2 20 14 Sequenced RTP Supported;
+	DBYT 0 2 c0 c2 Destination Controller Type:;
+	CEQU 0 2 20 14 Single Buffer;
+	CEQU 1 2 20 14 Multibuffer;
+*   skip padding byte 
+	INCR 1;
+	HLNG 0 0 c0 c2 Preferred Gateway Network ID:;
+	HWRD 0 0 c0 c2 Preferred Gateway Subnet ID:;
+	DWRD 0 0 c0 c2 Metric To Preferred Gateway:;
+	DBYT 0 2 c0 c2 Preferred Gateway Node Type:;
+	CEQU 1 2 20 14 Client Node;
+	CEQU 2 2 20 14 Router;
+	DBYT 0 2 c0 c2 Preferred Gateway Machine Type:;
+	CEQU 0 2 20 14 8088 CPU;
+	CEQU 1 2 20 14 80286 Or Better CPU;
+	CEQU 2 2 20 14 TCP/IP S-S Installed;
+	DBYT 0 2 c0 c2 Preferred Gateway Controller Type:;
+	CEQU 0 2 20 14 Single Buffer;
+	CEQU 1 2 20 14 Multibuffer;
+*   skip padding byte 
+	INCR 1;
+	HEX# 0 3 c0 c2 Preferred Gateway Data Link Addr:;
+	HEX# 0 4 c0 c2 Preferred Gateway Source Route:;
+void VINES RTP Update;
+	LABL 0 0 0 b1 VINES Sequenced Routing Update;
+	HBYT 0 2 a0 c2 Information Type:;
+	CEQU 1 2 20 14 Update;
+	CEQU 2 2 20 14 Response;
+	BBYT 0 3 a0 c2 Control Flags:;
+	CBIT 4 3 0 f4 Synchronization Update;
+	CBIT 3 3 0 f4 Full Topology Update;
+	CBIT 2 3 0 f4 Contains Only Specifically Requested Info;
+	CBIT 1 3 0 f4 End-Of-Message;
+	CBIT 0 3 0 f4 Beginning-Of-Message;
+	CEQU 0 3 0 14 Null Update;
+	DWRD 0 4 a0 c2 Packet ID:;
+	DWRD 0 0 a0 c2 Data Offset:;
+	DLNG 0 0 a0 c2 Router Sequence Number:;
+	DWRD 0 0 a0 c2 Metric Value:;
+	TLTE 1 10 0 0 VINES Update Tuples;
+
+void VINES Update Tuples;
+	LSTS 0 10 0 b1 Tuple Entry #;
+	HLNG 0 0 90 c2 Network ID:;
+	DWRD 0 2 90 c2 Metric Value:;
+	CEQU ffff 2 20 14 Unreachable;
+	DLNG 0 0 90 c2 Sequence Number:;
+	BBYT 0 3 90 c2 Network Flags:;
+	CBIT 3 3 0 f4 Destination Reachable Through Non-Sequenced RTP Only;
+	CBIT 2 3 0 f4 Neighbor Accesses Router Across Non-VINES Network;
+	CBIT 1 3 0 f4 Neighbor Accesses Router Across Point-To-Point Connection;
+	CBIT 0 3 0 f4 Neighbor Accesses Router Across Broadcast-Capable Medium;
+	HBYT 0 0 90 c2 Reserved:;
+	LSTZ 0 10 0 80;
+
+void VINES RTP Seq Redirect;
+	LABL 0 0 0 b1 VINES Sequenced Routing Redirect;
+	DBYT 0 3 c0 c2 Link Address Length:;
+	DBYT 0 4 c0 c2 Source Route Length:;
+	HLNG 0 0 c0 c2 Destination Network ID:;
+	HWRD 0 0 c0 c2 Destination Subnet ID:;
+	DWRD 0 0 c0 c2 Metric To Destination:;
+	DBYT 0 2 c0 c2 Destination Node Type:;
+	CEQU 1 2 20 14 Client Node;
+	CEQU 2 2 20 14 Router;
+	BBYT 0 2 c0 c2 Destination Flags:;
+	CBIT 3 2 0 f4 Destination Reachable Through Non-Sequenced RTP Only;
+	CBIT 2 2 0 f4 Neighbor Accesses Router Across Non-VINES Network;
+	CBIT 1 2 0 f4 Neighbor Accesses Router Across Point-To-Point Connection;
+	CBIT 0 2 0 f4 Neighbor Accesses Router Across Broadcast-Capable Medium;
+	DLNG 0 0 c0 c2 Destination Sequence Number:;
+	HLNG 0 0 c0 c2 Preferred Gateway Network ID:;
+	HWRD 0 0 c0 c2 Preferred Gateway Subnet ID:;
+	DWRD 0 0 c0 c2 Metric To Preferred Gateway:;
+	DBYT 0 2 c0 c2 Preferred Gateway Node Type:;
+	CEQU 1 2 20 14 Client Node;
+	CEQU 2 2 20 14 Router;
+	BBYT 0 2 c0 c2 Preferred Gateway Flags:;
+	CBIT 3 2 0 f4 Destination Reachable Through Non-Sequenced RTP Only;
+	CBIT 2 2 0 f4 Neighbor Accesses Router Across Non-VINES Network;
+	CBIT 1 2 0 f4 Neighbor Accesses Router Across Point-To-Point Connection;
+	CBIT 0 2 0 f4 Neighbor Accesses Router Across Broadcast-Capable Medium;
+	DLNG 0 0 c0 c2 Preferred Gateway Sequence Num:;
+	HEX# 0 3 c0 c2 Preferred Gateway Data Link Addr:;
+	HEX# 0 4 c0 c2 Preferred Gateway Source Route:;
+
+void VINES ICP;
+	LABL 0 0 0 b1 ICP - Internet Control Protocol\ICP:;
+	DWRD 0 1 90 c2 Packet Type:;
+	CEQU 0 1 20 14 Exception Notification;
+	CEQU 1 1 20 14 Metric Notification;
+	CEQU 2 1 20 14 Echo Request Or Reply;
+	TEQU 0 1 20 14 VINES ICP Exception;
+	TEQU 2 1 20 14 VINES Echo Req/Rply;
+	DWRD 0 0 90 c2 Metric Value:;
+	TLTE 1 10 0 0 VINES Internet;
+
+void VINES Echo Req/Rply;
+	DWRD 0 1 90 c2 Echo Type:;
+	CEQU 0 1 20 14 Echo Request;
+	CEQU 1 1 20 14 Echo Reply;
+	TLTE 1 10 0 0 VINES Internet;
+
+void VINES ICP Exception;
+	DWRD 0 1 90 c2 Exception Value:;
+	CEQU 9b 1 0 f4 Destination Address Is Not Known To Router;
+	CEQU 9d 1 0 f4 Destination Socket Does Not Exist;
+	TLTE 1 10 0 0 VINES Internet;
+
+void VINES Done;
+
+str# VINES Class Subfield;
+	All reachable nodes, regardless of cost;
+	All reachable nodes, except those with cost;
+	All reachable nodes with low cost (>= 4800 bps);
+	All reachable nodes on high speed media (LANs);
+	All reachable service nodes, regardless of cost;
+	All reachable service nodes, except those with cost;
+	All reachable service nodes with low cost (>= 4800 bps);
+	All reachable service nodes on high speed media (LANs);
+str# VINES Protocol Types;
+	VINES IPC;
+	VINES SPP;
+	;
+	VINES ARP;
+	VINES RTP;
+	VINES ICP;
+str# VINES IPC Packet Types;
+	Datagram;
+	Data;
+	Error;
+	Disconnect;
+	Probe;
+	Acknowledgment;
+str# VINES ARP Packet Types;
+	Query Request;
+	Service Response;
+	Assignment Request;
+	Assignment Response;
+str# VINES RTP Operation Types;
+	Request;
+	;
+	;
+	Update;
+	Response;
+	Redirect;
+str# VINES Seq RTP Op Types;
+	Request;
+	Update;
+	Redirect;
+	Re-initialize;

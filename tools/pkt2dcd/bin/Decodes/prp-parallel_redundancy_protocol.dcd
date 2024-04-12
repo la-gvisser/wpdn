@@ -1,0 +1,55 @@
+* PRP - parallel-redundancy-protocol
+
+str# EProto::Names_Str;
+	0x88fb | Parallel Redundancy Protocol;
+
+
+str# Ether::Branching_3_Str;
+	0x88fb | PRP;
+
+void PRP()
+{
+	LABL( 0, 0, 0, 0xb1, "PRP - Parallel Redundancy Protocol\PRP:");
+	DBIT( 4, 0, 0x90, 0xc2, "Path:");
+	DBIT( 12, 0, 0x90, 0xc2, "Version:");
+	DBIT( 8, l[1], 0x90, 0xc2, "TLV Type:");
+	if (l[1] == 20)
+	{
+		LABL( 0, 0, 0x00, 0x14, "Duplicate Discard");
+	}
+	if (l[1] == 21)
+	{
+		LABL( 0, 0, 0x00, 0x14, "Duplicate Accept");
+	}
+	DBIT( 8, 0, 0x90, 0xc2, "TLV Length:");
+	ETHR(0, 0, 0x90, 0xc2, "Source MAC Address A:");
+	ETHR(0, 0, 0x90, 0xc2, "Source MAC Address B:");
+	DBIT( 8, l[1], 0x90, 0xc2, "TLV Type:");
+	if (l[1] == 30)
+	{
+		LABL( 0, 0, 0x00, 0x14, "RedBox");
+	}
+	if (l[1] == 31)
+	{
+		LABL( 0, 0, 0x00, 0x14, "VDAN");
+	}
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0x00, 0x14, "End of TLVs");
+	}
+	DBIT( 8, 0, 0x90, 0xc2, "TLV Length:");
+	if (l[1] == 30)
+	{
+		ETHR( 0, 0, 0x90, 0xc2, "RedBox MAC Address:");
+	}
+	if (l[1] == 31)
+	{
+		ETHR( 0, 0, 0x90, 0xc2, "VDAN MAC Address:");
+	}
+	D64B( 0, 0, 0x90, 0xc2, "Padding:");
+	D64B( 0, 0, 0x00, 0x00);
+	DBIT( 0, 16, 0x00, 0x00);
+	DBIT( 0, 16, 0x90, 0xc2, "Sequence Number:");
+	HBIT( 0, 4, 0x90, 0xc2, "LAN:");
+	DBIT( 0, 12, 0x90, 0xc2, "LSDU Size:");
+}

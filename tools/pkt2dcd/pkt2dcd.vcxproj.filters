@@ -1,0 +1,1761 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>h;cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
+    </Filter>
+    <Filter Include="shared/multi">
+      <UniqueIdentifier>{85addc5d-58e6-42e7-a3cf-ee92685ca743}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shared/win">
+      <UniqueIdentifier>{7af5a0aa-8bc3-4756-ac71-e75253f5d153}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="decode">
+      <UniqueIdentifier>{758072f7-f599-4d3b-a40d-43f6e4df77d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decodes">
+      <UniqueIdentifier>{31e9da7c-330d-4c24-be3d-27131e5fa627}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decodes\bin">
+      <UniqueIdentifier>{d7fb01f6-0132-42f6-b878-6e8a0777bce6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Decodes\bin64">
+      <UniqueIdentifier>{fd3726e9-3023-4277-a423-8459577e8dbf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library">
+      <UniqueIdentifier>{1d438dc5-8896-4306-a9d9-4e4178696e54}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library\bin">
+      <UniqueIdentifier>{3ec36a42-3b3c-47ad-883e-6aa01b2f59d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library\bin64">
+      <UniqueIdentifier>{4ebfedd5-912c-4926-a97b-e8ba7cd1f5ea}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pkt2dcd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\ArrayEx.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\ByteStream.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\ChannelMgr.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\Parser.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\XObject.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\Environment.cpp">
+      <Filter>shared/win</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\FileUtil.cpp">
+      <Filter>shared/win</Filter>
+    </ClCompile>
+    <ClCompile Include="DecodeManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\MediaSpec.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\MediaSpecUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\OutputFileStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\TimeStamp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\XMLBuilder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\XMLDoc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\XMLIter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\XMLParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\AddressTableParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\Color.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\NameTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\NameTableFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\NameTableParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\NameTableReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\PeekTaggedFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\PortTableParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\ProtocolTableParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\StreamOnCByteStream.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\TimeStampFormat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\VariantUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\WFile.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\XMLParserFactory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\win\XmlUtil.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\multi\ChecksumUtil.cpp">
+      <Filter>shared/multi</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pkt2dcd.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\AGTypes.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\ArrayEx.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\ByteStream.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\ChannelMgr.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\Comparator.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\MediaTypes.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\MemUtil.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\PacketHeaders.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\Parser.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\PeekPacket.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\Peekplug.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\tagfile.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\TimeConv.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\wppushpack.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XObject.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\CatchHR.h">
+      <Filter>shared/win</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\Environment.h">
+      <Filter>shared/win</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\FileUtil.h">
+      <Filter>shared/win</Filter>
+    </ClInclude>
+    <ClInclude Include="decode\include\Dcod.h">
+      <Filter>decode</Filter>
+    </ClInclude>
+    <ClInclude Include="DecodeManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="decode\include\PSIDs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\helium\hecore.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\helium\heresult.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\helium\hestdint.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\helium\hlexcept.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\helium\hlstrconv.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\AlignUtil.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\EP3xColors.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\filepath.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\MediaSpec.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\MediaSpecUtil.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\OutputFileStream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\Protospecs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\TimeStamp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XMLBuilder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XMLDoc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XMLIter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\XMLParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\AddressTableParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\Color.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\NameTable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\NameTableFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\NameTableParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\NameTableReader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\PacketLoader.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\PeekTaggedFile.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\PortTableParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\ProtocolTableParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\SAXContentHandlerImpl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\StreamOnCByteStream.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\TimeStampFormat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\VariantUtil.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\XMLParserFactory.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\win\XmlUtil.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\multi\ChecksumUtil.h">
+      <Filter>shared/multi</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="pkt2dcd.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\Decodes\802_1ag_cfm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\802_1ah.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\802_1x.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\802_11n.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\802_11r_fastroaming.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aa_decoder_types.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aerohive.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ah-authentication_header.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\alternative_decodes_list.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aol-im_instant_messenging.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\apple.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\apple-afp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\arp-address_resolution_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aruba.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aruba_erm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\aruba-instantap.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\asap.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\asn1.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\autocol-automatic_device_discovery_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\avaya.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\bacnet-building_automation_and_control_network.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\banyan.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\bgp-border_gateway_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\bittorrent.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\bootp-bootstrap_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\calcapp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\capwap.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\cgmp-cisco_group_management_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\cisco.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\cisco_erspan.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ciscoap.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ciscofabricpath.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\citix_cgp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\citrix.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\citrix_ica_browser.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\cups-common_unix_printer_system.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\daap-digital_audio_access_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dec.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dhcp-dynamic_host_configuration_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\diameter.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dicom.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dns-domain_name_system.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\docsis.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dvmrp-distance_vector_multicast_routing_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\egp-exterior_gateway_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\enrp-enpoint_handlespace_redundancy_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\epr-etherpeek_remote_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\esp-encapsulating_security_payload.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\etherip.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ethernet_ip.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ethernetpowerlink.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\fasttrack.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\fc-fibre_channel.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\fcoe.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\fix-financial_information_exchange.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ftp-file_transfer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\g722.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\g726.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\g7291.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\garp-generic_attributes_registration_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gnutella.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\goose.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gre-generic_routing_encapsulation.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gss-generic_security_service.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gtp-gprs_tunneling_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\h222.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\h245.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\h264.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\hperm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\hsrp-hot_standby_router_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\http-hyper_text_transfer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iapp-inter-access_point_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ibm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\icap-internet_content_adaptation_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\icmp-internet_control_messages_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iec61850sv.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ieee.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ieee1722avbtransportprotocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ieee19051.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ietf_main.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\igap-igmp_for_user_authentication_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\igmp-internet_group_management_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\igrp-interior_gateway_routing_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\imap-internet_message_access_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\imps - instant messaging and presence service.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\intel_ans.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ipmi-intelligent_platform_management_interface.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iptalk-appletalk_encapsulated_in_ip.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\irc-internet_relay_chat.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\isakmp-internet_security_association_and_key_management.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iscsi-small_computer_systems_interface.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\isdn-q921_user_adaptation_layer.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ismp-interswitch_message_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\isns-internet_storage_name_service.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iso_connectionless_network_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\iso_transport_service.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\itu.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\kerberos.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\l2f_l2tp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\l2tp-layer_2_tunneling_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lacp-link_aggregation_control_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ldap-lightweight_directory_access_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ldp-label_distribution_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lldp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\llmnr.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lmp-link_management_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lotus_notes.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lpd-line_printer_daemon.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lseme.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\lwapp-light_weight_access_point_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\m2pa.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\manager.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\manet.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mapi.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\matip.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\megaco.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mgcp-media_gateway_control_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\microsoft.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mms message encapulation.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mobile_ip.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mobile_ipv6.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\modbus.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mpeg4.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mqseries.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ms_proxy.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\msdp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\msn-ms_messenger.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\msrp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\napster.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\netbios.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\nntp-network_news_transport_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\novell.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\novell_rehaul.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ntlm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ntp-network_time_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\oam-operations_administration_management.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\oid.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\openflow.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\openflowv1.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\openflowv4.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\openflowv5.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\osi.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ospf-open_shortest_path_first_routing_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\oui.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pgm.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pim-protocol_independent_multicast.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pingpongprotocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pop-post_office_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pppoe.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ppp-point_to_point_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\pptp-point_to_point_tunneling_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\profinet.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\prp-parallel_redundancy_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ptp-precision_time_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\radius.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rfc2833.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rgmp-router_port_group_management_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rip-routing_information_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rmcp-remote_management_control_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rsvp-resource_reservation_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rtp_rtcp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rtps.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rtsp-real_time_streaming_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\rx.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\s1ap - s1 application protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sabp - serviceareabroadcastprotocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sap-session_announcement_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sccp-skinny_client_control_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sctp-stream_control_transmission_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sdp-session_description_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sflow.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sgsap.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sip-session_initiation_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\slpp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\slp-service_location_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\smbv2_gss.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\smpp-short_message_peer_to_peer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\smqp-simple_message_queue_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\smtp-simple_mail_transfer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\snmp-simple_network_management_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\soap-simple_object_access_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ss7-transport.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ss7-user.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ssdp-simple_service_discovery_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ssh-secure_shell.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ssl-secure_sockets_layer.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\stun.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\sun.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\syslog.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\t38.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tacacs.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tali-transport_adapter_layer_interface.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tbrpf-topology_dissemination_based_on_reverse_path_forwarding.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tcp_udp_ports.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tds-tabular_data_stream.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\telnet-network_virtual_terminal.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tftp-trivial_file_transfer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\timbuktu.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tivo.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tns-transparent_network_substrate.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tpkt.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\tzsp-tazman_sniffer_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\unistim.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\vendor_ids.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\vn-tags.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\vvrp-virtual_router_redundancy_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\vxlan.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wan.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wapi.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wap-wireless_application_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wassp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\WaveLink.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wccp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wccp_fwd.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wfp2p-wi-fi_peer-to-peer.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wlccp - wireless lan context control protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wol-wakeonlan.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wps-wi-fi_protected_setup.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wsp-wireless_session_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\wtp-wireless_transaction_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\xerox.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\xml.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\yahoo-im-yahoo_instant_messenging.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_1ag_cfm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_1ah.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_1x.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_11n.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_11r_fastroaming.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aa_decoder_types.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aerohive.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ah-authentication_header.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\alternative_decodes_list.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aol-im_instant_messenging.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\apple.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\apple-afp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\arp-address_resolution_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aruba.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aruba_erm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\aruba-instantap.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\asap.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\asn1.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\autocol-automatic_device_discovery_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\avaya.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\bacnet-building_automation_and_control_network.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\banyan.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\bgp-border_gateway_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\bittorrent.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\bootp-bootstrap_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\calcapp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\capwap.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\cgmp-cisco_group_management_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\cisco.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\cisco_erspan.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ciscoap.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ciscofabricpath.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\citix_cgp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\citrix.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\citrix_ica_browser.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\cups-common_unix_printer_system.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\daap-digital_audio_access_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dec.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dhcp-dynamic_host_configuration_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\diameter.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dicom.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dns-domain_name_system.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\docsis.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dvmrp-distance_vector_multicast_routing_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\egp-exterior_gateway_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\enrp-enpoint_handlespace_redundancy_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\epr-etherpeek_remote_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\esp-encapsulating_security_payload.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\etherip.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ethernet_ip.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ethernetpowerlink.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\fasttrack.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\fc-fibre_channel.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\fcoe.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\fix-financial_information_exchange.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ftp-file_transfer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\g722.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\g726.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\g7291.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\garp-generic_attributes_registration_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gnutella.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\goose.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gre-generic_routing_encapsulation.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gss-generic_security_service.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gtp-gprs_tunneling_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\h222.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\h245.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\h264.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\hperm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\hsrp-hot_standby_router_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\http-hyper_text_transfer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iapp-inter-access_point_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ibm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\icap-internet_content_adaptation_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\icmp-internet_control_messages_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iec61850sv.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ieee.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ieee1722avbtransportprotocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ieee19051.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ietf_main.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\igap-igmp_for_user_authentication_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\igmp-internet_group_management_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\igrp-interior_gateway_routing_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\imap-internet_message_access_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\imps - instant messaging and presence service.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\intel_ans.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ipmi-intelligent_platform_management_interface.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iptalk-appletalk_encapsulated_in_ip.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\irc-internet_relay_chat.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\isakmp-internet_security_association_and_key_management.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iscsi-small_computer_systems_interface.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\isdn-q921_user_adaptation_layer.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ismp-interswitch_message_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\isns-internet_storage_name_service.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iso_connectionless_network_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\iso_transport_service.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\itu.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\kerberos.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\l2f_l2tp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\l2tp-layer_2_tunneling_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lacp-link_aggregation_control_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ldap-lightweight_directory_access_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ldp-label_distribution_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lldp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\llmnr.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lmp-link_management_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lotus_notes.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lpd-line_printer_daemon.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lseme.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\lwapp-light_weight_access_point_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\m2pa.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\manager.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\manet.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mapi.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\matip.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\megaco.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mgcp-media_gateway_control_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\microsoft.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mms message encapulation.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mobile_ip.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mobile_ipv6.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\modbus.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mpeg4.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mqseries.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ms_proxy.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\msdp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\msn-ms_messenger.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\msrp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\napster.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\netbios.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\nntp-network_news_transport_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\novell.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\novell_rehaul.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ntlm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ntp-network_time_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\oam-operations_administration_management.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\oid.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\openflow.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\openflowv1.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\openflowv4.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\openflowv5.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\osi.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ospf-open_shortest_path_first_routing_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\oui.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pgm.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pim-protocol_independent_multicast.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pingpongprotocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pop-post_office_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pppoe.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ppp-point_to_point_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\pptp-point_to_point_tunneling_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\profinet.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\prp-parallel_redundancy_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ptp-precision_time_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\radius.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rfc2833.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rgmp-router_port_group_management_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rip-routing_information_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rmcp-remote_management_control_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rsvp-resource_reservation_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rtp_rtcp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rtps.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rtsp-real_time_streaming_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\rx.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\s1ap - s1 application protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sabp - serviceareabroadcastprotocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sap-session_announcement_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sccp-skinny_client_control_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sctp-stream_control_transmission_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sdp-session_description_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sflow.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sgsap.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sip-session_initiation_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\slpp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\slp-service_location_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\smbv2_gss.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\smpp-short_message_peer_to_peer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\smqp-simple_message_queue_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\smtp-simple_mail_transfer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\snmp-simple_network_management_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\soap-simple_object_access_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ss7-transport.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ss7-user.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ssdp-simple_service_discovery_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ssh-secure_shell.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ssl-secure_sockets_layer.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\stun.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\sun.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\syslog.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\t38.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tacacs.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tali-transport_adapter_layer_interface.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tbrpf-topology_dissemination_based_on_reverse_path_forwarding.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tcp_udp_ports.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tds-tabular_data_stream.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\telnet-network_virtual_terminal.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tftp-trivial_file_transfer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\timbuktu.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tivo.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tns-transparent_network_substrate.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tpkt.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\tzsp-tazman_sniffer_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\unistim.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\vendor_ids.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\vn-tags.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\vvrp-virtual_router_redundancy_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\vxlan.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wan.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wapi.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wap-wireless_application_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wassp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wavelink.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wccp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wccp_fwd.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wfp2p-wi-fi_peer-to-peer.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wlccp - wireless lan context control protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wol-wakeonlan.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wps-wi-fi_protected_setup.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wsp-wireless_session_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\wtp-wireless_transaction_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\xerox.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\xml.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\yahoo-im-yahoo_instant_messenging.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin\Dcodu.dll">
+      <Filter>Library\bin</Filter>
+    </None>
+    <None Include="bin\Protospecs.dll">
+      <Filter>Library\bin</Filter>
+    </None>
+    <None Include="bin64\dcodu.dll">
+      <Filter>Library\bin64</Filter>
+    </None>
+    <None Include="bin64\Protospecs.dll">
+      <Filter>Library\bin64</Filter>
+    </None>
+    <None Include="bin\Decodes\decodes.bin">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin64\Decodes\decodes.bin">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin\Decodes\802_1ae_macsec.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gsmfr.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\gsmhr.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\ip_heuristic.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mqtt.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\mrp-media_redundancy_protocol.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\dicom_libary.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\nasdaq_moldudp_moldudp64_mossudp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\nyse_arcabook_multicast_equities.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\teredo.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\udp-lite.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\vlacp.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin\Decodes\zep.dcd">
+      <Filter>Decodes\bin</Filter>
+    </None>
+    <None Include="bin64\Decodes\802_1ae_macsec.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\teredo.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\udp-lite.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\vlacp.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\zep.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\dicom_libary.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gsmfr.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\gsmhr.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\ip_heuristic.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mqtt.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\mrp-media_redundancy_protocol.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+    <None Include="bin64\Decodes\nyse_arcabook_multicast_equities.dcd">
+      <Filter>Decodes\bin64</Filter>
+    </None>
+  </ItemGroup>
+</Project>

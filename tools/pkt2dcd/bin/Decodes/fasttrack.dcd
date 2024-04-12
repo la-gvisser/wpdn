@@ -1,0 +1,6 @@
+* FastTrack
+
+void FastTrack;
+	LABL 0 0 0 b1 FastTrack;
+	DUMP 0 10 90 c2 FastTrack Data;
+	TRTS;

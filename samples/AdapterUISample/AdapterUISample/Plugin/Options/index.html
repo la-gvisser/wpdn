@@ -1,0 +1,355 @@
+<html>
+<head>
+  <!-- After this page loads, the title of the dialog box is set to  -->
+  <!-- the title of the web page. -->
+  <title>Adapter UI Sample Options</title>
+  <script type="text/javascript">
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlTagName(xml) {
+      var end = xml.indexOf(' ');
+      if (end == -1) {
+        end = xml.length;
+      }
+
+      return xml.substring(0, end);
+    }
+
+    function xmlTagAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.length;
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf(' ', sep);
+        if (next == -1) next = end;
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next - 1);
+        }
+        begin = next;
+      }
+      return '';
+    }
+
+    function xmlGetValue(xml, tag) {
+      var begin = xml.indexOf(tag);
+      if (begin == -1) return '';
+      begin++;
+
+      var begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetNode(xml, tag) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('>', (begin + 1));
+      if (end == -1) return '';
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, (end + 1));
+      if (end == -1) return '';
+      end += tagEnd.length;
+
+      return xml.substring(begin, end);
+    }
+  </script>
+
+  <script type="text/javascript">
+    // Called after this page loads.
+    // Return the desired width and height in pixels as decimal values.
+    function GetDisplayProperties() {
+      var props;
+      props = "543 615";
+        
+      return props;
+    }
+
+    // Called when the OK button is clicked.
+    // Return "TRUE" if this dialog is ready to close,
+    // or "FALSE" if this dialog is not ready to close.
+    // But really false if: len(<str>) == 0, 'F', 'f', or int(<str>) == 0.
+    function ReadyToClose() {
+      var ready;
+      if (document.getElementById("close_id").checked) {
+        ready = "TRUE"
+      }
+      else {
+        ready = "FALSE"
+      }
+      return ready;
+    }
+
+    // Called when web page requested to send a message.
+    // Must be XML.
+    // Return the message as XML text.
+    function GetMessage() {
+      return document.getElementById('plugin_message').value;
+    }
+
+    // Called with the plugin's response to the message.
+    // The response is Xml.
+    function PutResponse(xml) {
+      var oBrowse = document.forms['browse_form'];
+      oBrowse.elements["filetext"].value += '\n' + xml;
+
+      // Root node: Tag
+      var tagRoot = xmlGetTag(xml);
+      var valRoot = xmlGetValue(xml,tagRoot);
+
+      if (tagRoot == 'create') {
+        var tagCreate = xmlGetTag(valRoot);
+        var valCreate = xmlGetValue(valRoot, tagCreate);
+
+        var oForm = document.forms['create_form'];
+        oForm.elements['response_id'].value = valCreate;
+      }
+      else if (tagRoot = 'list') {
+        var tagList = xmlGetTag(valRoot);
+        var valList = xmlGetValue(valRoot, tagList);
+
+        var oForm = document.forms['browse_form'];
+        oForm.elements["filetext"].value += '\n' + valList;
+      }
+    }
+
+    // Called with Engine Information in XML.
+    function PutEngineInfo(xml) {
+      // Preamble
+      var pre = xmlGetPreamble(xml);
+      var root = xml.substring(pre.length);
+
+      // Root node: engineinfo
+      var tagRoot = xmlGetTag(root);
+      var valRoot = xmlGetValue(root,tagRoot);
+
+      var valName = xmlGetValue(valRoot,'name');
+      document.getElementById('enginename').value = xmlEscape(valName);
+
+      var valAddress = xmlGetValue(valRoot,'address');
+      var valPort = xmlGetValue(valRoot,'port');
+      document.getElementById('engineaddress').value = valAddress + ':' + valPort;
+
+      var valAuth = xmlGetValue(valRoot,'auth');
+      var valDomain = xmlGetValue(valRoot,'domain');
+      var valUser = xmlGetValue(valRoot,'user');
+      document.getElementById('engineuser').value = valDomain + '\\' + valUser + ' (' + valAuth + ')';
+    }
+
+    // Called when user clicks Ok. Return Plugin Settings as XML.
+    function GetPreferences() {
+      var prefs;
+      prefs =
+        '<configure>' +
+        '</configure>';
+        
+      return prefs;
+    }
+
+    // Called with Plugin Settings in XML after page has completed loading.
+    function PutPreferences(inXml) {
+      var oForm = document.forms['browse_form'];
+      oForm.elements["filetext"].value = inXml;
+
+      // Preamble
+      var pre = xmlGetPreamble(inXml);
+      var xml = inXml.substring(pre.length);
+
+      // Root node
+      var tagRoot = xmlGetTag(xml);
+      var nameRoot = xmlTagName(tagRoot);
+      var valRoot = xmlGetValue(xml,nameRoot);
+
+      // Reference by Id.
+      document.getElementById('title_id').value = xmlGetValue(valRoot, 'title');
+      document.getElementById('unique_id').value = xmlGetValue(valRoot, 'id');
+    }
+  </script>
+
+  <script type="text/javascript">
+    function SetDefaults() {
+      var oForm = document.forms['browse_form'];
+
+      oForm.elements["showfiles"].checked = true;
+      oForm.elements["showhiddenfiles"].checked = false;
+      oForm.elements["hidehiddenctrl"].checked = false;
+      oForm.elements["path"].value = "C:\\";
+
+      GetAdapters();
+    }
+
+    // Called when user clicks Browse button: app:browse
+    // Return unsigned integer with flags:
+    //   0x0002 : Hide the 'Show Hidden' control.
+    //   0x0004 : Initially show hidden files.
+    //   0x0008 : Show the files pane. User must select a file.
+    function GetRemoteBrowserFlags() {
+      // If the Path has a file name, then set show files.
+      var oForm = document.forms['browse_form'];
+
+      var flags = 0;
+      if ( oForm.elements["hidehiddenctrl"].checked ) {
+        flags = flags | 0x02;
+      }
+      if ( oForm.elements["showhiddenfiles"].checked ) {
+        flags = flags | 0x04;
+      }
+      if ( oForm.elements["showfiles"].checked ) {
+        flags = flags | 0x08;
+      }
+      flags = flags | 0x10;
+        
+      return flags;
+    }
+
+    // Called when users clicks Ok to the Remote File Browser.
+    // inPath is a fully qualified file name.
+    function PutRemoteBrowserPath(inPath) {
+      var oForm = document.forms['browse_form'];
+      oForm.elements["path"].value = inPath;
+    }
+
+    // Called when user clicks Get File button: app:getremote
+    //                 or the Send File button: app:sendlocal
+    // return the fully qualified file name.
+    function GetRemoteBrowserPath() {
+      var oForm = document.forms['browse_form'];
+
+      var path;
+      path = oForm.elements["path"].value;
+        
+      return path;
+    }
+
+    // Called when user clicks Send File button: app:sendlocal
+    // return the file contents as a Unicode String.
+    function GetFileContent() {
+      var oForm = document.forms['browse_form'];
+
+      var content;
+      content = oForm.elements["filetext"].value;
+        
+      return content;
+    }
+
+    // Called after file transfer has been completed.
+    //     inFlags : 1 - file has been retrieved.
+    //               2 - file has been sent.
+    //   inContent : the Unicode String contents of the file retrieved.
+    function PutTransferComplete(inFlags, inContent) {
+      var oForm = document.forms['browse_form'];
+      oForm.elements["filetext"].value = inContent;
+    }
+  </script>
+
+  <script type="text/javascript">
+    function GetAdapters() {
+      document.getElementById('plugin_message').value = '<list />';
+      document.getElementById('issue_message').click();
+    }
+    function CreateMessage() {
+      var oForm = document.forms['create_form'];
+      var name = oForm.elements["name_id"].value;
+      var msg;
+      msg =
+        '<create>' +
+          '<adapter>' +
+            name +
+          '</adapter>' +
+        '</create>';
+      document.getElementById('plugin_message').value = msg;
+      document.getElementById('issue_message').click()
+    }
+  </script>
+</head>
+<body onload="SetDefaults()">
+  <bold>Adapter UI Sample Options</bold><br />
+  Version 1.2.0.0<br /><br />
+  <!-- A hidden control to hold the plugin message to send. -->
+  <input type="text" id="plugin_message" name="plugin" size="60" value="" class="text-input" />
+  <a href="app:message" id="issue_message"></a>
+  <a href="#" onclick="GetAdapters();">Refresh</a>
+  <div id="preferences_form">
+    <form id="close_form" name="ready-to-close" action="">
+      Ready to close:&nbsp;
+      <input type="checkbox" id="close_id" name="ready_to_close_state" checked=false /><br />
+    </form>
+    <form id="prefs_form" name="preferences" action="">
+      <fieldset>
+        <br />
+        Title:&nbsp;
+        <input type="text" id="title_id" name="title" size="40" value="" class="text-input" /><br />
+        Unique Id:&nbsp;
+        <input type="text" id="unique_id" name="unique" size="50" value="" class="text-input" /><br />
+      </fieldset>
+    </form>
+    <form id="create_form" name="create_demo" action="">
+      <fieldset>
+        New Adapter Name:&nbsp;
+        <input type="text" id="name_id" name="adaptername" size="60" value="" class="text-input" /><br />
+        Response:&nbsp;
+        <textarea id="response_id" name="response" cols="60" rows="1" wrap="off"></textarea><br />
+        <a href="#" onclick="CreateMessage();">Create</a>
+      </fieldset>
+    </form>
+    <form id="browse_form" name="browser" action="">
+      <fieldset>
+        <br />
+        Path:&nbsp;<input type="text" name="path" size="60" value="" class="text-input" /><br />
+        <input type="checkbox" id="show_id" name="showfiles" checked=false />Show Files<br />
+        <input type="checkbox" id="hide_id" name="showhiddenfiles" checked=false />Show hidden files<br />
+        <input type="checkbox" id="hidden_id" name="hidehiddenctrl" checked=false />Hide 'Hidden Files' control<br />
+        <br />
+        <textarea id="filetext" id="text_id" name="filetext" cols="60" rows="10"></textarea>
+        <br />
+        <!-- The Remote Browser intercepts the app:browse command then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then displays the Remote Browser Dialog.                   -->
+        <!-- If the user clicks OK, then PutRemoteBrowserPath is called.                           -->
+        <a href="app:browse">Browse</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:getremote command, then calls GetRemoteBrowserFlags -->
+        <!-- and GetRemoteBrowserFolder then retrieves the file specified.                             -->
+        <!-- Once the file has been retrieved PutTransferComplete is called.                           -->
+        <a href="app:getremote">Get Remote File</a>&nbsp;&nbsp;&nbsp;
+        <!-- The Remote Browser intercepts the app:sendlocal command, then calls GetRemoteBrowserFlags, -->
+        <!-- GetRemoteBrowserFolder and GetFileContents then sends the file specified.                  -->
+        <a href="app:sendlocal">Send Local File</a>
+      </fieldset>
+    </form>
+  </div>
+</body>
+</html>

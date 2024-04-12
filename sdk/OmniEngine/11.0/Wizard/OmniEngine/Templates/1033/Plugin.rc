@@ -1,0 +1,277 @@
+// =============================================================================
+//	Plugin.rc
+// =============================================================================
+//	Copyright (c) 2010-2017 Savvius, Inc. All rights reserved.
+
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+[!if !NOTIFY_UIHANDLER]
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "savviuslogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PLUGIN_ABOUT DIALOGEX 0, 0, 289, 119
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About [!output SAFE_PROJECT_NAME]"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         IDB_LOGO,IDC_PLUGIN_ABOUT_LOGO,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,107,105
+    CTEXT           "[!output SAFE_PROJECT_NAME] Analysis Module",IDC_PLUGIN_ABOUT_NAME,124,7,158,8
+    CTEXT           "Version 1.0.0.0",IDC_PLUGIN_VERSION,124,22,158,8
+    CTEXT           "Copyright © 2017 Savvius, Inc.",IDC_STATIC,124,37,158,8
+    CTEXT           "Description: To Do.",IDC_STATIC,124,52,158,24
+    DEFPUSHBUTTON   "Close",IDOK,178,98,50,14
+END
+
+
+IDD_PLUGIN_OPTIONS DIALOGEX 0, 0, 183, 227
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "[!output SAFE_PROJECT_NAME] Analysis Module Options"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+[!if NOTIFY_CODEEXAMPLES]
+    CONTROL         "Receive Notify Messages",IDC_CHK_RECEIVENOTIFIES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,7,122,10
+    CONTROL         "Enable",IDC_ENABLE_EXAMPLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,24,122,8
+    LTEXT           "Label:",IDC_LABEL_LABEL_EXAMPLE,7,40,54,8
+    EDITTEXT        IDC_LABEL_EXAMPLE,7,51,169,12,ES_AUTOHSCROLL,WS_EX_ACCEPTFILES
+    RTEXT           "Ethernet Address:",IDC_ETHERNET_LABEL_EXAMPLE,7,75,60,8
+    EDITTEXT        IDC_ETHERNET_EXAMPLE,86,72,90,14,ES_AUTOHSCROLL
+    RTEXT           "IP Address:",IDC_ADDRESS_LABEL_EXAMPLE,7,95,60,8
+    CONTROL         "",IDC_ADDRESS_EXAMPLE,"SysIPAddress32",WS_TABSTOP,86,94,90,11
+    RTEXT           "Port:",IDC_PORT_LABEL_EXAMPLE,7,116,60,8
+    EDITTEXT        IDC_PORT_EXAMPLE,86,114,90,12,ES_AUTOHSCROLL,WS_EX_ACCEPTFILES
+    RTEXT           "Time:",IDC_TIME_LABEL_EXAMPLE,7,135,60,8
+    CONTROL         "",IDC_TIME_EXAMPLE,"SysDateTimePick32",DTS_RIGHTALIGN | DTS_UPDOWN | WS_TABSTOP | 0x8,76,132,100,15
+    RTEXT           "Date:",IDC_DATE_LABEL_EXAMPLE,7,158,60,8
+    CONTROL         "",IDC_DATE_EXAMPLE,"SysDateTimePick32",DTS_RIGHTALIGN | WS_TABSTOP,76,155,100,15
+[!endif]
+    DEFPUSHBUTTON   "OK",IDOK,69,206,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,126,206,50,14
+END
+
+[!if NOTIFY_TAB]
+IDD_PLUGIN_TAB DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,116,27,193,149,WS_BORDER
+    LISTBOX         IDC_CONTEXT_LIST,7,27,100,149,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_OPTIONS_VIEW DIALOGEX 0, 0, 237, 158
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+[!if NOTIFY_CODEEXAMPLES]
+    RTEXT           "Notify Messages:",IDC_STATIC,7,7,73,8
+    LTEXT           "Not receiving",IDC_NOTIFY_STATE,88,7,141,8
+    RTEXT           "Current State:",IDC_STATIC,7,23,73,8
+    LTEXT           "Disabled",IDC_CURRENT_STATE,88,23,141,8
+    RTEXT           "Label:",IDC_STATIC,7,39,73,8
+    LTEXT           "- none -",IDC_LABEL_STATE,88,39,141,8
+    RTEXT           "Ethernet Address:",IDC_STATIC,7,55,73,8
+    LTEXT           "00:00:00:00:00:00",IDC_ETHERNET_STATE,88,55,141,8
+    RTEXT           "IP Address:",IDC_STATIC,7,71,73,8
+    LTEXT           "0.0.0.0",IDC_IP_STATE,88,71,141,8
+    RTEXT           "Port:",IDC_STATIC,7,87,73,8
+    LTEXT           "0",IDC_PORT_STATE,88,87,141,8
+    RTEXT           "Time:",IDC_STATIC,7,103,73,8
+    LTEXT           "Now",IDC_TIME_STATE,88,103,141,8
+    RTEXT           "Date:",IDC_STATIC,7,119,73,8
+    LTEXT           "Today",IDC_DATE_STATE,88,119,141,8
+[!endif]
+END
+
+IDD_CONTEXT_TAB DIALOGEX 0, 0, 207, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,7,27,193,149,WS_BORDER
+[!if NOTIFY_CODEEXAMPLES]
+    PUSHBUTTON      "Message",IDC_MESSAGE,150,7,50,14
+[!endif]
+END
+
+[!endif]
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PLUGIN_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_PLUGIN_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 176
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 220
+    END
+[!if NOTIFY_TAB]
+    IDD_PLUGIN_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+    IDD_CONTEXT_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+[!endif]
+END
+#endif    // APSTUDIO_INVOKED
+[!endif]
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "[!output SAFE_PROJECT_NAME] Analysis Module"
+#ifdef X64
+            " 64-bit"
+#else
+            " 32-bit"
+#endif
+			VALUE "FileVersion", "1, 0, 0, 0"
+            VALUE "InternalName", "[!output SAFE_PROJECT_NAME]Plugin"
+            VALUE "LegalCopyright", "Copyright (C) 2017"
+            VALUE "OriginalFilename", "[!output SAFE_PROJECT_NAME]Plugin.dll"
+            VALUE "ProductName", "[!output SAFE_PROJECT_NAME] Analysis Module"
+            VALUE "ProductVersion", "1, 0, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+[!if NOTIFY_UIHANDLER]
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// ZIP
+//
+
+IDR_ZIP_ABOUT           ZIP     "..\\Plugin\\[!output SAFE_PROJECT_NAME]-About.zip"
+IDR_ZIP_CAPTURE_TAB     ZIP     "..\\Plugin\\[!output SAFE_PROJECT_NAME]-CaptureTab.zip"
+IDR_ZIP_ENGINE_TAB      ZIP     "..\\Plugin\\[!output SAFE_PROJECT_NAME]-EngineTab.zip"
+IDR_ZIP_OPTIONS         ZIP     "..\\Plugin\\[!output SAFE_PROJECT_NAME]-Options.zip"
+[!endif]
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PLUGIN_NAME         "[!output SAFE_PROJECT_NAME] Analysis"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

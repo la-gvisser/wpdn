@@ -1,0 +1,123 @@
+// LACP - Link Aggregation Control Protocol
+
+// notes:
+//  recognized by protocol type: 0x8809
+// so protocol type 8809 could be an OAM PDU if the subtype == 3
+
+void LACP;
+	l[1] = pb[0];
+	TEQU 3 41 0 0 OAM;				// si: if the subtype is 3, then branch...
+	TNXT -LACP::Main;				// si: otherwise, go to lacp
+
+void LACP::Main;
+	LABL 0 0 0 b1 Link Aggregation Control Protocol\LACP:;
+	DBYT 0 42 90 c2 Subtype:\SType=;
+		CEQU 1 42 0 14 LACP Data Unit;
+		CLSE 0 0  0 14 Unknown Slow Protocol Data Unit;
+	DBYT 0 44 90 c2 Version:\V=;
+		CNEQ 1 44 0 14 Unknown Version;
+
+	LACP::TLV::Actor;
+	LACP::TLV::Partner;
+	LACP::TLV::Collector;
+	LACP::TLV::Terminator;
+	CHR# 32 00 90 c2 Reserved:;
+	TRTS;
+
+void LACP::TLV::Actor;
+	LABL 00 00 00 c7 Actor Information\Actor TLV;
+	DBYT 00 46 90 c2 Type:\;
+	LABL 00 00 00 14 Actor Information;
+	DBYT 00 48 90 c2 Length:\;
+	DWRD 00 01 90 c2 System Priority:\SysPri=;
+	ETHR 00 00 90 c2 System:\Sys=;
+	DWRD 00 01 90 c2 Key:;
+	DWRD 00 01 90 c2 Port Priority:\PortPri=;
+	DWRD 00 01 90 c2 Port:\Port=;
+	BBYT 00 01 90 c9 State:;
+		CBIT 70 01 00 d4 1... .... Receive Machine is in Expired State;
+		CLSE 00 00 00 d4 0... .... Receive Machine is Not in Expired State;
+		CBIT 06 01 00 d4 .1.. .... Receive Machine is using Defaulted Operational Partner Info;
+		CLSE 00 00 00 d4 .0.. .... Operation Partner Info received in a LACPDU;
+		CBIT 05 01 00 d4 ..1. .... Distribution is Enabled;
+		CLSE 00 00 00 d4 ..0. .... Distribution is Disabled;
+		CBIT 04 01 00 d4 ...1 .... Collecting Incoming Frames;
+		CLSE 00 00 00 d4 ...0 .... Not Collecting Incoming Frames;
+		CBIT 03 01 00 d4 .... 1... Link is In Sync;
+		CLSE 00 00 00 d4 .... 0... Link is Out of Sync;
+		CBIT 02 01 00 d4 .... .1.. Link is Aggregatable;
+		CLSE 00 00 00 d4 .... .0.. Link is Individual;
+		CBIT 01 01 00 d4 .... ..1. Short Timeout;
+		CLSE 00 00 00 d4 .... ..0. Long Timeout;
+		CBIT 00 01 00 d4 .... ...1 Active LACP;
+		CLSE 00 00 00 d4 .... ...0 Passive LACP;
+		LABL 00 00 00 c8;
+	HEX# 03 00 90 c2 Reserved:;
+	LABL 00 00 00 c8;
+	TRTS;
+	
+void LACP::TLV::Partner;
+	LABL 00 00 00 c7 Partner Information\Partner TLV;
+	DBYT 00 46 90 c2 Type:\;
+	LABL 00 00 00 14 Partner Information;
+	DBYT 00 48 90 c2 Length:\;
+	DWRD 00 01 90 c2 System Priority:\SysPri=;
+	ETHR 00 00 90 c2 System:\Sys=;
+	DWRD 00 01 90 c2 Key:;
+	DWRD 00 01 90 c2 Port Priority:\PortPri=;
+	DWRD 00 01 90 c2 Port:\Port=;
+	BBYT 00 01 90 c9 State:;
+		CBIT 70 01 00 d4 1... .... Receive Machine is in Expired State;
+		CLSE 00 00 00 d4 0... .... Receive Machine is Not in Expired State;
+		CBIT 06 01 00 d4 .1.. .... Receive Machine is using Defaulted Operational Partner Info;
+		CLSE 00 00 00 d4 .0.. .... Operation Partner Info received in a LACPDU;
+		CBIT 05 01 00 d4 ..1. .... Distribution is Enabled;
+		CLSE 00 00 00 d4 ..0. .... Distribution is Disabled;
+		CBIT 04 01 00 d4 ...1 .... Collecting Incoming Frames;
+		CLSE 00 00 00 d4 ...0 .... Not Collecting Incoming Frames;
+		CBIT 03 01 00 d4 .... 1... Link is In Sync;
+		CLSE 00 00 00 d4 .... 0... Link is Out of Sync;
+		CBIT 02 01 00 d4 .... .1.. Link is Aggregatable;
+		CLSE 00 00 00 d4 .... .0.. Link is Individual;
+		CBIT 01 01 00 d4 .... ..1. Short Timeout;
+		CLSE 00 00 00 d4 .... ..0. Long Timeout;
+		CBIT 00 01 00 d4 .... ...1 Active LACP;
+		CLSE 00 00 00 d4 .... ...0 Passive LACP;
+		LABL 00 00 00 c8;
+	HEX# 03 00 90 c2 Reserved:;
+	LABL 00 00 00 c8;
+	TRTS;
+
+void LACP::TLV::Collector;
+	LABL 00 00 00 c7 Collector Information\Collector TLV;
+	DBYT 00 46 90 c2 Type:\;
+	LABL 00 00 00 14 Collector Information;
+	DBYT 00 48 90 c2 Length:\;
+	DWRD 00 01 90 c2 Collector Max Delay:;
+	HEX# 0c 00 90 c2 Reserved:;
+	LABL 00 00 00 c8;
+	TRTS;
+	
+void LACP::TLV::Terminator;
+	LABL 00 00 00 c7 Terminator\Terminator TLV;
+	DBYT 00 46 90 c2 Type:\;
+	LABL 00 00 00 14 Terminator;
+	DBYT 00 48 90 c2 Length:\;
+	LABL 00 00 00 c8;
+	TRTS;
+	
+	
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+

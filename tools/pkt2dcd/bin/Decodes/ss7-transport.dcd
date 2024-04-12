@@ -1,0 +1,2798 @@
+//--------------------------------Variables for the SigTran Stack-------------------------------------
+
+str# SCTP::Payload_Prot_ID;
+0 | Reserved by SCTP;
+1 | IUA;
+2 | M2UA;
+3 |	M3UA;
+4 | SUA;
+5 | M2PA;
+6 | V5UA;
+7 | H.248/Megaco;
+8 | BICC/Q.2150.3;
+9 | TALI;
+10 | DUA;
+11 | ASAP;
+12 | ENRP;
+13 | H.323;
+14 | Q.IPC/Q.2150.3;
+15 | SIMCO;
+16 | DDP Segment Chunk;
+17 | DDP Stream Session Control;
+18 | S1 Application Protocol (S1AP);
+19 | RUA;
+20 | HNBAP;
+21 | ForCES-HP;
+22 | ForCES-MP;
+23 | ForCES-LP;
+24 | SBc-AP;
+25 | NBAP;
+26 | Unassigned;
+27 | X2AP;
+28 | IRCP - Inter Router Capability Protocol;
+29 | LCS-AP;
+30 | MPICH2;
+31 | Service Area Broadcast Protocol (SABP);
+32 | Fractal Generator Protocol (FGP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+33 | Ping Pong Protocol (PPP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+34 | CalcApp Protocol (CALCAPP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+35 | Scripting Service Protocol (SSP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+36 | NetPerfMeter Protocol Control Channel (NPMP-CONTROL);                        //[Thomas_Dreibholz][http://www.iem.uni-due.de/~dreibh/netperfmeter/] 40574
+37 | NetPerfMeter Protocol Data Channel (NPMP-DATA);                        //[Thomas_Dreibholz][http://www.iem.uni-due.de/~dreibh/netperfmeter/] 40574
+38 | Echo (ECHO);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+39 | Discard (DISCARD);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+40 | Daytime (DAYTIME);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+41 | Character Generator (CHARGEN);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+42 | 3GPP RNA;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/25471.htm] 40578
+43 | 3GPP M2AP;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/36442.htm][http://www.3gpp.org/ftp/specs/html-info/36443.htm] 40578
+44 | 3GPP M3AP;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/36442.htm][http://www.3gpp.org/ftp/specs/html-info/36444.htm] 40578
+45 | SSH over SCTP;                        //[Michael_Tuexen] 40616
+46 | Diameter in a SCTP DATA chunk;                        //[RFC6733] 
+47 | Diameter in a DTLS/SCTP DATA chunk;                        //[RFC6733] 
+48 | R14P. BER Encoded ASN.1 over SCTP;                        //[Josip_Djuricic][http://www.release14.org/wp-content/uploads/2012/07/r14p.asn] 
+49 | Unassigned;                        //
+50 | WebRTC Control;                        //[Michael_Tuexen] 41537
+51 | DOMString Last;                        //[Michael_Tuexen] 41537
+52 | Binary Data Partial;                        //[Michael_Tuexen] 41537
+53 | Binary Data Last;                        //[Michael_Tuexen] 41537
+54 | DOMString Partial;                        //[Michael_Tuexen] 41537
+55 | 3GPP PUA;                        //[Dario_S_Tonesi][http://www.3gpp.org/DynaReport/25470.htm][http://www.3gpp.org/DynaReport/25467.htm] 41642
+56 | WebRTC String Empty;                        //[draft-ietf-rtcweb-data-channel] 41873
+57 | WebRTC Binary Empty;                        //[draft-ietf-rtcweb-data-channel] 41873
+
+
+
+
+str# SCTP::Payload_Prot_ID::Func;
+0 |  SCTP::DUMP::UKNWN;
+1 |  Q921;
+2 |  SigTran::M2UA;
+3 |  SigTran::M3UA;
+4 |  SigTran::SUA;
+5 |  SigTran::M2PA;
+6 |  SigTran::V5UA;
+7 |  SigTran::H248;
+8 |  SigTran::BICC;
+9 |  TALI;						//dw: TT412
+10 |  SCTP::DUMP::UKNWN;
+11 |  SCTP::DUMP::UKNWN;
+12 |  SCTP::DUMP::UKNWN;
+13 |  SCTP::DUMP::UKNWN;
+14 |  SCTP::DUMP::UKNWN;
+15 |  SCTP::DUMP::UKNWN;
+16 |  SCTP::DUMP::UKNWN;
+17 |  SCTP::DUMP::UKNWN;
+18 |  SCTP::DUMP::UKNWN;
+19 |  SCTP::DUMP::UKNWN;
+20 |  SCTP::DUMP::UKNWN;
+21 |  SCTP::DUMP::UKNWN;
+22 |  SCTP::DUMP::UKNWN;
+23 |  SCTP::DUMP::UKNWN;
+24 |  SCTP::DUMP::UKNWN;
+25 |  SCTP::DUMP::UKNWN;
+26 |  SCTP::DUMP::UKNWN;
+27 |  SCTP::DUMP::UKNWN;
+28 |  SCTP::DUMP::UKNWN;
+29 |  SCTP::DUMP::UKNWN;
+30 |  SCTP::DUMP::UKNWN;
+31 |  SCTP::DUMP::UKNWN;
+32 | SCTP::DUMP::UKNWN;			//Fractal Generator Protocol (FGP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+33 | SCTP::DUMP::UKNWN;			//Ping Pong Protocol (PPP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+34 | SCTP::DUMP::UKNWN;			//CalcApp Protocol (CALCAPP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+35 | SCTP::DUMP::UKNWN;			//Scripting Service Protocol (SSP);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40574
+36 | SCTP::DUMP::UKNWN;			//NetPerfMeter Protocol Control Channel (NPMP-CONTROL);                        //[Thomas_Dreibholz][http://www.iem.uni-due.de/~dreibh/netperfmeter/] 40574
+37 | SCTP::DUMP::UKNWN;			//NetPerfMeter Protocol Data Channel (NPMP-DATA);                        //[Thomas_Dreibholz][http://www.iem.uni-due.de/~dreibh/netperfmeter/] 40574
+38 | SCTP::DUMP::UKNWN;			//Echo (ECHO);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+39 | SCTP::DUMP::UKNWN;			//Discard (DISCARD);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+40 | SCTP::DUMP::UKNWN;			//Daytime (DAYTIME);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+41 | SCTP::DUMP::UKNWN;			//Character Generator (CHARGEN);                        //[Thomas_Dreibholz][http://tdrwww.iem.uni-due.de/dreibholz/rserpool/] 40576
+42 | SCTP::DUMP::UKNWN;			//3GPP RNA;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/25471.htm] 40578
+43 | SCTP::DUMP::UKNWN;			//3GPP M2AP;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/36442.htm][http://www.3gpp.org/ftp/specs/html-info/36443.htm] 40578
+44 | SCTP::DUMP::UKNWN;			//3GPP M3AP;                        //[Tonesi][http://www.3gpp.org/ftp/specs/html-info/36442.htm][http://www.3gpp.org/ftp/specs/html-info/36444.htm] 40578
+45 | SCTP::DUMP::UKNWN;			//SSH over SCTP;                        //[Michael_Tuexen] 40616
+46 | SCTP::DUMP::UKNWN;			//Diameter in a SCTP DATA chunk;                        //[RFC6733] 
+47 | SCTP::DUMP::UKNWN;			//Diameter in a DTLS/SCTP DATA chunk;                        //[RFC6733] 
+48 | SCTP::DUMP::UKNWN;			//R14P. BER Encoded ASN.1 over SCTP;                        //[Josip_Djuricic][http://www.release14.org/wp-content/uploads/2012/07/r14p.asn] 
+49 | SCTP::DUMP::UKNWN;			//Unassigned;                        //
+50 | SCTP::DUMP::UKNWN;			//WebRTC Control;                        //[Michael_Tuexen] 41537
+51 | SCTP::DUMP::UKNWN;			//DOMString Last;                        //[Michael_Tuexen] 41537
+52 | SCTP::DUMP::UKNWN;			//Binary Data Partial;                        //[Michael_Tuexen] 41537
+53 | SCTP::DUMP::UKNWN;			//Binary Data Last;                        //[Michael_Tuexen] 41537
+54 | SCTP::DUMP::UKNWN;			//DOMString Partial;                        //[Michael_Tuexen] 41537
+55 | SCTP::DUMP::UKNWN;			//3GPP PUA;                        //[Dario_S_Tonesi][http://www.3gpp.org/DynaReport/25470.htm][http://www.3gpp.org/DynaReport/25467.htm] 41642
+56 | SCTP::DUMP::UKNWN;			//WebRTC String Empty;                        //[draft-ietf-rtcweb-data-channel] 41873
+57 | SCTP::DUMP::UKNWN;			//WebRTC Binary Empty;                        //[draft-ietf-rtcweb-data-channel] 41873
+
+void SCTP::DUMP::UKNWN()
+{
+	SIP::NMatch2;
+	TSB# 0 2 0 0 SCTP::Ports;
+	SKIP 1;
+	TSB# 0 1 0 0 SCTP::Ports;
+	//SKIP 1;
+	//DGLB( 0, g[0xa], 0x90, 0xc2, "left length g10" );
+	if (g[0xa] != 0)
+	{
+		LABL 0 0 90 b7 Payload Dump:;
+		SigTran::DumpwithPadding;
+		if (g[16] >= 1)
+		{
+			LABL 0 0 0 b8;
+			LABL( 0, 0,    0, 0xb1, "SCTP - Stream Control Transmission Protocol\SCTP:");
+			SCTP::Chunk();
+		}
+	}
+	if (g[0xb] != 0)
+	{
+		l[6] = g[0xb];
+		//DGLB( 0, l[6], 0x90, 0xc2, "left length l6" );
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0x90, 0xb7, "SCTP - Stream Control Transmission Protocol" );
+		LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+		DGLB(0, l[6], 0x90, 0x14 );
+		DUMP( 0, l[6], 0x90, 0xc2, "Padding:");
+		if (g[16] >= 1)
+		{
+			LABL 0 0 0 b8;
+			LABL( 0, 0,    0, 0xb1, "SCTP - Stream Control Transmission Protocol\SCTP:");
+			SCTP::Chunk();
+		}
+	}
+	
+	if (g[16] == 0)
+	{
+		LABL 0 0 0 b8;
+		//TRTS;
+	}
+}
+//----------------------------------------------------------------------------------------------------
+
+void SigTran::DumpwithPadding( )
+{
+	//DGLB( 0, l[6], 0x90, 0xc2, "left length l6" );
+	//g[21] = g[0xa];
+	//l[6] = g[21];
+	
+	l[6] = g[0xb];
+	DGLB( 0, g[11], 0x90, 0xc2, "Padding " );
+	MODG( 4, l[6]);
+	//DGLB( 0, l[6], 0x90, 0xc2, "left length l6" );
+	if (l[6] == 0)
+	{
+		DUMP( 0, g[21], 0x90, 0xc2, "Payload:" );
+	}
+	if ( l[6] >= 1)
+	{
+		DGLB( 0, g[0xa], 0x90, 0xc2, "left length g10" );
+		//DGLB( 0, l[6], 0x90, 0xc2, "left length l6" );
+		DUMP( 0, g[0xa], 0x90, 0xc2, "Payload:" );
+		l[5] = 4;
+		l[5] -= l[6];
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0x90, 0xb7, "SCTP - Stream Control Transmission Protocol" );
+		LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+		DGLB(0, l[5], 0x90, 0x14 );
+		DUMP( 0, l[5], 0x90, 0xc2, "Padding:");
+	}
+}
+
+
+
+//-------------------------------------------------------
+
+void SigTran::H248( )
+{ 
+	GBYT( 0, 1);
+	if (g[1] == 0x4d)
+	{
+		MegacoText;
+	}
+	if (g[1] != 0x3d)
+	{
+		SigTran::H248::H248;
+		LABL 0 0 0 b8;
+	}
+} 
+
+void SigTran::H248::H248( )
+{
+	LABL( 0, 0, 0, 0xb1, "H.248" );
+	LABL 0 0 90 b7 Payload Dump:;
+	SigTran::DumpwithPadding;
+}
+
+//------------------------------------------------------------------------------------
+void SigTran::SUA( )
+{
+	LABL( 0, 0, 0, 0xb1, "SCCP-User Adaptation Protocol" );
+	DBYT( 0, l[1], 0x05, 0xc2, "Version:\VE:" );
+	CEQU( 0; l[1], 0, 0x54, "Not supported" );
+	CEQU( 1; l[1], 0, 0x54, "Release 1.0" );
+	DBYT( 0, 0, 0x90, 0xc2, "Reserved:\RE:" );
+	DBYT( 0, g[19], 0x05, 0xc2, "Message Class: \MC:" );
+	if (g[19] <= 14)
+	{
+		CST#( 0, g[19], 0, 0x54, SigTran::SUA::MC );
+	}
+	if (g[19] >= 10)
+	{
+		if (g[19] <=127) 
+		{
+			LABL( 0, 0, 0, 0x54, "Reserved by the IETF" );
+		}
+	}
+	if (g[19] >= 128)
+	{
+		if (g[19] <= 255)
+		{
+			LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class extensions" );
+		}
+	}
+	BBYT( 0, g[20], 0x05, 0xc2, "Message Type:  \MT:" );
+	SigTran::SUA::ClassTypeView::Matrix;
+	DLNG( 0, g[23], 0x90, 0xc2, "Message Length:\ML:" );
+	SigTran::SUA::Interpreter;
+	
+}
+
+str# SigTran::SUA::MC;
+0         | SUA Management (MGMT) Message;
+1         | Reserved;
+2         | Signalling Network Management (SNM) Messages;
+3         | ASP State Maintenance (ASPSM) Messages;
+4         | ASP Traffic Maintenance (ASPTM) Messages;
+5         | Reserved;
+6         | Reserved;
+7         | Connectionless Messages;
+8         | Connection-Oriented Messages;
+9         | Routing Key Management (RKM) Messages;
+
+void SigTran::SUA::ClassTypeView::Matrix( )
+{
+	if  (g[19] == 0) 
+	{
+		CEQU( 0, g[20], 0, 0x54,"Error (ERR)" );
+		CEQU( 1, g[20], 0, 0x54,"Notify (NTFY)" );
+		if  (g[20] >= 9 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g[20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class Extensions" );
+				}
+		}
+	}
+	if (g[19] == 2)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Destination Unavailable (DUNA)" );
+		CEQU( 2, g[20], 0, 0x54,"Destination Available (DAVA)" );
+		CEQU( 3, g[20], 0, 0x54,"Destination State Audit (DAUD)" );
+		CEQU( 4, g[20], 0, 0x54,"Signalling Congestion (SCON)" );
+		CEQU( 5, g[20], 0, 0x54,"Destination User Part Unavailable (DUPU)" );
+		CEQU( 6, g[20], 0, 0x54,"Destination Restricted (DRST)" );
+		if  (g[20] >= 7 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+	if (g[19] == 3)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"ASP Up (UP)" );
+		CEQU( 2, g[20], 0, 0x54,"ASP Down (DOWN)" );
+		CEQU( 3, g[20], 0, 0x54,"Heartbeat (BEAT)" );
+		CEQU( 4, g[20], 0, 0x54,"ASP Up Ack (UP ACK)" );
+		CEQU( 5, g[20], 0, 0x54,"ASP Down Ack (DOWN ACK)" );
+		CEQU( 6, g[20], 0, 0x54,"Heartbeat Ack (BEAT ACK)" );
+		if  (g[20] >= 7 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}	
+	}
+	if (g[19] == 4)
+	{	
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"ASP Active (ACTIVE)" );
+		CEQU( 2, g[20], 0, 0x54,"ASP Inactive (INACTIVE)" );
+		CEQU( 3, g[20], 0, 0x54,"ASP Active Ack (ACTIVE ACK)" );
+		CEQU( 4, g[20], 0, 0x54,"ASP Inactive Ack (INACTIVE ACK)" );
+		if  (g[20] >= 5 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+	if (g[19] == 5)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Data Request Message" );
+		CEQU( 2, g[20], 0, 0x54,"Data Indication Message" );
+		CEQU( 3, g[20], 0, 0x54,"Unit Data Request Message" );
+		CEQU( 4, g[20], 0, 0x54,"Unit Data Indication Message" );
+		CEQU( 5, g[20], 0, 0x54,"Establish Request" );
+		if  (g[20] >= 5 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+	if (g[19] == 6)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Data" );
+		CEQU( 2, g[20], 0, 0x54,"Establish Request" );
+		CEQU( 3, g[20], 0, 0x54,"Establish Confirm" );
+		CEQU( 4, g[20], 0, 0x54,"Release Request" );
+		CEQU( 5, g[20], 0, 0x54,"Release Confirm" );
+		CEQU( 6, g[20], 0, 0x54,"Release Indication" );
+		CEQU( 7, g[20], 0, 0x54,"State Request" );
+		CEQU( 8, g[20], 0, 0x54,"State Confirm" );
+		CEQU( 9, g[20], 0, 0x54,"State Indication" );
+		CEQU( 10, g[20], 0, 0x54,"Data Retrieval Request" );
+		CEQU( 11, g[20], 0, 0x54,"Data Retrieval Confirm" );
+		CEQU( 12, g[20], 0, 0x54,"Data Retrieval Indication" );
+		CEQU( 13, g[20], 0, 0x54,"Data Retrieval Complete Indication" );
+		CEQU( 14, g[20], 0, 0x54,"Congestion Indication" );
+		CEQU( 15, g[20], 0, 0x54,"Data Acknowledge" );
+		if  (g[20] >= 16 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g20] <= 255 )
+					{
+						LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+					}
+			}
+	}
+	if (g[19] == 7)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Connectionless Data Transfer (CLDT)" );
+		CEQU( 2, g[20], 0, 0x54,"Connectionless Data Response (CLDR)" );
+		if  (g[20] >= 3 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+	if (g[19] == 8)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Connection Request (CORE)" );
+		CEQU( 2, g[20], 0, 0x54,"Connection Acknowledge (COAK)" );
+		CEQU( 3, g[20], 0, 0x54,"Connection Refused (COREF)" );
+		CEQU( 4, g[20], 0, 0x54,"Release Request (RELRE)" );
+		CEQU( 5, g[20], 0, 0x54,"Release Complete (RELCO)" );
+		CEQU( 6, g[20], 0, 0x54,"Reset Confirm (RESCO)" );
+		CEQU( 7, g[20], 0, 0x54,"Reset Request (RESRE)" );
+		CEQU( 8, g[20], 0, 0x54,"Connection Oriented Data Transfer (CODT)" );
+		CEQU( 9, g[20], 0, 0x54,"Connection Oriented Data Acknowledge (CODA)" );
+		CEQU( 10, g[20], 0, 0x54,"Connection Oriented Error (COERR)" );
+		CEQU( 11, g[20], 0, 0x54,"Inactivity Test (COIT)" );
+		if  (g[20] >= 12 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+	if (g[19] == 9)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Registration Request (REG REQ)" );
+		CEQU( 2, g[20], 0, 0x54,"Registration Response (REG RSP)" );
+		CEQU( 3, g[20], 0, 0x54,"Deregistration Request (DEREG REQ)" );
+		CEQU( 4, g[20], 0, 0x54,"Deregistration Response (DEREG RSP)" );
+		if  (g[20] >= 5 )
+		{
+			if (g[20] <= 127 )
+			 {
+				 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+			 }
+		}
+		if  (g[20] >= 128 )
+			{
+				if (g20] <= 255 )
+				{
+					LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined Message Class extension" );
+				}
+		}
+	}
+}
+
+void SigTran::SUA::Interpreter( )
+{
+	g[23] -=8;
+	if ( g[23] >= 8)
+	{
+		while ( g[23] >= 8)
+		{
+			DWRD( 0, g[24], 0x05, 0x05, "Parameter Tag: :\PRMT:" ); 
+			g[23] -= 2;
+			DWRD( 0, g[25], 0x05, 0x05, "Parameter Length: :\PRMLNGTH:" ); 
+			g[23] -= 2;
+			
+			g[23] -= g[25];
+			
+			LABL( 0, 0,  0x00, 0xb7, "Parameter Tag = " );
+			HGLB( 0, g[24], 0x07, 0x07 "" );
+			LABL( 0, 0, 0, 0x07, ": " );
+			CST#( 0, g[24], 0x90, 0x07, SigTran::M3UA::MT::MSGPARA );
+			DGLB( 0, g[25], 0x90, 0xc2, "Parameter Length: :\PRMLNGTH:" );
+			g[25] -= 4;
+			g[50] = g[25];
+			TSB#( 0, g[24], 0x90, 0xb7, SigTran::M3UA::MT::MSGPARA::Calls );
+
+			//LABL( 0, 0, 0, 0xb8);
+		}
+	}
+	if ( g[16] == 0)
+	{
+			LABL( 0, 0, 0, 0xb8);
+	}
+	if ( g[23] == 0)
+	{
+		if ( g[16] >= 1 )
+			{
+				if ( g[59] != 0)
+				{
+					//LABL( 0, 0, 0, 0xc2, "Padding:");
+					g[0xb] = g[25];
+					MODG 4 b;
+					if (g[0xb] == 0)
+					{
+
+					}
+					if (g[0xb] != 0)
+					{
+						l[5] = 4;
+						l[5] -= g[0xb];
+				
+						LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+						DGLB(0, l[5], 0x90, 0x14);
+					}
+					g[26] = l[5];
+					LABL( 0, 0, 0, 0xb8);
+					//TSB#( 0, g[59], 0x90, 0, SigTran::M3UA::SIO::SerIndVal::Calls );
+					
+					//DUMP( 0, g[25], 0x90, 0xc2, "payload");
+					if (g[26] >= 1)
+					{
+					LABL( 0, 0, 0, 0xb1, "SCCP User Adapter Layer" );
+					DUMP( 0, g[26], 0x90, 0xc2, "SUA Padding:");
+					LABL( 0, 0, 0, 0xb8);
+					}
+				}
+				if ( g[59] == 0)
+				{
+				}
+			 }
+	}
+}
+
+//------------------------------------------------------------------------------------
+void SigTran::V5UA( )
+{
+	LABL( 0, 0, 0, 0xb1, "V5 User Adaptation Protocol" );
+	LABL 0 0 90 b7 Payload Dump:;
+	SigTran::DumpwithPadding;
+}
+//------------------------------------------------------------------------------------
+void SigTran::BICC( )
+{
+	LABL( 0, 0, 0, 0xb1, "Bearer Independent Call Control Protocol" );
+	SigTran::BICC::CIC;
+	HBIT( 8, g[6], 0x90, 0xc2, "Message Type" ); 
+	CST#( 0, g[6], 0x90, 0x14, ISUP::MSGTYP);
+	g[25] -= 1;
+	DGLB( 0, g[25], 0x90, 0xc2, "Parameter Length: :\PRMLNGTH:" );
+	TSB#( 0, g[6], 0x90, 0xb7, ISUP::MSGTYP::Calls);
+}
+
+void SigTran::BICC::CIC( )
+{
+	BBIT( 8, l[1], 0x5, 0x5, "CIC 4");
+	BBIT( 8, l[2], 0x5, 0x5, "CIC 3");
+	BBIT( 8, l[3], 0x5, 0x5, "CIC 2");
+	BBIT( 8, l[4], 0x5, 0x5, "CIC 1");
+	g[25] -= 4;
+	SHFL( 8, l[4]);
+	l[4] += l[3];
+}
+//------------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------
+void SigTran::MTP::PARA::Unassigned( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2, "Not decoded:");
+	g[25] -= g[25];
+	LABL( 0, 0, 0, 0xb8 );
+}
+void SigTran::MTP::PARA::Reserved( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2, "Not decoded:");
+	g[25] -= g[25];
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::Data( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2 );
+	
+	g[0xb] = g[25];
+	MODG 4 b;
+	if (g[0xb] == 0)
+	{
+	LABL( 0, 0, 0, 0xc2, "No Padding " );
+	}
+	if (g[0xb] != 0)
+	{
+		l[5] = 4;
+		l[5] -= g[0xb];
+
+		LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+		DGLB( 0, l[5], 0x90, 0x14);
+		DUMP( 0, l[5], 0x90, 0xc2, "Padding:");
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::Segmentation( )
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "first/remaining:" );
+		CEQU( 0, l[1], 0, 0x14, "first segment" );
+		CEQU( 1, l[1], 0, 0x14, "remaining segment" );
+	BBIT( 7, 0, 0x90, 0xc2, "# of remaining seg.:" );
+	DBIT( 24, l[1], 0x90, 0xc2, "Segmentation Ref.:" );
+		
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::SS7HopCounter( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	DBIT( 8, 0, 0x90, 0xc2, "SS7 Hop Counter:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::SequenceControl( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2, SequenceControl: );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::SourceAddress( )
+{
+	DBIT( 16, l[1], 0x90, 0xc2, "Routing Indicator:" );
+		CEQU( 0, l[1], 0, 0x14, "Reserved");
+		CEQU( 1, l[1], 0, 0x14, "Route on Global Title");
+		CEQU( 2, l[1], 0, 0x14, "Route on SSN + PC");
+		CEQU( 3, l[1], 0, 0x14, "Route on Hostname");
+		CEQU( 4, l[1], 0, 0x14, "Route on SSN + IP Address");
+	DBIT( 16, l[2], 0x90, 0xc2, "Address Indicator:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::DestinationAddress( )
+{
+	DBIT( 16, l[1], 0x90, 0xc2, "Routing Indicator:" );
+		CEQU( 0, l[1], 0, 0x54, "Reserved");
+		CEQU( 1, l[1], 0, 0x54, "Route on Global Title");
+		CEQU( 2, l[1], 0, 0x54, "Route on SSN + PC");
+		CEQU( 3, l[1], 0, 0x54, "Route on Hostname");
+		CEQU( 4, l[1], 0, 0x54, "Route on SSN + IP Address");
+	DBIT( 16, l[2], 0x90, 0xc2, "Address Indicator:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::Dump( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2 );
+	g[25] -= g[25];
+}
+
+void SigTran::MTP::PARA::PointCode( ) 
+{
+	//Attention Wireshark is wrong here!!!! Seee the function in SCCP Pointcode!
+	BBIT( 16, l[3], 0x05, 0x05, "Res:" );
+	BBIT( 8, l[3], 0x90, 0xc2, "SPC LSB:" );
+	BBIT( 2, 0, 0x05, 0x05, "SPC Spare:" );
+	BBIT( 6, l[2], 0x90, 0xc2, "SPC MSB:" );
+	SHFL( 8, l[2]);
+	l[2] += l[3];
+	DGLB( 0, l[2], 0x90, 0xc2, "Signalling Point Code:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::IPv4Address( )
+{
+	IPLG;
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::IPv6Address( )
+{
+	IPV6;
+	g[25] -= 16;
+}
+
+void SigTran::MTP::PARA::GlobalTitleInd( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 8, l[1], 0x90, 0xc2, "GTI:" );
+		CEQU( 0, l[1], 0, 0x54, "Invalid");
+		CEQU( 1, l[1], 0, 0x54, "Nature of Address is taken over");
+		CEQU( 2, l[1], 0, 0x54, "The Translation Type implicitly determines Nature of Address and Numbering Plan");
+		CEQU( 3, l[1], 0, 0x54, "Numbering Plan and Translation Type are taken over");
+		CEQU( 4, l[1], 0, 0x54, "All information to populate the source address is present in the SCCP Address");
+		g[25] -= 4;
+		SigTran::MTP::PARA::Dump;
+		LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::ProtocolClass( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	//LABL( 0, 0, 0x90, 0xc2, "Protocol Class:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Return on error proc.:" );
+		CEQU( 0, l[1], 0, 0x54, "No special options");
+		CEQU( 1, l[1], 0, 0x54, "Return message on error");
+	BBIT( 5, 0, 0x90, 0xc2, "Should be 0:" );
+	BBIT( 2, l[1], 0x00, 0xc2, "Protocol Class:" );
+		CEQU( 0, l[1], 0, 0x54, "Class 0 (connectionless service)");
+		CEQU( 1, l[1], 0, 0x54, "Class 1 (connectionless service)");
+		CEQU( 2, l[1], 0, 0x54, "Class 2 (connection-oriented service)");
+		CEQU( 3, l[1], 0, 0x54, "Class 3 (connection-oriented service)");
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::SubsystemNumber( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	SigTran::SCCP::MTCC::SSN;
+	//SigTran::MTP::PARA::Dump;
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::HostName( )
+{
+	CHR#( 0, g[25], 0x90, 0xc2, "Host Name:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= g[25];
+}
+
+void SigTran::MTP::PARA::SourceReferenceNumber( )
+{
+	DBYT( 4, 0, 0x90, 0xc2, "Source Reference Number " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::DesinationReferenceNumber( )
+{
+	DBYT( 4, 0, 0x90, 0xc2, "Desination Reference Number " );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::SCCPCause( )
+{
+	HBIT( 16, 0, 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Cause Type:" );
+		CEQU( 1, l[1], 0, 0x54, "Return Cause (CLDR)" );
+		CEQU( 2, l[1], 0, 0x54, "Refusal Cause (COREF)" );
+		CEQU( 3, l[1], 0, 0x54, "Release Cause (RELRE)" );
+		CEQU( 4, l[1], 0, 0x54, "Reset Cause (RESRE)" );
+		CEQU( 5, l[1], 0, 0x54, "Error Cause (ERR)" );
+		XEQU( 1, l[1], 0, 0xc2, SigTran::SCCP::MTC::Returncause );
+		XEQU( 2, l[1], 0, 0xc2, SigTran::SCCP::MTC::RefusalCause );
+		XEQU( 3, l[1], 0, 0xc2, SigTran::SCCP::MTC::ReleaseCause );
+		XEQU( 4, l[1], 0, 0xc2, SigTran::SCCP::MTC::Resetcause );
+		XEQU( 5, l[1], 0, 0xc2, SigTran::SCCP::MTC::Errorcause );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 3;
+}
+
+
+void SigTran::MTP::PARA::SequenceNumber( )
+{
+	HBIT( 16, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 7, l[1], 0x90, 0xc2, "Rec Seq Num:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "M:" );
+	BBIT( 8, l[1], 0x90, 0xc2, "Sent Seq Num:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ReceiveSequenceNumber( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 8, l[1], 0x90, 0xc2, "Rec Seq Num:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ASPCapabilities( )
+{
+	HBIT( 20, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Protocol Class 3 Flag:" );
+		CEQU( 0, l[1], 0, 0x54, "Not Supported" );
+		CEQU( 1, l[1], 0, 0x54, "Supported" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Protocol Class 2 Flag:" );
+		CEQU( 0, l[1], 0, 0x54, "Not Supported" );
+		CEQU( 1, l[1], 0, 0x54, "Supported" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Protocol Class 1 Flag:" );
+		CEQU( 0, l[1], 0, 0x54, "Not Supported" );
+		CEQU( 1, l[1], 0, 0x54, "Supported" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Protocol Class 0 Flag:" );
+		CEQU( 0, l[1], 0, 0x54, "Not Supported" );
+		CEQU( 1, l[1], 0, 0x54, "Supported" );
+	HBIT( 8, l[1], 0x90, 0xc2, "Interworking:" );
+		CEQU( 1, l[1], 0, 0x54, "no interworking with SS7 Networks." );
+		CEQU( 2, l[1], 0, 0x54, "IP Signalling Endpoint (ASP), interworking with SS7 networks" );
+		CEQU( 3, l[1], 0, 0x54, "Signalling Gateway" );
+		CEQU( 4, l[1], 0, 0x54, "relay node support" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::Credit( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	SigTran::SCCP::MTC::Credit;
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 3;
+}
+
+void SigTran::MTP::PARA::User_Cause( )
+{
+	DBIT( 16, l[1], 0x90, 0xc2, "Cause:" );
+		CEQU( 0, l[1], 0, 0x54, "remote SCCP unavailable, reason unknown" );
+		CEQU( 1, l[1], 0, 0x54, "remote SCCP unequipped" );
+		CEQU( 2, l[1], 0, 0x54, "remote SCCP inaccessible" );
+	DBIT( 16, 0, 0x90, 0xc2, "User:" );
+		
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::DRNLabel( )
+{
+	DBIT( 8, 0, 0x90, 0xc2, "start:" );
+	DBIT( 8, 0, 0x90, 0xc2, "end:" );
+	DBIT( 16, 0, 0x90, 0xc2, "label value:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::TIDLabel( )
+{
+	DBIT( 8, 0, 0x90, 0xc2, "start:" );
+	DBIT( 8, 0, 0x90, 0xc2, "end:" );
+	DBIT( 16, 0, 0x90, 0xc2, "label value:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::AddressRange( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2 );
+	g[25] -= g[25];
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::SMI( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	HBIT( 8, l[1], 0x90, 0xc2, "SMI:" );
+		CEQU( 0, l[1], 0, 0x54, "Reserved/Unknown" );
+		CEQU( 1, l[1], 0, 0x54, "Solitary" );
+		CEQU( 2, l[1], 0, 0x54, "Duplicated" );
+		CEQU( 3, l[1], 0, 0x54, "Triplicated" );
+		CEQU( 4, l[1], 0, 0x54, "Quadruplicated" );
+		CEQU( 255, l[1], 0, 0x54, "Unspecified" );
+		
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::Importance( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 8, l[1], 0x90, 0xc2, "Importance:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::MessagePriority( )
+{
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	HBIT( 8, l[1], 0x90, 0xc2, "Importance:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+
+void SigTran::MTP::PARA::Status( )
+{
+	while ( g[25] >= 4)
+	{
+		 HWRD( 0,  l[6], 0x90, 0xc2, "Status Type:" ); 
+			CEQU( 1, l[6], 0, 0x54, "Application Server State Change (AS-State_Change)");
+			CEQU( 2, l[6], 0, 0x54, "Other");
+		 HWRD( 0,  l[6], 0x90, 0xc2, "Status Information:" ); 
+			CEQU( 1, l[6], 0, 0x54, "Reserved");
+			CEQU( 2, l[6], 0, 0x54, "Application Server Inactive (AS-INACTIVE)");
+			CEQU( 3, l[6], 0, 0x54, "Application Server Active (AS-ACTIVE)");
+			CEQU( 4, l[6], 0, 0x54, "Application Server Pending (AS-PENDING)");
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+
+void SigTran::MTP::PARA::AffectedPointCode( )
+{
+	while ( g[25] >= 4)
+	{
+	
+		 BBIT( 8, 0, 0x90, 0xc2, "Mask" );
+		 DBIT( 10, l[6], 0x05, 0); //Search
+		 if (l[6] == 0)
+		 {
+			LABL(0, 0,  0x05, 0xc9, "ITU 14-bit Point Code" );
+			DBIT( 3, 0, 0x90, 0xc2, "Zone:" );
+			DBIT( 8, 0 ,0x90,0xc2, "Region:" );
+			DBIT( 3, 0, 0x90, 0xc2, "SP:" );
+		 }
+		 if (l[6] >= 1)
+		 {
+			BBIT ( 6, 0, 0x05, 0);
+			DECR 2;
+			LABL( 0, 0,  0x05, 0xc9, "ANSI 24-bit Point Code" );
+			DBIT( 8, 0, 0x90, 0xc2, "Network:" );
+			DBIT( 8, 0 ,0x90, 0xc2, "Cluster:" );
+			DBIT( 8, 0, 0x90, 0xc2, "Member:" );
+		 }
+
+	g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::ConcernedDestination( )
+{
+	while ( g[25] >= 4)
+	{
+	
+		 BBIT( 8, 0, 0x90, 0xc2, "Mask" );
+		 DBIT( 10, l[6], 0x05, 0); //Search
+		 if (l[6] == 0)
+		 {
+			LABL(0, 0,  0x05, 0xc9, "ITU 14-bit Point Code" );
+			DBIT( 3, 0, 0x90, 0xc2, "Zone:" );
+			DBIT( 8, 0 ,0x90,0xc2, "Region:" );
+			DBIT( 3, 0, 0x90, 0xc2, "SP:" );
+		 }
+		 if (l[6] >= 1)
+		 {
+			BBIT ( 6, 0, 0x05, 0);
+			DECR 2;
+			LABL( 0, 0,  0x05, 0xc9, "ANSI 24-bit Point Code" );
+			DBIT( 8, 0, 0x90, 0xc2, "Network:" );
+			DBIT( 8, 0 ,0x90, 0xc2, "Cluster:" );
+			DBIT( 8, 0, 0x90, 0xc2, "Member:" );
+		 }
+
+	g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::NetworkAppearance( )
+{
+	DLNG( 0, 0,  0x90, 0xc2, "Network Appear.:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::RoutingContext( )
+{
+	while ( g[25] >= 4)
+	{
+		 DLNG( 0,  l[6], 0x90, 0xc2, "RC:" );
+		 CEQU( 0, l[6], 0, 0x54, "the registration was not successful" );
+		 g[25] -= 4;
+		 LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void SigTran::MTP::PARA::Cause_User( )
+{        
+	BBIT( 16, l[6], 0x90, 0xc2, "Cause:" );
+		CEQU( 0, l[6], 0, 0x54, "Unknown" );
+		CEQU( 1, l[6], 0, 0x54, "Unequipped Remote User" );
+		CEQU( 2, l[6], 0, 0x54, "Inaccessible Remote Use" );
+	BBIT( 16, l[6], 0x90, 0xc2, "User:" );
+		CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Reserved" );
+		CEQU( 2, l[6], 0, 0x54, "Reserved" );
+		CEQU( 3, l[6], 0, 0x54, "SCCP" );
+		CEQU( 4, l[6], 0, 0x54, "TUP" );
+		CEQU( 5, l[6], 0, 0x54, "ISUP" );
+		CEQU( 6, l[6], 0, 0x54, "Reserved" );
+		CEQU( 7, l[6], 0, 0x54, "Reserved" );
+		CEQU( 8, l[6], 0, 0x54, "Reserved" );
+		CEQU( 9, l[6], 0, 0x54, "Broadband ISUP" );
+		CEQU( 10, l[6], 0, 0x54, "Satellite ISUP" );
+		CEQU( 11, l[6], 0, 0x54, "Reserved" );
+		CEQU( 12, l[6], 0, 0x54, "AAL type 2 Signalling" );
+		CEQU( 13, l[6], 0, 0x54, "Bearer Independent Call Control BICC" );
+		CEQU( 14, l[6], 0, 0x54, "Gateway Control Protocol" );
+		CEQU( 15, l[6], 0, 0x54, "Reserved" );
+		LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ASPIdentifier( )
+{			
+	BBIT( 32, 0, 0x90, 0xc2, "ASP Identifier:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::INFOString( )
+{
+	while ( g[25] >= 4)
+	{
+		BBIT( 32, 0, 0x90, 0xc2, "INFO String:" );
+		g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::HeartbeatData( )
+{
+	while ( g[25] >= 4)
+	{
+		BBIT( 32, 0, 0x90, 0xc2, "Heartbeat Data:" );
+		g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::RoutingKey( )
+{	
+	while ( g[25] >= 12)
+	{	
+		SigTran::MTP::PARA::LocalRoutingKeyIdentifier;
+		g[25] -= 4;
+		BBIT( 24, 0, 0x90, 0xc2, "Destination Point Code:" );
+		g[25] -= 4;
+		BBIT( 24, 0, 0x90, 0xc2, "Destination Point Code:" );	
+		g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::LocalRoutingKeyIdentifier( )
+{	 
+	BBIT( 32, 0, 0x90, 0xc2, "Local-RK-Identifier value:" );	
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::DestinationPointCode( )
+{	 
+	BBIT( 8, 0, 0x90, 0xc2, "Mask:" );	
+	BBIT( 24, 0, 0x90, 0xc2, "Destination Point Code:" );	
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::ServiceIndicators( )
+{	
+	LABL(0, 0,  0x05, 0xc9, "Service Indicators" );
+	while ( g[25] >= 1)
+	{	
+		DBYT( 8, l[6], 0x90, 0xc2, "Service Indicator:" );
+		g[25] -= 1;
+		if (g[25] <= 3)
+		{
+			if ( l[6] == 0)
+			{
+					LABL( 0, 0, 0, 0x54, "This Octect is Padding-Byte!" );
+			}
+		}
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::OriginatingPointCodeList( )
+{
+	LABL(0, 0,  0x05, 0xc9, "Originating Point Code List" );
+	while ( g[25] >= 4)
+	{		
+		BBIT( 8, 0, 0x90, 0xc2, "Mask:" );
+		BBIT( 24, 0, 0x90, 0xc2, "Originating Point Code:" );
+		g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::RegistrationResultList( )
+{
+	LABL(0, 0,  0x05, 0xc9, "Registration Result List" );
+	while ( g[25] >= 8)
+	{
+		INCR 2;
+		DWRD( 0, l[25], 0x90, 0x05, "PL:" );
+		DECR 4;
+		//Subfuncs
+		while ( l[25] >= 8)
+		{
+			DWRD( 0, l[24], 0x90, 0xc2, "PT:" );
+			g[23] -= 2;
+			l[32] = g[25];
+			DWRD( 0, g[25], 0x90, 0xc2, "PL:" );
+			g[23] -= 2;
+			l[25] -= 4;
+			LABL( 0, 0,  0, 0xb1, "Parameter Tag = " );
+			HGLB( 0 , l[24], 0x01, 0x01);
+			LABL( 0, 0,  0, 0x1, ": " );
+			CST#( 0, l[24], 0x90, 0x01, SigTran::M3UA::MT::MSGPARA::Calls );
+			TSB#( 0, l[24], 0, 0, SigTran::M3UA::MT::MSGPARA::Calls );
+			g[25] = l[32];
+		}
+		g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::RegistrationStatus( )
+{
+	BBIT( 32, l[6], 0x90, 0xc2, "Registration Status:" );
+		CEQU( 0, l[6], 0, 0x54, "Successfully Registered" );
+		CEQU( 1, l[6], 0, 0x54, "Error - Unknown" );
+		CEQU( 2, l[6], 0, 0x54, "Error - Invalid DPC" );
+		CEQU( 3, l[6], 0, 0x54, "Error - Invalid Network Appearance" );
+		CEQU( 4, l[6], 0, 0x54, "Error - Invalid Routing Key" );
+		CEQU( 5, l[6], 0, 0x54, "Error - Permission Denied" );
+		CEQU( 6, l[6], 0, 0x54, "Error - Cannot Support Unique Routing" );
+		CEQU( 7, l[6], 0, 0x54, "Error - Routing Key not Currently Provisioned" );
+		CEQU( 8, l[6], 0, 0x54, "Error - Insufficient Resources" );
+		CEQU( 9, l[6], 0, 0x54, "Error - Unsupported RK parameter Field" );
+		CEQU( 10, l[6], 0, 0x54, "Error - Unsupported/Invalid Traffic Handling Mode" );
+		CEQU( 11, l[6], 0, 0x54, "Error - Routing Key Change Refused" );
+		CEQU( 12, l[6], 0, 0x54, "Error - Routing Key Already Registered" );
+		LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::DeregistrationResult( )
+{        
+	LABL(0, 0,  0x90, 0xc9, "Registration Result List" );
+	while ( g[25] >= 8)
+	{
+	BBIT( 32, l[6], 0x90, 0xc2, "Deregistration Result:" );
+	g[25] -= 4;
+	}
+	LABL( 0, 0, 0x90, 0xb8 );
+}
+
+void SigTran::MTP::PARA::CorrelationId( )
+{	
+	DLNG( 0, 0, 0x90, 0xc2, "Corr-Id:" );
+	LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}	
+
+void SigTran::MTP::PARA::ConcernedDPC( )
+{         
+	BBIT( 8, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 24, 0, 0x90, 0xc2, "Concerned DPC:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0x90, 0xb8, );		
+}
+
+void SigTran::MTP::PARA::CongestionLevel( )
+{         
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 8, 0, 0x90, 0xc2, "Congestion Level:" );
+	g[25] -= 4;
+	LABL( 0, 0, 0x90, 0xb8, );		
+}
+
+void SigTran::MTP::PARA::DiagnosticInformation( )
+{
+	while ( g[25] >= 5 )
+	{
+		BBIT( 32, 0, 0x90, 0xc2, "Diagnostic Information:" );
+		g[25] -= 4;
+	}
+	if ( g[25] == 4 )
+	{
+		BBIT( 32, 0, 0x90, 0xc2, "Diagnostic Information:" );
+		g[25] -= 4;
+	}
+
+}
+
+void SigTran::MTP::PARA::DeregistrationStatus( )												
+{        	
+	BBIT( 32, l[6], 0x90, 0xc2, "Deregistration Status:" );
+		CEQU( 0, l[6], 0, 0x54, "Successfully Registered" );
+		CEQU( 1, l[6], 0, 0x54, "Error - Unknown" );
+		CEQU( 2, l[6], 0, 0x54, "Error - Invalid Routing Context" );
+		CEQU( 3, l[6], 0, 0x54, "Error - Permission Denied" );
+		CEQU( 4, l[6], 0, 0x54, "Error - Not Registered" );
+		CEQU( 5, l[6], 0, 0x54, "Error - ASP Currently Active for Routing Context" );
+	LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ErrorCode_M3UA( )												
+{
+	HBIT( 32, l[6], 0x90, 0xc2, "Error Code:" );
+		//CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Invalid Version" );
+		CEQU( 2, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 3, l[6], 0, 0x54, "Unsupported Message Class" );
+		CEQU( 4, l[6], 0, 0x54, "Unsupported Message Type" );
+		CEQU( 5, l[6], 0, 0x54, "Unsupported Traffic Mode Type" );
+		CEQU( 6, l[6], 0, 0x54, "Unexpected Message" );
+		CEQU( 7, l[6], 0, 0x54, "Protocol Error" );
+		CEQU( 8, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 9, l[6], 0, 0x54, "Invalid Stream Identifier" );
+		CEQU( 10, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 11, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 12, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 13, l[6], 0, 0x54, "Refused - Management Blocking" );
+		CEQU( 14, l[6], 0, 0x54, "ASP Identifier Required" );
+		CEQU( 15, l[6], 0, 0x54, "Invalid ASP Identifier" );
+		CEQU( 16, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 17, l[6], 0, 0x54, "Invalid Parameter Value" );
+		CEQU( 18, l[6], 0, 0x54, "Parameter Field Error" );
+		CEQU( 19, l[6], 0, 0x54, "Unexpected Parameter" );
+		CEQU( 20, l[6], 0, 0x54, "Destination Status Unknown" );
+		CEQU( 21, l[6], 0, 0x54, "Invalid Network Appearance" );
+		CEQU( 22, l[6], 0, 0x54, "Missing Parameter" );
+		CEQU( 23, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 24, l[6], 0, 0x54, "Not Used in M3UA" );
+		CEQU( 24, l[6], 0, 0x54, "Invalid Routing Context" );
+		CEQU( 26, l[6], 0, 0x54, "No Configured AS for ASP" );
+	LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ErrorCode_M2UA( )												
+{
+	HBIT( 32, l[6], 0x90, 0xc2, "Error Code:" );
+		//CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Invalid Version" );
+		CEQU( 2, l[6], 0, 0x54, "Invalid Interface Identifier" );
+		CEQU( 3, l[6], 0, 0x54, "Unsupported Message Class" );
+		CEQU( 4, l[6], 0, 0x54, "Unsupported Message Type" );
+		CEQU( 5, l[6], 0, 0x54, "Unsupported Traffic Handling Mode" );
+		CEQU( 6, l[6], 0, 0x54, "Unexpected Message" );
+		CEQU( 7, l[6], 0, 0x54, "Protocol Error" );
+		CEQU( 8, l[6], 0, 0x54, "Unsupported Interface Identifier Type" );
+		CEQU( 9, l[6], 0, 0x54, "Invalid Stream Identifier" );
+		CEQU( 10, l[6], 0, 0x54, "Not Used in M2UA" );
+		CEQU( 11, l[6], 0, 0x54, "Not Used in M2UA" );
+		CEQU( 12, l[6], 0, 0x54, "Not Used in M2UA" );
+		CEQU( 13, l[6], 0, 0x54, "Refused - Management Blocking" );
+		CEQU( 14, l[6], 0, 0x54, "ASP Identifier Required" );
+		CEQU( 15, l[6], 0, 0x54, "Invalid ASP Identifier" );
+		CEQU( 16, l[6], 0, 0x54, "ASP Active for Interface Identifier(s)" );
+		CEQU( 17, l[6], 0, 0x54, "Invalid Parameter Value" );
+		CEQU( 18, l[6], 0, 0x54, "Parameter Field Error" );
+		CEQU( 19, l[6], 0, 0x54, "Unexpected Parameter" );
+		CEQU( 20, l[6], 0, 0x54, "Destination Status Unknown" );
+		CEQU( 21, l[6], 0, 0x54, "Invalid Network Appearance" );
+		CEQU( 22, l[6], 0, 0x54, "Missing Parameter" );
+		CEQU( 23, l[6], 0, 0x54, "Not Used in M2UA" );
+		CEQU( 24, l[6], 0, 0x54, "Not Used in M2UA" );
+		CEQU( 24, l[6], 0, 0x54, "Missing Parameter" );
+	LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::ProtocolData1( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2, "Not decoded:");
+	g[25] -= g[25];
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::ProtocolData2_TTC_( )
+{
+	while ( g[25] >= 4)
+	{
+		 DLNG( 0,  0, 0x90, 0xc2, "TTC Protocol Data:" );
+		 g[25] -= 4;
+	}
+	
+}
+
+void SigTran::MTP::PARA::StateRequest( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "State:" );
+		CEQU( 0, l[6], 0, 0x54, "STATUS_LPO_SET | Request local processor outage" );
+		CEQU( 1, l[6], 0, 0x54, "STATUS_LPO_CLEAR | Request local processor outage recovered" );
+		CEQU( 2, l[6], 0, 0x54, "STATUS_EMER_SET | Request emergency alignment" );
+		CEQU( 3, l[6], 0, 0x54, "STATUS_EMER_CLEAR | Request normal alignment (cancel emergency)" );
+		CEQU( 4, l[6], 0, 0x54, "STATUS_FLUSH_BUFFERS | Flush or clear receive, transmit and retransmit queues" );
+		CEQU( 5, l[6], 0, 0x54, "STATUS_CONTINUE | Continue or Resume" );
+		CEQU( 6, l[6], 0, 0x54, "STATUS_CLEAR_RTB | Clear the retransmit queue" );
+		CEQU( 7, l[6], 0, 0x54, "STATUS_AUDIT | Audit state of link" );
+		CEQU( 8, l[6], 0, 0x54, " STATUS_CONG_CLEAR | Congestion cleared" );
+		CEQU( 9, l[6], 0, 0x54, " STATUS_CONG_ACCEPT | Congestion accept" );
+		CEQU( 10, l[6], 0, 0x54, "STATUS_CONG_DISCARD | Congestion discard" );
+		g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::StateEvent( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "Event:" );
+		CEQU( 1, l[6], 0, 0x54, "EVENT_RPO_ENTER | Remote entered processor outage" );
+		CEQU( 2, l[6], 0, 0x54, "EVENT_RPO_EXIT | Remote exited processor outage" );
+		CEQU( 3, l[6], 0, 0x54, "EVENT_LPO_ENTER | Link entered processor outage" );
+		CEQU( 4, l[6], 0, 0x54, "EVENT_LPO_EXIT | Link exited processor outage" );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::CongestionIndication( )
+{	
+	HBIT( 24, 0, 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[6], 0x90, 0xc2, "Congestion Indication:" );
+		CEQU( 0, l[6], 0, 0x54, "LEVEL_NONE | No congestion" );
+		CEQU( 1, l[6], 0, 0x54, "LEVEL_1 | Congestion Level 1" );
+		CEQU( 2, l[6], 0, 0x54, "LEVEL_2 | Congestion Level 2" );
+		CEQU( 3, l[6], 0, 0x54, "LEVEL_3 | Congestion Level 3" );
+	LABL( 0, 0, 0x05, 0xb8 );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::DiscardStatus( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "Discard Status:" );
+		CEQU( 0, l[6], 0, 0x54, "LEVEL_NONE | No congestion" );
+		CEQU( 1, l[6], 0, 0x54, "LEVEL_1 | Congestion Level 1" );
+		CEQU( 2, l[6], 0, 0x54, "LEVEL_2 | Congestion Level 2" );
+		CEQU( 3, l[6], 0, 0x54, "LEVEL_3 | Congestion Level 3" );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::Action( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "Action:" );
+		CEQU( 1, l[6], 0, 0x54, "ACTION_RTRV_BSN | Retrieve the backward sequence number" );
+		CEQU( 2, l[6], 0, 0x54, "ACTION_RTRV_MSGS | Retrieve the PDUs from the transmit and retransmit queues" );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::RetrievalResult( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "Retrieval Result:" );
+		CEQU( 1, l[6], 0, 0x54, "RESULT_SUCCESS | Action successful" );
+		CEQU( 2, l[6], 0, 0x54, "RESULT_FAILURE | Action failed" );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::TrafficModeType( )
+{	
+	HLNG( 0, l[6], 0x90, 0xc2, "Traffic Mode Type:" );
+		CEQU( 1, l[6], 0, 0x54, "Override" );
+		CEQU( 2, l[6], 0, 0x54, "Load-share" );
+		CEQU( 3, l[6], 0, 0x54, "Broadcast" );
+	g[25] -= 4;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::CongestionIndications( )
+{	
+	BBIT( 24, 0 ,0x05, 0x05);
+	HBYT( 0, l[6], 0x90, 0xc2, "Congestion Level:" );
+		CEQU( 1, l[6], 0, 0x54, "No Congestion or Undefined" );
+		CEQU( 2, l[6], 0, 0x54, "Congestion Level 1" );
+		CEQU( 3, l[6], 0, 0x54, "Congestion Level 2" );
+		CEQU( 4, l[6], 0, 0x54, "Congestion Level 3" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 4;
+}
+
+
+void SigTran::MTP::PARA::InterfaceSelektor( )
+{
+	GBIT(16, l[6], 0, 0x5 );
+	if (l[6] == 0x0001)
+	{
+		SigTran::MTP::PARA::InterfaceIdentifier_Integer_;
+	}
+	if (l[6] == 0x0003)
+	{
+		SigTran::MTP::PARA::InterfaceIdentifier_Text_;
+	}
+	if (l[6] == 0x0008)
+	{
+		SigTran::MTP::PARA::InterfaceIdentifier_IntegerRange_;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::InterfaceIdentifier_Integer_( )
+{
+	while ( g[25] >= 4)
+	{
+		 DLNG( 0,  0, 0x90, 0xc2, "Interface Identifiers:" );
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::InterfaceIdentifier_Text_( )
+{
+	while ( g[25] >= 4)
+	{
+		 DLNG( 0,  0, 0x90, 0xc2, "Interface Identifiers:" );
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::InterfaceIdentifier_IntegerRange_( )
+{
+	l[6] = 1;
+	while ( g[25] >= 8)
+	{
+		 DLNG( 0,  0, 0x90, 0xc2, "Interface Identifier Start " );
+		 DGLB( 0, l[6], 0x90, 0xc2, "" );
+		 LABL( 0, 0,  0x90, 0xc2, " :" );
+		 DLNG( 0,  0, 0x90, 0xc2, "Interface Identifier Stop " );
+		 DGLB( 0, l[6], 0x90, 0xc2, "" );
+		 LABL( 0, 0,  0x90, 0xc2, " :" );
+		 g[25] -= 4;
+		 l[6] += 1;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::LinkKey( )
+{
+	while ( g[25] >= 12)
+	{
+		
+		 SigTran::MTP::PARA::Local-LK-Identifier;
+		 SigTran::MTP::PARA::SignallingDataTerminal_SDT_Identifier;
+		 SigTran::MTP::PARA::SignallingLinkTerminal_SDL_Identifier;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::MTP::PARA::Local-LK-Identifier( )
+{
+	while ( g[25] >= 4)
+	{
+		 
+		 DLNG( 0,  0, 0x90, 0xc2, "Local-LK-Identifier:" );
+
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+void SigTran::MTP::PARA::SignallingDataTerminal_SDT_Identifier( )
+{
+	while ( g[25] >= 4)
+	{
+		 LABL( 0, 0,  0x05, 0xc9, "Signalling Data Terminal Identifier" );
+		 BBIT( 0, 0, 0x90, 0xc2, "Reserved:" );
+		 BBIT( 0, 0, 0x90, 0xc2, "SDT Identifier:" );
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+void SigTran::MTP::PARA::SignallingLinkTerminal_SDL_Identifier( )
+{
+	while ( g[25] >= 4)
+	{
+		 LABL( 0, 0,  0x05, 0xc9, "Signalling Link Terminal Identifier" );
+		 BBIT( 0, 0, 0x90, 0xc2, "Reserved:" );
+		 BBIT( 0, 0, 0x90, 0xc2, "SDL Identifier:" );
+		 g[25] -= 4;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+
+void SigTran::MTP::PARA::RegistrationResult( )
+{
+	while ( g[25] >= 12 )
+	{
+		SigTran::MTP::PARA::Local-LK-Identifier;
+		SigTran::MTP::PARA::RegistrationStatus;
+		SigTran::MTP::PARA::InterfaceSelektor;
+	}
+}
+
+/*void SigTran::MTP::PARA::RegistrationStatus( )
+{
+	DLNG( 0, l[6], 0x90, 0xc2, "Registration Status:" );
+		CEQU( 0, l[6], 0, 0x54, "Successfully Registered" );
+		CEQU( 1, l[6], 0, 0x54, "Error - Unknown" );
+		CEQU( 2, l[6], 0, 0x54, "Error - Invalid SDLI" );
+		CEQU( 3, l[6], 0, 0x54, "Error - Invalid SDTI" );
+		CEQU( 4, l[6], 0, 0x54, "Error - Invalid Link Key" );
+		CEQU( 5, l[6], 0, 0x54, "Error - Permission Denied" );
+		CEQU( 6, l[6], 0, 0x54, "Error - Overlapping (Non-unique) Link Key" );
+		CEQU( 7, l[6], 0, 0x54, "Error - Link Key not Provisioned" );
+		CEQU( 8, l[6], 0, 0x54, "Error - Insufficient Resources" );
+	g[25] -= 4;
+}*/
+
+
+void SigTran::MTP::PARA::De-RegistrationResult( )
+{
+	while ( g[25] >= 12)
+	{
+		 
+		 SigTran::MTP::PARA::InterfaceSelektor;
+		 SigTran::MTP::PARA::De-RegistrationStatus;		 
+	}
+}
+
+void SigTran::MTP::PARA::De-RegistrationStatus( )
+{
+	DLNG( 0, l[6], 0x90, 0xc2, "De-Registration Status:" );
+		CEQU( 0, l[6], 0, 0x54, "Successfully De-Registered" );
+		CEQU( 1, l[6], 0, 0x54, "Error - Unknown" );
+		CEQU( 2, l[6], 0, 0x54, "Error - Invalid Interface Identifier" );
+		CEQU( 3, l[6], 0, 0x54, "Error - Permission Denied" );
+		CEQU( 4, l[6], 0, 0x54, "Error - Not Registered" );
+	g[25] -= 4;
+}
+
+void SigTran::MTP::PARA::StatusType_Information( )
+{        
+	BBIT( 16, l[7], 0x90, 0xc2, "Status Type:" );
+		//CEQU( 0, l[6], 0, 0x54, "Unknown" );
+		CEQU( 1, l[6], 0, 0x54, "Application Server State Change (AS-State_Change)" );
+		CEQU( 2, l[6], 0, 0x54, "Other" );
+	if (l[7] == 2)
+	{
+		BBIT( 16, l[6], 0x90, 0xc2, "Status Information:" );
+		//CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Insufficient ASP Resources Active in AS" );
+		CEQU( 2, l[6], 0, 0x54, "Alternate ASP Active" );
+		CEQU( 3, l[6], 0, 0x54, "ASP Failure" );
+	}
+	if (l[7] == 1)
+	{
+		BBIT( 16, l[6], 0x90, 0xc2, "Status Information:" );
+		//CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Reserved" );
+		CEQU( 2, l[6], 0, 0x54, "Application Server Inactive (AS-INACTIVE)" );
+		CEQU( 3, l[6], 0, 0x54, "Application Server Active (AS-ACTIVE)" );
+		CEQU( 4, l[6], 0, 0x54, "Application Server Pending (AS-PENDING)" );
+	
+	}
+	LABL( 0, 0, 0x90, 0xb8 );
+	g[25] -= 4;
+}
+
+
+void SigTran::MTP::Para::CatchTLV( )
+{
+	LABL( 0, 0, 0x90, 0xc2, "This parameter can't be decoded!");
+	DUMP( 0, g[25], 0x90, 0xb8, "Not supported:");
+	g[25] -= g[25];
+	LABL( 0, 0, 0x90, 0xb8 );
+}
+
+//---------------------------------------------------------------------------------------------------
+
+void SigTran::M3UA( )
+{ 
+	LABL( 0, 0, 0, 0xb1, "MTP 3 User Adapter Layer" );
+	DBYT( 0, l[1], 0x05, 0xc2, "Version:\VE:" );
+	CEQU( 0; l[1], 0, 0x54, "Not supported" );
+	CEQU( 1; l[1], 0, 0x54, "Release 1.0" );
+	DBYT( 0, 0, 0x90, 0xc2, "Reserved:\RE:" );
+	DBYT( 0, g[19], 0x05, 0xc2, "Message Class: \MC:" );
+	if (g[19] <= 14)
+	{
+		CST#( 0, g[19], 0, 0x54, SigTran::M3UA::MC );
+	}
+	if (g[19] >= 15)
+	{
+		if (g[19] <=127) 
+		{
+			LABL( 0, 0, 0, 0x54, "Unassigned" );
+		}
+	}
+	if (g[19] >= 128)
+	{
+		if (g[19] <= 255)
+		{
+			LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Transfer extensions" );
+		}
+	}
+	BBYT( 0, g[20], 0x05, 0xc2, "Message Type:  \MT:" );
+	SigTran::M3UA::ClassTypeView::Matrix;
+	DLNG( 0, g[23], 0x90, 0xc2, "Message Length:\ML:" );
+	SigTran::M3UA::Interpreter;
+}
+	
+void SigTran::M3UA::ClassTypeView::Matrix( )
+{
+	if  (g[19] == 0) 
+	{
+		CEQU( 0, g[20], 0, 0x54,"Error (ERR)" );
+		CEQU( 1, g[20], 0, 0x54,"Notify (NTFY)" );
+		CEQU( 2, g[20], 0, 0x54,"TEI Status Request" );
+		CEQU( 3, g[20], 0, 0x54,"TEI Status Confirm" );
+		CEQU( 4, g[20], 0, 0x54,"TEI Status Indication" );
+		CEQU( 5, g[20], 0, 0x54,"DLC Status Request" );
+		CEQU( 6, g[20], 0, 0x54,"DLC Status Confirm" );
+		CEQU( 7, g[20], 0, 0x54,"DLC Status Indication" );
+		CEQU( 8, g[20], 0, 0x54,"TEI Query Request" );
+			if  (g[20] >= 9 )
+			{
+				if (g[20] <= 127 )
+				 {
+					LABL( 0, 0, 0, 0x54,"Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+						LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined MGMT extension" );
+					}
+			}
+		//CEQU( 9-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined MGMT extensions" );
+	}
+	
+	if  (g[19] == 1)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Payload Data" );		
+	}
+	if (g[19] == 2)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Destination Unavailable (DUNA)" );
+		CEQU( 2, g[20], 0, 0x54,"Destination Available (DAVA)" );
+		CEQU( 3, g[20], 0, 0x54,"Destination State Audit (DAUD)" );
+		CEQU( 4, g[20], 0, 0x54,"Signalling Congestion (SCON)" );
+		CEQU( 5, g[20], 0, 0x54,"Destination User Part Unavailable (DUPU)" );
+		CEQU( 6, g[20], 0, 0x54,"Destination Restricted (DRST)" );
+			if  (g[20] >= 7 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54,"Reserved by the IETF" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g20] <= 255 )
+					{
+						LABL( 0, 0, 0, 0x54,"Reserved for IETF-Defined SSNM extension" );
+					}
+			}
+		//CEQU( 7-127, g[20], 0, 0x54,"Reserved by the IETF" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined SSNM extension" );
+	}
+	if (g[19] == 3)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"ASP Up (UP)" );
+		CEQU( 2, g[20], 0, 0x54,"ASP Down (DOWN)" );
+		CEQU( 3, g[20], 0, 0x54,"Heartbeat (BEAT)" );
+		CEQU( 4, g[20], 0, 0x54,"ASP Up Ack (UP ACK)" );
+		CEQU( 5, g[20], 0, 0x54,"ASP Down Ack (DOWN ACK)" );
+		CEQU( 6, g[20], 0, 0x54,"Heartbeat Ack (BEAT ACK)" );
+		//CEQU( 7-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined ASPSM extensions" );
+	}
+	if (g[19] == 4)
+	{	
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"ASP Active (ACTIVE)" );
+		CEQU( 2, g[20], 0, 0x54,"ASP Inactive (INACTIVE)" );
+		CEQU( 3, g[20], 0, 0x54,"ASP Active Ack (ACTIVE ACK)" );
+		CEQU( 4, g[20], 0, 0x54,"ASP Inactive Ack (INACTIVE ACK)" );
+		//CEQU( 5-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined ASPTM extensions" );
+	}
+	if (g[19] == 5)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Data Request Message" );
+		CEQU( 2, g[20], 0, 0x54,"Data Indication Message" );
+		CEQU( 3, g[20], 0, 0x54,"Unit Data Request Message" );
+		CEQU( 4, g[20], 0, 0x54,"Unit Data Indication Message" );
+		CEQU( 5, g[20], 0, 0x54,"Establish Request" );
+		CEQU( 6, g[20], 0, 0x54,"Establish Confirm" );
+		CEQU( 7, g[20], 0, 0x54,"Establish Indication" );
+		CEQU( 8, g[20], 0, 0x54,"Release Request" );
+		CEQU( 9, g[20], 0, 0x54,"Release Confirm" );
+		CEQU( 10, g[20], 0, 0x54,"Release Indication" );
+		//CEQU( 11-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined QPTM extensions" );
+	}
+	if (g[19] == 6)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Data" );
+		CEQU( 2, g[20], 0, 0x54,"Establish Request" );
+		CEQU( 3, g[20], 0, 0x54,"Establish Confirm" );
+		CEQU( 4, g[20], 0, 0x54,"Release Request" );
+		CEQU( 5, g[20], 0, 0x54,"Release Confirm" );
+		CEQU( 6, g[20], 0, 0x54,"Release Indication" );
+		CEQU( 7, g[20], 0, 0x54,"State Request" );
+		CEQU( 8, g[20], 0, 0x54,"State Confirm" );
+		CEQU( 9, g[20], 0, 0x54,"State Indication" );
+		CEQU( 10, g[20], 0, 0x54,"Data Retrieval Request" );
+		CEQU( 11, g[20], 0, 0x54,"Data Retrieval Confirm" );
+		CEQU( 12, g[20], 0, 0x54,"Data Retrieval Indication" );
+		CEQU( 13, g[20], 0, 0x54,"Data Retrieval Complete Indication" );
+		CEQU( 14, g[20], 0, 0x54,"Congestion Indication" );
+		CEQU( 15, g[20], 0, 0x54,"Data Acknowledge" );
+		//CEQU( 16-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined MAUP extensions" );
+	}
+	if (g[19] == 7)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Connectionless Data Transfer (CLDT)" );
+		CEQU( 2, g[20], 0, 0x54,"Connectionless Data Response (CLDR)" );
+		//CEQU( 3-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined Message Class Extensions" );
+	}
+	if (g[19] == 8)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Connection Request (CORE)" );
+		CEQU( 2, g[20], 0, 0x54,"Connection Acknowledge (COAK)" );
+		CEQU( 3, g[20], 0, 0x54,"Connection Refused (COREF)" );
+		CEQU( 4, g[20], 0, 0x54,"Release Request (RELRE)" );
+		CEQU( 5, g[20], 0, 0x54,"Release Complete (RELCO)" );
+		CEQU( 6, g[20], 0, 0x54,"Reset Confirm (RESCO)" );
+		CEQU( 7, g[20], 0, 0x54,"Reset Request (RESRE)" );
+		CEQU( 8, g[20], 0, 0x54,"Connection Oriented Data Transfer (CODT)" );
+		CEQU( 9, g[20], 0, 0x54,"Connection Oriented Data Acknowledge (CODA)" );
+		CEQU( 10, g[20], 0, 0x54,"Connection Oriented Error (COERR)" );
+		CEQU( 11, g[20], 0, 0x54,"Inactivity Test (COIT)" );
+		//CEQU( 12-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined Message Class Extensions" );
+	}
+	if (g[19] == 9)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Registration Request (REG REQ)" );
+		CEQU( 2, g[20], 0, 0x54,"Registration Response (REG RSP)" );
+		CEQU( 3, g[20], 0, 0x54,"Deregistration Request (DEREG REQ)" );
+		CEQU( 4, g[20], 0, 0x54,"Deregistration Response (DEREG RSP)" );
+		//CEQU( 5-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined RKM extensions" );
+	}
+	if (g[19] == 10)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Registration Request (REG REQ)" );
+		CEQU( 2, g[20], 0, 0x54,"Registration Response (REG RSP)" );
+		CEQU( 3, g[20], 0, 0x54,"Deregistration Request (DEREG REQ)" );
+		CEQU( 4, g[20], 0, 0x54,"Deregistration Response (DEREG RSP)" );
+		//CEQU( 5-127, g[20], 0, 0x54,"Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54,"Reserved for IETF-Defined IIM extensions" );
+	}
+	if (g[19] == 11)
+	{
+		CEQU( 1, g[20], 0, 0x54,"User Data" );
+		CEQU( 2, g[20], 0, 0x54,"Link Status" );
+	}
+	if (g[19] == 12)
+	{
+		CEQU( 1, g[20], 0, 0x54,"STARTTLS message" );
+		CEQU( 2, g[20], 0, 0x54,"STARTTLS_ACK message" );
+	}
+	if (g[19] == 13)
+	{
+		CEQU( 0, g[20], 0, 0x54,"Reserved" );
+		CEQU( 1, g[20], 0, 0x54,"Data Request Message" );
+		CEQU( 2, g[20], 0, 0x54,"Data Indication Message" );
+		CEQU( 3, g[20], 0, 0x54,"Unit Data Request Message" );
+		CEQU( 4, g[20], 0, 0x54,"Unit Data Indication Message" );
+		CEQU( 5, g[20], 0, 0x54,"Establish Request" );
+		CEQU( 6, g[20], 0, 0x54,"Establish Confirm" );
+		CEQU( 7, g[20], 0, 0x54,"Establish Indication" );
+		CEQU( 8, g[20], 0, 0x54,"Release Request" );
+		CEQU( 9, g[20], 0, 0x54,"Release Confirm" );
+		CEQU( 10, g[20], 0, 0x54,"Release Indication" );
+	}
+	if (g[19] == 14)
+	{
+		CEQU( 1, g[20], 0, 0x54,"Data Request Message" );
+		CEQU( 2, g[20], 0, 0x54,"Data Indication Message" );
+		CEQU( 3, g[20], 0, 0x54,"Unit Data Request Message" );
+		CEQU( 4, g[20], 0, 0x54,"Unit Data Indication Message" );
+		CEQU( 5, g[20], 0, 0x54,"Establish Request" );
+		CEQU( 6, g[20], 0, 0x54,"Establish Confirm" );
+		CEQU( 7, g[20], 0, 0x54,"Establish Indication" );
+		CEQU( 8, g[20], 0, 0x54,"Release Request" );
+		CEQU( 9, g[20], 0, 0x54,"Release Confirm" );
+		CEQU( 10, g[20], 0, 0x54,"Release Indication" );
+		CEQU( 11, g[20], 0, 0x54,"Link Status Start Reporting" );
+		CEQU( 12, g[20], 0, 0x54,"Link Status Stop Reporting" );
+		CEQU( 13, g[20], 0, 0x54,"Link Status Indication" );
+		CEQU( 14, g[20], 0, 0x54,"Sa-Bit Set Request" );
+		CEQU( 15, g[20], 0, 0x54,"Sa-Bit Set Confirm" );
+		CEQU( 16, g[20], 0, 0x54,"Sa-Bit Status Request" );
+		CEQU( 17, g[20], 0, 0x54,"Sa-Bit Status Indication" );
+		CEQU( 18, g[20], 0, 0x54,"Error Indication" );
+	}
+}
+
+str# SigTran::M3UA::MC;
+0         | Management (MGMT) Message;
+1         | Transfer Messages;
+2         | SS7 Signalling Network Management (SSNM) Messages;
+3         | ASP State Maintenance (ASPSM) Messages;
+4         | ASP Traffic Maintenance (ASPTM) Messages;
+5         | Q.921/Q.931 Boundary Primitives Transport (QPTM) Messages;
+6         | MTP2 User Adaptation (MAUP) Messages;
+7         | Connectionless Messages;
+8         | Connection-Oriented Messages;
+9         | Routing Key Management (RKM) Messages;
+10        | Interface Identifier Management (IIM) Messages;
+11        | M2PA Messages;
+12        | Security Messages;
+13        | DPNSS/DASS2 Boundary Primitives Transport Messages;
+14        | V5 Boundary Primitives Transport Messages V5PTM;
+
+//RFC4666
+str# SigTran::M3UA::MT::MSGPARA;
+0             | Reserved;
+1             | Interface Identifier (Integer);
+2             | Reserved;
+3             | Interface Identifier (Text);
+4             | Info String;
+5             | DLCI;
+6             | Routing Context;
+7             | Diagnostic Information;
+8             | Interface Identifier (Integer Range);
+9             | Heartbeat Data;
+10            | Reason;
+11            | Traffic Mode Type;
+12            | Error Code;
+13            | Status Type/Information;
+14            | Protocol Data;
+15            | Release Reason;
+16            | Status;
+17            | ASP Identifier;
+18            | Affected Point Code;
+19            | Correlation Id;
+20            | Registration Result;
+21            | Deregistration Result;
+22            | Registration Status;
+23            | Deregistration Status;
+24            | Local Routing Key Identifier;
+129           | DLCI/EFA;
+130           | Link Status;
+131           | Bit ID/Bit Value;
+132           | Error Reason;
+256           | Unassigned;
+257           | SS7 Hop Counter;
+258           | Source Address;
+259           | Destination Address;
+260           | Source Reference Number;
+261           | Destination Reference Number;
+262           | SCCP Cause;
+263           | Sequence Number;
+264           | Receive Sequence Number;
+265           | ASP Capabilities;
+266           | Credit;
+267           | Data;
+268           | Cause / User;
+269           | Network Appearance;
+270           | Routing Key;
+271           | DRN Label;
+272           | TID Label;
+273           | Address Range;
+274           | SMI;
+275           | Importance;
+276           | Message Priority;
+277           | Protocol Class;
+278           | Sequence Control;
+279           | Segmentation;
+280           | Congestion Level;
+512           | Network Appearance;
+513           | Reserved;
+514           | Reserved;
+515           | Reserved;
+516           | User/Cause;
+517           | Congestion Indications;
+518           | Concerned Destination;
+519           | Routing Key;
+520           | Registration Result;
+521           | Deregistration Result;
+522           | Local_Routing Key Identifier;
+523           | Destination Point Code;
+524           | Service Indicators;
+525           | Reserved;
+526           | Originating Point Code List;
+527           | Circuit Range;
+528           | Protocol Data;
+529           | Reserved;
+530           | Registration Status;
+531           | Deregistration Status;
+768           | Protocol Data 1;
+769           | Protocol Data 2 (TTC);
+770           | State Request;
+771           | State Event;
+772           | Congestion Status;
+773           | Discard Status;
+774           | Action;
+775           | Sequence Number;
+776           | Retrieval Result;
+777           | Link Key;
+778           | Local-LK-Identifier;
+779           | Signalling Data Terminal (SDT) Identifier;
+780           | Signalling Data Link (SDL) Identifier;
+781           | Registration Result;
+782           | Registration Status;
+783           | De-Registration Result;
+784           | De-Registration Status;
+32769         | Global Title;
+32770         | Point Code;
+32771         | Subsystem Number;
+32772         | IPv4 Address;
+32773         | Hostname;
+32774         | IPv6 Addresses;
+65535         | Reserved;
+
+str# SigTran::M3UA::MT::MSGPARA::Calls;													
+0             | SigTran::MTP::PARA::Reserved;
+1             | SigTran::MTP::PARA::InterfaceIdentifier_Integer_;
+2             | SigTran::MTP::PARA::Reserved;
+3             | SigTran::MTP::PARA::InterfaceIdentifier_Text_;
+4             | SigTran::MTP::PARA::InfoString;
+5             | SigTran::MTP::PARA::DLCI;
+6             | SigTran::MTP::PARA::RoutingContext;
+7             | SigTran::MTP::PARA::DiagnosticInformation;
+8             | SigTran::MTP::PARA::InterfaceIdentifier_IntegerRange_;
+9             | SigTran::MTP::PARA::HeartbeatData;
+10            | SigTran::MTP::PARA::Reason;
+11            | SigTran::MTP::PARA::TrafficModeType;
+12            | SigTran::MTP::PARA::ErrorCode_M3UA;
+13            | SigTran::MTP::PARA::StatusType_Information;
+14            | SigTran::MTP::PARA::ProtocolData;
+15            | SigTran::MTP::PARA::ReleaseReason;
+16            | SigTran::MTP::PARA::Status;
+17            | SigTran::MTP::PARA::ASPIdentifier;
+18            | SigTran::MTP::PARA::AffectedPointCode;
+19            | SigTran::MTP::PARA::CorrelationId;
+20            | SigTran::MTP::PARA::RegistrationResult;
+21            | SigTran::MTP::PARA::DeregistrationResult;
+22            | SigTran::MTP::PARA::RegistrationStatus;
+23            | SigTran::MTP::PARA::DeregistrationStatus;
+24            | SigTran::MTP::PARA::LocalRoutingKeyIdentifier;
+129           | SigTran::MTP::PARA::DLCI_EFA;
+130           | SigTran::MTP::PARA::LinkStatus;
+131           | SigTran::MTP::PARA::BitID_BitValue;
+132           | SigTran::MTP::PARA::ErrorReason;
+256           | SigTran::MTP::PARA::Unassigned;
+257           | SigTran::MTP::PARA::SS7HopCounter;
+258           | SigTran::MTP::PARA::SourceAddress;
+259           | SigTran::MTP::PARA::DestinationAddress;
+260           | SigTran::MTP::PARA::SourceReferenceNumber;
+261           | SigTran::MTP::PARA::DestinationReferenceNumber;
+262           | SigTran::MTP::PARA::SCCPCause;
+263           | SigTran::MTP::PARA::SequenceNumber;
+264           | SigTran::MTP::PARA::ReceiveSequenceNumber;
+265           | SigTran::MTP::PARA::ASPCapabilities;
+266           | SigTran::MTP::PARA::Credit;
+267           | SigTran::MTP::PARA::Data;
+268           | SigTran::MTP::PARA::Cause_User;
+269           | SigTran::MTP::PARA::NetworkAppearance;
+270           | SigTran::MTP::PARA::RoutingKey;
+271           | SigTran::MTP::PARA::DRNLabel;
+272           | SigTran::MTP::PARA::TIDLabel;
+273           | SigTran::MTP::PARA::AddressRange;
+274           | SigTran::MTP::PARA::SMI;
+275           | SigTran::MTP::PARA::Importance;
+276           | SigTran::MTP::PARA::MessagePriority;
+277           | SigTran::MTP::PARA::ProtocolClass;
+278           | SigTran::MTP::PARA::SequenceControl;
+279           | SigTran::MTP::PARA::Segmentation;
+280           | SigTran::MTP::PARA::CongestionLevel;
+512           | SigTran::MTP::PARA::NetworkAppearance;
+513           | SigTran::MTP::PARA::Reserved;
+514           | SigTran::MTP::PARA::Reserved;
+515           | SigTran::MTP::PARA::Reserved;
+516           | SigTran::MTP::PARA::User_Cause;
+517           | SigTran::MTP::PARA::CongestionIndications;
+518           | SigTran::MTP::PARA::ConcernedDestination;
+519           | SigTran::MTP::PARA::RoutingKey;
+520           | SigTran::MTP::PARA::RegistrationResult;
+521           | SigTran::MTP::PARA::DeregistrationResult;
+522           | SigTran::MTP::PARA::Local_RoutingKeyIdentifier;
+523           | SigTran::MTP::PARA::DestinationPointCode;
+524           | SigTran::MTP::PARA::ServiceIndicators;
+525           | SigTran::MTP::PARA::Reserved;
+526           | SigTran::MTP::PARA::OriginatingPointCodeList;
+527           | SigTran::MTP::PARA::CircuitRange;
+528           | SigTran::MTP::PARA::ProtocolData;
+529           | SigTran::MTP::PARA::Reserved;
+530           | SigTran::MTP::PARA::RegistrationStatus;
+531           | SigTran::MTP::PARA::DeregistrationStatus;
+768           | SigTran::MTP::PARA::ProtocolData1;
+769           | SigTran::MTP::PARA::ProtocolData2_TTC_;
+770           | SigTran::MTP::PARA::StateRequest;
+771           | SigTran::MTP::PARA::StateEvent;
+772           | SigTran::MTP::PARA::CongestionStatus;
+773           | SigTran::MTP::PARA::DiscardStatus;
+774           | SigTran::MTP::PARA::Action;
+775           | SigTran::MTP::PARA::SequenceNumber;
+776           | SigTran::MTP::PARA::RetrievalResult;
+777           | SigTran::MTP::PARA::LinkKey;
+778           | SigTran::MTP::PARA::Local-LK-Identifier;
+779           | SigTran::MTP::PARA::SignallingDataTerminal_SDT_Identifier;
+780           | SigTran::MTP::PARA::SignallingDataLink_SDL_Identifier;
+781           | SigTran::MTP::PARA::RegistrationResult;
+782           | SigTran::MTP::PARA::RegistrationStatus;
+783           | SigTran::MTP::PARA::De-RegistrationResult;
+784           | SigTran::MTP::PARA::De-RegistrationStatus;
+32769         | SigTran::MTP::PARA::GlobalTitle;
+32770         | SigTran::MTP::PARA::PointCode;
+32771         | SigTran::MTP::PARA::SubsystemNumber;
+32772         | SigTran::MTP::PARA::IPv4Address;
+32773         | SigTran::MTP::PARA::Hostname;
+32774         | SigTran::MTP::PARA::IPv6Addresses;
+65535         | SigTran::MTP::PARA::Reserved;
+
+
+
+void SigTran::M3UA::Interpreter( )
+{
+	g[23] -=8;
+	if ( g[23] >= 8)
+	{
+		while ( g[23] >= 8)
+		{
+			DWRD( 0, g[24], 0x05, 0x05, "Parameter Tag: :\PRMT:" ); 
+			g[23] -= 2;
+			DWRD( 0, g[25], 0x05, 0x05, "Parameter Length: :\PRMLNGTH:" ); 
+			g[23] -= 2;
+			
+			g[23] -= g[25];
+			
+			LABL( 0, 0,  0x00, 0xb7, "Parameter Tag = " );
+			HGLB( 4, g[24], 0x07, 0x07 "" );
+			LABL( 0, 0, 0, 0x07, ": " );
+			CST#( 0, g[24], 0x90, 0x07, SigTran::M3UA::MT::MSGPARA );
+			DGLB( 0, g[25], 0x90, 0xc2, "Parameter Length: :\PRMLNGTH:" );
+			g[25] -= 4;
+			TSB#( 0, g[24], 0x90, 0xb7, SigTran::M3UA::MT::MSGPARA::Calls );
+			XLSE( 0, 0, 0, 0, SigTran::MTP::Para::CatchTLV );
+			//LABL( 0, 0, 0, 0xb8);
+		}
+	}
+	if ( g[16] == 0)
+	{
+			LABL( 0, 0, 0, 0xb8);
+	}
+	if ( g[23] == 0)
+	{
+		if ( g[16] >= 1 )
+			{
+				if ( g[59] != 0)
+				{
+					//LABL( 0, 0, 0, 0xc2, "Padding:");
+					g[0xb] = g[25];
+					MODG 4 b;
+					if (g[0xb] == 0)
+					{
+						//LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+						//LABL 0 0 90 14 No Padding;
+					}
+					if (g[0xb] != 0)
+					{
+						l[5] = 4;
+						l[5] -= g[0xb];
+				
+						LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+						DGLB(0, l[5], 0x90, 0x14);
+					}
+					g[26] = l[5];
+					LABL( 0, 0, 0, 0xb8);
+					TSB#( 0, g[59], 0x90, 0, SigTran::M3UA::SIO::SerIndVal::Calls );
+					
+					//DUMP( 0, g[25], 0x90, 0xc2, "payload");
+					if (g[26] >= 1)
+					{
+					LABL( 0, 0, 0, 0xb1, "MTP 3 User Adapter Layer" );
+					DUMP( 0, g[26], 0x90, 0xc2, "M3UA Padding:");
+					LABL( 0, 0, 0, 0xb8);
+					}
+				}
+				if ( g[59] == 0)
+				{
+					// LABL( 0, 0, 0, 0xb8);
+					// LABL( 0, 0, 0, 0xb8);
+					// LABL( 0, 0,    0, 0xb1, "SCTP - Stream Control Transmission Protocol\SCTP:");
+					// M3UA::ResetLoops;
+					// SCTP::Chunk; 
+					TRTS;
+				}
+			 }
+	}	
+
+}
+
+
+
+
+//---------------------------------------------------------------------------------------------
+
+
+void SigTran::M3UA::ResetLoops( )
+{	
+	g[23] = 0;
+	//g[25] = 0;
+	g[24] = 0;
+	l[6] = 15;
+}
+
+void SigTran::MTP::PARA::ProtocolData( )
+{
+	DLNG( 0, l[10], 0x90, 0xc2, "OPC:\OPC:" ); 
+	DLNG( 0, l[10], 0x90, 0xc2, "DPC:\DPC:" ); 
+	HBIT( 8, l[6], 0x90, 0xc2, "Service Indicator:\SI:" );
+	if (l[6] >= 0xa0)
+	{
+		LABL( 0, 0, 0x90, 0x14, "Spare");
+		//g[16] = 0;
+	}
+	if (l[6] <= 0xa0)
+	{
+		CST#( 0, l[6], 0x90, 0x14, SigTran::M3UA::SIO::SerIndVal );
+	}
+	HBIT( 8, l[21], 0x90, 0xc2, "Network Indicator:\NI:" );
+	CST#( 0, l[21], 0x90, 0x14, SigTRan::M3UA::SIO::NetIndVal );
+	BBIT( 8, , 0x90, 0xc2, "Message Priority:\MP:" );
+	BBIT( 8, 0, 0x90, 0xc2, "Signalling Link Selection:" );
+	g[21] = g[25];
+	SigTran::M3UA::ResetLoops;
+	g[59] = l[6];
+	LABL( 0, 0, 0, 0xb8 );
+	g[25] -= 12;
+}
+
+str# SigTran::M3UA::SIO::SerIndVal;
+0x00	|	.... 0000 Signaling Network Management Messages;
+0x01	|	.... 0001 Signaling Network Testing and Maintenance Messages;
+0x02	|	.... 0010 Signaling Network Testing and Maintenance Special Messages (ANSI) or Spare (ITU-T);
+0x03	|	.... 0011 SCCP;
+0x04	|	.... 0100 Telephone User Part;
+0x05	|	.... 0101 ISDN User Part;
+0x06	|	.... 0110 Data User Part (call and circuit-related messages);
+0x07	|	.... 0111 Data User Part (facility registration and cancellation messages);
+0x08	|	.... 1000 Reserved for MTP Testing User Part;
+0x09	|	.... 1001 Broadband ISDN User Part;
+0x0a	|	.... 1010 Satellite ISDN User Part;
+0x0e	|	.... 1110 Gateway Control Protocol;
+
+str# SigTRan::M3UA::SIO::NetIndVal;
+0x00 | 00.. .... International;
+0x01 | 01.. .... International Spare;
+0x02 | 10.. .... National;
+0x03 | 11.. .... National Spare;
+
+
+str# SigTran::Users;
+0x00	| Signaling Network Management Messages;
+0x01	| Signaling Network Testing and Maintenance Messages;
+0x02	| Signaling Network Testing and Maintenance Special Messages (ANSI) or Spare (ITU-T);
+0x03	| SCCP;
+0x04	| Telephone User Part;
+0x05	| ISDN User Part;
+0x06	| Data User Part (call and circuit-related messages);
+0x07	| Data User Part (facility registration and cancellation messages);
+0x08	| Reserved for MTP Testing User Part;
+0x09	| Broadband ISDN User Part;
+0x0a	| Satellite ISDN User Part;
+0x0e	| Gateway Control Protocol;
+
+void SigTran::SSCMDW( )
+{
+	LABL( 0, 0, 0, 0xb8, " " );
+	g[21] -= 12;
+	l[6] = g[21];
+	LABL( 0, 0, 0, 0xb7, "Payload of " );
+	CST#( 0, g[59], 0x07, 0x07, SigTran::Users );
+	MODG( 4, l[6]);
+	if (l[6] == 0)
+	{
+		DUMP( 0, g[21], 0x90, 0xc2, "Payload:");
+	}
+	if ( l[6] >= 1)
+	{
+		DUMP( 0, g[21], 0x90, 0xc2, "Payload:");
+		l[5] = 4;
+		l[5] -= l[6];
+		
+		LABL( 0, 0, 0, 0xc2, "Padding Length: " );
+		DGLB(0, l[5], 0x90, 0x14);
+		DUMP( 0, l[5], 0x90, 0xc2, "Padding:");
+	}
+	TRTS;
+}
+
+//-------------------------------------------------------------------------------
+
+void SigTran::M2UA( )
+{
+	LABL( 0, 0, 0, 0xb1, "MTP 2 User Adapter Layer" );
+	DBYT( 0, l[1], 0x05, 0xc2, "Version:\VE:" );
+	CEQU( 0; l[1], 0, 0x54, "Not supported" );
+	CEQU( 1; l[1], 0, 0x54, "Release 1.0" );
+	DBYT( 0, 0, 0x90, 0xc2, "Reserved:\RE:" );
+	DBYT( 0, g[19], 0x05, 0xc2, "Message Class: \MC:" );
+	if (g[19] <= 10)
+	{
+		CST#( 0, g[19], 0, 0x54, SigTran::M2UA::MC );
+	}
+	if (g[19] >= 11)
+	{
+		if (g[19] <=127) 
+		{
+			LABL( 0, 0, 0, 0x54, "Reserved by the IETF" );
+		}
+	}
+	if (g[19] >= 128)
+	{
+		if (g[19] <= 255)
+		{
+			LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Transfer extensions" );
+		}
+	}
+	BBYT( 0, g[20], 0x05, 0xc2, "Message Type:  \MT:" );
+	SigTran::M2UA:ClassTypeView::Matrix;
+	DLNG( 0, g[23], 0x90, 0xc2, "Message Length:\ML:" );
+	SigTran::M2UA::Interpreter;
+}
+
+str# SigTran::M2UA::MC;																			
+0         | Management (MGMT) Message [IUA/M2UA/M3UA/SUA];
+1         | Transfer Messages [M3UA];
+2         | SS7 Signalling Network Management (SSNM) Messages [M3UA/SUA];
+3         | ASP State Maintenance (ASPSM) Messages [IUA/M2UA/M3UA/SUA];
+4         | ASP Traffic Maintenance (ASPTM) Messages [IUA/M2UA/M3UA/SUA];
+5         | Q.921/Q.931 Boundary Primitives Transport (QPTM) Messages [IUA];
+6         | MTP2 User Adaptation (MAUP) Messages [M2UA];
+7         | Connectionless Messages [SUA];
+8         | Connection-Oriented Messages [SUA];
+9         | Routing Key Management (RKM) Messages (M3UA);
+10        | Interface Identifier Management (IIM) Messages (M2UA);
+
+void SigTran::M2UA::Interpreter( )
+{
+	g[23] -=8;
+	if (g[23] >= 8)
+	{
+		while (g[23] > = 8)
+		{
+			DWRD( 0, g[24], 0x05, 0x05, "Parameter Tag: :\PRMT:" );
+			g[23] -= 2;
+			DWRD( 0, g[25], 0x05, 0x05, "Parameter Length: :\PRMLNGTH:" );
+			g[23] -= 2;
+			g[25] -= 4;
+			
+			LABL( 0, 0,  0, 0xb1, "Parameter Tag = " );
+			HGLB( 0 , g[24], 0x01, 0x01 "" );
+			LABL( 0, 0,  0, 0x1, ": " );
+			CST#( 0, g[24], 0x90, 0x01, SigTran::M2UA::MT::MSGPARA );
+			TSB#( 0, g[24], 0, 0, SigTran::M2UA::MT::MSGPARA::Calls );
+			XLSE( 0, 0, 0, 0, SigTran::MTP::Para::CatchTLV );
+		}
+	}
+	if ( g[23] == 0)
+	{
+		SigTran::M2UA::SendTo;
+		 //TST#( 0, g[59], 0x90, 0, SigTran::M2UA::XXXXX );
+	}
+}
+
+
+void SigTran::M2UA:ClassTypeView::Matrix( )			
+{
+	if  (g[19] == 0) 
+	{
+		CEQU( 0, g[20], 0, 0x54, "Error (ERR)" );
+		CEQU( 1, g[20], 0, 0x54, "Notify (NTFY)" );
+		CEQU( 2, g[20], 0, 0x54, "TEI Status Request" );
+		CEQU( 3, g[20], 0, 0x54, "TEI Status Confirm" );
+		CEQU( 4, g[20], 0, 0x54, "TEI Status Indication" );
+		CEQU( 5, g[20], 0, 0x54, "DLC Status Request" );
+		CEQU( 6, g[20], 0, 0x54, "DLC Status Confirm" );
+		CEQU( 7, g[20], 0, 0x54, "DLC Status Indication" );
+		CEQU( 8, g[20], 0, 0x54, "TEI Query Request" );
+			if  (g[20] >= 9 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined MGMT extension" );
+					}
+			}
+		//CEQU( 9-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined MGMT extensions" );
+	}
+	
+	if  (g[19] == 1)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Payload Data" );		
+	}
+	if (g[19] == 2)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Destination Unavailable (DUNA)" );
+		CEQU( 2, g[20], 0, 0x54, "Destination Available (DAVA)" );
+		CEQU( 3, g[20], 0, 0x54, "Destination State Audit (DAUD)" );
+		CEQU( 4, g[20], 0, 0x54, "Signalling Congestion (SCON)" );
+		CEQU( 5, g[20], 0, 0x54, "Destination User Part Unavailable (DUPU)" );
+		CEQU( 6, g[20], 0, 0x54, "Destination Restricted (DRST)" );
+			if  (g[20] >= 7 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Reserved by the IETF" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined SSNM extension" );
+					}
+			}
+		//CEQU( 7-127, g[20], 0, 0x54, "Reserved by the IETF" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined SSNM extension" );
+	}
+	if (g[19] == 3)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "ASP Up (UP)" );
+		CEQU( 2, g[20], 0, 0x54, "ASP Down (DOWN)" );
+		CEQU( 3, g[20], 0, 0x54, "Heartbeat (BEAT)" );
+		CEQU( 4, g[20], 0, 0x54, "ASP Up Ack (UP ACK)" );
+		CEQU( 5, g[20], 0, 0x54, "ASP Down Ack (DOWN ACK)" );
+		CEQU( 6, g[20], 0, 0x54, "Heartbeat Ack (BEAT ACK)" );
+			if  (g[20] >= 7 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined ASPSM extension" );
+					}
+			}
+		//CEQU( 7-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined ASPSM extensions" );
+	}
+	if (g[19] == 4)
+	{	
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "ASP Active (ACTIVE)" );
+		CEQU( 2, g[20], 0, 0x54, "ASP Inactive (INACTIVE)" );
+		CEQU( 3, g[20], 0, 0x54, "ASP Active Ack (ACTIVE ACK)" );
+		CEQU( 4, g[20], 0, 0x54, "ASP Inactive Ack (INACTIVE ACK)" );
+			if  (g[20] >= 5 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined ASPTM extension" );
+					}
+			}
+		//CEQU( 5-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined ASPTM extensions" );
+	}
+	if (g[19] == 5)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Data Request Message" );
+		CEQU( 2, g[20], 0, 0x54, "Data Indication Message" );
+		CEQU( 3, g[20], 0, 0x54, "Unit Data Request Message" );
+		CEQU( 4, g[20], 0, 0x54, "Unit Data Indication Message" );
+		CEQU( 5, g[20], 0, 0x54, "Establish Request" );
+		CEQU( 6, g[20], 0, 0x54, "Establish Confirm" );
+		CEQU( 7, g[20], 0, 0x54, "Establish Indication" );
+		CEQU( 8, g[20], 0, 0x54, "Release Request" );
+		CEQU( 9, g[20], 0, 0x54, "Release Confirm" );
+		CEQU( 10, g[20], 0, 0x54, "Release Indication" );
+			if  (g[20] >= 11 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined QPTM extension" );
+					}
+			}
+		//CEQU( 11-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined QPTM extensions" );
+	}
+	if (g[19] == 6)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Data" );
+		CEQU( 2, g[20], 0, 0x54, "Establish Request" );
+		CEQU( 3, g[20], 0, 0x54, "Establish Confirm" );
+		CEQU( 4, g[20], 0, 0x54, "Release Request" );
+		CEQU( 5, g[20], 0, 0x54, "Release Confirm" );
+		CEQU( 6, g[20], 0, 0x54, "Release Indication" );
+		CEQU( 7, g[20], 0, 0x54, "State Request" );
+		CEQU( 8, g[20], 0, 0x54, "State Confirm" );
+		CEQU( 9, g[20], 0, 0x54, "State Indication" );
+		CEQU( 10, g[20], 0, 0x54, "Data Retrieval Request" );
+		CEQU( 11, g[20], 0, 0x54, "Data Retrieval Confirm" );
+		CEQU( 12, g[20], 0, 0x54, "Data Retrieval Indication" );
+		CEQU( 13, g[20], 0, 0x54, "Data Retrieval Complete Indication" );
+		CEQU( 14, g[20], 0, 0x54, "Congestion Indication" );
+		CEQU( 15, g[20], 0, 0x54, "Data Acknowledge" );
+			if  (g[20] >= 15 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined MAUP extension" );
+					}
+			}
+		//CEQU( 16-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined MAUP extensions" );
+	}
+	if (g[19] == 7)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Connectionless Data Transfer (CLDT)" );
+		CEQU( 2, g[20], 0, 0x54, "Connectionless Data Response (CLDR)" );
+		//CEQU( 3-127, g[20], 0, 0x54, "Unassigned" );
+			if  (g[20] >= 3 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class extension" );
+					}
+			}
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined Message Class Extensions" );
+	}
+	if (g[19] == 8)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Connection Request (CORE)" );
+		CEQU( 2, g[20], 0, 0x54, "Connection Acknowledge (COAK)" );
+		CEQU( 3, g[20], 0, 0x54, "Connection Refused (COREF)" );
+		CEQU( 4, g[20], 0, 0x54, "Release Request (RELRE)" );
+		CEQU( 5, g[20], 0, 0x54, "Release Complete (RELCO)" );
+		CEQU( 6, g[20], 0, 0x54, "Reset Confirm (RESCO)" );
+		CEQU( 7, g[20], 0, 0x54, "Reset Request (RESRE)" );
+		CEQU( 8, g[20], 0, 0x54, "Connection Oriented Data Transfer (CODT)" );
+		CEQU( 9, g[20], 0, 0x54, "Connection Oriented Data Acknowledge (CODA)" );
+		CEQU( 10, g[20], 0, 0x54, "Connection Oriented Error (COERR)" );
+		CEQU( 11, g[20], 0, 0x54, "Inactivity Test (COIT)" );
+		//CEQU( 12-127, g[20], 0, 0x54, "Unassigned" );
+		if  (g[20] >= 12 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class extension" );
+					}
+			}
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined Message Class Extensions" );
+	}
+	if (g[19] == 9)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Registration Request (REG REQ)" );
+		CEQU( 2, g[20], 0, 0x54, "Registration Response (REG RSP)" );
+		CEQU( 3, g[20], 0, 0x54, "Deregistration Request (DEREG REQ)" );
+		CEQU( 4, g[20], 0, 0x54, "Deregistration Response (DEREG RSP)" );
+		//CEQU( 5-127, g[20], 0, 0x54, "Unassigned" );
+		if  (g[20] >= 5 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class extension" );
+					}
+			}
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined RKM extensions" );
+	}
+	if (g[19] == 10)
+	{
+		CEQU( 0, g[20], 0, 0x54, "Reserved" );
+		CEQU( 1, g[20], 0, 0x54, "Registration Request (REG REQ)" );
+		CEQU( 2, g[20], 0, 0x54, "Registration Response (REG RSP)" );
+		CEQU( 3, g[20], 0, 0x54, "Deregistration Request (DEREG REQ)" );
+		CEQU( 4, g[20], 0, 0x54, "Deregistration Response (DEREG RSP)" );
+		if  (g[20] >= 5 )
+			{
+				if (g[20] <= 127 )
+				 {
+					 LABL( 0, 0, 0, 0x54, "Unassigned" );
+				 }
+			}
+			if  (g[20] >= 128 )
+				{
+					if (g[20] <= 255 )
+					{
+					 LABL( 0, 0, 0, 0x54, "Reserved for IETF-Defined Message Class extension" );
+					}
+			}
+		//CEQU( 5-127, g[20], 0, 0x54, "Unassigned" );
+		//CEQU( 128-255, g[20], 0, 0x54, "Reserved for IETF-Defined IIM extensions" );
+	}
+}
+
+void SigTran::M2UA::SendTo( )
+{
+	SigTran::M3UA;
+}
+
+str# SigTran::M2UA::MT::MSGPARA;
+0             | Reserved;
+1             | Interface Identifier (Integer);
+2             | Reserved;
+3             | Interface Identifier (Text);
+4             | Info String;
+5             | DLCI;
+6             | Routing Context;
+7             | Diagnostic Information;
+8             | Interface Identifier (Integer Range);
+9             | Heartbeat Data;
+10            | Reason;
+11            | Traffic Mode Type;
+12            | Error Code;
+13            | Status Type/Information;
+14            | Protocol Data;
+15            | Release Reason;
+16            | Status;
+17            | ASP Identifier;
+18            | Affected Point Code;
+19            | Correlation Id;
+20            | Registration Result;
+21            | Deregistration Result;
+22            | Registration Status;
+23            | Deregistration Status;
+24            | Local Routing Key Identifier;
+129           | DLCI/EFA;
+130           | Link Status;
+131           | Bit ID/Bit Value;
+132           | Error Reason;
+256           | Unassigned;
+257           | SS7 Hop Counter;
+258           | Source Address;
+259           | Destination Address;
+260           | Source Reference Number;
+261           | Destination Reference Number;
+262           | SCCP Cause;
+263           | Sequence Number;
+264           | Receive Sequence Number;
+265           | ASP Capabilities;
+266           | Credit;
+267           | Data;
+268           | Cause / User;
+269           | Network Appearance;
+270           | Routing Key;
+271           | DRN Label;
+272           | TID Label;
+273           | Address Range;
+274           | SMI;
+275           | Importance;
+276           | Message Priority;
+277           | Protocol Class;
+278           | Sequence Control;
+279           | Segmentation;
+280           | Congestion Level;
+512           | Network Appearance;
+513           | Reserved;
+514           | Reserved;
+515           | Reserved;
+516           | User/Cause;
+517           | Congestion Indications;
+518           | Concerned Destination;
+519           | Routing Key;
+520           | Registration Result;
+521           | Deregistration Result;
+522           | Local_Routing Key Identifier;
+523           | Destination Point Code;
+524           | Service Indicators;
+525           | Reserved;
+526           | Originating Point Code List;
+527           | Circuit Range;
+528           | Protocol Data;
+529           | Reserved;
+530           | Registration Status;
+531           | Deregistration Status;
+768           | Protocol Data 1;
+769           | Protocol Data 2 (TTC);
+770           | State Request;
+771           | State Event;
+772           | Congestion Status;
+773           | Discard Status;
+774           | Action;
+775           | Sequence Number;
+776           | Retrieval Result;
+777           | Link Key;
+778           | Local-LK-Identifier;
+779           | Signalling Data Terminal (SDT) Identifier;
+780           | Signalling Data Link (SDL) Identifier;
+781           | Registration Result;
+782           | Registration Status;
+783           | De-Registration Result;
+784           | De-Registration Status;
+32769         | Global Title;
+32770         | Point Code;
+32771         | Subsystem Number;
+32772         | IPv4 Address;
+32773         | Hostname;
+32774         | IPv6 Addresses;
+65535         | Reserved;
+
+//only M2UA specialparas got to be coded extra cause there 
+
+str# SigTran::M2UA::MT::MSGPARA::Calls;																		
+0             | SigTran::MTP::PARA::Reserved;
+1             | SigTran::MTP::PARA::InterfaceIdentifier_Integer_;
+2             | SigTran::MTP::PARA::Reserved;
+3             | SigTran::MTP::PARA::InterfaceIdentifier_Text_;
+4             | SigTran::MTP::PARA::InfoString;
+5             | SigTran::MTP::PARA::DLCI;
+6             | SigTran::MTP::PARA::RoutingContext;
+7             | SigTran::MTP::PARA::DiagnosticInformation;
+8             | SigTran::MTP::PARA::InterfaceIdentifier_IntegerRange_;
+9             | SigTran::MTP::PARA::HeartbeatData;
+10            | SigTran::MTP::PARA::Reason;
+11            | SigTran::MTP::PARA::TrafficModeType;
+12            | SigTran::MTP::PARA::ErrorCode_M2UA;
+13            | SigTran::MTP::PARA::StatusType_Information;
+14            | SigTran::MTP::PARA::ProtocolData;
+15            | SigTran::MTP::PARA::ReleaseReason;
+16            | SigTran::MTP::PARA::Status;
+17            | SigTran::MTP::PARA::ASPIdentifier;
+18            | SigTran::MTP::PARA::AffectedPointCode;
+19            | SigTran::MTP::PARA::CorrelationId;
+20            | SigTran::MTP::PARA::RegistrationResult;
+21            | SigTran::MTP::PARA::DeregistrationResult;
+22            | SigTran::MTP::PARA::RegistrationStatus;
+23            | SigTran::MTP::PARA::DeregistrationStatus;
+24            | SigTran::MTP::PARA::LocalRoutingKeyIdentifier;
+129           | SigTran::MTP::PARA::DLCI_EFA;
+130           | SigTran::MTP::PARA::LinkStatus;
+131           | SigTran::MTP::PARA::BitID_BitValue;
+132           | SigTran::MTP::PARA::ErrorReason;
+256           | SigTran::MTP::PARA::Unassigned;
+257           | SigTran::MTP::PARA::SS7HopCounter;
+258           | SigTran::MTP::PARA::SourceAddress;
+259           | SigTran::MTP::PARA::DestinationAddress;
+260           | SigTran::MTP::PARA::SourceReferenceNumber;
+261           | SigTran::MTP::PARA::DestinationReferenceNumber;
+262           | SigTran::MTP::PARA::SCCPCause;
+263           | SigTran::MTP::PARA::SequenceNumber;
+264           | SigTran::MTP::PARA::ReceiveSequenceNumber;
+265           | SigTran::MTP::PARA::ASPCapabilities;
+266           | SigTran::MTP::PARA::Credit;
+267           | SigTran::MTP::PARA::Data;
+268           | SigTran::MTP::PARA::Cause_User;
+269           | SigTran::MTP::PARA::NetworkAppearance;
+270           | SigTran::MTP::PARA::RoutingKey;
+271           | SigTran::MTP::PARA::DRNLabel;
+272           | SigTran::MTP::PARA::TIDLabel;
+273           | SigTran::MTP::PARA::AddressRange;
+274           | SigTran::MTP::PARA::SMI;
+275           | SigTran::MTP::PARA::Importance;
+276           | SigTran::MTP::PARA::MessagePriority;
+277           | SigTran::MTP::PARA::ProtocolClass;
+278           | SigTran::MTP::PARA::SequenceControl;
+279           | SigTran::MTP::PARA::Segmentation;
+280           | SigTran::MTP::PARA::CongestionLevel;
+512           | SigTran::MTP::PARA::NetworkAppearance;
+513           | SigTran::MTP::PARA::Reserved;
+514           | SigTran::MTP::PARA::Reserved;
+515           | SigTran::MTP::PARA::Reserved;
+516           | SigTran::MTP::PARA::User_Cause;
+517           | SigTran::MTP::PARA::CongestionIndications;
+518           | SigTran::MTP::PARA::ConcernedDestination;
+519           | SigTran::MTP::PARA::RoutingKey;
+520           | SigTran::MTP::PARA::RegistrationResult;
+521           | SigTran::MTP::PARA::DeregistrationResult;
+522           | SigTran::MTP::PARA::Local_RoutingKeyIdentifier;
+523           | SigTran::MTP::PARA::DestinationPointCode;
+524           | SigTran::MTP::PARA::ServiceIndicators;
+525           | SigTran::MTP::PARA::Reserved;
+526           | SigTran::MTP::PARA::OriginatingPointCodeList;
+527           | SigTran::MTP::PARA::CircuitRange;
+528           | SigTran::MTP::PARA::ProtocolData;
+529           | SigTran::MTP::PARA::Reserved;
+530           | SigTran::MTP::PARA::RegistrationStatus;
+531           | SigTran::MTP::PARA::DeregistrationStatus;
+768           | SigTran::MTP::PARA::ProtocolData1;
+769           | SigTran::MTP::PARA::ProtocolData2_TTC_;
+770           | SigTran::MTP::PARA::StateRequest;
+771           | SigTran::MTP::PARA::StateEvent;
+772           | SigTran::MTP::PARA::CongestionStatus;
+773           | SigTran::MTP::PARA::DiscardStatus;
+774           | SigTran::MTP::PARA::Action;
+775           | SigTran::MTP::PARA::SequenceNumber;
+776           | SigTran::MTP::PARA::RetrievalResult;
+777           | SigTran::MTP::PARA::LinkKey;
+778           | SigTran::MTP::PARA::Local-LK-Identifier;
+779           | SigTran::MTP::PARA::SignallingDataTerminal_SDT_Identifier;
+780           | SigTran::MTP::PARA::SignallingDataLink_SDL_Identifier;
+781           | SigTran::MTP::PARA::RegistrationResult;
+782           | SigTran::MTP::PARA::RegistrationStatus;
+783           | SigTran::MTP::PARA::De-RegistrationResult;
+784           | SigTran::MTP::PARA::De-RegistrationStatus;
+32769         | SigTran::MTP::PARA::GlobalTitle;
+32770         | SigTran::MTP::PARA::PointCode;
+32771         | SigTran::MTP::PARA::SubsystemNumber;
+32772         | SigTran::MTP::PARA::IPv4Address;
+32773         | SigTran::MTP::PARA::Hostname;
+32774         | SigTran::MTP::PARA::IPv6Addresses;
+65535         | SigTran::MTP::PARA::Reserved;
+
+

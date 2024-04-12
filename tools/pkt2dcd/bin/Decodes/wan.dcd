@@ -1,0 +1,2467 @@
+
+//---------------------
+// 	WAN::Main
+//---------------------
+
+void WAN::Main()
+{
+	TRAK(  1,	g[16] );
+	LABL(  0,	0,		0x0,	0xb1, "Packet Info\Info:" );
+	
+	PRV7  0  0 90 c3 Packet Number:;
+	PRV2(  0,	g[11],	0x90,	0xc3, "Flags:\F:");
+	PRV3(  0,	g[2],	0x90,	0xc3, "Status:\S:" );
+	CBIT(  1,	g[2],	0x0,	0x14, "Truncated " );
+	CBIT(  5,	g[2],	0x0,	0x14, "Sliced" );
+	
+	WDIR(  0,	g[1],	0x90,	0xc3, "Direction:\D:");
+	CEQU(  1,	g[1],	0x00,	0x14, "To DTE");
+	CEQU(  2,	g[1],	0x00,	0x14, "To DCE");
+	WPTC(  0,	g[17],	0x90,	0xc3, "Protocol:\P:");
+	CST#(  0,	g[17],	0x00,	0x14, "WAN::Main::Protocol_List");
+	
+	PRV4(  0,	g[16],	0x90,	0xc3, "Packet Length:\L:" );
+	PRV5(  0,	g[15],	0x20,	0x23, "Slice Length:" );
+	PRV1(  0,	0,		0x90,	0xc3, "Timestamp:\T:" );
+	
+	// if slice length != 0
+	
+	if ( g[15] != 0 ) 
+	{
+		// if packet length > slice length
+		if (g[16] > g[15])
+		{
+			g[16] = g[15];
+		}
+	}
+	
+	// else
+	
+	if (g[15] == 0) 
+	{
+		g[16] -= 2;  // subtract fcs - for wan it's only 2 bytes
+	}
+	TST#( 0, g[17], 0, 0, "WAN::Main::Protocol_Branch");
+}
+
+
+str# WAN::Main::Protocol_List;
+	0x08 | TCP/IP;
+	0x10 | Point to Point Protocol;
+	0x23 | Frame Relay;
+	0x25 | X25;
+	0x29 | X25E;
+	0x31 | ISDN Basic & Primary Rate Q.921 and Q.931;
+	0x40 | SNA;
+	0x50 | IPARS;
+	0x60 | Unisys UTS U200;
+	0x70 | SS7 - Signalling System 7;
+
+str# WAN::Main::Protocol_Branch;
+	//0x08 | WAN::TCP;			//TCP/IP
+	0x10 | WAN::PPP::Main;		//Point to Point Protocol
+	0x23 | WAN_FRLY;			//Frame Relay
+	0x25 | WAN_X25;				//X25
+	0x29 | WAN_X25E;			//X25E
+	0x31 | WAN_Q921;			//ISDN Basic & Primary Rate Q.921 and Q.931
+	//0x40 | Mocha_SNA;			//SNA
+	//0x50 | Mocha_IPARS;			//IPARS
+	//0x60 | Mocha_U200;			//Unisys UTS U200
+	//0x70 | WAN_SS7;			//SS7 - Signalling System 7
+
+//---------------------
+// 	WAN::Send_Main
+//---------------------
+
+void WAN::Send_Main()
+{
+	TRAK  1 10;
+	LABL  0  0  0 b1 Packet Info;
+	PRV4  0 10 90 c3 Packet Length:;
+	PRV2  0  b 5;
+	PRV5  0  f  0 ;
+	
+	//Ether::Branching();
+}
+
+//---------------------
+// 	WAN::Generic
+//---------------------
+
+void WAN::Generic()
+{
+	LABL  0  0  0 b1 Packet Info\Info:;
+	PRV7  0  0 90 c3 Packet Number:;
+	PRV2  0  2 90 c3 Flags:\F:;
+	BST#  0  2  0 14 WAN::GenericFlagsStr;
+	PRV3  0  2 90 c3 Status:;
+	CBIT  1  2  0 14 Truncated ;
+	CBIT  5  2  0 14 Sliced;
+	WDIR  0  1 90 c3 Direction:;
+	WPTC  0  1 90 c3 Protocol:;
+	PRV4  0  0 90 c3 Packet Length:\Len:;
+	PRV5  0  0  0 23 Slice Length:;
+	PRV1  0  0 90 c3 Timestamp:\Time:;
+	DCHN  0  0 90 c3 Channel:;
+	PRV8  0  0 90 c3 Filter:;
+	TNXT  -WAN::Header;
+}
+
+//-------------------------
+//	WAN::GenericFlagsStr
+//-------------------------
+
+str# WAN::GenericFlagsStr;
+	1 | CRC Error ;
+	2 | Frame Error ;
+	4 | Oversize ;
+	5 | Runt ;
+	6 | Trigger ;
+	7 | 802.3;
+	
+// -------------------------------------------------------
+// 	WAN::Dump
+// -------------------------------------------------------
+
+void WAN::Dump()
+{
+	BREM 0 1;		* get remaining bytes
+	SGTE 4 1;
+	SKIP 2;
+	LABL 0 0 0 b1 "Extra bytes\Extra:";
+	DUMP 1 0 90 c2 Number of bytes:;
+	FCS();
+}
+
+// -------------------------------------------------------
+// 	WAN::Header
+// -------------------------------------------------------
+
+void WAN::Header()
+{
+	DUMP  0  0 90 b1 Raw Packet Data;
+}
+
+// -------------------------------------------------------
+//	WAN::PPP - Main
+
+void WAN::PPP::Main;				//si: branches to wan::ppp or wan::hdlc
+	g[1] = pb[0];
+	if (g[1] == 0xff)
+	{
+		TNXT -WAN::PPP;
+	}
+	if (g[1] == 0xf)
+	{
+		TNXT -WAN::HDLC;
+	}
+	if (g[1] == 0x8f)
+	{
+		TNXT -WAN::HDLC;
+	}
+	if (g[1] == 0x01)
+	{
+		TNXT -WAN::HDLC::OLD;
+	}
+	if (g[1] == 0x03)
+	{
+		TNXT -WAN::HDLC::OLD;
+	}
+	//if (g[1] == 0x04)
+	//{
+	//	TNXT -WAN_FRLY;
+	//}
+	TRTS;
+
+// -------------------------------------------------------
+//	PPP FRAME FORMAT
+// -------------------------------------------------------
+
+void WAN::PPP;
+	LABL 0 0 0 b1 Point to Point Protocol\PPP:;
+	HBYT 0 1 90 c2 Address:;
+	HBYT 0 1 90 c2 Control:\;
+	HWRD 0 1 90 c2 Protocol:\Prtcl:;
+	CST# 0 1 00 14 WAN::Protocols::Name;
+	TST# 0 1 00 00 WAN::Protocols::Func;
+
+
+// -------------------------------------------------------
+//	HDLC FRAME FORMAT
+// -------------------------------------------------------
+
+void WAN::HDLC;
+	LABL 0 0 0 b1 High-Level Data Link Control\HDLC:;
+	HBYT 0 1 90 c2 Address:\Addr:;
+	CEQU f 1 00 14 Unicast;
+	CEQU 8f 1 0 14 Broadcast;
+	HBYT 0 1 90 c2 Control:\;
+	HWRD 0 1 90 c2 Protocol:\Prtcl:;
+	CST# 0 1 00 14 WAN::Protocols::Name;
+	TST# 0 1 00 00 WAN::Protocols::Func;
+
+void WAN::HDLC::OLD;
+	LABL 0 0 0 b1 High-Level Data Link Control\HDLC:;
+	HBYT 0 1 90 c2 Address:\Addr:;
+	CEQU 1 1 00 14 Command;
+	CEQU 3 1 00 14 Request;
+	DBIT 6 0 5 5;
+	DBIT 2 1 5 5;
+	l[1] = g[1];
+	DECR 1;
+	//BBYT 1 0 90 c7 Control Field:;								//si: set these back to 9  -----------------------------------------------
+	//DECR 1;
+	LABL 0 0 00 c7 Control Field:;
+	CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::Name;
+	TSB# 0 1 00 14 WAN_X25::LAPB::Control_Field::Func;
+	LABL 0 0 00 c8;
+	if (g[16] > 0)
+	{
+		if (l[1] == 0)
+		{
+			HWRD 0 1 90 c2 Protocol:\Prtcl:;
+			CST# 0 1 00 14 WAN::Protocols::Name;
+			TST# 0 1 00 00 WAN::Protocols::Func;
+			DUMP 0 10 90 c2 Information:;						//si: just in case it didn't hit a protocol
+		}
+		if (l[1] == 2)
+		{
+			HWRD 0 1 90 c2 Protocol:\Prtcl:;
+			CST# 0 1 00 14 WAN::Protocols::Name;
+			TST# 0 1 00 00 WAN::Protocols::Func;
+			DUMP 0 10 90 c2 Information:;						//si: just in case it didn't hit a protocol
+		}
+	}
+	LABL 0 0 00 c8;
+
+// -------------------------------------------------------
+//	HDLC & PPP PROTOCOLS
+// -------------------------------------------------------
+
+str# WAN::Protocols::Name;
+	0x0021 | IP;
+	0x003d | Multilink Protocol;
+	0x8021 | IPCP (NCP for IP);
+	0x002d | Van Jacobson TCP/IP Header Compression (RFC 1144);
+	0x002f | Van Jacobson IP Header Compression;
+	0x0207 | Cisco Discovery Protocol;
+	0xc021 | Link Control Protocol;
+	0xc025 | Link Quality Report;
+	0xc223 | Challenge-Handshake Authentication Protocol;
+//hdlc protocol codes
+	0x0800 | IP;
+	0x2000 | Cisco Discovery Protocol;
+	0x8035 | Cisco SLARP;
+	0x809b | EtherTalk;
+	0x80f3 | AARP;
+	0x8137 | IPX;
+	0x6003 | DECnet phase IV;
+// cisco HDLC (cHDLC)
+	0x0200 | PUP;
+	0x0600 | XNS;
+	0x0804 | Chaos;
+	0x0806 | ARP;
+	0x0BAD | Vines IP;
+	0x0BAF | Vines Echo;
+	0x8019 | Apollo domain;
+	0x8038 | DEC bridge spanning tree protocol;
+	//0x0800 IP;
+	//0x6003 | DECnet phase IV;
+	//0x8035 Cisco SLARP;
+	//0x809B Apple EtherTalk;
+	//0x80F3 AppleTalk ARP;
+	//0x8137 Novell IPX;
+// cisco specific protocol codes
+	0x0808 | Frame Relay ARP;
+	0x4242 | IEEE Bridge Spanning Protocol;
+	0x6558 | Transparent Ethernet Bridging; 
+	0x8207 | Cisco Discovery Protocol;
+	0xFEFE | ISO CLNP/ISO ES-IS DSAP/SSAP;
+// ---
+	0x3100 | Bridging PDU;
+	0x8031 | Bridging NCP;
+
+str# WAN::Protocols::Func;
+	0x0021 | IP;						//IP
+	0x0057 | IPv6;
+	0x003d | WAN::MP;					//Multilink Protocol		
+	0x8021 | PPP-IPCP;					//IPCP (NCP for IP)		-this needs checking
+	0x002d | Dummy;						//Van Jacobson TCP/IP Header Compression (RFC 1144)
+	0x002f | Dummy;						//Van Jacobson IP Header Compression
+	0x0207 | Cisco Discovery Protocol;
+	0x0281 | MPLS::Unicast;   
+	0x0283 | MPLS::Multicast;
+	0xc021 | PPP-LCP;					//Link Control Protocol
+	0xc025 | Dummy;						//Link Quality Report
+	0xc223 | PPP-CHAP;
+//hdlc protocol codes
+	0x0800 | IP;						//IP
+	0x2000 | Cisco Discovery Protocol;
+	0x8035 | WAN::Cisco::SLARP;			//Cisco SLARP;
+	0x809b | EtherTalk;					//EtherTalk;			-this needs checking
+	0x80f3 | AARP;						//AARP;					-this needs checking
+	0x8137 | IPX Top;					//IPX;					-this needs checking
+	0x6003 | DECnet Phase IV;			//DECnet phase IV;		-this needs checking
+// for cisco HDLC (cHDLC)
+	0x0200 | Dummy;						//PUP;
+	0x0600 | XNS;						//XNS					-this needs checking
+	0x0804 | Dummy;						//Chaos;
+	0x0806 | ARP;						//						-this needs checking
+	0x0bad | VINES Internet;			//						-this needs checking
+	0x0baf | VINES Echo;				//						-this needs checking
+	0x8019 | Dummy;						//Apollo domain;
+	0x8038 | Dummy;						//DEC bridge spanning tree protocol;
+// cisco specific protocol codes
+	0x0808 | Dummy;						//Frame Relay ARP;
+	0x4242 | BPDU;						//IEEE Bridge Spanning Protocol;
+	0x6558 | WAN::802.3;				//Transparent Ethernet Bridging
+	0x8207 | Cisco Discovery Protocol;
+	0xFEFE | Dummy;						//ISO CLNP/ISO ES-IS DSAP/SSAP;
+
+
+// -------------------------------------------------------
+//	PPP Multilink Protocol
+// -------------------------------------------------------
+
+// si: this is the long frame...i don't know how to determine when to use short or long
+void WAN::MP;
+	LABL 0 0 00 b1 PPP Multilink Protocol;
+	BBYT 0 1 90 c9 Flags:;
+	CBIT 7 1 00 d4 1... .... End Fragment;
+	CLSE 0 0 00 d4 0... .... Not the End Fragment;
+	CBIT 6 1 00 d4 .1.. .... Beginning Fragment;
+	CLSE 0 0 00 d4 .0.. .... Not the Beginning Fragment;
+	LABL 0 0 00 d4 ..xx xxxx Reserved;
+	LABL 0 0 00 c8;
+	l[1] = g[1];
+	l[1] &= 0x80;
+	l[2] = g[1];
+	l[2] &= 0x40;
+	g[1] = pb[0];
+	g[2] = pw[1];
+	SHFL 10 1;
+	g[1] += g[2];
+	HEX# 3 0 05 05;
+	DGLB 0 1 90 c2 Sequence Number:;
+	if (l[1] == 0x80)
+	{
+		if (l[2] == 0x40)
+		{
+			HWRD 0 1 90 c2 Protocol:\Prtcl:;
+			CST# 0 1 00 14 WAN::Protocols::Name;
+			TST# 0 1 00 00 WAN::Protocols::Func;
+		}
+	}
+	TRTS;
+
+// -------------------------------------------------------
+//	802.3
+// -------------------------------------------------------
+
+void WAN::802.3;
+	CBIT 7 b 0 b1 802.3 Header\802.3;
+	CLSE 0 0 0 b1 Ethernet Header\Ethernet:;
+	ETHR 0 0 90 c2 Destination:\D:;
+	ETHR 0 0 90 c2 Source:\S:;
+	g[1] = pw[0];
+	// si: max length is 1500
+	if (g[1] > 1500)
+	{
+		// si: i stole this from ieee "void SNAP"
+		HWRD 0 2 90 c2 Protocol Type:\;
+		SNAP::Names;
+		TEQU 2001 2 0 0 CGMP;
+		SKIP 17;
+		TEQU 809b 2 0 0 Long DDP;
+		SKIP 15;
+		TEQU 6001 2 0 0 DECnet MOP Dump/Load;
+		SKIP 13;
+		TEQU 6002 2 0 0 DECnet MOP Remote Console;
+		SKIP 11;
+		TEQU 6003 2 0 0 DECnet Phase IV;
+		SKIP f;
+		TEQU 6004 2 0 0 DECnet LAT;
+		SKIP d;
+		TEQU 6005 2 0 0 DECnet Diagnostic Protocol;
+		SKIP b;
+		TEQU 6007 2 0 0 DECnet Phase IV;
+		SKIP 9;
+		TEQU 80c4 2 0 0 VINES Internet;
+		SKIP 7;
+		TEQU 80c5 2 0 0 VINES Echo;
+		SKIP 5;
+
+		MOVE 2 81;  * Ether Branching 3 us g1
+		Ether::Branching_3;
+		TGTE 0 10 0 0 RETURN;
+
+		// +++ Added from Clint
+		TEQU 2000 2 0 10 Cisco Discovery Protocol;
+		TEQU 80c5 2 0 0 VINES Echo;
+		
+		// BD: Deals with cases that over step bound of packet
+		BREM 0 10;
+		SUBG 4 10;
+		DUMP 0 10 90 c2 Packet Data:\;
+	}
+	if (g[1] <= 1500)
+	{
+		DWRD 0 0 90 c2 Length:;
+		TNXT -802_2;
+	}
+
+// -------------------------------------------------------
+//	CISCO SLARP
+// -------------------------------------------------------
+
+void WAN::Cisco::SLARP;
+	LABL 0 0 00 b1 Cisco Serial Line Address Resolution Protocol\SLARP:;
+	HLNG 0 1 90 c2 OpCode:\Op:;
+	CST# 0 1 00 14 WAN::Cisco::SLARP_OpCode:Name;
+	TST# 0 1 00 00 WAN::Cisco::SLARP_OpCode:Func;
+	DUMP 0 10 90 c2 Unknown SLARP;
+	TRTS;
+	
+str# WAN::Cisco::SLARP_OpCode:Name;
+	0x00 | Request;
+	0x01 | Reply;
+	0x02 | Line Check;
+
+str# WAN::Cisco::SLARP_OpCode:Func;
+	0x00 | WAN::Cisco::SLARP::Request;
+	0x01 | WAN::Cisco::SLARP::Reply;
+	0x02 | WAN::Cisco::SLARP::Line_Check;
+	
+void WAN::Cisco::SLARP::Request;
+	IPLG 0 1 90 c2 Address:\Addr:;
+	IPLG 0 1 90 c2 Mask:\Msk:;
+	HBYT 0 1 90 c2 Unused:\;
+	TRTS;
+
+void WAN::Cisco::SLARP::Reply;
+	IPLG 0 1 90 c2 Sending Sys Addr:\SS_Adr:;
+	IPLG 0 1 90 c2 Sending Sys Mask:\SS_Msk:;
+	HBYT 0 1 90 c2 Unused:\;
+	TRTS;
+
+void WAN::Cisco::SLARP::Line_Check;	
+	HLNG 0 1 90 c2 Sender Seq Num:\SdrSeq#:;
+	HLNG 0 1 90 c2 Last Rec Seq Num:\LstRecSeq#:;
+	HBYT 0 1 90 c2 Reserved:\;
+	TRTS;
+
+// -------------------------------------------------------
+//	Bridge Protocol Data Unit									--this needs to go elsewhere
+// -------------------------------------------------------
+
+void BPDU;
+	LABL 0 0 00 b1 Bridge Protocol Data Unit\BPDU:;
+	HWRD 0 1 90 c2 BPDU Identifier:\ID:;
+	DBYT 0 0 90 c2 BPDU Version:\Ver:;
+	DBYT 0 1 90 c2 BPDU Type:\Type:;
+	 CEQU 0 1 00 14 Configuration;
+	 CEQU 80 1 0 14 Topology Change Notification;
+	BBYT 0 1 90 c9 Flags:;
+	 CBIT 7 1 0 d4 1... .... Topology Change Ack;
+	 CLSE 0 0 0 d4 0... .... No Topology Change Ack;
+	 CBIT 0 1 0 d4 .... ...1 Topology Change;
+	 CLSE 0 0 0 d4 .... ...0 No Topology Change;
+	 LABL 0 0 0 c8;
+	HEX# 8 0 90 c2 Root Identifier/ID:\;
+	HLNG 0 1 90 c2 Root Path Cost:\;
+	DGLB 0 1 4 14 (;
+	LABL 0 0 0 4 ")";
+	HEX# 8 0 90 c2 Bridge Identifier/ID:\;
+	HWRD 0 0 90 c2 Port Identifier:\;
+	DWRD 0 0 90 c2 Message Age:\;
+	DWRD 0 0 90 c2 Maximum Age:\;
+	DWRD 0 0 90 c2 Hello Time:\;
+	DWRD 0 0 90 c2 Forward Delay:\;
+	TRTS;
+
+
+
+// -------------------------------------------------------
+//	FRAME RELAY
+// -------------------------------------------------------
+
+void WAN_FRLY()
+{
+	g[1] = pw[0];
+	if (g[1] == 0xffff)
+	{
+		g[1] = pb[2];
+		if (g[1] == 0x03)
+		{
+			TNXT -WAN_FRLY::MP;	
+		}
+	}
+	if (g[1] == 0x1)
+	{
+		g[1] = pw[2];
+		if (g[1] == 0x0308)
+		{
+			TNXT -WAN_FRLY::LMI;
+		}
+	}
+	//si: this means that the DLCI = 1023 or 11111100 11110001
+	if (g[1] == 0xfcf1)
+	{
+		g[1] = pw[2];
+		if (g[1] == 0x0308)
+		{
+			TNXT -WAN_FRLY::LMI;
+		}
+	}
+	TNXT -WAN_FRLY::LL;							//si: just default to this one
+}
+
+// -------------------------------------------------------
+//	FRAME RELAY - LINK LAYER
+
+void WAN_FRLY::LL()
+{
+	LABL 0 0 0 b1 Frame Relay - Link Layer\FRLY-LL:;
+	BWRD 0 1 90 c9 Frame Relay Header:;
+	g[2] = g[1];
+	g[2] &= 0xfc00;
+	SHFR a 2;
+	DGLB 0 2 04 d4 xxxxxx.. ........ High Order DLCI: ;
+	CBIT A 1 00 d4 ......1. ........ C/R: 1;
+	CLSE 0 0 00 d4 ......0. ........ C/R: 0;
+	CBIT 9 1 00 d4 .......1 ........ EA: No More Follows;
+	CLSE 0 0 00 d4 .......0 ........ EA: More Follows;
+	g[3] = g[1];
+	g[3] &= 0xf0;
+	SHFR 4 3;
+	DGLB 0 3 04 d4 ........ xxxx.... Low Order DLCI: ;
+	SHFL 4 2;
+	ADDG 2 83;
+	DGLB 0 3 04 14 "( Calculated DLCI: ";
+	LABL 0 0 00 04 " )";
+	CBIT 3 1 00 d4 ........ ....1... FECN: Frame sent downstream toward destination location due to congestion;
+	CLSE 0 0 00 d4 ........ ....0... FECN: No Forward Congestion;
+	CBIT 2 1 00 d4 ........ .....1.. BECN: Frame sent back toward source due to congestion;
+	CLSE 0 0 00 d4 ........ .....0.. BECN: No Backward Congestion;
+	CBIT 1 1 00 d4 ........ ......1. Discard Eligible;
+	CLSE 0 0 00 d4 ........ ......0. Not Discard Eligible;
+	CBIT 0 1 00 d4 ........ .......1 EA: End of Header;
+	CLSE 0 0 00 d4 ........ .......0 EA: Addtioanl Bytes Following Header;
+	LABL 0 0 00 c8;
+	g[4] = g[1];
+	g[4] &= 0x1;
+	if (g[4] == 0)
+	{
+		HBYT 0 4 90 c2 Extended Address:\EA:;
+	}
+	g[1] = pb[0];
+	if (g[1] == 0x03)
+	{
+		l[1] = pb[1];
+		l[2] = pb[2];
+		if (l[1] == 0xcc)
+		{
+			TNXT -WAN_FRLY::MP::Main;
+		}
+		if (l[2] == 0x80)
+		{
+			TNXT -WAN_FRLY::MP::Main;
+		}
+	}
+	HWRD 0 1 90 c2 Protocol:\Prtcl:;			//si: this might not work... errrrgh
+	CST# 0 1 00 14 WAN::Protocols::Name;
+	TST# 0 1 00 00 WAN::Protocols::Func;
+	DUMP 0 10 90 c2 Information:;
+}
+
+// -------------------------------------------------------
+//	FRAME RELAY - MULTIPROTOCOL
+
+void WAN_FRLY::MP()
+{
+	LABL 0 0 0 b1 Multiprotocol over Frame Relay\FRLY-MP:;
+	HWRD 0 1 90 c2 Address:\Addr:;
+	TNXT -WAN_FRLY::MP::Main;
+}
+
+void WAN_FRLY::MP::Main()
+{
+	HBYT 0 1 90 c9 Control:\Ctrl:;
+	g[2] = g[1];
+	ANDG fc 2;
+	SHFR 2 2;
+	DGLB 0 2 04 d4 xxxx xx.. = Command: ;
+	ANDG 3 2;
+	DGLB 0 1 04 d4 .... ..xx = Frame Type: ;
+	LABL 0 0 00 c8;
+	g[1] = pb[0];
+	if (g[1] == 0)
+	{
+		HBYT 0 1 90 c2 Optional Pad:\;		//si: ??
+	}
+	HBYT 0 1 90 c2 Ntwrk Lvl Prtcl ID:\NLPID:;
+	CST# 0 1 00 14 WAN_FRLY::MP::NLPID::Name;
+	TST# 0 1 00 00 WAN_FRLY::MP::NLPID::Func;
+	DUMP 0 10 90 c2 Unknown PID:;
+	TRTS;
+}
+
+str# WAN_FRLY::MP::NLPID::Name;
+	0x00 | Null Network Layer or Inactive Set;
+	0x08 | Q.933;
+	0x80 | SNAP;
+	0x81 | ISO CLNP;
+	0x82 | ISO ESIS;
+	0x83 | ISO ISIS;
+	0xcc | IP Datagram;
+	0xcf | PPP;
+	
+str# WAN_FRLY::MP::NLPID::Func;
+	//0x08 | Q.933;
+	0x80 | WAN_FRLY::MP::SNAP;
+	0xcc | IP;
+	0xcf | PPP;							//si: oh man....good luck with this one - means i'm not sure 
+
+void WAN_FRLY::MP::SNAP;				//si: type 0x80
+	HEX# 80000001 0 90 C2 OUI:;
+	HEX# 80000001 0 90 02 -;
+	HEX# 80000001 0 90 02 -;
+	g[5] = pw[0];
+	HEX# 80000001 0 90 C2 PID:;
+	HEX# 80000001 0 90 02 -;
+	CST# 0 5 00 14 WAN_FRLY::MP::PID::Name;
+	TST# 0 5 00 00 WAN_FRLY::MP::PID::Func;
+	DUMP 0 10 90 c2 Unknown PID:;
+	TRTS;
+
+str# WAN_FRLY::MP::PID::Name;
+	0x01	| 802.3/Ethernet;
+	0x02	| 802.4;
+	0x03	| 802.5;
+	0x04	| FDDI;
+	0x07	| 802.3/Ethernet;
+	0x08	| 802.4;
+	0x09	| 802.5;
+	0x0a	| FDDI;
+	0x0b	| 802.6;
+	0x0806	| ARP;
+	0x800	| IP;
+	0x8137	| IPX;
+
+str# WAN_FRLY::MP::PID::Func;
+	0x01	| WAN_FRLY::MP::PID::802.3;
+	0x02	| WAN_FRLY::MP::PID::802.4;
+	0x03	| WAN_FRLY::MP::PID::802.5;
+	0x04	| WAN_FRLY::MP::PID::FDDI;
+	0x07	| WAN_FRLY::MP::PID::802.3;
+	0x08	| WAN_FRLY::MP::PID::802.4;
+	0x09	| WAN_FRLY::MP::PID::802.5;
+	0x0a	| WAN_FRLY::MP::PID::FDDI;
+	0x0b	| WAN_FRLY::MP::PID::802.6;
+	0x0e	| WAN_FRLY::MP::PID::BPDU;
+	0x0806	| ARP;
+	0x800	| IP;
+	0x8137	| Dummy;
+
+void WAN_FRLY::MP::PID::802.3;				// 0x01 & 0x07
+	if (g[5] == 0x01)
+	{
+		TNXT -Ether::Branching;
+		/*
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		g[2] = g[16];
+		g[2] -= 2;		//si: subtract out lan fcs
+		HEX# 0 2 90 c2 Remaining Bytes:\;
+		HWRD 0 1 90 c2 LAN FCS:;
+		TRTS;
+		*/
+	}
+	if (g[5] == 0x07)
+	{
+		TNXT -Ether::Branching;
+	}
+	if (g[5] != 0x01)
+	{
+		HEX# 10 0 90 c2 MAC Dest Address:\MAC:;
+	}
+	TRTS;
+
+void WAN_FRLY::MP::PID::802.4;				// 0x02 & 0x08
+	HBYT 0 1 90 c2 Padding:\;
+	HBYT 0 1 90 c2 Frame Control:\F_Ctrl:;
+	if (g[5] == 0x02)
+	{
+		
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		g[2] = g[16];
+		g[2] -= 2;		//si: subtract out lan fcs
+		HEX# 0 2 90 c2 MAC Frame Remainder:\;
+		HWRD 0 1 90 c2 LAN FCS:;
+		TRTS;
+	}
+	if (g[5] != 0x02)
+	{
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		HEX# 0 10 90 c2 MAC Frame Remainder:\;
+	}
+	TRTS;
+
+void WAN_FRLY::MP::PID::802.5;				// 0x03 & 0x09
+	HBYT 0 1 90 c2 Padding:\;
+	HBYT 0 1 90 c2 Frame Control:\F_Ctrl:;
+	if (g[5] == 0x03)
+	{
+		
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		g[2] = g[16];
+		g[2] -= 2;		//si: subtract out lan fcs
+		HEX# 0 2 90 c2 MAC Frame Remainder:\;
+		HWRD 0 1 90 c2 LAN FCS:;
+		TRTS;
+	}
+	if (g[5] != 0x03)
+	{
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		HEX# 0 10 90 c2 MAC Frame Remainder:\;
+	}
+	TRTS;
+
+void WAN_FRLY::MP::PID::FDDI;				// 0x04 & 0x0a
+	HBYT 0 1 90 c2 Padding:\;
+	HBYT 0 1 90 c2 Frame Control:\F_Ctrl:;
+	if (g[5] == 0x04)
+	{
+		
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		g[2] = g[16];
+		g[2] -= 2;		//si: subtract out lan fcs
+		HEX# 0 2 90 c2 MAC Frame Remainder:\;
+		HWRD 0 1 90 c2 LAN FCS:;
+		TRTS;
+	}
+	if (g[5] != 0x04)
+	{
+		ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+		HEX# 0 10 90 c2 MAC Frame Remainder:\;
+	}
+	TRTS;
+
+void WAN_FRLY::MP::PID::802.6;				// 0x0b
+	HBYT 0 1 90 c2 Reserved:\;
+	HBYT 0 1 90 c2 BE Tag:\Tag:;
+	DWRD 0 1 90 c2 BA Size:\;
+	ETHR 0 1 90 c2 MAC Dest Address:\MAC:;
+	g[2] = g[16];
+	g[2] -= 4;		//si: subtract out common pdu trailer
+	HEX# 0 2 90 c2 MAC Frame Remainder:\;
+	HLNG 0 1 90 c2 Common PDU Trailer:\;
+	TRTS;	
+
+void WAN_FRLY::MP::PID::BPDU;				// 0x0e
+	//    |      BPDU as defined by       |
+    //    |     802.1(d) or 802.1(g)[12]  |
+
+
+// -------------------------------------------------------
+//	FRAME RELAY - LOCAL MANAGEMENT INTERFACE
+
+void WAN_FRLY::LMI()
+{
+	LABL 0 0 00 b1 Frame Relay - Local Management Interface\FRLY-LMI;
+	GWRD 0 1;
+	HGLB 0 1 90 c9 Frame Relay Header:;
+	BBIT 6 2 90 c2 High Order DLCI:\H_DLCI:;
+	BBIT 1 1 90 c2 C/R:\;
+	BBIT 1 0 90 c2 Extended Addr:\EA:;
+	BBIT 4 3 90 c2 Low Order DLCI:\L_DLCI:;
+	SHFL 4 2;
+	ADDG 2 83;
+	DGLB 0 3 04 14 "Calculated DLCI: ";
+	BBIT 1 1 90 c2 FECN:\FECN:;
+	BBIT 1 1 90 c2 BECN:\BECN:;
+	BBIT 1 0 90 c2 Discard Eligible:\DE:;
+	BBIT 1 4 90 c2 Extended Addr:\EA:;
+	LABL 0 0 0 c8;
+	HBYT 0 1 90 c2 Unnumbered Info:\UI:;
+	HBYT 0 1 90 c2 Protocol Discriminator:\PD:;
+	HBYT 0 1 90 c2 Call Reference:\CR:;
+	HBYT 0 1 90 c2 Message Type:;
+	 CST# 0 1 0 14 WAN_FRLY::LMI::Message_Types;
+	 CLSE 0 1 0 14 Unknown Message Type;
+	 	
+	TNXT -WAN_FRLY::LMI::IE::Main;		//si: now do the IE's
+}
+
+str# WAN_FRLY::LMI::Message_Types;
+	0x75 | Status Inquiry Message;
+	0x7d | Status Message;
+
+void WAN_FRLY::LMI::IE::Main()
+{
+	g[1] = pb[0];
+	if (g[1] == 0x95)
+	{
+		HBYT 0 1 90 c2 Shift Lock:;
+		LABL 0 0 00 14 Required in ANSI Frames;
+		g[1] = pb[0];
+	}
+	CST# 0 1 0 b7 WAN_FRLY::LMI::IE::Types::Name;
+	CLSE 0 0 0 b7 Unknown IE;
+	TSB# 0 1 0 00 WAN_FRLY::LMI::IE::Types::Func;
+	TLSE 0 0 0 00 WAN_FRLY::LMI::IE::Default;
+	LABL 0 0 0 b8;
+	if (g[16] > 0)
+	{
+		TNXT -WAN_FRLY::LMI::IE::Main;
+	}
+}
+
+void WAN_FRLY::LMI::IE::Default()
+{
+	HBYT 0 1 90 c2 IE ID:;
+	DBYT 0 1 90 c2 IE Length:;
+	DUMP 0 1 90 c2 IE Info:;
+	LABL 0 0 00 b8;
+	if (g[16] > 0)
+	{
+		TNXT -WAN_FRLY::LMI::IE::Main;
+	}
+}
+
+str# WAN_FRLY::LMI::IE::Types::Name;
+	0x01 | Report Type IE;						//si: ANSI TI.617a
+	0x03 | Link Integrity IE;					//si: ANSI TI.617a
+	0x07 | PVC Status IE;						//si: ANSI TI.617a
+	0x19 | Link Integrity IE;					//si: ANSI TI.617a
+	0x51 | Report Type IE;						//si: ITU-T Q.933
+	0x53 | Link Integrity IE;					//si: ITU-T Q.933
+	0x57 | PVC Status IE;						//si: ITU-T Q.933
+
+str# WAN_FRLY::LMI::IE::Types::Func;
+	0x01 | WAN_FRLY::LMI::IE::Report_Type;
+	0x03 | WAN_FRLY::LMI::IE::Link_Integrity;
+	0x07 | WAN_FRLY::LMI::IE::PVC_Status;
+	0x19 | WAN_FRLY::LMI::IE::Link_Integrity;
+	0x51 | WAN_FRLY::LMI::IE::Report_Type;
+	0x53 | WAN_FRLY::LMI::IE::Link_Integrity;
+	0x57 | WAN_FRLY::LMI::IE::PVC_Status;
+
+void WAN_FRLY::LMI::IE::Report_Type()
+{
+	HBYT 0 1 90 c2 Report Type ID:\;
+	DBYT 0 2 90 c2 Length:\Len:;			//si: should be 1
+	HBYT 0 1 90 c2 Type:;
+	 CEQU 0 1 00 14 Full Status;
+	 CEQU 1 1 00 14 Link Integrity;
+	 CEQU 2 1 00 14 Single PVC;
+	if (g[2] > 1)
+	{
+		g[2] -= 1;
+		DUMP 0 2 90 c2 Report Type Data:;
+	}
+	TRTS;
+}
+
+void WAN_FRLY::LMI::IE::PVC_Status()
+{
+	HBYT 0 1 90 c2 PVC Status ID:;
+	DBYT 0 2 90 c2 Length:;					//si: should be 3
+	
+	BBIT 1 0 90 c2 Ext Address:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 6 3 90 c2 High Order DLCI:;
+	
+	BBIT 1 0 90 c2 Ext Address:;
+	BBIT 4 4 90 c2 Low Order DLCI:;
+	SHFL 4 3;
+	ADDG 3 84;
+	DGLB 0 4 04 14 "Calculated DLCI: ";
+	BBIT 3 0 90 c2 Reserved:;
+	
+	BBIT 1 0 90 c2 Ext Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 New Bit:;
+	CEQU 0 0 00 14 PVC is New;
+	CEQU 0 0 00 14 PVC is Not New;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Active Bit:;
+	CEQU 0 0 00 14 PVC is Active;
+	CEQU 0 0 00 14 PVC is Not Active;
+	BBIT 1 0 90 c2 Reserved:;
+	
+	//si: here -- andg g[3] & g[4]
+	
+	if (g[2] > 3)
+	{
+		g[2] -= 3;
+		DUMP 0 2 90 c2 Report Type Data:;
+	}
+	TRTS;
+}
+
+void WAN_FRLY::LMI::IE::Link_Integrity()
+{
+	HBYT 0 1 90 c2 Link Integrity Verf ID:;
+	DBYT 0 2 90 c2 Length:;					//si: should be 2
+	HBYT 0 1 90 c2 Send Seq Num:;
+	HBYT 0 1 90 c2 Receive Seq Num:;
+	if (g[2] > 2)
+	{
+		g[2] -= 2;
+		DUMP 0 2 90 c2 Report Type Data:;
+	}
+	TRTS;
+}
+
+
+// -------------------------------------------------------
+//	XOT
+// -------------------------------------------------------
+
+void XOT;
+	LABL 0 0 0 b1 XOT;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 0 90 c2 Length:;
+	
+	LABL 0 0 0 b1 X.25;
+	WAN_X25::LAPB::GFI;
+	DBYT 0 1 90 c2 Logical Chan #:\LCN:;
+	
+	TST# 0 3 00 00 WAN_X25::LAPB::Frame_Type::Func;
+	TRTS;
+
+
+
+
+// -------------------------------------------------------
+//	X.25
+// -------------------------------------------------------
+
+void WAN_X25()
+{
+	//LABL 0 0 0 b1 X.25;
+	if (g[16] <= 2)
+	{
+		TNXT -WAN::HDLC::OLD;
+	}
+	TNXT -WAN_X25::LAPB;
+
+}
+
+void WAN_X25::LAPB()
+{
+	LABL 0 0 0 b1 X.25 - LAPB;
+	HBYT 0 1 90 c2 Address:\Addr:;
+	CEQU 1 1 00 14 DTE to DCE commands & DCE to DTE responses;
+	CEQU 3 1 00 14 DCE to DTE commands & DTE to DCE responses;
+	DBIT 6 0 5 5;
+	DBIT 2 1 5 5;
+	DECR 1;
+	//BBYT 0 2 90 c7 Control Field:;								//si: set these back to 9  -----------------------------------------------
+	//DECR 1;
+	LABL 0 0 00 c7 Control Field:;
+	CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::Name;
+	TSB# 0 1 00 14 WAN_X25::LAPB::Control_Field::Func;
+	LABL 0 0 00 c8;
+	
+	WAN_X25::LAPB::GFI;
+	DBYT 0 1 90 c2 Logical Chan #:\LCN:;
+	
+	TST# 0 3 00 00 WAN_X25::LAPB::Frame_Type::Func;
+	TRTS;
+}
+
+// -------------------------------------------------------
+
+str# WAN_X25::LAPB::Control_Field::Name;
+	0 | Information Format;
+	1 | Supervisory Format;
+	2 | Information Format;
+	3 | Unnumbered Format;
+
+str# WAN_X25::LAPB::Control_Field::Func;
+	0 | WAN_X25::LAPB::Control_Field::I_Format;
+	1 | WAN_X25::LAPB::Control_Field::S_Format;
+	2 | WAN_X25::LAPB::Control_Field::I_Format;
+	3 | WAN_X25::LAPB::Control_Field::U_Format;
+	
+void WAN_X25::LAPB::Control_Field::I_Format;
+	DBIT 3 1 90 c2 Receive Seq Num:\N(R):;
+		CST# 0 1 00 24 WAN_X25::LAPB::Control_Field::MAP1;
+	DBIT 1 1 90 c2 Poll Bit:\P:;
+		CEQU 0 1 00 24 ...0 ....;
+		CEQU 1 1 00 24 ...1 .... Poll;
+	DBIT 3 1 90 c2 Send Seq Num:\N(S):;
+		CST# 0 1 00 24 WAN_X25::LAPB::Control_Field::MAP2;
+	DBIT 1 0 90 c2 Identifier:\ID:;
+		LABL 0 0 00 24 .... ...0 I Format;
+	TRTS;
+
+void WAN_X25::LAPB::Control_Field::S_Format;
+	DBIT 3 1 90 c2 Receive Seq Num:\N(R):;
+		CST# 0 1 00 24 WAN_X25::LAPB::Control_Field::MAP1;
+	DBIT 1 1 90 c2 Poll/Final Bit:\;
+		CEQU 0 1 00 24 ...0 .... Final;
+		CEQU 1 1 00 24 ...1 .... Poll;
+	DBIT 2 1 90 c2 Supervisory Function:\Func:;
+		CEQU 0 1 00 24 .... 00.. Receive Ready;
+		CEQU 1 1 00 24 .... 01.. Receive Not Ready;
+		CEQU 2 1 00 24 .... 10.. Reject;
+	DBIT 2 0 90 c2 Identifier:\ID:;
+		LABL 0 0 00 24 .... ..01 S Format;
+	TRTS;
+
+void WAN_X25::LAPB::Control_Field::U_Format;
+	BBIT 3 1 90 c2 Modifier Function:\Func;
+		CST# 0 1 00 24 WAN_X25::LAPB::Control_Field::MAP1;
+	DBIT 1 1 90 c2 Poll/Final Bit:\;
+		CEQU 0 1 00 24 ...0 .... Final;
+		CEQU 1 1 00 24 ...1 .... Poll;
+	BBIT 2 2 90 c2 Modifier Function:\Func:;
+	GBIT 1 1;														//si: get the poll/final bit to see if it's a command or response
+	if (g[2] == 0)
+	{
+		CEQU 0 1 00 14 .... 00.. Unnumbered Acknowledgement;		//si: final bit set - response
+		CEQU 1 1 00 14 .... 00.. Disconnect;						//si: poll bit set
+	}
+	if (g[2] == 2)
+	{
+		CEQU 0 1 00 14 .... 10.. Frame Reject;						//si: final bit set - response
+	}
+	if (g[2] == 3)
+	{
+		CEQU 0 1 00 14 .... 11.. Disconnect Mode;					//si: final bit set - response
+		CEQU 1 1 00 14 .... 11.. Set Asynchonous Balanced Mode;		//si: poll bit set
+	}
+	DBIT 2 0 90 c2 Identifier:\ID:;
+		LABL 0 0 00 24 .... ..11 U Format;
+	TRTS;
+
+str# WAN_X25::LAPB::Control_Field::MAP1;
+	0 | 000. ....;
+	1 | 001. ....;
+	2 | 010. ....;
+	3 | 011. ....;
+	4 | 100. ....;
+	5 | 101. ....;
+	6 | 110. ....;
+	7 | 111. ....;
+
+str# WAN_X25::LAPB::Control_Field::MAP2;
+	0 | .... 000.;
+	1 | .... 001.;
+	2 | .... 010.;
+	3 | .... 011.;
+	4 | .... 100.;
+	5 | .... 101.;
+	6 | .... 110.;
+	7 | .... 111.;
+
+// -------------------------------------------------------
+
+void WAN_X25::LAPB::GFI;
+	LABL 0 0 00 b7 General Format Identifier\GFI:;				//si: set these back to 9	-----------------------------------------------
+	DBIT 1 1 90 c2 Qualifier Bit:\Q:;
+		CEQU 1 1 00 24 1... ....  Set;
+		CLSE 0 0 00 24 0... ....  Not Set;
+	DBIT 1 1 90 c2 Delivery Confirm Bit:\D:;
+		CEQU 1 1 00 24 .1.. ....  Set;
+		CLSE 0 0 00 24 .0.. ....  Not Set;
+	DBIT 2 3 90 c2 Sequence Scheme:\SS:;						//si: save this
+		CEQU 1 3 00 24 ..01 ....;
+		CEQU 2 3 00 24 ..10 ....;
+	CST# 0 3 00 14 WAN_X25::LAPB::Frame_Type::Name;
+	CLSE 0 0 00 14 Unknown Frame Type;
+	DBIT 4 1 90 c2 Logical Chan Group #:\LGN:;
+	CST# 0 1 00 24 WAN_X25::LAPB::GFI::MAP;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# WAN_X25::LAPB::GFI::MAP;
+	0x00 | .... 0000;
+	0x01 | .... 0001;
+	0x02 | .... 0010;
+	0x03 | .... 0011;
+	0x04 | .... 0100;
+	0x05 | .... 0101;
+	0x06 | .... 0110;
+	0x07 | .... 0111;
+	0x08 | .... 1000;
+	0x09 | .... 1001;
+	0x0A | .... 1010;
+	0x0B | .... 1011;
+	0x0C | .... 1100;
+	0x0D | .... 1101;
+	0x0E | .... 1110;
+	0x0F | .... 1111;
+
+str# WAN_X25::LAPB::Frame_Type::Name;
+	1 | Modulo 8;
+	2 | Modulo 128;
+
+str# WAN_X25::LAPB::Frame_Type::Func;
+	1 | WAN_X25::LAPB::MOD_8;
+	2 | WAN_X25E::LAPB::MOD_128;
+
+// -------------------------------------------------------
+
+void WAN_X25::LAPB::MOD_8()
+{
+	g[5] = 0;
+	//BBYT 0 1 00 c7 Packet Type Identifier:\PTI:;
+	GBYT 0 3;
+	//ANDG 1 3;				//si: ?!?!??!?!?
+	
+	LABL 0 0 00 c7 Packet Type Identifier:\PTI:;
+	CST# 0 3 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Name;
+	SKIP;
+		g[5] = 1;
+		ANDG 1F 3;
+		CST# 0 3 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::2::Name;
+		SKIP;
+			ANDG 1 3;
+			if (g[3] == 0)
+			{
+				LABL 0 0 00 14 DCE/DTE Data;
+				g[5] = 100;
+			}
+		ENDS;
+		if (g[3] == 1)
+		{
+			//si: hope to catch dce/dte rr
+			g[5] = 100;
+		}
+	ENDS;
+	
+	if (g[5] == 0)
+	{
+		DBIT 3 1 90 c2 Pkt Rec Seq Num:\P(R):;
+			CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::MAP1;
+		DBIT 1 1 90 c2 More Data:\M:;
+			CEQU 1 1 00 14 ...1 .... pkt is part of a seq of pkts that should be treated as a logical whole;
+			CLSE 0 0 00 14 ...0 ....;
+		DBIT 3 1 90 c2 Pkt Send Seq Num:\P(S):;
+			CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::MAP2;
+		DBIT 1 1 90 c2 Packet Type:\;
+			CEQU 1 1 00 14 .... ...1 RR;
+			CLSE 0 0 00 14 .... ...0 Data;
+		LABL 0 0 0 b8;
+		
+		if (g[16] > 0)
+		{
+			TST# 0 3 00 00 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Func;
+		}
+	}
+	if (g[5] == 100)
+	{
+		//DECR 1;
+		DBIT 3 1 90 c2 Pkt Rec Seq Num:\P(R):;
+			CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::MAP1;
+		DBIT 1 1 90 c2 More Data:\M:;
+			CEQU 1 1 00 14 ...1 .... pkt is part of a seq of pkts that should be treated as a logical whole;
+			CLSE 0 0 00 14 ...0 ....;
+		DBIT 3 1 90 c2 Pkt Send Seq Num:\P(S):;
+			CST# 0 1 00 14 WAN_X25::LAPB::Control_Field::MAP2;
+		DBIT 1 1 90 c2 Packet Type:\;
+			CEQU 1 1 00 14 .... ...1 RR;
+			CLSE 0 0 00 14 .... ...0 Data;
+		LABL 0 0 0 b8;
+		
+		if (g[16] > 0)
+		{
+			TST# 0 3 00 00 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Func;
+		}
+	}
+	
+	//si: this is straight out BUULLLLLLLLLLLLL SHHHHHH
+	// user data
+	GBYT 0 1;
+	if (g[1] == 0x45)
+	{
+		TNXT -IP;
+	}
+	if (g[1] == 0x81)
+	{
+		TNXT -ISO_CLNP;
+	}
+	if (g[16] > 0)
+	{
+		LABL 0 0 0 b7 User Data;		//OK SOMEONE TELL ME WHAT THIS DATA IS
+		g[1] = g[16];
+		if (g[1] > 50)
+		{
+			if (g[16] > 50)
+			{
+				CHR# 32 0 10 0;
+			}
+			while (g[16] > 50)
+			{
+				CHR# 32 0 10 0;
+			}
+			if (g[16] > 0)
+			{
+				CHR# 0 10 10 0;
+			}
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		if (g[1] <= 50)
+		{
+			CHR# 0 10 10 0;
+		}
+		LABL 0 0 0 b8;
+	}
+}
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Name;
+	0xb  | INCOMING CALL / CALL REQUEST;			
+	0xf	 | CALL CONNECTED / CALL ACCEPTED;		
+	0x13 | CLEAR INDICATION	/ CLEAR REQUEST;
+	0x17 | DCE CLEAR CONFIRMATION / DTE CLEAR CONFIRMATION;
+	0x1b | RESET INDICATION / RESET REQUEST;
+	0x1f | DCE RESET CONFIRM / DTE RESET CONFIRM;
+	0x23 | DCE INTERRUPT / DTE INTERRUPT;
+	0x27 | DCE INTERRUPT CONFIRM / DTE INERRUPT CONFIRM;
+	0xf1 | DIAGNOSTIC;
+	0xfb | RESTART INDICATION / RESTART REQUEST;
+	0xff | DCE RESTART CONFIRM / DTE RESTART CONFIRM;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Func;
+	0xb  | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x0b;
+	0xf	 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x0f;
+	0x13 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x13;
+	0x17 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x17;
+	0x1b | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1b;
+	0x1f | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1f;
+	0x23 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x23;
+	0x27 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x27;
+	0xf1 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xf1;
+	0xfb | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xfb;
+	0xff | WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xff;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::2::Name;
+	0x0 | DCE/DTE Data;
+	0x1 | DCE/DTE Receive Ready;
+	0x5 | DCE/DTE Receive Not Ready;
+	0x9 | DTE Reject;
+
+	/*
+	0000 1011	0xb		INCOMING CALL			CALL REQUEST				call setup & clearing
+	0000 1111	0xf		CALL CONNECTED			CALL ACCEPTED				call setup & clearing
+	0001 0011	0x13	CLEAR INDICATION		CLEAR REQUEST				call setup & clearing
+	0001 0111	0x17	DCE CLEAR CONFIRMATION	DTE CLEAR CONFIRMATION		call setup & clearing
+	0001 1011	0x1b	RESET INDICATION		RESET REQUEST				flow control & reset
+	0001 1111	0x1f	DCE RESET CONFIRM		DTE RESET CONFIRM			flow control & reset
+	0010 0011	0x23	DCE INTERRUPT			DTE INTERRUPT				data & interrupt
+	0010 0111	0x27	DCE INTERRUPT CONFIRM	DTE INERRUPT CONFIRM		data & interrupt
+	1111 0001	0xf1	DIAGNOSTIC				-							diagnostic
+	1111 1011	0xfb	RESTART INDICATION		RESTART REQUEST				restart
+	1111 1111	0xff	DCE RESTART CONFIRM		DTE RESTART CONFIRM			restart
+	
+	XXX0 0001	DCE RR					DTE RR						flow control & reset
+	XXX0 0101	DCE RNR					DTE RNR						flow control & reset
+	XXX0 1001	-						DTE REJ						flow control & reset
+
+	XXXX XXX0	DCE DATA				DTE DATA					data & interrupt
+	*/
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::AddressBlock;
+	DBIT 4 1 90 c2 Calling DTE Addr Len:;
+	DBIT 4 2 90 c2 Called DTE Addr Len:;
+	l[1] = g[1];
+	l[2] = g[2];
+	MODG 2 2;
+	DIVG 2 42;
+	if (g[2] == 0)
+	{
+		LABL 0 0 90 c2 Called DTE Address:;
+		while (l[2] > 0)
+		{
+			DBIT 4 0 5 5;
+			DBIT 4 0 90 00;
+			DECR 1;
+			DBIT 4 0 90 00;
+			DBIT 4 0 5 5;
+			
+			l[2] -= 1;
+		}
+	}
+	if (g[2] == 1)
+	{
+		LABL 0 0 90 c2 Called DTE Address:;
+		while (l[2] > 0)
+		{
+			DBIT 4 0 5 5;
+			DBIT 4 0 90 00;
+			DECR 1;
+			DBIT 4 0 90 00;
+			DBIT 4 0 5 5;
+			
+			l[2] -= 1;
+		}
+		DBIT 4 00 05 05;
+		DBIT 4 00 90 00;
+		DECR 1;
+	}
+	
+	MODG 2 1;
+	DIVG 2 41;
+	if (g[1] == 0)
+	{
+		if (g[2] == 1)
+		{
+			DBIT 4 0 90 c2 Calling DTE Address:;
+			DBIT 4 0 05 05;								// si: was taken care of in the called dte
+			l[1] -= 1;
+			while (l[1] > 0)
+			{
+				DBIT 4 0 5 5;
+				DBIT 4 0 90 00;
+				DECR 1;
+				DBIT 4 0 90 00;
+				DBIT 4 0 5 5;
+				
+				l[1] -= 1;
+			}
+			
+			DBIT 4 0 90 00;								// si: last 4 bits
+			DBIT 4 0 90 c2 Padding:;					// si: was taken care of in the called dte
+		}
+		if (g[2] == 0)
+		{
+			LABL 0 0 90 c2 Calling DTE Address:;
+			while (l[1] > 0)
+			{
+				DBIT 4 0 5 5;
+				DBIT 4 0 90 00;
+				DECR 1;
+				DBIT 4 0 90 00;
+				DBIT 4 0 5 5;
+				
+				l[1] -= 1;
+			}
+		}
+	}
+	if (g[1] == 1)
+	{
+		if (g[2] == 1)
+		{
+			DBIT 4 0 90 c2 Calling DTE Address:;
+			DBIT 4 0 05 05;								// si: was taken care of in the called dte
+		}
+		while (l[1] > 0)
+		{
+			DBIT 4 0 5 5;
+			DBIT 4 0 90 00;
+			DECR 1;
+			DBIT 4 0 90 00;
+			DBIT 4 0 5 5;
+
+			l[1] -= 1;
+		}
+		if (g[2] == 0)
+		{
+			DBIT 4 0 90 00;
+			DBIT 4 0 90 c2 Padding:;
+		}
+	}
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Diagnostic;
+	0	| No additional information;
+	1	| Invalid P(S);
+	2	| Invalid P(R);
+	16	| Packet type invalid;
+	17	| Packet type invalid - For state r1;
+	18	| Packet type invalid - For state r2;
+	19	| Packet type invalid - For state r3;
+	20	| Packet type invalid - For state p1;
+	21	| Packet type invalid - For state p2;
+	22	| Packet type invalid - For state p3;
+	23	| Packet type invalid - For state p4;
+	24	| Packet type invalid - For state p5;
+	25	| Packet type invalid - For state p6;
+	26	| Packet type invalid - For state p7;
+	27	| Packet type invalid - For state d1;
+	28	| Packet type invalid - For state d2;
+	29	| Packet type invalid - For state d3;
+	32	| Packet not allowed;
+	33	| Unidentifiable packet;
+	34	| Call on one-way logical channel;
+	35	| Invalid packet type on a permanent virtual circuit;
+	36	| Packet on unassigned logical channel;
+	37	| Reject not subscribed to;
+	38	| Packet too short;
+	39	| Packet too long;
+	40	| Invalid general format identifier;
+	41	| Restart packet with non-zero in bits 1 to 4 of octet 1, or bits 1 to 8 of octet 2;
+	42	| Packet type not compatible with facility;
+	43	| Unauthorized interrupt confirmation;
+	44	| Unauthorized interrupt;
+	45	| Unauthorized reject;
+	46	| TOA/NPI address subscription facility not subscribed to;
+	48	| Time expired;
+	49	| For incoming call;
+	50	| For clear indication;
+	51	| For reset indication;
+	52	| For restart indication;
+	53	| For call deflection;
+	64	| Call set-up or call clearing problem;
+	65	| Facility code not allowed;
+	66	| Facility parameter not allowed;
+	67	| Invalid called DTE address;
+	68	| Invalid calling DTE address;
+	69	| Invalid facility length;
+	70	| Incoming call barred;
+	71	| No logical channel available;
+	72	| Call collision;
+	73	| Duplicate facility requested;
+	74	| Non-zero address length;
+	75	| Non-zero facility length;
+	76	| Facility not provided when expected;
+	77	| Invalid ITU-T specified DTE facility;
+	78	| Maximum number of call redirections or call deflections exceeded;
+	80	| Miscellaneous;
+	81	| Improper cause code from DTE;
+	82	| Not aligned octet;
+	83	| Inconsistent Q-bit setting;
+	84	| NUI problem;
+	85	| ICRD problem;
+	112	| International problem;
+	113	| Remote network problem;
+	114	| International protocol problem;
+	115	| International link out of order;
+	116	| International link busy;
+	117	| Transit network facility problem;
+	118	| Remote network facility problem;
+	119	| International routing problem;
+	120	| Temporary routing problem;
+	121	| Unknown called DNIC;
+	122	| Maintenance action;
+
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x0b;
+	LABL 0 0 0 b7 Incoming Call / Call Request;
+	// address block
+	WAN_X25::LAPB::MOD_8::Pkt_Type::1::AddressBlock;
+	// facilities
+	DBYT 0 3 90 c2 Facility Length:;
+	WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities;
+	// Call User Data
+	LABL 0 0 0 b8;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x0f;				// call accepted/call connected
+	LABL 0 0 0 b7 Call Accepted / Call Connected;
+	// Address Block
+	WAN_X25::LAPB::MOD_8::Pkt_Type::1::AddressBlock;
+	// Facilities
+	DBYT 0 3 90 c2 Facility Length:;
+	WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities;
+	// call user data
+	LABL 0 0 0 b8;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x13;				// clear request/clear indication
+	LABL 0 0 00 b7 Clear Request / Clear Indication;
+	HBYT 0 1 90 c2 Clearing Cause:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x13::ClearingCause;
+	HBYT 0 1 90 c2 Diagnostic Code:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Diagnostic;
+	if (g[16] > 0)
+	{
+		// address block
+		WAN_X25::LAPB::MOD_8::Pkt_Type::1::AddressBlock;
+		// facilities
+		DBYT 0 3 90 c2 Facility Length:;
+		WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities;
+		// Call User Data
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x13::ClearingCause;
+	0x00 | DTE Originated;
+	0x01 | Number busy;
+	0x03 | Invalid facility request;
+	0x05 | Network congestion;
+	0x09 | Out of order;
+	0x0b | Access barred;
+	0x0d | Not obtainable;
+	0x11 | Remote procedure error;
+	0x13 | Local procedure error;
+	0x15 | ROA out of order;
+	0x19 | Reverse charging acceptance not subscribed;
+	0x21 | Incompatible destination;
+	0x29 | Fast select acceptance not subscribed;
+	0x39 | Ship absent;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x17;				// clear confirmation 
+	if (g[16] > 0)
+	{
+		LABL 0 0 00 b7 Clear Confirmation;
+		// Address Block
+		WAN_X25::LAPB::MOD_8::Pkt_Type::1::AddressBlock;
+		// Facilities
+		DBYT 0 3 90 c2 Facility Length:;
+		WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities;
+		LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1b;				// RESET INDICATION	/ RESET REQUEST
+	LABL 0 0 00 b7 Reset Indication / Reset Request;
+	DBYT 0 1 90 c2 Resetting Cause:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1b::ResetCode;
+	if (g[16] > 0)
+	{
+		DBYT 0 1 90 c2 Diagnostic Code:;
+		CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Diagnostic;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1b::ResetCode;
+	0x01 | Out of order;
+	0x03 | Remote procedure error;
+	0x05 | Local procedure error;
+	0x07 | Network congestion;
+	0x09 | Remote DTE operational;
+	0x0f | Network operational;
+	0x11 | Incompatible destination;
+	0x1d | Network out of order;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x1f;			// RESET CONFIRM
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x23;			// INTERRUPT
+	TRTS;		// ??
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0x27;			// INTERRUPT CONFIRM
+	TRTS;		// ??
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xf1;			// DIAGNOSTIC
+	LABL 0 0 00 b7 Diagnostic;
+	DBYT 0 1 90 c2 Diagnostic Code:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Diagnostic;
+	DBYT 0 1 90 c2 Diagnostic Explanation:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xfb;			// RESTART INDICATION / REQUEST	
+	LABL 0 0 00 b7 Restart Indication / Request;
+	DBYT 0 1 90 c2 Restarting Cause:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xfb::RestartCause;
+	DBYT 0 1 90 c2 Diagnostic Code:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Diagnostic;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xfb::RestartCause;
+	0x03 | Network congestion;
+	0x05 | Network operational;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::0xff;			// RESTART CONFIRM
+	TRTS;
+
+
+// ----------------------------------------------------------
+//	Facilities
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities;
+	BBIT 8 1 90 c9 Code:;
+	l[1] = g[1];
+	ANDG c0 41;
+	SHFR 6 41;
+	CST# 0 41 00 d4 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap;
+	CST# 0 01 00 d4 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap2;
+	CLSE 0 0 00 00 Unknown Facility Type;
+	LABL 0 0 00 c8;
+/*
+	if (l[1] == 0)
+	{
+		HBYT 0 0 90 c2 Param Field:;
+	}
+	if (l[1] == 1)
+	{
+		HWRD 0 0 90 c2 Param Field:;
+	}
+	if (l[1] == 2)
+	{
+		HEX# 3 0 90 c2 Param Field:;
+	}
+	if (l[1] == 3)
+	{
+		DBYT 0 1 90 c2 Param Field Len:;
+		HEX# 0 1 90 c2 Param Field:;
+	}
+*/
+	TST# 0 1 0 0 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap2Func;
+	DUMP 0 10 90 c2 Unknown Facility:;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap;
+	0 | 00.. .... Class A: Single Octet Param Field;
+	1 | 01.. .... Class B: Double Octet Param Field;
+	2 | 10.. .... Class C: Triple Octet Param Field;
+	3 | 11.. .... Class D: Variable Len Octet Param Field;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap2;
+	0x42 | Packet Size Negotiation;
+	0x43 | Window Size Negotiation;
+	0xd5 | Super Extended Window Size Negotiation;
+	0x02 | Basic Throughput Class Negotiation;
+	0x4c | Extended Throughput Class Negotiation;
+	0x03 | Basic Closed User Group Selection;
+	0x47 | Extended Closed User Group Selection;
+	0x09 | Basic Closed User Group with Outgoing Access Selection;
+	0x48 | Extended Closed User with Outgoing Access Group Selection;
+	0x41 | Bilateral Closed User Group Selection;
+	0x01 | Reverse Charging;
+	//?? | Fast Select;
+	//?? | ICRD Status Selection;
+	0xc6 | NUI Selection;
+	0x04 | Charging Info: Requesting Service;
+	0xc5 | Charging Info: Receiving Info: Monetary Unit;
+	0xc2 | Charging Info: Receiving Info: Segment Count;
+	0xc1 | Charging Info: Receiving Info: Call Duration;
+	0x44 | Basic ROA Selection;
+	0xc4 | Extended ROA Selection;
+	0xd1 | Call Defletion Selection;
+	0xc3 | Call Redirection or Call Deflection Notification;
+	0x08 | Called Line Address Modified Notification;
+	0x49 | Transit Delay Selection and Indication;
+	0x00 | Marker (7.1);
+	0xff | Reserved;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::CodeMap2Func;
+	0x42 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x42;
+	0x43 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x43;
+	0xd5 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xd5;
+	0x02 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x02;
+	0x4c | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x4c;
+	0x03 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x03;
+	0x47 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x47;
+	0x09 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x09;
+	0x48 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x48;
+	0x41 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x41;
+	0x01 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x01;
+	//?? | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::
+	//?? | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::
+	0xc6 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc6;
+	0x04 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x04;
+	0xc5 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc5;
+	0xc2 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc2;
+	0xc1 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc1;
+	0x44 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x44;
+	0xc4 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc4;
+	0xd1 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xd1;
+	0xc3 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc3;
+	0x08 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x08;
+	0x49 | WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x49;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x42;			// Facility - Packet Size Negotiation
+	DBYT 0 1 5 5;
+	ANDG f 1;
+	DGLB 0 1 90 c2 Called DTE Size:;
+	DBYT 0 1 5 5;
+	ANDG f 1;
+	DGLB 0 1 90 c2 Calling DTE Size:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x43;			// Facility - Window Size Negotiation
+	DBYT 0 1 5 5;
+	ANDG 7f 1;
+	DGLB 0 1 90 c2 Called DTE Size:;
+	DBYT 0 1 5 5;
+	ANDG 7f 2;
+	DGLB 0 2 90 c2 Calling DTE Size:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xd5;			// Facility - Super Extended Window Size Negotiation
+	// si: this is some insane shiz... seriously... who makes up these bunk protocols
+	DBYT 0 1 90 c2 Facility Param Len:;
+	if (g[1] < 6)
+	{
+		HEX# 0 0 90 c2 Facility:;
+		TRTS;
+	}
+	DWRD 0 0 5 5;		// dunno what this is, skip it
+	DBYT 0 1 5 5;		// low 7 bits
+	ANDG fe 1;
+	SHFR 1 1;
+	DBYT 0 2 5 5;		// high bits
+	SHFL 7 2;
+	ORRG 2 81;
+	DGLB 0 1 90 c2 Called DTE:;
+	DBYT 0 1 5 5;		// low 7 bits
+	ANDG fe 1;
+	SHFR 1 1;
+	DBYT 0 2 5 5;		// high bits
+	SHFL 7 2;
+	ORRG 2 81;
+	DGLB 0 1 90 c2 Calling DTE:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x02;			// Facility - Basic Throughput Class Negotiation
+	DBIT 4 1 90 c2 Called DTE:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x02::Throughput;
+	DBIT 4 1 90 c2 Calling DTE:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x02::Throughput;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x02::Throughput;
+	0 | Reserved;
+	1 | Reserved;
+	2 | Reserved;
+	3 | 75 bits/s;
+	4 | 150 bits/s;
+	5 | 300 bits/s;
+	6 | 600 bits/s;
+	7 | 1200 bits/s;
+	8 | 2400 bits/s;
+	9 | 4800 bits/s;
+	10 | 9600 bits/s;
+	11 | 19200 bits/s;
+	12 | 48000 bits/s;
+	13 | 64000 bits/s;
+	14 | 128000 bits/s;
+	15 | 192000 bits/s;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x4c;			// Facility - Extended Throughput Class Negotiation
+	g[1] = pb[0];
+	ANDG 3f 1;
+	DGLB 0 1 90 c2 Calling DTE:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x4c::Throughput;
+	DBYT 0 0 5 5;
+	g[1] = pb[0];
+	ANDG 3f 1;
+	DGLB 0 1 90 c2 Called DTE:;
+	CST# 0 1 00 14 WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x4c::Throughput;
+	DBYT 0 0 5 5;
+	TRTS;
+
+str# WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x4c::Throughput;
+	0 | Reserved;
+	1 | Reserved;
+	2 | Reserved;
+	3 | 75 bits/s;
+	4 | 150 bits/s;
+	5 | 300 bits/s;
+	6 | 600 bits/s;
+	7 | 1200 bits/s;
+	8 | 2400 bits/s;
+	9 | 4800 bits/s;
+	10 | 9600 bits/s;
+	11 | 19200 bits/s;
+	12 | 48000 bits/s;
+	13 | 64000 bits/s;
+	14 | 128000 bits/s;
+	15 | 192000 bits/s;
+	16 | 256000 bits/s;
+	17 | 320000 bits/s;
+	18 | 384000 bits/s;
+	19 | 448000 bits/s;
+	20 | 512000 bits/s;
+	21 | 576000 bits/s;
+	22 | 640000 bits/s;
+	23 | 704000 bits/s;
+	24 | 768000 bits/s;
+	25 | 832000 bits/s;
+	26 | 896000 bits/s;
+	27 | 960000 bits/s;
+	28 | 1024000 bits/s;
+	29 | 1088000 bits/s;
+	30 | 1152000 bits/s;
+	31 | 1216000 bits/s;
+	32 | 1280000 bits/s;
+	33 | 1344000 bits/s;
+	34 | 1408000 bits/s;
+	35 | 1472000 bits/s;
+	36 | 1536000 bits/s;
+	37 | 1600000 bits/s;
+	38 | 1664000 bits/s;
+	39 | 1728000 bits/s;
+	40 | 1792000 bits/s;
+	41 | 1856000 bits/s;
+	42 | 1920000 bits/s;
+	43 | 1984000 bits/s;
+	44 | 2048000 bits/s;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x03;			// Facility - Basic Closed User Group Selection
+	DBIT 4 0 90 c2 Closed User Grp Ind1:;
+	DBIT 4 0 90 c2 Closed User Grp Ind2:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x47;			// Facility - Extended Closed User Group Selection
+	DBIT 4 0 90 c2 Closed User Grp Ind1:;
+	DBIT 4 0 90 c2 Closed User Grp Ind2:;
+	DBIT 4 0 90 c2 Closed User Grp Ind3:;
+	DBIT 4 0 90 c2 Closed User Grp Ind4:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x09;			// Facility - Basic Closed User Group with Outgoing Access Selection
+	DBIT 4 0 90 c2 Closed User Grp Ind1:;
+	DBIT 4 0 90 c2 Closed User Grp Ind2:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x48;			// Facility - Extended Closed User with Outgoing Access Group Selection
+	DBIT 4 0 90 c2 Closed User Grp Ind1:;
+	DBIT 4 0 90 c2 Closed User Grp Ind2:;
+	DBIT 4 0 90 c2 Closed User Grp Ind3:;
+	DBIT 4 0 90 c2 Closed User Grp Ind4:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x41;			// Facility - Bilateral Closed User Group Selection
+	DBIT 4 0 90 c2 Closed User Grp Ind1:;
+	DBIT 4 0 90 c2 Closed User Grp Ind2:;
+	DBIT 4 0 90 c2 Closed User Grp Ind3:;
+	DBIT 4 0 90 c2 Closed User Grp Ind4:;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x01;			// Facility - Reverse Charging
+	BBYT 0 1 90 c9 Flags:;
+	l[1] = g[1];
+	ANDG c0 41;
+	SHFR 6 41;
+	CEQU 0 41 00 d4 00.. .... Fast select not requested;
+	CEQU 1 41 00 d4 01.. .... Fast select not requested; 
+	CEQU 2 41 00 d4 10.. .... Fast select requested with no restriction on response;
+	CEQU 3 41 00 d4 11.. .... Fast select requested with restriction on response;
+	l[1] = g[1];
+	ANDG 30 41;
+	SHFR 4 41;
+	CEQU 0 41 00 d4 ..00 .... ICRD status not selected;
+	CEQU 1 41 00 d4 ..01 .... ICRD prevention requested;
+	CEQU 2 41 00 d4 ..10 .... ICRD allowance requested;
+	CEQU 3 41 00 d4 ..11 .... Not allowed;
+	CBIT 3 1 00 d4 .... 1... Reserved;
+	CLSE 0 0 00 d4 .... 0... Reserved;
+	CBIT 2 1 00 d4 .... .1.. Reserved;
+	CLSE 0 0 00 d4 .... .0.. Reserved;
+	CBIT 1 1 00 d4 .... ..1. Reserved;
+	CLSE 0 0 00 d4 .... ..0. Reserved;
+	CBIT 0 1 00 d4 .... ...1 Reverse charging requested;
+	CLSE 0 0 00 d4 .... ...0 Reverse charging not requested;
+	LABL 0 0 00 c8;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc6;			// Facility - NUI Selection
+	DBYT 0 1 90 c2 Facility Param Len:;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Network User ID:;		//!@#!@# look this up in appendix VI
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x04;			// Facility - Charging Info: Requesting Service
+	BBYT 0 1 90 c2 Flags:;
+	LABL 0 0 00 d4 xxxx xxx. Reserved;
+	CBIT 0 1 00 d4 .... ...1 Charging information requested;
+	CLSE 0 0 00 d4 .... ...0 Charging information not requested;
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc5;			// Facility - Charging Info: Receiving Info: Monetary Unit
+	DBYT 0 1 90 c2 Facility Param Len:;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Charging:;
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc2;			// Facility - Charging Info: Receiving Info: Segment Count
+	DBYT 0 1 90 c2 Facility Param Len:;
+	l[1] = g[1];
+	l[1] /= 8;
+	DGLB 0 41 00 14 different tariff periods;
+	while (l[1] > 0)
+	{
+		HEX# 4 0 90 c2 # Segments to DTE:;
+		HEX# 4 0 90 c2 # Segments Received from DTE:;
+		l[1] -= 1;
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc1;			// Facility - Charging Info: Receiving Info: Call Duration
+	DBYT 0 1 90 c2 Facility Param Len:;
+	l[1] = g[1];
+	l[1] /= 4;
+	DGLB 0 41 00 14 different tariff periods;
+	while (l[1] > 0)
+	{
+		DBYT 0 0 90 c2 Num of Days:;
+		DBYT 0 0 90 c2 Num of Hours:;
+		DBYT 0 0 90 c2 Num of Mins:;
+		DBYT 0 0 90 c2 Num of Seconds:;
+		l[1] -= 1;
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x44;			// Facility - Basic ROA Selection
+	LABL 0 0 90 c2 Network ID Code:;
+	DBIT 4 1 00 00 ;
+	DBIT 4 2 00 00 -;
+	DBIT 4 2 00 00 -;
+	DBIT 4 2 00 00 -;
+	TRTS;
+	
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc4;			// Facility - Extended ROA Selection
+	DBYT 0 1 90 c2 Facility Param Len:;
+	l[1] = g[1];
+	l[1] /= 2;
+	DGLB 0 41 00 14 ROA transit networks;
+	while (l[1] > 0)
+	{
+		LABL 0 0 90 c2 Network ID Code:;
+		DBIT 4 1 00 00 ;
+		DBIT 4 2 00 00 -;
+		DBIT 4 2 00 00 -;
+		DBIT 4 2 00 00 -;
+		l[1] -=1
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xd1;			// Facility - Call Defletion Selection
+	DBYT 0 1 90 c2 Facility Param Len:;
+	DUMP 0 1 90 c2 Address:;		//si: yeah...i got lazy
+	TRTS;
+	
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0xc3;			// Facility - Call Redirection or Call Deflection Notification
+	DBYT 0 1 90 c2 Facility Param Len:;
+	DBYT 0 2 90 c2 Reason:;
+	CEQU 1 2 00 14 Originally called DTE busy;
+	CEQU 7 2 00 14 Call distribution within a hunt group;
+	CEQU 9 2 00 14 Originally called DTE out of order;
+	CEQU f 2 00 14 Systematic call redirection;
+	if (g[2] >= 128)
+	{
+		if (g[2] < 192)
+		{
+			LABL 0 0 0 14 Calling DTE originated;
+		}
+		if (g[2] >= 192)
+		{
+			LABL 0 0 0 14 Call deflection by the originally called DTE;
+		}
+	}
+	DBYT 0 3 90 c2 Num of Semi-Octets:;
+	l[1] = g[3];
+	MODG 2 41;
+	while (g[3] > 0)
+	{
+		DBIT 4 0 90 c2 Address:;
+	}
+	if (l[1] == 1)
+	{
+		DBIT 4 0 90 c2 Padding:;
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x08;			// Facility - Called Line Address Modified Notification
+	DBYT 0 1 90 c2 Called Line Addr:;
+	CEQU 1 1 00 14 Call redirection due to originally called DTE busy;
+	CEQU 7 1 00 14 Call distribution within a hunt group;
+	CEQU 9 1 00 14 Call redirection due to originally called DTE out of order;
+	CEQU f 1 00 14 Call redirection due to prior request from originally called DTE for systematic call redirection;
+	if (g[2] >= 128)
+	{
+		if (g[2] < 192)
+		{
+			LABL 0 0 0 14 Calling DTE originated;
+		}
+		if (g[2] >= 192)
+		{
+			LABL 0 0 0 14 Call deflection by the originally called DTE;
+		}
+	}
+	TRTS;
+
+void WAN_X25::LAPB::MOD_8::Pkt_Type::1::Facilities::0x49;			// Facility - Transit Delay Selection and Indication
+	DWRD 0 1 90 c2 Transit Delay:;
+	LABL 0 0 00 14 milliseconds;
+	TRTS;
+
+
+
+
+// -------------------------------------------------------
+//	X.25 Modulo 128
+// -------------------------------------------------------
+
+void WAN_X25E()
+{
+	LABL 0 0 0 b1 X.25 - Modulo 128\X25E:;
+	HBYT 0 1 90 c2 Address:\Addr:;
+	CEQU 1 1 00 14 DTE to DCE commands & DCE to DTE responses;
+	CEQU 3 1 00 14 DCE to DTE commands & DTE to DCE responses;
+	
+	GBIT 2 1;
+	BBYT 0 2 90 c7 Control Field:;								//si: set these back to 9  -----------------------------------------------
+	DECR 1;
+	CST# 0 1 00 14 WAN_X25E::Control_Field::Name;
+	TSB# 0 1 00 14 WAN_X25E::Control_Field::Func;
+	LABL 0 0 00 c8;
+	
+	WAN_X25E::LAPB::GFI;	
+	DBIT 4 1 90 c2 Logical Chan Group #:\LGN:;
+	LABL 0 0 00 24 .... xxxx;
+	DBYT 0 1 90 c2 Logical Chan #:\LCN:;
+	
+	//TST# 0 3 00 00 WAN_X25E::LAPB::Frame_Type::Func;
+
+	TRTS;
+}
+
+str# WAN_X25E::Control_Field::Name;
+	0 | Information Format;
+	2 | Supervisory Format;
+	3 | Unnumbered Format;
+
+str# WAN_X25E::Control_Field::Func;
+	0 | WAN_X25E::Control_Field::I_Format;
+	2 | WAN_X25E::Control_Field::S_Format;
+	3 | WAN_X25E::Control_Field::U_Format;
+
+void WAN_X25E::Control_Field::I_Format()
+{
+	DBIT 1 1 90 c2 Identifier:\;
+	LABL 0 0 00 24 0....... ........ I Format;
+	DBIT 7 1 90 c2 Send Seq Num:\S(S):;
+	LABL 0 0 00 24 .xxxxxxx ........ ;
+	DBIT 1 1 90 c2 Poll Bit:;
+	CEQU 1 1 00 24 ........ 1....... Set;
+	CLSE 0 0 00 24 ........ 0....... Not Set;
+	DBIT 7 1 90 c2 Receive Seq Num:\S(R):;
+	LABL 0 0 00 24 ........ .xxx xxxx;
+}
+
+void WAN_X25E::Control_Field::S_Format()
+{
+	DBIT 2 1 90 c2 Identifier:\;
+	DBIT 2 1 90 c2 Supervisory Function:;
+	BBIT 4 1 90 c2 Reserved:;
+	DBIT 1 1 90 c2 Poll/Final Bit:;
+	CEQU 1 1 00 24 ........ 01...... Poll;
+	CLSE 0 0 00 24 ........ 00...... Final;
+	DBIT 7 1 90 c2 Receive Seq Num:\S(R):;
+	LABL 0 0 00 24 ........ .xxx xxxx;
+}
+
+void WAN_X25E::Control_Field::U_Format()
+{
+	DBIT 2 1 90 c2 Identifier:\;
+	LABL 0 0 00 24 11.. ....;
+	DBIT 2 1 90 c2 Modifier Function:;
+	LABL 0 0 00 24 ..xx ....;
+	DBIT 1 1 90 c2 Poll/Final Bit:;
+	CEQU 1 1 00 24 .... 1... Poll;
+	CLSE 0 0 00 24 .... 0... Final;
+	DBIT 3 1 90 c2 Modifier Function:;
+	LABL 0 0 00 24 .... .xxx;
+}
+
+void WAN_X25E::LAPB::GFI()
+{
+	LABL 0 0 00 b7 General Format Identifier\GFI:;				//si: set these back to 9	-----------------------------------------------
+	DBIT 1 1 90 c2 Qualifier Bit:\Q:;
+	CEQU 1 1 00 24 1... ....  Set;
+	CLSE 0 0 00 24 0... ....  Not Set;
+	DBIT 1 1 90 c2 Delivery Confirm Bit:\D:;
+	CEQU 1 1 00 24 .1.. ....  Set;
+	CLSE 0 0 00 24 .0.. ....  Not Set;
+	DBIT 2 3 90 c2 Sequence Scheme:\SS:;						//si: save this
+	CEQU 1 3 00 24 ..01 ....;
+	CEQU 2 3 00 24 ..10 ....;
+	CST# 0 3 00 14 WAN_X25E::LAPB::Frame_Type::Name;
+	CLSE 0 0 00 14 Unknown Frame Type;
+	LABL 0 0 00 b8;
+	TRTS;
+}
+
+str# WAN_X25E::LAPB::Frame_Type::Name;
+	1 | Modulo 8;
+	2 | Modulo 128;
+
+str# WAN_X25E::LAPB::Frame_Type::Func;
+	1 | WAN_X25::LAPB::MOD_8;
+	2 | WAN_X25E::LAPB::MOD_128;
+
+void WAN_X25E::LAPB::MOD_128()
+{
+	LABL 0 0 0 b7 Packet Type\Pkt Type:;	
+	DBIT 7 1 90 c2 Pkt Rec Seq Num:;
+	DBIT 1 1 90 c2 Reserved:;
+	DBIT 7 1 90 c2 Pkt Send Seq Num:;
+	DBIT 1 1 90 c2 More Data:;
+	CEQU 1 1 00 14 pkt is part of a seq of pkts that should be treated as a logical whole;
+	LABL 0 0 0 b8;
+	GBYT 0 1;
+	if (g[1] == 0x45)
+	{
+		TNXT -IP;
+	}
+	// user data
+}
+
+
+// -------------------------------------------------------
+//	Q.921
+// -------------------------------------------------------
+
+void WAN_Q921()
+{
+	LABL 0 0 00 b1 Q.921;
+	GBYT 0 1;
+	BGLB 0 1 90 c7 Address (High):;
+	DBIT 6 1 90 c2 SAPI:;
+	CST# 0 1 00 14 WAN_Q921::SAPI::Name;
+	DBIT 1 1 90 c2 Command/Reponse:;
+	//CEQU 0 1 00 14 ;
+	//CEQU 1 1 00 14 ;
+	DBIT 1 1 90 c2 Extended Address:;
+	CEQU 0 1 00 14 Continue;
+	CEQU 1 1 00 14 End;
+	LABL 0 0 00 c8;
+	
+	GBYT 0 1;
+	BGLB 0 1 90 c7 Address (Low):;
+	DBIT 7 1 90 c2 TEI:;
+	if (g[1] <= 63)
+	{
+		LABL 0 0 0 14 Non automatic TEI assignment user equipment;
+	}
+	if (g[1] > 63)
+	{
+		if (g[1] <= 126)
+		{
+			LABL 0 0 0 14 Automatic TEI assignment user equipment;
+		}
+	}
+	CEQU 7f 1 0 14 Group TEI (broadcast data link connection);
+	DBIT 1 1 90 c2 Extended Address:;
+	CEQU 0 1 00 14 Continue;
+	CEQU 1 1 00 14 End;
+	LABL 0 0 00 c8;
+
+	WAN_Q921::Get_Frame_Type;			//si: the frame type will be in g[5]
+	
+	LABL 0 0 00 b7 Control Field;
+	TSB# 0 5 00 00 WAN_Q921::Control_Field::Func;
+	TLSE 0 0 00 00 WAN_Q921::Control_Field::Default_Format;
+	LABL 0 0 00 b8;
+	GBYT 0 1;
+	if (g[1] == 0x08)
+	{
+		TNXT -WAN_Q931;
+	}
+}
+
+str# WAN_Q921::SAPI::Name;
+	 0 | Call Control Procedure;
+	 1 | Reserved to packet mode communications using Q931 call control procedure;
+	16 | Packet communications conforming to X25 level 3 procedures;
+	63 | Layer 2 management procedures;
+
+void WAN_Q921::Get_Frame_Type;
+	DBIT 6 1 5 5;							//si: just go past this for now
+	DBIT 2 5 5 5;							//si: this is the frame format type
+	DECR 1;
+	TRTS;
+
+str# WAN_Q921::Control_Field::Func;
+	0 | WAN_Q921::Control_Field::I_Format;
+	1 | WAN_Q921::Control_Field::S_Format;
+	2 | WAN_Q921::Control_Field::I_Format;
+	3 | WAN_Q921::Control_Field::U_Format;
+
+void WAN_Q921::Control_Field::I_Format()
+{
+	DBIT 7 1 90 c2 Send Sequence Num:;
+	LABL 0 0 00 24 xxxx xxx.;
+	BBIT 1 1 90 c2 Format Type:;
+	LABL 0 0 00 24 .... ...0 Information Format;
+	DBIT 7 1 90 c2 Receive Sequence Num:;
+	LABL 0 0 00 24 xxxx xxx.;
+	DBIT 1 1 90 c2 Poll Bit:;
+	LABL 0 0 00 24 .... ...x;
+	TRTS;
+}
+
+void WAN_Q921::Control_Field::S_Format()
+{
+	BBIT 4 1 90 c2 Reserved:;
+	LABL 0 0 00 24 xxxx ....;
+	BBIT 2 1 90 c2 Supervisory Function:;
+	CEQU 0 1 00 24 .... 00.. Receive Ready;
+	CEQU 1 1 00 24 .... 01.. Receive Not Ready;
+	CEQU 2 1 00 24 .... 10.. Reject;
+	BBIT 2 1 90 c2 Format Type:;
+	LABL 0 0 00 24 .... ..01 Supervisory Format;
+	DBIT 7 1 90 c2 Receive Sequence Num:;
+	LABL 0 0 00 24 xxxx xxx.;
+	DBIT 1 1 90 c2 Poll/Final Bit:;
+	LABL 0 0 00 24 .... ...x;
+	TRTS;
+}
+
+void WAN_Q921::Control_Field::U_Format()
+{
+	BBIT 3 1 90 c2 Modifier Function:;
+	DBIT 1 1 90 c2 Poll/Final Bit:;
+	BBIT 2 1 90 c2 Modifier Function:;
+	BBIT 2 1 90 c2 Format Type:;
+	LABL 0 0 00 24 .... ..11 Unnumbered Format;
+	TRTS;
+}
+
+void WAN_Q921::Control_Field::Default_Format()
+{
+	DUMP 0 10 90 c2 Unknown:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void WAN_Q931()
+{
+	LABL 0 0 0 b1 Q.931;
+	HBYT 0 1 90 c2 Prtcl Discriminator:;
+	BBIT 4 1 90 c2 Reserved:;
+	DBIT 4 2 90 c2 Call Ref Value Len:;
+	DBIT 1 1 90 c2 Call Reference Flag:;
+	CEQU 0 1 0 14 Message is sent from the side that originates the Call Reference;
+	CEQU 1 1 0 14 Message is sent to the side that originates the Call Reference;
+	if (g[2] == 2)
+	{
+		DBIT f 1 90 c2 Call Reference Value:;
+	}
+	if (g[2] != 2)
+	{
+		DBIT 7 1 90 c2 Call Reference Value:;
+	}
+	GBIT 3 2;
+	BBIT 8 1 90 c2 Message Type:;
+	CST# 0 1 00 14 WAN_Q931::Message_Type::Name;
+	CLSE 0 0 00 14 Unknown Message Type;
+
+	TNXT -WAN_Q931::IE::Main;						//si: time to do the IE's
+}
+
+str# WAN_Q931::Message_Type::Name;
+	//Call establishment messages 
+	0x01 | ALERTING;
+	0x02 | CALL PROCEEDING;
+	0x07 | CONNECT;
+	0x0F | CONNECT ACKNOWLEDGE;
+	0x03 | PROGRESS;
+	0x05 | SETUP;
+	0x0B | SETUP ACKNOWLEDGE; 
+	//Call information phase messages 
+	0x24 | HOLD;
+	0x28 | HOLD ACKNOWLEDGE;
+	0x30 | HOLD REJECT;
+	0x26 | RESUME;
+	0x2E | RESUME ACKNOWLEDGE;
+	0x22 | RESUME REJECT;
+	0x31 | RETRIEVE;
+	0x33 | RETRIEVE ACKNOWLEDGE;
+	0x37 | RETRIEVE REJECT;
+	0x25 | SUSPEND;
+	0x2D | SUSPEND ACKNOWLEDGE;
+	0x21 | SUSPEND REJECT;
+	0x20 | USER INFORMATION;
+	//Call clearing messages 
+	0x45 | DISCONNECT;
+	0x4D | RELEASE;
+	0x5A | RELEASE COMPLETE;
+	0x46 | RESTART;
+	0x4E | RESTART ACKNOWLEDGE;
+	//Miscellaneous messages 
+	0x79 | CONGESTION CONTROL;
+	0x62 | FACILITY;
+	0x7B | INFORMATION;
+	0x6E | NOTIFY;
+	0x64 | REGISTER;
+	0x60 | SEGMENT;
+	0x7D | STATUS;
+	0x75 | STATUS ENQUIRY;
+
+void WAN_Q931::IE::Main()
+{
+	g[1] = pb[0];
+	CST# 0 1 0 b7 WAN_Q931::IE::Types::Name;
+	CLSE 0 0 0 b7 Unknown IE;
+	TSB# 0 1 0 00 WAN_Q931::IE::Types::Func;
+	TLSE 0 0 0 00 WAN_Q931::IE::Default;
+	LABL 0 0 0 b8;
+	if (g[16] > 0)
+	{
+		TNXT -WAN_Q931::IE::Main;
+	}
+}
+
+str# WAN_Q931::IE::Types::Name;
+	0x04 | Bearer Capability;
+	0x18 | Channel Identification;
+	0x6c | Calling Party Number;
+	0x70 | Called Party Number;
+	0xa1 | Sending Complete;
+		
+str# WAN_Q931::IE::Types::Func;
+	0x04 | WAN_Q931::IE::04;
+	0x18 | WAN_Q931::IE::18;
+	0x6c | WAN_Q931::IE::6c;
+	0x70 | WAN_Q931::IE::70;
+	0xa1 | WAN_Q931::IE::a1;
+
+void WAN_Q931::IE::Default()
+{
+	DUMP 0 10 90 c2 IE Info:;
+	LABL 0 0 00 b8;
+}
+
+void WAN_Q931::IE::04()
+{
+	HBYT 0 1 90 c2 IE Type:;
+	LABL 0 0 00 14 Bearer Capability;
+	DBYT 0 2 90 c2 Length:;
+	BBIT 1 1 90 c2 Reserved:;
+	LABL 0 0 00 14 x... ....;
+	BBIT 2 1 90 c2 Coding Standard:;
+	CEQU 0 1 00 14 .00. .... CCITT Standardized Coding;
+	CEQU 1 1 00 14 .01. .... Reserved;
+	CEQU 2 1 00 14 .10. .... National Standard;
+	CEQU 3 1 00 14 .11. .... Standard Defined for the Network;
+	BBIT 5 1 90 c2 Info Transfer Cap;
+	CST# 0 1 00 14 WAN_Q931::IE::04::Info_Transfer_Capability;
+	BBIT 1 1 90 c2 Reserved:;
+	LABL 0 0 00 14 x... ....;
+	BBIT 2 1 90 c2 Transfer Mode:;
+	CEQU 0 1 00 14 .00. .... Circuit Mode;
+	CEQU 2 1 00 14 .10. .... Packet Mode;
+	BBIT 5 1 90 c2 Info Transfer Rate:;
+	CST# 0 1 00 14 WAN_Q931::IE::04::Info_Transfer_Rate;
+	//si: WTF!?
+}
+
+str# WAN_Q931::IE::04::Info_Transfer_Capability;
+	0x00 | ...0 0000 Speech;
+	0x08 | ...0 1000 Unrestricted Digital Information;
+	0x09 | ...0 1001 Restricted Digital Information;
+	0x10 | ...1 0000 3,1 kHz Audio;
+	0x11 | ...1 0001 7 kHz Audio;
+	0x18 | ...1 1000 Video;
+
+str# WAN_Q931::IE::04::Info_Transfer_Rate;
+	0x00 | ...0 0000 Packet mode;
+	0x10 | ...1 0000 64 kbit/s Circuit mode;
+	0x11 | ...1 0001 2 x 64 kbit/s Circuit mode;
+	0x13 | ...1 0011 384 kbit/s Circuit mode;
+	0x15 | ...1 0101 1536 kbit/s Circuit mode;
+	0x17 | ...1 0111 1920 kbit/s Circuit mode;
+
+void WAN_Q931::IE::18()
+{
+	HBYT 0 1 90 c2 IE Type:;
+	LABL 0 0 00 14 Channel Identification;
+	DBYT 0 2 90 c2 Length:;
+	DBIT 1 1 90 c2 Reserved:;
+	LABL 0 0 00 14 x... ....;
+	DBIT 1 1 90 c2 Interface ID Present:;
+	CEQU 0 1 00 14 .0.. .... Interface Implicitly Identified;
+	CEQU 1 1 00 14 .1.. .... Interface Explicitly Identified;
+	DBIT 1 2 90 c2 Interface Type:;
+	CEQU 0 2 00 14 ..0. .... Basic rate ;
+	CEQU 1 2 00 14 ..1. .... Other interfaces (Primary rate);
+	DBIT 1 1 90 c2 Reserved:;
+	CEQU 0 1 00 14 ...0 .... Reserved;
+	CEQU 1 1 00 14 ...1 .... Reserved;
+	DBIT 1 1 90 c2 Preferred/Exclusive:;
+	CEQU 0 1 00 14 .... 0... Preferred;
+	CEQU 1 1 00 14 .... 1... Exclusive;
+	DBIT 1 1 90 c2 D-Channel Indicator:;
+	CEQU 0 1 00 14 .... .0.. Channel is not the D-channel;
+	CEQU 1 1 00 14 .... .1.. Channel is the D-channel ;
+	DBIT 2 1 90 c2 Info Channel Select:;
+	if (g[2] == 0)
+	{
+		CEQU 0 1 00 14 .... ..00 No Channel;
+		CEQU 1 1 00 14 .... ..01 B1 Channel;
+		CEQU 2 1 00 14 .... ..10 B2 Channel;
+		CEQU 3 1 00 14 .... ..11 Any Channel;
+	}
+	if (g[2] == 1)
+	{
+		CEQU 0 1 00 14 .... ..00 No Channel;
+		CEQU 1 1 00 14 .... ..01 In Following Octets;
+		CEQU 2 1 00 14 .... ..10 Reserved;
+		CEQU 3 1 00 14 .... ..11 Any Channel;
+	}
+}
+
+void WAN_Q931::IE::6c()
+{
+	HBYT 0 1 90 c2 IE Type:;
+	LABL 0 0 00 14 Calling Party Number;
+	DBYT 0 2 90 c2 Length:;
+	DBIT 1 3 90 c2 Ext Indicator:;
+	CEQU 1 3 00 14 1... .... Last Octect;
+	CLSE 0 0 00 14 0... .... More Octects;
+	DBIT 3 1 90 c2 Type of Number:;
+	CST# 0 1 00 14 WAN_Q931::IE::6c::Number_Type;
+	DBIT 4 1 90 c2 Numbering Plan:;
+	CST# 0 1 00 14 WAN_Q931::IE::6c::Numbering_Plan;
+	g[2] -= 1;
+	if (g[3] == 0)
+	{
+		HBYT 0 1 90 c2 Extension Byte:;
+		g[2] -= 1;
+	}
+	CHR# 0 2 90 c2 Calling Party Num:;
+	TRTS;
+}
+
+str# WAN_Q931::IE::6c::Number_Type;
+	0x00 | .000 .... Unknown;
+	0x01 | .001 .... International number;
+	0x02 | .010 .... National number;
+	0x03 | .011 .... Network specific number;
+	0x04 | .100 .... Subscriber number;
+	0x06 | .110 .... Abbreviated number;
+	0x07 | .111 .... Reserved; 
+
+str# WAN_Q931::IE::6c::Numbering_Plan;
+	0x00 | .... 0000 Unknown;
+	0x01 | .... 0001 ISDN/Telephony;
+	0x03 | .... 0011 Data;
+	0x04 | .... 0100 Telex;
+	0x08 | .... 1000 National Standard;
+	0x09 | .... 1001 Private;
+	0x0f | .... 1111 Reserved;
+
+void WAN_Q931::IE::70()
+{
+	HBYT 0 1 90 c2 IE Type:;
+	LABL 0 0 00 14 Called Party Number;
+	DBYT 0 2 90 c2 Length:;
+	DBIT 1 3 90 c2 Ext Indicator:;
+	CEQU 1 3 00 14 1... .... Last Octect;
+	CLSE 0 0 00 14 0... .... More Octects;
+	DBIT 3 1 90 c2 Type of Number:;
+	CST# 0 1 00 14 WAN_Q931::IE::6c::Number_Type;
+	DBIT 4 1 90 c2 Numbering Plan:;
+	CST# 0 1 00 14 WAN_Q931::IE::6c::Numbering_Plan;
+	g[2] -= 1;
+	if (g[3] == 0)
+	{
+		HBYT 0 1 90 c2 Extension Byte:;
+		g[2] -= 1;
+	}
+	CHR# 0 2 90 c2 Calling Party Num:;
+	TRTS;
+}
+
+void WAN_Q931::IE::a1()
+{
+	HBYT 0 1 90 c2 IE Type:;
+	LABL 0 0 00 14 Sending Complete; 
+}

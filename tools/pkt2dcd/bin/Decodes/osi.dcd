@@ -1,0 +1,2150 @@
+* Decoder version: 6.0.1.0
+
+
+void ISO TP Svcs;
+	LABL 0 0 0 b1 TPDU - Transport Protocol Data Units\TPDU:;
+	DBYT 0 1 90 c2 Length Indicator:;
+	GBIT 4 2;
+	HBYT 0 3 90 c2 TPDU Code:;
+	ANDG f 3 80;
+	SUBG 1 1;
+	CST# ffffffff 2 0 14 TP Service Types;
+	CLSE 0 0 0 14 Unknown Service;
+	TST# ffffffff 2 0 14 TP Svc Type Jumps;
+	TLSE -Unknown TPDU Service;
+
+void TP Expedited Data Jmp;
+	LABL 0 0 0 b1 Expedited Data TPDU\Expedited Data:;
+	WHOA 0 b 0 2 TP ED Opt;
+	MARK 1 a 0 0 TP ED Opt;
+	WHOA 0 b 0 2 TP ED Opt;
+	TNXT -ED Class 1,2,3,4 - Normal;
+
+void ED Class 1,2,3,4 - Normal;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	GBYT 0 3;
+	DIVG 80 3;
+	GBYT 0 4;
+	ANDG 7f 4;
+	INCR 1;
+	DGLB 0 3 90 c2 End of TPDU:;
+	DGLB 0 4 90 c2 Identification No.:;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void ED Class 2,3,4 - Extended;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	GBYT 0 3;
+	DIVG 80 3;
+	GLNG 0 4;
+	ANDG 7fffffff 4;
+	INCR 4;
+	DGLB 0 3 90 c2 End of TPDU:;
+	DGLB 0 4 90 c2 Identification No.:;
+	SUBG 6 1;
+	TNXT -TP Param Codes;
+void TP Expedited Data Acknowledge Jmp;
+	LABL 0 0 0 b1 Expedited Data Acknowledge TPDU\Data ACk:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	WHOA 0 b 0 2 TP EA Opt;
+	MARK 1 b 0 0 TP EA Opt;
+	WHOA 0 b 0 2 TP EA Opt;
+	TNXT -EA Class 1,2,3,4 - Normal;
+
+void EA Class 1,2,3,4 - Normal;
+	DBYT 0 0 90 c2 Next Sequence No.:;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+
+void EA Class 2,3,4 - Extended;
+	DLNG 0 4 90 c2 Next Sequence No.:;
+	SUBG 6 1;
+	TNXT -TP Param Codes;
+
+void TP Reject Jmp;
+	WHOA 0 b 0 2 TP RJ Opt;
+	MARK 1 a 0 0 TP RJ Opt;
+	WHOA 0 b 0 2 TP RJ Opt;
+	TNXT -RJ Class 1,3 - Normal;
+void RJ Class 1,3 - Normal;
+	DGLB 0 3 4 f4 "(Credit Value is ";
+	LABL 0 0 4 4 ")";
+	LABL 0 0 0 b1 Reject TPDU\Reject:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	DBYT 0 0 90 c2 Next Sequence No.:;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void RJ Class 3 - Extended;
+	LABL 0 0 0 b1 Reject TPDU\Reject:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	DLNG 0 4 90 c2 Next Sequence No.:;
+	DWRD 0 0 90 c2 Credit Value:;
+	SUBG 8 1;
+	TNXT -TP Param Codes;
+void TP Data Acknowledge Jmp;
+	WHOA 2 b 0 2 TP AK Opt;
+	MARK 2 b 0 0 TP AK Opt;
+	WHOA 0 b 0 2 TP AK Opt;
+	TNXT -AK Class 1,2,3,4 - Normal;
+void AK Class 1,2,3,4 - Normal;
+	DGLB 0 3 4 f4 "(Credit Value is ";
+	LABL 0 0 4 4 ")";
+	LABL 0 0 0 b1 Data Acknowledge TPDU\Ack:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	DBYT 0 0 90 c2 Next Sequence No.:;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void AK Class 2,3,4 - Extended;
+	LABL 0 0 0 b1 Data Acknowledge TPDU\Ack:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	DLNG 0 4 90 c2 Next Sequence No.:;
+	DWRD 0 0 90 c2 Credit Value:;
+	SUBG 8 1;
+	TNXT -TP Param Codes;
+void TP TPDU Error Jmp;
+	LABL 0 0 0 b1 TPDU Error;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	DBYT 0 3 90 c2 Reject Cause:;
+	CST# ffffffff 3 0 14 TP Error Causes;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void TP Disconnect Request Jmp;
+	LABL 0 0 0 b1 Disconnect Request TPDU\Disconnect:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	HWRD 0 0 90 c2 Src. Reference:;
+	DBYT 0 3 90 c2 Reason:;
+	SLTE 80 3;
+	SKIP 3;
+	CST# ffffffff 3 0 14 Disc Reasons LT 128;
+	SGTE 7f 3;
+	SKIP 1;
+	CST# 7f 3 0 14 Disc Reasons GE 128;
+	SUBG 5 1;
+	TNXT -TP Param Codes;
+void TP Disconnect Confirm Jmp;
+	LABL 0 0 0 b1 Disconnect Confirm TPDU\Disconnect:;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	HWRD 0 0 90 c2 Src. Reference:;
+	SUBG 4 1;
+	TNXT -TP Param Codes;
+void TP Connection Confirm Jmp;
+	DGLB 0 3 4 f4 "(Initial Credit Allocation is ";
+	LABL 0 0 4 4 ")";
+	LABL 0 0 0 b1 Connection Confirm TPDU\Connect:;
+	TNXT -TPDU Class Sub;
+void TP Connection Request Jmp;
+	DGLB 0 3 4 f4 "(Initial Credit Allocation is ";
+	LABL 0 0 4 4 ")";
+	LABL 0 0 0 b1 Connection Request TPDU\Request:;
+	TNXT -TPDU Class Sub;
+void TP Data Jmp;
+	CBIT 0 3 0 14 (Request Of Acknowledge Set);
+	CLSE 0 0 0 14 (No Request Of Acknowledge);
+	LABL 0 0 0 b1 Data TPDU\Data TPDU:;
+	WHOA 0 b 0 2 TP DT Opt;
+	MARK 1 a 0 0 TP DT Opt;
+	WHOA 0 b 0 2 TP DT Opt;
+	TNXT -DT Class 0,1 - Normal;
+void DT Class 0,1 - Normal;
+	TPDU-NR-EOT;
+	SUBG 1 1;
+	TNXT -TPDU Data;
+void DT Class 2,3,4 - Normal;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	TPDU-NR-EOT;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void DT Class 2,3,4 - Extended;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	GBYT 0 3;
+	DIVG 80 3;
+	GLNG 0 4;
+	ANDG 7fffffff 4;
+	INCR 4;
+	DGLB 0 3 90 c2 End of TPDU:;
+	DGLB 0 4 90 c2 Send Sequence No.:;
+	SUBG 6 1;
+	TNXT -TP Param Codes;
+void TPDU-NR-EOT;
+	GBYT 0 3;
+	DIVG 80 3;
+	GBYT 0 4;
+	ANDG 7f 4;
+	INCR 1;
+	DGLB 0 3 90 c2 End of TPDU:;
+	DGLB 0 4 90 c2 Send Sequence No.:;
+	TRTS;
+void Unknown TPDU Service;
+
+void TP Param Codes;
+	BREM 0 5;
+	TGTE 4 5 0 0 RETURN;
+	TEQU 0 1 0 0 TPDU Data;
+	SGTE 5dc 1;
+	SKIP 1;
+	TNXT -TPDU Data;
+	HBYT 0 4 90 c2 Parameter Code:;
+	BREM 0 5;
+	TGTE 4 5 0 0 RETURN;
+	TEQU 85 4 0 0 TPDU Ack Time;
+	TEQU 86 4 0 0 TPDU Resid Err;
+	TEQU 87 4 0 0 TPDU Priority;
+	TEQU 88 4 0 0 TPDU Transit Delay;
+	TEQU 89 4 0 0 TPDU Throughput;
+	TEQU 8a 4 0 0 TPDU Subsequence;
+	TEQU 8b 4 0 0 TPDU Reass Time;
+	TEQU 8c 4 0 0 TPDU Flow Ctl Confirm;
+	TEQU 8f 4 0 0 TPDU Selective Ack Params;
+	TEQU c0 4 0 0 TPDU Size;
+	TEQU c1 4 0 0 TSAP-ID Calling;
+	TEQU c2 4 0 0 TSAP-ID Called;
+	TEQU c3 4 0 0 TPDU Checksum;
+	TEQU c4 4 0 0 TPDU Version;
+	TEQU c5 4 0 0 TPDU Protection;
+	TEQU c6 4 0 0 TPDU Add Options;
+	TEQU c7 4 0 0 TPDU Alt Proto;
+	TEQU e0 4 0 0 TPDU User Defined;
+	TEQU f0 4 0 0 Max TPDU Size;
+	TEQU f2 4 0 0 TPDU Inactivity;
+	TNXT -TPDU Unknown;
+
+void TPDU Ack Time;
+	LABL 0 0 0 14 Acknowledge Time;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DWRD 0 0 a0 92 Max. Acknowledge Time:;
+	LABL - " milliseconds";
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Resid Err;
+	LABL 0 0 0 14 Residual Error Rate;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DBYT 0 3 a0 92 Target Value:;
+	LABL 0 0 0 4  (power of 10);
+	DBYT 0 3 a0 92 Minimum Acceptable:;
+	LABL 0 0 0 4  (power of 10);
+	DBYT 0 3 a0 92 TSDU Size:;
+	LABL 0 0 0 4  (power of 2);
+	SUBG 5 1;
+	TNXT -TP Param Codes;
+void TPDU Priority;
+	LABL 0 0 0 14 Priority;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DWRD 0 3 a0 92 Priority:;
+	LABL 0 0 0 4  (0 is the highest priority);
+	SUBG 4 1;
+	TNXT -TP Param Codes;
+void TPDU Transit Delay;
+	LABL 0 0 0 14 Transit Delay;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DWRD 0 3 a0 92 Calling-Called Target:;
+	LABL - " milliseconds";
+	DWRD 0 3 a0 92 Calling-Called Maximum:;
+	LABL - " milliseconds";
+	DWRD 0 3 a0 92 Called-Calling Target:;
+	LABL - " milliseconds";
+	DWRD 0 3 a0 92 Called-Calling Maximum:;
+	LABL - " milliseconds";
+	SUBG a 1;
+	TNXT -TP Param Codes;
+void TPDU Throughput;
+	LABL 0 0 0 14 Throughput;
+	DBYT 0 4 a0 92 Parameter Length:;
+	LABL 0 0 0 d4 Maximum Throughput Values;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Calling-Called Target:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Calling-Called Minimum:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Called-Calling Target:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Called-Calling Minimum:;
+	SEQU c 4;
+	SKIP 11;
+	LABL 0 0 0 d4 Average Throughput Values;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Calling-Called Target:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Calling-Called Minimum:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Called-Calling Target:;
+	GLNG 0 3;
+	DIVG 100 3;
+	INCR 3;
+	DGLB 0 3 a0 92 Called-Calling Minimum:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Subsequence;
+	LABL 0 0 0 14 Subsequence Number;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DWRD 0 3 a0 92 Subsequence Number:;
+	SUBG 4 1;
+	TNXT -TP Param Codes;
+void TPDU Reass Time;
+	LABL 0 0 0 14 Reassignment Time;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DWRD 0 3 a0 92 Time To Try Reass.:;
+	LABL - " seconds";
+	SUBG 4 1;
+	TNXT -TP Param Codes;
+void TPDU Flow Ctl Confirm;
+	LABL 0 0 0 14 Flow Control Confirmation;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DLNG 0 0 a0 92 Lower Window Edge:;
+	DWRD 0 0 a0 92 Subsequence Number:;
+	DWRD 0 0 a0 92 Credit Value:;
+	SUBG a 1;
+	TNXT -TP Param Codes;
+void TPDU Selective Ack Params;
+	LABL 0 0 0 14 Selective Acknowledgement;
+	DBYT 0 4 a0 92 Parameter Length:;
+	SUBG 2 1;
+	SUBG 4 81;
+	WHOA 0 b 0 2 TP Select Ack Opt;
+	MARK 1 b 0 0 TP Select Ack Opt;
+	WHOA 0 b 0 2 TP Select Ack Opt;
+	TNXT -Select Ack - Normal;
+void Select Ack - Normal;
+	TEQU 0 4 0 0 TP Param Codes;
+	SGTE 5dc 4;
+	SKIP 1;
+	TNXT -TP Param Codes;
+	GBYT 0 3;
+	ANDG 7f 3;
+	INCR 1;
+	DGLB 0 3 90 c2 Lower Edge:;
+	GBYT 0 3;
+	ANDG 7f 3;
+	INCR 1;
+	DGLB 0 3 90 c2 Upper Edge:;
+	TNXT -Select Ack - Normal;
+void Select Ack - Extended;
+	TEQU 0 4 0 0 TP Param Codes;
+	SGTE 5dc 4;
+	SKIP 1;
+	TNXT -TP Param Codes;
+	GLNG 0 3;
+	ANDG 7fffffff 3;
+	INCR 4;
+	DGLB 0 3 90 c2 Lower Edge:;
+	GLNG 0 3;
+	ANDG 7fffffff 3;
+	INCR 4;
+	DGLB 0 3 90 c2 Upper Edge:;
+	SUBG 8 4;
+	TNXT -Select Ack - Extended;
+void TPDU Size;
+	LABL 0 0 0 14 TPDU Size;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DBYT 0 3 a0 92 TPDU Size:;
+	CST# fffffffa 3 0 14 TPDU Sizes;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void TSAP-ID Calling;
+	LABL 0 0 0 14 Calling TSAP-ID;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Calling TSAP-ID:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TSAP-ID Called;
+	LABL 0 0 0 14 Called TSAP-ID;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Called TSAP-ID:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Checksum;
+	LABL 0 0 0 14 Checksum;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Checksum:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Version;
+	LABL 0 0 0 14 Version Number;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Version Number:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Protection;
+	LABL 0 0 0 14 Protection;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Protection Params:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Add Options;
+	LABL 0 0 0 14 Additional Option Selection;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HBYT 0 4 a0 92 Options:;
+	CBIT 5 4 0 f4 Use of Request Acknowledgement in Classes 1, 3, 4;
+	CLSE 0 0 0 f4 Non-use of Request Acknowledgement in Classes 1, 3, 4;
+	CBIT 4 4 0 f4 Use of Selective Acknowledgement in Class 4;
+	CLSE 0 0 0 f4 Non-use of Selective Acknowledgement in Class 4;
+	CBIT 3 4 0 f4 Use of Network Expedited in Class 1;
+	CLSE 0 0 0 f4 Non-use of Network Expedited in Class 1;
+	CBIT 2 4 0 f4 Use of Receipt Confirmation in Class 1;
+	CLSE 0 0 0 f4 Use of Explicit AK Variant in Class 1;
+	CBIT 1 4 0 f4 16-bit Checksum Shall Be Used in Class 4;
+	CLSE 0 0 0 f4 16-bit Checksum Shall Not Be Used in Class 4;
+	CBIT 0 4 0 f4 Use of Transport Expedited Data Transfer Service;
+	CLSE 0 0 0 f4 Non-use of Transport Expedited Data Transfer Service;
+	SUBG 3 1;
+	TNXT -TP Param Codes;
+void TPDU Alt Proto;
+	LABL 0 0 0 14 Alternate Protocol Classes;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Protocol Params:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU User Defined;
+	LABL 0 0 0 14 User Defined Additional Information;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DUMP 0 4 a0 92 User Defined Info:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void Max TPDU Size;
+	LABL 0 0 0 14 Preferred Maximum TPDU Size;
+	DBYT 0 4 a0 92 Parameter Length:;
+	HEX# 0 4 a0 92 Preferred Max Size:;
+	CST# 6 4 0 14 TPDU Size Encodings;
+	LABL - " times 128 octets";
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Inactivity;
+	LABL 0 0 0 14 Inactivity Timer;
+	DBYT 0 4 a0 92 Parameter Length:;
+	DLNG 0 3 a0 92 Inactivity Time:;
+	LABL - " milliseconds";
+	SUBG 6 1;
+	TNXT -TP Param Codes;
+void TPDU Unknown;
+	LABL 0 0 0 14 Unknown;
+	DBYT 0 4 90 c2 Parameter Length:;
+	DUMP 0 4 90 c2 Unknown Parameter Data:;
+	SUBG 2 1;
+	SUBG 4 81;
+	TNXT -TP Param Codes;
+void TPDU Data;
+	TEQU 0 10 0 0 AFP The End;
+	SGTE 5dc 10;
+	SKIP 1;
+	TNXT -AFP The End;
+	DUMP 0 10 90 c2 TPDU User Data:;
+void TPDU Class Sub;
+	HWRD 0 0 90 c2 Dst. Reference:;
+	HWRD 0 0 90 c2 Src. Reference:;
+	BBIT 4 9 90 c2 Class:;
+	DGLB 0 9 4 14 "(Class ";
+	LABL 0 0 4 4 ")";
+	BBIT 4 4 90 c2 Class Options:;
+	CBIT 1 4 0 14 Extended Formats;
+	CLSE 0 0 0 14 Normal Formats;
+	CBIT 0 4 0 14 No Explicit Flow Control;
+	CLSE 0 0 0 14 Explicit Flow Control;
+	SUBG 5 1;
+	TNEQ d 2 0 0 TP Param Codes;
+	SBIT 1 4 0 14;
+	SKIP b;
+	SGTE 1 9 0 14;
+	SKIP 2;
+	MARK 2 a 0 0 TP DT Opt;
+	SKIP 80000001;
+	MARK 1 a 0 0 TP DT Opt;
+	MARK 1 a 0 0 TP ED Opt;
+	MARK 1 a 0 0 TP EA Opt;
+	MARK 1 a 0 0 TP RJ Opt;
+	MARK 1 a 0 0 TP AK Opt;
+	MARK 1 a 0 0 TP Select Ack Opt;
+	TNXT -TP Param Codes;
+	MARK 3 a 0 0 TP DT Opt;
+	MARK 2 a 0 0 TP ED Opt;
+	MARK 2 a 0 0 TP EA Opt;
+	MARK 2 a 0 0 TP RJ Opt;
+	MARK 2 a 0 0 TP AK Opt;
+	MARK 2 a 0 0 TP Select Ack Opt;
+	TNXT -TP Param Codes;
+void ISO ES-IS;
+	LABL 0 0 0 b1 ES-IS - End System To Intermediate System\ES-IS:;
+	DBYT 0 1 90 c2 Header Length:;
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 0 90 c2 Reserved:;
+	DBYT 0 2 90 c2 Packet Type:\Type:;
+	CEQU 2 2 0 14 End System Hello;
+	CEQU 4 2 0 14 Intermediate System Hello;
+	CEQU 6 2 0 14 Redirect Message;
+	DWRD 0 0 90 c2 Holding Time:;
+	LABL - " micro-fortnights";
+	HWRD 0 0 90 c2 Checksum:;
+	SUBG 9 1;
+	TEQU 2 2 0 0 OSI ES-IS ES Hello;
+	TEQU 4 2 0 0 OSI ES-IS IS Hello;
+	TEQU 6 2 0 0 ISO ES-IS Redirect;
+	DUMP 0 10 90 c2 Packet Data:;
+void OSI ES-IS ES Hello;
+	DBYT 0 2 90 c2 Src Address Count:;
+	SUBG 1 1;
+	ESH Address Loop;
+	PDU Options Loop;
+void ESH Address Loop;
+	SNEQ 0 2;
+	SKIP 1;
+	TRTS;
+	DBYT 0 3 90 c2 Src. Addr. Len.:;
+	SNEQ 6 3;
+	SKIP 2;
+	ETHR 0 0 90 c2 Src. Address:;
+	SKIP 80000001;
+	HEX# 0 3 90 c2 Src. Address:;
+	SUBG 3 81;
+	SUBG 1 1;
+	SUBG 1 2;
+	TNXT -ESH Address Loop;
+void OSI ES-IS IS Hello;
+	DBYT 0 3 90 c2 Net Entity Length:;
+	HEX# 80000000 3 90 c2 Network Entity Title:;
+	SUBG 3 81;
+	SUBG 1 1;
+	PDU Options Loop;
+void ISO ES-IS Redirect;
+	DBYT 0 3 90 c2 Dst. Addr. Len.:;
+	SNEQ 6 3;
+	SKIP 2;
+	ETHR 0 0 90 c2 Dst. Address:;
+	SKIP 80000001;
+	HEX# 0 3 90 c2 Dst. Address:;
+	SUBG 3 81;
+	DBYT 0 3 90 c2 Subnet Addr. Length:;
+	HEX# 0 3 90 c2 Subnetwork Address:;
+	SUBG 3 81;
+	DBYT 0 3 90 c2 Net Entity Length:;
+	SEQU 0 3;
+	SKIP 3;
+	HEX# 80000000 3 90 c2 Network Entity Title:;
+	SUBG 3 81;
+	SUBG 3 1;
+	PDU Options Loop;
+void ISO IS-IS;
+	LABL 0 0 0 b1 IS-IS - Intermediate System To Intermediate System\IS-IS:;
+	DBYT 0 1 90 c2 Header Length:;
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 c 90 c2 ID Length:;
+	SNEQ 0 c;
+	SKIP 1;
+	MOVE 6 c;
+	DBYT 0 2 90 c2 Packet Type:\Type:;
+	ANDG 1f 2;
+	CST# ffffffff 2 0 14 IS-IS Packet Types;
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 0 90 c2 Reserved:;
+	DBYT 0 d 90 c2 Max Area Address:;
+	TST# ffffffff 2 0 0 IS-IS Packet Types;
+	DUMP 0 10 90 c2 IS-IS Packet Data:;
+void L1 Router Hello;
+	LABL 0 0 0 b1 Level 1 Router Hello;
+	TNXT -IS-IS Router Hello;
+void L2 Router Hello;
+	LABL 0 0 0 b1 Level 2 Router Hello;
+	TNXT -IS-IS Router Hello;
+void IS-IS Router Hello;
+	IS-IS Hello Start;
+	GBYT 0 3;
+	ANDG 7f 3;
+	INCR 1;
+	DGLB 0 3 90 c2 Priority:;
+	ADDG 1 c;
+	SNEQ 7 c;
+	SKIP 3;
+	ETHR 0 0 90 c2 LAN ID:;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 LAN ID:;
+	SUBG 1 c;
+	TNXT -IS-IS Var Hdr Start;
+void IS-IS Hello Start;
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 2 3 90 c2 Circuit Type:;
+	CEQU 1 3 0 14 Level 1 Only;
+	CEQU 2 3 0 14 Level 2 Only;
+	CEQU 3 3 0 14 Level 1 And Level 2;
+	SNEQ 6 c;
+	SKIP 2;
+	ETHR 0 0 90 c2 Source ID:;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 Source ID:;
+	DWRD 0 0 90 c2 Holding Time:;
+	DWRD 0 b 90 c2 Packet Length:;
+	TRTS;
+
+void Point-To-Point Hello;
+	LABL 0 0 0 b1 IS-To-IS Hello;
+	IS-IS Hello Start;
+	DBYT 0 0 90 c2 Local Circuit ID:;
+	TNXT -IS-IS Var Hdr Start;
+
+void L1 LSP - Link State Packet;
+	LABL 0 0 0 b1 LSP - Level 1 Link State Packet;
+	TNXT -OSI IS-IS LSP;
+
+void L2 LSP - Link State Packet;
+	LABL 0 0 0 b1 LSP - Level 2 Link State Packet;
+	TNXT -OSI IS-IS LSP;
+
+void OSI IS-IS LSP;
+	DWRD 0 b 90 c2 Packet Length:;
+	DWRD 0 0 90 c2 Remaining Life:;
+	ADDG 2 c;
+	SNEQ 8 c;
+	SKIP 4;
+	ETHR 0 0 90 c2 LSP ID:;
+	HBYT 80000000 0 0 0 :;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 LSP ID:;
+	SUBG 2 c;
+	DLNG 0 3 90 c2 Sequence Number:;
+	HGLB 0 3 84 14 "(";
+	LABL 0 0 80 4 ")";
+	HWRD 0 0 90 c2 Checksum:;
+	BBIT 1 3 90 c2 Partition Repair:;
+	CEQU 1 3 0 14 Supported;
+	CLSE 0 0 0 14 Not Supported;
+	BBIT 4 3 90 c2 ATT Metrics:;
+	CBIT 0 3 0 14 Default;
+	CBIT 1 3 0 14 Delay;
+	CBIT 2 3 0 14 Expense;
+	CBIT 3 3 0 14 Error;
+	BBIT 1 3 90 c2 LSP Database:;
+	CEQU 1 3 0 14 Out Of Room;
+	CLSE 0 0 0 14 Not Out Of Room;
+	BBIT 2 3 90 c2 IS Type:;
+	CEQU 1 3 0 14 Level 1 Router;
+	CEQU 3 3 0 14 Level 2 Router;
+	TNXT -IS-IS Var Hdr Start;
+
+
+void IS-IS Exchange ID;
+	LABL 0 0 0 b1 IS-To-IS Exchange Identification\IS-To-IS:;
+	DWRD 0 b 90 c2 Packet Length:;
+
+void Level 1 CSNP;
+	LABL 0 0 0 b1 L1 CSNP - Level 1 Complete Sequence Numbers Packet\L1 CSNP:;
+	OSI IS-IS SNP;
+	TNXT -IS-IS Complete SNP;
+
+void Level 2 CSNP;
+	LABL 0 0 0 b1 L2 CSNP - Level 2 Complete Sequence Numbers Packet\L@ CSNP:;
+	OSI IS-IS SNP;
+	TNXT -IS-IS Complete SNP;
+
+void Level 1 PSNP;
+	LABL 0 0 0 b1 L1 PSNP - Level 1 Partial Sequence Numbers Packet\L1 PSNP:;
+	OSI IS-IS SNP;
+	TNXT -IS-IS Var Hdr Start;
+void Level 2 PSNP;
+	LABL 0 0 0 b1 L2 PSNP - Level 2 Partial Sequence Numbers Packet\L2 PSNP:;
+	OSI IS-IS SNP;
+	TNXT -IS-IS Var Hdr Start;
+void OSI IS-IS SNP;
+	DWRD 0 b 90 c2 Packet Length:;
+	ADDG 1 c;
+	SNEQ 7 c;
+	SKIP 3;
+	ETHR 0 0 90 c2 Source ID:;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 Source ID:;
+	SUBG 1 c;
+	TRTS;
+void IS-IS Complete SNP;
+	ADDG 2 c;
+	SNEQ 8 c;
+	SKIP 7;
+	ETHR 0 0 90 c2 Start LSP ID:;
+	HBYT 80000000 0 0 0 :;
+	HBYT 80000000 0 0 0 :;
+	ETHR 0 0 90 c2 End LSP ID:;
+	HBYT 80000000 0 0 0 :;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000002;
+	DUMP 0 c 90 c2 Start LSP ID:;
+	DUMP 0 c 90 c2 End LSP ID:;
+	SUBG 2 c;
+	TNXT -IS-IS Var Hdr Start;
+void IS-IS Var Hdr Start;
+	SUBG b 81;
+	MULG ffffffff 1;
+	TNXT -IS-IS Variable Headers;
+	
+void IS-IS Variable Headers;
+	SEQU 0 f;
+	SKIP 1;
+	LABL 0 0 0 b8;
+	MOVE 1 f;
+	SGTE 0 1;
+	SKIP 2;
+	SGTE 5dd 1;
+	SKIP 6;
+	SEQU 0 10;
+	SKIP 3;
+	SLTE 5dd 10;
+	SKIP 1;
+	DUMP 0 10 90 c2 IS-IS Packet Data:;
+	TNXT -AFP The End;
+	GBYT 0 9;
+	*CST# ffffffff 9 0 b7 IS-IS Variable Fields;
+	CST# 0 9 0 b7 IS-IS Variable Fields;
+	CLSE 0 0 0 b7 Unknown Field;
+	DBYT 0 9 90 c2 Field Code:;
+	CLSE 0 0 0 14 Unknown Field Code;
+	DBYT 0 a 90 c2 Field Length:;
+	SUBG 2 1;
+	//SUBG a 81;
+	TSB# ffffffff 9 0 0 IS-IS Var Field Rtns;
+	DUMP 0 a 90 c2 Unknown Field Data:;
+	TNXT -IS-IS Variable Headers;
+// Type 1
+void IS-IS Area Addr;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	GBYT 0 8;
+	SLTE 8 8a;
+	SKIP 2;
+	DUMP 0 a 90 c2 Unused:;
+	TNXT -IS-IS Variable Headers;
+	DBYT 0 8 90 c2 Address Len:;
+	HEX# 0 8 90 c2 Area Address:;
+	SUBG 1 a;
+	SUBG 8 8a;
+	TNXT -IS-IS Area Addr;
+// Type 2
+void Hello IS Neighbors;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	ETHR 0 0 90 c2 Router ID:;
+	SUBG 6 a;
+	TNXT -Hello IS Neighbors;
+// Type 3
+void IS-IS ES Neighbors;
+	LSP Metrics;
+	TNXT -ES Neigh Neighbors;
+// Type 4
+void IS-IS Desig Lvl 2 Int Sys;
+	SNEQ 6 c;
+	SKIP 2;
+	ETHR 0 0 90 c2 System ID:;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 System ID:;
+	SUBG c 8a;
+	DUMP 0 a 90 c2 Remaining Variable Field Data:;
+	TNXT -IS-IS Variable Headers;
+// Type 5
+	void IS-IS Addr Pref;
+	LSP Metrics;
+	TNXT -IS2 Addr Prefs;
+
+// Type 8
+void IS-IS Padding;
+	DUMP 0 a 90 c2 Padding Data:;
+	TNXT -IS-IS Variable Headers;
+
+// Type 9
+void IS-IS LSP Entries;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	DWRD 0 0 90 c2 Remaining Life:;
+	ADDG 2 c;
+	SNEQ 8 c;
+	SKIP 4;
+	ETHR 0 0 90 c2 LSP ID:;
+	HBYT 80000000 0 0 0 :;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 LSP ID:;
+	SUBG c 8a;
+	SUBG 8 a;
+	SUBG 2 c;
+	DLNG 0 3 90 c2 Sequence Number:;
+	HGLB 0 3 84 14 "(";
+	LABL 0 0 80 4 ")";
+	HWRD 0 0 90 c2 Checksum:;
+	TNXT -IS-IS LSP Entries;
+
+// Type 10
+void IS-IS Authent;
+	DBYT 0 9 90 c2 Authent. Type:;
+	CEQU 1 9 0 14 Cleartext Password;
+	CEQU 2 9 0 14 ISO 10589 Reserved;
+	CEQU 3 9 0 14 Cryptographic Authentication (CRYPTO_AUTH);
+	CEQU 36 9 0 14 HMAC-MD5 Authentication;
+	CEQU ff 9 0 14 Routing Domain Private Auth.;
+	SUBG 1 a;
+	DUMP 0 a 90 c2 Password:;
+	TNXT -IS-IS Variable Headers;
+
+// Type 22
+void IS-IS::Extended_IS_Reachability()
+{
+	ETHR 7 0 90 c2 System ID:;
+	HBYT 0 0 90 c2 Pseudonode #:;
+	BBIT 18 0 90 c2 default metric;
+	DBYT 0 0 90 c2 Sub TLV Length:;
+	g[10] -= 11;
+	g[11] = g[10];
+	while (g[11] !=0)
+	{
+		GBYT 0 9;
+		CST# 0 9 0 b7 IS-IS::TLV_22_141_222::Names;
+		CLSE 0 0 0 b7 Unknown Field;
+		DBYT 0 9 90 c2 Field Code:;
+		CLSE 0 0 0 14 Unknown Field Code;
+		DBYT 0 c 90 c2 Field Length:;
+		//SUBG c 81;
+		g[11] -= 2;
+		g[11] -= g[12];
+		DGLB 0 c 90 c2 Unknown Field Data:;
+		TSB# 0 9 0 0 IS-IS::TLV_22_141_222::Calls;
+		if (g[12] != 0 )
+		{
+			DUMP 0 c 90 c2 Unknown Field Data:;
+		}
+		LABL 0 0 0 b8;
+	}
+	SUBG a 81;
+	
+	TNXT -IS-IS Variable Headers;
+}
+
+str# IS-IS::TLV_22_141_222::Names;
+0	|	Unassigned;
+1	|	Unassigned;
+2	|	Unassigned;
+3	|	Administrative group (color);
+4	|	Link Local/Remote Identifiers;
+5	|	Unassigned;
+6	|	IPv4 interface address;
+7	|	Unassigned;
+8	|	IPv4 neighbor address;
+9	|	Maximum link bandwidth;
+10	|	Maximum reservable link bandwidth;
+11	|	Unreserved bandwidth;
+12	|	IPv6 Interface Address;
+13	|	IPv6 Neighbor Address;
+14	|	Unassigned;
+15	|	Unassigned;
+16	|	Unassigned;
+17	|	Unassigned;
+18	|	TE Default metric;
+19	|	Link-attributes;
+20	|	Link Protection Type;
+21	|	Interface Switching Capability Descriptor;
+22	|	Bandwidth Constraints;
+23	|	Unconstrained TE LSP Count (sub-)TLV;
+24	|	remote AS number;
+25	|	IPv4 remote ASBR Identifier;
+26	|	IPv6 remote ASBR Identifier;
+27	|	Interface Adjustment Capability Descriptor (IACD);
+28	|	MTU;
+29	|	SPB-Metric;
+30	|	SPB-A-OALG;
+250	|	Reserved for Cisco-specific extensions;
+251	|	Reserved for Cisco-specific extensions;
+252	|	Reserved for Cisco-specific extensions;
+253	|	Reserved for Cisco-specific extensions;
+254	|	Reserved for Cisco-specific extensions;
+255	|	Reserved for future expansion;
+
+str# IS-IS::TLV_22_141_222::Calls;
+// 0	|	Unassigned;
+// 1	|	Unassigned;
+// 2	|	Unassigned;
+3	|	IS-IS::TLV_22_141_222::Administrative group;
+4	|	IS-IS::TLV_22_141_222::Link Local_Remote Identifiers;
+// 5	|	Unassigned;
+6	|	IS-IS::TLV_22_141_222::IPv4 interface address;
+// 7	|	Unassigned;
+8	|	IS-IS::TLV_22_141_222::IPv4 neighbor address;
+9	|	IS-IS::TLV_22_141_222::Maximum link bandwidth;
+10	|	IS-IS::TLV_22_141_222::Maximum reservable link bandwidth;
+11	|	IS-IS::TLV_22_141_222::Unreserved bandwidth;
+12	|	IS-IS::TLV_22_141_222::IPv6 Interface Address;
+13	|	IS-IS::TLV_22_141_222::IPv6 Neighbor Address;
+// 14	|	Unassigned;
+// 15	|	Unassigned;
+// 16	|	Unassigned;
+// 17	|	Unassigned;
+18	|	IS-IS::TLV_22_141_222::TE Default metric;
+19	|	IS-IS::TLV_22_141_222::Link-attributes;
+20	|	IS-IS::TLV_22_141_222::Link Protection Type;
+// 21	|	IS-IS::TLV_22_141_222::Interface Switching Capability Descriptor;
+// 22	|	IS-IS::TLV_22_141_222::Bandwidth Constraints;
+// 23	|	IS-IS::TLV_22_141_222::Unconstrained TE LSP Count (sub-)TLV;
+// 24	|	IS-IS::TLV_22_141_222::remote AS number;
+// 25	|	IS-IS::TLV_22_141_222::IPv4 remote ASBR Identifier;
+// 26	|	IS-IS::TLV_22_141_222::IPv6 remote ASBR Identifier;
+// 27	|	IS-IS::TLV_22_141_222::Interface Adjustment Capability Descriptor (IACD);
+// 28	|	IS-IS::TLV_22_141_222::MTU;
+29	|	IS-IS::TLV_22_141_222::SPB-Metric;
+30	|	IS-IS::TLV_22_141_222::SPB-A-OALG;
+// 250	|	Reserved for Cisco-specific extensions;
+// 251	|	Reserved for Cisco-specific extensions;
+// 252	|	Reserved for Cisco-specific extensions;
+// 253	|	Reserved for Cisco-specific extensions;
+// 254	|	Reserved for Cisco-specific extensions;
+// 255	|	Reserved for future expansion;
+//subtype 3
+void IS-IS::TLV_22_141_222::Administrative group()
+{
+	BLNG 0 0 90 c2 Admin. Group Bit Mask:;
+	g[12] -= 4;
+}
+//subtype 4
+void IS-IS::TLV_22_141_222::Link Local_Remote Identifiers()
+{
+	DLNG 0 0 90 c2 Link Local Identifier:;
+	DLNG 0 0 90 c2 Link Remote Identifier:;
+	g[12] -= 8;
+}
+//subtype 6
+void IS-IS::TLV_22_141_222::IPv4 interface address()
+{
+	IPLG 0 0 90 c2 Interface IPv4 Adress:;
+	g[12] -= 4;
+}
+//subtype 8
+void IS-IS::TLV_22_141_222::IPv4 neighbor address()
+{
+	IPLG 0 0 90 c2 Neighbor IPv4 Adress:;
+	g[12] -= 4;
+}
+//subtype 9
+void IS-IS::TLV_22_141_222::Maximum link bandwidth()
+{
+	DLNG 0 0 90 c2 Maximum Link Bandwidth:;
+	g[12] -= 4;
+}
+//subtype 10
+void IS-IS::TLV_22_141_222::Maximum reservable link bandwidth()
+{
+	DLNG 0 0 90 c2 Maximum Reservable Link Bandwidth:;
+	g[12] -= 4;
+}
+//subtype 11
+void IS-IS::TLV_22_141_222::Unreserved bandwidth()
+{
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 0:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 1:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 2:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 3:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 4:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 5:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 6:;
+	DLNG 0 0 90 c2 Amount of res. bandwidth of Prio 7:;
+	g[12] -= 32;
+}
+//subtype 12
+void IS-IS::TLV_22_141_222::IPv6 interface address()
+{
+	IPV6 0 0 90 c2 Interface IPv6 Adress:;
+	g[12] -= 4;
+}
+//subtype 13
+void IS-IS::TLV_22_141_222::IPv6 neighbor address()
+{
+	IPV6 0 0 90 c2 Neighbor IPv6 Adress:;
+	g[12] -= 4;
+}
+//subtype 18
+void IS-IS::TLV_22_141_222::TE Default metric()
+{
+	BBIT c 48 90 c2 Traffic Engineering Metric:;
+	g[12] -= 3;
+}
+//subtype 19
+void IS-IS::TLV_22_141_222::Link-attributes()
+{
+	BWRD 0 41 90 c2 Flags:;
+		CEQU 1 41 00 14 Local Protection Available set;
+		CEQU 2 41 00 14 Link Excluded from Local Protection set;
+		CLSE 0 0 0 14 not set;
+	g[12] -= 2;
+}
+//subtype 20
+void IS-IS::TLV_22_141_222::Link Protection Type()
+{
+	//BBYT 0 41 90 c2 Flags:;
+	BBYT 0 1 90 c9 Flags:;
+		CBIT 7 1 0 d4 1... .... Reserved;
+		CLSE 0 0 0 d4 0... .... Reserved;
+		CBIT 6 1 0 d4 .1.. .... Reserved;
+		CLSE 0 0 0 d4 .0.. .... Reserved;
+		CBIT 5 1 0 d4 ..1. .... Enhanced;
+		CLSE 0 0 0 d4 ..0. .... Enhanced;
+		CBIT 4 1 0 d4 ...1 .... Dedicated 1+1: set;
+		CLSE 0 0 0 d4 ...0 .... Dedicated 1+1: not set;
+		CBIT 3 1 0 d4 .... 1... Dedicated 1:1: set;
+		CLSE 0 0 0 d4 .... 0... Dedicated 1:1: not set;
+		CBIT 2 1 0 d4 .... .1.. Shared: set;
+		CLSE 0 0 0 d4 .... .0.. Shared: not set;
+		CBIT 1 1 0 d4 .... ..1. Unprotected: set;
+		CLSE 0 0 0 d4 .... ..0. Unprotected: not set;
+		CBIT 0 1 0 d4 .... ...1 Extra Traffic: set;
+		CLSE 0 0 0 d4 .... ...0 Extra Traffic: not set;
+	LABL 0 0 0 c8;
+	BBYT 0 41 90 c2 Reserved:;
+	g[12] -= 2;
+}
+
+
+//subtype 29
+void IS-IS::TLV_22_141_222::SPB-Metric()
+{
+	BBIT 18 48 90 c2 SPB Link Metric:;
+	DBYT 0 0 90 c2 Number PORTs:;
+	HWRD 0 0 90 c2 Port Identifier:;
+	g[12] -= 6;
+}
+//subtype 30
+void IS-IS::TLV_22_141_222::SPB-A-OALG()
+{
+	HLNG 0 48 90 c2 Opaque ECT Algorithm:;
+	CST# 0 48 0 14 IS-IS::ECT-Algo;
+	g[12] -= 4;
+	DUMP( 0 , g[12], 0x90, 0xc2 , "Opaque ECT Information:");
+}
+//..........
+
+
+//129
+void IS-IS::Protocols_Supported;
+	while (g[0xa] > 0)
+	{
+		HBYT 0 9 90 c2 NLPID:;
+		CST# 0 9 00 14 IS-IS::Protocols_Supported::NLPID;
+		g[0xa] -=1;
+	}
+	SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+
+str# IS-IS::Protocols_Supported::NLPID;
+	0x01 | X.29;
+	0x03 | X.633;
+	0x08 | Q.931/Q.933;
+	0x09 | Q.2931;
+	0x0c | Q.2119;
+	0x80 | SNAP;
+	0x81 | CLNP;
+	0x82 | ESIS;
+	0x83 | ISIS;
+	0x85 | IDRP;
+	0x8a | ESIS (X.25);
+	0x8c | ISO 10030;
+	0x8d | ISO 11577;
+	0x8e | IPv6;
+	0xb0 | Data compression protocol;
+	0xc1 | SubNetwork Dependent Convergence Function;
+	0xcc | IP;
+	0xcf | PPP;
+
+void IS-IS::IP_Internal_Reachability_Information;			//130
+	LABL 0 0 0 b9 Default Metric;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 1... .... Reserved;
+		CLSE 0 0 0 d4 0... .... Reserved;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 .1.. .... I/E Bit: External;
+		CLSE 0 0 0 d4 .0.. .... I/E Bit: Internal;
+		DBIT 6 0 24 d4 .... .... Default Metric:;
+		LABL 0 0 0 b8;
+	LABL 0 0 0 b9 Delay Metric;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 1... .... S Bit: Unsupported;
+		CLSE 0 0 0 d4 0... .... S Bit: Supported;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 .1.. .... Reserved;
+		CLSE 0 0 0 d4 .0.. .... Reserved;
+		DBIT 6 0 24 d4 .... .... Delay Metric:;
+		LABL 0 0 0 b8;
+	LABL 0 0 0 b9 Expense Metric;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 1... .... S Bit: Unsupported;
+		CLSE 0 0 0 d4 0... .... S Bit: Supported;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 .1.. .... Reserved;
+		CLSE 0 0 0 d4 .0.. .... Reserved;
+		DBIT 6 0 24 d4 .... .... Expense Metric:;
+		LABL 0 0 0 b8;
+	LABL 0 0 0 b9 Error Metric;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 1... .... S Bit: Unsupported;
+		CLSE 0 0 0 d4 0... .... S Bit: Supported;
+		DBIT 1 9 5 5;
+		CEQU 1 9 0 d4 .1.. .... Reserved;
+		CLSE 0 0 0 d4 .0.. .... Reserved;
+		DBIT 6 0 24 d4 .... .... Error Metric:;
+		LABL 0 0 0 b8;
+	IPLG 0 0 90 c2 IP Address:;
+	IPLG 0 0 90 c2 Subnet Mask:;
+	SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+	
+void IS-IS::Inter-Domain_Routing_Protocol_Information;			//131
+	DBYT 0 9 90 c2 Inter-Domain Info Type:;
+	g[0xa] -= 1;
+	DUMP 0 a 90 c2 External Info:;
+	SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+
+void IS-IS::IP_Interface_Address;								//132
+	if (g[0xa] == 4)
+	{
+		IPLG 0 0 90 c2 IP Address:;
+	}
+	if (g[0xa] != 4)
+	{
+		DUMP 0 a 90 c2 IP Address:;
+	}
+	TNXT -IS-IS Variable Headers;
+
+
+// Type 137
+void IS-IS::Dynamic_Hostname()
+{
+	CHR#( 0, g[10], 0x90, 0xc2, "Dynamic Hostname:" );
+	g[10] -= g[10];
+	//SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+}
+
+//143
+void IS-IS::MT-Port-Capability()
+{	
+	g[11] = g[10];	
+	BWRD( 0, 0x4, 0xa0, 0xc2, "Topology Identifier:" );
+	g[11] -= 2;
+	while (g[11] !=0)
+	{
+		GBYT 0 9;
+		CST# 0 9 0 b7 IS-IS::MT-Port-Capability::Mean;
+		CLSE 0 0 0 b7 Unknown Field;
+		DBYT 0 9 90 c2 Field Code:;
+		CLSE 0 0 0 14 Unknown Field Code;
+		DBYT 0 c 90 c2 Field Length:;
+		//SUBG c 81;
+		g[11] -= 2;
+		g[11] -= g[12];
+		DGLB 0 c 90 c2 Unknown Field Data:;
+		TSB# ffffffff 9 0 0 IS-IS::MT-Port-Capability::Fields;
+		if (g[12] != 0 )
+		{
+			DUMP 0 c 90 c2 Unknown Field Data:;
+		}
+		LABL 0 0 0 b8;
+	}
+	SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+}
+
+str# IS-IS::MT-Port-Capability::Mean;
+0	|	reserved;
+1	|	VLAN-FLAGs;
+2	|	Enabled-VLANs;
+3	|	AppointedFwrdrs;
+4	|	SPB-MCID;
+5	|	SPB-Digest;
+6	|	SPB Base VLAN-Identifier;
+
+str# IS-IS::MT-Port-Capability::Fields;
+1	|	IS-IS::MT-Port-Capability::VLAN-FLAGs;
+2	|	IS-IS::MT-Port-Capability::Enabled-VLANs;
+3	|	IS-IS::MT-Port-Capability::AppointedFwrdrs;
+5	|	IS-IS::MT-Port-Capability::SPB-MCID;
+6	|	IS-IS::MT-Port-Capability::SPB-Digest;
+7	|	IS-IS::MT-Port-Capability::SPB Base VLAN-Identifier;
+
+void IS-IS::MT-Port-Capability::VLAN-FLAGs()
+{
+	HWRD( 0, 0, 0x90, 0xc2, "Port ID:" );
+	CHR#( 2, 0, 0x90, 0xc2, "Sender Nickname:" );
+	BBIT( 1, 41, 0x90, 0xc2, "AF:" );
+		CEQU( 1, 41, 0, 0x14, "Originating IS believes it is appointed forwarder for the VLAN and port on which the containing IIH PDU was sent" );
+	BBIT( 1, 41, 0x90, 0xc2, "AC:" );
+		CEQU( 1, 41, 0, 0x14, "Originating port configured as an access port (TRILL traffic disabled)" );
+	BBIT( 1, 41, 0x90, 0xc2, "VM:" );
+		CEQU( 1, 41, 0, 0x14, "VLAN mapping detected on this link" );
+	BBIT( 1, 41, 0x90, 0xc2, "BY:" );
+		CEQU( 1, 41, 0, 0x14, "Bypass pseudonode" );
+	HBIT c 0 90 c2 Outer VLAN ID:;
+	BBIT( 1, 41, 0x90, 0xc2, "TR:" );
+		CEQU( 1, 41, 0, 0x14, "Originating port configured as a trunk port (endstation service disabled)" );
+	BBIT( 1, 0, 0x90, 0xc2, "Res.:" );
+	BBIT( 1, 0, 0x90, 0xc2, "Res.:" );
+	BBIT( 1, 0, 0x90, 0xc2, "Res.:" );
+	HBIT c 0 90 c2 Outer VLAN ID:;
+	g[12] -= 8;
+}
+
+void IS-IS::MT-Port-Capability::Enabled-VLANs()
+{
+	BBIT( 4, 0, 0x90, 0xc2, "RESV:" );
+	HBIT c 0 90 c2 Start VLAN ID:;
+	g[12] -= 2;
+	CHR#( 0 , g[12], 0x90, 0xc2 , "VLAN bit-map:");
+	g[12] -= g[12];
+}
+
+void IS-IS::MT-Port-Capability::AppointedFwrdrs()
+{
+	l[2] = 1;
+	while (g[12] != 0)
+	{
+		LABL 0 0 0 b7  Appointment Information: ;
+		DGLB( 0 , l[2], 0x07, 0x07 );
+		LABL( 0 , 0, 0, 0x07, ":  " );
+		CHR#( 2, 0, 0x90, 0xc2, "Appointee Nickname:" );
+		BBIT( 4, 0, 0x90, 0xc2, "RESV:" );
+		HBIT c 0 90 c2 Start VLAN ID:;
+		BBIT( 4, 0, 0x90, 0xc2, "RESV:" );
+		HBIT c 0 90 c2 End VLAN ID:;
+		g[12] -= 6;
+		l[2] += 1;
+	}
+}
+
+void IS-IS::MT-Port-Capability::SPB-MCID()
+{
+	while (g[12] != 0)
+	{
+		LABL 0 0 0 b7  MCID Configuration Identifier;
+			DBYT 0 0 90 c2  Configuration ID Format Selector:;
+			CHR# 20 0 90 c2 Configuration Name:;
+			DWRD 0 0 90 c2 Revision Level:;
+			HEX# 10 0 90 c2 Configuration Digest:;
+		LABL 0 0 0 c8;
+		g[12] -= 51;
+		LABL 0 0 0 b7  Auxiliary MCID Configuration Identifier;
+			DBYT 0 0 90 c2  Configuration ID Format Selector:;
+			CHR# 20 0 90 c2 Configuration Name:;
+			DWRD 0 0 90 c2 Revision Level:;
+			HEX# 10 0 90 c2 Configuration Digest:;
+		LABL 0 0 0 c8;
+		g[12] -= 51;
+		//DGLB 0 c 90 c2 Unknown Field Data:;
+	}
+}
+
+void IS-IS::MT-Port-Capability::SPB-Digest()
+{
+	BBIT 3 0 90 c2 reserved:;
+	BBIT 1 0 90 c2 V:;
+	BBIT 2 0 90 c2 A:;
+	BBIT 2 0 90 c2 D:;
+	CHR# 20 0 90 c2 Configuration Digest:;
+	g[12] -= 33;
+}
+
+void IS-IS::MT-Port-Capability::SPB Base VLAN-Identifier()
+{
+	l[2] = 1;
+	while (g[12] != 0)
+	{
+		LABL 0 0 0 b7 ECT-VID Tuple ;
+		DGLB( 0 , l[2], 0x07, 0x07 );
+		GLNG( 0, l[8] );
+		LABL( 0 , 0, 0, 0x07, ":  " );
+		CST# 0 48 0 07 IS-IS::ECT-Algo;
+		HLNG 3 41 90 c2 ECT Algorithm:;
+		CST# 0 41 0 14 IS-IS::ECT-Algo;
+		BBIT c 0 90 c2 Base Vid:;
+		BBIT 1 0 90 c2 U:;
+		BBIT 2 0 90 c2 M:;
+		BBIT 2 0 90 c2 reserved:;
+		g[12] -= 6;
+		LABL 0 0 0 c8;
+		l[2] += 1;
+	}
+}
+
+//144
+void IS-IS::MT-Capability()
+{	
+	g[11] = g[10];
+	BWRD( 0, 0, 0x47, 0xb7, "Header:" );
+	DECR 2;
+	BBIT( 1, 0, 0x90, 0xc2, "Overload Bit:" );
+	BBIT( 3, 0, 0x90, 0xc2, "reserved:" );
+	HBIT( 12, 0, 0x90, 0xc2, "MTID:" );
+	LABL 0 0 0 b8;
+	g[11] -= 2;
+	while (g[11] !=0)
+	{
+		GBYT 0 9;
+		CST# 0 9 0 b7 IS-IS::MT-Capability::Mean;
+		CLSE 0 0 0 b7 Unknown Field;
+		DBYT 0 9 90 c2 Field Code:;
+		CLSE 0 0 0 14 Unknown Field Code;
+		DBYT 0 c 90 c2 Field Length:;		
+		//SUBG c 81;
+		g[11] -= 2;
+		//g[12] -= 2;
+		g[11] -= g[12];
+		DGLB 0 c 90 c2 Unknown Field Data:;
+		TSB# 0 9 0 0 IS-IS::MT-Capability::Fields;
+		if (g[12] != 0 )
+		{
+			DUMP 0 c 90 c2 Unknown Field Data:;
+			
+		}
+		LABL 0 0 0 b8;
+	}
+	SUBG a 81;
+	TNXT -IS-IS Variable Headers;
+}
+
+str# IS-IS::MT-Capability::Mean;
+0	|	Reserved;
+1	|	SPB-Inst;
+2	|	SPB-I-OALG;
+3	|	SPBM-SI;
+4	|	SPBV-ADDR;
+
+str# IS-IS::MT-Capability::Fields;
+// 0	|	Reserved;
+1	|	IS-IS::MT-Capability::SPB-Inst;
+2	|	IS-IS::MT-Capability::SPB-I-OALG;
+3	|	IS-IS::MT-Capability::SPBM-SI;
+4	|	IS-IS::MT-Capability::SPBV-ADDR;
+
+
+void IS-IS::MT-Capability::SPB-Inst()
+{
+	D64B( 0 , 0, 0x90, 0xc2, "CIST Root Identifier:" );
+	HLNG( 0 , l[3], 0x90, 0xc2, "CIST External Root Path Cost:" );
+	DWRD( 0 , l[4], 0x90, 0xc2, "Bridge Priority:" );
+	BBIT( 15, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 1, 0, 0x90, 0xc2, "V-Bit:" );
+	DWRD( 0 , l[5], 0x90, 0xc2, "SPSourceID:" );
+	DBYT( 0 , l[6], 0x90, 0xc2, "Number of Trees:" );
+	l[2] = 1;
+	while(l[6] > 0)
+	{
+		LABL 0 0 0 b7 VLAN-ID Tuple ;
+		DGLB( 0 , l[2], 0x07, 0x07 );
+		GLNG( 1, l[8] );
+		LABL( 0 , 0, 0, 0x07, ":  " );
+		CST# 0 48 0 07 IS-IS::ECT-Algo;
+		BBIT 1 0 90 c2 U:;
+		BBIT 1 0 90 c2 M:;
+		BBIT 1 0 90 c2 A:;
+		BBIT 5 0 90 c2 reserved:;
+		HLNG 0 48 90 c2 ECT Algorithm:;
+		CST# 0 48 0 14 IS-IS::ECT-Algo;
+		HBIT c 0 90 c2 Base Vid:;
+		HBIT c 0 90 c2 SPVid:;
+		LABL 0 0 0 c8;
+		l[2] += 1;
+		l[6] -= 1;
+	}
+	g[12] -= g[12];
+}
+
+str# IS-IS::ECT-Algo;
+0x0080C201	|	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 / MASK 0x00;
+0x0080C202	|	15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0 / MASK 0xFF;
+0x0080C203	|	8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7 / MASK 0x88;
+0x0080C204	|	7,6,5,4,3,2,1,0,15,14,13,12,11,10,9,8 / MASK 0x77;
+0x0080C205	|	4,5,6,7,0,1,2,3,12,13,14,15,8,9,10,11 / MASK 0x44;
+0x0080C206	|	3,2,1,0,7,6,5,4,11,10,9,8,15,14,13,12 / MASK 0x33;
+0x0080C207	|	12,13,14,15,8,9,10,11,4,5,6,7,0,1,2,3 / MASK 0xCC;
+0x0080C208	|	11,10,9,8,15,14,13,12,3,2,1,0,7,6,5,4 / MASK 0xBB;
+0x0080C209	|	2,3,0,1,6,7,4,5,10,11,8,9,14,15,12,13 / MASK 0x22;
+0x0080C20A	|	1,0,3,2,5,4,7,6,9,8,11,10,13,12,15,14 / MASK 0x11;
+0x0080C20B	|	6,7,4,5,2,3,0,1,14,15,12,13,10,11,8,9 / MASK 0x66;
+0x0080C20C	|	5,4,7,6,1,0,3,2,13,12,15,14,9,8,11,10 / MASK 0x55;
+0x0080C20D	|	10,11,8,9,14,15,12,13,2,3,0,1,6,7,4,5 / MASK 0xAA;
+0x0080C20E	|	9,8,11,10,13,12,15,14,1,0,3,2,5,4,7,6 / MASK 0x99;
+0x0080C20F	|	13,12,15,14,9,8,11,10,5,4,7,6,1,0,3,2 / MASK 0xDD;
+0x0080C210	|	14,15,12,13,10,11,8,9,6,7,4,5,2,3,0,1 / MASK 0xEE;
+
+void IS-IS::MT-Capability::SPB-I-OALG()
+{
+	HLNG 0 48 90 c2 Opaque ECT Algorithm:;
+	CST# 0 48 0 14 IS-IS::ECT-Algo;
+	g[12] -= 4;
+	DUMP( 0 , g[12], 0x90, 0xc2 , "Opaque ECT Information:");
+}
+
+void IS-IS::MT-Capability::SPBM-SI()
+{
+	ETHR( 0 , 0, 0x90, 0xc2, "B-MAC ADDRESS:" );
+	BBIT( 0x4, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 0xc, 0, 0x90, 0xc2, "Base VID:" );
+	g[12] -= 8;
+	l[2] = 1;
+	while( g[12] > 0)
+	{
+		LABL 0 0 0 b7 I-SID # ;
+		DGLB( 0 , l[2], 0x07, 0x07 , " ");
+		BBIT( 1, 0, 0x90, 0xc2, "Transmit:" );
+		BBIT( 1, 0, 0x90, 0xc2, "Recieve:" );
+		BBIT( 6, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 0x18, 0, 0x90, 0xc2, "I-SID:" );
+		g[12] -= 4;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+}
+
+void IS-IS::MT-Capability::SPBV-ADDR()
+{
+	BBIT( 0x2, 0, 0x90, 0xc2, "Reserved:" );
+	BBIT( 0x2, 0, 0x90, 0xc2, "SR:" );
+	BBIT( 0xc, 0, 0x90, 0xc2, "SPVID:" );
+	g[12] -= 2;
+	l[2] = 1;
+	while( g[12] > 0)
+	{
+		LABL 0 0 0 b7 MAC Address # ;
+		DGLB( 0 , l[2], 0x07, 0x07 , " ");
+		BBIT( 1, 0, 0x90, 0xc2, "Transmit:" );
+		BBIT( 1, 0, 0x90, 0xc2, "Recieve:" );
+		BBIT( 6, 0, 0x90, 0xc2, "Reserved:" );
+		ETHR( 0, 0, 0x90, 0xc2, "MAC Address:" );
+		g[12] -= 7;
+		l[2] += 1;
+		LABL 0 0 0 c8;
+	}
+}
+//Type 222
+void IS-IS::MT-ISN()
+{
+	BBIT 4 0 90 c2 Reserved;
+	HBIT c 0 90 c2 MT ID;
+	ETHR 7 0 90 c2 System ID:;
+	HBYT 0 0 90 c2 Pseudonode #:;
+	BBIT 18 0 90 c2 Default metric;
+	DBYT 0 0 90 c2 Sub TLV Length:;
+	g[10] -= 13;
+	g[11] = g[10];
+	while (g[11] !=0)
+	{
+		GBYT 0 9;
+		CST# 0 9 0 b7 IS-IS::TLV_22_141_222::Names;
+		CLSE 0 0 0 b7 Unknown Field;
+		DBYT 0 9 90 c2 Field Code:;
+		CLSE 0 0 0 14 Unknown Field Code;
+		DBYT 0 c 90 c2 Field Length:;
+		//SUBG c 81;
+		g[11] -= 2;
+		g[11] -= g[12];
+		DGLB 0 c 90 c2 Unknown Field Data:;
+		TSB# 0 9 0 0 IS-IS::TLV_22_141_222::Calls;
+		if (g[12] != 0 )
+		{
+			DUMP 0 c 90 c2 Unknown Field Data:;
+		}
+		LABL 0 0 0 b8;
+	}
+	SUBG a 81;
+	
+	TNXT -IS-IS Variable Headers;
+}
+
+
+//Type 229
+void IS-IS::M-Topologies()
+{
+	l[2] = 1;
+	g[11] = g[10];
+	while (g[11] !=0)
+	{
+		LABL 0 0 0 b7 Multi-Topology # ;
+		DGLB( 0 , l[2], 0x07, 0x07 , " ");
+		BBIT( 1, 0, 0x90, 0xc2, "Overload:" );
+		BBIT( 1, 0, 0x90, 0xc2, "Attach:" );
+		BBIT( 2, 0, 0x90, 0xc2, "reserved:" );
+		HBIT( 0xc, 0, 0x90, 0xc2, "MT ID:" );
+		LABL 0 0 0 c8;
+		l[2] += 1;
+		g[11] -= 2;
+	}
+	g[10] -= g[10];
+	TNXT -IS-IS Variable Headers;
+}
+//----------------------------------------------
+//Type 240
+void IS-IS::Adjacency Three-Way State()
+{
+	g[11] = g[10];
+	HBYT 3 0 90 c2 Adjacency Three-Way State:;
+	DLNG 0 0 90 c2 Extended Local Circuit ID:;
+	g[10] -= 5;
+	g[11] -= 5;
+	if (g[11] >= 4)
+	{
+		g[11] -= 4;
+		CHR# 0 b 90 c2 Neighbor System ID;
+		DLNG 0 0 90 c2 Neighbor Extended Local Circuit ID;
+	}
+	g[10] -= g[10];
+	TNXT -IS-IS Variable Headers;
+}
+//----------------------------------------------
+void LSP IS Neighbors;
+	HBYT 0 0 90 c2 Virtual Flag:;
+	TNXT -LSP IS Neigh Loop;
+
+void LSP IS Neigh Loop;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	LSP Metrics;
+	ADDG 1 c;
+	SNEQ 7 c;
+	SKIP 3;
+	ETHR 0 0 90 c2 Neighbor ID:;
+	HBYT 80000000 0 0 0 :;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 Neighbor ID:;
+	SUBG c 8a;
+	SUBG 1 a;
+	SUBG 1 c;
+	TNXT -LSP IS Neigh Loop;
+void LSP Metrics;
+	BBIT 1 3 90 c2 Default Metric:;
+	BBIT 1 4 20;
+	DBIT 6 0 20;
+	CEQU 1 4 0 14 Externally;
+	CLSE 0 0 0 14 Internally;
+	CEQU 1 3 0 14  Not Supported;
+	CLSE 0 0 0 14  Valid;
+	BBIT 1 3 90 c2 Delay Metric:;
+	BBIT 1 4 20;
+	DBIT 6 4 20;
+	CEQU 1 4 0 14 Externally;
+	CLSE 0 0 0 14 Internally;
+	CEQU 1 3 0 14  Not Supported;
+	CLSE 0 0 0 14  Valid;
+	BBIT 1 3 90 c2 Expense Metric:;
+	BBIT 1 4 20;
+	DBIT 6 4 20;
+	CEQU 1 4 0 14 Externally;
+	CLSE 0 0 0 14 Internally;
+	CEQU 1 3 0 14  Not Supported;
+	CLSE 0 0 0 14  Valid;
+	BBIT 1 3 90 c2 Error Metric:;
+	BBIT 1 4 20;
+	DBIT 6 4 20;
+	CEQU 1 4 0 14 Externally;
+	CLSE 0 0 0 14 Internally;
+	CEQU 1 3 0 14  Not Supported;
+	CLSE 0 0 0 14  Valid;
+	SUBG 4 a;
+	TRTS;
+void ES Neigh Neighbors;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	SNEQ 6 c;
+	SKIP 2;
+	ETHR 0 0 90 c2 Neighbor ID:;
+	SKIP 80000001;
+	DUMP 0 c 90 c2 Neighbor ID:;
+	SUBG c 8a;
+	TNXT -ES Neigh Neighbors;
+void IS2 Addr Prefs;
+	SGTE 0 a;
+	SKIP 2;
+	SGTE 5dd a;
+	SKIP 1;
+	TNXT -IS-IS Variable Headers;
+	DBYT 0 4 90 c2 Addr Prefix Len:;
+	MOVE 4 83;
+	ANDG 1 4;
+	DIVG 1 3;
+	HEX# 0 3 90 c2 Addr Prefix:;
+	SUBG 3 8a;
+	SEQU 0 4;
+	SKIP 5;
+	GBYT 0 4;
+	ANDG f0 4;
+	HGLB 80000000 4;
+	INCR 1;
+	SUBG 1 a;
+	TNXT -IS2 Addr Prefs;
+void OSI;
+	LABL 0 0 0 b1 OSI - Open Systems Interconnection\OSI:;
+	DBYT 0 c 90 c2 Protocol ID:;
+	CEQU 81 c 0 14 CLNP;
+	TTST -ISO CLNP;
+	CEQU 82 c 0 14 ES-IS;
+	TTST -ISO ES-IS;
+	CEQU 83 c 0 14 IS-IS;
+	TTST -ISO IS-IS;
+	CEQU 0 c 0 14 Inactive;
+	TTST -OSI Inactive;
+	LABL 0 0 0 14 Unknown OSI Protocol;
+	DUMP 0 10 90 c2 OSI Packet Data:;
+void ISO CLNP;
+	LABL 0 0 0 b1 CLNP - Connectionless Network Protocol\CLNP:;
+	DBYT 0 1 90 c2 Header Length:;
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 0 90 c2 Lifetime:;
+	LABL - " /2 seconds";
+	BBIT 3 5 90 c2 Flags:;
+	CBIT 2 5 0 f4 Segmentation Permitted;
+	CLSE 0 0 0 f4 Segmentation Not Permitted;
+	CBIT 1 5 0 f4 More Segments Coming;
+	CLSE 0 0 0 f4 Last Segment;
+	CBIT 0 5 0 f4 Error Reported If Frame Discarded;
+	CLSE 0 0 0 f4 Error Not Reported If Frame Discarded;
+	DBIT 5 c 90 c2 Protocol Type:;
+	SUBG 5 1;
+	TEQU 1 c 0 10 CLNP Error Report PDU;
+	TEQU 1c c 0 10 CLNP Data Type PDU;
+	LABL 0 0 0 14 Unknown CLNP PDU Type ;
+	DUMP 0 10 90 c2 CLNP Packet Data:;
+void CLNP Data Type PDU;
+	LABL 0 0 0 14 CLNP Data Type PDU;
+	CLNP PDU Header;
+	TEQU af 6 0 0 TARP PDU;
+	TLSE -ISO TP Svcs;
+void CLNP Error Report PDU;
+	LABL 0 0 0 14 CLNP Error Report PDU;
+	CLNP PDU Header;
+	LABL 0 0 0 b4 Header of packet that caused error follows.;
+	TNXT -OSI;
+void CLNP PDU Header;
+	PDU Address Common;
+	SBIT 2 5;
+	SKIP 80000001;
+	PDU Segmentation Info;
+	PDU Options Loop;
+	TRTS;
+void PDU Address Common;
+	DWRD 0 2 90 c2 Segment Length:;
+	HWRD 0 0 90 c2 Checksum:;
+	DBYT 0 3 90 c2 Dst. Addr. Len.:;
+	SNEQ 6 3;
+	SKIP 2;
+	ETHR 0 0 90 c2 Dst. Address:;
+	SKIP 80000001;
+	HEX# 0 3 90 c2 Dst. Address:;
+	DECR 1;
+	HBYT 0 6 24 14 "(NSEL: ";
+	LABL 0 0 0 4 ")";
+	SUBG 3 81;
+	DECR 4;
+	GLNG 0 a;
+	INCR 4;
+	DBYT 0 3 90 c2 Src. Addr. Len.:;
+	SNEQ 6 3;
+	SKIP 2;
+	ETHR 0 0 90 c2 Src. Address:;
+	SKIP 80000001;
+	HEX# 0 3 90 c2 Src. Address:;
+	DECR 1;
+	HBYT 0 6 24 14 "(NSEL: ";
+	LABL 0 0 0 4 ")";
+	SUBG 3 81;
+	SUBG 6 1;
+	DECR 4;
+	GLNG 0 b;
+	INCR 4;
+	TRTS;
+void PDU Segmentation Info;
+	DWRD 0 0 90 c2 Data Unit ID:;
+	DWRD 0 0 90 c2 Segment Offset:;
+	DWRD 0 0 90 c2 Total Length:;
+	SUBG 6 1;
+	TRTS;
+
+void PDU Options Loop;
+	SNEQ 0 1;
+	SKIP 1;
+	TRTS;
+	DBYT 0 3 90 c2 Parameter Code:;
+	CST# bd 3 0 14 OSI-PDU Options;
+	CLSE 0 0 0 14 Unrecognized Option;
+	DBYT 0 2 90 c2 Param. Length:;
+	SUBG 2 1;
+	SUBG 2 81;
+	TST# bd 3 0 0 OSI-PDU Options;
+	DUMP 0 2 90 c2 Unrecognized Option Data:;
+	TNXT -PDU Options Loop;
+
+void Reason For Discard;
+	BBIT 4 3 90 c2 Class of Error:;
+	CST# ffffffff 3 0 14 OSI Reasn For Disc Clss of Err;
+	TST# ffffffff 3 0 0 OSI Reasn For Disc Clss of Err;
+	LABL 0 0 0 14 Unrecognized Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void General Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CST# ffffffff 3 0 14 OSI Gen Err Class Meaning;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void Address Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CEQU 0 3 0 14 Destination Address Unreachable;
+	CEQU 1 3 0 14 Destination Address Unknown;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void Source Routing Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CST# ffffffff 3 0 14 OSI Src Routng Err Class Meaning;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void Lifetime Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CEQU 0 3 0 14 Lifetime Expired While Data Unit In Transit;
+	CEQU 1 3 0 14 Lifetime Expired During Reassembly;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void PDU Discard Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CST# ffffffff 3 0 14 OSI Discard Err Class Meaning;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void Reassembly Error Class;
+	BBIT 4 3 90 c2 Meaning:;
+	CEQU 0 3 0 14 Reassembly Interference;
+	DBYT 0 3 90 c2 Error Field Offset:;
+	TNXT -PDU Options Loop;
+void Quality of Service Maintenance;
+	GBIT 2 3;
+	BBYT 0 4 90 c2 QoS Format Code:;
+	SUBG 1 2;
+	CST# ffffffff 3 0 14 OSI Qualty of Srvc Maint Types;
+	TEQU 3 3 0 0 Globally Unique Service Type;
+	CST# ffffffff 3 90 c2 OSI QoS Labels;
+	DUMP 0 2 80 42;
+	TNXT -PDU Options Loop;
+void Globally Unique Service Type;
+	CBIT 4 4 0 f4 Favor Sequencing Preservation over Low Transit Delay;
+	CLSE 0 0 0 f4 Favor Low Transit Delay over Sequence Preservation;
+	CBIT 3 4 0 f4 Intermediate System Congestion Experienced;
+	CBIT 2 4 0 f4 Favor Low Transit Delay over Low Cost;
+	CLSE 0 0 0 f4 Favor Low Cost over Low Transit Delay;
+	CBIT 1 4 0 f4 Favor Low Residual Error Probability over Low Transit Delay;
+	CLSE 0 0 0 f4 Favor Low Transit Delay over Low Residual Error Probability;
+	CBIT 0 4 0 f4 Favor Low Residual Error Prob. over Low Cost;
+	CLSE 0 0 0 f4 Favor Low Cost over Low Residual Error Prob.;
+	TNXT -PDU Options Loop;
+void Security Option;
+	GBIT 2 3;
+	BBYT 0 0 90 c2 Security Format Code:;
+	SUBG 1 2;
+	CST# ffffffff 3 0 14 OSI Security Types;
+	CST# ffffffff 3 90 c2 OSI ST Data Labels;
+	DUMP 0 2 80 42;
+	TNXT -PDU Options Loop;
+void Recording of Route;
+	DBYT 0 3 90 c2 Type Code:;
+	CEQU 0 3 0 14 Partial Recording Of Route In Progress;
+	CEQU 1 3 0 14 Complete Recording Of Route In Progress;
+	DBYT 0 3 20 d2 Offset Of Next Title To Use:;
+	SUBG 2 2;
+	CEQU 0 2 0 f4 No Network-Entity Titles Recorded;
+	SKIP 3;
+	CEQU ff 3 0 f4 Route Recording Terminated;
+	SKIP 1;
+	Route Net Entry Loop;
+	TNXT -PDU Options Loop;
+void Route Net Entry Loop;
+	SNEQ 0 2;
+	SKIP 1;
+	TRTS;
+	DBYT 0 4 20 d2 Length of Title:;
+	HEX# 0 4 90 c2 Net Entity Title:;
+	SUBG 1 2;
+	SUBG 4 82;
+	TNXT -Route Net Entry Loop;
+void Padding Option;
+	DUMP 0 2 90 c2 Parameter Value:;
+	TNXT -PDU Options Loop;
+void Priority Option;
+	DBYT 0 0 90 c2 Priority:;
+	LABL 0 0 0 14 (0 = Normal, 14 = Highest);
+	TNXT -PDU Options Loop;
+void Source Routing;
+	DBYT 0 3 90 c2 Type Code:;
+	CEQU 0 3 0 14 Partial Source Routing;
+	CEQU 1 3 0 14 Complete Source Routing;
+	DBYT 0 3 20 d2 Offset Of Next Title To Use:;
+	SUBG 2 2;
+	CEQU 0 3 0 d4 No Network-Entity Titles Recorded;
+	SKIP 1;
+	Route Net Entry Loop;
+	TNXT -PDU Options Loop;
+void OSI Inactive;
+	LABL 0 0 0 b1 Inactive Network Layer Protocol;
+	DUMP 0 10 90 c2 Error Report Data Field (Header of discarded Data PDU):;
+void Suggested ES Config Timer Option;
+	DWRD 0 0 90 c2 Suggested Value:;
+	LABL - " seconds";
+	TNXT -PDU Options Loop;
+void Address Mask Option;
+	DUMP 0 2 90 c2 Comparison Mask:;
+	TNXT -PDU Options Loop;
+void SNPA Mask Option;
+	DUMP 0 2 90 c2 Comparison Mask:;
+	TNXT -PDU Options Loop;
+void TARP PDU;
+	LABL 0 0 0 b1 TARP - TID Address Resolution Protocol\TARP:;
+	DWRD 0 0 a0 c2 Lifetime:;
+	DWRD 0 0 a0 c2 Sequence Number:;
+	HBYT 0 3 a0 c2 Protocol Address Type:;
+	CEQU fe 3 0 14 CLNP;
+	DBYT 0 3 a0 c2 URC and Type Code:;
+	CST# 0 3 0 14 TARP Type Names;
+	DBYT 0 3 a0 c2 TID Target Length:;
+	DBYT 0 4 a0 c2 TID Originator Length:;
+	DBYT 0 5 a0 c2 Protocol Address Length:;
+	CHR# 0 3 a0 c2 TID of Target:;
+	CHR# 0 4 a0 c2 TID of Originator:;
+	HEX# 0 5 a0 c2 Protocol Addr of Orig:;
+
+
+
+str# TP Service Types;
+	Illegal;
+	Expedited Data;
+	Expedited Data Acknowledge;
+	Illegal;
+	;
+	Reject;
+	Data Acknowledge;
+	TPDU Error;
+	Disconnect Request;
+	Illegal;
+	Illegal;
+	;
+	Disconnect Confirm;
+	Connection Confirm;
+	Connection Request;
+	Data;
+str# TP Svc Type Jumps;
+	Padding Option;
+	TP Expedited Data Jmp;
+	TP Expedited Data Acknowledge Jmp;
+	;
+	;
+	TP Reject Jmp;
+	TP Data Acknowledge Jmp;
+	TP TPDU Error Jmp;
+	TP Disconnect Request Jmp;
+	;
+	;
+	;
+	TP Disconnect Confirm Jmp;
+	TP Connection Confirm Jmp;
+	TP Connection Request Jmp;
+	TP Data Jmp;
+str# TP ED Opt;
+	ED Class 1,2,3,4 - Normal;
+	ED Class 2,3,4 - Extended;
+str# TP EA Opt;
+	EA Class 1,2,3,4 - Normal;
+	EA Class 2,3,4 - Extended;
+str# TP RJ Opt;
+	RJ Class 1,3 - Normal;
+	RJ Class 3 - Extended;
+str# TP AK Opt;
+	AK Class 1,2,3,4 - Normal;
+	AK Class 2,3,4 - Extended;
+str# TP Error Causes;
+	Reason Not Specified;
+	Invalid Parameter Code;
+	Invalid TPDU Type;
+	Invalid Parameter Value;
+str# Disc Reasons LT 128;
+	Reason Not Specified;
+	Congestion At TSAP;
+	Session Entity Not Attached To TSAP;
+	Address Unknown;
+str# Disc Reasons GE 128;
+	Normal Disconnect Initiated By Session Entity;
+	Remote Transport Entity Congestion At Connect Request Time;
+	Connection Negotiation Failed;
+	Duplicate Source Reference Detected For The Same Pair Of NSAPs;
+	Mismatched References;
+	Protocol Error;
+	Unknown;
+	Reference Overflow;
+	Connection Request Refused On This Network Connection;
+	Unknown;
+	Header Or Parameter Length Invalid;
+	Unknown;
+str# TP DT Opt;
+	DT Class 0,1 - Normal;
+	DT Class 2,3,4 - Normal;
+	DT Class 2,3,4 - Extended;
+str# TP Select Ack Opt;
+	Select Ack - Normal;
+	Select Ack - Extended;
+str# TPDU Sizes;
+	128 octets;
+	256 octets;
+	512 octets;
+	1024 octets;
+	2048 octets;
+	4096 octets;
+	8192 octets;
+str# TPDU Size Encodings;
+	128 octets;
+	256 octets;
+	512 octets;
+	1,024 octets;
+	2,048 octets;
+	4,096 octets;
+	8,192 octets;
+str# IS-IS Packet Types;
+	Padding Option;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	L1 Router Hello;
+	L2 Router Hello;
+	Point-To-Point Hello;
+	L1 LSP - Link State Packet;
+	;
+	L2 LSP - Link State Packet;
+	;
+	;
+	IS-IS Exchange ID;
+	Level 1 CSNP;
+	Level 2 CSNP;
+	Level 1 PSNP;
+	Level 2 PSNP;
+	;
+	;
+	;
+	;
+
+str# IS-IS Variable Fields; 				//dw: updated from IS-IS TLV Codepoints:http://www.iana.org/assignments/isis-tlv-codepoints/isis-tlv-codepoints.xml
+	  1 | Area Addresses;
+	  2 | LSP IS Neighbors;				//si: isn't this supposed to be is reachability?
+	  3 | ES Neighbors;
+	  4 | Designated Level 2 Intermediate System;
+	  5 | Address Prefixes;
+	  6 | Hello IS Neighbors;			//si: ?
+	  8 | Padding;
+	  9 | LSP Entries;
+	 10 | Authentication;
+	 12 | Optional Checksum;
+	 14 | LSPBufferSize;
+	 16 | Encapsulation Cap;
+	 22 | Extended IS Reachability;
+	 23 | IS Neighbor Attribute;
+	 24 | IS Alias ID;
+	 42 | DECnet Phase IV;
+	 66 | Lucent proprietary;
+	128	| IP Internal Reachability Information;
+	129 | Protocols Supported;
+	130 | IP external reachability information;
+	131 | Inter-Domain Routing Protocol Information;
+	132 | IP Interface Address;
+	133 | (obsolete) Authentication Information;
+	134 | Traffic Engineering router ID;
+	135 | Extended IP reachability;
+	137 | Dynamic Hostname;
+	138 | GMPLS Shared Risk Link Group;
+	139 | IPv6 SRLG;
+	140 | IPv6 TE Router ID;
+	141 | inter-AS reachability information;
+	142 | GADDR;	
+	143	| MT-Port-Capability;
+	144	| MT-Capability;
+	145 | TRILL Neighbor TLV;
+	147 | MAC-RI;
+	148 | BFD-Enabled;
+	176	| Nortel proprietary;
+	177	| Nortel proprietary;
+	211 | Restart;
+	222 | MT-ISN;
+	223 | MT IS Neighbor Attribute;
+	229 | M-Topologies;
+	232 | IPv6 Interface Address;
+	233 | IPv6 Global Interface Address;
+	234 | Unassigned;
+	235 | MT IP. Reach;
+	236 | IPv6 IP. Reach;
+	237 | MT IPv6 IP. Reach;	
+	240	| P2P Adjacency Three-Way State;
+	242 | IS-IS Router CAPABILITY;
+	250 | IPv6 Interface Address;
+	251 | Generic Information;
+// si: ok... this is off by one... so 130 | IS-IS::Protocols_Supported; is actually 129
+str# IS-IS Var Field Rtns;
+	  1 | Padding Option;
+	  2 | IS-IS Area Addr;
+	  3 | LSP IS Neighbors;
+	  4 | IS-IS ES Neighbors;
+	  5 | IS-IS Desig Lvl 2 Int Sys;
+	  6 | IS-IS Addr Pref;
+	  7 | Hello IS Neighbors;
+	  9 | IS-IS Padding;
+	 10 | IS-IS LSP Entries;
+	 11 | IS-IS Authent;
+	 22 | IS-IS::Extended_IS_Reachability;					*strangehow it got to be there, got to get sorted out later.
+	 23 | IS-IS::Extended_IS_Reachability;
+//	 24 | IS-IS::IS_Neighbor_Attribute;
+//	 25 | IS-IS::IS_Alias_ID;
+//	 43 | IS-IS::DECnet_Phase_IV;
+//	 67 | IS-IS::Lucent_proprietary;
+	129 | IS-IS::IP_Internal_Reachability_Information;
+	130 | IS-IS::Protocols_Supported;
+	132 | IS-IS::Inter-Domain_Routing_Protocol_Information;
+	133 | IS-IS::IP_Interface_Address;
+	138 | IS-IS::Dynamic_Hostname;
+	144 | IS-IS::MT-Port-Capability;
+	145 | IS-IS::MT-Capability;
+	223	| IS-IS::MT-ISN;
+	230	| IS-IS::M-Topologies;
+	241	| IS-IS::Adjacency Three-Way State;
+str# OSI-PDU Options;
+	Padding Option;
+	;
+	;
+	Reason For Discard;
+	;
+	Quality of Service Maintenance;
+	;
+	Security Option;
+	Suggested ES Config Timer Option;
+	;
+	Source Routing;
+	;
+	;
+	Recording of Route;
+	Padding Option;
+	Priority Option;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	Address Mask Option;
+	SNPA Mask Option;
+str# OSI Reasn For Disc Clss of Err;
+	General Error Class;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	Address Error Class;
+	Source Routing Error Class;
+	Lifetime Error Class;
+	PDU Discard Error Class;
+	Reassembly Error Class;
+	;
+str# OSI Gen Err Class Meaning;
+	Reason Not Specified;
+	Protocol Procedure Error;
+	Incorrect Checksum;
+	PDU Discarded Due To Congestion;
+	Header Syntax Error (Cannot Be Parsed);
+	Segmentation Needed But Not Permitted;
+	Incomplete PDU Received;
+	Duplicate Option;
+str# OSI Src Routng Err Class Meaning;
+	Unspecified Source Routing Error;
+	Syntax Error In Source Routing Field;
+	Unknown Address In Source Routing Field;
+	Path Not Acceptable;
+str# OSI Discard Err Class Meaning;
+	Unsupported Option Not Specified;
+	Unsupported Protocol Version;
+	Unsupported Security Option;
+	Unsupported Source Routing Option;
+	Unsupported Recording Of Route Option;
+str# OSI Qualty of Srvc Maint Types;
+	Reserved Service Type;
+	Source Address Specific Service Type;
+	Destination Address Specific Service Type;
+	Globally Unique Service Type;
+str# OSI QoS Labels;
+	Reserved QoS Data:;
+	Source Address Specific QoS Data:;
+	Destination Address Specific QoS Data:;
+	Globally Unique QoS Data:;
+str# OSI Security Types;
+	Reserved;
+	Source Address Specific;
+	Destination Address Specific;
+	Globally Unique;
+str# OSI ST Data Labels;
+	Reserved Security Data:;
+	Source Address Specific Security Data:;
+	Destination Address Specific Security Data:;
+	Globally Unique Security Data:;
+str# TARP Type Names;
+	Level 1 TARP Request;
+	Level 2 TARP Request;
+	TARP Response;
+	TARP Address Change;
+	TARP Request TID;
+	

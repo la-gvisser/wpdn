@@ -1,0 +1,3007 @@
+// iSCSI - Small Computer Systems Interface
+
+// notes
+// g[1] = opcode
+// g[2] = Total AHS length
+// g[3] = Data Segment Length
+// g[a] = random - will be clobbered
+// g[b] = random - will be clobbered but less so than g[a]
+// g[0x14] = WHOA to select Data-In response datasegment
+// supposed to travel on port 3260
+void iSCSI;
+	// there seem to be a lot of false positives being caught that are not long enough...
+	// check to see if the next few bytes are all zero... if so, get out
+	l[1] = pl[0];
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+
+	TNXT -iSCSI::Main;
+
+void iSCSI::Main;
+	LABL 0 0 0 b1 iSCSI - Internet Small Computer Systems Interface;
+	DBIT 2 0 5  5 incr 2 bits;					//si: yeah i know that there are reserved opcodes...
+	HBIT 6 1 5  5 Opcode:;						//si: but i'm just gonna ignore those for now
+	DECR 1;										//si: we incr'd 1 to get the opcode for the check
+	TST# 0 1 0 0 iSCSI_Check_List;				//si: i only want to jump if the opcode is recognized
+	DUMP 0 10 90 c2 iSCSI Data:;
+	LABL 0  0  0 14 possibly continuation data;
+	TRTS;
+
+void iSCSI_Check_OK;
+	iSCSI::BHS;
+	if (g[2] != 0) {
+	 iSCSI::AHS;                              
+	}
+	//iSCSI::Header_Digest;						//si: the login tells you if you have this or not... 
+												//    so there's no way to continue to pass that info on
+	TGTE 0 10 0 0 RETURN;
+	if (g[3] > 0)
+	{
+		iSCSI::Data_Segment;					//si: only doing this for login & text - request / response right now
+	}
+	TGTE 0 10 0 0 RETURN;
+	//if (g[1] == 1)
+	//{
+		//if (g[16] >= 16)
+		//{
+			//LABL 0 0  0 b7 SCSI Command Description Block\SCSI CDB:;
+			//HBYT 0 a 90 c2 Opcode:;
+			//CST# 0 a 0 14 iSCSI::CDB::Opcode_List;
+			//DUMP f 0 90 c2 SCSI Cmd Desc Block:;
+			//LABL 0 0 0 b8;
+		//}
+	//}
+	//iSCSI::Data_Digest;
+	TRTS;
+
+void iSCSI::BHS;								//si: all bhs's are 48 bytes
+	LABL  0 0  0 b7 Basic Header Segment\BHS:;
+	DBIT  1 0  5  5; 							//si: skip one bit
+	DBIT  1 a 90 c2 I bit:;
+    CBIT 0 a 0 14 Immediate delivery marker is ON;
+    SKIP 1;
+    LABL 0 0 0 14 Immediate delivery marker is OFF;
+	HBIT  6 1 90 c2 Opcode:;
+	 CST# 0 1 0 14 iSCSI::BHS_Opcode_List;
+	 BREM 0 11;
+	 TSB# 0 1 0 0 iSCSI::BHS_Opcode_Func_List;
+	 BREM 0 12;
+	 if (g[0x11] != g[0x12]) {					//si: means we've done the tsb# -> iSCSI::BHS_Opcode_Func_List
+	  LABL 0 0 0 b8;
+	  TRTS;
+	 }
+	DBIT  1 a 90 c2 Final Bit:;
+	 CEQU 1 a 0 14 Final (or only) PDU of sequence;
+	DBIT  7 0 90 c2 Opcode Spec Field:;
+	HWRD  0 a 90 c2 Opcode Spec Fields:;
+	DBYT  0 2 90 c2 Total AHS Length:;
+	INCR 1;										//si: the data seg length is supposed to be 3 bytes... but we don't have anything that does 3 bytes
+	DWRD  0 3 90 c2 Data Segment Length:;
+	HEX#  8 0 90 c2 Logical Unit Num:;
+	DLNG  0 a 90 c2 Init Task Tag:;
+	DUMP 1c 0 90 c2 Opcode Spec Fields:;		//si: starts at offset 20 bytes
+	LABL  0 0  0 b8;
+	TRTS;
+
+void iSCSI::AHS;                                     
+	LABL 0 0  0 b7 Additional Header Segment\AHS:;
+	DWRD 0 a 90 c2 AHS Length:;
+	SLTE a 83;                                       
+	SKIP 1;
+	 LABL 0 0 0 14 Length Suspicious;
+	BBYT 0 b 90 c2 AHS Type:;
+
+	SUBG 3 2;									//si: sub 3 bytes for ahs length and type fields
+	DUMP 0 2 90 c2 AHS Data:;
+	LABL 0 0  0 b8;
+	TRTS;
+
+void iSCSI::Header_Digest;
+	LABL 0 0 0 b7 Header-Digest;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void iSCSI::Data_Segment;
+	l[4] = g[16];
+	if (g[1] == 3) {									//si: login request
+	 LABL 0 0 0 b7 Data Segment\DS:;
+	 iSCSI::Data_Segment::Login_Request_Response;
+	 //LABL 0 0 0 b8;
+	}
+	if (g[1] == 4) {									//si: text request
+	 LABL 0 0 0 b7 Data Segment;
+	 iSCSI::Data_Segment::Login_Request_Response;
+	 //LABL 0 0 0 b8;
+	}
+	if (g[1] == 0x21)									//Ri:No trace
+	{
+		LABL 0 0 0 b7 Data Segment;
+		LABL 0 0 0 14 Sense and Response Data;
+		DWRD 0 a 90 c2 Sense Length:;
+		CHR# 0 a 90 c2 Sense Data:;
+		l[1] = g[2];
+		l[1] -= g[0xa];
+		if (l[1]!=0)
+		{
+			CHR# 0 41 90 c2 Response Data:;
+		}
+	}
+	if (g[1] == 0x23) {									//si: login response
+	 LABL 0 0 0 b7 Data Segment;
+	 iSCSI::Data_Segment::Login_Request_Response;
+	 //LABL 0 0 0 b8;
+	}
+	if (g[1] == 0x24) {									//si: text response
+	 LABL 0 0 0 b7 Data Segment;
+	 iSCSI::Data_Segment::Login_Request_Response;
+	 //LABL 0 0 0 b8;
+	}
+  if (g[1] == 0x25)
+  {
+    if (g[4]==s[1])
+    {
+      //g[11] = s[2];
+      LABL 0 0 0 b7 Data Segment;
+      //CST# 0 b 0 14 iSCSI::CDB::Opcode_Resp_List;
+      WHOA 0 14 0 0 iSCSI::CDB::Resp;
+      
+      l[5] = g[16];
+    	if (l[5] == l[4])
+    	{
+				DUMP 0 3 90 c2 Data Segment:;
+			}
+      
+			//TSB# 0 b 90 c2 iSCSI::CDB::Resp;	    //Ri:DataSegments for every command's response
+			SKIP 2;
+    }
+		
+    LABL 0 0 0 b7 Data Segment;
+    DUMP 0 3 90 c2 Data Segment:;
+  }
+  if (g[1] == 0x32)
+  {
+  	LABL 0 0 0 b7 Data Segment;
+  	LABL 0 0 0 14 Sense Data and iSCSI Event Data;
+		DWRD 0 a 90 c2 Sense Length:;
+		CHR# 0 a 90 c2 Sense Data:;
+		l[1] = g[2];
+		l[1] -= g[0xa];
+		if (l[1]!=0)
+		{
+			CHR# 0 41 90 c2 iSCSI Event Data:;
+		}
+  }
+  
+	if (g[1] != 3)
+  {
+		if (g[1] != 4)
+		{
+			if (g[1] != 0x23)
+			{
+				if (g[1] != 0x24)
+				{
+					if (g[1] != 0x25)
+					{
+						if (g[1] != 0x21)
+						{
+							if (g[1] != 0x32)
+                    {
+                      LABL 0 0 0 b7 Data Segment;
+					    				DUMP 0 3 90 c2 Data Segment:;
+	}	}	}	} }	}	}
+
+		LABL 0 0 0 b8;
+
+//Data Segment Padding
+    l[1] = g[3];
+    l[1] %= 4;
+    if (l[1]!=0)
+    {
+        g[10] = 4;
+        g[10] -= l[1];
+        HEX# 0 a 90 c2 Padding:;
+        DGLB 0 a 4 14 "(";
+        LABL 0 0 0 4 " bytes)";
+    }
+					    				
+    TRTS;
+
+void iSCSI::Data_Digest;
+	LABL 0 0 0 b7 Data-Digest;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void iSCSI::BHS::Total AHS Length and Data Segment Length;
+    DBYT  0 2 90 c2 Total AHS Length:;
+    g[10]=pb[0];                    
+    if (g[10]==0)
+    {
+        //INCR 1;
+        DBYT 0 0 5 c2 Data Segment Length:;
+	    DWRD 0 3 90 0;                
+    }
+    if (g[10]!=0)
+    {
+        HBYT 0 0 90 c2 Data Segment Length:;
+        HWRD 80000000 3 0 0;
+    }
+    TRTS;
+
+// ----- iSCSI Basic Header Segments ---------------------------------------------------
+
+void iSCSI::BHS::NOP-Out;								//0x00 
+	BBYT 1 a 90 c9 Flags:;
+	 LABL 0 0 0 d4 xxxx xx.. Reserved;
+	 CBIT 1 1 0 d4 .... ..1. I Bit Set;
+	 CLSE 0 0 0 d4 .... ..0. I Bit Not Set;
+	 LABL 0 0 0 d4 .... ...x Reserved;
+	LABL 0 0 0 b8;
+	HEX# 2 0 90 c2 Reserved:;
+	DBYT 0 2 90 c2 Total AHS Length:;
+	INCR 1;							//si: the data seg length is supposed to be 3 bytes... but we don't have anything that does 3 bytes
+	DWRD 0 3 90 c2 Data Segment Length:;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	DLNG 0 a 90 c2 Command Seq Num:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	if (g[16] >= 16)
+	{
+		HEX# 10 0 90 c2 Reserved:;
+	}
+	TRTS;
+
+void iSCSI::BHS::SCSI_Command;							//0x01
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (F) No unsolicited SCSI Data-Out PDUs follow;
+	 CLSE 0 0 0 d4 0... .... (F) SCSI Data-Out PDUs follow;
+	 CBIT 6 a 0 d4 .1.. .... (R) Expected to input data;
+	 CLSE 0 0 0 d4 .0.. .... (R) Not expected to input data;
+	 CBIT 5 a 0 d4 ..1. .... (W) Expected to output data;
+	 CLSE 0 0 0 d4 ..0. .... (W) Not expected to output data;
+     LABL 0 0 0 d4 ...x x... Reserved;
+     l[1] = g[0xa];
+     ANDG 7 41;
+     CEQU 7 41 0 d4 .... .111 Task Attribute: Reserved;
+     CEQU 6 41 0 d4 .... .110 Task Attribute: Reserved;
+     CEQU 5 41 0 d4 .... .101 Task Attribute: Reserved;
+     CEQU 4 41 0 d4 .... .100 Task Attribute: ACA;
+     CEQU 3 41 0 d4 .... .011 Task Attribute: Head of Queue;
+     CEQU 2 41 0 d4 .... .010 Task Attribute: Ordered;
+     CEQU 1 41 0 d4 .... .001 Task Attribute: Simple;
+     CEQU 0 41 0 d4 .... .000 Task Attribute: Untagged;
+	LABL 0 0 0 b8;
+	HWRD 0 a 90 c2 Reserved:;
+    iSCSI::BHS::Total AHS Length and Data Segment Length;
+	//DBYT  0 2 90 c2 Total AHS Length:;
+	//INCR 1;												//si: the data seg length is supposed to be 3 bytes... but we don't have anything that does 3 bytes
+	//DWRD  0 3 90 c2 Data Segment Length:;
+	HEX#  8 0 90 c2 Logical Unit Num:;
+	DLNG  0 a 90 c2 Init Task Tag:;
+
+    s[1] = g[10];                                          //Ri:Super G s[1] for Init Task Tag
+
+    DLNG  0 a 90 c2 Exp Data Trnsfr Len:;
+	DLNG  0 a 90 c2 Cmd Seq Num:;
+
+	DLNG  0 a 90 c2 Exp Stat Seq Num:;
+
+			LABL 0 0  0 b7 SCSI Command Description Block\SCSI CDB:;
+			HBYT 0 a 90 c2 Opcode:;
+
+      if (g[10]==0x7f)
+			{
+				SKIP 1;
+			}
+			CST# 0 a 0 14 iSCSI::CDB::Opcode_List;
+			//DUMP f 0 90 c2 SCSI Cmd Desc Block:;
+			TSB# 0 a 90 c2 iSCSI::CDB::CMD;	    //Ri:Commands content begine from here
+
+	TRTS;
+
+void iSCSI::BHS::Task_Management_Function_Request;		//0x02 - done with no pkts to check with
+	DBIT 1 a 90 c2 Reserved [1]:;                       
+	DBIT 7 a 90 c2 Function:;
+	 CST# 0 a 0 14 iSCSI::BHS::Task_Management_Function_Request_List;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Referenced Task Tag:;
+	DLNG 0 a 90 c2 Cmd Seq Num:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	DLNG 0 a 90 c2 Ref Cmd Seq Num:;  
+	DLNG 0 a 90 c2 Exp Data Seq Num:;
+	HLNG 0 a 90 c2 Reserved:;
+    HLNG 80000000 0 0 0;
+    //D64B 0 0 5 c2 Reserved:;
+    //LABL 0 0 0 14 (8 Bytes);
+	TRTS;                                                        
+
+void iSCSI::BHS::Login_Request;							//0x03
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (T) Initiator is ready to transit to next stage;
+	 CLSE 0 0 0 d4 0... .... (T) Initiator is not ready to transit to next stage;
+	 CBIT 6 a 0 d4 .1.. .... (C) Key=value pairs not complete;
+	 CLSE 0 0 0 d4 .0.. .... (C) Ends a set of key=value pairs;
+	 LABL 0 0 0 d4 ..xx .... Reserved;
+     DECR 1;
+     BBIT 1 b 5 5;
+     DBIT 3 0 5 5;
+     DBIT 2 a 5 5;
+      CEQU 0 a 0 d4 .... 00.. Current Stage(CSG): Security Negotiation;
+      CEQU 1 a 0 d4 .... 01.. Current Stage(CSG): Login Operational Negotiation;
+      CEQU 3 a 0 d4 .... 11.. Current Stage(CSG): Full Feature Phase;
+     if (g[11]==1)
+     {
+        DBIT 2 a 5 5;
+         CEQU 0 a 0 d4 .... ..00 Next Stage(NSG): Security Negotiation;
+         CEQU 1 a 0 d4 .... ..01 Next Stage(NSG): Login Operational Negotiation;
+         CEQU 3 a 0 d4 .... ..11 Next Stage(NSG): Full Feature Phase;
+     }
+     if (g[11]==0)
+     {
+        DBIT 2 a 5 d4 .... ..xx Reserved;
+     }
+	 LABL 0 0 0 b8;
+
+	DBYT 0 a 90 c2 Max Version Supported:;
+	DBYT 0 a 90 c2 Min Version Supported:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	BBIT 2 b 5 5 "T Field:";
+	INCR 1;									//si: align the bits
+	DECR 1;
+	 if (g[0xb] == 0x00) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 OUI Format;
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0 0 14 OUI Format;
+		HEX# 3 0 90 c2 OUI:;              
+		HEX# 3 0 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x01) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0  0 14 EN Format (IANA Enterprise Num);
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0  0 14 EN Format (IANA Enterprise Num);
+		HBIT 6 0 90 c2 Reserved:;
+		HEX# 3 0 90 c2 IANA Ent Num:;
+		HWRD 0 a 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x10) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 Random;
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0 0 14 Random;
+		HBIT 6 0 90 c2 Reserved:;
+		HEX# 3 0 90 c2 Random:;
+		HWRD 0 a 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x11) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 Reserved;
+	   BBIT 2 b 90 c2 "T Field:";
+	   LABL 0 0 0 14 Reserved;
+	   INCR 1;
+	   HEX# 5 0 90 c2 Reserved:;
+	   LABL 0 0 0 b8;
+	 }
+	 //if (g[0xb] != 0x00) {                 
+	  //if (g[0xb] != 0x01) {
+	   //if (g[0xb] != 0x10) {
+	    //if (g[0xb] != 0x11) {
+	     //HEX# 8 0 90 c2 Logical Unit Num:;
+	 //}}}}
+    HWRD 0 a 90 c2 TSIH:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HWRD 0 a 90 c2 Connection ID:;
+	HWRD 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Cmd Seq Num:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	HEX# 10 0 90 c2 Reserved:;              //Ri:DUMP c 0 90 c2 Reserved:
+	TRTS;
+
+void iSCSI::BHS::Text_Request;							//0x04 - done with no pkts to check with
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (F) Last or only text request;
+	 CLSE 0 0 0 d4 0... .... (F) More text requests follow;
+	 CBIT 6 a 0 d4 .1.. .... (C) Key=value pairs not complete;
+	 CLSE 0 0 0 d4 .0.. .... (C) Ends a set of key=value pairs;
+	 LABL 0 0 0 d4 ..xx xxxx Reserved;
+	 LABL 0 0 0 b8;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	DLNG 0 a 90 c2 Cmd Seq Num:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	HEX# 10 0 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::SCSI_Data_Out;							//0x05
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (F) Last data PDU;
+	 CLSE 0 0 0 d4 0... .... (F) More data PDU follow;
+	 LABL 0 0 0 d4 .xxx xxxx Reserved;
+	 LABL 0 0 0 b8;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Data Seq Num:;
+	DLNG 0 a 90 c2 Buffer Offset:;
+	HLNG 0 a 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::Logout_Request;						//0x06 - done with no pkts to check with
+	DBIT 1 a 90 c2 Reserved [1]:;
+	DBIT 7 a 90 c2 Reason Code:;
+	 CEQU 0 a 0 14 Close the session;
+	 CEQU 1 a 0 14 Close the connection;
+	 CEQU 2 a 0 14 Remove the connection for recovery;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HWRD 0 a 90 c2 Connection ID:;
+	HWRD 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Cmd Seq Num:;
+	DLNG 0 a 90 c2 Ex Stat Seq Num:;
+	HEX# 10 0 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::SNACK_Request;							//0x10 - done with no pkts to check with
+	DBIT 1 a 90 c2 Reserved [1]:;
+	DBIT 3 a 90 c2 Reserved:;
+	DBIT 4 b 90 c2 Type:;
+	 CEQU 0 b 0 14 Data/R2T SNACK;
+	 CEQU 1 b 0 14 Status SNACK;
+	 CEQU 2 b 0 14 DataACK;
+	 CEQU 3 b 0 14 R-Data SNACK;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+    if (g[11]!=2)
+    {
+	    HLNG 0 a 90 c2 SNACK Tag:;
+    }
+    if (g[11]==2)
+    {
+        HLNG 0 a 90 c2 Targ Transfer Tag:;
+    }
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Exp Stat Seq Num:;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 a 90 c2 BegRun:;
+	DLNG 0 a 90 c2 Run Length:;
+	TRTS;
+
+void iSCSI::BHS::NOP-In;								//0x20 - done with no pkts to check with
+	//MOVE 1 a;                                
+	//GBYT 1 a;
+	//BGLB 0 a 90 c9 Flags:;
+	 //DBIT 1 a 90 c2 Reserved [1]:;
+	//LABL 0 0 0 c8;
+    HBIT 1 a 90 c2 Reserved [1]:;
+	HBIT 7 a 90 c2 Reserved:;
+	//INCR 1;											
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	DLNG 0 a 90 c2 Status Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	HEX# c 0 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::SCSI_Response;							//0x21 - done with no pkts to check with
+
+     BBYT 1 a 90 c9 Flags:;
+      LABL 0 0 0 d4 1... .... Reserved[1];
+      LABL 0 0 0 d4 .xx. .... Reserved;
+      CBIT 4 a 0 d4 ...1 .... (o) Residual overflow for read;
+	   CLSE 0 0 0 d4 ...0 .... (o) No residual overflow for read;
+      CBIT 4 a 0 d4 .... 1... (u) Residual underflow for read;
+	   CLSE 0 0 0 d4 .... 0... (u) No residual underflow for read;
+      CBIT 4 a 0 d4 .... .1.. (O) Residual overflow for write;
+	   CLSE 0 0 0 d4 .... .0.. (O) No residual overflow for write;
+      CBIT 4 a 0 d4 .... ..1. (U) Residual underflow for write;
+	   CLSE 0 0 0 d4 .... ..0. (U) No residual underflow for write;
+      LABL 0 0 0 d4 .... ...x Reserved;
+      LABL 0 0 0 b8;
+
+	HBYT 0 a 90 c2 Response:;
+	 CEQU 0 a 0 14 Command Completed at Target;
+     CEQU 1 a 0 14 Target Failure;
+	HBYT 0 a 90 c2 Status:;
+	 CEQU  0 a 0 14 Good;
+	 CEQU  2 a 0 14 Check Condition;
+	 CEQU  8 a 0 14 Busy;
+	 CEQU 18 a 0 14 Reservation Conflict;
+	 CEQU 28 a 0 14 Task Set Full;
+	 CEQU 30 a 0 14 ACA Active;
+	 CEQU 40 a 0 14 Task Aborted;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	g[0xb] = pl[0];
+	if (g[0xb] == 0)
+	{
+		HLNG 0 a 90 c2 Reserved:;
+	}
+	if (g[0xb] != 0)
+	{
+		HLNG 0 a 90 c2 SNACK Tag:;
+	}
+	DLNG 0 a 90 c2 Status Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	DLNG 0 a 90 c2 Exp Data Seq Num:;
+	DLNG 0 a 90 c2 Bidrctnl Read Res Cnt:;           
+	DLNG 0 a 90 c2 Residual Count:;
+
+	TRTS;
+
+void iSCSI::BHS::Task_Management_Function_Response;		//0x22
+	BBIT 0 a 90 c2 Reserved [1]:;
+	INCR 1;
+	HBYT 0 b 90 c2 Response:;
+	 CEQU 0 b 0 14 Function complete;
+	 CEQU 1 b 0 14 Task does not exist;
+	 CEQU 2 b 0 14 LUN does not exist;
+	 CEQU 3 b 0 14 Task still allegiant;
+	 CEQU 4 b 0 14 Task allegiance reassignment not supported;
+	 CEQU 5 b 0 14 Task management function not supported;
+	 CEQU 6 b 0 14 Function authorization failed;
+     CEQU ff b 0 14 Function rejected;
+	HBYT 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	HEX# c 0 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::Login_Response;						//0x23
+
+    BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (T) Ready to transit to next stage;
+	 CLSE 0 0 0 d4 0... .... (T) Not ready to transit to next stage;
+	 CBIT 6 a 0 d4 .1.. .... (C) Key=value pairs is not complete;
+	 CLSE 0 0 0 d4 .0.. .... (C) Ends a set of key=value pairs;
+     LABL 0 0 0 d4 ..xx .... Reserved;
+     DECR 1;
+     BBIT 1 b 5 5;
+     DBIT 3 0 5 5;
+     DBIT 2 a 5 5;
+      CEQU 0 a 0 d4 .... 00.. Current Stage(CSG): Security Negotiation;
+      CEQU 1 a 0 d4 .... 01.. Current Stage(CSG): Login Operational Negotiation;
+      CEQU 3 a 0 d4 .... 11.. Current Stage(CSG): Full Feature Phase;
+     if (g[11]==1)
+     {
+        DBIT 2 a 5 5;
+         CEQU 0 a 0 d4 .... ..00 Next Stage(NSG): Security Negotiation;
+         CEQU 1 a 0 d4 .... ..01 Next Stage(NSG): Login Operational Negotiation;
+         CEQU 3 a 0 d4 .... ..11 Next Stage(NSG): Full Feature Phase;
+     }
+     if (g[11]==0)
+     {
+        DBIT 2 a 5 d4 .... ..xx Reserved;
+     }
+	 LABL 0 0 0 b8;
+	DBYT 0 a 90 c2 Max Version Supported:;
+	DBYT 0 a 90 c2 Act Version Supported:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+
+    BBIT 2 b 5 5 "T Field:";
+	INCR 1;									//si: align the bits
+	DECR 1;
+	 if (g[0xb] == 0x00) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 OUI Format;
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0 0 14 OUI Format;
+		HEX# 3 0 90 c2 OUI:;              
+		HEX# 3 0 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x01) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0  0 14 EN Format (IANA Enterprise Num);
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0  0 14 EN Format (IANA Enterprise Num);
+		HBIT 6 0 90 c2 Reserved:;
+		HEX# 3 0 90 c2 IANA Ent Num:;
+		HWRD 0 a 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x10) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 Random;
+		BBIT 2 b 90 c2 "T Field:";
+		LABL 0 0 0 14 Random;
+		HBIT 6 0 90 c2 Reserved:;
+		HEX# 3 0 90 c2 Random:;
+		HWRD 0 a 90 c2 Qualifier:;
+	   LABL 0 0 0 b8;
+	 }
+	 if (g[0xb] == 0x11) {
+	   LABL 0 0 0 b9 ISID:;
+	   LABL 0 0 0 14 Reserved;
+	   BBIT 2 b 90 c2 "T Field:";
+	   LABL 0 0 0 14 Reserved;
+	   INCR 1;
+	   HEX# 5 0 90 c2 Reserved:;
+	   LABL 0 0 0 b8;
+	 }
+
+    HWRD 0 a 90 c2 TSIH:;
+	DLNG  0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	DBYT 0 a 90 c2 Status-Class:;
+	 CEQU 0 a 0 14 Success;
+	 CEQU 1 a 0 14 Redirection;
+	 CEQU 2 a 0 14 Initiator Error;
+	 CEQU 3 a 0 14 Target Error;
+	HBYT 0 a 90 c2 Status-Detail:;
+    DECR 2;
+    HWRD 0 a 90 c2 Status:;
+    CST# 0 a 0 14 iSCSI::BHS::Login_Response::Status_List;
+	HEX# a 0 90 c2 Reserved:;
+	TRTS;
+
+str# iSCSI::BHS::Login_Response::Status_List;
+    0x0000 | Success;
+    0x0101 | Target moved temporarily;
+    0x0102 | Target moved permanently;
+    0x0200 | Initiator error;
+    0x0201 | Authentication failure;
+    0x0202 | Authorization failure;
+    0x0203 | Not found;
+    0x0204 | Target removed;
+    0x0205 | Unsupported version;
+    0x0206 | Too many connections;
+    0x0207 | Missing parameter;
+    0x0208 | Can't include in session;
+    0x0209 | Session type not supported;
+    0x020a | Session does not exist;
+    0x020b | Invalid during login;
+    0x0300 | Target error;
+    0x0301 | Service unavilable;
+    0x0302 | Out of resources;
+
+void iSCSI::BHS::Text_Rsponse;							//0x24
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (F) Final (or only) PDU of sequence - Finished whole operation;
+	 CLSE 0 0 0 d4 0... .... (F) Target has more work to do (invites a follow-on text request);
+	 CBIT 6 a 0 d4 .1.. .... (C) Text Response is not complete;
+	 CLSE 0 0 0 d4 .0.. .... (C) Text Response ends a set of key=value pairs;
+	 LABL 0 0 0 d4 ..xx xxxx Reserved;
+	 LABL 0 0 0 b8;
+
+	HWRD  0 a 90 c2 Reserved:;
+    iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 a 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;       
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	HEX# c 0 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::SCSI_Data_In;							//0x25
+	BBIT 7 0 5 5 incr past to the last byte;
+	BBIT 1 9 5 5 status flag;
+	DECR 1;
+	BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (F) Last input data PDU;
+	 CLSE 0 0 0 d4 0... .... (F) More input data PDU follow;
+	 CBIT 6 a 0 d4 .1.. .... (A) Ack bit is set;
+	 CLSE 0 0 0 d4 .0.. .... (A) Ack bit is NOT set;
+	 LABL 0 0 0 d4 ..xx x... Reserved;
+	 if (g[9] == 1)
+	 {
+		CBIT 2 a 0 d4 .... .1.. (U) Residual Underflow Occurred;
+		CLSE 0 0 0 d4 .... .0.. (U) Residual Underflow Did Not Occur;
+		CBIT 1 a 0 d4 .... ..1. (O) Residual Overflow Occurred;
+		CLSE 0 0 0 d4 .... ..0. (O) Residual Overflow Did Not Occur;
+	 }
+	 if (g[9] != 1)
+	 {
+		LABL 0 0 0 d4 .... .xx. Reserved;
+	 }
+	 CBIT 0 a 0 d4 .... ...1 (S) Status Included in Operation;         
+	 CLSE 0 0 0 d4 .... ...0 (S) Status Not Included in Operation;
+	LABL 0 0 0 b8;
+	HBYT 0 a 90 c2 Reserved:;
+	if (g[9] == 1)
+	{
+		HBYT 0 a 90 c2 Status:;
+		CST# 0 a  0 14 iSCSI::BHS::Status_List;
+	}
+	if (g[9] != 1)
+	{
+		HBYT 0 a 90 c2 Reserved:;
+	}
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 4 90 c2 Init Task Tag:;                         //Ri:Set g[4] for compare to super G
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	DLNG 0 a 90 c2 Data Seq Num:;
+	DLNG 0 a 90 c2 Buffer Offset:;
+	DLNG 0 a 90 c2 Residual Count:;
+
+	TRTS;
+
+void iSCSI::BHS::Logout_Response;						//0x26
+	BBIT 0 a 90 c2 Reserved [1]:;
+	INCR 1;
+	HBYT 0 b 90 c2 Response:;
+	 CEQU 0 b 0 14 Connection or session closed successfully;
+	 CEQU 1 b 0 14 CID not found;
+	 CEQU 2 b 0 14 Connection recovery is not supported;
+	 CEQU 3 b 0 14 Cleanup failed for various reasons;
+	HBYT 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	HLNG 0 a 90 c2 Reserved:;
+	DWRD 0 a 90 c2 Time to Wait:;
+	DWRD 0 a 90 c2 Time to Retain:;
+	HLNG 0 1 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::SCSI_R2T;								//0x31
+	BBIT 0 a 90 c2 Reserved [1]:;
+	INCR 1;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+    HEX# 8 0 90 c2 Logical Unit Num:;
+	DLNG 0 0 90 c2 Init Task Tag:;
+	HLNG 0 a 90 c2 Targ Transfer Tag:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	DLNG 0 a 90 c2 R2T Seq Num:;
+	DLNG 0 a 90 c2 Buffer Offset:;
+	DLNG 0 a 90 c2 Desired Data Trnsfr Len:;
+	TRTS;
+
+void iSCSI::BHS::Asynchronous_Message;					//0x32
+	BBIT 0 a 90 c2 Reserved [1]:;
+	INCR 1;
+	HWRD 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	g[0xb] = pb[28];
+	if (g[0xb] == 0)						//si: only if the asyncEvent == 0, then it's a LUN
+	{
+		HEX# 8 0 90 c2 Logical Unit Num:;
+	}
+	if (g[0xb] != 0)
+	{
+		HEX# 8 0 90 c2 Reserved:;
+	}
+	HLNG 0 a 90 c2 0xffffffff:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	HBYT 0 b 90 c2 Async Event:;
+	 CEQU  0 b 0 14 SCSI Asynchronous Event is reported in the sense data;
+	 CEQU  1 b 0 14 Target requests Logout;
+	 CEQU  2 b 0 14 Target indicates it will drop the connection;
+	 CEQU  3 b 0 14 Target indicates it will drop all the connections of this session;
+	 CEQU  4 b 0 14 Target requests parameter negotiation on this connection;
+	 CEQU ff b 0 14 Vendor specific iSCSI event;
+	if (g[0xb] == 0xff)
+	{
+		HBYT 0 a 90 c2 Async VCode:;
+	}
+	if (g[0xb] != 0xff)
+	{
+		HBYT 0 a 90 c2 Reserved:;
+	}
+	if (g[0xb] == 1)
+	{
+		HWRD 0 a 90 c2 Parameter 1:;
+		LABL 0 0  0 14 Reserved;
+		HWRD 0 a 90 c2 Parameter 2:;
+		LABL 0 0  0 14 Reserved;
+		HWRD 0 a 90 c2 Parameter 3:;
+		LABL 0 0  0 14 seconds. Must issue a logout in this amt of time;
+	}
+	if (g[0xb] == 2)
+	{
+		HWRD 0 a 90 c2 Parameter 1:;
+		LABL 0 0  0 14 CID;
+		HWRD 0 a 90 c2 Parameter 2:;
+		LABL 0 0  0 14 seconds. Min time to wait before attempting to reconnect or reassign;
+		HWRD 0 a 90 c2 Parameter 3:;
+		LABL 0 0  0 14 Max time allowed to reassign commands after initial wait;
+	}
+	if (g[0xb] == 3)
+	{
+		HWRD 0 a 90 c2 Parameter 1:;
+		LABL 0 0  0 14 Reserved;
+		HWRD 0 a 90 c2 Parameter 2:;
+		if (g[0xa] == 0)
+		{
+			LABL 0 0  0 14 seconds. Reconnect can be attempted immediately;
+		}
+		if (g[0xa] != 0)
+		{
+			LABL 0 0  0 14 seconds. Min time to wait before attempting to reconnect or reassign;
+		}
+		HWRD 0 a 90 c2 Parameter 3:;
+		LABL 0 0  0 14 Max time allowed to reassign commands after initial wait;
+		if (g[0xa] == 0)
+		{
+			LABL 0 0 0 14 Session terminated;
+		}
+	}
+	if (g[0xb] == 4)
+	{
+		HWRD 0 a 90 c2 Parameter 1:;
+		LABL 0 0  0 14 Reserved;
+		HWRD 0 a 90 c2 Parameter 2:;
+		LABL 0 0  0 14 Reserved;
+		HWRD 0 a 90 c2 Parameter 3:;
+		LABL 0 0  0 14 seconds. Must honor request by using a Text Request in this amt of time;
+	}
+	if (g[0xb] != 1)
+	{
+		if (g[0xb] != 2)
+		{
+			if (g[0xb] != 3)
+			{
+				if (g[0xb] != 4)
+				{
+					HWRD 0 a 90 c2 Parameter 1:;
+					LABL 0 0  0 14 Reserved;
+					HWRD 0 a 90 c2 Parameter 2:;
+					LABL 0 0  0 14 Reserved;
+					HWRD 0 a 90 c2 Parameter 3:;
+					LABL 0 0  0 14 Reserved;
+	}	}	}	}
+	HLNG 0 a 90 c2 Reserved:;
+	TRTS;
+
+void iSCSI::BHS::Reject;								//0x3f
+	BBIT 0 a 90 c2 Reserved [1]:;
+	INCR 1;
+	HBYT 0 a 90 c2 Reason:;
+	 CST# 0 a 0 14 iSCSI::BHS::Reject_Reason;
+	HBYT 0 a 90 c2 Reserved:;
+	iSCSI::BHS::Total AHS Length and Data Segment Length;
+	HEX# 8 0 90 c2 Reserved:;
+	HLNG 0 a 90 c2 0xffffffff:;
+	HLNG 0 a 90 c2 Reserved:;
+	DLNG 0 a 90 c2 Stat Seq Num:;
+	DLNG 0 a 90 c2 Exp Cmd Seq Num:;
+	DLNG 0 a 90 c2 Max Cmd Seq Num:;
+	DLNG 0 a 90 c2 DataSN/R2T Seq Num:;                      
+	HLNG 0 a 90 c2 Reserved:;
+	HLNG 0 a 90 c2 Reserved:;
+	TRTS;
+
+
+
+
+
+// ----- iSCSI Helper Functions --------------------------------------------------------
+
+
+// ----- iSCSI Data Segments -----------------------------------------------------------
+
+void iSCSI::Data_Segment::Login_Request_Response;		
+	MOVE 0 a;
+	iSCSI::Kill_Zeros;
+	if (g[0xa] > 0)
+	{
+		HEX# 0 a 90 c2 Padding:;
+	}
+	iSCSI::Print_Strings;
+	TRTS;
+
+void iSCSI::Kill_Zeros;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 b;
+	if (g[0xb] == 0) {
+	 g[0xa] += 1;
+	 INCR 1;
+	}
+	if (g[0xb] != 0) {
+	 DECR 0 a;
+	 TRTS;
+	}
+	TNXT -iSCSI::Kill_Zeros;
+
+void iSCSI::Print_Strings;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 b;
+	while (g[0xb] != 0) {
+	 TGTE 0 10 0 0 RETURN;
+	 iSCSI::Print_Strings1;
+	 INCR 1;											//si: get rid of the '='
+	 LABL 0 0 0 2 ":";
+	 iSCSI::Print_Strings2;
+	 INCR 1;											//si: get rid of the '0'
+	 TGTE 0 10 0 0 RETURN;
+	 GBYT 0 b;
+	}
+	TRTS;
+
+void iSCSI::Print_Strings1;
+	TGTE 0 10 0 0 RETURN;
+	MOVE 0  a;
+	GSTR 2000003d a;									//3d -> '='
+	CHR# 0 a 12 0;
+	TRTS;
+
+void iSCSI::Print_Strings2;
+	TGTE 0 10 0 0 RETURN;
+	MOVE 0 a;
+	GSTR 0 a;
+	CHR# 0 a 90 0;
+	TRTS;
+
+
+// ----- iSCSI String Lists ------------------------------------------------------------
+
+str# iSCSI::BHS_Opcode_List;
+	//si: Initiator opcodes defined in this specification are [request PDUs]:
+	0x00 | NOP-Out;
+	0x01 | SCSI Command (encapsulates a SCSI Command Descriptor Block);
+	0x02 | SCSI Task Management function request;
+	0x03 | Login Request;
+	0x04 | Text Request;
+	0x05 | SCSI Data-out (for WRITE operations);
+	0x06 | Logout Request;
+	0x10 | SNACK Request;
+	0x1c | Vendor specific codes;
+	0x1d | Vendor specific codes;
+	0x1e | Vendor specific codes;
+
+	//si: Target opcodes are [response PDUs]:
+	0x20 | NOP-In;
+	0x21 | SCSI Response;
+	0x22 | SCSI Task Management function response;
+	0x23 | Login Response;
+	0x24 | Text Response;
+	0x25 | SCSI Data-in - for READ operations;
+	0x26 | Logout Response;
+	0x31 | Ready To Transfer (R2T) - sent by target when it is ready to receive data;
+	0x32 | Asynchronous Message - sent by target to indicate certain special conditions;
+	0x3c | Vendor specific codes;
+	0x3d | Vendor specific codes;
+	0x3e | Vendor specific codes;
+	0x3f | Reject;
+	//si: All other opcodes are reserved.
+
+str# iSCSI::BHS_Opcode_Func_List;
+	0x00 | iSCSI::BHS::NOP-Out;
+	0x01 | iSCSI::BHS::SCSI_Command;
+	0x02 | iSCSI::BHS::Task_Management_Function_Request;
+	0x03 | iSCSI::BHS::Login_Request;
+	0x04 | iSCSI::BHS::Text_Request;
+	0x05 | iSCSI::BHS::SCSI_Data_Out;
+	0x06 | iSCSI::BHS::Logout_Request;
+	0x10 | iSCSI::BHS::SNACK_Request;
+	0x20 | iSCSI::BHS::NOP-In;
+	0x21 | iSCSI::BHS::SCSI_Response;
+	0x22 | iSCSI::BHS::Task_Management_Function_Response;
+	0x23 | iSCSI::BHS::Login_Response;
+	0x24 | iSCSI::BHS::Text_Rsponse;
+	0x25 | iSCSI::BHS::SCSI_Data_In;
+	0x26 | iSCSI::BHS::Logout_Response;
+	0x31 | iSCSI::BHS::SCSI_R2T;
+	0x32 | iSCSI::BHS::Asynchronous_Message;
+	0x3f | iSCSI::BHS::Reject;
+
+str# iSCSI_Check_List;
+	   0 | iSCSI_Check_OK;
+	   1 | iSCSI_Check_OK;
+	   2 | iSCSI_Check_OK;
+	   3 | iSCSI_Check_OK;
+	   4 | iSCSI_Check_OK;
+	   5 | iSCSI_Check_OK;
+	   6 | iSCSI_Check_OK;
+	0x10 | iSCSI_Check_OK;
+	0x1c | iSCSI_Check_OK;
+	0x1d | iSCSI_Check_OK;
+	0x1e | iSCSI_Check_OK;
+	0x20 | iSCSI_Check_OK;
+	0x21 | iSCSI_Check_OK;
+	0x22 | iSCSI_Check_OK;
+	0x23 | iSCSI_Check_OK;
+	0x24 | iSCSI_Check_OK;
+	0x25 | iSCSI_Check_OK;
+	0x26 | iSCSI_Check_OK;
+	0x31 | iSCSI_Check_OK;
+	0x32 | iSCSI_Check_OK;
+	0x3c | iSCSI_Check_OK;
+	0x3d | iSCSI_Check_OK;
+	0x3e | iSCSI_Check_OK;
+	0x3f | iSCSI_Check_OK;
+
+
+str# iSCSI::BHS::Task_Management_Function_Request_List;
+	1 | Abort Task;
+	2 | Abort Task Set;
+	3 | Clear ACA;
+	4 | Clear Task Set;
+	5 | Logical Unit Reset;
+	6 | Target Warm Reset;
+	7 | Target Cold Reset;
+	8 | Task Reassign;
+
+str# iSCSI::BHS::Reject_Reason;
+	0x01 | Reserved;
+	0x02 | Data (payload) Digest Error;
+	0x03 | SNACK Reject;
+	0x04 | Protocol Error (e.g., SNACK request for a status that was already acknowledged);
+	0x05 | Command not supported;
+	0x06 | Immediate Command Reject - too many immediate commands;
+	0x07 | Task in progress;
+	0x08 | Invalid Data ACK;
+	0x09 | Invalid PDU field;
+	0x0a | Long Operation Reject - Can't generate Target Transfer Tag - out of resources;
+	0x0b | Negotiation Reset;
+	0x0c | Waiting for Logout;
+
+str# iSCSI::BHS::Status_List;
+	0x00 | GOOD;
+	0x02 | CHECK CONDITION;
+	0x08 | BUSY;
+	0x18 | RESERVATION CONFLICT;
+	0x28 | TASK SET FULL;
+	0x30 | ACA ACTIVE;
+	0x40 | TASK ABORTED;
+
+str# iSCSI::CDB::Opcode_List;
+    0x00 | Test Unit Ready;
+    0x03 | Request Sense;
+    0x04 | Format Unit;
+    0x07 | Reassign Blocks;
+    0x08 | Read(6);
+    0x0a | Write(6);
+    0x12 | Inquiry;
+    0x15 | Mode Select(6);
+    0x16 | Reserve(6);
+    0x17 | Release(6);
+    0x18 | Copy;
+    0x1a | Mode Sense(6);
+    0x1b | Start Stop Unit;
+    0x1c | Receive Diagnostics Results;
+    0x1E | Prevent-Allow Medium Removal;
+    0x1d | Send Diagnostic;
+    0x25 | Read Capacity;
+    0x28 | Read(10);
+    0x2a | Write(10);
+    0x2b | Seek(10);
+    0x2e | Write & Verify(10);
+    0x2f | Verify(10);
+    0x33 | Set Limits(10);
+    0x34 | Pre-Fetch(10);
+    0x35 | Synchronize Cache(10);
+    0x36 | Lock Unlock Cache(10);
+    0x37 | Read Defect Data(10);
+    0x39 | Compare;
+    0x3a | Copy And Verify;
+    0x3b | Write Buffer;
+    0x3c | Read Buffer;
+    0x3e | Read Long(10);
+    0x3f | Write Long(10);
+    0x40 | Change Definition;
+    0x41 | Write Same(10);
+    0x43 | Read TOC;
+    0x4c | Log Select;
+    0x4d | Log Sense;
+    0x50 | XdWrite(10);
+    0x51 | XpWrite(10);
+    0x52 | XdRead(10);
+    0x53 | XdWriteRead(10);
+    0x55 | Mode Select(10);
+    0x56 | Reserve(10);
+    0x57 | Release(10);
+    0x5a | Mode Sense(10);
+    0x5e | Persistent Reserve In;
+    0x5f | Persistent Reserve Out;
+    0x7f | Variable Length CDB;
+    //0x7f | Rebuild(32);
+    //0x7f | Regenerate(32);
+    //0x7f | XdRead(32);
+    //0x7f | XdWrite(32);
+    //0x7f | XdWriteRead(32);
+    //0x7f | XdWrite Extended(32);
+    //0x7f | XpWrite(32);
+    0x80 | XdWrite Extended(16);
+    0x81 | Rebuild(16);
+    0x82 | Regenerate(16);
+    0x83 | Extended Copy;
+    0x84 | Receive Copy Results;
+    0x88 | Read(16);
+    0x8a | Write(16);
+    0x8e | Write & Verify(16);
+    0x8f | Verify(16);
+    0x90 | Pre-Fetch(16);
+    0x91 | Synchronize Cache(16);
+    0x92 | Lock Unlock Cache(16);
+    0x93 | Write Same(16);
+    0xa8 | Read(12);
+    0xa0 | Report LUNs;
+    0xa3 | Report Device ID;
+    0xa4 | Set Device ID;
+    0xaa | Write(12);
+    0xae | Write & Verify(12);
+    0xaf | Verify(12);
+    0xb3 | Set Limits(12);
+    0xb7 | Read Defect Data(12);
+
+//Ri:New CDB Commands Modules!(2007-05-01)
+
+void iSCSI::CDB::Control_Byte;
+    BBYT 1 a 90 c9 Control Byte:;
+     //CBIT 7 a 0 d4 1... .... Vendor specific;
+     //CLSE 0 0 0 d4 0... .... Vendor specific;
+     //CBIT 6 a 0 d4 .1.. .... Vendor specific;
+     //CLSE 0 0 0 d4 .0.. .... Vendor specific;
+     l[1] = g[0xa];
+     ANDG c0 41;
+     CEQU  0 41 0 d4 00.. .... Vendor specific;
+     CEQU 40 41 0 d4 01.. .... Vendor specific;
+     CEQU 80 41 0 d4 10.. .... Vendor specific;
+     CEQU c0 41 0 d4 11.. .... Vendor specific;
+     LABL 0 0 0 d4 ..xx x... Reserved;
+     CBIT 2 a 0 d4 .... .1.. NACA bit is set(ACA shell be established);
+     CLSE 0 0 0 d4 .... .0.. NACA bit is NOT set(CA shell be established);
+     LABL 0 0 0 d4 .... ..x. Obsolete;
+     //CBIT 1 a 0 d4 .... ..1. Obsolete bit set to 1;
+     //CLSE 0 0 0 d4 .... ..0. Obsolete bit set to 0;
+     CBIT 0 a 0 d4 .... ...1 Link bit is set(Continue the task across multiple commands);
+     CLSE 0 0 0 d4 .... ...0 Link bit is NOT set;
+    LABL 0 0 0 b8;
+    TRTS;
+
+void iSCSI::CDB::Padding;                   
+    l[1]=g[0x10];
+    HEX# 0 41 90 c2 Padding:;
+    DGLB 0 41 4 14 "(";
+    LABL 0 0 0 4 " bytes)";
+    LABL 0 0 0 b8;
+    TRTS;
+
+str# iSCSI::CDB::CMD;
+    0x00 | iSCSI::CDB::CMD::Test Unit Ready;
+    0x03 | iSCSI::CDB::CMD::Request Sense;
+    0x04 | iSCSI::CDB::CMD::Format Unit;
+    0x07 | iSCSI::CDB::CMD::Reassign Blocks;
+    0x08 | iSCSI::CDB::CMD::Read_6;
+    0x0a | iSCSI::CDB::CMD::Write_6;
+    0x12 | iSCSI::CDB::CMD::Inquiry;
+    0x15 | iSCSI::CDB::CMD::Mode Select_6;
+    0x16 | iSCSI::CDB::CMD::Reserve_6;
+    0x17 | iSCSI::CDB::CMD::Release_6;
+    0x18 | iSCSI::CDB::CMD::Copy;
+    0x1a | iSCSI::CDB::CMD::Mode Sense_6;
+    0x1b | iSCSI::CDB::CMD::Start Stop Unit;
+    0x1c | iSCSI::CDB::CMD::Receive Diagnostics Results;
+    0x1E | iSCSI::CDB::CMD::Prevent-Allow Medium Removal;
+    0x1d | iSCSI::CDB::CMD::Send Diagnostic;
+    0x25 | iSCSI::CDB::CMD::Read Capacity;
+    0x28 | iSCSI::CDB::CMD::Read_10;
+    0x2a | iSCSI::CDB::CMD::Write_10;
+    0x2b | iSCSI::CDB::CMD::Seek_10;
+    0x2e | iSCSI::CDB::CMD::Write & Verify_10;
+    0x2f | iSCSI::CDB::CMD::Verify_10;
+    0x33 | iSCSI::CDB::CMD::Set Limits_10;
+    0x34 | iSCSI::CDB::CMD::Pre-Fetch_10;
+    0x35 | iSCSI::CDB::CMD::Synchronize Cache_10;
+    0x36 | iSCSI::CDB::CMD::Lock Unlock Cache_10;
+    0x37 | iSCSI::CDB::CMD::Read Defect Data_10;
+    0x39 | iSCSI::CDB::CMD::Compare;
+    0x3a | iSCSI::CDB::CMD::Copy And Verify;
+    0x3b | iSCSI::CDB::CMD::Write Buffer;
+    0x3c | iSCSI::CDB::CMD::Read Buffer;
+    0x3e | iSCSI::CDB::CMD::Read Long_10;
+    0x3f | iSCSI::CDB::CMD::Write Long_10;
+    0x40 | iSCSI::CDB::CMD::Change Definition;
+    0x41 | iSCSI::CDB::CMD::Write Same_10;
+    0x43 | iSCSI::CDB::CMD::Read TOC;
+    0x4c | iSCSI::CDB::CMD::Log Select;
+    0x4d | iSCSI::CDB::CMD::Log Sense;
+    0x50 | iSCSI::CDB::CMD::XdWrite_10;
+    0x51 | iSCSI::CDB::CMD::XpWrite_10;
+    0x52 | iSCSI::CDB::CMD::XdRead_10;
+    0x53 | iSCSI::CDB::CMD::XdWriteRead_10;
+    0x55 | iSCSI::CDB::CMD::Mode Select_10;
+    0x56 | iSCSI::CDB::CMD::Reserve_10;
+    0x57 | iSCSI::CDB::CMD::Release_10;
+    0x5a | iSCSI::CDB::CMD::Mode Sense_10;
+    0x5e | iSCSI::CDB::CMD::Persistent Reserve In;
+    0x5f | iSCSI::CDB::CMD::Persistent Reserve Out;
+    0x7f | iSCSI::CDB::CMD::Variable Length CDB;
+    //0x7f | iSCSI::CDB::CMD::Rebuild_32;
+    //0x7f | iSCSI::CDB::CMD::Regenerate_32;
+    //0x7f | iSCSI::CDB::CMD::XdRead_32;
+    //0x7f | iSCSI::CDB::CMD::XdWrite_32;
+    //0x7f | iSCSI::CDB::CMD::XdWriteRead_32;
+    //0x7f | iSCSI::CDB::CMD::XdWrite Extended_32;
+    //0x7f | iSCSI::CDB::CMD::XpWrite_32;
+    0x80 | iSCSI::CDB::CMD::XdWrite Extended_16;
+    0x81 | iSCSI::CDB::CMD::Rebuild_16;
+    0x82 | iSCSI::CDB::CMD::Regenerate_16;
+    0x83 | iSCSI::CDB::CMD::Extended Copy;
+    0x84 | iSCSI::CDB::CMD::Receive Copy Results;
+    0x88 | iSCSI::CDB::CMD::Read_16;
+    0x8a | iSCSI::CDB::CMD::Write_16;
+    0x8e | iSCSI::CDB::CMD::Write & Verify_16;
+    0x8f | iSCSI::CDB::CMD::Verify_16;
+    0x90 | iSCSI::CDB::CMD::Pre-Fetch_16;
+    0x91 | iSCSI::CDB::CMD::Synchronize Cache_16;
+    0x92 | iSCSI::CDB::CMD::Lock Unlock Cache_16;
+    0x93 | iSCSI::CDB::CMD::Write Same_16;
+    0xa8 | iSCSI::CDB::CMD::Read_12;
+    0xa0 | iSCSI::CDB::CMD::Report LUNs;
+    0xa3 | iSCSI::CDB::CMD::Report Device ID;
+    0xa4 | iSCSI::CDB::CMD::Set Device ID;
+    0xaa | iSCSI::CDB::CMD::Write_12;
+    0xae | iSCSI::CDB::CMD::Write & Verify_12;
+    0xaf | iSCSI::CDB::CMD::Verify_12;
+    0xb3 | iSCSI::CDB::CMD::Set Limits_12;
+    0xb7 | iSCSI::CDB::CMD::Read Defect Data_12;
+
+void iSCSI::CDB::CMD::Mode Sense_6;  //Ri:spc2r20
+	MARK 1a 14 0 0 iSCSI::CDB::Resp;
+    BBIT 4 0 90 c2 Reserved:;
+    BBIT 1 a 90 c2 Disable Block Descriptors:;
+    CBIT 0 a 0 14 The device server shall not return any block descriptors in the returned MODE SENSE data.;
+    SKIP 1;
+     LABL 0 0 0 14 The device server may return zero or more block descriptors in the returned MODE SENSE data.;
+    BBIT 3 0 90 c2 Reserved:;
+    BBIT 2 a 90 c2 Page Control:;
+    CST# 0 a 0 14 iSCSI::CDB::CMD::Mode Sense::Page_Control_List;
+    HBIT 6 a 90 c2 Page Code:;
+    if (g[10]==0)
+    {
+        LABL 0 0 0 14 Vendor specific (does not require page format);
+    }
+    if (g[10]>0)
+    {
+        if (g[10]<=0x1f)
+        {
+            LABL 0 0 0 14 See specific device-types;
+        }
+    }
+    if (g[10]>0x20)
+    {
+        if (g[10]<=0x3e)
+        {
+            LABL 0 0 0 14 Vendor specific (page format required);
+        }
+    }
+    if (g[10]==0x3f)
+    {
+        LABL 0 0 0 14 Return all mode pages;
+    }
+    //CST# 0 a 90 14 iSCSI::CDB::CMD::Mode Sense::Page_Code_List;
+    HEX# 1 0 90 c2 Reserved:;
+    LABL 0 0 0 14 "(1 byte)";
+    DBYT 0 0 90 c2 Allocation length:;
+
+    iSCSI::CDB::Control_Byte;                                    //Ri:Control Byte
+    iSCSI::CDB::Padding;                                            //Ri:Padding
+
+    TRTS;
+
+void iSCSI::CDB::CMD::Mode Sense_10;  //Ri:spc2r20
+    BBIT 3 0 90 c2 Reserved:;
+    BBIT 1 a 90 c2 Long LBA Accepted:;
+    CBIT 0 a 0 14 The device server is allowed to return parameter data with the LONGLBA bit equal to one.;
+    SKIP 1;
+     LABL 0 0 0 14 The LONGLBA bit shall be zero in the parameter data returned by the device server.;
+    BBIT 1 a 90 c2 Disable Block Descriptors:;
+    CBIT 0 a 0 14 The device server shall not return any block descriptors in the returned MODE SENSE data.;
+    SKIP 1;
+     LABL 0 0 0 14 The device server may return zero or more block descriptors in the returned MODE SENSE data.;
+    BBIT 3 0 90 c2 Reserved:;
+    BBIT 2 a 90 c2 Page Control:;
+    CST# 0 a 0 14 iSCSI::CDB::CMD::Mode Sense::Page_Control_List;
+    HBIT 6 a 90 c2 Page Code:;
+    if (g[10]==0)
+    {
+        LABL 0 0 0 14 Vendor specific (does not require page format);
+    }
+    if (g[10]>0)
+    {
+        if (g[10]<=0x1f)
+        {
+            LABL 0 0 0 14 See specific device-types;
+        }
+    }
+    if (g[10]>0x20)
+    {
+        if (g[10]<=0x3e)
+        {
+            LABL 0 0 0 14 Vendor specific (page format required);
+        }
+    }
+    if (g[10]==0x3f)
+    {
+        LABL 0 0 0 14 Return all mode pages;
+    }
+    //CST# 0 a 90 14 iSCSI::CDB::CMD::Mode Sense::Page_Code_List;
+    HEX# 4 0 90 c2 Reserved:;
+    LABL 0 0 0 14 "(4 bytes)";
+    DWRD 0 0 90 c2 Allocation length:;
+    iSCSI::CDB::Control_Byte;                                    //Ri:Control Byte
+    iSCSI::CDB::Padding;                                            //Ri:Padding
+
+    TRTS;
+
+str# iSCSI::CDB::CMD::Mode Sense::Page_Control_List;
+    0x00 | Current values;
+    0x01 | Changeable values;
+    0x02 | Default values;
+    0x03 | Saved values;
+
+void iSCSI::CDB::CMD::Test Unit Ready;  //Ri:spc2r20
+    HEX# 4 0 90 c2 Reserved:;
+    LABL 0 0 0 14 "(4 bytes)";
+
+    iSCSI::CDB::Control_Byte;                                    //Ri:Control Byte
+    iSCSI::CDB::Padding;                                            //Ri:Padding
+
+    TRTS;
+
+void iSCSI::CDB::CMD::Inquiry;  //Ri:spc2r20
+		MARK 12 14 0 0 iSCSI::CDB::Resp;
+    BBIT 6 0 90 c2 Reserved:;
+    BBIT 1 0 90 c2 Command Support Data:;
+    BBIT 1 0 90 c2 Enable Vital Product Data:;
+    HBYT 0 0 90 c2 Page or Operation Code:;
+    HBYT 0 0 90 c2 Reserved:;
+    DBYT 0 0 90 c2 Allocation length:;
+
+    iSCSI::CDB::Control_Byte;                                    //Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Prevent-Allow Medium Removal;  //Ri:spc2r20
+	HEX# 3 0 90 c2 Reserved:;
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 2 a 90 c2 Prevent:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Prevent-Allow Medium Removal::Prevent_List;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+str# iSCSI::CDB::CMD::Prevent-Allow Medium Removal::Prevent_List;
+	0x00 | Medium removal shall be allowed from both the data transport element and the attached medium changer (if any).;
+	0x01 | Medium removal shall be prohibited from the data transport element but allowed from the attached medium changer (if any).;
+	0x02 | Medium removal shall be allowed for the data transport element but prohibited for the attached medium changer.;
+	0x03 | Medium removal shall be prohibited for both the data transport element and the attached medium changer.;
+
+void iSCSI::CDB::CMD::Report LUNs;  //Ri:spc2r20
+	MARK a0 14 0 0 iSCSI::CDB::Resp;
+	HEX# 5 0 90 c2 Reserved:;
+	LABL 0 0 0 14 "(5 bytes)";
+	DLNG 0 0 90 c2 Allocation Length:;
+	LABL 0 0 0 14 "(4 bytes)";
+	HEX# 1 0 90 c2 Reserved:;
+	LABL 0 0 0 14 "(1 byte)";
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read Capacity;  //Ri:mmc2r11a
+	MARK 25 14 0 0 iSCSI::CDB::Resp;
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 RelAdr:;
+	CBIT 0 a 0 14 The LBA value is relative.;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	HEX# 2 0 90 c2 Reserved:;
+	LABL 0 0 0 14 (2 bytes);
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Partial Medium Indicator:;
+	CBIT 0 a 0 14 Return value for the last LBA after which a substantial delay in data transfer will be encountered.;
+	SKIP 1;
+	 LABL 0 0 0 14 Return value for the last LBA.;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read_6;  //Ri:sbc2r16  **no trace
+	BBIT 3 0 90 c2 Reserved:;
+	HBIT 15 0 90 c2 Logical Block Address:;
+	DBYT 0 0 90 c2 Transfer Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read_10;  //Ri:sbc2r16
+	MARK 28 14 0 0 iSCSI::CDB::Resp;
+	BBIT 3 0 90 c2 RDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read TOC;  //Ri:mmc2r11a
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 MSF:;
+	CBIT 0 a 0 14 Using MSF format.;
+	SKIP 1;
+	 LABL 0 0 0 14 Using logical block address format.;
+	BBIT 5 0 90 c2 Reserved:;
+	BBIT 4 0 90 c2 Format:;
+	HEX# 3 0 90 c2 Reserved:;
+	HBYT 0 0 90 c2 Track/Session Number:;
+	DWRD 0 0 90 c2 Allocation length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;
+
+	TRTS;
+
+
+//Ri:No trace
+
+void iSCSI::CDB::CMD::Request Sense;  //Ri:spc2r20
+	HEX# 3 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Allocation length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Format Unit;  //Ri:mmc2r11a  
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Format Data:;
+	BBIT 1 a 90 c2 Complete List:;
+	CBIT 0 a 0 14 The initiator will send a complete list of defects, overwriting the existing list.;
+	SKIP 1;
+	 LABL 0 0 0 14 The initiator will send a partial list of defects, to be added to the existing list.;
+	BBIT 3 a 90 c2 Format Code:;
+	//CST# 0 a 0 14 iSCSI::CDB::CMD::Format Unit::Defect_List;
+	HBYT 1 0 90 c2 Reserved:;
+	HWRD 2 a 90 c2 Interleave Value:;
+	//if (g[10]>1)
+	//{
+		//LABL 0 0 0 14 Vendor specific.;
+	//}
+	//if (g[10]==0)
+	//{
+		//LABL 0 0 0 14 The target can use its default interleave.;
+	//}
+	//if (g[10]==1)
+	//{
+		//LABL 0 0 0 14 Consecutive LBAs must be contiguous.;
+	//}
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;
+
+	TRTS;
+
+//str# iSCSI::CDB::CMD::Format Unit::Defect_List;
+	//0x00 | Block format - 32-bit LBAs;
+	//0x04 | Bytes from index format - cylinder + head + byte-offset;
+	//0x05 | Physical sector format - cylinder + head + sector;
+	//0x06 | Vendor-specific;
+
+void iSCSI::CDB::CMD::Reassign Blocks;  //Ri:sbc2r16
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Long LBA:;
+	CBIT 0 a 0 14 The REASSIGN BLOCKS defective LBA list contains eight byte LBAs.;
+	SKIP 1;
+	 LABL 0 0 0 14 The REASSIGN BLOCKS defective LBA list contains four byte LBAs.;
+	BBIT 1 0 90 c2 Long List:;
+	HEX# 3 0 90 c2 Reserved:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Write_6;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 Reserved:;
+	HBIT 15 0 90 c2 Logical Block Address:;
+	DBYT 0 0 90 c2 Transfer Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Write_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Mode Select_6;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Page Format:;
+	CBIT 0 a 0 14 The MODE SELECT parameters and block descriptor(s) are structured as pages of related parameters.;
+	SKIP 1;
+	 LABL 0 0 0 14 All parameters after the block descriptors are vendor specific.;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Save Pages:;
+	HEX# 2 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Parameter List Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Reserve_6;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 5 0 90 c2 Obsolete:;
+	BBIT 8 0 90 c2 Obsolete:;
+	HWRD 0 0 90 c2 Obsolete:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Release_6;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 5 0 90 c2 Obsolete:;
+	BBIT 8 0 90 c2 Obsolete:;
+	HWRD 0 0 90 c2 Reserved:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Copy;  //Ri:s2-r10l  Obsolete in spc2r20 
+	BBIT 3 0 90 c2 Logical Unit Number:;
+	BBIT 4 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Pad:;
+	DBIT 18 0 90 c2 Parameter List Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Start Stop Unit;  //Ri:sbc2r16
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Immediate:;
+	CBIT 0 a 0 14 The device server shall return status as soon as the CDB has been validated.;
+	SKIP 1;
+	 LABL 0 0 0 14 The device server shall return status after the operation is completed.;
+	HEX# 2 0 90 c2 Reserved:;
+	HBIT 4 a 90 c2 Power Condition:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Start Stop Unit::Power_Condition_List;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Load Eject:;
+	CBIT 0 a 0 14 Load or unload the medium according to START bit.;
+	SKIP 1;
+	 LABL 0 0 0 14 The logical unit shall take no action regarding loading or ejecting the medium.;
+	BBIT 1 0 90 c2 START:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+str# iSCSI::CDB::CMD::Start Stop Unit::Power_Condition_List;
+	0x0 | START_VALID;
+	0x1 | ACTIVE;
+	0x2 | IDLE;
+	0x3 | STANDBY;
+	0x4 | Reserved;
+	0x5 | Obsolete;
+	0x6 | Reserved;
+	0x7 | LU_CONTROL;
+	0x8 | Reserved;
+	0x9 | Reserved;
+	0xa | FORCE_IDLE_0;
+	0xb | FORCE_STANDBY_0;
+	0xc | Reserved;
+	0xd | Reserved;
+	0xe | Reserved;
+	0xf | Reserved;
+
+void iSCSI::CDB::CMD::Receive Diagnostics Results;  //Ri:spc2r20
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Page Code Valid:;
+	CBIT 0 a 0 14 The contents of the PAGE CODE field shall define the data returned by this command.;
+	SKIP 1;
+	 LABL 0 0 0 14 The most recent SEND DIAGNOSTIC command shall define the data returned by this command.;
+	HBYT 0 0 90 c2 Page Code:;
+	DWRD 0 0 90 c2 Allocation length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Send Diagnostic;  //Ri:spc2r20
+	HBIT 3 a 90 c2 SELF-TEST Code:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Send Diagnostic::SELF-TEST_Code_List;
+	BBIT 1 a 90 c2 Page Format:;
+	CBIT 0 a 0 14 The SEND DIAGNOSTIC parameters are standard.;
+	SKIP 1;
+	 LABL 0 0 0 14 All SEND DIAGNOSTIC parameters are vendor specific.;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Self Test:;
+	CBIT 0 a 0 14 Device server shall complete the target's default self-test.;
+	SKIP 1;
+	 LABL 0 0 0 14 Device server perform the diagnostic operation specified by the SELF-TEST Code field or in the parameter list.;
+	BBIT 1 0 90 c2 UNITOFFL:;
+	BBIT 1 0 90 c2 DEVOFFL:;
+	HEX# 1 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter List Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+str# iSCSI::CDB::CMD::Send Diagnostic::SELF-TEST_Code_List;
+	0x0 | Coordinate with Self Test bit;
+	0x1 | Background short self-test;
+	0x2 | Background extended self-test;
+	0x3 | Reserved;
+	0x4 | Abort background self-test;
+	0x5 | Foreground short self-test;
+	0x6 | Foreground extended self-test;
+	0x7 | Reserved;
+
+void iSCSI::CDB::CMD::Seek_10;  //Ri:sbc-r08c
+	HEX# 1 0 90 c2 Reserved:;
+	HLNG 0 0 90 c2 Logical Bloack Address:;
+	HEX# 3 0 90 c2 Reserved:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Write & Verify_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Verify_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 VRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Verification Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Set Limits_10;  //Ri:s2-r10l  Obsolete
+	BBIT 3 0 90 c2 Logical Unit Number:;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Read Inhibit:;
+	CBIT 0 a 0 14 Read operations within the range shall be inhibited.;
+	BBIT 1 a 90 c2 Write Inhibit:;
+	CBIT 0 a 0 14 Write operations within the range shall be inhibited.;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	HEX# 1 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Number of Blocks:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Pre-Fetch_10;  //sbc2r16
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Immediate:;
+	CBIT 0 a 0 14 Status shall be returned as soon as the CDB has been validated.;
+	SKIP 1;
+	 LABL 0 0 0 14 Status shall be returned after the operation is complete.;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Prefetch Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Synchronize Cache_10;  //Ri:sbc2r16
+	BBIT 5 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 SYNC_NV:;
+	BBIT 1 a 90 c2 Immediate:;
+	CBIT 0 a 0 14 Device server shall return status as soon as the CDB has been validated.;
+	SKIP 1;
+	 LABL 0 0 0 14 Device server shall not return status until the operation has been completed.;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Number of Blocks:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Lock Unlock Cache_10;  //Ri:s2-r10l  Obsolete
+	BBIT 3 0 90 c2 Logical Unit Number:;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Lock:;
+	CBIT 0 a 0 14 Any logical block in the specified range that is currently present in the cache memory shall be locked into cache memory.;
+	SKIP 1;
+	 LABL 0 0 0 14 All logical blocks in range that are locked into the cache memory shall be unlocked, but not necessarily removed.;
+	BBIT 1 a 90 c2 Relative Address:;
+	CBIT 0 a 0 14 LBA is a two'scomplementdisplacement.;
+	SKIP 1;
+	 LABL 0 0 0 14 LBA specifies the first logical block of the range of logical blocks to be operated on by this command.;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	HEX# 1 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Number of Blocks:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read Defect Data_10;  //Ri:sbc2r16
+	HEX# 1 0 90 c2 Reserved:;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 REQ_PLIST:;
+	BBIT 1 0 90 c2 REQ_GLIST:;
+	BBIT 3 0 90 c2 Defect List Format:;
+	HEX# 4 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Allocation Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Compare;  //Ri:s2-r10l  Obsolete!
+
+void iSCSI::CDB::CMD::Copy And Verify;  //Ri:s2-r10l Obsolete!
+
+void iSCSI::CDB::CMD::Write Buffer;  //Ri:spc2r20
+	BBIT 4 0 90 c2 Reserved:;
+	BBIT 4 a 90 c2 MODE:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Write Buffer::MODE_List;
+	DBYT 0 0 90 c2 Buffer ID:;
+	DBIT 18 0 90 c2 Buffer Offset:;
+	DBIT 18 0 90 c2 Parameter List Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+void iSCSI::CDB::CMD::Read Buffer;  //Ri:spc2r20
+	BBIT 4 0 90 c2 Reserved:;
+	BBIT 4 a 90 c2 MODE:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Read Buffer::MODE_List;
+	DBYT 0 0 90 c2 Buffer ID:;
+	DBIT 18 0 90 c2 Buffer Offset:;
+	DBIT 18 0 90 c2 Allocation Length:;
+
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	iSCSI::CDB::Padding;											//Ri:Padding
+
+	TRTS;
+
+str# iSCSI::CDB::CMD::Write Buffer::MODE_List;
+	0x00 | Write combined header and data;
+	0x01 | Vendor specific;
+	0x02 | Write data;
+	0x03 | Reserved;
+	0x04 | Download microcode;
+	0x05 | Download microcode and save;
+	0x06 | Download microcode with offsets;
+	0x07 | Download microcode with offsets and save;
+	0x08 | Reserved;
+	0x09 | Reserved;
+	0x0a | Echo buffer;
+	0x0b | Reserved;
+	0x0c | Reserved;
+	0x0d | Reserved;
+	0x0e | Reserved;
+	0x0f | Reserved;
+
+str# iSCSI::CDB::CMD::Read Buffer::MODE_List;
+	0x00 | Combined header and data;
+	0x01 | Vendor specific;
+	0x02 | Data;
+	0x03 | Descriptor;
+	0x04 | Reserved;
+	0x05 | Reserved;
+	0x06 | Reserved;
+	0x07 | Reserved;
+	0x08 | Reserved;
+	0x09 | Reserved;
+	0x0a | Echo buffer;
+	0x0b | Echo buffer descriptor;
+	0x0c | Reserved;
+	0x0d | Reserved;
+	0x0e | Reserved;
+	0x0f | Reserved;
+
+void iSCSI::CDB::CMD::Read Long_10;  //Ri:sbc2r16
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Correct:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	HEX# 1 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Byte Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Write Long_10;  //Ri:sbc2r16
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	HEX# 1 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Byte Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Change Definition;  //Ri:s2-r10l   Obsolete
+
+void iSCSI::CDB::CMD::Write Same_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 PBDATA:;
+	BBIT 1 0 90 c2 LBDATA:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Number of Blocks:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Log Select;  //Ri:spc2r20
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Parameter Code Reset:;
+	BBIT 1 0 90 c2 Save Parameters:;
+	BBIT 2 a 90 c2 Page Control:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Log Select_Sense::Page_Control_List;
+	BBIT 6 0 90 c2 Reserved:;
+	HEX# 4 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter List Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Log Sense;  //Ri:spc2r20
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Parameter Pointer Control:;
+	BBIT 1 0 90 c2 Save Parameters:;
+	BBIT 2 a 90 c2 Page Control:;
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Log Select_Sense::Page_Control_List;
+	HBIT 6 0 90 c2 Page Code:;
+	HEX# 2 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter Pointer:;
+	DWRD 0 0 90 c2 Allocation Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+str# iSCSI::CDB::CMD::Log Select_Sense::Page_Control_List;
+	0x00 | Current threshold values;
+	0x01 | Current cumulative values;
+	0x02 | Default threshold values;
+	0x03 | Default cumulative values;
+	
+void iSCSI::CDB::CMD::XdWrite_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Disable Write:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::XpWrite_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 XOR Protection Information:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::XdRead_10;  //Ri:sbc2r16
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 XOR Protection Information:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::XdWriteRead_10;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Disable Write:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 XOR Protection Information:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DWRD 0 0 90 c2 Transfer Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Mode Select_10;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Page Format:;
+	CBIT 0 a 0 14 The MODE SELECT parameters and block descriptor(s) are structured as pages of related parameters.;
+	SKIP 1;
+	 LABL 0 0 0 14 All parameters after the block descriptors are vendor specific.;
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Save Pages:;
+	HEX# 5 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter List Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Reserve_10;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 3rd-Party:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Long ID:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HEX# 1 0 90 c2 Obsolete:;
+	DBYT 0 0 90 c2 3rd-Party Device ID:;
+	HEX# 3 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter List Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Release_10;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 3rd-Party:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Long ID:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HEX# 1 0 90 c2 Obsolete:;
+	DBYT 0 0 90 c2 3rd-Party Device ID:;
+	HEX# 3 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Parameter List Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Persistent Reserve In;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 5 a 90 c2 Service Action:;
+	if (g[10]==0x00)
+	{
+		LABL 0 0 0 14 READ KEYS;
+	}
+	if (g[10]==0x01)
+	{
+		LABL 0 0 0 14 READ RESERVATION;
+	}
+	if (g[10]>0x01)
+	{
+		LABL 0 0 0 14 Reserved;
+	}
+	HEX# 5 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Allocation Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Persistent Reserve Out;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 5 a 90 c2 Service Action:;
+	if (g[10]<0x07)
+	{
+		CST# 0 a 0 14 iSCSI::CDB::CMD::Persistent Reserve Out::Service Action_List;
+	}
+	if (g[10]>=0x07)
+	{
+		LABL 0 0 0 14 Reserved;
+	}
+	HBIT 4 0 90 c2 SCOPE:;
+	HBIT 4 0 90 c2 TYPE:;
+	HEX# 4 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Allocation Length:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+str# iSCSI::CDB::CMD::Persistent Reserve Out::Service Action_List;
+	0x00 | REGISTER;
+	0x01 | RESERVE;
+	0x02 | RELEASE;
+	0x03 | CLEAR;
+	0x04 | PREEMPT;
+	0x05 | PREEMPT AND ABORT;
+	0x06 | REGISTER AND IGNORE EXISTING KEY;
+
+void iSCSI::CDB::CMD::XdWrite Extended_16;  //Ri:sbc2r16  Obsolete
+
+void iSCSI::CDB::CMD::Rebuild_16;  //Ri:sbc2r16  Obsolete
+
+void iSCSI::CDB::CMD::Regenerate_16;  //Ri:sbc2r16  Obsolete
+
+void iSCSI::CDB::CMD::Extended Copy;  //Ri:spc2r20
+	HEX# 9 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Parameter List Length:;
+	HEX# 1 0 90 c2 Reserved:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Receive Copy Results;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 5 a 90 c2 Service Action:;
+	if (g[10]<0x05)
+	{
+		CST# 0 a 0 14 iSCSI::CDB::CMD::Receive Copy Results::Service Action_List;
+	}
+	if (g[10]>=0x05)
+	{
+		if (g[10]<=1e)
+		{
+			LABL 0 0 0 14 Reserved;
+		}
+	}
+	if (g[10]==1f)
+	{
+		LABL 0 0 0 14 Vendor Specific;
+	}
+	DBYT 0 0 90 c2 List Identifier:;
+	HEX# 7 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Allocation Length:;
+	HEX# 1 0 90 c2 Reserved:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+str# iSCSI::CDB::CMD::Receive Copy Results::Service Action_List;
+	0x00 | COPY STATUS;
+	0x01 | RECEIVE DATA;
+	0x03 | OPERATING PARAMETERS;
+	0x04 | FAILED SEGMENT DETAILS;
+	
+void iSCSI::CDB::CMD::Read_16;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 RDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Write_16;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Write & Verify_16;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Verify_16;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 VRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Verification Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Pre-Fetch_16;  //sbc2r16
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 a 90 c2 Immediate:;
+	CBIT 0 a 0 14 Status shall be returned as soon as the CDB has been validated.;
+	SKIP 1;
+	 LABL 0 0 0 14 Status shall be returned after the operation is complete.;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Prefetch Length:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Synchronize Cache_16;  //Ri:sbc2r16
+	BBIT 5 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 SYNC_NV:;
+	BBIT 1 a 90 c2 Immediate:;
+	CBIT 0 a 0 14 Device server shall return status as soon as the CDB has been validated.;
+	SKIP 1;
+	 LABL 0 0 0 14 Device server shall not return status until the operation has been completed.;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Number of Blocks:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Lock Unlock Cache_16;  //Ri:s2-r10l   Obsolete
+
+void iSCSI::CDB::CMD::Write Same_16;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 PBDATA:;
+	BBIT 1 0 90 c2 LBDATA:;
+	BBIT 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Number of Blocks:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Read_12;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 RDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Report Device ID;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	HBIT 5 0 90 c2 Service Action(05h):;
+	HEX# 2 0 90 c2 Reserved:;
+	HWRD 0 0 90 c2 Restricted:;
+	DLNG 0 0 90 c2 Allocation Length:;
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Restricted:;
+	BBIT 1 0 90 c2 Reserved:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Set Device ID;  //Ri:spc2r20
+	BBIT 3 0 90 c2 Reserved:;
+	HBIT 5 0 90 c2 Service Action(06h):;
+	HEX# 2 0 90 c2 Reserved:;
+	HWRD 0 0 90 c2 Restricted:;
+	DLNG 0 0 90 c2 Parameter List Length:;
+	BBIT 6 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Restricted:;
+	BBIT 1 0 90 c2 Reserved:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Write_12;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Write & Verify_12;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Verify_12;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 VRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Obsolete:;
+	HLNG 0 0 90 c2 Logical Block Address:;
+	DLNG 0 0 90 c2 Verification Length:;
+	BBIT 1 0 90 c2 Restricted for MMC-4:;
+	BBIT 2 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Set Limits_12;  //Ri:s2-r10l  Obsolete
+
+void iSCSI::CDB::CMD::Read Defect Data_12;  //Ri:sbc2r16 
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 REQ_PLIST:;
+	BBIT 1 0 90 c2 REQ_GLIST:;
+	BBIT 3 0 90 c2 Defect List Format:;
+	HEX# 4 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Allocation Length:;
+	HEX# 1 0 90 c2 Reserved:;
+	
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte 
+	iSCSI::CDB::Padding;											//Ri:Padding
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Variable Length CDB;  //Ri:Variable Length CDB 32
+	GWRD 7 a; 
+	CST# 0 a 0 14 iSCSI::CDB::CMD::Variable Length CDB::CMD_List;
+	iSCSI::CDB::Control_Byte;									//Ri:Control Byte
+	HEX# 4 0 90 c2 Reserved:;
+	BBIT 3 0 90 c2 Reserved:;
+	DBIT 5 0 90 c2 Group Number:;
+	DBYT 0 0 90 c2 Additional CDB Length:;
+	HWRD 0 a 90 c2 Service Action:;
+	TSB# 0 a 90 c2 iSCSI::CDB::CMD::Variable Length CDB::Sub_CMD;	    //Ri:Variable Length CDB
+	
+	TRTS;
+
+str# iSCSI::CDB::CMD::Variable Length CDB::CMD_List;
+	0x0009 | Read(32);
+	0x000a | Verify(32);
+	0x000b | Write(32);
+	0x000c | Write & Verify(32);
+	0x000d | Write Same(32);
+	0x0003 | XdRead(32);
+	0x0004 | XdWrite(32);
+	0x0007 | XdWriteRead(32);
+	0x0006 | XpWrite(32);
+
+str# iSCSI::CDB::CMD::Variable Length CDB::Sub_CMD;
+	0x0009 | iSCSI::CDB::CMD::Variable Length CDB::Read_32;
+	0x000a | iSCSI::CDB::CMD::Variable Length CDB::Verify_32;
+	0x000b | iSCSI::CDB::CMD::Variable Length CDB::Write_32;
+	0x000c | iSCSI::CDB::CMD::Variable Length CDB::Write & Verify_32;
+	0x000d | iSCSI::CDB::CMD::Variable Length CDB::Write Same_32;
+	0x0003 | iSCSI::CDB::CMD::Variable Length CDB::XdRead_32;
+	0x0004 | iSCSI::CDB::CMD::Variable Length CDB::XdWrite_32;
+	0x0007 | iSCSI::CDB::CMD::Variable Length CDB::XdWriteRead_32;
+	0x0006 | iSCSI::CDB::CMD::Variable Length CDB::XpWrite_32;
+	
+void iSCSI::CDB::CMD::Variable Length CDB::Read_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 RDPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HLNG 0 0 90 c2 Expected Initial Logical Block Reference Tag:;
+	HWRD 0 0 90 c2 Expected Logical Block Application Tag:;
+	HWRD 0 0 90 c2 Logical Block Application Tag Mask:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Variable Length CDB::Verify_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 VRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HLNG 0 0 90 c2 Expected Initial Logical Block Reference Tag:;
+	HWRD 0 0 90 c2 Expected Logical Block Application Tag:;
+	HWRD 0 0 90 c2 Logical Block Application Tag Mask:;
+	DLNG 0 0 90 c2 Verification Length:;
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Variable Length CDB::Write_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HLNG 0 0 90 c2 Expected Initial Logical Block Reference Tag:;
+	HWRD 0 0 90 c2 Expected Logical Block Application Tag:;
+	HWRD 0 0 90 c2 Logical Block Application Tag Mask:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Variable Length CDB::Write & Verify_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Byte Check:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HLNG 0 0 90 c2 Expected Initial Logical Block Reference Tag:;
+	HWRD 0 0 90 c2 Expected Logical Block Application Tag:;
+	HWRD 0 0 90 c2 Logical Block Application Tag Mask:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Variable Length CDB::Write Same_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 2 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 PBDATA:;
+	BBIT 1 0 90 c2 LBDATA:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HLNG 0 0 90 c2 Expected Initial Logical Block Reference Tag:;
+	HWRD 0 0 90 c2 Expected Logical Block Application Tag:;
+	HWRD 0 0 90 c2 Logical Block Application Tag Mask:;
+	DLNG 0 0 90 c2 Number of Blocks:;
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Variable Length CDB::XdRead_32;  //Ri:sbc2r16
+	BBIT 7 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 XORPINFO:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Variable Length CDB::XdWrite_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Disable Write:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 Reserved:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+	
+void iSCSI::CDB::CMD::Variable Length CDB::XdWriteRead_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 WRPROTECT:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Disable Write:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 XORPINFO:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Transfer Length:;
+	
+	TRTS;
+
+void iSCSI::CDB::CMD::Variable Length CDB::XpWrite_32;  //Ri:sbc2r16
+	BBIT 3 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Disable Page Out:;
+	BBIT 1 0 90 c2 Force Unit Access:;
+	BBIT 1 0 90 c2 Reserved:;
+	BBIT 1 0 90 c2 Force Unit Access Non-volatile:;
+	BBIT 1 0 90 c2 XORPINFO:;
+	HEX# 1 0 90 c2 Reserved:;
+	D64B 0 0 90 c2 Logical Block Address:;
+	HEX# 8 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Transfer Length:;
+
+	TRTS;
+
+
+
+// ------Response Data Segments for SCSI Commands----------------------------------------
+
+str# iSCSI::CDB::Opcode_Resp_List;
+    0x00 | Test Unit Ready Response Data;
+    0x03 | Request Sense Response Data;
+    0x04 | Format Unit Response Data;
+    0x07 | Reassign Blocks Response Data;
+    0x08 | Read(6) Response Data;
+    0x0a | Write(6) Response Data;
+    0x12 | Inquiry Response Data;
+    0x15 | Mode Select(6) Response Data;
+    0x16 | Reserve(6) Response Data;
+    0x17 | Release(6) Response Data;
+    0x18 | Copy Response Data;
+    0x1a | Mode Sense(6) Response Data;
+    0x1b | Start Stop Unit Response Data;
+    0x1c | Receive Diagnostics Results Response Data;
+    0x1E | Prevent-Allow Medium Removal Response Data;
+    0x1d | Send Diagnostic Response Data;
+    0x25 | Read Capacity Response Data;
+    0x28 | Read(10) Response Data;
+    0x2a | Write(10) Response Data;
+    0x2b | Seek(10) Response Data;
+    0x2e | Write & Verify(10) Response Data;
+    0x2f | Verify(10) Response Data;
+    0x33 | Set Limits(10) Response Data;
+    0x34 | Pre-Fetch(10) Response Data;
+    0x35 | Synchronize Cache(10) Response Data;
+    0x36 | Lock Unlock Cache(10) Response Data;
+    0x37 | Read Defect Data(10) Response Data;
+    0x39 | Compare Response Data;
+    0x3a | Copy And Verify Response Data;
+    0x3b | Write Buffer Response Data;
+    0x3c | Read Buffer Response Data;
+    0x3e | Read Long(10) Response Data;
+    0x3f | Write Long Response Data;
+    0x40 | Change Definition Response Data;
+    0x41 | Write Same(10) Response Data;
+    0x43 | Read TOC Response Data;
+    0x4c | Log Select Response Data;
+    0x4d | Log Sense Response Data;
+    0x50 | XdWrite(10) Response Data;
+    0x51 | XpWrite(10) Response Data;
+    0x52 | XdRead(10) Response Data;
+    0x53 | XdWriteRead(10) Response Data;
+    0x55 | Mode Select(10) Response Data;
+    0x56 | Reserve(10) Response Data;
+    0x57 | Release(10) Response Data;
+    0x5a | Mode Sense(10) Response Data;
+    0x5e | Persistent Reserve In Response Data;
+    0x5f | Persistent Reserve Out Response Data;
+    0x7f | Variable Length CDB Response Data;
+    //0x7f | Rebuild(32);
+    //0x7f | Regenerate(32);
+    //0x7f | XdRead(32);
+    //0x7f | XdWrite(32);
+    //0x7f | XdWriteRead(32);
+    //0x7f | XdWrite Extended(32);
+    //0x7f | XpWrite(32);
+    0x80 | XdWrite Extended(16) Response Data;
+    0x81 | Rebuild(16) Response Data;
+    0x82 | Regenerate(16) Response Data;
+    0x83 | Extended Copy Response Data;
+    0x84 | Receive Copy Results Response Data;
+    0x88 | Read(16) Response Data;
+    0x8a | Write(16) Response Data;
+    0x8e | Write & Verify(16) Response Data;
+    0x8f | Verify(16) Response Data;
+    0x90 | Pre-Fetch(16) Response Data;
+    0x91 | Synchronize Cache(16) Response Data;
+    0x92 | Lock Unlock Cache(16) Response Data;
+    0x93 | Write Same(16) Response Data;
+    0xa8 | Read(12) Response Data;
+    0xa0 | Report LUNs Response Data;
+    0xa3 | Report Device ID Response Data;
+    0xa4 | Set Device ID Response Data;
+    0xaa | Write(12) Response Data;
+    0xae | Write & Verify(12) Response Data;
+    0xaf | Verify(12) Response Data;
+    0xb3 | Set Limits(12) Response Data;
+    0xb7 | Read Defect Data(12) Response Data;
+
+str# iSCSI::CDB::Resp;
+//  0x00 | iSCSI::CDB::Resp::Test Unit Ready;
+//	0x03 | iSCSI::CDB::Resp::Request Sense;
+//	0x04 | iSCSI::CDB::Resp::Format Unit;
+//	0x07 | iSCSI::CDB::Resp::Reassign Blocks;
+//	0x08 | iSCSI::CDB::Resp::Read_6;
+//	0x0a | iSCSI::CDB::Resp::Write_6;
+	0x12 | iSCSI::CDB::Resp::Inquiry;
+//	0x15 | iSCSI::CDB::Resp::Mode Select_6;
+//	0x16 | iSCSI::CDB::Resp::Reserve_6;
+//	0x17 | iSCSI::CDB::Resp::Release_6;
+//	0x18 | iSCSI::CDB::Resp::Copy;
+//	0x1a | iSCSI::CDB::Resp::Mode Sense_6;
+//	0x1b | iSCSI::CDB::Resp::Start Stop Unit;
+//	0x1c | iSCSI::CDB::Resp::Receive Diagnostics Results;
+//	0x1E | iSCSI::CDB::Resp::Prevent-Allow Medium Removal;
+//	0x1d | iSCSI::CDB::Resp::Send Diagnostic;
+	0x25 | iSCSI::CDB::Resp::Read Capacity;
+//	0x28 | iSCSI::CDB::Resp::Read_10;
+//  0x2a | iSCSI::CDB::Resp::Write_10;
+//  0x2b | iSCSI::CDB::Resp::Seek_10;
+//  0x2e | iSCSI::CDB::Resp::Write & Verify_10;
+//  0x2f | iSCSI::CDB::Resp::Verify_10;
+//  0x33 | iSCSI::CDB::Resp::Set Limits_10;
+//  0x34 | iSCSI::CDB::Resp::Pre-Fetch_10;
+//  0x35 | iSCSI::CDB::Resp::Synchronize Cache_10;
+//  0x36 | iSCSI::CDB::Resp::Lock Unlock Cache_10;
+//  0x37 | iSCSI::CDB::Resp::Read Defect Data_10;
+//  0x39 | iSCSI::CDB::Resp::Compare;
+//  0x3a | iSCSI::CDB::Resp::Copy And Verify;
+//  0x3b | iSCSI::CDB::Resp::Write Buffer;
+//  0x3c | iSCSI::CDB::Resp::Read Buffer;
+//  0x3e | iSCSI::CDB::Resp::Read Long_10;
+//  0x3f | iSCSI::CDB::Resp::Write Long;
+//  0x40 | iSCSI::CDB::Resp::Change Definition;
+//  0x41 | iSCSI::CDB::Resp::Write Same_10;
+//  0x43 | iSCSI::CDB::Resp::Read TOC;
+//  0x4c | iSCSI::CDB::Resp::Log Select;
+//	0x4d | iSCSI::CDB::Resp::Log Sense;
+//  0x50 | iSCSI::CDB::Resp::XdWrite_10;
+//  0x51 | iSCSI::CDB::Resp::XpWrite_10;
+//  0x52 | iSCSI::CDB::Resp::XdRead_10;
+//  0x53 | iSCSI::CDB::Resp::XdWriteRead_10;
+//  0x55 | iSCSI::CDB::Resp::Mode Select_10;
+//  0x56 | iSCSI::CDB::Resp::Reserve_10;
+//  0x57 | iSCSI::CDB::Resp::Release_10;
+//  0x5a | iSCSI::CDB::Resp::Mode Sense_10;
+//  0x5e | iSCSI::CDB::Resp::Persistent Reserve In;
+//  0x5f | iSCSI::CDB::Resp::Persistent Reserve Out;
+//  0x7f | iSCSI::CDB::Resp::Variable Length CDB;
+//	0x7f | iSCSI::CDB::Resp::Rebuild_32;
+//	0x7f | iSCSI::CDB::Resp::Regenerate_32;
+//	0x7f | iSCSI::CDB::Resp::XdRead_32;
+//	0x7f | iSCSI::CDB::Resp::XdWrite_32;
+//	0x7f | iSCSI::CDB::Resp::XdWriteRead_32;
+//	0x7f | iSCSI::CDB::Resp::XdWrite Extended_32;
+//	0x7f | iSCSI::CDB::Resp::XpWrite_32;
+//	0x80 | iSCSI::CDB::Resp::XdWrite Extended_16;
+//	0x81 | iSCSI::CDB::Resp::Rebuild_16;
+//	0x82 | iSCSI::CDB::Resp::Regenerate_16;
+//	0x83 | iSCSI::CDB::Resp::Extended Copy;
+//	0x84 | iSCSI::CDB::Resp::Receive Copy Results;
+//	0x88 | iSCSI::CDB::Resp::Read_16;
+//	0x8a | iSCSI::CDB::Resp::Write_16;
+//	0x8e | iSCSI::CDB::Resp::Write & Verify_16;
+//	0x8f | iSCSI::CDB::Resp::Verify_16;
+//	0x90 | iSCSI::CDB::Resp::Pre-Fetch_16;
+//  0x91 | iSCSI::CDB::Resp::Synchronize Cache_16;
+//  0x92 | iSCSI::CDB::Resp::Lock Unlock Cache_16;
+//  0x93 | iSCSI::CDB::Resp::Write Same_16;
+//  0xa8 | iSCSI::CDB::Resp::Read_12;
+    0xa0 | iSCSI::CDB::Resp::Report LUNs;
+//  0xa3 | iSCSI::CDB::Resp::Report Device ID;
+//  0xa4 | iSCSI::CDB::Resp::Set Device ID;
+//  0xaa | iSCSI::CDB::Resp::Write_12;
+//  0xae | iSCSI::CDB::Resp::Write & Verify_12;
+//  0xaf | iSCSI::CDB::Resp::Verify_12;
+//  0xb3 | iSCSI::CDB::Resp::Set Limits_12;
+//  0xb7 | iSCSI::CDB::Resp::Read Defect Data_12;
+
+
+void iSCSI::CDB::Resp::Inquiry;
+		LABL 0 0 0 14 Inquiry Response Data;
+    BBIT 3 a 90 c2 Peripheral Qualifier:;
+    if (g[0xa]<=3)
+    {
+        CST# 0 a 0 14 iSCSI::CDB::Resp::Inquiry::Peri Qual;
+    }
+    if (g[0xa]>3)
+    {
+        LABL 0 0 0 14 Vendor specific;
+    }
+    HBIT 5 b 90 c2 Peripheral Device Type:;
+    CST# 0 b 0 14 iSCSI::CDB::Resp::Inquiry::Peri Devi Type;
+    BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (RMB) The medium is removable;
+	 CLSE 0 0 0 d4 0... .... (RMB) The medium is NOT removable;
+     LABL 0 0 0 d4 .xxx xxxx Reserved;
+    LABL 0 0 0 b8;
+    HBYT 0 a 90 c2 Version:;
+    if (g[0xa]<=7)
+    {
+        CST# 0 a 0 14 iSCSI::CDB::Resp::Inquiry::Version_List_1;
+    }
+    if (g[0xa]>=128)
+    {
+        if (g[0xa]<=132)
+        {
+            CST# 0 a 0 14 iSCSI::CDB::Resp::Inquiry::Version_List_2;
+        }
+    }
+    if (g[0xa]>=5)
+    {
+        if (g[0xa]<=7)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    if (g[0xa]>=0x0d)
+    {
+        if (g[0xa]<=0x3f)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    if (g[0xa]>=0x45)
+    {
+        if (g[0xa]<=0x47)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    if (g[0xa]>=0x4d)
+    {
+        if (g[0xa]<=0x7f)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    if (g[0xa]>=0x85)
+    {
+        if (g[0xa]<=0x87)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    if (g[0xa]>=0x8d)
+    {
+        if (g[0xa]<=0xff)
+        {
+            LABL 0 0 0 14 Reserved;
+        }
+    }
+    BBYT 1 a 90 c9 Flags:;
+     if (g[0xb]==3)                 //Ri:g[0xb]=Peripheral Device Type;
+     {
+	    CBIT 7 a 0 d4 1... .... (AERC) The processor device is capable of accepting asynchronous event reports.;
+	    CLSE 0 0 0 d4 0... .... (AERC) The processor device does NOT support asynchronous event reports.;
+     }
+     if (g[0xb]!=3)
+     {
+        LABL 0 0 0 d4 x... .... Reserved;
+     }
+     LABL 0 0 0 d4 .x.. .... Obsolete;
+     CBIT 5 a 0 d4 ..1. .... (NormACA) The device server supports setting the NACA bit;
+     CLSE 0 0 0 d4 ..0. .... (NormACA) The device server does NOT support setting the NACA bit;
+     CBIT 4 a 0 d4 ...1 .... (HiSup) Hierarchical addressing model is suppored;
+     CLSE 0 0 0 d4 ...0 .... (HiSup) Hierarchical addressing model is NOT suppored;
+     l[1] = g[0xa];
+     ANDG f 41;
+     CEQU 2 41 0 d4 .... 0010 Response Data Format: SPC-2;
+     CEQU 0 41 0 d4 .... 0000 Response Data Format: Obsolete;
+     CEQU 1 41 0 d4 .... 0001 Response Data Format: Obsolete;
+     CEQU 3 41 0 d4 .... 0011 Response Data Format: Reserved;
+     CEQU 4 41 0 d4 .... 0100 Response Data Format: Reserved;
+     CEQU 5 41 0 d4 .... 0101 Response Data Format: Reserved;
+     CEQU 6 41 0 d4 .... 0110 Response Data Format: Reserved;
+     CEQU 7 41 0 d4 .... 0111 Response Data Format: Reserved;
+     CEQU 8 41 0 d4 .... 1000 Response Data Format: Reserved;
+     CEQU 9 41 0 d4 .... 1001 Response Data Format: Reserved;
+     CEQU a 41 0 d4 .... 1010 Response Data Format: Reserved;
+     CEQU b 41 0 d4 .... 1011 Response Data Format: Reserved;
+     CEQU c 41 0 d4 .... 1100 Response Data Format: Reserved;
+     CEQU d 41 0 d4 .... 1101 Response Data Format: Reserved;
+     CEQU e 41 0 d4 .... 1110 Response Data Format: Reserved;
+     CEQU f 41 0 d4 .... 1111 Response Data Format: Reserved;
+    LABL 0 0 0 b8;
+    DBYT 0 0 90 c2 Additional Length:;
+    BBYT 1 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... (SCCS) The device contains an embedded storage array controller component.;
+	 CLSE 0 0 0 d4 0... .... (SCCS) The device does NOT contain an embedded storage array controller component.;
+     LABL 0 0 0 d4 .xxx xxxx Reserved;
+    LABL 0 0 0 b8;
+    BBYT 1 a 90 c9 Flags:;
+     GBYT 1 b;
+     ANDG 2 b;
+     if (g[0xb]==0)
+     {
+	    CBIT 7 a 0 d4 1... .... (BQue) Basic task management model supported;
+	    CLSE 0 0 0 d4 0... .... (BQue) No command queuing of any kind supported;
+     }
+     if (g[0xb]==2)
+     {
+        CBIT 7 a 0 d4 1... .... (BQue) Illegal combination of BQue and CmdQue bits;
+	    CLSE 0 0 0 d4 0... .... (BQue) Command queuing with all types of task tags supported.;
+     }
+     CBIT 6 a 0 d4 .1.. .... (EncSevr) Device contains an embedded enclosure services component.;
+	 CLSE 0 0 0 d4 .0.. .... (EncSevr) Device does NOT contain an embedded enclosure services component.;
+     CBIT 5 a 0 d4 ..1. .... (VS) Vendor specific;
+	 CLSE 0 0 0 d4 ..0. .... (VS) Vendor specific;
+     CBIT 4 a 0 d4 ...1 .... (MultiP) Multi-port device and conforms to the SCSI multi-port device requirements.;
+	 CLSE 0 0 0 d4 ...0 .... (MultiP) Single port device and does not implement the multi-port requirements.;
+     CBIT 3 a 0 d4 .... 1... (MChngr) Device is associated with or attached to a medium transport element.;
+	 CLSE 0 0 0 d4 .... 0... (MChngr) Device is not embedded within or attached to a medium transport element.;
+     LABL 0 0 0 d4 .... .xx. Obsolete;
+     LABL 0 0 0 d4 .... ...x Reserved;
+    LABL 0 0 0 b8;
+    BBYT 1 a 90 c9 Flags:;
+     CBIT 7 a 0 d4 1... .... (RelAdr) Device server supports the relative addressing mode.;
+	 CLSE 0 0 0 d4 0... .... (RelAdr) Device server does not support relative addressing.;
+     LABL 0 0 0 d4 .x.. .... Obsolete;
+     LABL 0 0 0 d4 ..xx .... Reserved;
+     CBIT 3 a 0 d4 .... 1... (Linked) Device server supports linked commands.;
+	 CLSE 0 0 0 d4 .... 0... (Linked) Device server does not support linked commands.;
+     LABL 0 0 0 d4 .... .x.. Obsolete;
+     CBIT 1 a 0 d4 .... ..1. (CmdQue) Device supports tagged tasks.;
+	 CLSE 0 0 0 d4 .... ..0. (CmdQue) Device server may support tagged tasks.;
+     CBIT 0 a 0 d4 .... ...1 (VS) Vendor specific;
+	 CLSE 0 0 0 d4 .... ...0 (VS) Vendor specific;
+    LABL 0 0 0 b8;
+    CHR# 8 0 90 c2 Vendor ID:;
+    CHR# 10 0 90 c2 Product ID:;
+    CHR# 4 0 90 c2 Prdct Revision Level:;
+
+    TRTS;
+
+str# iSCSI::CDB::Resp::Inquiry::Peri Qual;
+    0x00 | The specified peripheral device type is currently connected to this logical unit.;
+    0x01 | The device server is capable of supporting the specified peripheral device type on this logical unit.;
+    0x02 | Reserved;
+    0x03 | The device server is not capable of supporting a physical device on this logical unit.;
+
+str# iSCSI::CDB::Resp::Inquiry::Peri Devi Type;
+    0x00 | Direct-access device;
+    0x01 | Sequential-access device;
+    0x02 | Printer device;
+    0x03 | Processor device;
+    0x04 | Write-once device;
+    0x05 | CD-ROM device;
+    0x06 | Scanner device;
+    0x07 | Optical memory device;
+    0x08 | Medium changer device;
+    0x09 | Communications device;
+    0x0a | Defined by ASC IT8;
+    0x0b | Defined by ASC IT8;
+    0x0c | Storage array controller device;
+    0x0d | Enclosure services device;
+    0x0e | Simplified direct-access device;
+    0x0f | Optical card reader/writer device;
+    0x10 | Reserved;
+    0x11 | Object-based Storage Device;
+    0x12 | Reserved;
+    0x13 | Reserved;
+    0x14 | Reserved;
+    0x15 | Reserved;
+    0x16 | Reserved;
+    0x17 | Reserved;
+    0x18 | Reserved;
+    0x19 | Reserved;
+    0x1a | Reserved;
+    0x1b | Reserved;
+    0x1c | Reserved;
+    0x1d | Reserved;
+    0x1e | Reserved;
+    0x1f | Unknown or no device type;
+
+str# iSCSI::CDB::Resp::Inquiry::Version_List_1;
+    0x00 | The device does not claim conformance to any standard.;
+    //0x01 | Obsolete;
+    0x02 | The device complies to ANSI X3.131:1994.;
+    0x03 | The device complies to ANSI X3.301:1997.;
+    0x04 | The device complies to this standard.;
+    0x05 | Reserved;
+    0x06 | Reserved;
+    0x07 | Reserved;
+
+str# iSCSI::CDB::Resp::Inquiry::Version_List_2;
+    0x80 | The device complies to ISO/IEC 9316:1995.;
+    //0x81 | Obsolete;
+    0x82 | The device complies to ISO/IEC 9316:1995 and to ANSI X3.131:1994.;
+    0x83 | The device complies to ISO/IEC 9316:1995 and to ANSI X3.301:1997.;
+    0x84 | The device complies to ISO/IEC 9316:1995 and to this standard.;
+
+void iSCSI::CDB::Resp::Report LUNs;
+	LABL 0 0 0 14 Report LUNs Response Data;
+	DLNG 0 0 90 c2 LUN List Length:;
+	HEX# 4 0 90 c2 Reserved:;
+	l[1] = g[3];
+	l[1] -= 8;
+	//l[2] = 1;
+	while (l[1]>0)
+	{
+		D64B 0 0 90 c2 LUN:;
+		//LABL 0 0 0 c2 LUN;
+		//DGLB 0 42 20 0;
+		//D64B 0 0 90 42 :;
+		l[1] -= 8;
+		//l[2] += 1;
+	}
+	TRTS;
+	
+void iSCSI::CDB::Resp::Read Capacity;
+	LABL 0 0 0 14 Read Capacity(10) Response Data;
+	DLNG 0 0 90 c2 Returned LBA:;
+	DLNG 0 0 90 c2 Block Length in Bytes:;
+	
+	TRTS;

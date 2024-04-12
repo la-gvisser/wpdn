@@ -1,0 +1,1290 @@
+* PPP - Point-to-Point Protocol
+
+void PPP;
+	GWRD 0  1;
+	TEQU 0  1 0 0 RETURN;						*si: if it's zero, it's most likely nothing!
+	LABL 0  0 0 b1 Point-to-Point Protocol\PPP:;
+	GBYT 0  1;
+	TEQU FF 1 0 0 PPP::LEX;
+	HWRD 0 1c 90 c2 PPP;
+	SUBG 2 19;
+	CST# 0 1c 0 14 PPP_Protocols_List;
+	TST# 0 1c 0  0 PPP_Protocols_Func;
+
+void PPP First Choice Compression;
+	GBYT 0 11;
+	ANDG f0 11;
+	DIVG 10 11;
+	DGLB 0 11 90 c9 Flags:;
+	DBYT 0 1 5; *invis
+	CBIT 3 11 0 d4 1... Encryption tables initialized (Bit A);
+	CLSE 0  0 0 d4 0... Encryption tables NOT initialized (Bit A);
+	CBIT 2 11 0 d4 .1.. Has significance in MPPE (Bit B);
+	CLSE 0  0 0 d4 .0.. Has NO significance in MPPE (Bit B);
+	CBIT 1 11 0 d4 ..1. Has significance in MPPE (Bit C);
+	CLSE 0  0 0 d4 ..0. Has NO significance in MPPE (Bit C);
+	CBIT 0 11 0 d4 ...1 Packet is encrypted (Bit D);
+	CLSE 0  0 0 d4 ...0 Packet is NOT encrypted (Bit D);
+	LABL 0 0 0 b8;
+	DECR 1;
+	DWRD 0 1 90 c2 Coherency Count:;
+	TGTE 0 10 0 0 RETURN;
+	DUMP 1 0 90 c2 PPP Data:;
+
+void PPP-LCP;
+	LABL 0 0 0 b1 PPP Link Control Protocol;
+	LCP CILV;
+	TRTS;
+
+void PPP-IPCP;
+	LABL 0 0 0 b1 PPP Internet Protocol Control Protocol;
+	IPCP TLV;
+	TRTS;
+
+void PPP-CCP;
+	LABL 0 0 0 b1 PPP Compression Control Protocol;
+	LCP CILV;
+	TRTS;
+
+void PPP-CHAP;
+	LABL 0 0 0 b1 Challenge-Handshake Authentication Protocol;
+	Challenge-Handshake Authentication Protocol;
+	TRTS;
+
+void PAP;
+	LABL 0 0 0 b1 Password Authentication Protocol;
+	Password Authentication Protocol;
+	TRTS;
+
+void LCP CILV;
+	DBYT 0 1c 90 c2 LCP Code:;
+	CST# 0 1c 00 14 LCP_CILV::List;
+	SUBG 1 19;
+	TST# 0 1c 00 00 LCP_CILV::Func;
+
+str# LCP_CILV::Func;
+	LCP Codes 1-4;
+	LCP Codes 1-4;
+	LCP Codes 1-4;
+	LCP Codes 1-4;
+	LCP Codes 5-6;
+	LCP Codes 5-6;
+	LCP Code 7;
+	LCP Code 8;
+	LCP Codes 9-11;
+	LCP Codes 9-11;
+	LCP Codes 9-11;
+	LCP Codes 9-11;
+	LCP Codes 9-11;
+
+str# LCP_CILV::List;
+	Configure Request;
+	Configure Ack;
+	Configure Nak;
+	Configure Reject;
+	Terminate Request;
+	Terminate Ack;
+	Code Reject;
+	Protocol Reject;
+	Echo Request;
+	Echo Reply;
+	Discard Request;
+	Identification;
+	Time-Remaining;
+
+void LCP Codes 1-4;
+	MOVE 0 1d;  *init CHAP checker
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	SEQU 0 1c;
+	SKIP 1;
+	LCP Options g[28];
+
+// si: roarrrrr!  
+// 0x1c = whole ppp length
+// 0x1d = option length      ... what a burnout... track them
+void LCP Options g[28];
+	CEQU 3 1e 0 b7 Standard CHAP;
+	CLSE 0  0  0 b7 Option;
+
+	GBYT 0 1d;
+	DBYT 0 1e 90 c2 Type:;
+ 	 CST# 0 1e 0 14 PPP::LCP::Options_List;
+	DBYT 0 1d 90 c2 Length:;
+	SUBG 2 1d;
+	SUBG 2 1c;
+
+	TSB# 0 1e 0 0 PPP::LCP::Options_Func;
+
+	if (g[0x1d] != 0)
+	{
+	 HEX# 0 1d 90 c2 Data:;
+	}
+
+	LABL 0 0 0 b8;
+	SUBG 1d 9c;
+	TNEQ 0 1c 0 0 LCP Options g[28];
+	TRTS;
+
+str# PPP::LCP::Options_List;
+	 1 | Maximum Receive Unit;
+	 2 | Async Control Character Map;
+	 3 | Authentication Protocol;
+	 4 | Quality Protocol;
+	 5 | Magic Number;
+	 7 | Protocol Field Compression;
+	 8 | Address and Control Field Compression;
+	 9 | FCS-Alternatives;
+	10 | Self-Describing-Padding;
+	13 | Callback;
+	15 | Compound-Frames;
+	17 | Stac Electronics LZS;
+	18 | Microsoft PPC;
+	19 | Multilink Endpoint Discriminator;
+	21 | DCE-Identifier;
+	22 | MP+ Procedure Option;
+	23 | Link Discriminator for BACP;
+	24 | LCP-Authentication-Option;
+	25 | Consistent Overhead Byte Stuffing;
+	27 | Multilink header format;
+	28 | Internationalization;
+	29 | Simple Data Link on SONET/SDH;
+
+str# PPP::LCP::Options_Func;
+	 1 | PPP::LCP::Option::01;
+	 3 | PPP::LCP::Option::03;
+	 4 | PPP::LCP::Option::04;
+	 5 | PPP::LCP::Option::05;
+	 9 | PPP::LCP::Option::09;
+	10 | PPP::LCP::Option::10;
+	13 | PPP::LCP::Option::13;
+	17 | PPP::LCP::Option::17;
+	18 | PPP::LCP::Option::18;
+	19 | PPP::LCP::Option::19;
+	23 | PPP::LCP::Option::23;
+
+void PPP::LCP::Option::01;
+	DWRD 0 a 90 c2 Max Receive Unit:;
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Option::03;
+	HWRD 0 1 90 c2 Auth Protocol:;
+	 CEQU c023 1 0 14 Password Authentication Protocol;
+	 CEQU c223 1 0 14 Challenge Handshake Authentication;
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Option::04;
+	HWRD 0 1 90 c2 Quality Protocol:;
+	 CEQU c025 1 0 14 Link Quality Report;
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Option::05;
+	HLNG 0 1 90 c2 Magic Number:;
+	g[0x1d] -= 4;
+	g[0x1c] -= 4;
+	TRTS;
+
+void PPP::LCP::Option::09;
+	LABL 0 0 0 b9 Options;
+	while (g[0x1d] > 0)
+	{
+	 DBYT 0 a 90 c2 Option:;
+	  CEQU 1 a 0 14 Null FCS;
+	  CEQU 2 a 0 14 CCITT 16-bit FCS;
+	  CEQU 4 a 0 14 CCITT 32-bit FCS;
+	 g[0x1d] -= 1;
+	 g[0x1c] -= 1;
+	} 
+	LABL 0 0 0 b8;
+	TRTS;
+
+void PPP::LCP::Option::10;
+	DBYT 0 a 90 c2 Maximum:;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	TRTS;
+
+void PPP::LCP::Option::13;
+	DBYT 0 a 90 c2 Operation:;
+	 CEQU 0 a 0 14 location is determined by user authentication;
+	 CEQU 1 a 0 14 dialing string;
+	 CEQU 2 a 0 14 location identifier;
+     CEQU 3 a 0 14 E.164 number;
+     CEQU 4 a 0 14 X.500 distinguished name;
+     CEQU 5 a 0 14 unassigned;
+     CEQU 6 a 0 14 location is determined during CBCP negotiation;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	TRTS;
+
+/*
+void PPP::Config_Options::17;
+	DWRD 0 a 90 c2 History Count:;
+	HBYT 0 a 90 c2 Check Value:;
+	 CEQU 0 a 0 14 None;            
+	 CEQU 1 a 0 14 LCB;
+	 CEQU 2 a 0 14 CRC;
+     CEQU 3 a 0 14 Sequence Number;
+     CEQU 4 a 0 14 Extended Mode;
+	g[0x1d] -= 3;
+	g[0x1c] -= 3;
+	TRTS;
+*/
+
+void PPP::LCP::Option::17; 		//LCP::Options::MRRU;	???	*si: option 0x11
+	DWRD 0 1 90 c2 Max Num Octets:;
+	SUBG 2 1c;
+	SUBG 2 1d;
+	TRTS;
+
+void PPP::LCP::Option::18;
+	HLNG 0 a 90 c2 Supported Bits:;
+	DECR 4;
+	BBIT( 7, l[4], 0x5, 0x0);
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... ...0 .... .... .... .... .... .... = Stateless Mode Off");
+	 CEQU( 1, l[4], 0x0 0x14, ".... ...1 .... .... .... .... .... .... = Stateless Mode On");
+	BBIT( 0x10, l[4], 0x5, 0x0);
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... .... .... .... .... .... 0... .... = 56-bit Encryption Off");
+	 CEQU( 1, l[4], 0x0 0x14, ".... .... .... .... .... .... 1... .... = 56-bit Encryption On");
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... .... .... .... .... .... .0.. .... = 128-bit Encryption Off");
+	 CEQU( 1, l[4], 0x0 0x14, ".... .... .... .... .... .... .1.. .... = 128-bit Encryption On");
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... .... .... .... .... .... ..0. .... = 40-bit Encryption Off");
+	 CEQU( 1, l[4], 0x0 0x14, ".... .... .... .... .... .... ..1. .... = 40-bit Encryption On");
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... .... .... .... .... .... ...0 .... = Obsolute (should always be zero)");
+	 CEQU( 1, l[4], 0x0 0x14, ".... .... .... .... .... .... ...1 .... = Obsolete (should NOT be 1)");
+	BBIT( 3, l[4], 0x5, 0x0);
+	BBIT( 1, l[4], 0x5, 0xc9);
+	 CEQU( 0, l[4], 0x0 0x14, ".... .... .... .... .... .... .... ...0 = NOT Desire to negotiate MPPC");
+	 CEQU( 1, l[4], 0x0 0x14, ".... .... .... .... .... .... .... ...1 = Desire to Negotiate MPPC");
+	LABL( 0, 0, 0, 0xc8);
+	g[0x1d] -= 4;
+	g[0x1c] -= 4;
+	TRTS;
+
+void PPP::LCP::Option::19; 		//LCP::Options::MED;	*si: option 0x13
+	DBYT 0 1 90 c2 Class:;
+	CST# 0 1  0 14 PPP::LCP::Option::19::Class_List;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	if (g[1] == 1)
+	{
+	DUMP 0 1d 90 c2 Content:;
+	SUBG 1d 9c;
+	MOVE  0 1d;
+	}
+	if (g[1] == 2)
+	{
+	IPLG 0 2 90 c2 IP Address:;
+	SUBG 4 1d;
+	SUBG 4 1c;
+	}
+	if (g[1] == 3)
+	{
+	ETHR 0 2 90 c2 MAC Address:;
+	SUBG 6 1d;
+	SUBG 6 1c;
+	}
+	if (g[1] == 4)
+	{
+	HEX# 0 1d 90 c2 Magic Number:;
+	SUBG 1d 9c;
+	MOVE  0 1d;
+	}	
+	if (g[1] == 5)
+	{
+	HEX# 0 1d 90 c2 Data:;
+	SUBG 1d 9c;
+	MOVE  0 1d;
+	}
+	TRTS;
+
+str# PPP::LCP::Option::19::Class_List;
+	0 | Null Class;
+	1 | Locally Assigned Address;
+	2 | Internet Protocol (IP) Address;
+	3 | IEEE 802.1 Globally Assigned MAC Address;
+	4 | PPP Magic-Number Block;
+	5 | Public Switched Network Directory Number;
+
+void PPP::LCP::Option::23;
+	HWRD 0 1 90 c2 Link Discriminator:;
+	SUBG 2 1d;
+	SUBG 2 1c;
+	TRTS;
+
+void LCP Codes 5-6;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	SEQU 0 1c;
+	SKIP 1;
+	DUMP 0 1c 0 c0;
+
+void LCP Code 7;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	LABL 0 0 0 14 Rejected Packet Follows;
+	TNXT -PPP-LCP;
+
+void LCP Code 8;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	HWRD 0 1d 90 c2 Rejected Protocol:;
+	CST# 0 1d  0 14 PPP_Protocols_List;
+	SUBG 2 1c;
+	DUMP 0 1c 90 c2 Rejected Information:;
+
+void LCP Codes 9-11;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	HLNG 0 1d 90 c2 Magic Number:;
+	SUBG 4 1c;
+	DUMP 0 1c 90 c2 Data:;
+
+void IPCP TLV;
+	DBYT 0 1c 90 c2 Type Code:;
+	SUBG 1 19;
+	CEQU 1 1c 0 14 Configure Request;
+	TEQU 1 1c 0 14 IPCP Codes 1-4;
+	CEQU 2 1c 0 14 Configure Ack;
+	TEQU 2 1c 0 14 IPCP Codes 1-4;
+	CEQU 3 1c 0 14 Configure Nak;
+	TEQU 3 1c 0 14 IPCP Codes 1-4;
+	CEQU 4 1c 0 14 Configure Reject;
+	TEQU 4 1c 0 14 IPCP Codes 1-4;
+	CEQU 5 1c 0 14 Terminate Request;
+	TEQU 5 1c 0 14 IPCP Codes 5-6;
+	CEQU 6 1c 0 14 Terminate Ack;
+	TEQU 6 1c 0 14 IPCP Codes 5-6;
+	CEQU 7 1c 0 14 Code Reject;
+	TEQU 7 1c 0 14 IPCP Code 7;
+
+void IPCP Codes 1-4;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	SEQU 0 1c 0 40;
+	SKIP 1 0 0 40;
+	*LCP Options g[28];
+	IPCP Options g[28];
+
+void IPCP Options g[28];
+	DBYT 0 1e 90 b7 Option Type:;
+	SUBG 1 1c;
+	CEQU 2 1e 0 14 IP Compression Protocol;
+	CEQU 3 1e 0 14 IP Address;
+	CEQU 4 1e 0 14 Mobile IPv4;
+	CEQU 81 1e 0 14 Primary DNS Server Address;
+	CEQU 82 1e 0 14 Primary NBNS Server Address;
+	CEQU 83 1e 0 14 Secondary DNS Server Address;
+	CEQU 84 1e 0 14 Secondary NBNS Server Address;
+	DBYT 0 1d 90 c2 Length:;
+	SUBG 2 1d;
+	SUBG 1 1c;
+	SUBG 1d 9c 0 40;
+	*HEX# 0 1d 90 c2 Data:;
+	if (g[0x1e] == 2)
+	{
+		IPCP::Options::2;
+	}
+	if ( g[0x1e] != 2 )
+	{
+		IPLG 0 0 90 c2 Address:;
+	}
+	LABL 0 0 0 b8;
+	SEQU 0 1c 0 40;
+	SKIP 1 0 0 40;
+	IPCP Options g[28];
+	TRTS;
+
+void IPCP::Options::2;
+	if ( g[0x1d] < 10 )
+	{
+		l[1] = pw[0];
+		if ( l[1] == 0x002d )
+		{
+			HWRD 0 0 90 c2 Compression Protocol;
+			LABL 0 0 00 14 VJ Compression;
+			DBYT 0 0 90 c2 Max Slot ID:; 
+			DBYT 0 1 90 c2 Compress Slot ID:;
+			CEQU 1 1 00 14 Yes;
+			CLSE 0 0 00 14 No;
+		}
+		if ( l[1] != 0x002d )
+		{
+			IPLG 0 0 90 c2 Address:;
+		}
+		TRTS;
+	}
+	// RFC 3241 ROHC over PPP
+	if ( g[0x1d] >= 8 )
+	{
+		l[1] = pw[0];
+		if ( l[1] == 0x0003 )
+		{
+			HWRD 0 0 90 c2 Compression Protocol:;
+			LABL 0 0 00 14 ROHC;
+			DWRD 0 0 90 c2 Max CID:;
+			DWRD 0 0 90 c2 MRRU:;
+			DWRD 0 0 90 c2 Max Header:;
+			g[0x1d] -= 8;
+			if ( g[0x1d] > 0 )
+			{
+				HEX# 0 1d 90 c2 SubOptions:;
+			}
+			TRTS;
+		}
+	}
+	// RFC 3544 
+	if ( g[0x1d] > 12 )
+	{
+		l[1] = pw[0];
+		if ( l[1] == 0x0061 )
+		{
+			HWRD 0 0 90 c2 Compression Protocol:;
+			LABL 0 0 00 14 ROHC;
+			DWRD 0 0 90 c2 TCP Space:;
+			DWRD 0 0 90 c2 Non TCP Space:;
+			DWRD 0 0 90 c2 F Max Period:;
+			DWRD 0 0 90 c2 F Max Time:;
+			DWRD 0 0 90 c2 Max Header:;
+			g[0x1d] -= 12;
+			if ( g[0x1d] > 0 )
+			{
+				HEX# 0 1d 90 c2 SubOptions:;
+			}
+			TRTS;
+		}
+	}
+
+void IPCP Codes 5-6;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c 0 40;
+	DUMP 0 1c 0 c0;
+
+void IPCP Code 7;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 Length:;
+	SUBG 4 1c;
+	TNXT -PPPoE Session;
+
+void Password Authentication Protocol;
+	DBYT 0 1c 90 c2 Authentication Code:;
+	SUBG 1 19;
+	CEQU 1 1c 0 14 Authenticate-Request;
+	TEQU 1 1c 0 14 PAP Code 1;
+	CEQU 2 1c 0 14 Authenticate-Ack;
+	TEQU 2 1c 0 14 PAP Codes 2-3;
+	CEQU 3 1c 0 14 Authenticate-Nak;
+	TEQU 3 1c 0 14 PAP Codes 2-3;
+
+void PAP Code 1;
+	HBYT 0 1c 90 c2 Identifier:;
+	SUBG 1 1c;
+	DWRD 0 1c 90 c2 Length:;
+	TEQU 4 1c  0  0 RETURN;		*SI: if the length's only 4 bytes, that means no more data
+	SUBG 2 1c;
+	DBYT 0 1d 90 c2 Peer-Id Length:;
+	SUBG 1 1c;
+	CHR# 0 1d 90 c2 Peer-Id:;
+	SUBG 1d 9c;
+	DBYT 0 1d 90 c2 Passwd Length:;
+	SUBG 1 1c;
+	CHR# 0 1d 90 c2 Passwd:;
+	SUBG 1d 9c;
+
+void PAP Codes 2-3;
+	HBYT 0 1c 90 c2 Identifier:;
+	SUBG 1 1c;
+	DWRD 0 1c 90 c2 Length:;
+	TEQU 4 1c  0  0 RETURN;		*SI: if the length's only 4 bytes, that means no more data
+	SUBG 2 1c;
+	DBYT 0 1d 90 c2 Message Length:;
+	SUBG 1 1c;
+	CHR# 0 1d 90 c2 Message:;
+	SUBG 1d 9c;
+
+void Challenge-Handshake Authentication Protocol;
+	MOVE 10 94;										*SI: SAVE - move the count to g20
+	DBYT 0 1c 90 c2 Authentication Code:;
+	*SUBG 1 19 0 40;
+	CEQU 1 1c 0 14 Challenge;
+	TEQU 1 1c 0 14 CHAP Codes 1-2;
+	CEQU 2 1c 0 14 Response;
+	TEQU 2 1c 0 14 CHAP Codes 1-2;
+	CEQU 3 1c 0 14 Success;
+	TEQU 3 1c 0 14 CHAP Codes 3-4;
+	CEQU 4 1c 0 14 Failure;
+	TEQU 4 1c 0 14 CHAP Codes 3-4;
+
+void CHAP Codes 1-2;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1c 90 c2 CHAP Length:;
+	DBYT 0 1d 90 c2 Value Size:;
+	HEX# 0 1d 90 c2 Value:;
+	SUBG 10 94;						*si: figure out the message length
+	SUBG 14 9c;
+	SEQU 0 1c;
+	SKIP 1;
+	 CHR# 0 1c 90 c2 Name:;
+
+void CHAP Codes 3-4;
+	HBYT 0 1c 90 c2 Identifier:;
+	DWRD 0 1d 90 c2 Length:;
+	SUBG 10 94;						*si: figure out the message length
+	SUBG 14 9d;
+	SEQU 0 1d;
+	SKIP 1;
+	 CHR# 0 1d 90 c2 Message:;
+
+// -------------------------------------------------------
+// PPP::LEX - LAN Extension Interface Protocol
+// -------------------------------------------------------
+
+void PPP::LEX;
+	HBYT 0 1 90 c2 Address:;
+	//si: check for tagged ppp (rfc1662)
+		l[1] = pb[0];
+		if (l[1] == 0x7d)
+		{
+			INCR 1;
+			g[0x11] = 0x7d;
+		}
+	HBYT 0 1 90 c2 Control:;
+	HWRD 0 1 90 c2 Protocol Type:;
+	if (g[0x11] == 0x7d)
+	{
+		INCR 1;
+	}
+	if (g[1] == 32833)				*SI: 0x8041 = 32833
+	{
+		LABL 0 0 0 14 Control Packet;
+		TNXT -PPP::LEX::Header;
+	}
+	if (g[1] == 65)					*SI: 0x41 = 65
+	{
+		LABL 0 0 0 14 Data Packet;
+		TNXT -PPP::LEX::Header;
+	}
+	if (g[1] == 0x0021)
+	{
+		IP;
+	}
+	EProto::Names;
+	SUBG 4 19;
+	MOVE 1 82;
+	if (g[0x11] == 0x7d)
+	{
+		TNXT -Ether::Branching_3::Tagged;
+	}
+	TNXT -Ether::Branching_3;
+
+void PPP::LEX::Header;
+	LABL 0 0 0 b1 LAN Extension Interface Protocol Header;
+	HBYT 0 1 90 c2 Code:;
+	 CEQU 1 1 0 14 Config-Req;
+     CEQU 2 1 0 14 Config-Ack;
+     CEQU 3 1 0 14 Config-Nak;
+     CEQU 4 1 0 14 Config-Rej;
+	HBYT 0 1 90 c2 Identifier:;
+	DWRD 0 19 90 c2 Length:;
+	SUBG 4 19;
+	TNXT -PPP::LEX::Options;
+	
+void PPP::LEX::Options;
+	LABL 0 0 0 b7 LAN Extension Interface Startup Options;
+	while (g[19] > 0) 
+	{
+	 HBYT 0 1 90 b7 Option Type:;
+	 HBYT 0 2 90 c2 Option Length:;
+	 SUBG 2 99;			*si: option length specifies all option fields length
+	 SUBG 2 2;
+	 if (g[1] == 1)					* mac type
+	 {
+	  HEX# 0 2 90 c2 Mac Type:;
+	 }
+	 if (g[1] == 3)					* mac address
+	 {
+	  ETHR 0 3 90 c2 Mac Address:;
+	 }	 
+	 if (g[1] == 5)					* lan extension
+	 {
+	  HEX# 0 2 90 c2 Protocol Vers Num:;
+	 }
+	 LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------
+// PPP Compression Control Protocol;
+// -------------------------------------------------------
+
+void PPP::CCP;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1  0 14 PPP::CPP::Codes;
+	HBYT 0 1 90 c2 Identifier:;
+	DWRD 0 2 90 c2 Length:;
+	SUBG 4 2;
+	SUBG 4 19;
+	PPP::CCP::Options;
+	TRTS;
+
+str# PPP::CPP::Codes;
+	 0 | Vendor Specific;
+	 1 | Configure-Request;
+	 2 | Configure-Ack;
+	 3 | Configure-Nak;
+	 4 | Configure-Reject;
+	 5 | Terminate-Request;
+	 6 | Terminate-Ack;
+	 7 | Code-Reject;
+	14 | Reset-Request;
+	15 | Reset-Reply;
+
+void PPP::CCP::Options;
+	while (g[2] > 0)
+	{
+	 DBYT 0 1 90 b7 Option Type:;
+	 CST# 0 1  0 14 PPP::CCP::Options_List;
+	 DBYT 0 3 90 c2 Option Length:;
+	 SUBG 2 3;
+	 SUBG 2 2;
+	 
+	 TSB# 0 1 0 0 PPP::CCP::Options_Func;
+	 
+	 if (g[3] != 0) 
+	 {
+	  SUBG 3 82;
+	  DUMP 0 3 90 c2 Option Data:;
+	 }
+	 
+	 LABL 0 0  0 b8;
+	 SUBG 3 82;
+	}
+
+str# PPP::CCP::Options_List;
+	 0 | OUI;
+	 1 | Predictor type 1;
+	 2 | Predictor type 2;
+	 3 | Puddle Jumper;
+	16 | Hewlett-Packard PPC;
+	17 | LZS, PPP Stac LZS Compression Protocol;
+	18 | Microsoft Point-To-Point Compression/Encryption Protocol;
+	19 | FZA, PPP Gandalf FZA Compression Protocol;
+	20 | V.42bis compression;
+	21 | BSD, PPP BSD Compression Protocol;
+	23 | LZS-DCP, PPP LZS-DCP Compression Protocol;
+	24 | MVRCA, PPP Magnalink Variable Resource Compression Algorithm;
+	25 | DCE, PPP for Data Compression in Data Circuit-Terminating Equipment;
+	26 | Deflate, PPP Deflate Protocol;
+	27 | V.44/LZJH Compression Protocol;
+
+str# PPP::CCP::Options_Func;
+	17 | PPP::CCP::Options::LZS;
+	18 | PPP::CCP::Options::MPPE;
+
+
+void PPP::CCP::Options::LZS;						//si: option type 17
+	DWRD 0 1 90 c2 History Count:;
+	HBYT 0 1 90 c2 Check Mode:;
+	 CEQU 0 1 0 14 None;
+	 CEQU 1 1 0 14 LCB;
+	 CEQU 2 1 0 14 CRC;
+	 CEQU 3 1 0 14 Sequence Number;
+	 CEQU 4 1 0 14 Extended Mode;
+	SUBG 3 2;
+	SUBG 3 3;
+	TRTS;
+
+void PPP::CCP::Options::MPPE;						//si: option type 18
+	HLNG 0 1 90 c9 Supported Bits:;
+	 CBIT 18 1 0 d4 .......1 ........ ........ ........ Stateless Mode On;
+	 CLSE  0 0 0 d4 .......0 ........ ........ ........ Stateless Mode Off;
+	 CBIT  7 1 0 d4 ........ ........ ........ 1....... 56 bit Encryption On;
+	 CLSE  0 0 0 d4 ........ ........ ........ 0....... 56 bit Encryption Off;
+	 CBIT  6 1 0 d4 ........ ........ ........ .1...... 128 bit Encryption On;
+	 CLSE  0 0 0 d4 ........ ........ ........ .0...... 128 bit Encryption Off;
+	 CBIT  5 1 0 d4 ........ ........ ........ ..1..... 40 bit Encryption On;
+	 CLSE  0 0 0 d4 ........ ........ ........ ..0..... 40 bit Encryption Off;
+	 CBIT  0 1 0 d4 ........ ........ ........ .......1 Desire to Negotiate MPPC;
+	 CLSE  0 0 0 d4 ........ ........ ........ .......0 No Desire to Negotiate MPPC;
+	 LABL  0 0 0 c8;
+	SUBG 4 2;
+	SUBG 4 3;
+	TRTS;
+
+// -------------------------------------------------------
+// PPP Callback Control Protocol
+// -------------------------------------------------------
+
+void PPP::CBCP;
+	LABL 0 0 0 b1 PPP Callback Control Protocol\PPP-CBCP;
+	HBYT 0 1 90 c2 Code:;
+	 CEQU 1 1 0 14 Callback Request (Answerer -> Caller);
+	 CEQU 2 1 0 14 Callback Response (Caller -> Answerer);
+	 CEQU 3 1 0 14 Callback Ack (Answerer -> Caller);
+	HBYT 0 1 90 c2 Identifier:;
+	DWRD 0 2 90 c2 Length:;
+	g[2] -= 4;
+	PPP::CBCP::Options;
+	if (g[2] > 0)
+	{
+	 DUMP 0 2 90 c2 "Extra Bytes:\Extra:";
+	 g[2] = 0;
+	}
+	TRTS;
+
+void PPP::CBCP::Options;
+	while (g[2] > 0)
+	{
+	LABL 0 0 0 b7 Option;
+	 HBYT 0 1 90 c2 Type:;
+	  CEQU 1 1 0 14 No callback;
+	  CEQU 2 1 0 14 Callback to a user-specifiable number;
+	  CEQU 3 1 0 14 Callback to a pre-specified or administrator specified number;
+	  CEQU 4 1 0 14 Callback to any of a list of numbers;
+	 DBYT 0 3 90 c2 Length:;
+	 g[3] -= 2;
+	 g[2] -= 2;
+	 if (g[1] != 1)
+	 {
+	  DBYT 0 1 90 c2 Delay:;
+	  g[3] -= 1;
+	  g[2] -= 1;
+	  PPP::CBCP::Options::Address;
+	 }
+	 if (g[3] > 0)
+	 {
+	  DUMP 0 3 90 c2 "Extra Bytes:\Extra:";
+	  g[2] -= g[3];
+	 }
+	 LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void PPP::CBCP::Options::Address;
+	HBYT 0 1 90 c2 Address Type:;
+	if (g[1] == 1) {
+	 CHR# 0 3 90 c2 Address:;
+	}
+	if (g[1] != 1) {
+	 DUMP 0 3 90 c2 Address:;
+	}
+	g[3] = 0;
+	TRTS;
+
+
+// -------------------------------------------------------
+// PPP IPXCP - IPX Control Protocol
+// -------------------------------------------------------
+
+void PPP::IPXCP;
+	LABL 0 0 0 b1 PPP IPX Control Protocol\PPP-IPXCP;
+	HBYT 0 1 90 c2 Code:;
+	 CST# 0 1 0 14 PPP::IPXCP::Codes;
+	HBYT 0 1 90 c2 Identifier:;
+	DWRD 0 2 90 c2 Length:;
+	g[2] -= 4;
+	PPP::IPXCP::Options;
+	if (g[2] > 0)
+	{
+	 DUMP 0 2 90 c2 "Extra Bytes:\Extra:";
+	 g[2] = 0;
+	}
+	TRTS;
+
+void PPP::IPXCP::Options;
+	while (g[2] > 0)
+	{
+	 LABL 0 0  0 b7 Option;
+	 HBYT 0 1 90 c2 Type:;
+	  CST# 0 1 0 14 PPP::IPXCP::Options_List;
+	 DBYT 0 3 90 c2 Length:;
+	 g[2] -= g[3];
+	 g[3] -= 2;
+	 TSB# 0 1 0 0 PPP::IPXCP::Options_Func;
+	 if (g[3] != 0) {
+	  DUMP 0 3 0 c0;
+	  g[3] = 0;
+	 }
+	 LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void PPP::IPXCP::Options::Network_Number;
+	IPLG 0 1 90 c2 Network Num:;
+	g[3] -= 4;
+	TRTS;
+
+void PPP::IPXCP::Options::Node_Number;
+	HEX# 6 0 90 c2 Node Num:;
+	g[3] -= 6;
+	TRTS;
+
+void PPP::IPXCP::Options::Compression_Protocol;
+	HWRD 0 1 90 c2 Compression Prtcl:;
+	 CEQU   2 1 0 14 Telebit Compressed IPX;
+	 CEQU 235 1 0 14 Shiva Compressed NCP/IPX;
+	g[3] -= 2;
+	TRTS;
+
+void PPP::IPXCP::Options::Routing_Protocol;
+	HWRD 0 1 90 c2 Routing Prtcl:;
+	 CEQU 0 1 0 14 No routing protocol required;
+	 CEQU 1 1 0 14 RESERVED;
+	 CEQU 2 1 0 14 Novell RIP/SAP required;
+	 CEQU 4 1 0 14 Novell NLSP required;
+	g[3] -= 2;
+	TRTS;
+
+void PPP::IPXCP::Options::Router_Name;
+	if (g[3] != 0)
+	{
+	 CHR# 0 3 90 c2 Router Name:;
+	 g[3] = 0;
+	}
+	TRTS;
+
+str# PPP::IPXCP::Codes;
+	0 | Vendor Specific;
+	1 | Configure-Request;
+	2 | Configure-Ack;
+	3 | Configure-Nak;
+	4 | Configure-Reject;
+	5 | Terminate-Request;
+	6 | Terminate-Ack;
+	7 | Code-Reject;
+
+str# PPP::IPXCP::Options_List;
+	1 | IPX-Network-Number;
+	2 | IPX-Node-Number;
+	3 | IPX-Compression-Protocol;
+	4 | IPX-Routing-Protocol;
+	5 | IPX-Router-Name;
+	6 | IPX-Configuration-Complete;
+
+str# PPP::IPXCP::Options_Func;
+	1 | PPP::IPXCP::Options::Network_Number;
+	2 | PPP::IPXCP::Options::Node_Number;
+	3 | PPP::IPXCP::Options::Compression_Protocol;
+	4 | PPP::IPXCP::Options::Routing_Protocol;
+	5 | PPP::IPXCP::Options::Router_Name;
+	//6 | PPP::IPXCP::Options::Configuration_Complete;			si: no length... just signifies that it's complete
+
+
+
+// -------------------------------------------------------
+// PPP BPDU - DEC LANBridge100 Spanning Tree
+// -------------------------------------------------------
+
+void PPP::BPDU;											// si: this is just taken from ethereal... couldn't find a spec on it
+	HBYT 0 1 90 c2 BPDU Identifier:\ID:;
+	DBYT 0 1 90 c2 BPDU Type:\Type:;
+	DBYT 0 0 90 c2 BPDU Version:\Ver:;
+
+	GBYT 0 1;
+	BGLB 0 1 90 c9 Flags:;
+	 DBIT 1 1 5 5; 
+	  CEQU 1 1 0 d4 1... .... Use Short Timers;
+	  CLSE 0 0 0 d4 0... .... Do Not Use Short Timers;
+	 DBIT 1 1 5 5;
+	 DBIT 1 1 5 5;
+	 DBIT 1 1 5 5;
+	 DBIT 2 1 5 5;
+	 DBIT 1 1 5 5; 
+	  CEQU 1 1 0 d4 .... ..1. Topology Change Ack;
+	  CLSE 0 0 0 d4 .... ..0. No Topology Change Ack;
+	 DBIT 1 1 5 5; 
+	  CEQU 1 1 0 d4 .... ...1 Topology Change;
+	  CLSE 0 0 0 d4 .... ...0 No Topology Change;
+	 LABL 0 0 0 c8;
+	DWRD 0 0 90 c2 Root Priority/ID:\;
+	ETHR 0 0 90 40  / ;
+	HWRD 0 1 90 c2 Cost Of Path To Root:\;
+	DGLB 0 1 4 14 (;
+	LABL 0 0 0 4 ")";
+	HWRD 0 0 90 c2 Bridge Priority/ID:\;
+	ETHR 0 0 90 40  / ;
+	HBYT 0 0 90 c2 Port Identifier:\;
+	DBYT 0 0 90 c2 Message Age:\;
+	DBYT 0 0 90 c2 Maximum Age:\;
+	DBYT 0 0 90 c2 Hello Time:\;
+	DBYT 0 0 90 c2 Forward Delay:\;
+	TRTS;
+
+// -------------------------------------------------------
+// IPV6CP - PPP IPv6 Control Protocol 
+// -------------------------------------------------------
+void PPP::IPV6CP()
+{
+	LABL 0 0 0 b1 PPP IPv6 Control Protocol\PPP-IPXCP;
+	HBYT 0 1 90 c2 Code:;
+	 CST# 0 1 0 14 PPP::IPV6CP::Codes;
+	HBYT 0 1 90 c2 Identifier:;
+	DWRD 0 2 90 c2 Length:;
+	g[2] -= 4;
+	PPP::IPV6CP::Options;
+	if (g[2] > 0)
+	{
+	 DUMP 0 2 90 c2 "Extra Bytes:\Extra:";
+	 g[2] = 0;
+	}
+	TRTS;
+}
+
+void PPP::IPV6CP::Options;
+	while (g[2] > 0)
+	{
+	 LABL 0 0  0 b7 Option;
+	 HBYT 0 1 90 c2 Type:;
+	  CST# 0 1 0 14 PPP::IPV6CP::Options_List;
+	 DBYT 0 3 90 c2 Length:;
+	 g[2] -= g[3];
+	 g[3] -= 2;
+	 TSB# 0 1 0 0 PPP::IPV6CP::Options_Func;
+	 if (g[3] != 0) {
+	  DUMP 0 3 0 c0;
+	  g[3] = 0;
+	 }
+	 LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void PPP::IPV6CP::Interface-Identifier()
+{
+	HWRD 80000000 0 90 c2 Interface Identifier:;
+	LABL 0 0 0 00 :;
+	HWRD 80000000 0 00 02 ;
+	LABL 0 0 0 00 :;
+	HWRD 80000000 0 00 02 ;
+	LABL 0 0 0 00 :;
+	HWRD 80000000 0 00 02 ;
+	g[3] -= 8;
+}
+
+str# PPP::IPV6CP::Codes;
+0	|	Vendor Specific;
+1	|	Configure-Request;
+2	|	Configure-Ack;
+3	|	Configure-Nak;
+4	|	Configure-Reject;
+5	|	Terminate-Request;
+6	|	Terminate-Ack;
+7	|	Code-Reject; 
+str# PPP::IPV6CP::Options_List;
+1	|	Interface-Identifier;
+2	|	IPv6-Compression-Protocol;
+str# PPP::IPV6CP::Options_Func;
+1	|	PPP::IPV6CP::Interface-Identifier;
+*2	|	PPP::IPV6CP::IPv6-Compression-Protocol;
+// -------------------------------------------------------
+// PPP Protocol Lists
+// -------------------------------------------------------
+str# PPP_Protocols_List;
+	0x0001 | Padding Protocol;
+	0x0003 | ROHC small-CID;
+	0x0005 | ROHC large-CID;
+	0x0021 | IP, Internet Protocol;   
+	0x0023 | OSI Network Layer;   
+	0x0025 | Xerox NS IDP;   
+	0x0027 | DECnet Phase IV;   
+	0x0029 | Appletalk;   
+	0x002B | IPX;   
+	0x002D | Van Jacobson Compressed TCP/IP;   
+	0x002F | Van Jacobson Uncompressed TCP/IP;   
+	0x0031 | Bridging PDU;   
+	0x0033 | ST-II, Stream Protocol;   
+	0x0035 | Banyan Vines;   
+	0x0037 | Reserved (until 1993);   
+	0x0039 | AppleTalk EDDP;   
+	0x003B | AppleTalk SmartBuffered;   
+	0x003D | MP, PPP Multilink Protocol;
+	0x003F | NETBIOS Framing;   
+	0x0041 | Cisco Systems;   
+	0x0043 | Ascom Timeplex;   
+	0x0045 | LBLB, Fujitsu Link Backup and Load Balancing;   
+	0x0047 | DCA Remote Lan;   
+	0x0049 | SDTP, PPP Serial Data Transport Protocol;
+	0x004B | SNA over 802.2;
+	0x004D | SNA;
+	0x004F | IP6 Header Compression;   
+	0x0051 | KNX Bridging Data;   
+	0x0053 | Encryption;   
+	0x0055 | Individual Link Encryption;   
+	0x0057 | IPv6;   
+	0x0059 | PPP Multiplexing;
+	0x0061 | RTP IPHC Full Header;
+	0x0063 | RTP IPHC Compressed TCP;
+	0x0065 | RTP IPHC Compressed Non TCP;
+	0x0067 | RTP IPHC Compressed UDP 8;
+	0x0069 | RTP IPHC Compressed RTP 8;
+	0x006F | Stampede Bridging;   
+	0x0071 | Reserved;   
+	0x0073 | MP+, PPP Ascend's Multilink Protocol Plus;
+	0x007D | Reserved (Control Escape);   
+	0x007F | Reserved (compression inefficient);   
+	0x0081 | Reserved (until 20-Oct-2000);   
+	0x0083 | Reserved (until 20-Oct-2000);   
+	0x00C1 | NTCITS IPI;   
+	0x00CF | Reserved (PPP NLPID);   
+	0x00FB | Single link compression in multilink;
+	0x00FD | Compressed datagram;
+	0x0201 | 802.1d Hello Packets;
+	0x0203 | IBM Source Routing BPDU;   
+	0x0205 | DEC LANBridge100 Spanning Tree;   
+	0x0207 | Cisco Discovery Protocol;   
+	0x0209 | Netcs Twin Routing;   
+	0x020B | STP, Scheduled Transfer Protocol;   
+	0x020D | EDP, Extreme Discovery Protocol;   
+	0x0211 | OSCP, Optical Supervisory Channel Protocol;   
+	0x0213 | OSCP, Optical Supervisory Channel Protocol;   
+	0x0231 | Luxcom;   
+	0x0233 | Sigma Network Systems;   
+	0x0235 | Apple Client Server Protocol;   
+	0x0281 | MPLS, Multi-Protocol Label Switching, unicast;   
+	0x0283 | MPLS, Multi-Protocol Label Switching, multicast;   
+	0x0285 | IEEE p1284.4 standard - data packets;
+	0x0287 | ETSI TETRA Network Protocol Type 1;
+	0x0289 | Multichannel Flow Treatment Protocol;
+	0x2063 | RTP IPHC Compressed TCP No Delta;
+	0x2065 | RTP IPHC Context State;
+	0x2067 | RTP IPHC Compressed UDP 16;
+	0x2069 | RTP IPHC Compressed RTP 16;
+	0x4001 | Cray Communications Control Protocol;
+	0x4003 | CDPD Mobile Network Registration Protocol;
+	0x4005 | Expand accelerator protocol;
+	0x4007 | ODSICP NCP;
+	0x4021 | LZS, PPP Stac LZS Compression Protocol;
+	0x4023 | RefTek Protocol;   
+	0x4025 | Fibre Channel;
+	0x4027 | EMIT Protocols;   
+	0x801F | Reserved;
+	0x8021 | IPCP, PPP Internet Protocol Control Protocol;   
+	0x8023 | OSINLCP, PPP OSI Network Layer Control Protocol;   
+	0x8025 | XNSCP, PPP XNS IDP Control Protocol;   
+	0x8027 | DNCP, DECnet Phase IV Control Protocol;   
+	0x8029 | ATCP, PPP AppleTalk Control Protocol;   
+	0x802B | IPXCP, PPP IPX Control Protocol;   
+	0x802D | Reserved;   
+	0x802F | Reserved;   
+	0x8031 | BCP, PPP Bridging Control Protocol;   
+	0x8033 | Stream Protocol Control Protocol;   
+	0x8035 | BVCP, Banyan Vines Control Protocol;   
+	0x8037 | Reserved (until 1993);   
+	0x8039 | Reserved;   
+	0x803B | Reserved;   
+	0x803D | Multi-Link Control Protocol;   
+	0x803F | NBFCP, PPP NetBIOS Frames Control Protocol;   
+	0x8041 | PPP-LEX, PPP LAN extension protocol;   
+	0x8043 | Ascom Timeplex;   
+	0x8045 | Fujitsu LBLB Control Protocol;   
+	0x8047 | RLNCP, DCA Remote Lan Network Control Protocol;   
+	0x8049 | SDCP, PPP Serial Data Control Protocol;   
+	0x804B | SNACP, SNA over 802.2 Control Protocol;   
+	0x804D | SNACP, SNA Control Protocol;   
+	0x804F | IP6 Header Compression Control Protocol;   
+	0x8051 | KNX Bridging Control Protocol;   
+	0x8053 | ECP, PPP Encryption Control Protocol;   
+	0x8055 | Individual Link Encryption Control Protocol;   
+	0x8057 | IPV6CP, PPP IPv6 Control Protocol;   
+	0x8059 | PPP Multiplexing Control Protocol;
+	0x806F | Stampede Bridging Control Protocol;   
+	0x8071 | Reserved;   
+	0x8073 | MP+ Control Protocol;   
+	0x807D | Reserved;
+	0x8081 | Reserved (until 20-Oct-2000);   
+	0x8083 | Reserved (until 20-Oct-2000);   
+	0x80C1 | NTCITS IPI Control Protocol;   
+	0x80CF | Reserved;
+	0x80FB | Compression on single link in multilink group control;
+	0x80FD | CCP, PPP Compression Control Protocol;
+	0x80FF | Reserved (not used);
+	0x8207 | Cisco Discovery Protocol Control;   
+	0x8209 | Netcs Twin Routing;   
+	0x820B | STP, Control Protocol;   
+	0x820D | EDPCP, Extreme Discovery Protocol Control Protocol;   
+	0x8235 | Apple Client Server Protocol Control;   
+	0x8281 | MPLSCP, MPLS Control Protocol;
+	0x8283 | Tag Switching - Multicast;   
+	0x8285 | IEEE p1284.4 standard - Protocol Control;   
+	0x8287 | ETSI TETRA NSP1 Control Protocol;   
+	0x8289 | Multichannel Flow Treatment Protocol;
+	0xC021 | LCP, Link Control Protocol;   
+	0xC023 | PAP, Password Authentication Protocol;   
+	0xC025 | Link Quality Report;   
+	0xC027 | SPAP, Shiva Password Authentication Protocol;   
+	0xC029 | CBCP, CallBack Control Protocol;   
+	0xC02B | BACP, PPP Bandwidth Allocation Control Protocol;   
+	0xC02D | BAP, PPP Bandwidth Allocation Protocol;   
+	0xC081 | Container Control Protocol;   
+	0xC223 | CHAP, Challenge Handshake Authentication Protocol;   
+	0xC225 | RSA Authentication Protocol;   
+	0xC227 | EAP, PPP Extensible Authentication Protocol;
+	0xC229 | SIEP, Mitsubishi Security Info Exch Protocol;   
+	0xC26F | Stampede Bridging Authorization Protocol;   
+	0xC281 | Proprietary Authentication Protocol;   
+	0xC283 | Proprietary Authentication Protocol;   
+	0xC481 | Proprietary Node ID Authentication Protocol;   
+
+str# PPP_Protocols_Func;
+	//0x0001 | Padding Protocol;
+	//0x0003 | ROHC small-CID;
+	//0x0005 | ROHC large-CID;
+	0x0021 | IP;
+	*0x0023 | OSI Network Layer;   
+	*0x0025 | Xerox NS IDP;   
+	*0x0027 | DECnet Phase IV;   
+	*0x0029 | Appletalk;   
+	*0x002B | IPX;   
+	*0x002D | Van Jacobson Compressed TCP/IP;   
+	*0x002F | Van Jacobson Uncompressed TCP/IP;   
+	*0x0031 | Bridging PDU;   
+	*0x0033 | ST-II, Stream Protocol;   
+	*0x0035 | Banyan Vines;   
+	*0x0037 | Reserved (until 1993);   
+	*0x0039 | AppleTalk EDDP;   
+	*0x003B | AppleTalk SmartBuffered;   
+	*0x003D | MP, PPP Multilink Protocol;
+	*0x003F | NETBIOS Framing;   
+	*0x0041 | Cisco Systems;   
+	*0x0043 | Ascom Timeplex;   
+	*0x0045 | LBLB, Fujitsu Link Backup and Load Balancing;   
+	*0x0047 | DCA Remote Lan;   
+	*0x0049 | SDTP, PPP Serial Data Transport Protocol;
+	*0x004B | SNA over 802.2;
+	*0x004D | SNA;
+	*0x004F | IP6 Header Compression;   
+	*0x0051 | KNX Bridging Data;   
+	*0x0053 | Encryption;   
+	*0x0055 | Individual Link Encryption;   
+	0x0057 | IPv6;   
+	*0x0059 | PPP Multiplexing;
+	*0x0061 | RTP IPHC Full Header;
+	*0x0063 | RTP IPHC Compressed TCP;
+	*0x0065 | RTP IPHC Compressed Non TCP;
+	*0x0067 | RTP IPHC Compressed UDP 8;
+	*0x0069 | RTP IPHC Compressed RTP 8;
+	*0x006F | Stampede Bridging;   
+	*0x0071 | Reserved;   
+	*0x0073 | MP+, PPP Ascend's Multilink Protocol Plus;
+	*0x007D | Reserved (Control Escape);   
+	*0x007F | Reserved (compression inefficient);   
+	*0x0081 | Reserved (until 20-Oct-2000);   
+	*0x0083 | Reserved (until 20-Oct-2000);   
+	*0x00C1 | NTCITS IPI;   
+	*0x00CF | Reserved (PPP NLPID);   
+	*0x00FB | Single link compression in multilink;
+	0x00FD | PPP First Choice Compression;
+	*0x0201 | 802.1d Hello Packets;
+	*0x0203 | IBM Source Routing BPDU;   
+	0x0205 | PPP::BPDU;			//DEC LANBridge100 Spanning Tree;   
+	*0x0207 | Cisco Discovery Protocol;   
+	*0x0209 | Netcs Twin Routing;   
+	*0x020B | STP, Scheduled Transfer Protocol;   
+	*0x020D | EDP, Extreme Discovery Protocol;   
+	*0x0211 | OSCP, Optical Supervisory Channel Protocol;   
+	*0x0213 | OSCP, Optical Supervisory Channel Protocol;   
+	*0x0231 | Luxcom;   
+	*0x0233 | Sigma Network Systems;   
+	*0x0235 | Apple Client Server Protocol;   
+	0x0281 | MPLS::Unicast;   
+	0x0283 | MPLS::Multicast;   
+	*0x0285 | IEEE p1284.4 standard - data packets;   
+	*0x0287 | ETSI TETRA Network Protocol Type 1;   
+	*0x0289 | Multichannel Flow Treatment Protocol;   
+	*0x2063 | RTP IPHC Compressed TCP No Delta;
+	*0x2065 | RTP IPHC Context State;
+	*0x2067 | RTP IPHC Compressed UDP 16;
+	*0x2069 | RTP IPHC Compressed RTP 16;
+	*0x4001 | Cray Communications Control Protocol;   
+	*0x4003 | CDPD Mobile Network Registration Protocol;   
+	*0x4005 | Expand accelerator protocol;   
+	*0x4007 | ODSICP NCP;   
+	*0x4021 | LZS, PPP Stac LZS Compression Protocol;   
+	*0x4023 | RefTek Protocol;   
+	*0x4025 | Fibre Channel;   
+	*0x4027 | EMIT Protocols;   
+	*0x801F | Reserved;
+	0x8021 | IPCP TLV;
+	*0x8023 | OSINLCP, PPP OSI Network Layer Control Protocol;   
+	*0x8025 | XNSCP, PPP XNS IDP Control Protocol;   
+	*0x8027 | DNCP, DECnet Phase IV Control Protocol;   
+	*0x8029 | ATCP, PPP AppleTalk Control Protocol;   
+	0x802B | PPP::IPXCP;			//IPXCP, PPP IPX Control Protocol;   
+	*0x802D | Reserved;   
+	*0x802F | Reserved;   
+	*0x8031 | BCP, PPP Bridging Control Protocol;   
+	*0x8033 | Stream Protocol Control Protocol;   
+	*0x8035 | BVCP, Banyan Vines Control Protocol;   
+	*0x8037 | Reserved (until 1993);   
+	*0x8039 | Reserved;   
+	*0x803B | Reserved;   
+	*0x803D | Multi-Link Control Protocol;   
+	*0x803F | NBFCP, PPP NetBIOS Frames Control Protocol;   
+	*0x8041 | PPP-LEX, PPP LAN extension protocol;   
+	*0x8043 | Ascom Timeplex;   
+	*0x8045 | Fujitsu LBLB Control Protocol;   
+	*0x8047 | RLNCP, DCA Remote Lan Network Control Protocol;   
+	*0x8049 | SDCP, PPP Serial Data Control Protocol;   
+	*0x804B | SNACP, SNA over 802.2 Control Protocol;   
+	*0x804D | SNACP, SNA Control Protocol;   
+	*0x804F | IP6 Header Compression Control Protocol;   
+	*0x8051 | KNX Bridging Control Protocol;   
+	*0x8053 | ECP, PPP Encryption Control Protocol;   
+	*0x8055 | Individual Link Encryption Control Protocol;   
+	0x8057 | PPP::IPV6CP;
+	*0x8059 | PPP Multiplexing Control Protocol;
+	*0x806F | Stampede Bridging Control Protocol;   
+	*0x8071 | Reserved;   
+	*0x8073 | MP+ Control Protocol;   
+	*0x807D | Reserved;
+	*0x8081 | Reserved (until 20-Oct-2000);   
+	*0x8083 | Reserved (until 20-Oct-2000);   
+	*0x80C1 | NTCITS IPI Control Protocol;   
+	*0x80CF | Reserved;
+	*0x80FB | Compression on single link in multilink group control;
+	0x80FD | PPP-CCP;
+	*0x80FF | Reserved (not used);
+	*0x8207 | Cisco Discovery Protocol Control;   
+	*0x8209 | Netcs Twin Routing;   
+	*0x820B | STP, Control Protocol;   
+	*0x820D | EDPCP, Extreme Discovery Protocol Control Protocol;   
+	*0x8235 | Apple Client Server Protocol Control;   
+	*0x8281 | MPLSCP, MPLS Control Protocol;
+	*0x8283 | Tag Switching - Multicast;   
+	*0x8285 | IEEE p1284.4 standard - Protocol Control;   
+	*0x8287 | ETSI TETRA NSP1 Control Protocol;   
+	*0x8289 | Multichannel Flow Treatment Protocol;
+	0xc021 | PPP-LCP;	*LCP CILV;
+	0xc023 | Password Authentication Protocol;
+	*0xC025 | Link Quality Report;   
+	*0xC027 | SPAP, Shiva Password Authentication Protocol;   
+	0xC029 | PPP::CBCP;
+	*0xC02B | BACP, PPP Bandwidth Allocation Control Protocol;   
+	*0xC02D | BAP, PPP Bandwidth Allocation Protocol;   
+	*0xC081 | Container Control Protocol;   
+	0xC223 | PPP-CHAP;		*Challenge-Handshake Authentication Protocol;
+	*0xC225 | RSA Authentication Protocol;   
+	*0xC227 | EAP, PPP Extensible Authentication Protocol;
+	*0xC229 | SIEP, Mitsubishi Security Info Exch Protocol;   
+	*0xC26F | Stampede Bridging Authorization Protocol;   
+	*0xC281 | Proprietary Authentication Protocol;   
+	*0xC283 | Proprietary Authentication Protocol;   
+	*0xC481 | Proprietary Node ID Authentication Protocol;   

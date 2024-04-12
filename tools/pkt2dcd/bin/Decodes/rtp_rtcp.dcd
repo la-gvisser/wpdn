@@ -1,0 +1,924 @@
+// RTP
+
+void RTP/RTCP;
+	GWRD 0 3 0 30;
+	ANDG ff 3 0 30;
+	TEQU c8 3 0 0 RTCP Sender Rpt;
+	TEQU c9 3 0 0 RTCP Rcvr Rpt;
+	TEQU ca 3 0 0 RTCP Src Descr;
+	TEQU cb 3 0 0 RTCP Bye;
+	TEQU cc 3 0 0 RTCP App Def;
+
+	// si: check to see if we can on udp [ip type 11hex]	...in void ip, we saved the protocol type to g32[hex]
+	TNEQ 11 32 0 0 RETURN;
+
+	// first check for valid RTP - checks the version num...it MUST be 2
+	GBIT 2 2 90 c2 Version:;
+	SEQU 2 2;
+	SKIP 1;
+	TRTS;
+
+	// check the payload type
+	//GWRD 0 4;
+	//ANDG 7f 4;							// mask out everything but the last 7 bits
+	//MOVE 4 85;
+	//ADDG 1 5;
+	INCR 1;
+	GBYT 0 4;
+	DECR 1;
+	ANDG 7f 4;
+	MOVE 4 85;
+	//ADDG 1 5;
+	CST# 0 5 0 5 RTP Payload Types;
+	SKIP 80000001;
+    TNXT -RTP;
+
+	TRTS;
+
+void RTCP;
+	GWRD 0 3 0 30;
+	ANDG ff 3 0 30;
+	TEQU c8 3 0 0 RTCP Sender Rpt;
+	TEQU c9 3 0 0 RTCP Rcvr Rpt;
+	TEQU ca 3 0 0 RTCP Src Descr;
+	TEQU cb 3 0 0 RTCP Bye;
+	TEQU cc 3 0 0 RTCP App Def;
+
+void RTP::Test();
+    // Acording to PSPEC
+    l[1] = pb[0];
+    ANDG c0 41;
+
+
+    if (l[1] == 0x80)    //version
+    {
+            l[2] = pb[1];
+            ANDG 7f 42;
+            TSB# 0 42 0 0 RTP::Test::Type_str;
+
+           // RTP/RTCP;
+    }
+str# RTP::Test::RTCP_str;
+      200 | RTCP;
+      201 | RTCP;
+      202 | RTCP;
+      203 | RTCP;
+      204 | RTCP;
+
+str# RTP::Test::Type_str;
+	0 | RTP; // G.711;			//PCMU
+	3 | RTP; // GSM;
+	4 | RTP; // G.723;
+	5 | RTP; // DVI4;
+	6 | RTP; // DVI4;
+	7 | RTP; // LPC;
+	8 | RTP; // G.711;			//PCMA
+	9 | RTP; // G.722;
+	10 | RTP; // L16;
+	11 | RTP; // L16;
+    12 | RTP; // QCELP;
+    13 | RTP; // CN;
+    14 | RTP; // MPA;
+    15 | RTP; // G.728;
+    16 | RTP; // DVI4;
+    17 | RTP; // DVI4;
+	18 | RTP; // G.729;        
+    25 | RTP; // CelB;
+    26 | RTP; // JPEG;
+    28 | RTP; // nv;
+	31 | RTP; // H.261;
+	34 | RTP; // RTP::MPV;
+    35 | RTP; // MP2T;
+    36 | RTP; // H.263;
+    96 | RTP; // RTP::Dynamic;
+    97 | RTP; // RTP::Dynamic;
+    98 | RTP; // RTP::Dynamic;
+    99 | RTP; // RTP::Dynamic;
+    100 | RTP; // RTP::Dynamic;
+    101 | RTP; // RTP::Dynamic;
+    102 | RTP; // RTP::Dynamic;
+    103 | RTP; // RTP::Dynamic;
+    104 | RTP; // RTP::Dynamic;
+    105 | RTP; // RTP::Dynamic;
+    106 | RTP; // RTP::Dynamic;
+    107 | RTP; // RTP::Dynamic;
+    108 | RTP; // RTP::Dynamic;
+    109 | RTP; // RTP::Dynamic;
+    110 | RTP; // RTP::Dynamic;
+    111 | RTP; // RTP::Dynamic;
+    112 | RTP; // RTP::Dynamic;
+    113 | RTP; // RTP::Dynamic;
+    114 | RTP; // RTP::Dynamic;
+    115 | RTP; // RTP::Dynamic;
+    116 | RTP; // RTP::Dynamic;
+    117 | RTP; // RTP::Dynamic;
+    118 | RTP; // RTP::Dynamic;
+    119 | RTP; // RTP::Dynamic;
+    120 | RTP; // RTP::Dynamic;
+    121 | RTP; // RTP::Dynamic;
+    122 | RTP; // RTP::Dynamic;
+    123 | RTP; // RTP::Dynamic;
+    124 | RTP; // RTP::Dynamic;
+    125 | RTP; // RTP::Dynamic;
+    126 | RTP; // RTP::Dynamic;
+    127 | RTP; // RTP::Dynamic;
+
+void RTP;
+	LABL 0 0 0 b1 RTP - Real-time Transport Protocol\RTP:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 1 5 90 c2 Extension:;
+	DBIT 4 3 90 c2 CSRC Count:;
+	DBIT 1 0 90 c2 Marker:;
+	DBIT 7 4 90 c2 Payload Type:;
+
+	CST# 0 4 0 14 RTP Payload Types;
+
+	TEQU 0 4 0 0 RTP Cont;
+	TEQU 3 4 0 0 RTP Cont;
+	TEQU 4 4 0 0 RTP Cont;
+	TEQU 5 4 0 0 RTP Cont;
+	TEQU 6 4 0 0 RTP Cont;
+	TEQU 7 4 0 0 RTP Cont;
+	TEQU 8 4 0 0 RTP Cont;
+	TEQU 9 4 0 0 RTP Cont;
+	TEQU a 4 0 0 RTP Cont;
+	TEQU b 4 0 0 RTP Cont;
+	TEQU c 4 0 0 RTP Cont;
+	TEQU d 4 0 0 RTP Cont;
+	TEQU e 4 0 0 RTP Cont;
+	TEQU f 4 0 0 RTP Cont;
+	TEQU 11 4 0 0 RTP Cont;
+	TEQU 12 4 0 0 RTP Cont;
+	TEQU 1f 4 0 0 RTP Cont;
+	TEQU 19 4 0 0 RTP Cont;
+	TEQU 1a 4 0 0 RTP Cont;
+	TEQU 1c 4 0 0 RTP Cont;
+	TEQU 20 4 0 0 RTP Cont;
+	TEQU 21 4 0 0 RTP Cont;
+	TEQU 22 4 0 0 RTP Cont;
+	CLTE 60 4 0 14 Dynamic;
+	TNXT -RTP Cont;
+
+str# RTP Payload Types;
+	0 | PCMU;
+	1 | reserved;
+	2 | G.726-32/reserved;
+	3 | GSM;
+	4 | G.723;
+	5 | DVI4;
+	6 | DVI4;
+	7 | LPC;
+	8 | PCMA;
+	9 | G.722;
+	10 | L16;
+	11 | L16;
+	12 | QCELP;
+	13 | CN;
+	14 | MPA;
+	15 | G.728;
+	16 | DVI4;
+	17 | DVI4;
+	18 | G.729;
+	19 | reserved;
+	25 | CelB;
+	26 | JPEG;
+	28 | nv;
+	31 | H.261;
+	32 | MPV;
+	33 | MP2T;
+	34 | H.263;
+	64 | RFC2833 DTMF;
+	65 | RFC2833 DTMF;
+str# RTP Payload Type_Load;
+
+//to use this function correctly print out the label for the field and then call this function.
+//Example:
+//LABL 0 0 0 c2 SSRC:;	//print label
+//RTP::PrintSSRCInHexandDec;	//call function
+//
+//output: SSRC: 0x00000011 (17)
+void RTP::PrintSSRCInHexandDec()
+{
+	HLNG 0 41 90 0;
+	LABL 0 0 0 0 " (";
+	DGLB 0 41 0 0;
+	LABL 0 0 0 0 ")";
+}
+
+void RTP Cont;
+	DWRD  0  0 90 c2 Sequence:;
+	DLNG  0  0 90 c2 Time Stamp:;
+	LABL 0 0 0 c2 Sync Src ID:;
+	RTP::PrintSSRCInHexandDec;
+	TGTE  0 10  0  0 RETURN;			//si: tt6163
+	TEQU  1  5  0  0 RTP Ext Hdr;
+	TLTE  1  3  0  0 RTP CSRC ID;
+	TGTE  0 10  0  0 NFS::The_End;
+    TNXT  -RTP Payloads;				//zz changed
+
+void RTP Ext Hdr;
+	LABL 0 0 0 c1 RTP Header Extension;
+	DWRD 0 0 90 c2 Profile Data:;
+	DWRD 0 41 90 c2 Extension Len:;
+	MULG 4 41;
+	DUMP 0 41 90 c2 RTP Header Extension:;
+	TLTE 1 3 0 0 RTP CSRC ID;
+    TNXT -RTP Payloads;					//zz
+
+void RTP CSRC ID;
+	LSTS 0 3 0 c2 CSRC ID #;
+	DLNG 0 0 70 2 :;
+	SUBG 1 3;
+	LSTZ 0 3;
+    TNXT -RTP Payloads;*zz
+
+void RTP Payloads()
+{
+	//zz added
+	TGTE  0 10  0  0 NFS::The_End;
+    GWRD 0 41;
+    // Test Audio
+    if (l[1] == 0x0010)
+	{
+		if (g[4] != 100)
+		{
+			if (g[4] != 101)
+			{
+				DUMP 1 0 90 c2 Audio Payload:;
+				TRTS;
+			}
+		}
+		if (g[4] != 101)
+		{
+			if (g[4] != 100)
+			{
+				DUMP 1 0 90 c2 Audio Payload:;
+				TRTS;
+			}
+		}
+	}
+    
+
+    // Test MPEG4 Start Code;
+    if (l[1] == 0x0000)
+    {
+       GBYT 2 41;
+       if (l[1] == 1)
+       {
+		RTP::MPEG4;
+		TRTS;
+       }
+    }
+
+    TEQU  0  4  0  0 G.711;			//PCMU
+	TEQU  2  4  0  0 G726::32;
+	TEQU  3  4  0  0 GSM;
+    TEQU  8  4  0  0 G.711;			//PCMA
+	TEQU  9  4  0  0 G.722;
+    TEQU  4  4  0  0 G.723;
+    TEQU  d  4  0  0 RTP::ComfortNoise;
+    TEQU  f  4  0  0 G.728;
+    TEQU 12  4  0  0 G.729;
+	TEQU 1f  4  0  0 H.261;
+	TEQU 20	 4  0  0 RTP::MPV;
+	TEQU 21	 4  0  0 RTP::MP2T;
+    TEQU 22  4  0  0 H.263;
+	TEQU 64  4  0  0 RFC2833::RTP_Event;
+	TEQU 65  4  0  0 RFC2833::RTP_Event;
+	TLTE 60  4  0  0 RTP::Dynamic;
+	Dump Data;
+	TGTE  0 10  0  0 NFS::The_End;
+	Dump Data;
+}
+	
+void RTP::ComfortNoise;
+	LABL 0 0 0 b1 Comfort Noise\CN:;
+	DBYT 0 41 90 c2 Noise Level;
+	LABL 0 0 0 4 " -";
+	DGLB 0 41 4 14;
+	LABL 0 0 0 4 " dBov";
+	
+void RTP::MPEG4;
+    MPEG4::Video;
+
+void RTP::MPV;
+	*DUMP 0 10 90 c2 MPV Payload:;
+	H222::PS::program_stream_map;  * call to H222 protocol (a.k.a MPEG2 protocol)
+	TRTS;
+	/*
+	LABL 0 0 00 b1 MPEG Video Header;
+	BBIT 5 0 90 c2 MBZ:;
+		LABL 0 0 00 14 Unused;
+	BBIT 1 1 90 c2 T:;
+	CEQU 1 1 00 14 Header Extension Present;
+	CLSE 0 0 00 14 Header Extension Not Present;
+	DBIT a 0 90 c2 Temporal Reference:;
+	Active N bit:;
+	N
+	S
+	B
+	E
+	P
+	FBV
+	BFC
+	FFV
+	FFC
+	*/
+
+void RTP::MP2T;
+  H222::MPEG_transport_stream;      * call to H222 protocol (a.k.a MPEG2 protocol)
+	TRTS;
+
+void RTP::Dynamic;
+	l[1] = pb[0];
+    l[2] = pb[1];
+    if (l[2] == 0 )
+    {
+       if (l[1]>0 )
+       {
+       // A stupid compare , but better than nothing.
+        H.264;
+        }
+    }
+    g[1] = g[17];
+	g[1] -= 2;						//si: some fool decided to only take out src / dst / length fields and not the chksm field for udp length
+	g[1] -= 12;						//si: rtp header
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Payload:;
+	}
+	TRTS;
+
+// --------------------------------------------------
+
+void RTCP Sender Rpt;
+	LABL 0 0 0 b1 RTCP SR - Real-time Transport Control Protocol Sender Report\RTCP SR:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 5 3 90 c2 RR Count:;
+	DBYT 0 0 90 c2 Packet Type:;
+	LABL 0 0 0 14 SR - Sender Report;
+	DWRD 0 4 90 c2 Length:;	
+	g[4] += 1;	// Length = # of 32-bit words MINUS ONE
+	g[4] *= 4;
+	DGLB 0 4 4 14 "(";
+	g[4] -= 4;	// Subtract the extra 32-bit word.
+	LABL 0 0 0 4 " bytes)";	
+	//we print the SSRC in hex and decimal because our customers want it like that
+	LABL 0 0 0 c2 Sender SSRC:;
+	RTP::PrintSSRCInHexandDec;
+	TIME 3 0 90 c2 NTP Timestamp Hi:;
+	DLNG 0 0 90 c2 NTP Timestamp Lo:;
+	LABL 0 0  0 14 fraction;
+	TIME 3 0 90 c2 RTP Timestamp:;
+	DLNG 0 0 90 c2 Sender Packet Count:;
+	DLNG 0 0 90 c2 Sender Octet Count:;
+	TLTE 1 3 0 0 RTCP RRB;
+	TNXT -RTCP Next;
+
+// --------------------------------------------------
+
+void RTCP RRB;
+	LSTS 0 3 0 b7 RTCP Reception Report Block #;
+	DLNG 0 0 90 c2 Source ID:;
+	GLNG 0 4;
+	ANDG ffffff 4;
+	DBYT 0 0 90 c2 Fraction Lost:;
+	LABL 0 0 00 14 "/ 256";
+	DEC# 3 0 90 c2 Cumulative Lost:;
+	LABL 0 0 0 4 " packets";
+	DLNG 0 0 90 c2 Ext High Seqence:;
+	DLNG 0 0 90 c2 Interarrival Jitter:;
+	DLNG 0 0 90 c2 Last Sender Report:;
+	DLNG 0 0 90 c2 Delay Since Last SR:;
+	SUBG 1 3;
+	LSTZ 0 3;
+	LABL 0 0 0 b8;
+	TNXT -RTCP Next;
+
+// --------------------------------------------------
+
+void RTCP Rcvr Rpt;
+	LABL 0 0 0 b1 RTCP RR - Real-time Transport Control Protocol Receiver Report;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 5 3 90 c2 RR Count:;
+	DBYT 0 0 90 c2 Packet Type:;
+	LABL 0 0 0 14 RR - Receiver Report;
+	DWRD 0 4 90 c2 Packet Len:;
+	//we print the SSRC in hex and decimal because our customers want it like that
+	LABL 0 0 0 c2 Sync Src ID:;
+	RTP::PrintSSRCInHexandDec;
+	TLTE 1 3 0 0 RTCP RRB;
+	TNXT -RTCP Next;
+
+// --------------------------------------------------
+
+void RTCP Src Descr;
+	LABL 0 0 0 b1 RTCP SDES - Real-time Transport Control Protocol Source Description;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 5 3 90 c2 Source Count:;
+	DBYT 0 0 90 c2 Packet Type:;
+	LABL 0 0 0 14 SDES - Source Description;
+	DWRD 0 4 90 c2 Packet Len:;
+	TLTE 1 3 0 0 RTCP SDES;
+	TNXT -RTCP Next;
+
+void RTCP SDES;
+	LSTS 0 3 0 b7 RTCP Source Descriptor Chunk #;
+	//we print the SSRC in hex and decimal because our customers want it like that
+	LABL 0 0 0 c2 SSRC/CSRC ID:;
+	RTP::PrintSSRCInHexandDec;
+	MOVE 0 7;
+	RTCP SDES Items;
+	ANDG 3 7;
+	SEQU 0 7;
+	SKIP 3;
+	MOVE 4 6;
+	SUBG 7 86;
+	HEX# 0 6 90 c2 Alignment Pad:;
+	SUBG 1 3;
+	LSTZ 0 3;
+	LABL 0 0 00 b8;
+	TNXT -RTCP Next;
+
+void RTCP SDES Items;
+	DBYT 0 4 90 c2 SDES Type:;
+	CST# ffffffff 4 0 14 SDES Types;
+	SNEQ 0 4;
+	SKIP 2;
+	ADDG 1 7;
+	TRTS;
+	DBYT 0 5 90 c2 SDES Length:;
+	ADDG 2 7;
+	SEQU 0 5;
+	SKIP 2;
+	CHR# 0 5 90 c2 SDES Name:;
+	ADDG 5 87;
+	TNXT -RTCP SDES Items;
+
+str# SDES Types;
+	END - End of SDES List;
+	CNAME - Canonical Name;
+	NAME - User Name;
+	EMAIL - User's E-mail;
+	PHONE - User's Phone;
+	LOC - User Geograhic Location;
+	TOOL - Application or Tool Name;
+	NOTE - Notice ABout the Source;
+	PRIV - Private Extensions;
+	
+// --------------------------------------------------
+
+void RTCP Bye;
+	LABL 0 0 0 b1 RTCP BYE - Real-time Transport Control Protocol Goodbye\RTCP BYE:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Padding:;
+	DBIT 5 3 90 c2 Report Count:;
+	DBYT 0 0 90 c2 Packet Type:;
+	LABL 0 0 0 14 BYE - Goodbye;
+	DWRD 0 4 90 c2 Packet Len:;
+	
+	l[1] = g[3];
+	l[2] = g[4];	//we will track the amount of data left after reading the SSRC/CSRC IDs
+	l[2] *= 4;		//convert to bytes
+	
+	LABL 0 0 0 c7 SSRC/CSRC IDs;
+	
+	if( l[1] == 0 )
+	{
+		LABL	0	0	0	14 0 items;
+	}
+	
+	while( l[1] > 0 )
+	{
+		//we print the SSRC in hex and decimal because our customers want it like that
+		LABL 0 0 0 c2 ID:;
+		RTP::PrintSSRCInHexandDec;
+		l[1] -= 1;
+		l[2] -= 4;
+	}
+	
+	LABL 0 0 0 c8;
+	
+	//lets see if there is an optional message
+	if( l[2] > 0 )
+	{
+		DBYT 0 43 90 c2 Message Length:;
+		CHR# 0 43 90 c2 Reason:;
+		
+		l[2] -= 1;	//accounts for the byte we read for the message length
+		l[2] -= l[3];	//subtract the message length
+	}
+	
+	//anything left is padding
+	while( l[2] > 0 )
+	{
+		//get rid of the padding
+		HEX# 0 42 5 5;
+		l[2] = 0;
+	}
+
+// --------------------------------------------------
+
+void RTCP App Def;
+	LABL 0 0 0 b1 RTCP APP - Real-time Transport Control Protocol Application-Defined\RTCP APP:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 5 3 90 c2 Subtype:;
+	DBYT 0 0 90 c2 Packet Type:;
+	LABL 0 0 0 14 APP - Application-Defined;
+	DWRD 0 4 90 c2 Length:;
+	g[4] += 1;	// Length = # of 32-bit words MINUS ONE
+	g[4] *= 4;
+	DGLB 0 4 4 14 "(";
+	g[4] -= 4;	// Subtract the extra 32-bit word.
+	LABL 0 0 0 4 " bytes)";
+	//we print the SSRC in hex and decimal because our customers want it like that
+	LABL 0 0 0 c2 SSRC/CSRC:;
+	RTP::PrintSSRCInHexandDec;
+	g[4] -= 4;
+	CHR# 4 0 90 c2 Name:;
+	g[4] -= 4;
+	DUMP 0 4 90 c2 Application-Defined Data:;
+	TNXT -RTCP Next;
+
+// --------------------------------------------------
+
+void RTCP::XR;
+	LABL 0 0 0 b1 RTCP XR - Real-time Transport Control Protocol Extended Reports\RTCP XR:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	LABL 0 0 00 14 10.. ....;
+	DBIT 1 0 90 c2 Padding:;
+	LABL 0 0 00 14 ..x. ....;
+	DBIT 5 3 90 c2 Reserved:;
+	LABL 0 0 00 14 ...x xxxx;
+	DBYT 0 0 90 c2 Payload Type:;
+	LABL 0 0 00 14 XR - Extended Reports;
+	DWRD 0 4 90 c2 Length:;
+	g[4] += 1;	// Length = # of 32-bit words MINUS ONE
+	g[4] *= 4;
+	DGLB 0 4 4 14 "(";
+	g[4] -= 4;	// Subtract the extra 32-bit word.
+	LABL 0 0 0 4 " bytes)";	
+	LABL 0 0 0 c2 Sync Src ID:;
+	RTP::PrintSSRCInHexandDec;
+	while (g[4] > 0)
+	{
+		TGTE 0 10 0 0  RETURN;
+		l[1] = g[16];
+		g[1] = pb[0];
+		TSB# 0 1 0 0 RTCP::XR::ReportBlocks::Func;
+		l[1] -= g[16];
+	}
+	TRTS;
+
+str# RTCP::XR::ReportBlocks::Func;
+	1 | RTCP::XR::Report_Blocks::Loss_RLE;
+	2 | RTCP::XR::Report_Blocks::Duplicate_RLE;	
+	3 | RTCP::XR::Report_Blocks::Packet_Receipt_Times;
+	4 | RTCP::XR::Report_Blocks::Receiver_Reference_Time;
+	5 | RTCP::XR::Report_Blocks::DLRR;
+	6 | RTCP::XR::Report_Blocks::Statistics_Summary;
+	7 | RTCP::XR::Report_Blocks::VOIP_Metrics;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::Loss_RLE;
+	g[1] = pb[0];
+	CEQU 1 1 00 b7 Loss RLE Report Block;
+	CEQU 2 1 00 b7 Duplicate RLE Report Block;
+	DBYT 0 1 90 c2 Block Type:;
+	CEQU 1 1 00 14 Loss RLE;
+	CEQU 2 1 00 14 Duplicate RLE;
+	BBYT 0 1 90 c9 Type Specific:;
+	LABL 0 0 00 d4 xxxx .... Reserved;
+	ANDG f 1;
+	CST# 0 1 00 d4 RTCP::XR::Report_Blocks::Thinning;
+	CLSE 0 0 00 d4 .... 0000 Thinning: 0 (reserved);
+	LABL 0 0 00 c8;
+	DWRD 0 1 90 c2 Block Length:;
+	LABL 0 0 0 c2 SSRC of Source:;
+	RTP::PrintSSRCInHexandDec;
+	DWRD 0 0 90 c2 Begin Sequence:;
+	DWRD 0 0 90 c2 End Sequence:;
+	// chunk
+	g[1] = pw[0];
+	if (g[1] == 0)
+	{
+		DWRD 0 0 90 c2 Terminating Null Chunk:;
+	}
+	if (g[1] != 0)
+	{
+		ANDG 8000 1;
+		// Run Length Chunk
+		if (g[1] == 0)
+		{
+			DBIT 1 1 90 c2 Chunk Type:;
+			LABL 0 0 00 14 Run Length;
+			DBIT 1 1 90 c2 Run Type:;
+			DBIT e 1 90 c2 Run Length:;
+		}
+		// Bit Vector Chunk
+		if (g[1] > 0)
+		{
+			DBIT 1 1 90 c2 Chunk Type:;
+			LABL 0 0 00 14 Bit Vector;
+			DBIT f 1 90 c2 Bit Vector:;
+		}
+	}
+	LABL 0 0 00 b8;
+
+str# RTCP::XR::Report_Blocks::Thinning;
+	.... 0001 Thinning: 1;
+	.... 0010 Thinning: 2;
+	.... 0011 Thinning: 3;
+	.... 0100 Thinning: 4;
+	.... 0101 Thinning: 5;
+	.... 0110 Thinning: 6;
+	.... 0111 Thinning: 7;
+	.... 1000 Thinning: 8;
+	.... 1001 Thinning: 9;
+	.... 1010 Thinning: 10;
+	.... 1011 Thinning: 11;
+	.... 1100 Thinning: 12;
+	.... 1101 Thinning: 13;
+	.... 1110 Thinning: 14;
+	.... 1111 Thinning: 15;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::Duplicate_RLE;	// 2
+	RTCP::XR::Report_Blocks::Loss_RLE;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::Packet_Receipt_Times;
+	LABL 0 0 00 b7 Packet Receipt Report Block;
+	DBYT 0 1 90 c2 Block Type:;					// 3
+	LABL 0 0 00 14 Packet Reecipt Times;
+	BBYT 0 1 90 c9 Type Specific:;
+	LABL 0 0 00 d4 xxxx .... Reserved;
+	ANDG f 1;
+	CST# 0 1 00 d4 RTCP::XR::Report_Blocks::Thinning;
+	CLSE 0 0 00 d4 .... 0000 Thinning: 0 (reserved);
+	LABL 0 0 00 c8;
+	DWRD 0 5 90 c2 Block Length:;
+	MULG 4 5;
+	LABL 0 0 0 c2 SSRC of Source:;
+	RTP::PrintSSRCInHexandDec;
+	DWRD 0 0 90 c2 Begin Sequence:;
+	DWRD 0 0 90 c2 End Sequence:;
+	g[5] -= 8;
+	while (g[5] > 0)
+	{
+		DLNG 0 0 90 c2 Receipt Time of Pkt:;
+		g[5] -= 4;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::Receiver_Reference_Time;
+	LABL 0 0 00 b7 Receiver Reference Time Report Block;
+	DBYT 0 1 90 c2 Block Type:;					// 4
+	LABL 0 0 00 14 Receiver Reference Time;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 5 90 c2 Block Length:;
+	D64B 0 0 90 c2 NTP TimeStamp:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::DLRR;
+	LABL 0 0 00 b7 Delay since Last Receiver Report Report Block;
+	DBYT 0 1 90 c2 Block Type:;					// 5
+	LABL 0 0 00 14 Delay since Last Receiver Report;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 5 90 c2 Block Length:;
+	while (g[5] > 0)
+	{
+		LABL 0 0 00 c9 DLRR Sub-Block;
+		LABL 0 0 0 c2 SSRC of Receiver:;
+		RTP::PrintSSRCInHexandDec;
+		DLNG 0 0 90 c2 Last RR:;
+		DLNG 0 0 90 c2 DLRR:;
+		LABL 0 0 00 c8;
+		g[5] -= 12;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::Statistics_Summary;
+	LABL 0 0 00 b7 Statistics Summary Report Block;
+	DBYT 0 1 90 c2 Block Type:;					// 6
+	LABL 0 0 00 14 Statistics Summary;
+	BBYT 0 1 90 c9 Flags:;
+		CBIT 7 1 00 d4 1... .... Loss Report Present;
+		CLSE 0 0 00 d4 0... .... Loss Report NOT Present;
+		CBIT 6 1 00 d4 .1.. .... Duplicate Report Present;
+		CLSE 0 0 00 d4 .0.. .... Duplicate Report NOT Present;
+		CBIT 5 1 00 d4 ..1. .... Jitter Present;
+		CLSE 0 0 00 d4 ..0. .... Jitter NOT Present;
+		l[2] = g[1];
+		ANDG 18 42;
+		SHFR 3 42;
+		CEQU 0 42 0 d4 ...0 0... ToH: NOT Present;
+		CEQU 1 42 0 d4 ...0 1... ToH: IPv4 TTL Values;
+		CEQU 2 42 0 d4 ...1 0... ToH: IPv6 Hop Limit Values;
+		CEQU 3 42 0 d4 ...1 1... ToH: Invalid Value;
+		LABL 0 0 00 d4 .... .xxx Reserved;
+		LABL 0 0 00 c8;
+	DWRD 0 5 90 c2 Block Length:;
+	LABL 0 0 0 c2 SSRC of Source:;
+	RTP::PrintSSRCInHexandDec;
+	DWRD 0 0 90 c2 Begin Sequence:;
+	DWRD 0 0 90 c2 End Sequence:;
+	
+	l[1] = g[1];
+	ANDG 80 41;
+	if (l[1] > 0)
+	{
+		DLNG 0 0 90 c2 Lost Packets:;
+	}
+	
+	l[1] = g[1];
+	ANDG 40 41;
+	if (l[1] > 0)
+	{
+		DLNG 0 0 90 c2 Duplicate Packets:;
+	}
+	
+	l[1] = g[1];
+	ANDG 20 41;
+	if (l[1] > 0)
+	{
+		DLNG 0 0 90 c2 Min Jitter:;
+		DLNG 0 0 90 c2 Max Jitter:;
+		DLNG 0 0 90 c2 Mean Jitter:;
+		DLNG 0 0 90 c2 Dev Jitter:;
+	}
+	
+	if (l[2] > 0)
+	{
+		if (l[2] == 1)
+		{
+			DBYT 0 0 90 c2 Min TTL:;
+			DBYT 0 0 90 c2 Max TTL:;
+			DBYT 0 0 90 c2 Mean TTL:;
+			DBYT 0 0 90 c2 Dev TTL:;
+		}
+		if (l[2] == 2)
+		{
+			DBYT 0 0 90 c2 Min Hop Limit:;
+			DBYT 0 0 90 c2 Max Hop Limit:;
+			DBYT 0 0 90 c2 Mean Hop Limit:;
+			DBYT 0 0 90 c2 Dev Hop Limit:;
+		}
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// --------------------------
+
+void RTCP::XR::Report_Blocks::VOIP_Metrics;
+	LABL 0 0 00 b7 VoIP Metrics Report Block;
+	DBYT 0 1 90 c2 Block Type:;					// 7
+	LABL 0 0 00 14 VoIP Metrics;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 5 90 c2 Block Length:;
+	LABL 0 0 0 c2 SSRC of Source:;
+	RTP::PrintSSRCInHexandDec;
+	DBYT 0 0 90 c2 Loss Rate:;
+	LABL 0 0 00 14 "/ 256";
+	DBYT 0 0 90 c2 Discard Rate:;
+	LABL 0 0 00 14 "/ 256";
+	DBYT 0 0 90 c2 Burst Density:;
+	DBYT 0 0 90 c2 Gap Density:;
+	DWRD 0 0 90 c2 Burst Duration:;
+	LABL 0 0 00 14 ms;
+	DWRD 0 0 90 c2 Gap Duration:;
+	LABL 0 0 00 14 ms;
+	DWRD 0 0 90 c2 Round Trip Delay:;
+	LABL 0 0 00 14 ms;
+	DWRD 0 0 90 c2 End System Delay:;
+	LABL 0 0 00 14 ms;
+	DBYT 0 0 90 c2 Signal Level:;
+	DBYT 80000000 0 90 c2 Noise Level:;
+	DBYT 0 0 90 c2 RERL:;
+	DBYT 0 0 90 c2 G-Min:;
+	DBYT 0 0 90 c2 R Factor:;
+	DBYT 0 0 90 c2 Ext R Factor:;
+	
+	// get the first part
+	l[1] = pb[0];
+	l[1] /= 10;
+	// get the remainder
+	l[2] = pb[0];
+	MODG a 42;
+	DBYT 0 0 5 5;
+	DGLB 0 41 90 c2 MOS Listening Qual:;
+	DGLB 0 42 00 00 ".";
+	
+	// get the first part
+	l[1] = pb[0];
+	l[1] /= 10;
+	// get the remainder
+	l[2] = pb[0];
+	MODG a 42;
+	DBYT 0 0 5 5;
+	DGLB 0 41 90 c2 MOS Conversation Qual:;
+	DGLB 0 42 00 00 ".";
+	
+	BBYT 0 1 90 c9 Recevier Config:;
+		l[1] = g[1];
+		ANDG c0 41;
+		SHFR 6 41;
+		CST# 0 41 0 d4 RTCP::XR::Report_Blocks::VOIP_Metrics::RX_PLC;
+		l[1] = g[1];
+		ANDG 30 41;
+		SHFR 4 41;
+		CST# 0 41 0 d4 RTCP::XR::Report_Blocks::VOIP_Metrics::RX_JBA;
+		l[1] = g[1];
+		ANDG f 41;
+		CST# 0 41 0 d4 RTCP::XR::Report_Blocks::VOIP_Metrics::RX_JBRate;
+		LABL 0 0 00 c8;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 JB Nominal:;
+	DWRD 0 0 90 c2 JB Maximum:;
+	DWRD 0 0 90 c2 JB Abs Max:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+str# RTCP::XR::Report_Blocks::VOIP_Metrics::RX_PLC;
+	0 | 00.. .... Packet Loss Concealment: Unspecified;
+	1 | 01.. .... Packet Loss Concealment: Disabled;
+	2 | 10.. .... Packet Loss Concealment: Enhanced;
+	3 | 11.. .... Packet Loss Concealment: Standard;
+
+str# RTCP::XR::Report_Blocks::VOIP_Metrics::RX_JBA;
+	0 | ..00 .... Jitter Buffer Adaptive: Unknown;
+	1 | ..01 .... Jitter Buffer Adaptive: Reserved;
+	2 | ..10 .... Jitter Buffer Adaptive: Non-Adaptive;
+	3 | ..11 .... Jitter Buffer Adaptive: Adaptive;
+
+str# RTCP::XR::Report_Blocks::VOIP_Metrics::RX_JBRate;
+	 0 | .... 0000 Jitter Buffer Rate: 0;
+	 1 | .... 0001 Jitter Buffer Rate: 1;
+	 2 | .... 0010 Jitter Buffer Rate: 2;
+	 3 | .... 0011 Jitter Buffer Rate: 3;
+	 4 | .... 0100 Jitter Buffer Rate: 4;
+	 5 | .... 0101 Jitter Buffer Rate: 5;
+	 6 | .... 0110 Jitter Buffer Rate: 6;
+	 7 | .... 0111 Jitter Buffer Rate: 7;
+	 8 | .... 1000 Jitter Buffer Rate: 8;
+	 9 | .... 1001 Jitter Buffer Rate: 9;
+	10 | .... 1010 Jitter Buffer Rate: 10;
+	11 | .... 1011 Jitter Buffer Rate: 11;
+	12 | .... 1100 Jitter Buffer Rate: 12;
+	13 | .... 1101 Jitter Buffer Rate: 13;
+	14 | .... 1110 Jitter Buffer Rate: 14;
+	15 | .... 1111 Jitter Buffer Rate: 15;
+
+// --------------------------------------------------
+
+void RTCP Next;
+	TGTE 0 10 0 0 NFS::The_End;
+	GWRD 0 3 0 30;
+	ANDG ff 3 0 30;
+	TEQU c8 3 0 0 RTCP Sender Rpt;
+	TEQU c9 3 0 0 RTCP Rcvr Rpt;
+	TEQU ca 3 0 0 RTCP Src Descr;
+	TEQU cb 3 0 0 RTCP Bye;
+	TEQU cc 3 0 0 RTCP App Def;
+	TEQU cf 3 0 0 RTCP::XR;
+	DUMP 1  0 90 c2 RTCP Data Area:;
+	
+	

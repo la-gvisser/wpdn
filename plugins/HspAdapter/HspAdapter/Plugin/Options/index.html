@@ -1,0 +1,213 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body, input, label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 9pt;
+    }
+  </style>
+  <!-- After this page load, the title of the dialog box is set to  -->
+  <!-- the title of the web page. -->
+  <title>FolderAdapterOE Options</title>
+  <script type="text/javascript">
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      var space = xml.indexOf(' ', begin);
+      if (space > 0 && space < end) end = space;
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>');
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf('"', sep + 2);
+        if (next == -1) return '';
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next);
+        }
+        begin = next + 2;
+      }
+      return '';
+    }
+
+    function xmlGetValue(xml, tag, opt) {
+      // opt is used to iterate through a list of tags with the same name.
+      // var opt = {'offset' : 0}
+      // var value1 = xmlGetValue(xml, 'item', opt)
+      // var value2 = xmlGetValue(xml, 'item', opt)
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) return '';
+      }
+      begin++;
+
+      begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      if (typeof opt != 'undefined') opt['offset'] = xml.indexOf('>', end);
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetElement(xml, tag, opt) {
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+      }
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, begin + 1);
+      if (end == -1) {
+        if (typeof opt != 'undefined') opt['offset'] = -1;
+        return '';
+      }
+      end += tagEnd.length;
+
+      if (typeof opt != 'undefined') opt['offset'] = end;
+      return xml.substring(begin, end);
+    }
+
+    function xmlEscape(xml) {
+      xml = xml.split('&quot;').join('\"');
+      xml = xml.split('&apos;').join('\'');
+      xml = xml.split('&lt;').join('<');
+      xml = xml.split('&gt;').join('>');
+      xml = xml.split('&amp;').join('&');
+      return xml;
+    }
+  </script>
+  <script type="text/javascript">
+    // Called after this page has been loaded.
+    // Return the desired width and height in pixels as decimal values.
+    function GetDisplayProperties() {
+      var props;
+      props = '570 270';
+      return props;
+    }
+
+    // Called when web page requested to send a message.
+    // Must be XML.
+    // Return the message as XML text.
+    function GetMessage() {
+      return document.getElementById('pluginmessage').value;
+    }
+
+    // Called with the plugin's response to the message.
+    // The response is Xml.
+    function PutResponse(xml) {
+      // Root node: Tag
+      var tagRoot = xmlGetTag(xml);
+      var valRoot = xmlGetValue(xml, tagRoot);
+    }
+
+    function ReadyToClose() {
+      var canclose = CanClose();
+      return canclose.toString();
+    }
+  </script>
+  <script type="text/javascript">
+    // Simulate clicking an anchor control to send the app an event.
+    function appMessage(anchorObj) {
+      if (anchorObj.click) {
+        anchorObj.click()
+      }
+      else if (document.createEvent) {
+        var evt = document.createEvent('MouseEvents');
+        evt.initMouseEvent('click', true, true, window,
+            0, 0, 0, 0, 0, false, false, false, false, 0, null);
+        var allowDefault = anchorObj.dispatchEvent(evt);
+      }
+    }
+
+    function SetDefaults() {
+    }
+
+    function CanClose() {
+      return true;
+    }
+
+    // Called when user clicks Browse button: app:browse
+    // Return unsigned integer with flags:
+    //   0x0002 : Hide the 'Show Hidden' control.
+    //   0x0004 : Initially show hidden files.
+    //   0x0008 : Show the files pane. User must select a file.
+    function GetRemoteBrowserFlags() {
+      var hidehiddenctrl = 0x02;
+      var showhidden = 0x04;
+      var showfiles = 0x08;
+      var flags = 0x10;
+      return flags;
+    }
+
+    // Called when users clicks Ok to the Remote File Browser.
+    // inPath is a fully qualified file name.
+    function PutRemoteBrowserPath(inPath) {
+      document.getElementById(browsetarget).value = inPath;
+    }
+
+    // Called when user clicks Get File button: app:getremote
+    //                 or the Send File button: app:sendlocal
+    // return the fully qualified file name.
+    function GetRemoteBrowserPath() {
+      var path;
+      path = document.getElementById(browsetarget).value;
+      return path;
+    }
+  </script>
+</head>
+<body onload="SetDefaults()">
+  <div>
+    <i>Version</i> 4.2.0.0 - HspAdapterOE
+  </div>
+  <div style="display: none">
+    <!-- Hidden controls for Browse remote file system. -->
+    <a style="display:none" href="app:browse" id="appbrowse" name="appbrowse">Browse</a>
+
+    <!-- Hidden controls for Plugin Messaging. -->
+    <a style="display:none" href="app:message" id="appmessage" name="appmessage">Message</a>
+    <input type="text" id="pluginmessage" name="pluginmessage" size="75" value="" class="text-input" readonly />
+  </div>
+</body>
+</html>

@@ -1,0 +1,906 @@
+* L2F - Layer 2 Forwarding;
+* L2TP - Layer 2 Tunneling Protocol
+* L2TPv3 is IP ID 115
+
+str# IP::Common_Str;
+115 | L2TPv3IP::SessionHeaderIP;
+str# IP Protocols;
+115 | L2TP - Layer 2 Tunneling Protocol Version 3;
+void L2TP/L2F()
+{
+	GWRD 0 13;
+	ANDG f 13;
+	//DGLB 0 13 90 c2 version:;
+	TEQU 1 13 0 0 L2F;
+	TEQU d 13 0 0 L2TPv3IP::SessionHeaderIP;
+	TNXT -L2TP;
+}
+
+void L2TPv3IP::SessionHeaderIP()
+{
+	GLNG( 0, l[1] );
+	if (l[1] == 0)
+	{
+		LABL 0 0 0 b1 L2TP - Layer 2 Tunneling Protocol Version 3 - Control Message\L2TPv3:;
+		L2TPv3::IP0Header;
+	}
+	if (l[1] != 0)
+	{
+		LABL 0 0 0 b1 L2TP - Layer 2 Tunneling Protocol Version 3 - Data Message\L2TPv3:;
+		DLNG 0 0 90 c2 Session ID:;
+		DLNG 0 0 90 c2 Cookie:;
+		//D64B 0 0 90 c2 Cookie 2:;
+		//HWRD 0 0 90 c2 Protocol Type:; 
+		//IP::Common();
+		L2TPv3::DefaultL2-SpecificSublayer;
+	}
+	LABL 0  0 0 c8;
+}
+
+void L2TPv3::DefaultL2-SpecificSublayer()
+{
+	LABL 0 0 0 b1 L2TPv3 - Default Layer 2 Specific Sublayer;
+		BBYT 0 41 90 c9 Flags:;
+			LABL 0  0 0 d4 -.-- ---- Reserved;
+			CBIT 6 41 0 d4 .1.. .... Sequence Number contains a valid number for this sequenced frame;
+			CLSE 0  0 0 d4 .0.. .... Sequence Number contents are undefined and MUST be ignored;
+		LABL 0  0 0 c8;
+		DBIT 18 0 90 c2 Sequence Number:;
+	LABL 0  0 0 c8;
+	L2TPv3::Find_next_IP;
+}
+
+void L2TPv3::Find_next_IP()
+{
+	l[1] = g[16];
+	l[2] = 0;
+	l[3] = 1;
+	l[4] = 2;
+	while (l[1] != 0)
+	{
+		GBYT( l[2], l[10] );
+		GBYT( l[3], l[11] );
+		GBYT( l[4], l[12] );
+		if (l[10] == 0x08)
+		{
+			if (l[11] == 0x00)
+			{
+				if (l[11] == 0x00)
+				{
+					LABL 0 0 0 b1 Unknown Sublayer:;
+					//INCR( l[4]);
+					l[4] -= 2;
+					HEX# 0 44 90 c2 Undecoded Data:;
+					PRTO 0 0 90 c2 Protocol Type:;
+					LABL 0  0 0 c8;
+					IP;
+				}
+			}
+		}
+		l[2] += 1;
+		l[3] += 1;
+		l[4] += 1;
+		l[1] -= 1;
+	}
+}
+
+void L2TPv3::IP0Header()
+{
+	//LABL 0 0 0 b1 L2TP - Layer 2 Tunneling Protocol Version 3\L2TPv3:;
+	HLNG 0 14 90 c2 Zero session ID:;
+	L2TPv3::Header::IP;
+}	
+
+void L2TPv3::Header::IP()
+{	
+	GWRD 0 13;
+	BWRD 0 14 90 c9 Flags:;
+		 LABL 0  0 0 d4 ..-- .--- ---- .... Reserved;
+		 CBIT f 14 0 d4 1... .... .... .... Control Message;
+		 CLSE 0  0 0 d4 0... .... .... .... Data Message;
+		 CBIT e 14 0 d4 .1.. .... .... .... Length Field Present;
+		 CLSE 0  0 0 d4 .0.. .... .... .... Length Field NOT Present;
+		 CBIT b 14 0 d4 .... 1... .... .... Sequence Fields Present;
+		 CLSE b  0 0 d4 .... 0... .... .... Sequence Fields NOT Present;		
+		 LABL 0  0 0 d4 .... .... .... ---- Version Bits;
+		 LABL 0  0 0 c8;
+	DECR 1;
+	DBIT 4 0 05 05 hidden:;
+	DBIT 4 0 90 c2 Version:;
+	SBIT e 13;
+	SKIP 80000001;
+		DWRD 0 15 90 c2 Length:;
+		HWRD 0 0 90 c2 Tunnel ID:;
+		HWRD 0 0 90 c2 Session ID:;
+	SBIT b 13;
+	SKIP 80000002;
+		DWRD 0 0 90 c2 Next Send (Ns):;
+		DWRD 0 0 90 c2 Next Received (Nr):;
+	LABL 0  0 0 c8;
+	TBIT f 13 0 0 L2TP AVP;
+}
+
+void L2F;
+	LABL 0 0 0 b1 L2F - Layer 2 Forwarding\L2F:;
+	GWRD 0 13 90 c2;
+	HWRD 0 14 90 c2 Flags:;
+	CBIT f 14 0 94 Offset Present;
+	CBIT e 14 0 94 Key Present;
+	CBIT d 14 0 94 Priority;
+	CBIT c 14 0 94 Sequence Number Present;
+	CBIT 3 14 0 94 Checksum Present;
+	ANDG 7 14;
+	DGLB 0 14 90 c2 Version:;
+	HBYT 0 15 90 c2 Protocol:;
+	CST# ffffffff 15 0 14 L2F Protocols;
+	SBIT c 14;
+	SKIP 80000001;
+	HBYT 0 0 90 c2 Sequence:;
+	HWRD 0 0 90 c2 Multiplex ID:;
+	HWRD 0 0 90 c2 Client ID:;
+	HWRD 0 15 90 c2 Length:;
+	SUBG 9 15;
+	SBIT f 14;
+	SKIP 80000002;
+	SUBG 2 15;
+	DWRD 0 0 90 c2 Offset:;
+	SBIT e 14;
+	SKIP 80000002;
+	SUBG 4 15;
+	HLNG 0 0 90 c2 Key:;
+	SBIT c 14;
+	SKIP 80000001;
+	SUBG 1 15;
+	SBIT 3 14;
+	SKIP 80000001;
+	SUBG 1 15;
+	DUMP 0 15;
+	SBIT 3 14;
+	SKIP 80000001;
+	HWRD 0 0 90 c2 Checksum:;
+
+str# L2F Protocols;
+	L2F_ILLEGAL;
+	L2F_PROTO;
+	L2F_PPP;
+	L2F_SLIP;
+
+
+void L2TP;
+	LABL 0 0 0 b1 L2TP - Layer 2 Tunneling Protocol\L2TP:;
+	GWRD 0 13;
+	HWRD 0 14 90 c9 Flags:;
+	 LABL 0  0 0 d4 ..-- .-.. ---- .... Reserved;
+	 CBIT f 14 0 d4 1... .... .... .... Control Message;
+	 CLSE 0  0 0 d4 0... .... .... .... Data Message;
+	 CBIT e 14 0 d4 .1.. .... .... .... Length Field Present;
+	 CLSE 0  0 0 d4 .0.. .... .... .... Length Field NOT Present;
+	 CBIT b 14 0 d4 .... 1... .... .... Sequence Fields Present;
+	 CLSE b  0 0 d4 .... 0... .... .... Sequence Fields NOT Present;
+	 CBIT 9 14 0 d4 .... ..1. .... .... Offset Size Field Present;
+	 CLSE 0  0 0 d4 .... ..0. .... .... Offset Size Field NOT Present;
+	 CBIT 8 14 0 d4 .... ...1 .... .... Preferential Treatment;
+	 CBIT 8 14 0 d4 .... ...0 .... .... NOT Preferential Treatment;
+	 LABL 0  0 0 d4 .... .... .... ---- Version Bits;
+	 LABL 0  0 0 c8;
+
+	DECR 1;
+	DBYT 0 14 90 c2 Version:;
+	SBIT e 13;
+	SKIP 80000002;
+		DWRD 0 15 90 c2 Length:;
+		HWRD 0 0 90 c2 Tunnel ID:;
+	HWRD 0 0 90 c2 Session ID:;
+	SBIT b 13;
+	SKIP 80000002;
+		DWRD 0 0 90 c2 Next Send (Ns):;
+		DWRD 0 0 90 c2 Next Received (Nr):;
+	SBIT 9 13;
+	SKIP 80000003;
+		DWRD 0 16 90 c2 Offset Size:;
+		DUMP 0 16 90 c2 Offset Padding:;
+		MOVE 0 17;
+	TBIT f 13 0 0 L2TP AVP;
+
+	GBYT 0 1 90 c2 FIND HDLC FF;
+	SEQU ff 1 0 0 MUST BE HDLC;
+	SKIP 80000003;
+	LABL 0 1c 90 c1 HDLC;
+	HBYT 0 0 90 c2 Address: ;
+	HBYT 0 0 90 c2 Control: ;
+	SEQU 21 1 0 0 MUST BE HDLC;
+	SKIP 80000002;
+	INCR 1;
+	TEQU 21 1 0 0 IP;
+	TNXT -PPP;
+
+void L2TP AVP;
+	TEQU 0 10 0 0 RETURN;
+	ADDG 1 17;
+	LABL 0 0 0 b7 Attribute-Value Pair #;
+	DGLB 0 17 0 07;
+	HWRD 0 14 90 c9 AVP Flags:;
+	CBIT f 14 0 d4 1... .... Mandatory;
+	CLSE 0  0 0 d4 0... .... Not mandatory;
+	CBIT e 14 0 d4 .1.. .... Hidden;
+	CLSE 0  0 0 d4 .0.. .... Not hidden;
+	LABL 0 0 0 c8;
+	ANDG 3ff 14;
+	DGLB 0 14 90 c2 AVP Length:;
+	HWRD 0 0 90 c2 Vendor ID:;
+	DWRD 0 15 90 c2 Attribute Type:;	
+	CST# ffffffff 15 0 14 L2TP AVP Attribute Names;
+	SUBG 6 14;
+	TST# ffffffff 15 0 10 L2TP AVP Attributes;
+	//si: this is for unknown avp attribs
+	if (g[14] > 0)
+	{
+		DUMP 0 14 90 c2 AVP Data:;
+	}
+	LABL 0 0 0 b8;
+ 
+void AVP Message Type;
+	DWRD 0 15 90 c2 Message Type:;
+	CST# ffffffff 15 0 14 L2TP Message Types;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Result Code;
+	DWRD 0 0 90 c2 Result Code:;
+	SUBG 2 14;
+	SGTE 1 14;
+	SKIP 5;
+	DWRD 0 0 90 c2 Error Code:;
+	SUBG 2 14;
+	SGTE 1 14;
+	SKIP 1;
+	CHR# 0 14 90 c2 Error Message:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Protocol Version;
+	DBYT 0 0 90 c2 Protocol Version:;
+	DBYT 0 0 90 c2 Protocol Revision:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Framing Capabilities;
+	HLNG 0 18 90 c9 Framing Capabilities:;
+	LABL 0  0 0 d4 ---- --.. Reserved;
+	CBIT 1 18 0 d4 .... ..1. Asynchronous Framing Supported;
+	CLSE 0  0 0 d4 .... ..0. Asynchronous Framing NOT Supported;
+	CBIT 0 18 0 d4 .... ...1 Synchronous Framing Supported;
+	CLSE 0  0 0 d4 .... ...0 Synchronous Framing NOT Supported;
+	LABL 0  0 0 c8;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Bearer Capabilities;
+	HLNG 0 18 90 c9 Bearer Capabilities:;
+	LABL 0  0 0 d4 ---- --.. Reserved;
+	CBIT 2 18 0 d4 .... .1.. Broadband Access Supported;
+	CLSE 0  0 0 d4 .... .0.. Broadband Access NOT Supported;
+	CBIT 1 18 0 d4 .... ..1. Analog Access Supported;
+	CLSE 0  0 0 d4 .... ..0. Analog Access NOT Supported;
+	CBIT 0 18 0 d4 .... ...1 Digital Access Supported;
+	CLSE 0  0 0 d4 .... ...0 Digital Access NOT Supported;
+	LABL 0  0 0 c8;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Tie Breaker;
+	HEX# 8 0 90 c2 Tie Breaker:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Firmware Revision;
+	HWRD 0 0 90 c2 Firmware Revision:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Host Name;
+	CHR# 0 14 90 c2 Host Name:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Vendor Name;
+	CHR# 0 14 90 c2 Vendor Name:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Assigned Tunnel ID;
+	HWRD 0 0 90 c2 Assigned Tunnel ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Receive Window Size;
+	DWRD 0 0 90 c2 Receive Window Size:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Challenge;
+	DUMP 0 14 90 c2 Challenge:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Q.931 Cause Code;
+	HWRD 0 0 90 c2 Cause Code:;
+	HBYT 0 0 90 c2 Cause Msg:;
+	SUBG 3 14;
+	SGTE 1 14;
+	SKIP 80000001;
+	CHR# 0 14 90 c2 Advisory Msg:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Response;
+	HEX# 10 0 90 c2 Response:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Assigned Session ID;
+	HWRD 0 0 90 c2 Assigned Session ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Call Serial Number;
+	HLNG 0 0 90 c2 Call Serial Number:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Minimum BPS;
+	DLNG 0 0 90 c2 Minimum BPS:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Maximum BPS;
+	DLNG 0 0 90 c2 Maximum BPS:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Bearer Type;
+	HLNG 0 18 90 c2 Bearer Type:;
+	CBIT 0 18 0 14 Digital Channel;
+	CBIT 1 18 0 14 Analog Channel;
+	CBIT 2 18 0 14 Broadband Channel;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Framing Type;
+	HLNG 0 18 90 c9 Framing Type:;
+	LABL 0  0 0 d4 ---- --.. Reserved;
+	CBIT 1 18 0 d4 .... ..1. Asynchronous Framing Supported;
+	CLSE 0  0 0 d4 .... ..0. Asynchronous Framing NOT Supported;
+	CBIT 0 18 0 d4 .... ...1 Synchronous Framing Supported;
+	CLSE 0  0 0 d4 .... ...0 Synchronous Framing NOT Supported;
+	LABL 0 00 0 c8;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Called Number;
+	CHR# 0 14 90 c2 Called Number:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Calling Number;
+	CHR# 0 14 90 c2 Calling Number:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Sub-Address;
+	CHR# 0 14 90 c2 Sub-Address:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Tx Connect Speed BPS;
+	DLNG 0 0 90 c2 Tx Connect Speed:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Physical Channel ID;
+	HLNG 0 0 90 c2 Physical Channel ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Initial Received LCP CONFREQ;
+	DUMP 0 14 90 c2 Initial Received LCP CONFREQ:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Last Sent LCP CONFREQ;
+	DUMP 0 14 90 c2 Last Sent LCP CONFREQ:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Last Received LCP CONFREQ;
+	DUMP 0 14 90 c2 Last Rcvd LCP CONFREQ:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Proxy Authen Type;
+	DWRD 0 18 90 c2 Proxy Auth Type:;
+	CST# ffffffff 18 0 14 L2TP Proxy Authen Types;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Proxy Authen Name;
+	CHR# 0 14 90 c2 Auth Name:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Proxy Authen Challenge;
+	DUMP 0 14 90 c2 Auth Challenge:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Proxy Authen ID;
+	HWRD 0 0 90 c2 Authentication ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Proxy Authen Response;
+	DUMP 10 0 90 c2 Auth Response:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Call Errors;
+	DWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 CRC Errors:;
+	DLNG 0 0 90 c2 Framing Errors:;
+	DLNG 0 0 90 c2 Hardware Overruns:;
+	DLNG 0 0 90 c2 Buffer Overruns:;
+	DLNG 0 0 90 c2 Time-out Errors:;
+	DLNG 0 0 90 c2 Alignment Errors:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP ACCM;
+	DWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Send ACCM:;
+	DLNG 0 0 90 c2 Receive ACCM:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Random Vector;
+	DUMP 0 14 90 c2 Random Vector:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Private Group ID;
+	DUMP 0 14 90 c2 Private Group ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+/*
+void AVP Rx Connect Speed;
+	DLNG 0 0 90 c2 Rx Connect Speed:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+*/
+void AVP Sequencing Required;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Rx Minimum BPS;
+	DLNG 0 0 90 c2 Rx Minimum BPS:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Rx Maximum BPS;
+	DLNG 0 0 90 c2 Rx Maximum BPS:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Service Category;
+	BWRD 0 41 90 c9 Service Category:;
+		LABL 0  0 0 d4 -------- -------. Reserved for future QoS ind;
+		CBIT 0 41 0 d4 ........ .......1 real time service requirement;
+		CLSE 0 41 0 d4 ........ .......0 Non real time service requirement;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Service Name;
+	CHR# 0 14 90 c2 Service Name:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Calling Sub-Address;
+	DUMP 0 14 90 c2 Calling Sub-Address:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP VPI/VCI identifier;
+	LABL 0 0 90 c9 VPI/VCI identifier:;
+		DBIT 4 0 90 c2 Reserved:;
+		DBIT c 0 90 c2 VPI:;
+		DBIT f 0 90 c2 VCI:;
+		LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP PPP Disconnect Cause Code;
+	DWRD 0 41 90 c2 Disconnect Code:;		
+	DWRD 0 41 90 c2 Control Protocol Number:;
+	DBYT 0 41 90 c2 Direction:;
+		CEQU 0 41 0 14 global error;
+		CEQU 0 41 0 14 at peer;
+		CEQU 0 41 0 14 at local;
+		CLSE 0 41 0 14 Reserved;
+	g[20] -= 4;
+	DUMP 0 14 90 c2 Message:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Control Connection DS;
+	DWRD 0 41 90 c2 PHB Code;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP LCP Want Options;
+	DUMP 0 14 90 c2 LCP Configure-Req:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+void AVP LCP Allow Options;
+	DUMP 0 14 90 c2 LCP Configure-Ack Value:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP LNS Last Sent LCP Confreq;
+	AVP Last Sent LCP CONFREQ;
+
+void AVP LNS Last Received LCP Confreq;
+	AVP Last Received LCP CONFREQ;
+	
+void AVP Modem On-Hold Capable;
+	
+	
+void AVP Modem On-Hold Status;
+	DWRD 0 41 90 c2 Modem On-Hold Status:;
+	DECR 2;
+	BBIT 1 41 90 c2 Hold:;
+		CEQU 1 41 0 14 client modem is on-hold;
+		CLSE 0 41 0 14 client modem is back online;
+	BBIT b 0 90 c2 Reserved:;
+	BBIT 4 41 90 c2 Timeout:;
+		CEQU 0 41 0 14 Reserved;
+		CEQU 1 41 0 14 10 seconds;
+		CEQU 2 41 0 14 20 seconds;
+		CEQU 3 41 0 14 30 seconds;
+		CEQU 4 41 0 14 40 seconds;
+		CEQU 5 41 0 14 1 minute;
+		CEQU 6 41 0 14 2 minutes;
+		CEQU 7 41 0 14 3 minutes;
+		CEQU 8 41 0 14 4 minutes;
+		CEQU 9 41 0 14 6 minutes;
+		CEQU a 41 0 14 8 minutes;
+		CEQU b 41 0 14 12 minutes;
+		CEQU c 41 0 14 16 minutes;
+		CEQU d 41 0 14 No limit;
+		CEQU e 41 0 14 Reserved;
+		CEQU f 41 0 14 Reserved;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP PPPoE Relay;
+	DUMP 0 14 90 c2 PPPoE PAD Message:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Router ID
+	DWRD 0 41 90 c2 Router Identifier:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Assigned Control Connection ID;
+	DWRD 0 41 90 c2 Assigned Control Connection ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Pseudowire Capabilities List;
+	l[1] = g[20];
+	l[2] = 0
+	while (l[1])
+	{
+		LABL 0 0 90 c2 Pseudowire Type ;
+		DGLB 0 0 02 02 ;
+		LABL 0 0 90 02 :;
+		DWRD 0 0 90 0;
+		l[1] -= 2;
+	}
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Local Session ID;
+	DLNG 0 0 90 c2 Local Session ID;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Remote Session ID;
+	DLNG 0 0 90 c2 Remote Session ID;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Assigned Cookie;
+	if (g[20] == 4 )
+	{
+		DLNG 0 0 90 c2 Assigned Cookie;
+	}
+	if (g[20] == 8 )
+	{
+	 	D64B 0 0 90 c2 Assigned Cookie;
+	}
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+
+void AVP Remote End ID;
+	DUMP 0 14 90 c2 Remote End ID:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Application Code;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Pseudowire Type;
+	DWRD 0 0 90 c2 Pseudowire Type:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP L2-Specific Sublayer;
+	DWRD 0 41 90 c2 L2-Specific Sublayer Type:;
+		CEQU 0 41 0 14 no L2-Specific Sublayer present;
+		CEQU 1 41 0 14 Default L2-Specific Sublayer is used;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Data Sequencing;
+	DWRD 0 41 90 c2 L2-Specific Sublayer Type:;
+		CEQU 0 41 0 14 No incoming data packets require sequencing;
+		CEQU 1 41 0 14 Only non-IP data packets require sequencing;
+		CEQU 2 41 0 14 All incoming data packets require sequencing;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Circuit Status;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Preferred Language;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Control Message Authentication Nonce;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Tx Connect Speed;
+	D64B 0 0 90 c2 Tx Connect Speed:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+void AVP Rx Connect Speed;
+	D64B 0 0 90 c2 Rx Connect Speed:;
+	LABL 0 0 0 b8;
+	TNXT -L2TP AVP;
+	
+str# L2TP AVP Attributes;
+	AVP Message Type;
+	AVP Result Code;
+	AVP Protocol Version;
+	AVP Framing Capabilities;
+	AVP Bearer Capabilities;
+	AVP Tie Breaker;
+	AVP Firmware Revision;
+	AVP Host Name;
+	AVP Vendor Name;
+	AVP Assigned Tunnel ID;
+	AVP Receive Window Size;
+	AVP Challenge;
+	AVP Q.931 Cause Code;
+	AVP Response;
+	AVP Assigned Session ID;
+	AVP Call Serial Number;
+	AVP Minimum BPS;
+	AVP Maximum BPS;
+	AVP Bearer Type;
+	AVP Framing Type;
+	;
+	AVP Called Number;
+	AVP Calling Number;
+	AVP Sub-Address;
+	AVP Tx Connect Speed BPS;
+	AVP Physical Channel ID;
+	AVP Initial Received LCP CONFREQ;
+	AVP Last Sent LCP CONFREQ;
+	AVP Last Received LCP CONFREQ;
+	AVP Proxy Authen Type;
+	AVP Proxy Authen Name;
+	AVP Proxy Authen Challenge;
+	AVP Proxy Authen ID;
+	AVP Proxy Authen Response;
+	AVP Call Errors;
+	AVP ACCM;
+	AVP Random Vector;
+	AVP Private Group ID;
+	AVP Rx Connect Speed;
+	AVP Sequencing Required;
+	AVP Rx Minimum BPS;	
+	AVP Rx Maximum BPS;
+	AVP Service Category;
+	AVP Service Name;
+	AVP Calling Sub-Address;
+	AVP VPI/VCI identifier;
+	AVP PPP Disconnect Cause Code;
+	AVP Control Connection DS;
+	AVP Control Connection DS;
+	AVP LCP Want Options;
+	AVP LCP Allow Options;
+	AVP LNS Last Sent LCP Confreq;
+	AVP LNS Last Received LCP Confreq;
+	AVP Modem On-Hold Capable;
+	AVP Modem On-Hold Status;
+	AVP PPPoE Relay;
+	;	//PPPoE Relay Response Capability AVP;
+	;	//PPPoE Relay Forward Capability AVP;
+	AVP Router ID;
+	AVP Assigned Control Connection ID;
+	AVP Pseudowire Capabilities List;
+	AVP Local Session ID;
+	AVP Remote Session ID;
+	AVP Assigned Cookie;
+	AVP Remote End ID;
+	;	//AVP Application Code;
+	AVP Pseudowire Type;
+	AVP L2-Specific Sublayer;
+	AVP Data Sequencing;
+	;	//AVP Circuit Status;
+	;	//AVP Preferred Language;
+	;	//AVP Control Message Authentication Nonce;
+	AVP Tx Connect Speed;
+	AVP Rx Connect Speed;
+
+str# L2TP AVP Attribute Names;
+	Message Type;
+	Result Code;
+	Protocol Version;
+	Framing Capabilities;
+	Bearer Capabilities;
+	Tie Breaker;
+	Firmware Revision;
+	Host Name;
+	Vendor Name;
+	Assigned Tunnel ID;
+	Receive Window Size;
+	Challenge;
+	Q.931 Cause Code;
+	Response;
+	Assigned Session ID;
+	Call Serial Number;
+	Minimum BPS;
+	Maximum BPS;
+	Bearer Type;
+	Framing Type;
+	;
+	Called Number;
+	Calling Number;
+	Sub-Address;
+	Tx Connect Speed BPS;
+	Physical Channel ID;
+	Initial Received LCP CONFREQ;
+	Last Sent LCP CONFREQ;
+	Last Received LCP CONFREQ;
+	Proxy Authen Type;
+	Proxy Authen Name;
+	Proxy Authen Challenge;
+	Proxy Authen ID;
+	Proxy Authen Response;
+	Call Errors;
+	ACCM;
+	Random Vector;
+	Private Group ID;
+	Rx Connect Speed;
+	Sequencing Required;
+	Rx Minimum BPS;
+	Rx Maximum BPS;
+	Service Category;
+	Service Name;
+	Calling Sub-Address;
+	VPI/VCI Identifier;
+	PPP Disconnect Cause Code;
+	CCDS AVP;
+	SDS AVP;
+	LCP Want Options;
+	LCP Allow Options;
+	LNS Last Sent LCP Confreq;
+	LNS Last Received LCP Confreq;
+	Modem On-Hold Capable AVP;
+	Modem On-Hold Status AVP;
+	PPPoE Relay AVP;
+	PPPoE Relay Response Capability AVP;
+	PPPoE Relay Forward Capability AVP;
+	Extended Vendor ID AVP;
+	Message Digest;
+	Router ID;
+	Assigned Control Connection ID;
+	Pseudowire Capabilities List;
+	Local Session ID;
+	Remote Session ID;
+	Assigned Cookie;
+	Remote End ID;
+	Application Code;
+	Pseudowire Type;
+	L2-Specific Sublayer;
+	Data Sequencing;
+	Circuit Status;
+	Preferred Language;
+	Control Message Authentication Nonce;
+	Tx Connect Speed;
+	Rx Connect Speed;
+	Failover Capability;
+	Tunnel Recovery;
+	Suggested Control Sequence;
+	Failover Session State;
+	Multicast Capability;
+	New Outgoing Sessions;
+	New Outgoing Sessions Acknowledgement;
+	Withdraw Outgoing Sessions;
+	Multicast Packets Priority;
+	Frame-Relay Header Length;
+	ATM Maximum Concatenated Cells AVP;
+	OAM Emulation Required AVP;
+	ATM Alarm Status AVP Also, see ATM Alarm Status AVP Values below;
+	Attachment Group Identifier;
+	Local End Identifier;
+	Interface Maximum Transmission Unit;
+	FCS Retention;
+	Tunnel Switching Aggregator ID AVP;
+	Maximum Receive Unit (MRU) AVP;
+	Maximum Reassembled Receive Unit (MRRU) AVP;
+	VCCV Capability AVP;
+	Connect Speed Update AVP;
+	Connect Speed Update Enable AVP;
+	TDM Pseudowire AVP;
+	RTP AVP;
+	PW Switching Point AVP;
+
+str# L2TP Message Types;
+	RESERVED;
+	Start-Control-Connection-Request;
+	Start-Control-Connection-Reply;
+	Start-Control-Connection-Connected;
+	Stop-Control-Connection-Notification;
+	RESERVED;
+	HELLO;
+	Outgoing-Call-Request;
+	Outgoing-Call-Reply;
+	Outgoing-Call-Connected;
+	Incoming-Call-Request;
+	Incoming-Call-Reply;
+	Incoming-Call-Connected;
+	RESERVED;
+	Call-Disconnect-Notify;
+	WAN-Error-Notify;
+	Set-Link-Info;
+	(MDMST) Modem Status;
+	(SRRQ) Service Relay Request Message;
+	(SRRP) Service Relay Reply Message;
+	(ACK) Explicit Acknowledgement;
+	(FSQ) Failover Session Query;
+	(FSR) Failover Session Response;
+	(MSRQ) Multicast-Session-Request;
+	(MSRP) Multicast-Session-Response;
+	(MSE) Multicast-Session-Establishment;
+	(MSI) Multicast-Session-Information;
+	(MSEN) Multicast-Session-End-Notify;
+	(CSUN) Connect-Speed-Update-Notification;
+	(CSURQ) Connect-Speed-Update-Request;
+
+str# L2TP Proxy Authen Types;
+	RESERVED;
+	Textual username/password exchange;
+	PPP CHAP;
+	PPP PAP;
+	No Authentication;
+	Microsoft CHAP Version 1;
+ 	Reserved;
+ 	EAP;

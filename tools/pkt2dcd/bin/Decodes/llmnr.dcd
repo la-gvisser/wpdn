@@ -1,0 +1,178 @@
+* Link Local Multicast Name Resolution decoder
+* 2/11/2009
+*
+*///////////////////////////////////////////////////////////
+
+void LLMNR::LLMNR()
+{
+	//we are going to overwrite g[1] so save it for restoration later
+	PUSH 0 1 5 5;
+	BREM 0 1 5 5;	//get the number of bytes remaining
+	
+	LABL 0 0 0 b1 Link Local Multicast Name Resolution\LLMNR;
+	
+	DWRD 0 41 90 c2 Id:;
+	
+	DBIT 1 41 90 c2 Message Type:;
+	CEQU 0 41 0 14  Query;
+	CEQU 1 41 0 14	Response;
+	
+	DBIT 4 41 90 c2 Opcode:;
+	CNEQ 0 41 0 14	Unknown Opcode;
+	
+	DBIT 1 41 90 c2 Conflict:;
+	CEQU 1 41 0 14 Name Conflict;
+	
+	DBIT 1 41 90 c2 Truncation:;
+	CEQU 1 41 0 14 Message Truncated;
+	
+	DBIT 1 41 90 c2 Tentative:;
+	CEQU 1 41 0 14 Name may not be unique;
+	
+	HBIT 4 41 90 c2 Reserved:;
+	
+	DBIT 4 41 90 c2 RCode:;
+	
+	DWRD 0 41 90 c2 QDCount:;
+	DWRD 0 42 90 c2 ANCount:;
+	DWRD 0 43 90 c2 NSCount:;
+	DWRD 0 44 90 c2 ARCount:;
+	
+	while( l[1] > 0 )
+	{
+		LABL 0 0 0 c7 Question;
+		LLMNR::Question;
+		LABL 0 0 0 c8;
+		l[1] -= 1;
+	}
+	
+	while( l[2] > 0 )
+	{
+		LABL 0 0 0 c7 Answer;
+		LLMNR::ResourceRecord;
+		LABL 0 0 0 c8;
+		l[2] -= 1;
+	}
+	
+	while( l[3] > 0 )
+	{
+		LABL 0 0 0 c7 Authority Record;
+		LLMNR::ResourceRecord;
+		LABL 0 0 0 c8;
+		l[3] -= 1;
+	}
+	
+	while( l[4] > 0 )
+	{
+		LABL 0 0 0 c7 Additional Record;
+		LLMNR::ResourceRecord;
+		LABL 0 0 0 c8;
+		l[4] -= 1;
+	}
+	
+	//restore g[1]
+	POPX 0 1 5 5;
+}
+
+void LLMNR::Question()
+{
+	LLMNR::NameFieldLabel;
+	
+	DWRD 0 41 90 c2 Type:;
+	CST# 0 41 0 14 DNS::Types;
+	DWRD 0 41 90 c2 Class:;
+	CST# 0 41 0 14 DNS::Classes;
+}
+
+void LLMNR::ResourceRecord()
+{
+	LLMNR::NameFieldLabel;
+	
+	DWRD 0 42 90 c2 Type:;
+	CST# 0 42 0 14 DNS::Types;
+	DWRD 0 41 90 c2 Class:;
+	CST# 0 41 0 14 DNS::Classes;
+	
+	DLNG 0 41 90 c2 TTL:;
+	DWRD 0 41 90 c2 Data Length:;
+	
+	//the dns code scares me but if we use it I don't have to reinvent the wheel
+	//we need to setup a bunch of global variables that the dns code uses
+	BREM 0 10 0 0;	//store the remaining bytes in g[16]
+	g[17] = g[16];	//and g[17]
+	g[9] = l[2];	//store the type in g[9]
+	g[7] = l[1];	//store the rdlength in g[7]
+	g[15] = g[1];	//g[1] holds the total dns message size
+	DNS::Display_Resource_Data;
+}
+void LLMNR::NameFieldLabel()
+{
+	LABL 0 0 90 c2 Name:;
+	//we will use g[2] to mark whether this is the first label or not
+	//save g[2] so we can restore later
+	l[1] = g[2];
+	g[2] = 1;	//this is the first label
+	LLMNR::NameField;
+	g[2] = l[1];	//restore g[2] to whatever it was before we used it
+}
+
+void LLMNR::NameField()
+{
+	DBYT 0 42 5 5;	//label length
+	while( l[2] > 0 )
+	{
+		if( l[2] >= 0xC0 )
+		{
+			//this is a pointer, calculate the offset
+			l[3] = l[2];
+			l[3] &= 0x3f;
+			
+			//figure out where to jump to
+			BREM 0 44 5 5;	//get the number of bytes remaining
+			l[5] = g[1];	//g[1] holds the number of bytes remaining from the start of the header
+			l[5] -= l[4];	//calculate how many bytes we have read so far
+			l[5] -= l[3];	//figure out how far back we need to go
+			
+			if( l[5] > 0 ) 
+			{
+				DECR 0 45 0 0;
+				
+				LLMNR::NameField();
+				
+				//now we need to figure out how to get back to where we were
+				BREM 0 43 5 5;
+				l[5] = l[3];	//where we are now
+				l[5] -= l[4];	//number of bytes between where we are and where we were
+				INCR 0 45 0 0;				
+			}
+			
+			TRTS;
+		}
+		
+		if( l[2] > 0x3f )
+		{
+			LABL 0 0 0 0 "[bad label]";
+			TRTS;
+		}
+	
+		if( g[2] == 0 )
+		{
+			CHR# 0 42 0 0;
+		}
+			
+		if( g[2] == 1 )
+		{
+			CHR# 0 42 90 0;
+			g[2] = 0;
+		}
+			
+		DBYT 0 42 5 5;
+		
+		if( l[2] > 0 )
+		{
+			LABL 0 0 0 0 ".";
+		}
+	}
+}
+
+	

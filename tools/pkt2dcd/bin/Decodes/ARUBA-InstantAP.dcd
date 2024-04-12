@@ -1,0 +1,25 @@
+//Aruba Instant AP Protocol
+//
+//
+
+str# Ether::Branching_3_Str;
+0x8ffd	|	AIAP;
+
+
+str# EProto::Names_Str;
+0x8ffd	|	Aruba Instant AP Protocol;
+
+
+void AIAP()
+{
+	LABL( 0x0, 0x0, 0x0, 0xb1 "Aruba Instant AP Protocol");
+		HEX#( 0, 2, 0x90, 0xc2, "Magic:" );
+		DBYT( 0, 0, 0x90, 0xc2, "Type:" );
+		HEX#( 0, 4, 0x90, 0xc2, "Unknown:" );
+		HEX#( 0, 4, 0x90, 0xc2, "Unknown:" );
+		IPLG( 0, 0, 0x90, 0xc2, "IP:" );
+		HEX#( 0, 4, 0x90, 0xc2, "Unknown:" );
+		HEX#( 0, 4, 0x90, 0xc2, "Unknown:" );
+		HEX#( 0, g[16], 0x90, 0xc2, "Unknown:" );
+	LABL( 0x0, 0x0, 0x0, 0xb8 );
+}

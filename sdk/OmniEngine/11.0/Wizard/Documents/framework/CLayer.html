@@ -1,0 +1,414 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CLayer Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CLayer Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        CLayer is the base class for other more specific classes. A layer contains
+        a header and a payload. This class provides standard public methods for
+        the layer type and accessing the header and payload data.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CLayer
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::CLayer">CLayer</a>
+            </td>
+            <td>
+                Constructs a CLayer object.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetDataBytes">GetDataBytes</a>
+            </td>
+            <td>
+                Retunrs the payload (data) of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetDataLength">GetDataLength</a>
+            </td>
+            <td>
+                Returns the number of bytes in the payload (data).
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetDataRef">GetDataRef</a>
+            </td>
+            <td>
+                Returns a CByteVectRef of the payload of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetHeaderBytes">GetHeaderBytes</a>
+            </td>
+            <td>
+                Return the header of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetHeaderLength">GetHeaderLength</a>
+            </td>
+            <td>
+                Returns the number of bytes in the header of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetHeaderRef">GetHeaderRef</a>
+            </td>
+            <td>
+                Returns a CByteVectRef of the header of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetLength">GetLength</a>
+            </td>
+            <td>
+                Returns the total length, header and payload, of the layer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetOffset">GetOffset</a>
+            </td>
+            <td>
+                Returns the offset of the first byte of the header of the layer within the packet.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetPacket">GetPacket</a>
+            </td>
+            <td>
+                Returns a CPacket of the packet that this layer is a part of.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CLayer::GetType">GetType</a>
+            </td>
+            <td>
+                Returns the type of this layer.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CLayer Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CLayer::CLayer"></a>CLayer::CLayer</h3>
+    <p class="onlyP">
+        Constructs a CLayer object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CLayer();</td>
+        </tr>
+        <tr>
+            <td colspan="3">CLayer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket*</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inHeader</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet that this layer belongs to.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inType</em></dt>
+        <dd>The layer type.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inHeader</em></dt>
+        <dd>The header of the layer.</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inData</em></dt>
+        <dd>The payload or data of the layer.</dd>
+    </dl>
+
+    <!-- GetDataBytes details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;"><a name="CLayer::GetDataBytes"></a>CLayer::GetDataBytes</h3>
+    <p class="onlyP">
+        GetDataBytes description.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">COmniStream GetDataBytes();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A copy of the layer's data as a COmniStream.
+    </p>
+
+    <!-- GetDataLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;"><a name="CLayer::GetDataLength"></a>CLayer::GetDataLength</h3>
+    <p class="onlyP">
+        Get the number of bytes in the layer's data.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">UInt16 GetDataLength() const;</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the layer's data.
+    </p>
+
+    <!-- GetDataRef details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetDataRef"></a>CLayer::GetDataRef
+    </h3>
+    <p class="onlyP">
+        Get a reference to the layer's data.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CByteVectRef GetDataRef() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The length and a pointer to the layer's data as a CByteVectRef.
+    </p>
+
+    <!-- GetHeaderBytes details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetHeaderBytes"></a>CLayer::GetHeaderBytes
+    </h3>
+    <p class="onlyP">
+        Get a copy of the layer's header.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                COmniStream GetHeaderBytes() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A copy of the layer's header.
+    </p>
+
+    <!-- GetHeaderLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetHeaderLength"></a>CLayer::GetHeaderLength
+    </h3>
+    <p class="onlyP">
+        Get the lenght in bytes of the layer's header.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetHeaderLength() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the layer's header.
+    </p>
+
+    <!-- GetHeaderRef details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetHeaderRef"></a>CLayer::GetHeaderRef
+    </h3>
+    <p class="onlyP">
+        Get a reference to the layer's header.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CByteVectRef GetHeaderRef() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The length and a pointer to the layer's header as a CByteVectRef.
+    </p>
+
+    <!-- GetLength details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;"><a name="CLayer::GetLength"></a>CLayer::GetLength</h3>
+    <p class="onlyP">
+        Get the total number of bytes in the layer including both the header and data.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetLength() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The total number of bytes in the layer.
+    </p>
+
+    <!-- GetOffset details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetOffset"></a>CLayer::GetOffset
+    </h3>
+    <p class="onlyP">
+        Get the offset of this layer from the begining of the packet.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt16 GetOffset() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The offset of the layer within the packet.
+    </p>
+
+    <!-- GetPacket details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetPacket"></a>CLayer::GetPacket
+    </h3>
+    <p class="onlyP">
+        Get the packet that contains this layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                CPacket* GetPacket() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The packet that contains this object.
+    </p>
+
+    <!-- GetType details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CLayer::GetType"></a>CLayer::GetType
+    </h3>
+    <p class="onlyP">
+        Get the type of the layer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">
+                UInt32 GetType() const;
+            </td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The layer's type.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

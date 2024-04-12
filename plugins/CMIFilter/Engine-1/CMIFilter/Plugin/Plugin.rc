@@ -1,0 +1,394 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "wplogo.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PLUGIN_ABOUT DIALOGEX 0, 0, 168, 158
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About CMIFilterOE"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    CONTROL         IDB_LOGO,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,5,7,155,49
+    CTEXT           "CMIFilterOE",IDC_STATIC,6,69,155,8
+    CTEXT           "Copyright © 2011-2017 Savvius, Inc.",IDC_STATIC,6,97,155,8
+    CTEXT           "Reassemble CMI packets.",IDC_STATIC,6,110,155,11
+    DEFPUSHBUTTON   "Close",IDOK,62,132,50,14
+    CTEXT           "Version 1.8.2.0",IDC_PLUGIN_VERSION,6,85,155,8
+END
+
+IDD_PLUGIN_OPTIONS DIALOGEX 0, 0, 330, 367
+STYLE DS_SETFONT | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+EXSTYLE WS_EX_CONTROLPARENT
+CAPTION "CMIFilterOE Options"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Filter",IDC_IPADDR_BOX,7,3,316,165
+    LTEXT           "Encapsulation Protocol:",IDC_PROTOCOL_STATIC,17,19,75,8
+    COMBOBOX        IDC_PROTOCOL_TYPE,96,17,80,52,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Security Id",IDC_SECURITYID_BOX,17,33,298,41
+    CONTROL         "Intercept Id:",IDC_INTERCEPTID_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,45,49,8
+    EDITTEXT        IDC_INTERCEPTID_EDIT,80,43,76,12,ES_AUTOHSCROLL
+    LTEXT           "First line of text.\nLine 2 of text.\nThird line has descending glyphs.",IDC_INTERCEPTID_NOTE,163,45,146,26
+    CONTROL         "Site name:",IDC_INTERCEPTSITE_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,27,59,45,8
+    EDITTEXT        IDC_INTERCEPTSITE_EDIT,80,57,76,12,ES_AUTOHSCROLL
+    GROUPBOX        "IP Address Filters",IDC_STATIC,16,81,298,78
+    CONTROL         "",IDC_IPFILTER_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,21,94,231,59
+    PUSHBUTTON      "Add",IDC_ADD_IPFILTER,258,105,50,14
+    PUSHBUTTON      "Modify",IDC_EDIT_IPFILTER,258,123,50,14
+    PUSHBUTTON      "Delete",IDC_DELETE_IPFILTER,258,139,50,14
+    GROUPBOX        "",IDC_MAC_BOX,7,173,196,75
+    CONTROL         "Insert MAC Header",IDC_MAC_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,172,76,10
+    LTEXT           "Source MAC Address:",IDC_SRCMAC_STATIC,19,189,70,8
+    EDITTEXT        IDC_SRCMAC_EDIT,106,187,90,12,ES_AUTOHSCROLL
+    LTEXT           "Destination MAC Address:",IDC_DSTMAC_STATIC,19,203,83,8
+    EDITTEXT        IDC_DSTMAC_EDIT,106,201,90,12,ES_AUTOHSCROLL
+    LTEXT           "Protocol Type:",IDC_PROTOCOLTYPE_STATIC,19,217,47,8
+    CONTROL         "IP",IDC_PROTOCOLTYPE_IP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,216,89,10
+    EDITTEXT        IDC_PROTOCOLTYPE_EDIT,106,227,34,12,ES_AUTOHSCROLL
+    LTEXT           "Hex:",IDC_HEX_STATIC,145,229,16,8
+    EDITTEXT        IDC_HEX_EDIT,161,227,34,12,ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_VLAN_BOX,212,174,111,61
+    CONTROL         "Insert VLAN Tag",IDC_VLAN_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,216,173,69,10
+    LTEXT           "VLAN ID:",IDC_VLAN_STATIC,223,191,31,8
+    EDITTEXT        IDC_VLAN_EDIT,265,189,40,12,ES_AUTOHSCROLL
+    GROUPBOX        "Fragment Age",IDC_AGE_BOX,8,251,315,34
+    LTEXT           "Fragment Age Limit:",IDC_AGE_STATIC,19,268,72,8
+    EDITTEXT        IDC_AGE_EDIT,87,266,40,12,ES_AUTOHSCROLL
+    LTEXT           "seconds",IDC_AGE2_STATIC,134,268,28,8
+    GROUPBOX        "",IDC_SAVE_BOX,7,294,316,46
+    CONTROL         "Save Orphan Fragments",IDC_SAVE_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,294,93,10
+    LTEXT           "File Path:",IDC_SAVEDIR_STATIC,19,310,30,8
+    EDITTEXT        IDC_SAVEDIR_EDIT,109,308,193,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_SAVE_BROWSE,304,308,13,12,NOT WS_VISIBLE
+    LTEXT           "Save the file every:",IDC_SAVEFILE_STATIC,19,324,62,8
+    EDITTEXT        IDC_SAVE_INTERVAL,109,322,40,12,ES_AUTOHSCROLL
+    COMBOBOX        IDC_SAVE_MULTIPLE,153,322,48,30,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK",IDOK,217,346,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,273,346,50,14
+END
+
+IDD_OPTIONS_VIEW DIALOGEX 0, 0, 333, 306
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_VISIBLE
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "Filter",IDC_IPADDR_BOX,7,7,316,122
+    LTEXT           "Encapsulation Protocol:",IDC_PROTOCOL_STATIC,17,19,75,8
+    EDITTEXT        IDC_PROTOCOL_VALUE,105,17,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Security Id:",IDC_SECURITYID_STATIC,17,33,40,8
+    EDITTEXT        IDC_SECURITYID_VALUE,105,31,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Site name:",IDC_SITENAME_STATIC,17,47,35,8
+    EDITTEXT        IDC_SITENAME_VALUE,105,45,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Insert MAC Header",IDC_MAC_BOX,7,137,196,61
+    LTEXT           "Source MAC Address:",IDC_SRCMAC_STATIC,17,153,70,8
+    EDITTEXT        IDC_SRCMAC_VALUE,105,151,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Destination MAC Address:",IDC_DSTMAC_STATIC,17,167,83,8
+    EDITTEXT        IDC_DSTMAC_VALUE,105,165,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Protocol Type:",IDC_PROTOCOLTYPE_STATIC,17,181,47,8
+    EDITTEXT        IDC_PROTOCOLTYPE_VALUE,105,179,36,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Hex:",IDC_HEX_STATIC,144,181,16,8
+    EDITTEXT        IDC_HEX_EDIT,162,179,31,12,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Insert VLAN Tag",IDC_VLAN_BOX,212,137,111,61
+    LTEXT           "VLAN ID:",IDC_VLAN_STATIC,218,153,31,8
+    EDITTEXT        IDC_VLAN_VALUE,251,151,62,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "Age Limits",IDC_AGE_BOX,7,207,315,34
+    LTEXT           "Fragment Age Limit:",IDC_AGE_STATIC,17,222,65,8
+    EDITTEXT        IDC_AGE_VALUE,86,220,40,12,ES_CENTER | ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "seconds",IDC_AGE2_STATIC,131,222,28,8
+    GROUPBOX        "Save Orphan Fragments",IDC_SAVE_BOX,7,250,315,46
+    LTEXT           "File Path:",IDC_SAVEDIR_STATIC,17,266,41,8
+    EDITTEXT        IDC_SAVEDIR_VALUE,52,264,261,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Save fragments every:",IDC_SAVEFILE_STATIC,17,280,76,8
+    EDITTEXT        IDC_SAVE_INTERVAL,95,278,100,12,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "",IDC_IPFILTER_LIST,"SysListView32",LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,17,62,231,59
+END
+
+IDD_PLUGIN_TAB DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_UPDATE,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,116,27,193,149,WS_BORDER
+    LISTBOX         IDC_CONTEXT_LIST,7,27,100,149,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_CONTEXT_TAB DIALOGEX 0, 0, 207, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,7,27,193,149,WS_BORDER
+END
+
+IDD_IPFILTER DIALOGEX 0, 0, 318, 78
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "IP Address Filter"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "IP Address 1:",IDC_ADDRESS1_STATIC,10,10,43,8
+    CONTROL         "",IDC_ADDRESS1_EDIT,"SysIPAddress32",WS_TABSTOP,10,20,100,12
+    LTEXT           "Direction:",IDC_DIRECTION_STATIC,114,11,31,8
+    COMBOBOX        IDC_DIRECTION_COMBO,114,20,80,52,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "IP Address 2:",IDC_ADDRESS2_STATIC,211,10,43,8
+    CONTROL         "",IDC_ADDRESS2ENABLED_RADIO,"Button",BS_AUTORADIOBUTTON | WS_GROUP,200,22,10,8
+    CONTROL         "",IDC_ADDRESS2_EDIT,"SysIPAddress32",WS_TABSTOP,210,20,100,12
+    CONTROL         "Any Address",IDC_ADDRESS2ANY_RADIO,"Button",BS_AUTORADIOBUTTON,200,37,55,10
+    CONTROL         "Port:",IDC_PORT_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,38,27,8
+    EDITTEXT        IDC_PORT_EDIT,40,36,40,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,201,57,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,261,57,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PLUGIN_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 5
+        RIGHTMARGIN, 161
+        BOTTOMMARGIN, 147
+    END
+
+    IDD_PLUGIN_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 323
+        VERTGUIDE, 323
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 360
+    END
+
+    IDD_OPTIONS_VIEW, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 326
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 299
+    END
+
+    IDD_PLUGIN_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_CONTEXT_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_IPFILTER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 311
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 71
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,8,2,0
+ PRODUCTVERSION 1,8,2,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "CMIFilterOE"
+#ifdef X64
+            " 64-bit"
+#else
+            " 32-bit"
+#endif
+            VALUE "FileVersion", "1.8.2.0"
+            VALUE "InternalName", "CMIFilterOE"
+            VALUE "LegalCopyright", "Copyright (C) 2011-2017 Savvius, Inc."
+            VALUE "OriginalFilename", "CMIFilterOE.dll"
+            VALUE "ProductName", "CMIFilterOE"
+            VALUE "ProductVersion", "1.8.2.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PLUGIN_OPTIONS DLGINIT
+BEGIN
+    IDC_PROTOCOL_TYPE, 0x403, 4, 0
+0x4d43, 0x0049, 
+    IDC_PROTOCOL_TYPE, 0x403, 5, 0
+0x4350, 0x494c, "\000" 
+    IDC_PROTOCOL_TYPE, 0x403, 12, 0
+0x6553, 0x7563, 0x6972, 0x7974, 0x4920, 0x0064, 
+    IDC_PROTOCOL_TYPE, 0x403, 9, 0
+0x7245, 0x6369, 0x7373, 0x6e6f, "\000" 
+    IDC_PROTOCOL_TYPE, 0x403, 6, 0
+0x7241, 0x6972, 0x0073, 
+    IDC_PROTOCOL_TYPE, 0x403, 14, 0
+0x754a, 0x696e, 0x6570, 0x2f72, 0x6f4e, 0x696b, 0x0061, 
+    IDC_SAVE_MULTIPLE, 0x403, 8, 0
+0x6553, 0x6f63, 0x646e, 0x0073, 
+    IDC_SAVE_MULTIPLE, 0x403, 8, 0
+0x694d, 0x756e, 0x6574, 0x0073, 
+    IDC_SAVE_MULTIPLE, 0x403, 6, 0
+0x6f48, 0x7275, 0x0073, 
+    0
+END
+
+IDD_IPFILTER DLGINIT
+BEGIN
+    IDC_DIRECTION_COMBO, 0x403, 16, 0
+0x6f42, 0x6874, 0x4420, 0x7269, 0x6365, 0x6974, 0x6e6f, 0x0073, 
+    IDC_DIRECTION_COMBO, 0x403, 15, 0
+0x6441, 0x7264, 0x7365, 0x2073, 0x2031, 0x6f74, 0x3220, "\000" 
+    IDC_DIRECTION_COMBO, 0x403, 15, 0
+0x6441, 0x7264, 0x7365, 0x2073, 0x2032, 0x6f74, 0x3120, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PLUGIN_OPTIONS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PLUGIN_NAME         "CMIFilterOE"
+    IDS_SAVE_FILE           "cmi_orphans.pkt"
+    IDS_SAVE_ORPHANS_ERROR  "Error Saving Orphan Fragments"
+    IDS_SRCMAC_ERROR        "Error in Src MAC Address"
+    IDS_DSTMAC_ERROR        "Error in Dst Mac Address"
+    IDS_IPADDR_ERROR        "Error in IP Address"
+    IDS_PORT_ERROR          "Error in Port"
+    IDS_PROTOCOL_ERROR      "Error in Protocol Type"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_VLANID_ERROR        "Error in VLAN ID. VLAN ID must be between 2 and 4094."
+    IDS_INTERVAL_ERROR      "Error in Timer Value"
+    IDS_FILE_TYPES          "*.pkt"
+    IDS_AGE_ERROR           "Error in Age. Age must be greater than 5 seconds."
+    IDS_VERSION_TEMPLATE    "Version: v%u.%u.%u.%u"
+    IDS_NOTE_SECURITYID     "7 Hexidecimal digits; may include spaces and dashes."
+    IDS_NOTE_ERICSSON       "Security Id is a 32-bit decimal value.\nSite name is a string of characters. Leading and trailing whitespace will be removed."
+    IDS_NOTE_ARRIS          "A 32-bit integer decimal value."
+    IDS_NOTE_JUNIPER        "A 30-bit integer decimal value."
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

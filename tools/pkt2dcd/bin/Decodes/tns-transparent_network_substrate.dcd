@@ -1,0 +1,1576 @@
+* TNS - Transparent Network Substrate Protocol + SQL.Net
+// Version 2.0
+// Changed:
+// Add DATA Packet SQL Statement display
+// Add OALL8 packet format
+// Patch SQL text length and offset process
+// patch OFETCH process
+// -v
+// last edited 2007-5-9
+
+str# TCP::Ports_Str;
+	5024  | TNS;
+
+void TNS;
+	LABL 0 0 0 b1 TNS - Transparent Network Substrate Protocol\TNS:;
+	DWRD 0 11 90 c2 Packet Length:;
+	HWRD 0 12 90 c2 Packet Checksum:;
+	DBYT 0 13 90 c2 TNS Type:;
+	CST# 0 13  0 14 TNS_Types;
+	HBYT 0 14 90 c9 Packet Flags:;
+	 CBIT 0 14  0 d4 .... ...1 Used prior to TNS version 3;
+	 CLSE 0  0  0 d4 .... ...0 Not used prior to TNS version 3;
+	 LABL 0 0 0 c8;
+	HWRD 0 15 90 c2 Header Checksum:;
+	TST# 0 13 0 0 TNS_Types_Jumper;
+	TRTS;
+
+* the 'x' means there is something there
+str# TNS_Types;
+	0x01 | connect;							*1x
+	0x02 | accept;							*2x
+	0x03 | acknowledge;						*3??
+	0x04 | refuse;							*4x
+	0x05 | redirect;						*5x
+	0x06 | data;							*6x
+	0x07 | null - empty data, no flags;		*7
+	0x08 | ;								*8
+	0x09 | abort;							*9x
+	0x0A | ;								*a	10
+	0x0B | resend;							*bx	11
+	0x0C | marker;							*cx	12
+	0x0D | attention;						*d	13- there isn't one - special case of marker
+	0x0E | control information;				*ex	14
+	*NSPTHI	19		12	highest legal packet type
+
+str# TNS_Types_Jumper;
+	0x01 | TNS_Connect_Pkt;				*1x
+	0x02 | TNS_Accept_Pkt;				*2x
+	0x03 | ;							*3??
+	0x04 | TNS_Refuse_Pkt;				*4x
+	0x05 | TNS_Redirect_Pkt;			*5x
+	0x06 | TNS_Data_Pkt;				*6x
+	0x07 | ;							*7
+	0x08 | ;							*8
+	0x09 | TNS_Abort_Pkt;				*9x
+	0x0A | ;							*a	10
+	0x0B | TNS_Resend_Pkt;				*bx	11
+	0x0C | TNS_Marker_Pkt;				*cx	12
+	0x0D | ;							*d
+	0x0E | TNS_Control_Pkt;				*ex	14
+
+// --------------------------------------------------------------------
+// DO NOT CHANGE THESE AS OTHERS DEPEND ON THEM!!!
+
+void TNS_Data;
+	GBYT  0 1;
+	TNEQ 28 1 0 0 TNS_Data_none;
+	TNS_Data_Loop;
+	LABL 0 0 0 c8;
+
+void TNS_Data_none;
+	LABL 0 0 0 14 No TNS Data;
+	TRTS;
+
+void TNS_Data_Loop;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 c2;
+	GBYT 0 1;
+	TEQU 28 1 0 0 TNS_Data_LP;		* (
+	TEQU 29 1 0 0 TNS_Data_RP;		* )
+	LABL 0 0 0 1;
+
+void TNS_Data_LP;
+	CHR# 1 0 0 14;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 28 1;
+	SKIP 1;
+	TNXT -TNS_Data_LP;
+	SNEQ 29 1;
+	SKIP 1;
+	TNXT -TNS_Data_RP;
+
+	TNXT -TNS_Data_Loop;
+
+void TNS_Data_RP;
+	CHR# 1 0 0 14;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 29 1;
+	SKIP 1;
+	TNXT -TNS_Data_Loop;
+	TNXT -TNS_Data_RP;
+
+// --------------------------------------------------------------------
+
+void TNS_Connect_Pkt;						*TNS_TYPE: 1
+	LABL 0 0 0 b7 Connect Pkt;
+	DWRD 0 16 90 c2 NS Version Number:;
+	DWRD 0 17 90 c2 Compatiable w/Vers:;
+	TNS Global Service Options;
+	DWRD 0 1a 90 c2 SDU size:;
+	DWRD 0 1b 90 c2 TDU size:;
+	HBYT 0 1c 90 c9 NT protocol chars1:;
+	 CBIT 7 1c  0 d4 1... .... Hang on to Listener Connection;
+	 CLSE 0  0  0 d4 0... .... Do not hang on to Listener Connection;
+	 CBIT 6 1c  0 d4 .1.. .... Confirmed Release;
+	 CLSE 0  0  0 d4 .0.. .... Release Unconfirmed;
+	 CBIT 5 1c  0 d4 ..1. .... I/O is TDU based;
+	 CLSE 0  0  0 d4 ..0. .... I/O is Not TDU based;
+	 CBIT 4 1c  0 d4 ...1 .... Spawner is Running;
+	 CLSE 0  0  0 d4 ...0 .... Spawner is not Running;
+	 CBIT 3 1c  0 d4 .... 1... Data Test;
+	 CLSE 0  0  0 d4 .... 0... Not a Data Test;
+	 CBIT 2 1c  0 d4 .... .1.. I/O Callback Supported;
+	 CLSE 0  0  0 d4 .... .0.. I/O Callback is not Supported;
+	 CBIT 1 1c  0 d4 .... ..1. Asynchronous I/O Support;
+	 CLSE 0  0  0 d4 .... ..0. Asynchronous I/O not Supported;
+	 CBIT 0 1c  0 d4 .... ...1 I/O is Packet Oriented;
+	 CLSE 0  0  0 d4 .... ...0 I/O is Not Packet Oriented;
+	 LABL 0 0 0 c8;
+	HBYT 0 1d 90 c9 NT protocol chars2:;
+	 CBIT 7 1d  0 d4 1... .... Grant Connection to Another;
+	 CLSE 0  0  0 d4 0... .... Do Not Grant Connection to Another;
+	 CBIT 6 1d  0 d4 .1.. .... Can Hand off Connection to Another;
+	 CLSE 0  0  0 d4 .0.. .... Can Not Hand off Connection to Another;
+	 CBIT 5 1d  0 d4 ..1. .... Generate SIGIO Signal;
+	 CLSE 0  0  0 d4 ..0. .... Do Not Generate SIGIO Signal;
+	 CBIT 4 1d  0 d4 ...1 .... Generate SIGPIPE Signal;
+	 CLSE 0  0  0 d4 ...0 .... Do Not Generate SIGPIPE Signal;
+	 CBIT 3 1d  0 d4 .... 1... Generate SIGURG Signal;
+	 CLSE 0  0  0 d4 .... 0... Do Not Generate SIGURG Signal;
+	 CBIT 2 1d  0 d4 .... .1.. Urgent Data I/O Supported;
+	 CLSE 0  0  0 d4 .... .0.. Urgent Data I/O Not Supported;
+	 CBIT 1 1d  0 d4 .... ..1. Half Duplex I/O Not Supported;
+	 CLSE 0  0  0 d4 .... ..0. Half Duplex I/O Supported;
+	 CBIT 0 1d  0 d4 .... ...1 Test Operation;
+	 CLSE 0  0  0 d4 .... ...0 Not a Test Operation;
+	 LABL 0 0 0 c8;
+	DWRD 0 1e 90 c2 Max Pkts Before Receive:;
+    TNS_Byte_Order;
+
+	DWRD 0 20 90 c2 Connect Data Len:;
+	DWRD 0 21 90 c2 Offset to Connect Data:;
+	DLNG 0 22 90 c2 Max Connect Data Receivable:;
+	TNS Connect Flags;
+	SUBG 22 21;		*si: 22h is the amt from start tns to now....
+    TNS_Connect_Data;
+
+void TNS_Connect_Data;
+	//SGTE 21 90;		* incr the offset amt
+	// SKIP 1;
+	// INCR 0 21;
+	if (g[0x21] > 0)
+	{
+		DUMP 0 21 90 c2 Offset Data:;
+	}
+	if (g[16] > 0)
+	{
+		LABL 0 0 0 c9 Connect Data:;
+		TNS::Data_C;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TNS::Data_C;
+	g[1] = pb[0];
+	if (g[1] != 0x28)
+	{
+		TNS::Data_C::Find_0x28_Loop;
+		g[1] = pb[0];
+	}
+	TNEQ 28 1 0 0 TNS::Data_C::none;
+	TNS::Data_C::Loop;
+	LABL 0 0 0 c8;
+
+void TNS::Data_C::Find_0x28_Loop;
+	l[2] = 0;
+	l[1] = pb[0];
+	while (l[1] != 0x28)
+	{
+		TGTE 0 10 0 0 RETURN;
+		INCR 1;
+		l[2] += 1;
+		l[1] = pb[0];
+	}
+	DECR 0 42;
+	if (l[2] > 0)
+	{
+		DUMP 0 42 90 c2 Pkt Info:;
+	}
+	TRTS;
+
+void TNS::Data_C::none;
+	LABL 0 0 0 14 No TNS Data;
+	TRTS;
+
+void TNS::Data_C::Loop;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 20 0 0 RETURN;
+	LABL 0 0 0 c2;
+	GBYT 0 1;
+	TEQU 28 1 0 0 TNS::Data_C::LP;		* (
+	TEQU 29 1 0 0 TNS::Data_C::RP;		* )
+	LABL 0 0 0 1;
+
+void TNS::Data_C::LP;
+	CHR# 1 0 0 14;
+	g[0x20] -= 1;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 20 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 28 1;
+	SKIP 1;
+	TNXT -TNS::Data_C::LP;
+	SNEQ 29 1;
+	SKIP 1;
+	TNXT -TNS::Data_C::RP;
+
+	TNXT -TNS::Data_C::Loop;
+
+void TNS::Data_C::RP;
+	CHR# 1 0 0 14;
+	g[0x20] -= 1;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 20 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 29 1;
+	SKIP 1;
+	TNXT -TNS::Data_C::Loop;
+	TNXT -TNS::Data_C::RP;
+
+void TNS_Byte_Order;
+	DWRD 0 1f 90 c2 Hardware '1' encoding:;
+	CST# 0 1f 0 14 TNS_BO_str;
+    TRTS;
+
+str# TNS_BO_str;
+	0x1		| Big Endian;
+	0x100	| Little Endian;
+
+void TNS_Accept_Pkt;						* TNS_TYPE: 2
+	LABL 0 0 0 b7 Accept Pkt;
+	DWRD 0 16 90 c2 NS Version Number:;
+	TNS Global Service Options;
+	DWRD 0 1a 90 c2 SDU size:;
+	DWRD 0 1b 90 c2 TDU size:;
+    TNS_Byte_Order;
+	DWRD 0 20 90 c2 Connect data length:;
+	DWRD 0 21 90 c2 Offset to start of connect data:;
+	TNS Connect Flags;
+	SUBG 18 21;		*18h is the amt from start tns to now....
+    TNS_Connect_Data;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------
+
+void TNS_Refuse_Pkt;						* TNS_TYPE: 4
+	LABL 0 0  0 b7 Refuse Pkt;
+
+	DBYT 0 1 90 c2 Application refuse reason:;
+	CST# 0 1 0 14 TNS_App_Ref_str;
+
+    LABL 0 0 90 c2 System refuse reason:;
+    GBYT 0 1;
+    ADDG 30f2 1; *12530
+    DGLB 0 1 90 10 ORA-;
+	CST# 0 1 0 14 TNS_Sys_Ref_str;
+    INCR 1;
+
+	DWRD 0 1 90 c2 Refuse Data Length:;
+	LABL 0 0  0 c9 Refuse Data:;
+	TNS_Data;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# TNS_App_Ref_str;
+    0x0	| Ignored;
+    0x34| Connection refused;
+    0x59| Requested options not granted;
+    0x58| Incompatible version levels;
+    0x5A| Required port characteristics unavailable;
+    0x09| Operation failed;
+
+str# TNS_Sys_Ref_str;
+    0x314f | Illegal operation;
+    0x3110 | Protocol adapter error;
+    0x3150 | Connection registered for event notification;
+
+// --------------------------------------------------------------------
+
+void TNS_Redirect_Pkt;						* TNS_TYPE: 5
+	LABL 0  0  0 b7 Redirect Pkt;
+	DWRD 0 16 90 c2 Data length:;
+	LABL 0 0 0 c9 Redirect Data:;
+	TNS::Data_R;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TNS::Data_R;
+	GBYT  0 1;
+	TNEQ 28 1 0 0 TNS::Data_none_R;
+	TNS::Data_Loop_R;
+	LABL 0 0 0 c8;
+
+void TNS::Data_none_R;
+	LABL 0 0 0 14 No TNS Data;
+	TRTS;
+
+void TNS::Data_Loop_R;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 c2;
+	GBYT 0 1;
+	TEQU 28 1 0 0 TNS::Data_LP_R;		* (
+	TEQU 29 1 0 0 TNS::Data_RP_R;		* )
+	LABL 0 0 0 1;
+
+void TNS::Data_LP_R;
+	CHR# 1 0 0 14;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	if (g[1] == 0x50)			// 0x[ 50 4F 52 54 ] = P O R T
+	{
+		g[1] = pl[0];
+		if (g[1] == 0x504f5254)
+		{
+			INCR 5;
+			TNS::Redirect::Port_Value;
+			DECR 5;
+			GBYT 0 1;			// re-get the byte to make it work as if we never came into this
+		}
+	}
+	SEQU 28 1;
+	SKIP 1;
+	TNXT -TNS::Data_LP_R;
+	SNEQ 29 1;
+	SKIP 1;
+	TNXT -TNS::Data_RP_R;
+
+	TNXT -TNS::Data_Loop_R;
+
+void TNS::Data_RP_R;
+	CHR# 1 0 0 14;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 29 1;
+	SKIP 1;
+	TNXT -TNS::Data_Loop_R;
+	TNXT -TNS::Data_RP_R;
+
+void TNS::Redirect::Port_Value;
+	l[1] = pb[0];		// thousandths place
+	l[2] = pb[1];		// hundreths place
+	l[3] = pb[2];		// tenths place
+	l[4] = pb[3];		// ones place
+
+	TSB# 0 41 0 0 TNS::Redirect::Port_String;
+	l[1] = g[1];
+	l[1] *= 1000;
+	TSB# 0 42 0 0 TNS::Redirect::Port_String;
+	l[2] = g[1];
+	l[2] *= 100;
+	TSB# 0 43 0 0 TNS::Redirect::Port_String;
+	l[3] = g[1];
+	l[3] *= 10;
+	TSB# 0 44 0 0 TNS::Redirect::Port_String;
+	l[4] = g[1];
+
+	l[1] += l[2];
+	l[1] += l[3];
+	l[1] += l[4];
+	g[2] = l[1];
+	MARK 1 2 0 0 TNS::Redirect::Ports;
+	TRTS;
+
+str# TNS::Redirect::Ports;
+	TNS;
+
+str# TNS::Redirect::Port_String;
+	0x30 | TNS::Redirect::Port_0;
+	0x31 | TNS::Redirect::Port_1;
+	0x32 | TNS::Redirect::Port_2;
+	0x33 | TNS::Redirect::Port_3;
+	0x34 | TNS::Redirect::Port_4;
+	0x35 | TNS::Redirect::Port_5;
+	0x36 | TNS::Redirect::Port_6;
+	0x37 | TNS::Redirect::Port_7;
+	0x38 | TNS::Redirect::Port_8;
+	0x39 | TNS::Redirect::Port_9;
+
+void TNS::Redirect::Port_0;
+	g[1] = 0;
+	TRTS;
+void TNS::Redirect::Port_1;
+	g[1] = 1;
+	TRTS;
+void TNS::Redirect::Port_2;
+	g[1] = 2;
+	TRTS;
+void TNS::Redirect::Port_3;
+	g[1] = 3;
+	TRTS;
+void TNS::Redirect::Port_4;
+	g[1] = 4;
+	TRTS;
+void TNS::Redirect::Port_5;
+	g[1] = 5;
+	TRTS;
+void TNS::Redirect::Port_6;
+	g[1] = 6;
+	TRTS;
+void TNS::Redirect::Port_7;
+	g[1] = 7;
+	TRTS;
+void TNS::Redirect::Port_8;
+	g[1] = 8;
+	TRTS;
+void TNS::Redirect::Port_9;
+	g[1] = 9;
+	TRTS;
+
+
+
+
+
+
+// --------------------------------------------------------------------
+
+void TNS_Resend_Pkt;						*TNS_TYPE: 11
+	LABL 0 0 0 b7 Resend Pkt;
+	* SAM ???
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------
+
+void TNS_Data_Pkt;							* TNS_TYPE: 6
+	LABL 0 0  0 b7 Data Pkt;
+	HWRD 0 1 90 c9 Flags:;
+	 CBIT 9 1 0 d4 1. .... .... request NT trailer;
+	 CLSE 0 0 0 d4 0. .... .... no request NT trailer;
+	 CBIT 8 1 0 d4 .1 .... .... request to send;
+	 CLSE 0 0 0 d4 .0 .... .... no request to send;
+     CBIT 7 1 0 d4 .. 1... .... do immediate confirmation;
+	 CLSE 0 0 0 d4 .. 0... .... immediate confirmation not needed;
+     CBIT 6 1 0 d4 .. .1.. .... end of file;
+	 CLSE 0 0 0 d4 .. .0.. .... not at the end of file;
+	 CBIT 5 1 0 d4 .. ..1. .... more data to come;
+	 CLSE 0 0 0 d4 .. ..0. .... no more data to come;
+	 CBIT 4 1 0 d4 .. ...1 .... reserved;
+	 CLSE 0 0 0 d4 .. ...0 .... reserved;
+	 CBIT 3 1 0 d4 .. .... 1... confirmation;
+	 CLSE 0 0 0 d4 .. .... 0... no confirmation;
+	 CBIT 1 1 0 d4 .. .... ..1. request confirmation;
+	 CLSE 0 0 0 d4 .. .... ..0. no request confirmation;
+	 CBIT 0 1 0 d4 .. .... ...1 hdx (send) token;
+	 CLSE 0 0 0 d4 .. .... ...0 no hdx (send) token;
+	LABL 0 0  0 c8;
+
+    SNEQ a 11;
+	SKIP 3;
+	  LABL 0 0 90 c2 Dead connection detection frame;
+	  LABL 0  0 0 b8;
+	  TRTS;
+
+	TNS_SQLData_Check;
+	if (g[0x10] == 0)
+	{
+	 LABL 0  0 0 b8;
+	 TGTE 0 10 0 0 RETURN;
+	}
+
+	GWRD 0 1;
+	SNEQ DEAD 1;							* xxx deadbeef comparison does not work
+	SKIP 3;
+	 LABL 0 0 0 b8;
+	 HLNG 0 1 90 c2 SNS Identifier:;
+	 TNXT -TNS_Data_Pkt_SNS;
+
+	GLNG  0 1;
+	SNEQ 28444553 1 0 0 ;					*(DES
+	SKIP;
+		LABL	0	0	0	c9 Connect Data:;
+		TNS_Data;
+		LABL	0	0	0	c8;
+	ENDS;
+
+	SNEQ 28414444 1 0 0 ;					*(ADD
+	SKIP;
+		LABL	0	0	0	c9 Redirect Data:;
+		TNS_Data;
+		LABL	0	0	0	c8;
+	ENDS;
+
+	LABL 0 0 0 b8;
+	TGTE 0 10 0 0 RETURN;
+
+	DUMP 0 10 90 c2 Packet Data:;
+
+	LABL 0 0  0 b8;
+	TRTS;
+
+void TNS_Data_Pkt_SNS;
+	DWRD 0 18 90 c2 Packet length:;
+	*test for unreasonable length
+	*BREM 0 1;
+	*ADDG 1 1;
+	*SLTE 18 81;
+	*SKIP 2;
+	*LABL  0  0 0 14 Unreasonable packet length;
+	*TRTS;
+
+	INCR 4;									* unknown field
+	DWRD 0 19 90 c2 Number of services:;
+	HBYT 0 1a 90 c2 Error flag:;
+	CST# 0 1a 0 14  TNS_Err_Flg_str;
+	LABL 0  0  0 b7 SNS Packets;
+	TNS SNS Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# TNS_Err_Flg_str;
+     0 | No error has occured;
+     1 | Error has occured;
+
+void TNS_SQLData_Check;
+	GBYT 0 16;								* 1 2 3 4 5 6 7 8 9 10 11 12 13
+	SNEQ 1 16;
+	SKIP 3;
+	 SQLData_1;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 2 16;
+	SKIP 3;
+	 SQLData_2;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 3 16;
+	SKIP 3;
+	 SQLData_3;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 4 16;
+	SKIP 3;
+	 SQLData_4;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 5 16;
+	SKIP 3;
+	 SQLData_5;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 6 16;
+	SKIP 4;
+	 INCR 1;
+	 TSB# 0 16 0 0 SQLNet Jump;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 7 16;
+	SKIP 3;
+	 SQLData_7;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 8 16;
+	SKIP 3;
+	 SQLData_8;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ 9 16;
+	SKIP 3;
+	 SQLData_9;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ a 16;
+	SKIP 3;
+	 SQLData_10;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ b 16;
+	SKIP 3;
+	 SQLData_11;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ c 16;
+	SKIP 3;
+	 SQLData_12;
+	 LABL 0 0 0 b8;
+	 TRTS;
+	SNEQ d 16;
+	SKIP 3;
+	 SQLData_13;
+	 LABL 0 0 0 b8;
+	 TRTS;
+    SNEQ 11 16;
+    SKIP 3;
+      SQLData_Find_Str;
+      LABL 0 0 0 b8;
+      TRTS;
+	TRTS;
+
+void SQLData_Find_Str;
+     INCR 56;
+     GLNG 40000000 43;
+     if (l[3] == 0x1A06ACE)
+     {
+        INCR 4;
+        GBYT 40000000 43;
+        if (l[3] == 0xFE)
+        {
+            INCR 2;
+            CSTR 0 0 90 c2 SQL statement:;
+        }
+        if (l[3] != 0xFE)
+        {
+            INCR 1;
+            CHR# 0 43 90 c2 SQL statement:;
+        }
+
+
+
+void SQLData_1;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Set Station Protocol;
+	LABL 0 0  0 b7 Protocols Supported;
+	SQLNet::Protocols::Loop;
+	INCR 1;
+	LABL 0 0 0 b8;
+	CSTR 0 0 90 c2 Station Info:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLData_2;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Set data type representation;
+
+
+void SQLData_3;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 UPI(User to Oracle Request);  // Patched by -v
+    SQLNet::UPI;
+// 	LABL 0 0 0 b7 UPI;
+//	DBYT 0 17 90 c2 Function type:;
+//	CST#  0 17 0 14 TNS_Func_type_str;
+
+//	TSB# 0 17 0 0 SQLNet::UPI::Functions;
+
+//	DBYT 0 18 90 c2 Sequence number:;
+//	LABL 0  0  0 b8;
+	TRTS;
+
+str# TNS_Func_type_str;
+    0x1		| OLOGON - Logon;
+	0x2		| OOPEN - Open Cursor;
+	0x3		| OSQL - Parse Statement;
+	0x4		| OEXEC - Execute Statement;
+	0x5		| OFETCH - Fetch row;
+	0x8		| OCLOSE - Close cursor;
+	0x9		| OLOGOFF - Logoff;
+    0xa		| ODESCRIBE - Describe select list column;
+    0xb		| ODEFIN - Define where column ends up;
+    0xc		| OCOMON - Auto commit On;
+    0xd		| OCOMOFF - Auto commit Off;
+	0xe		| OCOMMIT - Commit;
+    0xf		| OROLL - Rollback;
+    0x10	| OSFE - Set fatal error;
+    0x11	| ORESUME - Resume operation;
+    0x12	| OVERSION - Get version and date string;
+    0x14	| OCANCEL - Cancel current op;
+    0x15	| OGEM - Get error message;
+    0x17	| OSPECIAL - Special function;
+    0x18	| OABORT - Abort;
+    0x19	| ODQRID - Dequeue using rowid;
+    0x1a	| OLNGF6 - Fetch long value;
+    0x1f	| OHOWMANY - How many items;
+    0x20	| OINIT - Initialize database;
+    0x21	| OCHANGEU - Change user id;
+    0x22	| OBINDRP - Bind by reference pos;
+    0x23	| OGETBV - Get Nth bind var;
+    0x24	| OGETIV - Get Nth into var;
+    0x25	| OBINDRV - Bind by reference val;
+    0x26	| OBINDRN - Bind by reference num;
+	0x27	| OPARSEX - Parse and execute;
+    0x28	| OPARSYN - Parse for syntax;
+    0x29	| OPARSDI - Parse for syntax & SQL dictionary lookup;
+    0x2a	| OCONTINU - Continue serving;
+    0x2b	| ODSCRARR - Describe array;
+    0x2c	| OLCCINI - Init system parameters table;
+    0x2d	| OLCCFIN - Finalize system parameters table;
+    0x2e	| OLCCPUT - Put param into command table;
+    0x30	| OV6STRT - V6 start;
+    0x31	| OV6STOP - V6 stop;
+    0x32	| ORIP - Run independent process;
+    0x34	| OARCHIVE - Archive operation;
+    0x35	| OMRSTART - Start media recovery;
+    0x36	| OMRRECTS - Record table space;
+    0x37	| OMRGSLSQ - Get start log seq num;
+    0x38	| OMRREC - Recover using off-line log;
+    0x39	| OMRCAN - Cancel media recovery;
+	0x3a	| O2LOGON - Logon to ORACLE;
+	0x3b	| OVERSION - Get oracle version-date string;
+    0x3c	| OINIT2 - Initialize;
+    0x3d	| OCLOALL - Close all cursors;
+    0x3e	| OALL - Execute bundle;
+    0x3f	| OTEX - Transaction Execute;
+    0x40	| OSDAUTH - Set DBA authorization;
+    0x41	| OUDLFUN - Direct loader functions;
+    0x42	| OUDLBUF - Direct loader buffer transfer;
+    0x43	| OK2RPC - Distributed TM RPC;
+    0x44	| ODSCIDX - Describe indexes;
+    0x45	| OSESOPN - Session operations;
+    0x46	| OEXECSCN - Execute using sync commit numbers;
+	0x47	| OALL7 - Fast UPI call to opial7;
+    0x48	| OLONGF - Long fetch;
+    0x49	| OEXECA - Call opiexe from opiall;
+    0x4a	| OSQL7 - Parse call (v7);
+    0x4b	| OOBS - Obsolete;
+    0x4c	| ORPC - RPC call;
+    0x4e	| OEXFEN - Execute;
+    0x4f	| OXAOPN - XA operation;
+    0x50	| OKGL - KGL;
+    0x51	| O3LOGON - 2nd half of logon;
+    0x52	| O2LOGA - 1st half of logon;
+    0x53	| OFNSTM - Streaming;
+    0x54	| O71SESOPN - Open session;
+    0x55	| O71XAOPN - X/Open operation;
+    0x56	| ODEBUG - Debug;
+    0x57	| ODEBUGS - Debug special;
+    0x58	| OXAST - XA start;
+    0x59	| OXACM - XA commit;
+    0x5a	| OXAPR - XA prepare;
+    0x5b	| OXDP - XA import;
+    0x5b	| OCONNECT - Connect;
+    0x5e    | OALL8 - new v8 bundled call;
+
+
+void SQLData_4;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Error;
+	LABL 0 0  0 b7 Error;
+	DBYT 0 17 90 c2 Row count length:;
+    SLTE 2 17;
+    SKIP 80000001;
+      TRTS;
+
+    DBYT 0 17 90 c2 Current row counter:;
+
+	DBYT 0 18 90 c2 Return code Length:;
+	DUMP 0 18 90 c2 Return code;
+
+	INCR 2;
+
+	DBYT 0 19 90 c2 Current cursor length:;
+	DUMP 0 19 90 c2 Current cursor;
+    INCR 1;
+
+	DBYT 0 1a 90 c2 SQL command:;
+	CST# 0 1a 0  14 TNS_SQL_Cmd_str;
+
+	INCR 1;
+
+	HBYT 0 1b 90 c9 Various flags:;
+	 CBIT 4 1b 0 d4 ...1 .... No more error packets;
+	 CLSE 0 0  0 d4 ...0 .... More error packets;
+	 CBIT 3 1b 0 d4 .... 1... Update performed in user transaction;
+	 CLSE 0 0  0 d4 .... 0... Update not performed in user transaction;
+	 CBIT 2 1b 0 d4 .... .1.. Current row should be backed out;
+	 CLSE 0 0  0 d4 .... .0.. Current row should not be backed out;
+	 CBIT 1 1b 0 d4 .... ..1. Rollback necessary;
+	 CLSE 0 0  0 d4 .... ..0. Rollback not necessary;
+	 CBIT 0 1b 0 d4 .... ...1 Current operation suspended;
+	 CLSE 0 0  0 d4 .... ...0 Current operation not suspended;
+	LABL 0 0  0 c8;
+
+    INCR 2;
+
+	HBYT 0 1b 90 c9 Warning flags:;
+	 CBIT 7 1b 0 d4 1... .... Change after query start;
+	 CLSE 0 0  0 d4 0... .... No change after query start;
+	 CBIT 5 1b 0 d4 ..1. .... Compilation error;
+	 CLSE 0 0  0 d4 ..0. .... No Compilation error;
+	 CBIT 4 1b 0 d4 ...1 .... UPDATE or DELETE with no WHERE clause;
+	 CLSE 0 0  0 d4 ...0 .... UPDATE or DELETE with WHERE clause;
+	 CBIT 3 1b 0 d4 .... 1... INTO count error;
+	 CLSE 0 0  0 d4 .... 0... No INTO count error;
+	 CBIT 2 1b 0 d4 .... .1.. No null was used in avg/sum/max;
+	 CLSE 0 0  0 d4 .... .0.. Null was used in avg/sum/max;
+	 CBIT 1 1b 0 d4 .... ..1. Item was truncated;
+	 CLSE 0 0  0 d4 .... ..0. No item was truncated;
+	 CBIT 0 1b 0 d4 .... ...1 Set on any warning;
+	 CLSE 0 0  0 d4 .... ...0 Not set on any warning;
+	LABL 0 0  0 c8;
+
+	INCR 7;
+
+    DBYT 0 1c 90 c2 Sequence number:;
+
+	INCR 1;
+
+	DBYT 0 1c 90 c2 Successful iter:;
+    DUMP 0 1c 90 c2 Number of successful iterations:;
+
+	if (g[16] > 72)
+	{
+		INCR 46;							* skip 70 bytes
+		DBYT 0 1  90 c2 Error Length:;
+		CHR# 0 1  90 c2 Error:;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# TNS_SQL_Cmd_str;
+	0x00	| Not Specified;
+	0x01	| Create Table;
+	0x02	| Insert;
+	0x03	| Select;
+	0x04	| Create Cursor;
+	0x05	| Alter Cursor;
+	0x06	| Update;
+	0x07	| Delete;
+	0x08	| Drop Curser;
+	0x09	| Create Index;
+	0x0A	| Drop Index;
+	0x0B	| Alter Index;
+	0x0C	| Drop Table;
+	0x0D	| Create Sequence;
+	0x0E	| Alter Sequence;
+	0x0F	| Alter Table;
+	0x10	| Drop Sequence;
+	0x11	| Grant;
+	0x12	| Revoke;
+	0x13	| Create Synonym;
+	0x14	| Drop Synonym;
+	0x15	| Create View;
+	0x16	| Drop View;
+	0x17	| Validate Index;
+	0x18	| Create Proc;
+	0x19	| Alter Proc;
+	0x1A	| Lock Table;
+	0x1B	| No Operation;
+	0x1C	| Rename;
+	0x1D	| Comment;
+	0x1E	| Audit;
+	0x1F	| No Audit;
+	0x20	| Create Database Link;
+	0x21	| Drop Database Link;
+	0x22	| Not Specified;
+	0x23	| Alter Database;
+	0x24	| Create Rollback Segment;
+	0x25	| Alter Rollback Segment;
+	0x26	| Drop Rollback Segment;
+	0x27	| Create Tbl Spc;
+	0x28	| Alter Tbl Spc;
+	0x29	| Drop Tbl Spc;
+	0x2A	| Alter Session;
+	0x2B	| Alter Usr;
+	0x2C	| Commit;
+	0x2D	| Rollback;
+	0x2E	| Savepoint;
+	0x2F	| PL/SQL Execute;
+	0x30	| Set Tranx;
+	0x31	| Alter Sys Switch Log;
+	0x32	| Explain;
+	0x33	| Create Usr;
+	0x34	| Create Roll;
+	0x35	| Drop Usr;
+	0x36	| Drop Role;
+	0x37	| Set Role;
+	0x38	| Create Schema;
+	0x39	| Create Control File;
+	0x3A	| Alter Tracing;
+	0x3B	| Create Trigger;
+	0x3C	| Alter Trigger;
+	0x3D	| Drop Trigger;
+	0x3E	| Analyze Tbl;
+	0x3F	| Analyze Index;
+	0x40	| Analyze Cursor;
+	0x41	| Create Profile;
+	0x42	| Drop Profile;
+	0x43	| Alter Profile;
+	0x44	| Drop Proc;
+	0x46	| Alter Resrc Cost;
+	0x4A	| Create Snapshot Log;
+	0x4B	| Alter Snapshot Log;
+	0x4C	| Drop Snapshot Log;
+	0x4F	| Alter Role;
+	0x55	| Truncate Table;
+	0x56	| Truncate Cursor;
+	0x57	| Create Bitmap File;
+	0x58	| Alter View;
+	0x59	| Drop Bitmap File;
+	0x5B	| Create Function;
+	0x5C	| Alter Function;
+	0x5D	| Drop Function;
+	0x5E	| Create Package;
+	0x5F	| Alter Package;
+	0x50	| Drop Package;
+	0x51	| Create Package Body;
+	0x62	| Alter Package Body;
+	0x63	| Drop Package Body;
+
+void SQLData_5;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Access user address space;
+
+void SQLData_7;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Row transfer data follows;
+
+void SQLData_8;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Return OPI Parameter;
+	LABL 0 0  0 b7 OPI;
+	DBYT 0 1 90 c2 Return value:;
+	LABL 0 0  0 b8;
+
+void SQLData_9;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Oracle function complete;
+
+void SQLData_10;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 N error return definitions follow;
+
+void SQLData_11;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Sending I/O vector for fast UPI;
+	HBYT 0 17 90 c9 Flags:;
+	 CBIT 2 17 0 d4 .... .1.. Vector for PL/SQL var follows;
+	 CLSE 0 0  0 d4 .... .0.. Vector for PL/SQL var does not follow;
+	 CBIT 1 17 0 d4 .... ..1. End of row;
+	 CLSE 0 0  0 d4 .... ..0. Not end of row;
+	 CBIT 0 17 0 d4 .... ...1 Oracle to user bit set;
+	 CLSE 0 0  0 d4 .... ...0 Oracle to user bit not set;
+	LABL 0 0  0 c8;
+	DBYT 0 18 90 c2 Number of cols:;
+	DBYT 0 18 90 c2 Count:;
+
+void SQLData_12;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Send long for fast UPI;
+
+void SQLData_13;
+	DBYT 0 1 90 c2 Basic Operation:;
+	LABL 0 0  0 14 Invoke user callback;
+
+void TNS_Abort_Pkt;							* TNS_TYPE: 9
+	LABL 0 0  0 b7 Abort Pkt;
+	DBYT 1 1 90 c2 Abort Reason:;
+	DBYT 1 1 90 c2 System Reason for Abort:;
+	LABL 0 0  0 b9 Abort Data:;
+	TNS_Data;
+	LABL 0 0  0 c8;
+	LABL 0 0  0 b8;
+	TRTS;
+
+void TNS_Marker_Pkt;						* TNS_TYPE: c
+	LABL 0 0  0 b7 Marker Pkt;
+	HBYT 0 1 90 c2 Marker Type:;
+	CST# 0 1 0	14 TNS_Marker_Type_str;
+	HBYT 0 1 90 c2 Old Marker Data Byte:;
+	LABL 0 0  0 14 Pre v3.05;
+	HBYT 0 1 90 c2 Marker Data Byte:;
+	LABL 0 0  0 14 v3.05;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# TNS_Marker_Type_str;
+	 0x0	| Data Marker (0 data bytes);
+	 0x1	| Data Marker (1 data byte);
+	 0x2	| Attn Marker;
+
+void TNS_Control_Pkt;						* TNS_TYPE: e
+	LABL 0 0  0 b7 Control Pkt;
+	DWRD 0 1 90 c2 Command Type:;
+	 CEQU 1 1 0 14 Oracle trace command;
+	LABL 0 0  0 c9:;
+	TNS_Data;
+	LABL 0 0  0 c8;
+	LABL 0 0  0 b8;
+	TRTS;
+
+void TNS Global Service Options;
+	HBYT 0 18 90 c9 Glob service options1:;
+	 CBIT 5 18  0 d4 ..1. .... Broken connect notify;
+	 CLSE 0  0  0 d4 ..0. .... No broken connect notify;
+	 CBIT 4 18  0 d4 ...1 .... Packet checksum;
+	 CLSE 0  0  0 d4 ...0 .... No packet checksum;
+	 CBIT 3 18  0 d4 .... 1... Header checksum;
+	 CLSE 0  0  0 d4 .... 0... No header checksum;
+	 CBIT 2 18  0 d4 .... .1.. Full duplex;
+	 CLSE 0  0  0 d4 .... .0.. Not full duplex;
+	 CBIT 1 18  0 d4 .... ..1. Half duplex;
+	 CLSE 0  0  0 d4 .... ..0. Not half duplex;
+	 CBIT 0 18  0 d4 .... ...1 Care;
+	 CLSE 0  0  0 d4 .... ...0 Don't care;
+	LABL 0 0 0 c8;
+
+	HBYT 0 19 90 c9 Glob service options2:;
+	 CBIT 7 19  0 d4 1... .... Care;
+	 CLSE 0  0  0 d4 0... .... Don't care;
+	 CBIT 4 19  0 d4 ...1 .... Direct I/O to transport;
+	 CLSE 0  0  0 d4 ...0 .... Not direct I/O to transport;
+	 CBIT 3 19  0 d4 .... 1... No attention processing;
+	 CLSE 0  0  0 d4 .... 0... Attention processing;
+	 CBIT 2 19  0 d4 .... .1.. Can receive attention;
+	 CLSE 0  0  0 d4 .... .0.. Can't receive attention;
+	 CBIT 1 19  0 d4 .... ..1. Can send attention;
+	 CLSE 0  0  0 d4 .... ..0. Can't send attention;
+	LABL 0 0 0 c8;
+
+void TNS Connect Flags;
+	HBYT 0 23 90 c9 Connect flags 0:;
+	 CBIT 4 23  0 d4 ...1 .... NA Services required;
+	 CLSE 0  0  0 d4 ...0 .... NA Services NOT required;
+	 CBIT 3 23  0 d4 .... 1... NA Services are linked in;
+	 CLSE 0  0  0 d4 .... 0... NA Services are NOT linked in;
+	 CBIT 2 23  0 d4 .... .1.. Do not enable NA Services on this connection;
+	 CLSE 0  0  0 d4 .... .0.. Enable NA Services on this connection;
+	 CBIT 1 23  0 d4 .... ..1. Interchange is involved;
+	 CLSE 0  0  0 d4 .... ..0. Interchange is NOT involved;
+	 CBIT 0 23  0 d4 .... ...1 Want to use NA Services;
+	 CLSE 0  0  0 d4 .... ...0 Don't want to use NA Services;
+	LABL 0 0 0 c8;
+
+	HBYT 0 24 90 c9 Connect flags 1:;
+	 CBIT 4 24  0 d4 ...1 .... NA Services required;
+	 CLSE 0  0  0 d4 ...0 .... NA Services NOT required;
+	 CBIT 3 24  0 d4 .... 1... NA Services are linked in;
+	 CLSE 0  0  0 d4 .... 0... NA Services are NOT linked in;
+	 CBIT 2 24  0 d4 .... .1.. Do not enable NA Services on this connection;
+	 CLSE 0  0  0 d4 .... .0.. Enable NA Services on this connection;
+	 CBIT 1 24  0 d4 .... ..1. Interchange is involved;
+	 CLSE 0  0  0 d4 .... ..0. Interchange is NOT involved;
+	 CBIT 0 24  0 d4 .... ...1 Want to use NA Services;
+	 CLSE 0  0  0 d4 .... ...0 Don't want to use NA Services;
+	LABL 0 0 0 b8;
+
+void TNS Data;
+	* test for SQL NET Data
+	GBYT 0 1;
+	TEQU 0 1 0 0 SQLNet;
+
+	LABL 0 0 0 b7 TNS Data;
+	HWRD 0 16 90 c2 Data flags:;
+	TEQU 0 10  0 0 RETURN; *special test for EOD
+	HLNG 0 17 90 c2 Reserved:;
+	DWRD 0 18 90 c2 Packet length:;
+
+	*test for unreasonable length
+	BREM 0 1;
+	ADDG 1 1;
+	SLTE 18 81;
+	SKIP 2;
+	LABL  0  0 0 14 Unreasonable packet length;
+	TRTS;
+
+	INCR 4;  * unknown field
+	DWRD 0 19 90 c2 # of services:;
+	DBYT 0 1a 90 c2 Error flag:;
+	LABL 0  0  0 b7 SNS Packets;
+	TNS SNS Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void TNS SNS Loop;
+	TEQU 0 19 0 0 RETURN;
+	SUBG 1 19;
+	GWRD 0 25;
+	CST# 0 25 0 b7 TNS_SNS_subpkt_str;
+	DWRD 0 25 90 c2 Service type:;
+	DWRD 0 26 90 c2 Subpacket count:;
+	DLNG 0 27 90 c2 Error code;
+	TNS SNS Subpacket Loop;
+	LABL 0 0 0 b8;
+	TNXT -TNS SNS Loop;
+
+
+str# TNS_SNS_subpkt_str;
+	0x1	| Authentication (Check for valid user);
+	0x2	| Encryption (Setup encryption algorithm);
+	0x3	| Data Integrity (Setup enc algo to ensure data integrity);
+    0x4	| Supervisory (Misc services);
+
+void TNS SNS Subpacket Loop;
+	TEQU 0 26 0 0 RETURN;
+	SUBG 1 26;
+	LABL 0  0 0 b7 Subpacket;
+	DWRD 0 28 90 c2 Length:;
+	DWRD 0 29 90 c2 Data type:;
+	CST# 0 29  0 14 TNS_SNS_Datatype_str;
+
+    SEQU 2 25;
+    SKIP 80000003;
+        SEQU 0 26;
+        SKIP 80000001;
+          TNS_Encrypt;
+
+    SEQU 3 25;
+    SKIP 80000003;
+        SEQU 0 26;
+        SKIP 80000001;
+          TNS_Encrypt;
+
+	SNEQ 0 29;
+	SKIP 2;
+	   CHR# 0 28 90 c2 String data:;
+	   MOVE 0 28;
+
+    SNEQ 1 29;
+    SKIP;
+      SLTE a 28;
+      SKIP 80000000;
+		GWRD 0 1;
+		SNEQ DEAD 1;* xxx deadbeef comparison does not work
+		SKIP;
+			HLNG 0 0 90 c2 SNS Identifier:;
+			DWRD 0 1 90 c2 Data type:;
+			CST# 0 1 0  14 TNS_SNS_Datatype_str;
+			DLNG 0 0 90 c2 Number of elements;
+			SUBG a 28;
+		ENDS;
+	  ENDS;
+	ENDS;
+
+	HEX# 0 28 90 c2 Data:;
+	LABL 0 0 0 b8;
+	TNXT -TNS SNS Subpacket Loop;
+
+str# TNS_SNS_Datatype_str;
+	0x0		| string data;
+	0x1		| raw data;
+	0x2		| 1 byte unsigned number;
+	0x3		| 2 byte unsigned number;
+	0x5		| 4 byte version stamp;
+	0x6		| 2 byte status flag;
+	0x7		| data array;
+
+void TNS_Encrypt;
+    DBYT 0 1 90 c2 Encryption Algorithm:;
+	CST# 0 1 0 14 TNS_Enc_Type_str;
+    SUBG 1 28;
+    TRTS;
+
+str# TNS_Enc_Type_str;
+    0x0		| No encryption;
+    0x1		| 40-bit RC4;
+    0x2		| 56-bit DES;
+    0x3		| 40-bit DES;
+
+void SQLNet;
+	LABL 0  0  0 b7 SQL-Net Data;
+	HWRD 0 16 90 c9 Data flag:;
+	 CBIT 9 16 0 d4 ......1. ........ Send NT Trailer;
+	 CLSE 0  0 0 d4 ......0. ........ Don't Send NT Trailer;
+	 CBIT 8 16 0 d4 .......1 ........ Request To Send;
+	 CLSE 0  0 0 d4 .......0 ........ No Request To Send;
+	 CBIT 7 16 0 d4 ........ 1....... Do Immediate Confirmation;
+	 CLSE 0  0 0 d4 ........ 0....... Immediate Confirmation Not Specified;
+	 CBIT 6 16 0 d4 ........ .1...... End of File;
+	 CLSE 0  0 0 d4 ........ .0...... Not EOF;
+	 CBIT 5 16 0 d4 ........ ..1..... More Data to Come;
+	 CLSE 0  0 0 d4 ........ ..0..... No More Data;
+	 CBIT 3 16 0 d4 ........ ....1... Reserved;
+	 CLSE 0  0 0 d4 ........ ....0... Reserved;
+	 CBIT 2 16 0 d4 ........ .....1.. Confirmation;
+	 CLSE 0  0 0 d4 ........ .....0.. No Confirmation;
+	 CBIT 1 16 0 d4 ........ ......1. Request Confirmation;
+	 CLSE 0  0 0 d4 ........ ......0. Confirmation not Requested;
+	 CBIT 0 16 0 d4 ........ .......1 Send Token;
+	 CLSE 0 16 0 d4 ........ .......0 Don't Send Token;
+	LABL 0 0 0 b8;
+
+	SNEQ 0 10;
+	SKIP 2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+	GBYT 0 1;							*SI: check to see if there's data here
+	TEQU 28 1 0 0 SQLNet_TNS_Data;
+
+	DBYT 0 16 90 c9 Basic operation:;
+	CST# 0 16 0  14 TNS_BOP_Type_str;
+	LABL 0 0 0 b8;
+
+	TSB# 0 16 0 0 SQLNet Jump;
+	LABL 0 0 0 b8;
+
+str# TNS_BOP_Type_str;
+	 0x1	| Set protocol;
+	 0x2	| Set datatype representation;
+	 0x3	| User to Oracle (UPI) request;
+	 0x4	| Error return status;
+	 0x6	| Row transfer header;
+	 0x8	| Return OPI Parameter;
+	 0x9	| Oracle function complete;
+
+void SQLNet_TNS_Data;
+	LABL 0 0 0 c9 Data:;
+	TNS_Data;
+	LABL 0 0 0 c8;
+
+str# SQLNet Jump;
+	1 | SQLNet::Set;
+	3 | SQLNet::UPI;
+	4 | SQLNet::Error;
+	6 | SQLNet::Row;
+	8 | SQLNet::OPI;
+
+void SQLNet::Row;
+	HBYT 0 17 90 c9 Flags:;
+	 CBIT 2 17 0 d4 .... .1.. Vector for PL/SQL var follows;
+	 CLSE 0 0  0 d4 .... .0.. Vector for PL/SQL var does not follow;
+	 CBIT 1 17 0 d4 .... ..1. End of row;
+	 CLSE 0 0  0 d4 .... ..0. Not end of row;
+	 CBIT 0 17 0 d4 .... ...1 Oracle to user bit set;
+	 CLSE 0 0  0 d4 .... ...0 Oracle to user bit not set;
+	LABL 0 0  0 c8;
+	DBYT 0 18 90 c2 Number of cols:;
+	DWRD 0 19 90 c2 Iter number:;
+	DWRD 0 1a 90 c2 # of Iters now:;
+	DWRD 0 1b 90 c2 User access buf len:;
+    DBYT 0 1c 90 c2 Data sub-packet:;
+    TEQU 7 1c  0  0 SQLNet Row Data Loop;
+
+void SQLNet Row Data Loop;
+	TEQU 0 18 0 0 RETURN;
+	SUBG 1 18;
+	DBYT 0 1d 90 c2 Row data length:;
+	if (g[0x1d] > 0)
+	{
+		CHR# 0 1d 90 c2 Row data:;
+	}
+	//INCR 2;* skip 2 bytes			<-- si: what is this for and who put it here?
+    TNXT -SQLNet Row Data Loop;
+
+void SQLNet::OPI;
+	INCR 1;
+	DBYT 0 17  90 c2 Return value:;
+
+void SQLNet::Set;
+	LABL 0 0 0 b7 Protocols Supported;
+	SQLNet::Protocols::Loop;
+	INCR 1; *past the null
+	LABL 0 0 0 b8;
+	CSTR 0 0 90 c2 Station Info:;
+	LABL 0 0 0 b8;
+
+void SQLNet::Protocols::Loop;
+	GBYT 0 17;
+	TEQU 0 17 0 0 RETURN;
+	DBYT 0 17 90 c2 Protocol version:;
+	CST# 0 17  0 14 TNS_Prot_Ver_str;
+	TNXT -SQLNet::Protocols::Loop;
+
+
+str# TNS_Prot_Ver_str;
+	0x5	| V7 Protocol;
+	0x4	| V7 Protocol;
+	0x3	| V6 NLS Protocol;
+	0x2	| V6 Protocol;
+	0x1	| V5 Protocol;
+
+void SQLNet::OALL8;
+     HBYT 0 19 90 c9 Fast UPI Option1:;
+	 CBIT 7 19 0 d4 1... .... Statement is NOT PL/SQL;
+	 CLSE 0  0 0 d4 0... .... Statement is PL/SQL;
+	 CBIT 6 19 0 d4 .1.. .... Parsing Required;
+	 CLSE 0  0 0 d4 .0.. .... No Parsing Required;
+	 CBIT 2 19 0 d4 .... .1.. Send I/O Vector Back;
+	 CLSE 0  0 0 d4 .... .0.. Do NOT send I/O Vector Back;
+	 CBIT 1 19 0 d4 .... ..1. Exact Fetch;
+	 CLSE 0  0 0 d4 .... ..0. Non-Exact Fetch;
+	 CBIT 0 19 0 d4 .... ...1 Commit;
+	 CLSE 0  0 0 d4 .... ...0 No Commit;
+	 LABL 0 0 0 b8;
+	HBYT 0 1a 90 c9 Fast UPI Option2:;
+	 CBIT 7 1a 0 d4 1... .... Cancel After Fetch;
+	 CLSE 0  0 0 d4 0... .... No Cancel After Fetch;
+	 CBIT 6 1a 0 d4 .1.. .... Fetch to be Done;
+	 CLSE 0  0 0 d4 .0.. .... No Fetch to be Done;
+	 CBIT 5 1a 0 d4 ..1. .... Execute to be Done;
+	 CLSE 0  0 0 d4 ..0. .... No Execute to be Done;
+	 CBIT 4 1a 0 d4 ...1 .... Define to be Done;
+	 CLSE 0  0 0 d4 ...0 .... No Define to be Done;
+	 CBIT 1 1a 0 d4 .... 1... Bind to be Done;
+	 CLSE 0  0 0 d4 .... 0... No Bind to be Done;
+	 CBIT 0 1a 0 d4 .... ...1 Parse to be Done;
+	 CLSE 0  0 0 d4 .... ...0 No Parse to be Done;
+	 LABL 0 0 0 b8;
+    INCR 3;
+    DLNG 40000000 0 90 c2 Curosr number:;
+    HLNG 40000000 0 90 c2 SQL text address:;
+    DLNG 40000000 3 90 c2 SQL text length:;
+    if (g[3] != 0)
+    {
+        INCR 34;
+        GLNG 40000000 42;
+        if (l[2] == 0x1A06ACE)
+        {
+            INCR 4;
+            GWRD 40000000 42;
+            if (l[2] == 0x40FE)
+            {
+                INCR 2;
+                CHR# 0 3 90 c2 SQL statement:;
+            }
+            if (l[2] != 0x40FE)
+            {
+            PSTR 0 0 90 c2 SQL statement:;
+            }
+        }
+    }
+void SQLNet::UPI;
+	LABL 0 0 0 b7 UPI;
+	DBYT 0 17 90 c2 Function type:;
+	CST#  0 17 0 14 TNS_Func_type_str;
+    TSB# 0 17 -SQLNet::UPI::Functions;
+    LABL 0 0 0 b8;
+//	DBYT 0 18 90 c2 Sequence number:;
+	TRTS;
+
+
+str# SQLNet::UPI::Functions;
+    0x2 | SQLNet::OOPEN;
+    0x3 | SQLNet::OSQL;
+    0x4 | SQLNet::OEXEC;
+    0x5 | SQLNet::OFETCH;
+    0x8 | SQLNet::OCLOSE;
+    0xe | SQLNet::OCOMMIT;
+    0x27| SQLNet::OPARSEX;
+    0x3a| SQLNet::O2LOGON;
+    0x3b| SQLNet::O2VERSION;
+    0x47| SQLNet::OALL7;
+    0x5e| SQLNet::OALL8;
+  //  0x76| SQLNet::OSESSKEY;                                       //added by -v
+str# SQLNet::MagicNumbers;
+    0x019F9DA0|User name address;
+    0x00129D00|Keyword-Value Pairs;
+    0x0012dcbc|User Name;
+
+void SQLNet::OSESSKEY;
+    HLNG 40000000 0 90 c2 User name address:;
+    DLNG 40000000 18 90 c2 User name length;
+	TRTS;
+
+void SQLNet::OCOMMIT;
+	DBYT 0 18 90 c2 Sequence number:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OEXEC;
+	DBYT 0 18 90 c2 Sequence number:;
+	INCR 1;
+	DLNG 40000000 19 90 c2 Cursor number:;
+	INCR 1;
+	DBYT 0 1a 90 c2 Number of iters:;
+	DBYT 0 1b 90 c2 Restart bin index:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::O2VERSION;
+	DBYT 0 18 90 c2 Sequence number:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OFETCH;                                               //-v patched
+	DBYT 0 18 90 c2 Sequence number:;
+	INCR 1;
+	DLNG 40000000 19 90 c2 Cursor number:;
+	//INCR 1;
+	DLNG 40000000 19 90 c2 Number of rows:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OALL7;
+	DBYT 0 18 90 c2 Sequence number:;
+	INCR 1;
+	HBYT 0 19 90 c9 Fast UPI Option1:;
+	 CBIT 7 19 0 d4 1... .... Statement is NOT PL/SQL;
+	 CLSE 0  0 0 d4 0... .... Statement is PL/SQL;
+	 CBIT 6 19 0 d4 .1.. .... Parsing Required;
+	 CLSE 0  0 0 d4 .0.. .... No Parsing Required;
+	 CBIT 2 19 0 d4 .... .1.. Send I/O Vector Back;
+	 CLSE 0  0 0 d4 .... .0.. Do NOT send I/O Vector Back;
+	 CBIT 1 19 0 d4 .... ..1. Exact Fetch;
+	 CLSE 0  0 0 d4 .... ..0. Non-Exact Fetch;
+	 CBIT 0 19 0 d4 .... ...1 Commit;
+	 CLSE 0  0 0 d4 .... ...0 No Commit;
+	 LABL 0 0 0 b8;
+	HBYT 0 1a 90 c9 Fast UPI Option2:;
+	 CBIT 7 1a 0 d4 1... .... Cancel After Fetch;
+	 CLSE 0  0 0 d4 0... .... No Cancel After Fetch;
+	 CBIT 6 1a 0 d4 .1.. .... Fetch to be Done;
+	 CLSE 0  0 0 d4 .0.. .... No Fetch to be Done;
+	 CBIT 5 1a 0 d4 ..1. .... Execute to be Done;
+	 CLSE 0  0 0 d4 ..0. .... No Execute to be Done;
+	 CBIT 4 1a 0 d4 ...1 .... Define to be Done;
+	 CLSE 0  0 0 d4 ...0 .... No Define to be Done;
+	 CBIT 1 1a 0 d4 .... 1... Bind to be Done;
+	 CLSE 0  0 0 d4 .... 0... No Bind to be Done;
+	 CBIT 0 1a 0 d4 .... ...1 Parse to be Done;
+	 CLSE 0  0 0 d4 .... ...0 No Parse to be Done;
+	 LABL 0 0 0 b8;
+	INCR 1; *?
+	DLNG 40000000 19 90 c2 Cursor number:;
+	DLNG 40000000 1a 90 c2 SQL text address:;
+	DLNG 40000000 1b 90 c2 SQL text length:;
+	DBYT 0 1c 90 c2 DBlink text address:;
+	DBYT 0 1d 90 c2 DBlink text length:;
+    INCR 2B;
+    GBYT 0 41;
+    if (g[27] == l[1])
+    {
+      PSTR 0 0 90 c2 SQL statement:;
+
+    }
+    if (g[27] != l[1])
+    {
+	CHR# 0 1b 90 c2 SQL statement:;
+    }
+    if (g[27] ==0)
+    {
+        LABL 0 0 0 c4 Not Specified;
+    }
+    CHR# 0 1d 90 c2 DBLink:;
+    if (g[29] ==0)
+    {
+
+        LABL 0 0 0 c4 Not Specified;
+    }
+
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OSQL;
+	DBYT 0 18 90 c2 Sequence number:;
+	DLNG 40000000 19 90 c2 Cursor number:;                //Patched by -v
+	HLNG 40000000 1a 90 c2 SQL text address:;
+	//INCR 1; *?
+	DLNG 40000000 1b 90 c2 SQL text length:;
+    l[1] = pw[0];
+    if (l[1] == 0xFE40)
+    {
+      INCR 2;
+     CHR# 0 1b 90 c2 SQL statement:;
+    }
+    if (l[1] != 0xFE40)
+    {
+     PSTR 0 1b 90 c2 SQL statement:;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OCLOSE;
+	DBYT 0 18 90 c2 Sequence number:;
+	INCR 1; *?
+	DLNG 40000000 19 90 c2 Cursor number:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OOPEN;
+	DBYT 0 18 90 c2 Sequence number:;
+	DBYT 0 19 90 c2 Return cursor addr:;
+	CEQU 1 19  0 14 Sent;
+	DBYT 0 19 90 c2 Context area size:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::OPARSEX;
+	DBYT 0 18 90 c2 Sequence number:;
+	INCR 1;
+	DLNG 40000000 19 90 c2 Cursor number:;
+	DBYT 0 1a 90 c2 SQL text address:;
+	INCR 1; *?
+	DBYT 0 1b 90 c2 SQL text length:;
+	CHR# 0 1b 90 c2 SQL statement:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::O2LOGON;
+	LABL 0 0 0 b7 Logon;
+	DBYT 0 18 90 c2 Sequence number:;
+	DLNG 0 19 90 c2 User name address:;
+	DLNG 0 1a 90 c2 User name length:;
+	INCR 9;* INCR 24 (and INCR 16) does not work...
+	INCR 9;
+	INCR 6;
+	DLNG 0 1b 90 c2 Terminal name addr:;
+	DLNG 0 1c 90 c2 Terminal name length:;
+	DLNG 0 1d 90 c2 Machine name addr:;
+	DLNG 0 1e 90 c2 Machine name length:;
+	DLNG 0 1f 90 c2 System uname addr:;
+	DLNG 0 20 90 c2 System uname length:;
+	INCR 4;
+	DLNG 0 21 90 c2 Process ID addr:;
+	DLNG 0 22 90 c2 Process ID length:;
+	DLNG 0 23 90 c2 Program name addr:;
+	DLNG 0 24 90 c2 Program name length:;
+	DLNG 0 25 90 c2 Svr attribute addr:;
+	DLNG 0 26 90 c2 Svr attribute length:;
+	DLNG 0 27 90 c2 Svr binary data addr:;
+	DLNG 0 28 90 c2 Svr binary data lngth:;
+	DLNG 0 29 90 c2 Svr information addr:;
+	DLNG 0 2a 90 c2 Svr information length:;
+	INCR 4;
+
+	SEQU 0 1a;
+	 SKIP 1;
+	 CHR# 0 1a 90 c2 User logon name:;
+
+	SNEQ 3a 17;* skip 4 bytes for 58
+	SKIP 1;
+	  INCR 4;
+
+	SEQU 0 1c;
+	 SKIP 1;
+	 CHR# 0 1c 90 c2 Terminal name:;
+	SEQU 0 1e;
+	 SKIP 1;
+	 CHR# 0 1e 90 c2 Machine name:;
+	SEQU 0 20;
+	 SKIP 1;
+	 CHR# 0 20 90 c2 System user name:;
+	SEQU 0 22;
+	 SKIP 1;
+	 CHR# 0 22 90 c2 Process ID:;
+	SEQU 0 24;
+	 SKIP 1;
+	 CHR# 0 24 90 c2 Program name:;
+	SEQU 0 26;
+	 SKIP 1;
+	 CHR# 0 26 90 c2 Svr attribute:;
+	SEQU 0 28;
+	 SKIP 1;
+	 CHR# 0 28 90 c2 Svr binary data:;
+	SEQU 0 2a;
+	 SKIP 1;
+	 CHR# 0 2a 90 c2 Svr information:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SQLNet::Error;
+	LABL 0 0 0 b7 Error;
+	DBYT 0 17 90 c2 Current row counter:;
+	DBYT 0 18 90 c2 Return code:;
+	INCR 3; *?
+	DBYT 0 19 90 c2 Current cursor id:;
+	INCR 1;
+	DBYT 0 1a 90 c2 SQL command:;
+	CEQU 2a 1a 0 14 Alter Session;
+	INCR 1; *?
+	HBYT 0 1b 90 c2 Various flags:;
+	INCR 2; *?
+	HBYT 0 1b 90 c2 Various flags:;
+	INCR 7; *?
+	DBYT 0 1c 90 c2 Sequence number:;
+	INCR 1; *?
+	DBYT 0 1c 90 c2 Successful iter:;
+	LABL 0 0 0 b8;
+	TRTS;
+

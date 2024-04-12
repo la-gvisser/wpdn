@@ -1,0 +1,2711 @@
+*********************************************************************
+*
+* Protocol: ISO_IEC 13818-1 (a.k.a ITU-T H.222.0 or MPEG2)
+*
+*           Information technology ¡ª Generic coding
+*           of moving pictures and associated audio
+*           information: Systems
+*
+* Specification: ISO_IEC 13818-1:2000(E)
+*                ITU-T H.222.0 (2000 E)
+*
+*********************************************************************
+
+* g[22] - Sync byte for next TS packet
+* g[23] - Number of valid TS packets
+* g[24] - Each TS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+* g[41] - PUSI (payload unit start indicator)
+* g[42] - CC (continuity counter)
+* g[43] - DI (discontinuity indicator)
+
+// Last update 9/21/2007
+// 
+// -------------------------------------------------------
+//
+//	2.4 Transport Stream bitstream requirements
+//
+// -------------------------------------------------------
+
+// -------------------------------------------------------
+//	2.4.3 Transport Stream
+// -------------------------------------------------------
+
+// -------------------------------------------------------
+//	MPEG_transport_stream()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next TS packet
+* g[23] - Number of valid TS packets
+* g[24] - Each TS Packet Length
+* g[25] - PPL (PES packet length)
+
+void H222::MPEG_OverUDPTest;
+	if (g[16] < 188)
+	{
+		TRTS;
+	}
+	l[3] = pb[0];
+	if (l[3] != 0x47)
+	{
+		TRTS;
+	}
+	l[1] = g[16];
+	l[1] /= 188;
+	l[2] = l[1];
+	l[2] *= 188;
+	if (l[2] != g[16])
+	{
+		TRTS;
+	}
+	l[10] = 1;
+	l[4] = 0;
+	while (l[1] > 1)
+	{
+		INCR  BC 0;
+		l[4] += 188;
+		l[1] -= 1;
+		l[3] = pb[0];
+		if l[3] != 0x47
+		{
+			l[10] = 0;
+			l[1] = 0;
+		}
+	}
+	if (l[4] != 0)
+	{
+		DECR 0 44;
+	}
+	if (l[10] = 1)
+	{
+		H222::MPEG_transport_stream;
+	}
+	TRTS;
+
+void H222::MPEG_transport_stream;
+
+  LABL    0   0   0   b1  H.222 - ISO/IEC 13818-1 MPEG2 protocol\MPEG2:;
+
+  g[22] = pb[0];
+  g[23] = 0;
+  g[25] = 0;        // Init PES lenght to 0
+  while (g[22] == 0x47)
+  {
+    g[23] += 1;
+    g[24] = 184;		// Init TS Packet Length to (188 - 4)
+    H222::TS::transport_packet;
+    g[22] == pb[0];
+  }
+  LABL 0 0 0 b8;
+  TRTS;
+
+// -------------------------------------------------------
+//	transport_packet()
+// -------------------------------------------------------
+
+* g[25] - PPL (PES packet length)
+
+* g[41] - PUSI (payload unit start indicator)
+* g[42] - CC (continuity counter)
+* g[43] - DI (discontinuity indicator)
+
+* g[33] - PID
+* g[34] - AFC (adaptation field control)
+* g[35] - AFL (adaptation field length)
+* g[36] - AFEL (adaptation field extension length)
+
+void H222::TS::transport_packet;
+  LABL 0 0  0  b7 TS - MPEG Transport Packet # ;
+  CST# 0 17 0  07 H222::Num_Index;
+  HBYT 0 0  90 c2 Sync Byte:;
+  BBIT 1 1  90 c2 TS Error Indicator:;
+  CST# 0 1  0  74 H222::TS::Error_Values;
+  BBIT 1 29 90 c2 Payload Unit Start:\PUSI;	// PUSI
+  CST# 0 29 0  74 H222::TS::PUSI_Str;
+  BBIT 1 1  90 c2 TS Priority:;
+  CST# 0 1  0  74 H222::TS::Priority_Values;
+  HBIT d 21 90 c2 PID:\PID:;  //PID
+  H222::TS::PID;
+  BBIT 2 1  90 c2 TS Scrambling:;
+  CST# 0 1  0  74 H222::TS::Scrambling_Control_Values;
+  BBIT 2 22 90 c2 Adaptation Field Ctrl:\AFC:; //AFC
+  CST# 0 22 0  74 H222::TS::Adaptation_Field_Control_Values;
+  DBIT 4 2a 90 c2 Continuity Counter:\CC:;	//CC
+  CST# 0 2a 0  74 H222::TS::Continuity_Counter_Values;
+
+  *Check if there is adaptation_field
+  g[1] = g[34];
+  g[1] &= 0x2;
+  if (g[1] != 0)
+  {
+    g[43] = 0; *clear DI
+    H222::TS::adaptation_field;
+  }
+
+  *Check if there is data
+  g[1] = g[34];
+  g[1] &= 0x1;
+  if (g[1] != 0)
+  {
+    if (g[33] == 0x1fff)
+    {
+      DUMP 0 18 90 c2 NULL Packet Data:;
+      LABL 0 0 0 b8;
+      TRTS;
+    }
+    if (g[33] >= 3)
+    {
+      if (g[33] <= 0xf)
+      {
+         DUMP 0 18 90 c2 Reserved Data:;
+         LABL 0 0 0 b8;
+        TRTS;
+      }
+    }
+
+    *branch via PUSI
+    TSB# 0 29 0 0 H222::TS::data_entires;
+  }
+
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::TS::PUSI_Str;
+  0 | .0.. ....  No payload stars in this TS;
+  1 | .1.. ....  Payload starts in this TS;
+
+str# H222::TS::Error_Values;
+  0 | 0... ....  No error;
+  1 | 1... ....  At least 1 uncorrectable bit error;
+
+str# H222::TS::Priority_Values;
+  0 | ..0. ....  Normal priority;
+  1 | ..1. ....  Great priority;
+
+void H222::TS::PID;
+  g[1] = g[33];
+  CST# 0 1 0 74 H222::TS::PID_Table;
+  SKIP 1;
+    LABL 0 0 0 74 PID for network, program map, elementry, or other purposes;
+  TRTS;
+
+str# H222::TS::PID_Table;
+  * 0x0003-0x000F Reserved
+  * 0x00010-0x1FFE May be assigned as network_PID, Program_map_PID, elementary_PID, or for other purposes
+  * 0x1FFF Null packet
+  0x0000 | Program Association Table;
+  0x0001 | Conditional Access Table;
+  0x0002 | Transport Stream Description Table;
+  0x0003 | Reserved;
+  0x0004 | Reserved;
+  0x0005 | Reserved;
+  0x0006 | Reserved;
+  0x0007 | Reserved;
+  0x0008 | Reserved;
+  0x0009 | Reserved;
+  0x000A | Reserved;
+  0x000B | Reserved;
+  0x000C | Reserved;
+  0x000D | Reserved;
+  0x000E | Reserved;
+  0x000F | Reserved;
+  0x1FFF | Null packet;
+
+str# H222::TS::Scrambling_Control_Values;
+  0 | 00.. ....  Not scrambled;
+  1 | 01.. ....  User-defined;
+  2 | 10.. ....  User-defined;
+  3 | 11.. ....  User-defined;
+
+str# H222::TS::Adaptation_Field_Control_Values;
+  0 | ..00 ....  Reserved for future use by ISO IEC;
+  1 | ..01 ....  No adaptation field, payload only;
+  2 | ..10 ....  Adaptation field only, no payload;
+  3 | ..11 ....  Adaptation field followed by payload;
+
+str# H222::TS::Continuity_Counter_Values;
+  0  | .... 0000  Counter # 0;
+  1  | .... 0001  Counter # 1;
+  2  | .... 0010  Counter # 2;
+  3  | .... 0011  Counter # 3;
+  4  | .... 0100  Counter # 4;
+  5  | .... 0101  Counter # 5;
+  6  | .... 0110  Counter # 6;
+  7  | .... 0111  Counter # 7;
+  8  | .... 1000  Counter # 8;
+  9  | .... 1001  Counter # 9;
+  10 | .... 1010  Counter # 10;
+  11 | .... 1011  Counter # 11;
+  12 | .... 1100  Counter # 12;
+  13 | .... 1101  Counter # 13;
+  14 | .... 1110  Counter # 14;
+  15 | .... 1111  Counter # 15;
+
+str# H222::TS::data_entires;
+  0 | H222::TS::data_continuity;
+  1 | H222::TS::data_start;
+
+// -------------------------------------------------------
+//	adaptation_field()
+// -------------------------------------------------------
+
+* g[43] - DI (discontinuity indicator)
+
+* g[34] - AFC (adaptation field control)
+* g[35] - AFL (adaptation field length)
+* g[36] - AFEL (adaptation field extension length)
+* g[37] - Flags (adaptioin flag)
+
+void H222::TS::adaptation_field;
+  LABL 0 0  0  87 Adaptation Field;
+  DBYT 2 23 90 c2 Field Length:\AFL:;     //AFL (adaptation field length)
+  g[24] -= 1;	    // update TS Packet length
+  g[24] -= g[35];	// update TS Packet length
+  if (g[35] == 0)
+  {
+    LABL 0 0 0 b8;
+    TRTS;
+  }
+  BBYT 0 25 90 c9 Adaptation Flag:\Flags:;  //Flags (adaptioin flag)
+  BST# 0 25 0  d4 H222::TS::Adaptation_Field_Str;
+  LABL 0 0 0 b8;
+  g[35] -= 1;    // update Adaptation Field length
+  SBIT 4 25;
+  SKIP 80000001;
+    H222::TS::AF::PCR;
+  SBIT 3 25;
+  SKIP 80000001;
+    H222::TS::AF::OPCR;
+  SBIT 2 25;
+  SKIP 80000001;
+    H222::TS::AF::splicing_point;
+  SBIT 2 25;
+  SKIP 80000001;
+    H222::TS::AF::transport_private_data;
+  SBIT 2 25;
+  SKIP 80000001;
+    H222::TS::AF::extention;
+  if (g[35] > 0)
+  {
+    DUMP 0 23 90 c2 Pack Stuffing Buffer:;
+  }
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::TS::Adaptation_Field_Str;
+  7 | 1... ....  Discontinuity Indicator is set; //DI (discontinuity indicator)
+      0... ....  Discontinuity Indicator is not set;
+  6 | .1.. ....  Random Access Indicator is set;
+      .0.. ....  Random Access Indicator is not set;
+  5 | ..1. ....  Elementary Stream Priority is set;
+      ..0. ....  Elementary Stream Priority is not set;
+  4 | ...1 ....  PCR Flag is set;
+      ...0 ....  PCR Flag is not set;
+  3 | .... 1...  OPCR Flag is set;
+      .... 0...  OPCR Flag is not set;
+  2 | .... .1..  Splicing Point Flag is set;
+      .... .0..  Splicing Point Flag is not Set;
+  1 | .... ..1.  Transport Private Data Flag is set;
+      .... ..0.  Transport Private Data Flag is not set;
+  0 | .... ...1  Adaptation Field Extention Flag is set;
+      .... ...0  Adaptation Field Extention Flag is not set;
+
+void H222::TS::AF::PCR;
+  LABL 0 0 0  89 Program Clock Reference;
+  BLNG 0 0 90 c2 PRC Base [32..1]:;
+  BBIT 1 1 90 c2 PRC Base [0]:;
+  CST# 0 1  0 74 H222::Bit7;
+  BBIT 6 0 90 c2 Reserved:;
+  LABL 0 0 0  74 .111 111.;
+  BBIT 9 0 90 c2 PCR Exension:;
+  g[35] -= 6;    // update Adaptation Field length
+  LABL 0 0 0  b8;
+  TRTS;
+
+void H222::TS::AF::OPCR;
+  LABL 0 0 0  89 Original Program Clock Reference;
+  BLNG 0 0 90 c2 PRC Base [32:1]:;
+  BBIT 1 0 90 c2 PRC Base [0]:;
+  BBIT 6 0 90 c2 Reserved:;
+  BBIT 9 0 90 c2 PCR Exension;
+  g[35] -= 6;    // update Adaptation Field length
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::TS::AF::splicing_point;
+  HBYT 0 0 90 c2 Splice Countdown:;
+  g[35] -= 1;    // update Adaptation Field length
+  TRTS;
+
+void H222::TS::AF::transport_private_data;
+  LABL 0 0 0  89 Transport Private Data;
+  HBYT 0 1 90 c2 Data Length:;
+  g[35] -= 1;    // update Adaptation Field length
+  DUMP 0 1 90 c2 Data Buffer:;
+  g[35] -= g[1]; // update Adaptation Field length
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::TS::AF::extention;
+  LABL 0 0  0  89 Adaptation Field Extention;
+  DBYT 2 24 90 c2 Extention Length:\AFEL:;     //AFEL (adaptation field extension length)
+  g[35] -= 1;	    // update AFL
+  g[35] -= g[36];	// update AFL
+  if (g[36] == 0)
+  {
+    LABL 0 0 0 b8;
+    TRTS;
+  }
+  BBYT 0 41 90 c9 Extention Flag:;
+  BST# 0 41 0  d4 H222::TS::Extention_Flag_Str;
+  g[36] -= 1;    // update AFEL
+  SBIT 7 41;
+  SKIP 80000000;
+    LABL 0 0 0  89 Legal Time Window Field;
+    BBIT 1 1 90 c2 LTW Valid Flag:;
+    CST# 0 1 90 74 H222::Bit7;
+    HBIT f 0 90 c2 LTW Offset:;
+    g[36] -= 2;    // update AFEL
+    LABL 0 0 0 b8;
+  ENDS;
+  SBIT 6 41;
+  SKIP 80000000;
+    LABL 0  0 0  89 Piecewise Rate Field;
+    BBIT 2  0 90 c2 Reserved:;
+    CST# 0  1 90 74 H222::Reserved_One_Bit7_Bit6;
+    DBIT 16 0 90 c2 Piecewise Rate:;
+    g[36] -= 3;    // update AFEL
+    LABL 0 0 0 b8;
+  ENDS;
+  SBIT 5 41;
+  SKIP 80000000;
+    LABL 0 0 0  89 Seamless Splice Field;
+    BBIT 4 1 90 c2 Splice Type:;
+    CST# 0 1 0  74 H222::TS::AF::Extention::Splice_Type_Values;
+    BBIT 3 1 90 c2 DTS Next AU [32..30]:;
+    CST# 0 1 0  74 H222::Bit3_Bit2_Bit1;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 DTS Next AU [29..15]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 DTS Next AU [14..0]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    g[36] -= 5;    // update AFEL
+    LABL 0 0 0 b8;
+  ENDS;
+  if (g[36] > 0)
+  {
+    DUMP 0 24 90 c2 Reserved:;
+  }
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::TS::Extention_Flag_Str;
+  7 | 1... ....  LTW (legal time window) flag is set;
+      0... ....  LTW (legal time window) flag is not set;
+  6 | .1.. ....  Piecewise rate flag is set;
+      .0.. ....  Piecewise rate flag is not set;
+  5 | ..1. ....  Seamless splice flag is set;
+      ..0. ....  Seamless splice flag is not set;
+
+str# H222::TS::AF::Extention::Splice_Type_Values;
+  0  | 0000 ....  Splice_decoding_delay = 120 ms, max_splice_rate = 15.0 x 10^6 bit/s;
+  1  | 0001 ....  Splice_decoding_delay = 150 ms, max_splice_rate = 12.0 x 10^6 bit/s;
+  2  | 0010 ....  Splice_decoding_delay = 225 ms, max_splice_rate = 8.0 x 10^6 bit/s;
+  3  | 0011 ....  Splice_decoding_delay = 250 ms, max_splice_rate = 7.2 x 10^6 bit/s;
+  4  | 0100 ....  Reserved;
+  5  | 0101 ....  Reserved;
+  6  | 0110 ....  Reserved;
+  7  | 0111 ....  Reserved;
+  8  | 1000 ....  Reserved;
+  9  | 1001 ....  Reserved;
+  10 | 1010 ....  Reserved;
+  11 | 1011 ....  Reserved;
+  12 | 1100 ....  User-defined;
+  13 | 1101 ....  User-defined;
+  14 | 1110 ....  User-defined;
+  15 | 1111 ....  User-defined;
+
+* g[24] - Each TS Packet Length
+* g[33] - PID
+* g[35] - SL (section length)
+
+void H222::TS::data_start;
+  *Try PSI via PID first
+  if (g[33] < 3)
+  {
+    H222::PSI::pointer_field;
+    TSB# 0 21 0 0 H222::PSI::section_entries_via_PID;
+    if (g[24] > 0)
+    {
+      DUMP 0 18 90 c2 Reserved Data:;
+    }
+    TRTS;
+  }
+
+  *Check whether it is PES
+  l[1] = pl[0]; *Get first 24 bits
+  SHFR 8 41;
+  if (l[1] == 0x000001)
+  {
+    H222::PES_packet;
+    TRTS;
+  }
+
+  *Try PSI via Table ID
+  H222::PSI::pointer_field;
+  H222::PSI;
+  if (g[24] > 0)
+  {
+    DUMP 0 18 90 c2 Reserved Data:;
+    //LABL 0  0  0 b8;
+  }
+  TRTS;
+
+str# H222::PSI::section_entries_via_PID;
+  0 | H222::PSI::program_association_section;
+  1 | H222::PSI::CA_section;
+  2 | H222::PSI::TS_description_section;
+  *0x0003-0x000F Reserved
+  *0x0010-0x1FFE May be assigned as network_PID, Program_map_PID, elementary_PID, or for other purposes
+  *0x1FFF Null packet
+
+void H222::TS::data_continuity;
+  DUMP 0 18 90 c2 Continuity Payload:; // (haven't parsed);
+  TRTS;
+
+// -------------------------------------------------------
+//	PES_packet()
+// -------------------------------------------------------
+
+* g[24] - Each TS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+* g[41] - PUSI (payload unit start indicator)
+* g[42] - CC (continuity counter)
+* g[43] - DI (discontinuity indicator)
+
+void H222::PES_packet;
+  LABL 0  0  0  b7 PES Packet;
+  HBIT 18 0  90 c2 Packet Start Prefix:;
+  HBYT 0  1a 90 c2 Stream ID:\SID:;  //SID (stream_id)
+  g[1] = g[26];
+  H222::PES::stream_id;
+  DWRD 0  19 90 c2 PES Packet Length:\PL:; //PPL (PES packet length)
+  g[24] -= 6;    // update Each TS Packet Length
+  H222::PES::set_branch;
+  TRTS;
+
+void H222::PES::stream_id;
+  l[1] = g[1];
+  l[1] >>= 5;
+  if (l[1] == 0x6)
+  {
+    LABL 0 0 0 14 ISO/IEC 13818-3 or ISO/IEC 11172-3 or ISO/IEC 13818-7 or ISO/IEC 14496-3 audio stream;
+    TRTS;
+  }
+  l[1] = g[1];
+  l[1] >>= 4;
+  if (l[1] == 0xe)
+  {
+    LABL 0 0 0 14 ITU-T Rec. H.262 or ISO/IEC 13818-2 or ISO/IEC 11172-2 or ISO/IEC 14496-2 video stream;
+    TRTS;
+  }
+  CST# 0 1a 0 14 H222::PES::Stream_ID_Assignments;
+  TRTS;
+
+str#  H222::PES::Stream_ID_Assignments;
+  * 110x xxxx | ISO/IEC 13818-3 or ISO/IEC 11172-3 or ISO/IEC 13818-7 or ISO/IEC 14496-3 audio stream number x xxxx;
+  * 1110 xxxx | ITU-T Rec. H.262 or ISO/IEC 13818-2 or ISO/IEC 11172-2 or ISO/IEC 14496-2 video stream number xxxx;
+  0xbc | program_stream_map;
+  0xbd | private_stream_1;
+  0xbe | padding_stream;
+  0xbf | private_stream_2;
+  0xf0 | ECM_stream;
+  0xf1 | EMM_stream;
+  0xf2 | ITU-T Rec. H.222.0 or ISO/IEC 13818-1 Annex A or ISO/IEC 13818-6_DSMCC_stream;
+  0xf3 | ISO/IEC_13522_stream;
+  0xf4 | ITU-T Rec. H.222.1 type A;
+  0xf5 | ITU-T Rec. H.222.1 type B;
+  0xf6 | ITU-T Rec. H.222.1 type C;
+  0xf7 | ITU-T Rec. H.222.1 type D;
+  0xf8 | ITU-T Rec. H.222.1 type E;
+  0xf9 | ancillary_stream;
+  0xfa | ISO/IEC14496-1_SL-packetized_stream;
+  0xfb | ISO/IEC14496-1_FlexMux_stream;
+  0xfc | reserved data stream;
+  0xfd | reserved data stream;
+  0xfe | reserved data stream;
+  0xff | program_stream_directory;
+
+void H222::PES::set_branch;
+  l[1] = g[26];
+  l[1] >>= 5;
+  if (l[1] == 0x6)
+  {
+    H222::PES::branch1;
+    TRTS;
+  }
+  l[1] = g[26];
+  l[1] >>= 4;
+  if (l[1] == 0xe)
+  {
+    H222::PES::branch1;
+    TRTS;
+  }
+  TSB# 0 1a 0 0 H222::PES::entries_via_SID;
+  TRTS;
+
+str#  H222::PES::entries_via_SID;
+  * 110x xxxx | H222::PES::branch1;
+  * 1110 xxxx | H222::PES::branch1;
+  0xbc | H222::PES::branch2;
+  0xbd | H222::PES::branch1;
+  0xbe | H222::PES::branch3;
+  0xbf | H222::PES::branch2;
+  0xf0 | H222::PES::branch2;
+  0xf1 | H222::PES::branch2;
+  0xf2 | H222::PES::branch2;
+  0xf3 | H222::PES::branch1;
+  0xf4 | H222::PES::branch1;
+  0xf5 | H222::PES::branch1;
+  0xf6 | H222::PES::branch1;
+  0xf7 | H222::PES::branch1;
+  0xf8 | H222::PES::branch2;
+  0xf9 | H222::PES::branch1;
+  0xfa | H222::PES::branch1;
+  0xfb | H222::PES::branch1;
+  0xfc | H222::PES::branch1;
+  0xfd | H222::PES::branch1;
+  0xfe | H222::PES::branch1;
+  0xff | H222::PES::branch2;
+
+* g[24] - Each TS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+* g[34] - Flags
+* g[35] - PHDL (PES header data_length)
+
+void H222::PES::branch1;
+  BBYT 0 22 90 c9 Basic Info:\Flags:; //Flags
+  g[1] = g[34];
+  g[1] >>= 6;
+  CST# 0 1  0  d4 H222::OneZero_Bit7_Bit6;
+  g[1] = g[34];
+  g[1] >>= 4;
+  g[1] &= 0x3;
+  CST# 0 1  0 d4 H222::PES::Scrambling_Control_Values;
+  BST# 0 22 0 d4 H222::PES::Basic_Info_Low_Byte_Str;
+  LABL 0 0  0 b8;
+  g[24] -= 1;    // update Each TS Packet Length
+  BBYT 1 22 90 c9 PES Flags:\Flags:; //Flags
+  g[1] = g[34];
+  g[1] >>= 6;
+  CST# 0 1  0 d4 H222::PES::PTS_DTS_flags_Values;
+  BST# 0 22 0 d4 H222::PES::Flags_Str;
+  LABL 0 0  0 b8;
+  g[24] -= 1;    // update Each TS Packet Length
+  DBYT 8 23 90 c2 Header Data Length:\PHDL:; //PHDL (PES header data_length)
+  g[24] -= 1;    // update Each TS Packet Length
+  g[24] -= g[35];
+  SBIT 7 22;
+  SKIP 80000001;
+    H222::PES::PTS_DTS_field;
+  SBIT 5 22;
+  SKIP 80000001;
+    H222::PES::ESCR_field;
+  SBIT 4 22;
+  SKIP 80000001;
+    H222::PES::ES_rate_field;
+  SBIT 3 22;
+  SKIP 80000001;
+    H222::PES::DSM_trick_mode_field;
+  SBIT 2 22;
+  SKIP 80000001;
+    H222::PES::additional_copy_info_field;
+  SBIT 1 22;
+  SKIP 80000001;
+    H222::PES::PES_CRC_field;
+  SBIT 0 22;
+  SKIP 80000001;
+    H222::PES::PES_extension_field;
+
+  * Skip suffing_byte
+  if (g[35] > 0)
+  {
+    DUMP 0 23 90 c2 Suffing_byte;
+  }
+
+  if (g[24] > 0)
+  {
+    LABL 0 0  0  b7 PES Packet Data;
+    DUMP 0 18 90 c2 PES Packet Data:; //Ref. to Vol2 & Vol3;
+    LABL 0 0  0  b8;
+  }
+  g[24] = 0;
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PES::Scrambling_Control_Values;
+  0 | ..00 ....  Not scrambled;
+  1 | ..01 ....  User-defined;
+  2 | ..10 ....  User-defined;
+  3 | ..11 ....  User-defined;
+
+str# H222::PES::Basic_Info_Low_Byte_Str;
+  3 | .... 1...  High priority;
+      .... 0...  Normal priority;
+  2 | .... .1..  Alignment defined;
+      .... .0..  Alignment NOT defined;
+  1 | .... ..1.  Protected by copyright;
+      .... ..0.  NOT define wether protected by copyright;
+  0 | .... ...1  Content is an original;
+      .... ...0  Content is an copy;
+
+str# H222::PES::PTS_DTS_flags_Values;
+  0 | 00.. ....  Neither PTS fields nor DTS fields present;
+  1 | 01.. ....  Forbidden;
+  2 | 10.. ....  PTS fields present;
+  3 | 11.. ....  Both the PTS fields and DTS fields present;
+
+str# H222::PES::Flags_Str;
+  5 | ..1. ....  ESCR field present;
+      ..0. ....  ESCR field not present;
+  4 | ...1 ....  ES rate field present;
+      ...0 ....  ES rate field not present;
+  3 | .... 1...  DSM trick mode field present;
+      .... 0...  DSM trick mode field not present;
+  2 | .... .1..  Additional copy info field present;
+      .... .0..  Additional copy info field not present;
+  1 | .... ..1.  PES CRC field present;
+      .... ..0.  PES CRC field not present;
+  0 | .... ...1  PES extension field present;
+      .... ...0  PES extension field not present;
+
+str# H222::PES::branch1_field_entires;
+  H222::PES::PES_extension_field;
+  H222::PES::PES_CRC_field;
+  H222::PES::additional_copy_info_field;
+  H222::PES::DSM_trick_mode_field;
+  H222::PES::ES_rate_field;
+  H222::PES::ESCR_field;
+
+* g[34] - Flags
+* g[35] - PHDL (PES header data_length)
+
+void H222::PES::PTS_DTS_field;
+  LABL 0 0  0  b7 PTS Field;
+  BST# 0 22 0  c2 H222::PES::PTS_Field_Labels;
+  BBIT 4 0  90 05;
+  BST# 0 22 0  74 H222::PES::PTS_Field_Values;
+  BBIT 3 1  90 c2 PTS [32..30]:;
+  CST# 0 1  0  74 H222::Bit3_Bit2_Bit1;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 PTS [29..15]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 PTS [14..0]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  g[35] -= 5;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  SBIT 6 22;
+  SKIP 80000000;
+    LABL 0 0 0  b7 DTS Field;
+    BBIT 4 0 90 c2 '0001' Bits:;
+    LABL 0 0 0  74 0001 ....;
+    BBIT 3 1 90 c2 DTS [32..30]:;
+    CST# 0 1 0  74 H222::Bit3_Bit2_Bit1;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 DTS [29..15]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 DTS [14..0]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    g[35] -= 5;    // update Each TS Packet Length
+    LABL 0 0 0 b8;
+  ENDS
+  TRTS;
+
+str# H222::PES::PTS_Field_Labels;
+  6 | '0010' Bits:;
+      '0011' Bits:;
+
+str# H222::PES::PTS_Field_Values;
+  6 | 0010 ....;
+      0011 ....;
+
+void H222::PES::ESCR_field;
+  LABL 0 0 0  b7 ESCR Field;
+  BBIT 2 1 90 c2 Reserved:;
+  BBIT 3 1 90 c2 ESCR Base [32..30]:;
+  CST# 0 1 0  74 H222::Bit3_Bit2_Bit1;
+  BBIT 1 1 90 c2 Marker Bit:;
+  CST# 0 1 0  74 H222::Marker_Bit2;
+  BBIT f 0 90 c2 ESCR Base [29..15]:;
+  BBIT 1 1 90 c2 Marker Bit:;
+  CST# 0 1 0  74 H222::Marker_Bit2;
+  BBIT f 0 90 c2 ESCR Base [14..0]:;
+  BBIT 1 1 90 c2 Marker Bit:;
+  CST# 0 1 0  74 H222::Marker_Bit2;
+  BBIT 9 0 90 c2 ESCR Extension:;
+  BBIT 1 1 90 c2 Marker Bit:;
+  CST# 0 1 0  74 H222::Marker_Bit0;
+  g[35] -= 6;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PES::ES_rate_field;
+  LABL 0  0 0  b7 ES Rate Field;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit7;
+  DBIT 16 0 90 c2 ES Rate:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit0;
+  g[35] -= 3;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PES::DSM_trick_mode_field;
+  LABL 0 0 0  b7 DSM Trick Mode Field;
+  BBIT 3 1 90 c2 Trick Mode Control:;
+  CST# 0 1 0  74 H222::PES::Trickmode_Control_Values;
+  if (g[1] ==  0)
+  {
+     BBIT 2 1 90 c2 Field Id:;
+     CST# 0 1 0  74 H222::PES::Field_ID_Field_Control_Values;
+     BBIT 1 1 90 c2 Intra Slice Refresh:;
+     CST# 0 1 0  74 H222::PES::Intra_Slice_Refresh_Values;
+     BBIT 2 1 90 c2 Frequency Truncation:;
+     CST# 0 1 0  74 H222::PES::Coefficient_Selection_Values;
+  }
+  if (g[1] == 1)
+  {
+     BBIT 5 0 90 c2 Rep Cntrl:;
+  }
+  if (g[1] == 2)
+  {
+     BBIT 2 1 90 c2 Field Id:;
+     CST# 0 1 0  74 H222::PES::Field_ID_Field_Control_Values;
+     BBIT 3 1 90 c2 Reserved:;
+     CST# 0 1 0  74 H222::Reserved_One_Bit3_Bit2_Bit1;
+  }
+  if (g[1] == 3)
+  {
+     BBIT 2 0 90 c2 Field Id:;
+     CST# 0 1 0  74 H222::PES::Field_ID_Field_Control_Values;
+     BBIT 1 1 90 c2 Intra Slice Refresh:;
+     CST# 0 1 0  74 H222::PES::Intra_Slice_Refresh_Values;
+     BBIT 2 1 90 c2 Frequency Truncation:;
+     CST# 0 1 0  74 H222::PES::Coefficient_Selection_Values;
+  }
+  if (g[1] == 4)
+  {
+     BBIT 5 0 90 c2 Rep Cntrl:;
+  }
+  if (g[1] >= 5)
+  {
+     BBIT 5 0 90 c2 Reserved:;
+  }
+  g[35] -= 1;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PES::Trickmode_Control_Values;
+  0 | 000. ....  Fast forward;
+  1 | 001. ....  Slow motion;
+  2 | 010. ....  Freeze frame;
+  3 | 011. ....  Fast reverse;
+  4 | 100. ....  Slow reverse;
+  5 | 101. ....  Reserved;
+  6 | 110. ....  Reserved;
+  7 | 111. ....  Reserved;
+
+str# H222::PES::Field_ID_Field_Control_Values;
+  0 | ...0 0...  Display from top field only;
+  1 | ...0 1...  Display from bottom field only;
+  2 | ...1 0...  Display complete frame;
+  3 | ...1 1...  Reserved;
+
+str# H222::PES::Intra_Slice_Refresh_Values;
+  0 | .... .0..  No missing macroblocks between coded slices of video data;
+  1 | .... .1..  There may be missing macroblocks between coded slices of video data;
+
+str# H222::PES::Coefficient_Selection_Values;
+  0 | .... ..00  Only DC coefficients are non-zero;
+  1 | .... ..01  Only the first three coefficients are non-zero;
+  2 | .... ..10  Only the first six coefficients are non-zero;
+  3 | .... ..11  All coefficients may be non-zero;
+
+void H222::PES::additional_copy_info_field;
+  LABL 0 0 0  b7 Additional Copy Info Field;
+  BBIT 1 1 90 c2 Marker Bit:;
+  CST# 0 1 0  74 H222::Marker_Bit7;
+  BBIT 7 0 90 c2 Additional Copy Info:;
+  g[35] -= 1;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PES::PES_CRC_field;
+  LABL 0 0 0  b7 PES CRC Field;
+  DWRD 0 0 90 c2 Previous PES packet CRC:;
+  g[35] -= 2;    // update Each TS Packet Length
+  LABL 0 0 0 b8;
+  TRTS;
+
+* g[34] - Flags
+* g[35] - PHDL (PES header data_length)
+* g[36] - EFlags (extention flags)
+
+void H222::PES::PES_extension_field;
+  LABL 0 0 0 b7 PES extension Field;
+  BBYT 1 24 90 c9 Extension Flags:\EFlags:; //EFlags
+  BST# 0 24 0  d4 H222::PES::Extention_Flags_Str1;
+  g[1] = g[36];
+  g[1] >>= 1;
+  g[1] &= 0x7;
+  CST# 0 1  0 d4 H222::Reserved_One_Bit4_Bit3_Bit2;
+  BST# 0 24 0 d4 H222::PES::Extention_Flags_Str2;
+  g[35] -= 1;    // update Each TS Packet Length
+  SBIT 7 24;
+  SKIP 80000000;
+    LABL 0 0 0  b7 PES Private Data Field;
+    g[1] = 6; *128 bits
+    DUMP 0 1 90 c2 Private Data;
+    g[35] -= g[1]; // update Each TS Packet Length
+    LABL 0 0 0 b8;
+  ENDS
+  SBIT 6 24;
+  SKIP 80000000;
+    LABL 0 0 0  b7 Packet Header Field;
+    DBYT 0 1 90 c2 Packet Field Length:;
+    g[35] -= 1;    // update Each TS Packet Length
+    if (g[1] >0)
+    {
+      DUMP 0 1 90 c2 Packet Header:; // Ref. to ISO/IEC 11172-1 pack header or Program Stream pack header.
+      g[35] -= g[1]; // update Each TS Packet Length
+    }
+    LABL 0 0 0 b8;
+  ENDS
+  SBIT 5 24;
+  SKIP 80000000;
+    LABL 0 0 0  b7 Program Packet Sequence Counter Field;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit7;
+    BBIT 7 1 90 c2 Program Packet Sequence Counter:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit7;
+    BBIT 1 1 90 c2 MPEG1 MPEG2 Identifier:;
+    CST# 0 1 0  d4 H222::PES::MPEG1_MPEG2_Identifier_Values;
+    DBIT 6 1 90 c2 Original Stuff Length:;
+    g[35] -= 2;    // update Each TS Packet Length
+    LABL 0 0 0 b8;
+  ENDS
+  SBIT 4 24;
+  SKIP 80000000;
+    LABL 0 0 0  b7 P-STD Buffer Field;
+    BBIT 2 1 90 c2 '01' Bits:;
+    CST# 0 1  0 d4 H222::ZeroOne_Bit7_Bit6;
+    BBIT 1 1 90 c2 P-STD Buffer Scale:;
+    CST# 0 1  0 d4 H222::PES::PSTD_Buffer_Scale_Values;
+    DBIT d 1 90 c2 P-STD Buffer Size:;
+    g[35] -= 2;    // update Each TS Packet Length
+    LABL 0 0 0 b8;
+  ENDS
+  SBIT 0 24;
+  SKIP 80000000;
+    LABL 0 0 0  b7 PES Extension Flag Field;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit7;
+    BBIT 7 1 90 c2 PES Extension Field Length:;
+    g[35] -= 1;    // update Each TS Packet Length
+    if (g[1] > 0)
+    {
+      DUMP 0 1 90 c2 Reserved Data:;
+      g[35] -= g[1]; // update Each TS Packet Length
+    }
+    LABL 0 0 0 b8;
+  ENDS
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PES::Extention_Flags_Str1;
+  7 | 1... ....  Private data present;
+      0... ....  Private data not present;
+  6 | .1.. ....  Packet header field present;
+      .0.. ....  Packet header field not present;
+  5 | ..1. ....  Program Packet Sequence Counter present;
+      ..0. ....  Program Packet Sequence Counter not present;
+  4 | ...1 ....  P-STD buffer present;
+      ...0 ....  P-STD buffer not present;
+
+str# H222::PES::Extention_Flags_Str2;
+  0 | .... ...1  PES_extension_field_length field and associated fields present;
+      .... ...0  PES_extension_field_length field and associated fields present not present;
+
+str# H222::PES::MPEG1_MPEG2_Identifier_Values;
+  0 | .0.. ....  ISO/IEC 11172-1 stream;
+  1 | .1.. ....  Program Stream;
+
+str# H222::PES::PSTD_Buffer_Scale_Values;
+  0 | ..0. ....  The preceding stream_id indicates an audio stream;
+  1 | ..1. ....  The preceding stream_id indicates a video stream;
+
+void H222::PES::branch2;
+  if (g[24] > 0)
+  {
+    LABL 0  0 0  b7 PES Packet Data;
+    DUMP 0 18 90 c2 PES Packet Data:; //Ref. to Vol2 & Vol3;
+    LABL 0 0 0 b8;
+  }
+  g[24] = 0;
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PES::branch3;
+  if (g[24] > 0)
+  {
+    LABL 0  0 0  b7 PES Padding Data;
+    DUMP 0 18 90 c2 Padding Byte;
+    LABL 0 0 0 b8;
+  }
+  TRTS;
+
+// -------------------------------------------------------
+//	2.4.4 Program specific information
+// -------------------------------------------------------
+
+* g[24] - Each TS Packet Length
+* g[33] - PID
+* g[35] - SL (section length)
+
+void H222::PSI;
+  g[1] = pb[0]; *Get Table Id
+  if (g[1] <= 4)
+  {
+    TSB# 0 1 0 0 H222::PSI::section_entries_via_TID;
+    TRTS;
+  }
+  if (g[1] <= 37)
+  {
+    LABL 0 0 0 b4 ITU-T Rec. H.222.0 | ISO_IEC 13818-1 reserved;
+    TRTS;
+  }
+  if (g[1] <= 3f)
+  {
+    LABL 0 0 0 b4 Defined in ISO_IEC 13818-6;
+    TRTS;
+  }
+  if (g[1] <= 0xFE)
+  {
+    H222::PSI::private_section;
+    TRTS;
+  }
+
+  LABL 0 0 0 b4 forbidden;
+  TRTS;
+
+str# H222::PSI::section_entries_via_TID;
+  0 | H222::PSI::program_association_section;
+  1 | H222::PSI::CA_section;
+  2 | H222::PSI::program_map_section;
+  3 | H222::PSI::TS_description_section;
+  * 4 | ISO_IEC_14496_scene_description_section; //[TBD]
+  * 5 | ISO_IEC_14496_object_descriptor_section; //[TBD]
+  * 0x06-0x37 ITU-T Rec. H.222.0 | ISO_IEC 13818-1 reserved;
+  * 0x38-0x3F Defined in ISO_IEC 13818-6;
+  * 0x40-0xFE H222::PSI::private_section;
+  * 0xFF forbidden;
+
+// -------------------------------------------------------
+//	pointer_field
+// -------------------------------------------------------
+
+* g[24] - Each TS Packet Length
+* g[41] - PUSI (payload unit start indicator)
+
+void H222::PSI::pointer_field;
+  if (g[41] != 1) {  TRTS; }
+  HBYT 0 1 90 c2  Pointer Field:;
+  g[24] -= 1;     // update TS Packet length
+  if (g[1] != 0)
+  {
+    DUMP 0 1 90 c2 Skipped Data:;
+  }
+  g[24] -= g[1];  // update TS Packet length
+  TRTS;
+
+// -------------------------------------------------------
+//	program_association_section()
+// -------------------------------------------------------
+
+* g[33] - PID should be 0x0000
+* g[34] - Table Id
+* g[35] - SL (section length)
+* g[36] - TS Id
+
+void H222::PSI::program_association_section;
+  if (g[33] != 0) { TRTS; }
+  LABL 0 0  0  b7 Program Association Section;
+  H222::PSI::common_header;
+  HWRD 0 24 90 c2 Transport Stream ID:\TsId:; //TsId
+  g[35] -= 2;
+  H222::PSI::common_body;
+  l[1] = 1;
+  while (g[35] > 4) * Exclude CRC size
+  {
+    LABL 0 0  0  b7 Program List # ;
+    CST# 0 41 0  07 H222::Num_Index;
+    HWRD 0 1  90 c2 Program Number:;
+    BBIT 3 1  90 c2 Reserved:;
+    CST# 0 1  0  74 H222::Reserved_One_Bit7_Bit6_Bit5;
+    if (g[1] == 0)
+    {
+      HBIT d 0  90 c2 Network PID:;
+    }
+    if (g[1] != 0)
+    {
+      HBIT d 0  90 c2 Program Map PID:;
+    }
+    g[35] -= 4;
+    l[1] += 1;
+    LABL 0 0 0 b8;
+  }
+  HLNG 0 0 90 c2 CRC:;
+  g[35] -= 4;
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PSI::common_header;
+  HBYT 0 22 90 c2 Table ID:;
+  g[1] = g[34];
+  H222::PSI::table_id;
+  BBIT 1 1  90 c2 Section Syntax:;
+  CST# 0 1  0  74 H222::PSI::Section_Syntax_Indicator_Values;
+  BBIT 1 1  90 c2 '0' Bit:;
+  CST# 0 1  0  74 H222::Zero_Bit6;
+  BBIT 2 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_Bit5_Bit4;
+  DBIT c 23 90 c2 Section Length:\SL:; //SL (section length)
+  g[1] = g[35];
+  H222::PSI::check_12bits_length;
+  g[24] -= 3;     // update TS Packet length
+  g[24] -= g[35]; // update TS Packet length
+  TRTS;
+
+str# H222::PSI::Section_Syntax_Indicator_Values;
+  0 | 0... ....  This bit should be '1';
+  1 | 1... ....  Section syntax indicator;
+
+void H222::PSI::common_body;
+  BBIT 2 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_Bit7_Bit6;
+  DBIT 5 1  90 c2 Version Number:;
+  CST# 0 1  0  74 H222::PSI::Version_Number_Values;
+  BBIT 1 1  90 c2 Current or Next:;
+  CST# 0 1  0  74 H222::PSI::Current_Next_Indicator_Values;
+  DBYT 0 1  90 c2 Section Number:;
+  DBYT 0 1  90 c2 Last Section Number:;
+  g[35] -= 3;
+  TRTS;
+
+str# H222::PSI::Version_Number_Values;
+  0  | ..00 000.  Version 0;
+  1  | ..00 001.  Version 1;
+  2  | ..00 010.  Version 2;
+  3  | ..00 011.  Version 3;
+  4  | ..00 100.  Version 4;
+  5  | ..00 101.  Version 5;
+  6  | ..00 110.  Version 6;
+  7  | ..00 111.  Version 7;
+  8  | ..01 000.  Version 8;
+  9  | ..01 001.  Version 9;
+  10 | ..01 010.  Version 10;
+  11 | ..01 011.  Version 11;
+  12 | ..01 100.  Version 12;
+  13 | ..01 101.  Version 13;
+  14 | ..01 110.  Version 14;
+  15 | ..01 111.  Version 15;
+  16 | ..10 000.  Version 16;
+  17 | ..10 001.  Version 17;
+  18 | ..10 010.  Version 18;
+  19 | ..10 011.  Version 19;
+  20 | ..10 100.  Version 20;
+  21 | ..10 101.  Version 21;
+  22 | ..10 110.  Version 22;
+  23 | ..10 111.  Version 23;
+  24 | ..11 000.  Version 24;
+  25 | ..11 001.  Version 25;
+  26 | ..11 010.  Version 26;
+  27 | ..11 011.  Version 27;
+  28 | ..11 100.  Version 28;
+  39 | ..11 101.  Version 39;
+  30 | ..11 110.  Version 30;
+  31 | ..11 111.  Version 31;
+
+str# H222::PSI::Current_Next_Indicator_Values;
+  0 | .... ...0  The table is not yet applicable and shall be the next table to become valid;
+  1 | .... ...1  This table is currently applicable;
+
+void H222::PSI::check_12bits_length;
+  g[1] &= 0x700;
+  SEQU 0 1;
+  SKIP 1;
+    LABL 0 0  0  74 ([11..10] should be '%00');
+  TRTS;
+
+void H222::PSI::table_id;
+  if (g[1] == 0xff)
+  {
+    LABL 0 0 0 74 forbidden;
+    TRTS;
+  }
+  if (g[1] < 6)
+  {
+    CST# 0 1 0 74 H222::PSI::Table_ID_Assignment_Values;
+    TRTS;
+  }
+  if (g[1] <= 0x37)
+  {
+    LABL 0 0 0 74 ITU-T Rec. H.222.0 | ISO_IEC 13818-1 reserved;
+    TRTS;
+  }
+  CGTE 3f 1 0 74 Defined in ISO_IEC 13818-6;
+  CLTE 40 1 0 74 User private;
+  TRTS;
+
+str# H222::PSI::Table_ID_Assignment_Values;
+  0 | Program association section;
+  1 | Conditional access section (CA_section);
+  2 | TS program map section;
+  3 | TS description section;
+  4 | ISO IEC 14496 scene description section;
+  5 | ISO IEC 14496 object descriptor section;
+  * 0x06-0x37 ITU-T Rec. H.222.0 | ISO_IEC 13818-1 reserved;
+  * 0x38-0x3F Defined in ISO_IEC 13818-6;
+  * 0x40-0xFE User private;
+  * 0xFF forbidden;
+
+// -------------------------------------------------------
+//	CA_section()
+// -------------------------------------------------------
+
+* g[34] - Table Id
+* g[35] - SL (section length)
+* g[36] - N/A
+* g[37] - DL (descriptor length)
+
+* g[41] - PUSI (payload unit start indicator)
+
+void H222::PSI::CA_section;
+  LABL 0  0 0  b7 CA Section;
+  H222::PSI::common_header;
+  BBIT 10 0 90 c2 Reserved:;
+  g[35] -= 2;
+  H222::PSI::common_body;
+  g[36] = g[35];
+  g[36] -= 4; *Exclude CRC size to parse descriptors
+  H222::Descriptor;
+  HLNG 0 0 90 c2 CRC:;
+  LABL 0 0 0 b8;
+  TRTS;
+
+// -------------------------------------------------------
+//	TS_program_map_section()
+// -------------------------------------------------------
+
+* g[34] - Table Id
+* g[35] - SL (section length)
+* g[36] - PIL (program info length) / EIL (ES info length)
+* g[37] - DL (descriptor length)
+
+void H222::PSI::program_map_section;
+  LABL 0 0  0  b7 Program Map Section;
+  H222::PSI::common_header;
+  DWRD 0 0  90 c2 Program Number:;
+  g[35] -= 2;
+  H222::PSI::common_body;
+  BBIT 3 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_Bit7_Bit6_Bit5;
+  HBIT d 1  90 c2 PCR PID:;
+  H222::PSI::table_id;
+  BBIT 4 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_High_4Bits;
+  DBIT c 24 90 c2 Program Info Length:\PIL:; //PIL (program info length)
+  g[1] = g[36];
+  H222::PSI::check_12bits_length;
+  g[35] -= 4;
+  g[35] -= g[36];
+  H222::Descriptor; *g[36] is TDL
+  while (g[35] > 4) *Exclude CRC size
+  {
+    LABL 0 0  0  b7 Elementary Stream Info;
+    HBYT 0 1  90 c2 Stream Type:;
+    H222::PSI::stream_type;
+    BBIT 3 1  90 c2 Reserved:;
+    CST# 0 1  0  74 H222::Reserved_One_Bit7_Bit6_Bit5;
+    HBIT d 0  90 c2 Elementary PID:;
+    BBIT 4 1  90 c2 Reserved:;
+    CST# 0 1  0  74 H222::Reserved_One_High_4Bits;
+    DBIT c 24 90 c2 ES Info Length:\EIL:; //EIL (ES info length)
+    g[1] = g[36];
+    H222::PSI::check_12bits_length;
+    g[35] -= 5;
+    g[35] -= g[36];
+    //DUMP 0 24 90 c2 Descritpor- Data:;
+	H222::Descriptor; *g[36] is TDL
+    LABL 0 0 0 b8;
+  }
+  HLNG 0 0 90 c2 CRC:;
+  g[35] -= 4;
+  LABL 0 0 0 b8;
+  TRTS;
+
+void H222::PSI::stream_type;
+  if (g[1] < 0x1C)
+  {
+    CST# 0 1 0 24 H222::PSI::Stream_Type_Assignments;
+    TRTS;
+  }
+  CGTE 7f 1 0 24 ITU-T Rec. H.222.0 or ISO_IEC 13818-1 Reserved;
+  CLTE 80 1 0 24 User private;
+  TRTS;
+
+str# H222::PSI::Stream_Type_Assignments;
+  0x00 | ITU-T or ISO IEC Reserved;
+  0x01 | ISO/IEC 11172 Video;
+  0x02 | ITU-T Rec. H.262 or ISO_IEC 13818-2 Video or ISO/IEC 11172-2 constrained parameter video stream;
+  0x03 | ISO/IEC 11172 Audio;
+  0x04 | ISO/IEC 13818-3 Audio;
+  0x05 | ITU-T Rec. H.222.0 or ISO/IEC 13818-1 private_sections;
+  0x06 | ITU-T Rec. H.222.0 or ISO/IEC 13818-1 PES packets containing private data;
+  0x07 | ISO/IEC 13522 MHEG;
+  0x08 | ITU-T Rec. H.222.0 or ISO/IEC 13818-1 Annex A DSM-CC;
+  0x09 | ITU-T Rec. H.222.1;
+  0x0a | ISO/IEC 13818-6 type A;
+  0x0b | ISO/IEC 13818-6 type B;
+  0x0c | ISO/IEC 13818-6 type C;
+  0x0d | ISO/IEC 13818-6 type D;
+  0x0e | ITU-T Rec. H.222.0 or ISO/IEC 13818-1 auxiliary;
+  0x0f | ISO/IEC 13818-7 Audio with ADTS transport syntax;
+  0x10 | ISO/IEC 14496-2 Visual;
+  0x11 | ISO/IEC 14496-3 Audio with the LATM transport syntax as defined in ISO/IEC 14496-3 / AMD 1;
+  0x12 | ISO/IEC 14496-1 SL-packetized stream or FlexMux stream carried in PES packets;
+  0x13 | ISO/IEC 14496-1 SL-packetized stream or FlexMux stream carried in ISO/IEC14496_sections.;
+  0x14 | ISO/IEC 13818-6 Synchronized Download Protocol;
+  0x15 | Metadata carried in PES packets;
+  0x16 | Metadata carried in metadata_sections;
+  0x17 | Metadata carried in ISO/IEC 13818-6 Data Carousel;
+  0x18 | Metadata carried in ISO/IEC 13818-6 Object Carousel;
+  0x19 | Metadata carried in ISO/IEC 13818-6 Synchronized Download Protocol;
+  0x1A | IPMP stream (defined in ISO/IEC 13818-11, MPEG-2 IPMP);
+  0x1B | AVC video stream as defined in ITU-T Rec. H.264 ISO/IEC 14496-10 Video;
+  0x7F | IPMP stream;
+  * 0x1C-0x7E ITU-T Rec. H.222.0 or ISO/IEC 13818-1 Reserved;
+  * 0x80-0xFF User Private;
+
+// -------------------------------------------------------
+//	private_section()
+// -------------------------------------------------------
+
+* g[34] - Table Id
+* g[35] - SL (section length)
+* g[36] -
+* g[37] - DL (descriptor length)
+
+void H222::PSI::private_section;
+  LABL 0 0  0  b7 Private Section;
+  HBYT 0 22 90 c2 Table ID:;
+  g[1] = g[34];
+  H222::PSI::table_id;
+  BBIT 1 41 90 c2 Section Syntax:;
+  CST# 0 41 0  74 H222::PSI::Priviate_Section_Syntax_Indicator_Values;
+  BBIT 1 1  90 c2 Private Indicator:;
+  CST# 0 1  0  74 H222::PSI::Private_Indicator_Values;
+  BBIT 2 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_Bit5_Bit4;
+  DBIT c 23 90 c2 Section Length:\SL:; //SL (section length)
+  g[1] = g[35];
+  H222::PSI::check_12bits_length;
+  g[24] -= 3;     // update TS Packet length
+  g[24] -= g[35]; // update TS Packet length
+  if (l[1] == 0)
+  {
+    DUMP 0 23 90 c2 Private Data:;
+    
+    TRTS;
+  }
+  HWRD 0 0  90 c2 Table ID Extension:;
+  g[35] -= 2;
+  H222::PSI::common_body;
+  g[35] -= 4;
+  DUMP 0 23 90 c2 Private Data:;
+  HLNG 0 0  90 c2 CRC:;
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PSI::Priviate_Section_Syntax_Indicator_Values;
+  0 | 0... ....  Data bytes immediately follow the private section length field;
+  1 | 1... ....  The private section follows the generic section syntax;
+
+str# H222::PSI::Private_Indicator_Values;
+  0 | .0.. ....  User defined flag;
+  1 | .1.. ....  User defined flag;
+
+// -------------------------------------------------------
+//	TS_description_section()
+// -------------------------------------------------------
+
+* g[34] - Table Id
+* g[35] - SL (section length)
+* g[36] -
+* g[37] - DL (descriptor length)
+
+void H222::PSI::TS_description_section;
+  LABL 0 0  0  b7 TS Description Section;
+  H222::PSI::common_header;
+  BBIT 10 0 90 c2 Reserved:;
+  g[35] -= 2;
+  H222::PSI::common_body;
+  g[36] = g[35];
+  g[36] -= 4; *Exclude CRC size to parse descriptors
+  H222::Descriptor;
+  HLNG 0 0 90 c2 CRC:;
+  LABL 0 0 0 b8;
+  TRTS;
+
+
+// -------------------------------------------------------
+//
+//	2.5 Program Stream bitstream requirements
+//
+// -------------------------------------------------------
+
+// -------------------------------------------------------
+//	2.5.3 Program Stream
+// -------------------------------------------------------
+
+// -------------------------------------------------------
+//	MPEG2_program_stream()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+void H222::MPEG2_program_stream;
+  *DGLB	0	10	90	c2  g[10]; for testing
+  LABL    0   0   0   b1  H.222 - ISO/IEC 13818-1 MPEG2 protocol\MPEG2:;
+
+  g[25] = 0;        // Init PES lenght to 0
+
+  g[23] = 1;
+  H222::PS::packet;
+
+  g[22] = pw[0];
+  while (g[22] == (0x000001BA)
+  {
+    g[23] += 1;
+    g[24] = 184;		// Init TS Packet Length to (188 - 4)
+    H222::TS::transport_packet;
+    g[22] == pw[0];
+  }
+  HLNG 0 1 90 c2 MPEG Program End Code:;
+  LABL 0 0 0  b8;
+  TRTS;
+
+// -------------------------------------------------------
+//	pack()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+void H222::PS::packet;
+  LABL 0  0  0  b7 PS - MPEG Program Packet # ;
+  CST# 0  17 0  07 H222::Num_Index;
+  H222::PS::pack_header;
+
+  *Check whether it is PES
+  l[1] = pl[0]; *Get first 24 bits
+  SHFR 8 41;
+  while (l[1] == 0x000001)
+  {
+    g[25] = g[24]; *Init PES packet length
+    H222::PES_packet;
+    l[1] = pl[0]; *Get first 24 bits
+    SHFR 8 41;
+  }
+
+  LABL 0 0 0 b8;
+  TRTS;
+
+// -------------------------------------------------------
+//	pack_header()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+void H222::PS::pack_header;
+  LABL 0  0  0  b7 Packet Header;
+  HLNG 0  0  90 c2 Packet Start Code:;
+  g[24] -= 4;	    // update PS Packet length
+  BBIT 0  1  90 c2 '01' Bits:;
+  CST# 0  1  0  d4 H222::ZeroOne_Bit7_Bit6;
+  BBIT 3  0 90 c2 SCR Base [32..30]:;
+  CST# 0  1 0  74 H222::Bit3_Bit2_Bit1;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit2;
+  BBIT f  0 90 c2 SCR Base [29..15]:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit2;
+  BBIT f  0 90 c2 SCR Base [14..0]:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit2;
+  BBIT 9  1 90 c2 SCR Extension:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit0;
+  g[24] -= 6;	    // update PS Packet length
+  DBIT 16 1 90 c2 Program Mux Rate:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit1;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit0;
+  g[24] -= 3;	    // update PS Packet length
+  BBIT 5  1 90 c2 Reserved:;
+  DBIT 3  1 90 c2 Pack Stuffing Length:;
+  g[24] -= 3;	    // update PS Packet length
+  if (g[1] > 0)
+  {
+    DUMP 0 1 90 c2 Stuffing Bytes;
+    g[24] -= g[1];	    // update PS Packet length
+  }
+  g[22] == pw[0];
+  if (g[22] == 0x000001BB)
+  {
+    H222::PS::packet2;
+  }
+  LABL 0 0 0 b8;
+  TRTS;
+
+// -------------------------------------------------------
+//	system_header()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id)
+
+* g[33] - HL (header length)
+
+void H222::PS::packet2;
+  LABL 0 0  0  b7 System Header;
+  HLNG 0 0  90 c2 System Header Start Code:;
+  DWRD 0 21 90 c2 Header Lenght:\HL; //HL (header length)
+  g[24] -= 6;	    // update PS Packet length
+  g[24] -= g[35];	// update PS Packet length
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit7;
+  DBIT 16 0 90 c2 Rate Bound:;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit0;
+  g[33] -= 3;    // update HL
+  DBIT 6  0 90 c2 Audio Bound:;
+  BBIT 4  1 90 c9 Flags:;
+  BST# 0  24 0 d4 H222::PS::Header_Flags_Str;
+  BBIT 1  1 90 c2 Marker Bit:;
+  CST# 0  1 0  74 H222::Marker_Bit5;
+  DBIT 5  0 90 c2 Audio Bound:;
+  BBIT 1  1 90 c2 Packet Rate Restriction:;
+  CST# 0  1 0  d4 H222::PS::Packet_Rate_Restriction_Values;
+  BBIT 7  1 90 c2 Reserved:;
+  g[33] -= 3;    // update HL
+  
+  *P-STD_buffer info
+  g[1] = pb[1];
+  g[1] &= 0x80;
+  l[1] = 1;
+   while (g[1] == 0x80)
+  {
+    LABL 0 0  0  b7 P-STD_buffer info # ;
+    CST# 0 41 0  07 H222::Num_Index;
+    HBYT 0 1  90 c2 Stream ID:\SID:;  //SID (stream_id)
+    H222::PES::stream_id;
+    BBIT 1 1  90 c2 '11' Bits;
+    CST# 0  1 0  d4 H222::OneOne_Bit7_Bit6;
+    BBIT 1 1 90 c2 P-STD Buffer Scale:;
+    CST# 0 1  0 d4 H222::PES::PSTD_Buffer_Scale_Values;
+    DBIT d 1 90 c2 P-STD Buffer Size:;
+    g[33] -= 3;    // update HL
+    LABL 0 0 0 b8;
+    g[1] = pb[1];
+    g[1] &= 0x80;
+    l[1] += 1;
+  }
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PS::Header_Flags_Str;
+  3 | .... ..1.  variable bitrate operation;
+      .... ..0.  Fixed bitrate operation;
+  2 | .... ...1  CSPS defined;
+      .... ...0  CSPS not defined;
+  1 | 1... ....  System audio lock;
+      0... ....  System audio not lock;
+  0 | .1.. ....  System video lock;
+      .0.. ....  System video not lock;
+
+str# H222::PS::Packet_Rate_Restriction_Values;
+  0 | 0... ....  Packet rate restriction not defined;
+  1 | 1... ....  Packet rate restriction defined;
+
+// -------------------------------------------------------
+//	program_stream_map()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id) must be 0xBC
+
+* g[35] - PIF (PS info length)
+* g[36] - TDL (total descriptors length)
+* g[37] - DL (descriptor length)
+
+void H222::PS::program_stream_map;
+  LABL 0  0  0  b7 Program Stream Map;
+  HBIT 18 0  90 c2 Packet Start Prefix:;
+  HBYT 0  1a 90 c2 Map Stream ID:\SID:;  //SID (stream_id)
+  g[1] = g[26];
+  H222::PES::stream_id;
+  DWRD 0  19 90 c2 Program Stream Map Length:\PL:; //PPL (PES packet length)
+  g[24] -= 6;     // update PS Packet Length
+  g[24] -= g[25]; // update PS Packet Length
+  BBIT 1 1  90 c2 Current or Next:;
+  CST# 0 1  0  74 H222::PSI::Current_Next_Indicator_Values;
+  BBIT 2 1  90 c2 Reserved:;
+  CST# 0 1  0  74 H222::Reserved_One_Bit6_Bit5;
+  DBIT 5 1  90 c2 PS Map Version:;
+  CST# 0 1  0  74 H222::PS::Map_Version_Number_Values;
+  BBIT 7 1  90 c2 Reserved:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  g[25] -= 2;     // update PPL
+
+  *program stream info
+  DWRD 0 24 90 c2 PS Info Length:\TDL:;  //TDL (total descriptors length)
+  g[25] -= 2;     // update PPL
+  g[25] -= g[36]; // update PPL
+  H222::Descriptor;
+
+  *elementary stream map length
+  DWRD 0 23 90 c2 ES Map Length:\PIF:;  //PIF (PS info length)
+  g[25] -= 2;     // update PPL
+  g[25] -= g[35]; // update PPL
+  while (g[35] > 0)
+  {
+    LABL 0  0  0  b7 Elementary Stream Map;
+    HBYT 0  1  90 c2 ES ID:\SID:;  //SID (stream_id)
+    H222::PES::stream_id;
+    DWRD 0  24 90 c2 ES Info Length:\TDL:;  //TDL (total descriptors length)
+    g[35] -= 4;     // update PIF
+    g[35] -= g[36]; // update PIF
+    H222::Descriptor;
+    LABL 0 0 0 b8;
+  }
+
+  DLNG 0 0 90 c2 CRC:;
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::TS::PS::Current_Next_Indicator_Values;
+  0 | 0... ....  The table is not yet applicable and shall be the next table to become valid;
+  1 | 1... ....  This table is currently applicable;
+
+str# H222::PS::Map_Version_Number_Values;
+  0  | ...0 0000  Version 0;
+  1  | ...0 0001  Version 1;
+  2  | ...0 0010  Version 2;
+  3  | ...0 0011  Version 3;
+  4  | ...0 0100  Version 4;
+  5  | ...0 0101  Version 5;
+  6  | ...0 0110  Version 6;
+  7  | ...0 0111  Version 7;
+  8  | ...0 1000  Version 8;
+  9  | ...0 1001  Version 9;
+  10 | ...0 1010  Version 10;
+  11 | ...0 1011  Version 11;
+  12 | ...0 1100  Version 12;
+  13 | ...0 1101  Version 13;
+  14 | ...0 1110  Version 14;
+  15 | ...0 1111  Version 15;
+  16 | ...1 0000  Version 16;
+  17 | ...1 0001  Version 17;
+  18 | ...1 0010  Version 18;
+  19 | ...1 0011  Version 19;
+  20 | ...1 0100  Version 20;
+  21 | ...1 0101  Version 21;
+  22 | ...1 0110  Version 22;
+  23 | ...1 0111  Version 23;
+  24 | ...1 1000  Version 24;
+  25 | ...1 1001  Version 25;
+  26 | ...1 1010  Version 26;
+  27 | ...1 1011  Version 27;
+  28 | ...1 1100  Version 28;
+  39 | ...1 1101  Version 39;
+  30 | ...1 1110  Version 30;
+  31 | ...1 1111  Version 31;
+
+// -------------------------------------------------------
+//	directory_PES_packet()
+// -------------------------------------------------------
+
+* g[22] - Sync byte for next PS packet
+* g[23] - Number of valid PS packets
+* g[24] - Each PS Packet Length
+* g[25] - PPL (PES packet length)
+* g[26] - SID (stream_id) must be 0xBC
+
+* g[35] - NAU (number of access units)
+* g[36] - TDL (total descriptors length)
+* g[37] - DL (descriptor length)
+
+void H222::PS::directory_PES_packet;
+  LABL 0  0  0  b7 Directory PES Packet;
+  HBIT 18 0  90 c2 Packet Start Prefix:;
+  HBYT 0  1a 90 c2 Directory Stream ID:\SID:;  //SID (stream_id)
+  g[1] = g[26];
+  H222::PES::stream_id;
+  DWRD 0  19 90 c2 Program Stream Map Length:\PL:; //PPL (PES packet length)
+  g[24] -= 6;     // update PS Packet Length
+  g[24] -= g[25]; // update PS Packet Length
+
+  BBIT f 23 90 c2 Number of Access Units:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  g[25] -= 2;     // update PPL
+  BBIT f 0  90 c2 Prev Directory Offset [44..30]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 Prev Directory Offset [29..15]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 Prev Directory Offset [14..0]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  g[25] -= 6;     // update PPL
+  BBIT f 0  90 c2 Next Directory Offset [44..30]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 Next Directory Offset [29..15]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  BBIT f 0  90 c2 Next Directory Offset [14..0]:;
+  BBIT 1 1  90 c2 Marker Bit:;
+  CST# 0 1  0  74 H222::Marker_Bit0;
+  g[25] -= 6;     // update PPL
+
+  while (g[35] > 0)
+  {
+    LABL 0 0 0  b7 Access Unit;
+    HBYT 0 1 90 c2 Packet Stream ID:\SID:;  //SID (stream_id)
+    H222::PES::stream_id;
+    g[25] -= 1;    // update PPL
+    BBIT 1 1 90 c2 PES Header Position Offset Sign:;
+    BBIT e 0 90 c2 PES Header Position Offset [44..30]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 PES Header Position Offset [29..15]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 PES Header Position Offset [14..0]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    g[25] -= 6;    // update PPL
+    HWRD 0 1 90 c2 Reference Offset:;
+    g[25] -= 2;    // update PPL
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit7;
+    BBIT 3 1 90 c2 Reserved:;
+    BBIT 3 0 90 c2 PTS [32..30]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 PTS [29..15]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT f 0 90 c2 PTS [14..0]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    g[25] -= 6;    // update PPL
+    BBIT f 0 90 c2 Bytes to Read [22..8]:;
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit0;
+    BBIT 8 0 90 c2 Bytes to Read [7..0]:;
+    g[25] -= 3;    // update PPL
+    BBIT 1 1 90 c2 Marker Bit:;
+    CST# 0 1 0  74 H222::Marker_Bit7;
+    BBIT 1 1 90 c2 Intra Coded Indicator:;
+    CST# 0 1 0  d4 H222::PS::Intra_Coded_Indicator_Values;
+    BBIT 2 1 90 c2 Coding Parameters Indicator:;
+    CST# 0 1 0  d4 H222::PS::Coding_Parameters_Indicator_Values;
+    BBIT 4 1 90 c2 Reserved:;
+    g[25] -= 1;    // update PPL
+    LABL 0 0 0 b8;
+  }
+
+  LABL 0 0 0 b8;
+  TRTS;
+
+str# H222::PS::Intra_Coded_Indicator_Values;
+  0 | .0.. ....  Not Intra;
+  1 | .1.. ....  Intra;
+
+str# H222::PS::Coding_Parameters_Indicator_Values;
+  0 | ..00 ....  All coding parameters are set to their default values;
+  1 | ..01 ....  All coding parameters are set in this access unit, at least one of them is not set to a default;
+  2 | ..10 ....  Some coding parameters are set in this access unit;
+  3 | ..11 ....  No coding parameters are coded in this access unit;
+
+
+// -------------------------------------------------------
+//
+//	2.6 Program and program element descriptors
+//
+// -------------------------------------------------------
+
+* g[36] - TDL (total descriptors length)
+* g[37] - DL (descriptor length)
+
+void H222::Descriptor;
+  while (g[36] > 0)
+  {
+    g[3] = pb[1]; //Get descriptor_length;
+    g[36] -= 2;   // Update TDL
+    g[36] -= g[3]; // Update TDL	
+    g[1] = pb[0]; 	//Get descriptor_tag
+    //H222::Descriptor::descriptor_label;
+
+	LABL 0 0 0 b7 Descriptor - ;
+	CST# 0 1 0 07 H222::Descriptor::Descriptor_Table;
+	CLSE 0 1 0 07 Unknown;
+	TSB# 0 1 0 0 H222::Descriptor::entries;
+	SKIP 3;
+	l[41] = pb[1];
+	l[41] += 2;
+	DUMP( 0, l[41], 0x90, 0xc2, "Descriptor Payload:");
+	LABL 0 0 0 b8;
+	
+  }
+  TRTS;
+/*
+void H222::Descriptor::descriptor_label;
+  if (g[1] >= 64)
+  {
+    LABL 0 0 0 b7 User Private;
+    TRTS;
+  }
+  if (g[1] >= 36)
+  {
+    LABL 0 0 0 b7 ITU-T Rec. H.222.0 | ISO_IEC 13818-1 reserved;
+    TRTS;
+  }
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  TRTS;
+*/
+str# H222::Descriptor::Descriptor_Table;
+	* 36-63  ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved;
+	* 64-255 User Private;
+	0  | Reserved;
+	1  | Reserved;
+	2  | Video Stream Descriptor;
+	3  | Audio Stream Descriptor;
+	4  | Hierarchy Descriptor;
+	5  | Registration Descriptor;
+	6  | Data Stream Alignment Descriptor;
+	7  | Target Background Grid Descriptor;
+	8  | Video Window Descriptor;
+	9  | CA Descriptor;
+	10 | ISO_639_language Descriptor;
+	11 | System Clock Descriptor;
+	12 | Multiplex Buffer Utilization Descriptor;
+	13 | Copyright Descriptor;
+	14 | Maximum Bitrate Descriptor;
+	15 | Private Data Indicator Descriptor;
+	16 | Smoothing Buffer Descriptor;
+	17 | STD Descriptor;
+	18 | IBP Descriptor;
+	19 | Defined in ISO/IEC 13818-6;
+	20 | Defined in ISO/IEC 13818-6;
+	21 | Defined in ISO/IEC 13818-6;
+	22 | Defined in ISO/IEC 13818-6;
+	23 | Defined in ISO/IEC 13818-6;
+	24 | Defined in ISO/IEC 13818-6;
+	25 | Defined in ISO/IEC 13818-6;
+	26 | Defined in ISO/IEC 13818-6;
+	27 | MPEG-4_video Descriptor;
+	28 | MPEG-4_audio Descriptor;
+	29 | IOD Descriptor;
+	30 | SL Descriptor;
+	31 | FMC Descriptor;
+	32 | External ES ID Descriptor;
+	33 | MuxCode Descriptor;
+	34 | FmxBufferSize Descriptor;
+	35 | MultiplexBuffer Descriptor;
+	36 | content_labeling_descriptor;  
+	37 | metadata_pointer_descriptor;
+	38 | metadata_descriptor;
+	39 | metadata_STD_descriptor;
+	40 | AVC video descriptor;
+	41 | IPMP_descriptor;
+	42 | AVC timing and HRD descriptor;
+	43 | MPEG-2_AAC_audio_descriptor;
+	44 | FlexMuxTiming_descriptor;
+	45 | MPEG-4_text_descriptor;
+	46 | MPEG-4_audio_extension_descriptor;
+	47 | auxiliary_video_stream_descriptor;
+	48 | SVC extension descriptor;
+	49 | MVC extension descriptor;
+	50 | J2K video descriptor;
+	51 | MVC operation point descriptor;
+	52 | MPEG2_stereoscopic_video_format_descriptor;
+	53 | Stereoscopic_program_info_descriptor;
+	54 | Stereoscopic_video_info_descriptor;
+	55 | Rec. ITU-T H.222.0 / ISO/IEC 13818-1 Reserved;
+	56 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	57 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	58 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	59 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	60 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	61 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	62 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	63 | Rec. ITU-T H.222.0  /  ISO/IEC 13818-1 Reserved;
+	/*	From	ETSI	EN	300	468	*/
+	64  |  Network Name Descriptor;
+	65  |  Service List Descriptor;
+	66  |  Stuffing Descriptor;
+	67  |  Satellite Delivery System Descriptor;
+	68  |  Cable Delivery System Descriptor;
+	69  |  VBI Data Descriptor;
+	70  |  VBI Teletext Descriptor;
+	71  |  Bouquet Name Descriptor;
+	72  |  Service Descriptor;
+	73  |  Country Availability Descriptor;
+	74  |  Linkage Descriptor;
+	75  |  NVOD Reference Descriptor;
+	76  |  Time Shifted Service Descriptor;
+	77  |  Short Event Descriptor;
+	78  |  Extended Event Descriptor;
+	79  |  Time Shifted Event Descriptor;
+	80  |  Component Descriptor;
+	81  |  Mosaic Descriptor;
+	82  |  Stream Identifier Descriptor;
+	83  |  CA Identifier Descriptor;
+	84  |  Content Descriptor;
+	85  |  Parent Rating Descriptor;
+	86  |  Teletext Descriptor;
+	87  |  Telephone Descriptor;
+	88  |  Local Time Offset Descriptor;
+	89  |  Subtitling Descriptor;
+	90  |  Terrestrial Delivery System Descriptor;
+	91  |  Multilingual Network Name Descriptor;
+	92  |  Multilingual Bouquet Name Descriptor;
+	93  |  Multilingual Service Name Descriptor;
+	94  |  Multilingual Component Descriptor;
+	95  |  Private Data Specifier Descriptor;
+	96  |  Service Move Descriptor;
+	97  |  Short Smoothing Buffer Descriptor;
+	98  |  Frequency List Descriptor;
+	99  |  Partial Transport Stream Descriptor;
+	100  |  Data Broadcast Descriptor;
+	101  |  Scrambling Descriptor;
+	102  |  Data Broadcast ID Descriptor;
+	103  |  Transport Stream Descriptor;
+	104  |  DSNG Descriptor;
+	105  |  PDC Descriptor;
+	106  |  AC-3 Descriptor;
+	107  |  Ancillary Data Descriptor;
+	108  |  Cell List Descriptor;
+	109  |  Cell Frequency Link Descriptor;
+	110  |  Announcement Support Descriptor;
+	111  |  Application Signalling Descriptor;
+	112  |  Adaptation Field Data Descriptor;
+	113  |  Service Identifier Descriptor;
+	114  |  Service Availability Descriptor;
+	115  |  Default Authority Descriptor;
+	116  |  Related Content Descriptor;
+	117  |  TVA ID Descriptor;
+	118  |  Content Identifier Descriptor;
+	119  |  Time Slice FEC Identifier Descriptor;
+	120  |  ECM Repetition Rate Descriptor;
+	121  |  S2 Satellite Delivery System Descriptor;
+	122  |  Enhanced AC-3 Descriptor;
+	123  |  DTS Descriptor;
+	124  |  AAC Descriptor;
+	125  |  XAIT Content Location Descriptor;
+	126  |  FTA Content Management Descriptor;
+	127  |  Extension Descriptor;
+	/*	From	ETSI	EN	301	790	*/
+	160  |  Network Layer Info Descriptor;
+	161  |  Correction Message Descriptor;
+	162  |  Logon Initialize Descriptor;
+	163  |  ACQ Assign Descriptor;
+	164  |  SYNC Assign Descriptor;
+	165  |  Encrypted Logon ID Descriptor;
+	166  |  Echo Value Descriptor;
+	167  |  RCS Content Descriptor;
+	168  |  Satellite Forward Link Descriptor;
+	169  |  Satellite Return Link Descriptor;
+	170  |  Table Update Descriptor;
+	171  |  Contention Control Descriptor;
+	172  |  Correction Control Descriptor;
+	173  |  Forward Interaction Path Descriptor;
+	174  |  Return Interaction Path Descriptor;
+	175  |  Connection Control Descriptor;
+	176  |  Mobility Control Descriptor;
+	177  |  Correction Message Extension Descriptor;
+	178  |  Return Transmission Modes Descriptor;
+	179  |  Mesh Logon Initialize Descriptor;
+	181  |  Implementation Type Descriptor;
+	182  |  LL FEC Identifier Descriptor;
+
+
+str# H222::Descriptor::entries;
+  2  | H222::Descriptor::video_stream_descriptor;
+  3  | H222::Descriptor::audio_stream_descriptor;
+  4  | H222::Descriptor::hierarchy_descriptor;
+  5  | H222::Descriptor::registration_descriptor;
+  6  | H222::Descriptor::data_stream_alignment_descriptor;
+  7  | H222::Descriptor::target_background_grid_descriptor;
+  8  | H222::Descriptor::video_window_descriptor;
+  9  | H222::Descriptor::CA_descriptor;
+  10 | H222::Descriptor::ISO_639_language_descriptor;
+  11 | H222::Descriptor::system_clock_descriptor;
+  12 | H222::Descriptor::multiplex_buffer_utilization_descriptor;
+  13 | H222::Descriptor::copyright_descriptor;
+  14 | H222::Descriptor::maximum_bitrate_descriptor;
+  15 | H222::Descriptor::private_data_indicator_descriptor;
+  16 | H222::Descriptor::smoothing_buffer_descriptor;
+  17 | H222::Descriptor::STD_descriptor;
+  18 | H222::Descriptor::ibp_descriptor;
+  27 | H222::Descriptor::MPEG4_video_descriptor;
+  28 | H222::Descriptor::MPEG4_audio_descriptor;
+  29 | H222::Descriptor::IOD_descriptor;
+  30 | H222::Descriptor::SL_descriptor;
+  31 | H222::Descriptor::FMC_descriptor;
+  32 | H222::Descriptor::External_ES_ID_descriptor;
+  33 | H222::Descriptor::Muxcode_descriptor;
+  34 | H222::Descriptor::FmxBufferSize_descriptor;
+  35 | H222::Descriptor::MultiplexBuffer_descriptor;
+
+// -------------------------------------------------------
+//	video_stream_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::video_stream_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBYT 0 1  90 b9 Video Stream Flag:;
+  BST# 0 1  0  24 H222::Descriptor::VideoStream::Field_Str1;
+  l[1] = g[1];
+  l[1] &= 0x71;
+  SHFR 3 41;
+  CST# 0 1  0  24 H222::Descriptor::VideoStream::Frame_Rate_Code_Values;
+  BST# 0 1  0  24 H222::Descriptor::VideoStream::Field_Str2;
+  g[37] -= 1;     // Update DL
+  SBIT 1 1;
+  SKIP 80000004;
+    BBIT 8 0 90 b9 Profile and Level Indication:; //[TBD] Ref. to ITU-T Rec. H.262 | ISO/IEC 13818-2
+    BBIT 2 0 90 b9 Chroma Format:;                //[TBD] Ref. to ITU-T Rec. H.262 | ISO/IEC 13818-2
+    BBIT 1 0 90 b9 Frame Rate Extension Flag:;    //[TBD] Ref. to ITU-T Rec. H.262 | ISO/IEC 13818-2
+    BBIT 5 0 90 b9 Reserved:;
+  TRTS;
+
+str# H222::Descriptor::VideoStream::Field_Str1;
+  7 | 1... ....  Multiple frame rates;
+      0... ....  Single frame rate;
+
+str# H222::Descriptor::VideoStream::Frame_Rate_Code_Values;
+  0  | .000 0...  Frame rate code 0;
+  1  | .000 1...  Frame rate code 1;
+  2  | .001 0...  Frame rate code 2;
+  3  | .001 1...  Frame rate code 3;
+  4  | .010 0...  Frame rate code 4;
+  5  | .010 1...  Frame rate code 5;
+  6  | .011 0...  Frame rate code 6;
+  7  | .011 1...  Frame rate code 7;
+  8  | .010 0...  Frame rate code 8;
+  9  | .000 1...  Frame rate code 9;
+  10 | .001 0...  Frame rate code 10;
+  11 | .001 1...  Frame rate code 11;
+  12 | .000 0...  Frame rate code 12;
+  13 | .010 1...  Frame rate code 13;
+  14 | .011 0...  Frame rate code 14;
+  15 | .011 1...  Frame rate code 15;
+  16 | .110 0...  Frame rate code 16;
+  17 | .110 1...  Frame rate code 17;
+  18 | .101 0...  Frame rate code 18;
+  19 | .101 1...  Frame rate code 19;
+  20 | .100 0...  Frame rate code 20;
+  21 | .100 1...  Frame rate code 21;
+  22 | .111 0...  Frame rate code 22;
+  23 | .111 1...  Frame rate code 23;
+  24 | .110 0...  Frame rate code 24;
+  25 | .110 1...  Frame rate code 25;
+  26 | .111 0...  Frame rate code 26;
+  27 | .101 1...  Frame rate code 27;
+  28 | .100 0...  Frame rate code 28;
+  29 | .100 1...  Frame rate code 29;
+  30 | .101 0...  Frame rate code 30;
+  31 | .111 1...  Frame rate code 31;
+
+str# H222::Descriptor::VideoStream::Field_Str2;
+  2 | .... .1..  Contains MPEG1 data only;
+      .... .0..  May contain both MPEG2 and MPEG1 data;
+  1 | .... ..1.  Not contain unconstrained ISO/IEC 11172-2 video data;
+      .... ..0.  May contain both constrained parameters and unconstrained ISO/IEC 11172-2 video streams;
+  0 | .... ...1  Contains only still pictures.;
+      .... ...0  May contain either moving or still picture data;
+
+// -------------------------------------------------------
+//	audio_stream_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::audio_stream_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBYT 0 1  90 b9 Audio Stream Flag:;
+  BST# 0 1  0  24 H222::Descriptor::AudioStream::Field_Str1;
+  l[1] = g[1];
+  l[1] &= 0x30;
+  SHFR 4 41;
+  CST# 0 1  0  24 H222::Descriptor::AudioStream::Layer_Values;
+  BST# 0 1  0  24 H222::Descriptor::AudioStream::Field_Str2;
+  g[37] -= 1;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::AudioStream::Field_Str1;
+  7 | 1... ....  Multiple audio frames with the bitrate_index set to '0000';
+      0... ....  No audio frames with the bitrate_index set to '0000';
+  6 | .1.. ....  ID field is set to '1' in each audio frame;
+      .0.. ....  ID field maybe is NOT set to '1' in each audio frame;
+
+str# H222::Descriptor::AudioStream::Layer_Values;
+  0 | ..00 ....  Layer 0;
+  1 | ..01 ....  Layer 1;
+  2 | ..10 ....  Layer 2;
+  3 | ..11 ....  Layer 3;
+
+str# H222::Descriptor::AudioStream::Field_Str2;
+  3 | .1.. ....  Encoded value of the bit rate field may change;
+      .0.. ....  Encoded value of the bit rate field NOT change;
+
+// -------------------------------------------------------
+//	hierarchy_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::hierarchy_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 4 0  90 b9 Reserved:;
+  BBIT 4 1  90 b9 Hierarchy Type:;
+  CST# 0 1   0 24 H222::Descriptor::Hierarchy_Type_Field_Values;
+  BBIT 2 0  90 b9 Reserved:;
+  BBIT 6 1  90 b9 Hierarchy Layer Index:;
+  BBIT 2 0  90 b9 Reserved:;
+  DBIT 6 1  90 b9 Hierarchy Embedded Layer Index:;
+  BBIT 2 0  90 b9 Reserved:;
+  DBIT 6 1  90 b9 Hierarchy Channel:;
+  g[37] -= 4;
+  TRTS;
+
+str# H222::Descriptor::Hierarchy_Type_Field_Values;
+  0  | Reserved;
+  1  | ITU-T Rec. H.262 or ISO/IEC 13818-2 Spatial Scalability;
+  2  | ITU-T Rec. H.262 or ISO/IEC 13818-2 SNR Scalability;
+  3  | ITU-T Rec. H.262 or ISO/IEC 13818-2 Temporal Scalability;
+  4  | ITU-T Rec. H.262 or ISO/IEC 13818-2 Data partitioning;
+  5  | ISO/IEC 13818-3 Extension bitstream;
+  6  | ITU-T Rec.H222.0 or ISO/IEC 13818-1 Private Stream;
+  7  | ITU-T Rec. H.262 or ISO/IEC 13818-2 Multi-view Profile;
+  8  | Reserved;
+  9  | Reserved;
+  10 | Reserved;
+  11 | Reserved;
+  12 | Reserved;
+  13 | Reserved;
+  14 | Reserved;
+  15 | Base layer;
+
+// -------------------------------------------------------
+//	registration_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::registration_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HLNG 0 0  90 c2 Format Identifier Length:;
+  g[37] -= 4;     // Update DL
+  DUMP 0 25 90 c2 Additional Identification Info;
+  TRTS;
+
+// -------------------------------------------------------
+//	data_stream_alignment_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::data_stream_alignment_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  DBYT 0 1  90 c2 Alignment Type:;
+  g[37] -= 1;     // Update DL
+  if (g[1] >= 5) *[TBD] Differenciate Video and Audio
+  {
+    LABL 0 0 0 24 Reserved;
+    TRTS;
+  }
+  CST# 0 1 0 24 H222::Descriptor::VideoStream::Alignment_Values;
+  TRTS;
+
+str# H222::Descriptor::VideoStream::Alignment_Values;
+  *05-FF Reserved;
+  0 | Reserved;
+  1 | Slice, or video access unit;
+  2 | Video access unit;
+  3 | GOP, or SEQ;
+  4 | SEQ;
+
+str# H222::Descriptor::AudioStream::Alignment_Values;
+  *03-FF Reserved;
+  0 | Reserved;
+  1 | Sync word;
+
+// -------------------------------------------------------
+//	target_background_grid_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::target_background_grid_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  DBIT e 0  90 c2 Horizontal Size:;
+  DBIT e 0  90 c2 Vertical Size:;
+  DBIT 4 0  90 c2 Aspect Ratio Info:;  //[TBD] Ref. to ITU-T Rec. H.262 | ISO/IEC 13818-2
+  g[37] -= 4;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	video_window_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::video_window_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  DBIT e 0  90 c2 Horizontal Offset:;
+  DBIT e 0  90 c2 Vertical Offset:;
+  DBIT 4 0  90 c2 Window Priority:;
+  g[37] -= 4;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	CA_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::CA_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HWRD 0 0  90 c2 CA system ID:;
+  HBIT 3 0  90 c2 Reserved:;
+  HBIT d 0  90 c2 CA_PID:;
+  //DGLB 0 25 90 c2 g37:;
+  g[37] -= 4;     // Update DL
+  //DGLB 0 25 90 c2 g37:;
+
+  if (g[37] >= 5)
+  {
+	DUMP 0 25 90 c2 Private Data:;
+  }
+  TRTS;
+
+// -------------------------------------------------------
+//	ISO_639_language_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::ISO_639_language_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  l[1] = 1;
+  while (g[37] > 0)
+  {
+    LABL 0  0  0  b7 Language Info # ;
+    CST# 0  41 0  07 H222::Num_Index;
+    CHR# 3 0  90 c2 Language Code:;
+    HBYT 0  1  90 c2 Audio Type:;
+    if (g[1] < 4)
+    {
+      CST# 0 1 0 24 H222::Descriptor::Audio_Type_Values;
+    }
+    if (g[1] >= 4)
+    {
+      LABL 0 0 0 24 Reserved;
+    }
+    LABL 0 0 0 b8;
+    l[1] += 1;
+    g[37] -= 4;      // Update DL
+  }
+  TRTS;
+
+str# H222::Descriptor::Audio_Type_Values;
+  * 0x04-0xFF Reserved
+  0 | Undefined;
+  1 | Clean effects;
+  2 | Hearing impaired;
+  3 | Visual impaired commentary;
+
+// -------------------------------------------------------
+//	system_clock_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::system_clock_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 1 1  90 c2 External Clock Reference Indicator:;
+  BST# 0 1  90 24 H222::Descriptor::External_Clock_Reference_Indicator_Values;
+  BBIT 1 0  90 c2 Reserved:;
+  BBIT 6 0  90 c2 Clock Accuracy Integer:;
+  BBIT 3 0  90 c2 Clock Accuracy Exponent:;
+  BBIT 5 0  90 c2 Reserved:;
+  g[37] -= 2;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::External_Clock_Reference_Indicator_Values;
+  0 | 1... ...  External frequency reference may be available at the decoder;
+      0... ...  External frequency reference NOT is available at the decoder;
+
+// -------------------------------------------------------
+//	multiplex_buffer_utilization_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::multiplex_buffer_utilization_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 1 1  90 c2 Bound Valid Flag:;
+  BST# 0 1  90 24 H222::Descriptor::Bound_Valid_Flag_Values;
+  HBIT f 0  90 c2 LTW Offset Lower Bound:;
+  BBIT 1 0  90 c2 Reserved:;
+  HBIT f 0  90 c2 LTW Offset Upper Bound:;
+  g[37] -= 4;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::Bound_Valid_Flag_Values;
+  0 | 1... ...  External frequency reference may be available at the decoder;
+      0... ...  External frequency reference NOT is available at the decoder;
+
+// -------------------------------------------------------
+//	copyright_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::copyright_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HLNG 0 1  90 c2 Copyright Identifier:;
+  g[37] -= 4;     // Update DL
+  DUMP 0 25 90 c2 Additional Copyright Info;
+  TRTS;
+
+// -------------------------------------------------------
+//	maximum_bitrate_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::maximum_bitrate_descriptor;
+  HBYT 0  1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0  25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 2  0  90 c2 Reserved:;
+  DBIT 16 0  90 c2 Maximum Bitrate:;
+  g[37] -= 3;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	private_data_indicator_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::private_data_indicator_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HLNG 0 0  90 c2 Private Data Indicator:;
+  g[37] -= 4;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	smoothing_buffer_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::smoothing_buffer_descriptor;
+  HBYT 0  1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0  25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 2  0  90 c2 Reserved:;
+  DBIT 16 0  90 c2 SB Leak Rate;
+  BBIT 2  0  90 c2 Reserved:;
+  DBIT 16 0  90 c2 SB Size:;
+  g[37] -= 6;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	STD_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::STD_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 7 0  90 c2 Reserved:;
+  BBIT 1 1  90 c2 Leak Valid Flag:;
+  BST# 0 1  90 24 H222::Descriptor::Leak_Valid_Flag_Values;
+  g[37] -= 1;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::Leak_Valid_Flag_Values;
+  0 | .... ..1  Use the leak method;
+      .... ..0  Use the vbv_delay method;
+
+// -------------------------------------------------------
+//	ibp_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::ibp_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  BBIT 1 1  90 c2 Closed GOP Flag:;
+  BST# 0 1  90 24 H222::Descriptor::Closed_GOP_Flag_Values;
+  BBIT 1 1  90 c2 Identical GOP Flag:;
+  BST# 0 1  90 24 H222::Descriptor::Identical_GOP_Flag_Values;
+  DBIT e 1  90 c2 Max GOP Length:;
+  g[37] -= 2;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::Closed_GOP_Flag_Values;
+  0 | 1... ...  A group of pictures header is encoded before every I-frame;
+      0... ...  A group of pictures header is NOT encoded before every I-frame;
+
+str# H222::Descriptor::Identical_GOP_Flag_Values;
+  0 | .1.. ...  The group of pictures between I-pictures is the same;
+      .0.. ...  The group of pictures between I-pictures is NOT the same;
+
+// -------------------------------------------------------
+//	MPEG4_video_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::MPEG4_video_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HBYT 0 1  90 c2 MPEG4 Visual Profile and Level; //[TBD] Ref. to ITU-T Rec. H.262 | ISO/IEC 13818-2
+  g[37] -= 1;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	MPEG4_audio_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::MPEG4_audio_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HBYT 0 1  90 c2 MPEG4 Audio Profile and Level:;
+  CST# 0 1  0  24 H222::Descriptor::MPEG4_Audio_Profile_and_Level_Assignment_Values;
+  g[37] -= 1;     // Update DL
+  TRTS;
+
+str# H222::Descriptor::MPEG4_Audio_Profile_and_Level_Assignment_Values;
+  0x10 | Main profile, level 1;
+  0x11 | Main profile, level 2;
+  0x12 | Main profile, level 3;
+  0x13 | Main profile, level 4;
+  0x18 | Scalable Profile, level 1;
+  0x19 | Scalable Profile, level 2;
+  0x1A | Scalable Profile, level 3;
+  0x1B | Scalable Profile, level 4;
+  0x20 | Speech profile, level 1;
+  0x21 | Speech profile, level 2;
+  0x28 | Synthesis profile, level 1;
+  0x29 | Synthesis profile, level 2;
+  0x2A | Synthesis profile, level 3;
+  0x30 | High quality audio profile, level 1;
+  0x31 | High quality audio profile, level 2;
+  0x32 | High quality audio profile, level 3;
+  0x33 | High quality audio profile, level 4;
+  0x34 | High quality audio profile, level 5;
+  0x35 | High quality audio profile, level 6;
+  0x36 | High quality audio profile, level 7;
+  0x37 | High quality audio profile, level 8;
+  0x38 | Low delay audio profile, level 1;
+  0x39 | Low delay audio profile, level 2;
+  0x3A | Low delay audio profile, level 3;
+  0x3B | Low delay audio profile, level 4;
+  0x3C | Low delay audio profile, level 5;
+  0x3D | Low delay audio profile, level 6;
+  0x3E | Low delay audio profile, level 7;
+  0x3F | Low delay audio profile, level 8;
+  0x40 | Natural audio profile, level 1;
+  0x41 | Natural audio profile, level 2;
+  0x42 | Natural audio profile, level 3;
+  0x43 | Natural audio profile, level 4;
+  0x48 | Mobile audio internetworking profile, level 1;
+  0x49 | Mobile audio internetworking profile, level 2;
+  0x4A | Mobile audio internetworking profile, level 3;
+  0x4B | Mobile audio internetworking profile, level 4;
+  0x4C | Mobile audio internetworking profile, level 5;
+  0x4D | Mobile audio internetworking profile, level 6;
+
+// -------------------------------------------------------
+//	IOD_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::IOD_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HBYT 0 1  90 c2 Scope of IOD Label:;
+  CST# 0 1  0  24 H222::Descriptor::Scope_of_IOD_Label_Values;
+  HBYT 0 1  90 c2 IOD Label:;
+  g[37] -= 8;     // Update DL
+  DUMP 0 25 90 c2 Initial Object Descriptor; //[TBD] Ref. to 8.6.3.1 of ISO/IEC 14496-1.
+  TRTS;
+
+str# H222::Descriptor::Scope_of_IOD_Label_Values;
+  0x10 | IOD_Label is unique within the Program Stream or within the specific program in a Transport Stream;
+  0x11 | IOD_Label is unique within the Transport Stream;
+
+// -------------------------------------------------------
+//	SL_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::SL_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HWRD 0 1  90 c2 ES ID:;
+  g[37] -= 2;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	FMC_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::FMC_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  l[1] = 1;
+  while (g[37] > 0)
+  {
+    LABL 0  0  0  b7 Language Info # ;
+    CST# 0  41 0  07 H222::Num_Index;
+    HWRD 18 0  90 c2 ES ID:;
+    HBYT 0  1  90 c2 Flex Mux Channel:;
+    LABL 0 0 0 b8;
+    l[1] += 1;
+    g[37] -= 3;      // Update DL
+  }
+  TRTS;
+
+// -------------------------------------------------------
+//	External_ES_ID_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::External_ES_ID_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HWRD 0 1  90 c2 External ES ID:;
+  g[37] -= 2;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//	Muxcode_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::Muxcode_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  DUMP 0 25 90 c2 Mux Code Table Entry; //[TBD] Ref. to 11.2.4.3 of ISO/IEC 14496-1.
+  TRTS;
+
+// -------------------------------------------------------
+//	FmxBufferSize_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::FmxBufferSize_descriptor;
+  HBYT 0 1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0 25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  DUMP 0 25 90 c2 Flex Mux Buffer Descriptor; //[TBD] Ref. to 11.2 of ISO/IEC 14496-1..
+  TRTS;
+
+// -------------------------------------------------------
+//	MultiplexBuffer_descriptor()
+// -------------------------------------------------------
+void H222::Descriptor::MultiplexBuffer_descriptor;
+  HBYT 0  1  90 c2 Descriptor Tag:;
+  CST# 0 1 0 24 H222::Descriptor::Descriptor_Table;
+  DBYT 0  25 90 c2 Descriptor Length:\DL:;	//DL (descriptor length)
+  HBIT 18 1  90 c2 MB Buffer Size:;
+  HBIT 18 1  90 c2 TB Leak Rate:;
+  g[37] -= 6;     // Update DL
+  TRTS;
+
+// -------------------------------------------------------
+//
+//	Common strings
+//
+// -------------------------------------------------------
+
+str# H222::Num_Index;
+  1;
+  2;
+  3;
+  4;
+  5;
+  6;
+  7;
+  8;
+  9;
+  10;
+  11;
+  12;
+  13;
+  14;
+  15;
+
+str# H222::Reserved_One_High_4Bits;
+  0  | 0000 ....  These four bits should be '1111';
+  1  | 0001 ....  These four bits should be '1111';
+  2  | 0010 ....  These four bits should be '1111';
+  3  | 0011 ....  These four bits should be '1111';
+  4  | 0100 ....  These four bits should be '1111';
+  5  | 0101 ....  These four bits should be '1111';
+  6  | 0110 ....  These four bits should be '1111';
+  7  | 0111 ....  These four bits should be '1111';
+  8  | 1000 ....  These four bits should be '1111';
+  9  | 1001 ....  These four bits should be '1111';
+  10 | 1010 ....  These four bits should be '1111';
+  11 | 1011 ....  These four bits should be '1111';
+  12 | 1100 ....  These four bits should be '1111';
+  13 | 1101 ....  These four bits should be '1111';
+  14 | 1110 ....  These four bits should be '1111';
+  15 | 1111 ....  Reserved bits;
+
+str# H222::Reserved_One_Bit7_Bit6_Bit5;
+  0 | 000. ....  These thress bits should be '111';
+  1 | 001. ....  These thress bits should be '111';
+  2 | 010. ....  These thress bits should be '111';
+  3 | 011. ....  These thress bits should be '111';
+  4 | 100. ....  These thress bits should be '111';
+  5 | 101. ....  These thress bits should be '111';
+  6 | 110. ....  These thress bits should be '111';
+  7 | 111. ....  Reserved bits;
+
+str# H222::Reserved_One_Bit7_Bit6;
+  0 | 00.. ....  These two bits should be '11';
+  1 | 01.. ....  These two bits should be '11';
+  2 | 10.. ....  These two bits should be '11';
+  3 | 11.. ....  Reserved bits;
+
+str# H222::Reserved_One_Bit6_Bit5;
+  0 | .00. ....  These two bits should be '11';
+  1 | .01. ....  These two bits should be '11';
+  2 | .10. ....  These two bits should be '11';
+  3 | .11. ....  Reserved bits;
+
+str# H222::Reserved_One_Bit5_Bit4;
+  0 | ..00 ....  These two bits should be '11';
+  1 | ..01 ....  These two bits should be '11';
+  2 | ..10 ....  These two bits should be '11';
+  3 | ..11 ....  Reserved bits;
+
+str# H222::Reserved_One_Bit4_Bit3_Bit2;
+  0 | .... 000.  These thress bits should be '111';
+  1 | .... 001.  These thress bits should be '111';
+  2 | .... 010.  These thress bits should be '111';
+  3 | .... 011.  These thress bits should be '111';
+  4 | .... 100.  These thress bits should be '111';
+  5 | .... 101.  These thress bits should be '111';
+  6 | .... 110.  These thress bits should be '111';
+  7 | .... 111.  Reserved bits;
+
+str# H222::Reserved_One_Bit3_Bit2_Bit1;
+  0 | .... .000  These thress bits should be '111';
+  1 | .... .001  These thress bits should be '111';
+  2 | .... .010  These thress bits should be '111';
+  3 | .... .011  These thress bits should be '111';
+  4 | .... .100  These thress bits should be '111';
+  5 | .... .101  These thress bits should be '111';
+  6 | .... .110  These thress bits should be '111';
+  7 | .... .111  Reserved bits;
+
+str# H222::Zero_Bit6;
+  0 | .0.. ....  '0' Bit;
+  1 | .1.. ....  This bit should be '0';
+
+str# H222::OneZero_Bit7_Bit6;
+  0 | 00.. ....  These two bits should be '10';
+  1 | 01.. ....  These two bits should be '10';
+  2 | 10.. ....  '10' Bits;
+  3 | 11.. ....  These two bits should be '10';
+
+str# H222::ZeroOne_Bit7_Bit6;
+  0 | 00.. ....  These two bits should be '01';
+  1 | 01.. ....  '01' Bits;
+  2 | 10.. ....  These two bits should be '01';
+  3 | 11.. ....  These two bits should be '01';
+
+str# H222::OneOne_Bit7_Bit6;
+  0 | 00.. ....  These two bits should be '11';
+  1 | 01.. ....  These two bits should be '11';
+  2 | 10.. ....  These two bits should be '11';
+  3 | 11.. ....  '11' Bits;
+
+str# H222::Marker_Bit7;
+  0 | 0... ....  ;
+  1 | 1... ....  ;
+
+str# H222::Marker_Bit5;
+  0 | ..0. ....  ;
+  1 | ..1. ....  ;
+
+str# H222::Marker_Bit2;
+  0 | .... .0..  ;
+  1 | .... .1..  ;
+
+str# H222::Marker_Bit1;
+  0 | .... ..0.  ;
+  1 | .... ..1.  ;
+
+str# H222::Marker_Bit0;
+  0 | .... ...0  ;
+  1 | .... ...1  ;
+
+str# H222::Bit7;
+  0 | 0... ....  ;
+  1 | 1... ....  ;
+
+str# H222::Bit3_Bit2_Bit1;
+  0 | .... 000.  ;
+  1 | .... 001.  ;
+  2 | .... 010.  ;
+  3 | .... 011.  ;
+  4 | .... 100.  ;
+  5 | .... 101.  ;
+  6 | .... 110.  ;
+  7 | .... 111.  ;
+

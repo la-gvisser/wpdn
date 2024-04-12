@@ -1,0 +1,611 @@
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+//-------------------------------------------------
+
+str# SMB2::GSSAPINFOTYPE;
+0x60 | 	GssAPIInitialContextToken;
+0xA0 |	;
+0xA1 |	SpnegoNegotiationToken;
+ 
+void SMB2::GSSDUMPREST()
+{
+	GBYT( 0, l[1]);
+	LABL( 0, 0, 0, 0xb7, "GSSAPI Object: " );
+	CST#( 0, l[1], 0x90, 0x07, SMB2::GSSAPINFOTYPE );
+	//SMB2::GSSNEW;
+	
+	
+	if ( l[1] == 0x60 )
+	{
+		LABL( 0, 0, 0, 0xb7 , "ApplicationHeader:" );
+			HBYT( 0, l[2], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[3], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "ThisMech:" );
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+			HEX#( 0x8000000, l[5], 0x90, 0xc2, "Raw Data:" );
+			g[21] -= l[5];
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "InnerContextToken:" );
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "ChoiceTag:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+			LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+		ASN1_Init;
+		ASN1_DisableEnum;
+		l[1] = pb[0];
+		l[11] = pb[1];
+		DGLB( 0, l[11], 0x90, 0xc2, "l11:" );
+		if (l[1] == 0xa0) 
+		{
+			LABL	0	0	0	b7 MechTypesList;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			l[1] = g[2];
+			while (l[1] > 1)
+			{
+				l[12] = pb[0];
+				l[13] = pb[1];
+				BREM	0	42;
+				LABL	0	0	0	b7 MechType;
+				ASN1_Value;
+				
+				LABL	0	0	0	b8 ;
+				BREM	0	43;
+				l[2] -= l[3];
+				l[1] -= l[2];
+				//DECR( l[13] );
+				
+				LABL 0 0 90 c2 Description:\;
+			}
+			LABL	0	0	0	b8 ;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0xa1) 
+		{
+			LABL	0	0	0	b7 reqFlags;
+			*tbd
+			LABL	0	0	0	b8 ;
+		}
+		
+		l[1] = pb[0];
+		if (l[1] == 0xa2) 
+		{
+			LABL	0	0	0	b7 mechToken;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			SMB::NTLMSSP_Check;
+			LABL 0 0 0 b8;
+		}
+		//insert menü hier
+		l[1] = pb[0];
+		if (l[1] == 0xa3) 
+		{
+			LABL	0	0	0	b7 mechListMIC;
+			ASN1_SkipTag;*a3 ll
+			CHR#	0	2	90	c2 mechListMIC Data:;
+			LABL	0	0	0	b8 ;
+		}
+
+		
+		}
+		
+		
+		LABL( 0, 0, 0, 0xb8 );
+}
+void SMB2::GSSDUMPREST:Ses_Set1()
+{
+	LABL( 0, 0, 0, 0xb7 , "ApplicationHeader:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	DGLB( 0, g[2], 0x90, 0xc2 , "Length:" );
+	LABL( 0, 0, 0, 0xb7 , "This Mech:" );
+	ASN1_Init;
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	DGLB( 0, g[2], 0x90, 0xc2 , "Length:" );
+	LABL( 0, 0, 0, 0xc2 , "OID:" );
+	ASN1_OID;
+	LABL( 0, 0, 0, 0xb7 , "InnerContextToken:" );
+	LABL( 0, 0, 0, 0xb7 , "SpnegoToken:" );
+	LABL( 0, 0, 0, 0xb7 , "ChoiceTag:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL	0	0	0	b8 ;
+	LABL( 0, 0, 0, 0xb7 , "NegTokenInit:" );
+	LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL( 0, 0, 0, 0xb7 , "Tag0:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+
+	LABL	0	0	0	b7 MechTypesList;
+	LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+	ASN1_Init;
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	g[40] = g[2];
+		//	
+			//
+			while (g[40] > 1)
+			{
+			
+			l[12] = pb[0];
+				l[13] = pb[1];
+				BREM	0	42;
+				LABL	0	0	0	b7 MechType;
+				LABL( 0, 0, 0, 0xc2, "OID:" );
+				ASN1_Value;
+				LABL	0	0	0	b8 ;
+				BREM	0	43;
+			 	l[2] -= l[3];
+				g[40] -= l[2];
+				DECR 2;			*I don't know why this offset got to e corrected!
+			}
+		LABL	0	0	0	b8 ;
+		LABL( 0, 0, 0, 0xb7 , "Tag2:" );	
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL	0	0	0	b8 ;
+	LABL( 0, 0, 0, 0xb7 , "OctectStringHeader:" );	
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL( 0, 0, 0, 0xb7 , "Mechtoken:" );
+	LABL( 0, 0, 0, 0xb7 , "Kerberostoken:" );
+	LABL( 0, 0, 0, 0xb7 , "ApplicationHeader:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	DGLB( 0, g[2], 0x90, 0xc2 , "Length:" );
+	LABL( 0, 0, 0, 0xb7 , "This Mech:" );
+	ASN1_Init;
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	DGLB( 0, g[2], 0x90, 0xc2 , "Length:" );
+	LABL( 0, 0, 0, 0xc2 , "OID:" );
+	ASN1_OID;
+	LABL( 0, 0, 0, 0xb7 , "InnerContextToken:" );
+		HWRD( 0, 0, 0x90, 0xc2 , "TokID:" );
+	LABL( 0, 0, 0, 0xb7 , "ApReq:" );
+	LABL( 0, 0, 0, 0xb7 , "ApplicationTag:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL( 0, 0, 0, 0xb7 , "Tag0:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	LABL( 0, 0, 0, 0xb7 , "PvNo:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	//DECR 2;
+	//g[1]
+	HWRD( 0, 0, 0x90, 0xc2 , "AsnInt:" );
+	LABL( 0, 0, 0, 0xb7 , "Tag1:" );
+	ASN20::TYPE;
+	ASN20::LNGTH;
+	DUMP( 0, g[16], 0x90, 0xc2, "InnerContextToken:" );
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+	LABL	0	0	0	b8;
+
+	LABL	0	0	0	b8;
+}
+
+void SMB2::GSSDUMPREST:Ses_RESP()
+{
+	LABL( 0, 0, 0, 0xb7 , "NegotiationToken:" );
+		LABL( 0, 0, 0, 0xb7 , "ChoiceTag:" );
+			ASN20::TYPE;
+			ASN20::LNGTH;
+		LABL	0	0	0	b8 ;
+	LABL( 0, 0, 0, 0xb7 , "NegTokenResp:" );
+		LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+			ASN20::TYPE;
+			ASN20::LNGTH;
+		LABL( 0, 0, 0, 0xb7 , "Tag0:" );
+			ASN20::TYPE;
+			ASN20::LNGTH;
+		LABL	0	0	0	b7 Negstate;
+			DUMP( 0, g[2], 0x90, 0xc2, "l12:" );
+			LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );
+				ASN20::TYPE;
+				ASN20::LNGTH;
+				l[1] = g[2];
+				while (l[1] > 1)
+				{
+					l[12] = pb[0];
+					l[13] = pb[1];
+					DGLB( 0, l[12], 0x90, 0xc2, "l12:" );
+					DGLB( 0, l[13], 0x90, 0xc2, "l13:" );
+					BREM	0	42;
+					LABL	0	0	0	b7 MechType;
+					ASN1_Value;
+					LABL	0	0	0	b8 ;
+					BREM	0	43;
+					l[2] -= l[3];
+					l[1] -= l[2];
+				}
+			LABL	0	0	0	b8 ;
+		LABL( 0, 0, 0, 0xb7 , "Tag2:" );	
+			ASN20::TYPE;
+			ASN20::LNGTH;
+		LABL( 0, 0, 0, 0xb7 , "OctectStringHeader:" );
+			ASN20::TYPE;
+			ASN20::LNGTH;
+	
+	
+	LABL	0	0	0	b8 ;
+	
+
+}
+
+
+void ASN20::TYPE()
+{
+	BBYT( 0, 0, 0x90, 0xc9, "ASN-ID:" );
+	DECR 1;
+		BBIT( 2, l[1], 0x90, 0xc2, "Class:" );
+		CST#( 0, l[1], 0, 0x14, ASN20::IdClass );
+		BBIT( 1, l[2], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[2], 0, 0x14, ASN20::IdType );
+		BBIT( 5, l[3], 0x90, 0xc2, "TagValue:" );
+			CST#( 0, l[3], 0, 0x14, ASN20::IdTag );
+			// if ( l[1] == 0)
+			// {
+				// g[5] = l[3];
+			// }
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void ASN20::LNGTH()
+{
+	BBIT( 1, l[5], 0x5, 0x5, "Length tester:" );
+	DBIT( 7, l[6], 0x5, 0x5, "Length:" );
+	DECR 1;
+	if (l[5] == 0x00)
+	{
+		DBYT( 0, g[2], 0x90, 0xc2, "Length(s):" );
+	}
+	if (l[5] == 0x01)
+	{
+		DBIT( 1, l[8], 0x5, 0x5, "Length tester:" );
+		DBIT( 7, l[9], 0x5, 0x5, "l2-lngth:" );
+		if (l[9] == 1)
+			{
+				DECR 1;
+				DBYT( 0, g[2], 0x90, 0xc2, "Length(s):" );
+			}
+		if (l[9] == 2)
+			{				
+				DWRD( 0, g[2], 0x90, 0xc2, "Length(lng):" ); 
+			}
+	}
+}
+//--------------
+
+void SMB2::GSSNEW()
+{	
+	LABL( 0, 0, 0, 0xb7, "ASN Coded Object:" );
+	//Analyse!
+	BBIT( 2, l[1], 0x90, 0xc2, "Class:" );
+	CST#( 0, l[1], 0, 0x14, ASN20::IdClass );
+	BBIT( 1, l[2], 0x90, 0xc2, "Type:" );
+	CST#( 0, l[2], 0, 0x14, ASN20::IdType );
+	BBIT( 5, l[3], 0x90, 0xc2, "TagValue:" );
+		CST#( 0, l[3], 0, 0x14, ASN20::IdTag );
+	
+
+	// BGLB( 0, l[1], 0, 0xc2, "l1:" );
+	// BGLB( 0, l[2], 0, 0xc2, "l2:" );
+	// BGLB( 0, l[3], 0, 0xc2, "l3:" );
+	// BGLB( 0, l[4], 0, 0xc2, "l4:" );
+
+	BBIT( 1, l[5], 0x90, 0xc2, "l1:" );
+	DBIT( 7, l[6], 0x90, 0xc2, "length:" );
+		DECR 2;
+//	ASN1_ValueDisplayContextSpecific;
+	//consume
+	HBYT( 0, l[7], 0x90, 0xc2, "AsnID:" );
+	if (l[5] == 0x00)
+	{
+		HBYT( 0, l[8], 0x90, 0xc2, "le1ngth:" );
+	}
+	if (l[5] == 0x01)
+	{
+		DBIT( 1, l[8], 0x90, 0xc2, "le1ngth:" );
+		DBIT( 7, l[9], 0x90, 0xc2, "le1ngth:" );
+		DBIT( 1, l[10], 0x90, 0xc2, "le1ngth:" );
+		DBIT( 7, l[11], 0x90, 0xc2, "le1ngth:" );
+		DECR 2;
+		HWRD( 0x40000000, l[11], 0x90, 0xc2, "le1ngth:" );
+		SHFL( 7, l[11]);
+		l[11] += l[9];
+		HWRD( 0x40000000, l[9], 0x90, 0xc2, "le9ngth:" );
+	}
+	if ( l[1] == 0x00 )
+	{
+		if ( l[2] == 0x00 )
+		{
+			 DGLB( 0, l[3], 0, 0xc2, "l3:" );
+			 HEX#( 0, l[3], 0, 0xc2, "Content:" );
+			// SMB2::GSSNEW;
+		}
+	}
+		
+	if ( l[1] == 0x01 )
+	{
+		SMB2::GSSNEW;
+	}
+	
+	LABL( 0, 0, 0, 0xb7, "GSSAPI Object2:" );	
+	//ASN1_Value2;
+	CST#( 0, l[1], 0x90, 0x07, SMB2::GSSAPINFOTYPE );
+	l[1] = pb[0];
+	if ( l[1] == 0x60 )
+	{
+		LABL( 0, 0, 0, 0xb7 , "ApplicationHeader:" );	
+			HBYT( 0, l[2], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[3], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "ThisMech:" );	
+			ASN1_Init;
+			ASN1_DisableEnum;
+			BREM	0	42;
+			LABL	0	0	0	b7 MechType;
+			ASN1_Value;
+			LABL	0	0	0	b8 ;
+		
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "InnerContextToken:" );	
+					HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+
+			//HEX#( 0x8000000, l[5], 0x90, 0xc2, "Raw Data:" );
+			//g[21] -= l[5];
+	//	LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "ChoiceTag:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			g[21] -= 2;
+			LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );	
+			// HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			// DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+		
+		//LABL( 0, 0, 0, 0xb8 );
+		ASN1_Init;
+		ASN1_DisableEnum;
+		l[1] = pb[0];
+		l[11] = pb[1];
+		DGLB( 0, l[11], 0x90, 0xc2, "l11:" );
+
+		if (l[1] == 0xa0) 
+		{
+			LABL	0	0	0	b7 MechTypesList;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			l[1] = g[2];
+			while (l[1] > 1)
+			{
+				l[12] = pb[0];
+				l[13] = pb[1];
+				DGLB( 0, l[12], 0x90, 0xc2, "l12:" );
+				DGLB( 0, l[13], 0x90, 0xc2, "l13:" );
+				BREM	0	42;
+				LABL	0	0	0	b7 MechType;
+				ASN1_Value;
+				
+				LABL	0	0	0	b8 ;
+				BREM	0	43;
+				l[2] -= l[3];
+				l[1] -= l[2];
+				//DECR( l[13] );
+				
+				//LABL 0 0 90 c2 Description:\;
+			}
+		LABL	0	0	0	b8 ;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0xa1) 
+		{
+			LABL	0	0	0	b7 reqFlags;
+			*tbd
+			LABL	0	0	0	b8 ;
+		}
+		
+		l[1] = pb[0];
+		if (l[1] == 0xa2) 
+		{
+			LABL	0	0	0	b7 mechToken;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			SMB::NTLMSSP_Check;
+			LABL 0 0 0 b8;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0xa3) 
+		{
+			LABL	0	0	0	b7 NegHints:;
+			LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			LABL( 0, 0, 0, 0xb7 , "Tag0:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			LABL( 0, 0, 0, 0xb7 , "Hintname:" );
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			ASN1_SkipTag;*a3 ll			
+			CHR#	0	2	90	c2 mechListMIC Data:;
+			LABL	0	0	0	b8 ;
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+	if ( l[1] != 0x60 )
+	{
+		LABL( 0, 0, 0, 0xb7 , "ApplicationHeader:" );	
+			HBYT( 0, l[2], 0x90, 0xc2, "AsnID:" );
+		//DWRD( 0x40000000, l[3], 0x90, 0xc2, "AsnLength:" );
+		ASN1_ParseLength;
+			g[21] -= 2;
+		LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );	
+			HBYT( 0x40000000, l[4], 0x90, 0xc2, "AsnID:" );
+			ASN1_Length;
+		
+		LABL( 0, 0, 0, 0xb8 );
+		ASN1_Init;
+		ASN1_DisableEnum;
+		l[1] = pb[0];
+		l[11] = pb[1];
+		DGLB( 0, l[11], 0x90, 0xc2, "l11:" );
+
+		if (l[1] == 0xa0) 
+		{
+			LABL	0	0	0	b7 MechTypesList;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			l[1] = g[2];
+			while (l[1] > 1)
+			{
+				l[12] = pb[0];
+				l[13] = pb[1];
+				DGLB( 0, l[12], 0x90, 0xc2, "l12:" );
+				DGLB( 0, l[13], 0x90, 0xc2, "l13:" );
+				BREM	0	42;
+				LABL	0	0	0	b7 MechType;
+				ASN1_Value;
+				
+				LABL	0	0	0	b8 ;
+				BREM	0	43;
+				l[2] -= l[3];
+				l[1] -= l[2];
+				//DECR( l[13] );
+				
+				//LABL 0 0 90 c2 Description:\;
+			}
+		LABL	0	0	0	b8 ;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0xa1) 
+		{
+			LABL	0	0	0	b7 reqFlags;
+			*tbd
+			LABL	0	0	0	b8 ;
+		}
+		
+		l[1] = pb[0];
+		if (l[1] == 0xa2) 
+		{
+			LABL	0	0	0	b7 mechToken;
+			ASN1_SkipTag;*a0 ll
+			ASN1_SkipTag;*30 ll
+			SMB::NTLMSSP_Check;
+			LABL 0 0 0 b8;
+		}
+		l[1] = pb[0];
+		if (l[1] == 0xa3) 
+		{
+			LABL	0	0	0	b7 NegHints:;
+			LABL( 0, 0, 0, 0xb7 , "Sequenceheader:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			LABL( 0, 0, 0, 0xb7 , "Tag0:" );	
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			LABL( 0, 0, 0, 0xb7 , "Hintname:" );
+			HBYT( 0, l[4], 0x90, 0xc2, "AsnID:" );
+			DBYT( 0, l[5], 0x90, 0xc2, "AsnLength:" );
+			ASN1_SkipTag;*a3 ll			
+			CHR#	0	2	90	c2 mechListMIC Data:;
+			LABL	0	0	0	b8 ;
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+	}
+}
+
+str# ASN20::IdClass;
+0	|	Universal;
+1	|	Application;
+2	|	Context-specific; 
+3	|	Private;
+str# ASN20::IdType;
+0	|	Primitive;
+1	|	Constructed;
+
+str# ASN20::IdTag;
+0	|	"Reserved for use by the encoding rules";
+1	|	"Boolean type";
+2	|	"Integer type";
+3	|	"BitString type";
+4	|	"OctetString type";
+5	|	"Null type";
+6	|	"ObjectIdentifier type";
+7	|	"ObjectDescriptor type";
+8	|	"External and Instance Of types";
+9	|	"Real type";
+10	|	"Enumerated type";
+11	|	"EmbeddedPDV type";
+12	|	"UTF8String type";
+13	|	"Relative-OID (object identifier) type";
+//14:
+15	|	""Reserved for future editions of this Recommendation | International Standard"";
+16	|	"Sequence and SequenceOf types";
+17	|	"Set and SetOf types";
+18	|	"NumericString type";
+19	|	"PrintableString type";
+20	|	"TeletexString and T61String types";
+21	|	"VideoTextString type";
+22	|	"IA5String type";
+23	|	"UTCTime type";
+24	|	"GeneralizedTime type";
+25	|	"GraphicString type";
+26	|	"VisibleString and ISO646String types";
+27	|	"GeneralString type";
+28	|	"UniversalString type";
+29	|	"CharacterString type";
+30	|	"BMPString type";
+
+//	default: FormatString("Reserved for addenda to this Recommendation | International Standard;
+//--------------
+

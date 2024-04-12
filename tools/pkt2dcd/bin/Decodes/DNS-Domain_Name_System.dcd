@@ -1,0 +1,1063 @@
+
+// Notes on register usage in the DNS decoder
+//  1 General temporary variable
+//  2 Number of questions
+//  3 Number of answer records
+//  4 Number of authority records
+//  5 Number of additional records
+//  6 Length of DNS label string
+//  7 RData length
+//  8 RR class
+//  9 RR type
+//  a loop detection flag
+//  b loop detection register
+//  c (unused by DNS decoder)
+//  d Extra bytes in TCP version of DNS packet
+//  e Packet offset to which we should return after following name compression pointers
+//  f Total length of DNS message (excluding UDP header etc.)
+// 10 Global tracked count of bytes remaining to be processed
+// 10 Locally tracked count of bytes remaining to be processed
+
+//-----------------------------  
+// g[3]==IP Type (set in IP)
+
+void DNS()
+{
+	BREM  0  1;
+	TGTE  4  1 0  0 RETURN;
+	LABL  0  0 0 b1 "DNS - Domain Name System Protocol\DNS:";
+	TEQU  6	 3 0  0 DNS::TCP(); 
+	TEQU 11  3 0  0 DNS::UDP(); 
+}
+
+//-----------------------------
+
+void DNS::TCP()
+{	
+	g[13] = g[16];								//Copy real packet length into register D
+	g[17] = g[16];								//Copy real packet length into register 11
+	
+	// if the length is whacked then assume more answers
+	
+	// use l[1] as a bool
+	l[1] = 0;
+	
+	// get the length
+	g[15] = pw[0];
+	
+	
+	if (g[15] == 0) {
+		l[1] = 1;
+	}
+	if (g[15] > 10000) {
+		l[1] = 1;
+	}
+	
+	if (l[1] == 1)
+	{
+		g[13] = 0;
+		g[31] = 0;
+		g[17] = g[16];
+		g[15] = g[16];
+		g[3]  = 1000;
+		l[1]  = pw[0];
+		
+		// look for a null terminator
+		l[2] = 0;
+		while (l[1] != 0xc00c) {
+			INCR(1);
+			l[1] = pw[0];
+			l[2] += 1;
+			if (g[16] < 3)
+			{
+				l[1] = 0xc00c;
+			}
+		}
+		
+		DECR(0, l[2]);
+		
+		if (l[2] > 0) {
+			//DNS::Display_Next_Label();
+			//l[2] += 1;
+			DUMP(0, l[2], 0x90, 0xc2, "End of Prev Data:");
+			TRTS;
+		}
+		
+		// get stream info
+		g[2] = s[2];
+		g[3] = s[3];
+		g[4] = s[4];
+		g[5] = s[5];
+	
+		DNS::Question_Section();
+						
+		TRTS;
+	}
+
+
+	
+	DWRD( 0, g[15], 0x90, 0xc2, "Length:" );	//Get claimed length from message header into R10
+	
+	if (g[15] > g[16]) {
+		g[13] = 0;
+	}
+	
+	if (g[15] <= g[16]) {
+		g[13] -= g[15];
+	}
+	
+	//SUBG  2  d;							//Subtract the two length bytes from register D
+	//SUBG 11 8d;							//Subtract the claimed length from register D
+	//TEQU  0 11  0  0 DNS::Fin();
+		
+	g[13] = 0;
+	g[31] = 0;
+	g[17] = g[16];
+	g[15] = g[16];
+	DNS::Common();
+}
+
+//-----------------------------
+
+void DNS::UDP()
+{
+	g[13] = 0;
+	g[31] = 0;
+	g[17] = g[16];
+	DNS::Common();
+}
+
+//-----------------------------
+
+void DNS::Common()
+{
+	MOVE 11 8f;							*Keep track of how many bytes we started with
+	HWRD 0 0 90 c2 "Identification:\ID:";
+	HWRD 0 1 90 c9 "DNS Flags:\Flags:";
+	CBIT f 1 0 d4 1... .... .... .... Response;
+	CLSE 0 0 0 d4 0... .... .... .... Query;
+	MOVE 1 82;
+	ANDG 7800 2;
+	CEQU    0 2 0 d4 .000 0... .... .... Standard Query;
+	CEQU  800 2 0 d4 .000 1... .... .... Inverse Query;
+	CEQU 1000 2 0 d4 .001 0... .... .... Server Status Request;
+	CEQU 2800 2 0 d4 .010 1... .... .... Registration;
+	CEQU 3000 2 0 d4 .011 0... .... .... Release;
+	CEQU 3800 2 0 d4 .011 1... .... .... Wait For Ack (WACK);
+	CEQU 4000 2 0 d4 .100 0... .... .... Refresh;
+	CBIT    a 1 0 d4 .... .1.. .... .... Authoritative Answer;
+	CLSE    0 0 0 d4 .... .0.. .... .... (Non-Authoritative Answer);
+	CBIT    9 1 0 d4 .... ..1. .... .... Message Truncated;
+	CLSE    0 0 0 d4 .... ..0. .... .... (Message Not Truncated);
+	CBIT    8 1 0 d4 .... ...1 .... .... Recursion Desired;
+	CLSE    0 0 0 d4 .... ...0 .... .... (Recursion Not Desired);
+	CBIT    7 1 0 d4 .... .... 1... .... Recursion Available;
+	CLSE    0 0 0 d4 .... .... 0... .... (Recursion Not Available);
+	CBIT    6 1 0 d4 .... .... .1.. .... Reserved;
+	CLSE    0 0 0 d4 .... .... .0.. .... (Reserved);
+	CBIT    5 1 0 d4 .... .... ..1. .... Authenticated Data;
+	CLSE    0 1 0 d4 .... .... ..0. .... (Authenticated Not Data);
+	CBIT    4 1 0 d4 .... .... ...1 .... Checking Disabled; //Packet Was Broadcast;
+	CLSE    0 0 0 d4 .... .... ...0 .... (Checking Enabled); //(Packet Was Not Broadcast);
+	MOVE    1 82;
+	SBIT    f 1;
+	SKIP    80000008;					*If this is a query then skip response code parsing
+	ANDG    f 2;
+	CEQU    0 2 0 d4 .... .... .... 0000 Reply code: No Error;
+	CEQU    1 2 0 d4 .... .... .... 0001 Reply code: Format Error;
+	CEQU    2 2 0 d4 .... .... .... 0010 Reply code: Server Failure;
+	CEQU    3 2 0 d4 .... .... .... 0011 Reply code: Name Error;
+	CEQU    4 2 0 d4 .... .... .... 0100 Reply code: Query Not Supported Error;
+	CEQU    5 2 0 d4 .... .... .... 0101 Reply code: Query Refused Error;
+	CEQU    9 2 0 d4 .... .... .... 1001 Reply code: Server Not Authoritative for Zone;
+
+	LABL 0 0 0 b8;
+
+	l[1] = pw[0];
+	l[2] = pw[2];
+	l[3] = pw[4];
+	l[4] = pw[6];
+	
+	/*
+	LABL( 0,    0, 0, 0xc2, "Summary:");
+	DGLB( 0, l[1], 0x0, 0x20, "Ques=");	
+	DGLB( 0, l[2], 0x0, 0x0, " Answ=");
+	DGLB( 0, l[3], 0x0, 0x0, " Auth=");
+	DGLB( 0, l[4], 0x0, 0x0, " Addi=");
+	*/
+	
+	DWRD    0 2 90 c2 Questions:\Qu:;	*Global 2 holds number of questions
+	DWRD    0 3 90 c2 Answers:\An:;		*Global 3 holds number of answer records
+	DWRD    0 4 90 c2 Authority:\Au:;	*Global 4 holds number of authority records
+	DWRD    0 5 90 c2 Additional:\Ad:;	*Global 5 holds number of additional records
+	SUBG    c 11;
+	
+	// save into stream info
+	s[2] = g[2];
+	s[3] = g[3];
+	s[4] = g[4];
+	s[5] = g[5];
+	
+	DNS::Question_Section();
+}
+
+//-----------------------------------
+
+void DNS::Question_Section()
+{
+	if (g[16]==0) { TRTS; }
+
+	TEQU 0 2 0 0 DNS::Answer_Section();		//Check number of questions remaining
+	g[2] -= 1;								//decrement # of questions
+	s[2] -= 1;								//decrement # of questions in super
+	LABL 0 0 0 b7 "Question";				//Newline
+	DNS::Common_Section();
+	LABL 0 0 0 b8;
+	TLTE 1 10 0 0 DNS::Question_Section();	//And repeat
+}
+
+//----------------------------------
+
+void DNS::Answer_Section()
+{
+	if (g[16]==0) { TRTS; }
+
+	if (g[3]==0)							//Check number of answers remaining
+	{ 
+		DNS::Authority_Section(); 
+	}
+
+	if (g[16]<=4) { TRTS; }
+
+	g[3] -= 1;								//decrement # of answers
+	s[3] -= 1;								//decrement # of answers in super
+	LABL 0 0 0 b7 "Answer";					//Newline
+	  g[17] = g[16];						//si: TT6072
+	  DNS::Common_Section();
+	  DLNG 0 0 90 c2 "Time to Live:\TTL:";	//Display the time-to-live
+	  DWRD 0 7 90 c2 "Data Length:\Len:";	//Display two-byte length
+	  g[18] = g[7];							//SI: Save data_length for resource data
+	  if (g[7] > g[16])
+	  {
+		LABL 0 0 0 14 More data in following packets;
+	  }
+	  g[17] -= 6;
+	  DNS::Display_Resource_Data();			//Display the resource data
+	LABL 0 0 0 b8;
+	TLTE 1 10 0 0 DNS::Answer_Section();	//And repeat
+}
+
+//--------------------------------------
+
+void DNS::Authority_Section()
+{
+	if (g[16]==0) { TRTS; }
+
+	TEQU 0 4 0 0 DNS::Additional_Section();	//Check number of authorities remaining
+	if (g[16]==0) { TRTS; }
+
+	g[4] -= 1;								//decrement # of authorities
+	s[4] -= 1;								//decrement # of authorities in super
+	LABL 0 0 0 b7 Authority;				//Newline
+	  g[17] = g[16];						//si: TT6072
+	  DNS::Common_Section();
+	  DLNG 0 0 90 c2 "Time to Live:";		//Display the time-to-live
+	  DWRD 0 7 90 c2 "Data Length:";		//Display two-byte length
+	  g[18] = g[7];							//SI: Save data_length for resource data
+	  if (g[7] > g[16])
+	  {
+		LABL 0 0 0 14 More data in following packets;
+	  }
+	  g[17] -= 6;
+	  DNS::Display_Resource_Data();			//Display the resource data
+	LABL 0 0 0 b8;
+	TLTE 1 10 0 0 DNS::Authority_Section();	//And repeat
+}
+
+//---------------------------------
+
+void DNS::Additional_Section()
+{
+	if (g[16]==0) { TRTS; }
+
+	TEQU 0 5 0 0 DNS::End_Section();		//Check number of additionals remaining
+	if (g[16]==0) { TRTS; }
+	g[5] -= 1;								//decrement # of additionals
+	s[5] -= 1;								//decrement # of additionals in super
+	LABL 0 0 0 b7 "Additional";				//Newline
+	  SEQU 0 5;								//si: TT6651
+	  SKIP 1;
+	   MOVE 10 91;							//si: TT6072
+	  DNS::Common_Section();
+	  DLNG 0 0 90 c2 "Time to Live:";			//Display the time-to-live
+	  DWRD 0 7 90 c2 "Data Length:";			//Display two-byte length
+	  g[18] = g[7];							//SI: Save data_length for resource data
+	  if (g[7] > g[16])
+	  {
+		LABL 0 0 0 14 More data in following packets;
+	  }
+	  g[17] -= 6;
+	  DNS::Display_Resource_Data();			//Display the resource data
+	LABL 0 0 0 b8;
+	TLTE 1 10 0 0 DNS::Additional_Section();
+}
+
+//---------------------------------
+
+void DNS::Common_Section()
+{
+	if (g[16]==0) { TRTS; }
+
+	LABL 0 0 0 c2 "Domain Name:\Domain:";			//Display label
+	DNS::Display_Domain_Name();				//Display the domain name
+	DWRD 0 9 90 c2 "Type:";					//Display the additional type as decimal number
+	g[17] -= 2;
+	DNS::Display_RR_Type();					//And by name
+	DNS::Display_Class();
+}
+
+//---------------------------------
+
+void DNS::Display_Class()
+{
+	DWRD 0 8 90 c2 Class:;					*Display the question class as decimal number
+	CST# 0 8 0 14 DNS::Classes;				*And by name
+	CLSE 0 0 0 14 Unknown Class;
+	SUBG 2 11;
+}
+
+//---------------------------------
+
+void DNS::End_Section()
+{
+	SEQU 0 d;							*Do we have any additional TCP bytes?
+	SKIP 1;
+	MOVE d 90;							*If yes, put into R10 byte count
+	MOVE 1 5;
+	DNS::End_Data();
+}
+
+//---------------------------------
+
+void DNS::End_Data()
+{
+	TNEQ 0 a 0 0 RETURN;					*check loop detection flag
+	BREM 0 1;
+	TGTE 4 1 0 0 RETURN;
+	TGTE 0 10 0 0 RETURN;
+	TEQU 0 11 0 0 DNS::Fin();					*If no more bytes, we're finished
+	TLTE 5dc 11 0 0 DNS::Fin();
+	SNEQ fc 9;
+	SKIP 8;
+	LABL 0 0 0 c0;
+	DGLB 0 5 1 1 "Zone Transfer Record #";
+	ADDG 1 5;
+	DWRD 0 7 90 c2 "Length:";
+	HEX# c 0 90 c2 "Unknown Field(s):";
+	SUBG e 11;
+	SEQU fc 9;
+	SKIP 3;
+	TGTE a 11 0 0 DNS::Dump();
+	LABL 0 0 0 c0;
+	LABL 0 0 0 1 "Resource Record";
+	LABL 0 0 0 c2  "Domain Name:\Domain:";
+	DNS::Display_Domain_Name();
+	DWRD 0 9 90 c2 Type:;					*Display the resource type as decimal number
+	DNS::Display_RR_Type();		*And by name
+	DWRD 0 8 90 c2  Class:;					*Display the resource class as decimal number
+	SLTE 5 8;								*if the (class > 5) then skip the CST#
+	SKIP 1;
+	CST# 0 8 0 14 DNS::Classes;				*And by name
+	CEQU ff 8 0 14 Any Class;				*DNS Class FF is the "any class" wildcard
+	DLNG 0 0 90 c2 Time to Live:;			*Display the time-to-live
+	DWRD 0 7 90 c2 Data Length:;			*Display two-byte length
+	DNS::Display_Resource_Data();	*Display the resource data
+	DNS::End_Data();
+}
+
+//-----------------------------
+
+void DNS::Display_Domain_Name()
+{
+	g[10] = 0;						*init loop detection flag
+	g[11] = 0;						*init loop detection register
+	
+	if (g[0x1f] == 15) {			*test for NetBios
+		NB Display DNS Next Label();
+		TRTS;	
+	}
+	
+	g[6] = pb[0];					*Get the string length byte		
+
+	if (g[6] != 0) {
+		DNS::Display_Next_Label();	*If non-zero, display sequence of DNS labels
+		TRTS;
+	}
+	
+	PSTR( 0, 6, 0x90, 0x24, "[Root]" );			*Else this is just the root Label
+	g[17] -= 1;
+	TRTS;							*And return
+}
+
+//----------------------
+
+void DNS::Display_Next_Label()
+{
+	g[6] = pb[0];										//Get the string length byte
+	g[6] &= 0xc0;										//Test top two bits
+	
+	TEQU c0 6 0 0 DNS::Display_Compr_Domain_Name();		//If both one, this is a compressed label offset
+	TNEQ  0 6 0 0 DNS::Domain_Name_Bad();				//If 0x40 or 0x80, this is an illegal value
+	
+	// handle fragmented packet
+	l[1] = g[16];
+	l[1] -= 1;  // subg 1 for length bytes
+	g[6] = pb[0];										//Get the string length byte
+	if (g[6] > l[1]) {
+		g[6] = l[1];
+		INCR(1);
+		CHR#  0 6 90 2;										//Display the label
+		LABL( 0, 0, 0, 0x24, "  label continues in next packet");
+		//MARK 1 1 0 0 DNS::Answer_Section;
+		TRTS;
+	}
+	
+	PSTR  0 6 90 2;										//Display the label
+	SUBG  1 11;
+	SUBG  6 91;
+	
+	if (g[6] == 0) {									//Test if length byte was non-zero
+		TRTS;											//If byte was zero, we're finished, so return
+	}
+	
+	g[6] = pb[0];										//Get the next string length byte
+	if (g[6] != 0) 
+	{
+		LABL(0, 0, 0, 0, ".");								//Display a '.' after the label
+	}
+	
+	DNS::Display_Next_Label();							//Go back and repeat
+}
+
+//------------------------
+
+void DNS::Domain_Name_Bad()
+{
+	LABL 0 0 0 24 "[Name not found]";
+	TRTS;
+}
+
+//------------------------
+
+void DNS::Display_Compr_Domain_Name()
+{
+		// First thing we do when decoding a compressed name is remember where we need to come back to
+		
+	//l[1] = 0;								// use l[1] to do an else
+	
+	//if (g[15] <= g[16]) {
+		g[14] = g[15];						// RE = Total DNS message size
+		g[14] -= g[16];						// RE -= remaining bytes (i.e. RE=offset from start)
+	//	l[1] = 1;
+	//}
+	
+	//if (l[1] == 0) {
+	//	if (g[15] > g[16]) {
+	//		g[14] = 0;
+	//	}
+	//}
+	
+	DNS::Follow_CDN_Pointer();
+}
+
+//-----------------------
+
+void DNS::Follow_CDN_Pointer()
+{
+	GWRD 0 6;							*Get two-byte pointer offset
+	ANDG 3fff 6;						*Mask pointer offset down to 14 bits
+	SUBG 6 8e;							*RE -= desired offset (given by pointer)
+
+	* loop detection 1
+	SLTE 1 e;							*Test for loop
+	SKIP 4;
+	MOVE 1 a;							*Set loop detection flag
+	LABL 0 0 0 14 "!! Name contains a pointer that loops !!";
+	INCR 2;
+	TRTS;
+	
+	DECR 0 e;							*Backtrack by RE bytes
+
+	SNEQ 10 8b;							*Loop detection 2 test
+	SKIP 4;
+	MOVE 1 a;							*Set loop detection flag
+	LABL 0 0 0 14 "!! Name contains a pointer that loops !!";
+	INCR 2;
+	TRTS;
+	
+	MOVE 10 8b;							*Loop detection 2 setup
+
+	MOVE 6 8e;							*We are now at new offset
+	DNS::Display_Compr_Next_Label();
+}
+
+//---------------------
+
+void DNS::Display_Compr_Next_Label()
+{
+	GBYT 0 6;									//Get the string length byte
+	ANDG c0 6;									//Test top two bits
+	TEQU c0 6 0 0 DNS::Follow_CDN_Pointer();	//If both one, this is a compressed label offset
+	TNEQ 0 6 0 0 DNS::Compr_Domain_Name_Bad();	//If 0x40 or 0x80, this is an illegal value
+	PSTR 0 6 90 2;								//Display the label
+	ADDG 1 e;									//Add 1 (for length byte) to current offset
+	ADDG 6 8e;									//Add string length to current offset
+	TEQU 0 6 0 0 DNS::Compr_Domain_Name_Exit();	//If length byte was zero we're finished now
+	g[6] = pb[0];										//Get the next string length byte
+	if (g[6] != 0) 
+	{
+		LABL(0, 0, 0, 0, ".");								//Display a '.' after the label
+	}
+	DNS::Display_Compr_Next_Label();			//Go back and repeat
+}
+
+//----------------------
+
+void DNS::Compr_Domain_Name_Bad()
+{
+	LABL 0 0 0 24 "[Name not found]";
+	DNS::Compr_Domain_Name_Exit;
+}
+
+//----------------------
+
+void DNS::Compr_Domain_Name_Exit()
+{
+	LABL 0 0 4 24 "[Compressed Name]";		*Indicate that this was a name with compression
+	SUBG 2 11;							*Decrement byte count by 2 (compressio pointer)
+	MOVE f 86;							*Set R6 to total byte count
+	SUBG 11 86;							*R6 -= remaining bytes (i.e. R6=desired offset)
+	SUBG e 86;							*R6 -= current offset
+	INCR 0 6;							*Forward track by R6 bytes
+	
+	* make sure we are not back at the CDN pointer 
+	* (if we are it is probably due to a bug)
+	* !! This test causes a problem with some good packets !!
+	* !! Maybe figure it out later !!
+	*GBYT 0 6;							
+	*ANDG c0 6;							*Test top two bits
+	*SNEQ c0 6;
+	*SKIP 2;
+	*INCR 2;
+	*SUBG 2 11;
+
+	TRTS;
+}
+
+//----------------------
+
+str# DNS::Types;
+	1		| A - Host Address;
+	2		| NS - Authoritative Name Server;
+	3		| MD - Mail Destination;
+	4		| MF - Mail Forwarder;
+	5		| CNAME - Canonical Name For Alias;
+	6		| SOA - Mark Start Of Zone Authority;
+	7		| MB - Mailbox Domain Name;
+	8		| MG - Mail Group Member;
+	9		| MR - Mail Rename Domain;
+	10		| NULL - Null Resource Record;
+	11		| WKS - Well Known Service;
+	12		| PTR - Domain Name Pointer;
+	13		| HINFO - Host Information;
+	14		| MINFO - Mailbox or Mail List Info;
+	15		| MX - Mail Exchange;
+	16  	| TXT - Text Strings;
+	17   	| RP - Responsible Person;
+	18  	| AFSDB - AFS Data Base location;
+	19  	| X25 - X.25 PSDN Address;
+	20  	| ISDN - ISDN Address;
+	21  	| RT - Route Through;
+	22  	| NSAP - NSAP Address, NSAP-style A record;
+	23  	| NSAP-PTR;
+	24  	| SIG - Security Signature;
+	25  	| KEY - Security Key;
+	26  	| PX - X.400 Mail Mapping Information;
+	27  	| GPOS - Geographical Position;
+	28  	| AAAA - IPv6 Address;
+	29  	| LOC - Location Information;
+	30  	| NXT - Next Domain;
+	31  	| EID - Endpoint Identifier;
+	32  	| NIMLOC - Nimrod Locator;
+	33  	| SRV - Service Location Record;
+	34  	| ATMA - ATM Address;
+	35  	| NAPTR - Naming Authority Pointer;
+	36  	| KX - Key Exchanger;
+	37  	| CERT;
+	38  	| A6;
+	39  	| DNAME;
+	40  	| SINK;
+	41  	| OPT;
+	42      | APL;
+	43      | DS - Delegation Signer;
+	44      | SSHFP - SSH Key Fingerprint;
+	45      | IPSECKEY;
+	46      | RRSIG;
+	47      | NSEC;
+	48      | DNSKEY;
+	49      | DHCID;
+	50      | NSEC3;
+	51      | NSEC3PARAM;
+	99      | SPF;
+	100  	| UINFO;
+	101 	| UID;
+	102 	| GID;
+	103 	| UNSPEC;
+	249 	| TKEY - Transaction Key;
+	250 	| TSIG - Transaction Signature;
+	251 	| IXFR - Incremental transfer;
+	252 	| AXFR - Transfer Entire Zone;
+	253 	| MAILB - Mailbox Related Records;
+	254 	| MAILA - Mail Agent Resource Records;
+	255 	| ALL - All Records;
+	32768   | TA - DNSSEC Trust Authorities;
+	32769   | DLV - DNSSEC Lookaside Validation;
+
+//------------------------
+str# DNS::Classes;
+	0x1		| Internet;
+	0x2		| CSNET;
+	0x3		| CHAOS;
+	0x4		| Hesiod;
+	0xff	| Any;
+
+//-------------------------
+// RR type is one-byte value in R9
+
+void DNS::Display_RR_Type()
+{
+	SNEQ f 1f;	* test for NetBios
+	SKIP 2;
+	LABL 0 0 0 14 NetBIOS General Name Service;
+	TRTS;
+	CST# 0 9 0 14 DNS::Types;
+	SKIP 1;
+	LABL 0 0 0 14 "Unknown RR Type";
+	TRTS;
+}
+
+//--------------------------------------
+// RR type is one-byte value in R9; rdlength is two-byte value in R7
+
+void DNS::Display_Resource_Data()
+{
+	if (g[16] == 0) { TRTS; }
+	
+	MOVE 11 81;							//Copy R10 to R1
+	SUBG 7 81;							//Subtract RD length
+	SNEQ 0 7; * no data
+	SKIP 1;
+	TRTS;
+	MOVE 7 99;							//si: move the "data length" to g[25] ... to be used for rr_Datas
+	MOVE 1 87;							//R7 is now our anticipated ending value for R10
+
+		//Now branch off to appropriate resource decoder
+	TEQU  1 9 0 0 DNS::Display_RD_A();			//A
+	TEQU  2 9 0 0 DNS::Display_RD_DomName();	//NS
+	TEQU  3 9 0 0 DNS::Display_RD_DomName();	//MD - Mail Destination
+	TEQU  4 9 0 0 DNS::Display_RD_DomName();	//MF - Mail Forwarder
+	TEQU  5 9 0 0 DNS::Display_RD_DomName();	//CNAME
+	TEQU  6 9 0 0 DNS::Display_RD_SOA();		//SOA
+	TEQU  7 9 0 0 DNS::Display_RD_DomName();	//MB - Mailbox domain name
+	TEQU  8 9 0 0 DNS::Display_RD_DomName();	//MG - Mailgroup member
+	TEQU  9 9 0 0 DNS::Display_RD_DomName();	//MR - Mail rename domain name
+	TEQU  a 9 0 0 DNS::Display_RD_DomName();	//NULL - Null resource record
+	*TEQU b 9 0 0 DNS::Display_RD_DomName();	//WKS - well known service desc
+	TEQU  c 9 0 0 DNS::Display_RD_DomName();	//PTR - 
+	TEQU  d 9 0 0 DNS::Display_RD_HINFO();		//HINFO
+	TEQU  f 9 0 0 DNS::Display_RD_MX();			//MX
+	TEQU 10 9 0 0 DNS::Display_RD_TXT;			// TXT Data
+	TEQU 1c 9 0 0 DNS::Display_IPv6_Address();
+	TEQU 1d 9 0 0 DNS::Display_RD_LOC();		//LOC
+	TEQU 20 9 0 0 DNS::Display_RD_NB();
+	TEQU 21 9 0 0 DNS::Display_RD_SRV();		//SRV
+	TEQU f9 9 0 0 DNS::Display_RD_TKEY();		//TKEY - Transaction Key
+	TEQU fa 9 0 0 DNS::Display_RD_TSIG();		//TSIG - Transaction Signature
+	
+	DNS::Display_Extra_RData();			//Unknown types go to the 'extra' decoder
+}
+
+//------------------------
+
+void DNS::Display_Extra_RData()
+{
+	TGTE 0 10 0 0 RETURN;
+	MOVE 10 81;							*R1 = current count of bytes remaining
+	SUBG 7 81;							*Subtract anticipated count of bytes remaining
+	SGTE 0 1;							*Do we have any bytes remaining to be consumed?
+	SKIP 2;							*If none, skip next two instructions
+	DUMP 0 1 90 c2 "Unknown Resource Data:";	*For unknown data, just hex dump
+	SUBG 1 91;	*si: TT6072
+
+}
+
+void DNS::Display_RD_TXT;
+	TGTE 0 10 0 0 RETURN;
+	MOVE 10 81;	
+	SUBG 19 91;
+	SUBG 7 81;
+	SEQU 0 1;
+	SKIP 1;
+	DNS::Display_RD_TXT::Helper;
+	TRTS;
+
+void DNS::Display_RD_TXT::Helper;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 1 0 0 RETURN;
+	DBYT 0 14 5 5;
+	CHR# 0 14 90 c2 Text:;
+	ADDG 1 14;
+	SUBG 14 81;
+	TNXT -DNS::Display_RD_TXT::Helper;
+
+//---------------------------
+// Generic decoder for all resource types whose RData is just a domain name
+
+void DNS::Display_IPv6_Address()
+{
+	IPV6 0 0 90 c2 IP Address:;				*Display IPv6 address
+	g[17] -= 16;
+	DNS::Display_Extra_RData();
+}
+
+//--------------------------
+
+void DNS::Display_RD_NB()
+{
+	TGTE 0 10 0  0 RETURN;
+	LABL 0 0  0 b7 Resource Data;
+	BBIT 1 1 90 c2 Group Name Flag:;
+	CEQU 0 1  0 24 is a UNIQUE NetBIOS name;
+	CEQU 1 1  0 24 is a GROUP NetBIOS name;
+	BBIT 2 1 90 c2 Owner Node Type:;
+	CEQU 0 1  0 24 B node; 
+	CEQU 1 1  0 24 P node; 
+	CEQU 2 1  0 24 M node; 
+	CEQU 3 1  0 24 Reserved for future use; 
+	DBIT 5 1 90 c2 Reserved;
+	LABL 0 0  0 24 Must be zero;
+	DBIT 8 1 90 c2 Reserved;
+	LABL 0 0  0 24 Must be zero;
+	IPLG 0 0 90 c2 IP Address:;				*Display IP address
+	SUBG 6 11;
+	LABL 0 0  0 b8;
+	 SUBG 6 12;					* SI: dangerous...this was set by data length in Answer Section;
+	 SLTE 1 12;					* check to see if we're done with resource data
+	 SKIP 1;
+	 TRTS;
+	 TNXT -DNS::Display_RD_NB();
+	 
+	DNS::Display_Extra_RData();
+}
+
+// Specific decoders for resource types with known structure
+
+void DNS::Display_RD_DomName()
+{
+	LABL 0 0 0 c2 Domain Name:\Domain:;
+	DNS::Display_Domain_Name();
+	DNS::Display_Extra_RData();
+}
+
+//-----------------------
+
+void DNS::Display_RD_A()
+{
+	IPLG 0 0 90 c2 IP Address:;				*Display IP address
+	g[17] -= 4;
+	DNS::Display_Extra_RData();
+}
+
+//-----------------------
+
+void DNS::Display_RD_SOA()
+{
+	LABL 0 0 0 c2 MNAME:;
+	DNS::Display_Domain_Name();
+	LABL 0 0 0 c2 RNAME:;
+	DNS::Display_Domain_Name();
+	DLNG 0 0 90 c2 Serial:;
+	DLNG 0 0 90 c2 Refresh:;
+	DLNG 0 0 90 c2 Retry:;
+	DLNG 0 0 90 c2 Expire:;
+	DLNG 0 0 90 c2 Minimum:;
+	g[17] -= 20;
+	DNS::Display_Extra_RData();
+}
+	
+//-----------------------
+	
+void DNS::Display_RD_HINFO()
+{
+	PSTR 0 6 90 c2 CPU;						*Display the CPU type
+	SUBG 1 11;
+	SUBG 6 91;
+	PSTR 0 6 90 c2 OS;						*Display the OS type
+	SUBG 1 11;
+	SUBG 6 91;
+	DNS::Display_Extra_RData();
+}
+
+//-----------------------
+
+void DNS::Display_RD_MX()
+{
+	DWRD 0 0 90 c2 MX Preference:;
+	LABL 0 0 0 c2 Mail Exchanger:;
+	DNS::Display_Domain_Name();
+	DNS::Display_Extra_RData();
+}
+
+//-----------------------
+
+void DNS::Display_RD_LOC()
+{
+	HBYT 0 0 90 c2 LOC Version:;
+	HBYT 0 0 90 c2 Size:;
+	HBYT 0 0 90 c2 Horiz Precision:;
+	HBYT 0 0 90 c2 Vert Precision:;
+	DLNG 0 0 90 c2 Latitude:;
+	DLNG 0 0 90 c2 Longitude:;
+	DLNG 0 0 90 c2 Altitude:;
+	SUBG 10 11;
+	DNS::Display_Extra_RData();
+}
+
+//------------------------
+
+void DNS::Display_RD_SRV()
+{
+	SNEQ f 1f;	// Test for netBIOS
+	SKIP 3;
+	DBYT 0 7 90 c2 Number of Names:;	//store number of names in this global
+	DNS::NetBIOS_Name();
+	TRTS;
+
+	* DNS Stuff
+	DWRD 0 0 90 c2 SRV Priority:\Priority:;
+	DWRD 0 0 90 c2 SRV Weight:\Weight:;
+	DWRD 0 0 90 c2 SRV Port:\Port:;
+	g[17] -= 6;
+	LABL 0 0 0 c2 SRV Target:\Target:;
+	DNS::Display_Domain_Name();
+	if (g[16] <= 4) { TRTS; }
+	DNS::Display_Extra_RData();
+}
+
+//-----------------------
+
+void DNS::Display_RD_TKEY()
+{
+	l[7]  = g[18];					//si: supposed to be the data length
+	l[8]  = g[16];					//si: grab the length as of now
+	l[16] = g[16];
+	CSTR 0 41 90 c2 Algorithm:;
+	TIME 5 0 90 c2 Inception:;
+	TIME 5 0 90 c2 Expiration:;
+	HWRD 0 41 90 c2 Mode:;
+	CST# 0 41 00 14 DNS::Display_RD_TKEY::Mode_Value;
+	HWRD 0 41 90 c2 Error:;
+	CST# 0 41 00 14 DNS::Display_RD_TKEY::Error_Codes;
+	DWRD 0 41 90 c2 Key Size:;
+	if (l[1] > g[16])
+	{
+		LABL 0 0 0 14 Key data continues on following packet(s).;
+	}
+	
+	//si: must preserve the records ... so save them in the locals
+	l[2] = g[2];
+	l[3] = g[3];
+	l[4] = g[4];
+	l[5] = g[5];
+	l[17] = g[17];
+		// si: this is GSS-API stuff... beware... it could be something diff... 
+		//DUMP 0 1 90 c2 Key Data:;
+		ASN1_Init;
+		ASN1_DisableEnum;
+		ASN1_OID;
+		ASN1_SkipTag;
+		LABL	0	0	0	b7 Mechanism Type;
+		ASN1_Value;
+		LABL	0	0	0	b8 ;
+		l[1] = pb[0];
+		if (l[1] == 0xa0) 
+		{
+			LABL	0	0	90	c2	Negotiation Token Type:;
+			LABL	0	0	0	14	negTokenInit;
+			GSS::NegTokenInit();
+		}
+		if (l[1] == 0xa1) 
+		{
+			LABL	0	0	90	c2	Negotiation Token Type:;
+			LABL	0	0	0	14	NegTokenTarg;
+			GSS::NegTokenTarg();
+		}
+		l[8] -= g[16];
+		if (l[7] > l[8])
+		{
+			l[7] -= l[8];
+			DUMP 0 47 90 c2 Remaining Bytes:;
+		}
+	//si: must preserve the records ... so put them back in the appropriate vars
+	g[2] = l[2];
+	g[3] = l[3];
+	g[4] = l[4];
+	g[5] = l[5];
+	g[17] = l[17];
+	
+	l[16] -= g[16];
+	g[17] -= l[16];
+}
+
+str# DNS::Display_RD_TKEY::Mode_Value;
+	0	| reserved;
+	1	| server assignment;
+	2	| Diffie-Hellman exchange;
+	3	| GSS-API negotiation;
+	4	| resolver assignment;
+	5	| key deletion;
+
+str# DNS::Display_RD_TKEY::Error_Codes;
+	0	| No Error;
+	1	| a non-extended RCODE;
+	2	| a non-extended RCODE;
+	3	| a non-extended RCODE;
+	4	| a non-extended RCODE;
+	5	| a non-extended RCODE;
+	6	| a non-extended RCODE;
+	7	| a non-extended RCODE;
+	8	| a non-extended RCODE;
+	9	| a non-extended RCODE;
+	10	| a non-extended RCODE;
+	11	| a non-extended RCODE;
+	12	| a non-extended RCODE;
+	13	| a non-extended RCODE;
+	14	| a non-extended RCODE;
+	15	| a non-extended RCODE;
+	16	| BADSIG (TSIG);
+	17	| BADKEY (TSIG);
+	18	| BADTIME (TSIG);
+	19	| BADMODE;
+	20	| BADNAME;
+	21	| BADALG;
+
+//-----------------------
+
+void DNS::Display_RD_TSIG()
+{
+	CSTR 0 41 90 c2 Algorithm:;
+	HEX# 6 00 90 c2 Time Signed:;
+	DWRD 0 41 90 c2 Fudge:;
+	l[1] /= 60;
+	DGLB 0 41 24;
+	LABL 0 00 00 4 " Minutes";
+	DWRD 0 41 90 c2 MAC Size:;
+	DUMP 0 41 90 c2 MAC:;
+	DWRD 0 00 90 c2 Original ID:;
+	DWRD 0 41 90 c2 Error:;
+	CST# 0 41 00 14 DNS::Display_RD_TKEY::Error_Codes;
+	DWRD 0 41 90 c2 Other Data Length:;
+	if (l[1] > 0)
+	{
+		DUMP 0 41 90 c2 Other Data:;
+	}
+}
+
+//-----------------------
+
+void DNS::NetBIOS_Name()
+{
+	CHR# 10 0 90 c2 NetBIOS Name:; *16hex = 10dec
+
+	HBYT 0 4 90 c9 Flags:;
+	CBIT 1 4 0 d4 .... ..1. Permanent Node Name;
+	CLSE 0 4 0 d4 .... ..0. Not a Permanent Node Name;
+	CBIT 2 4 0 d4 .... .1.. Active Name;
+	CLSE 0 4 0 d4 .... .0.. Not an Active Name;
+	CBIT 3 4 0 d4 .... 1... Conflict;
+	CLSE 0 4 0 d4 .... 0... No Conflicts;
+	CBIT 4 4 0 d4 ...1 .... Deregister - deleted;
+	CLSE 0 4 0 d4 ...0 .... Not being deleted;
+
+	SBIT 5 4; 
+	SKIP 5;		* If 5 was true, we skip
+	CBIT 6 4 0 d4 .10. .... M node; *10
+	CLSE 0 0 0 d4 .00. .... B Node; *00
+	*LABL 0 0 0 b8;
+	DNS::NetBIOS_Name2();
+	TRTS;
+
+	CBIT 6 4 0 d4 .11. .... Reserved for Future Use; *11
+	CLSE 0 0 0 d4 .01. .... P Node;				  *01
+	*LABL 0 0 0 b8;
+	
+	DNS::NetBIOS_Name2();
+}
+
+//-----------------------------
+//last section of flags..
+
+void DNS::NetBIOS_Name2()			
+{	
+	CBIT 7 4 0 d4 "1... .... Group NetBIOS Name";		//reversed these - tt2321
+	CLSE 0 0 0 d4 "0... .... Unique NetBIOS Name";
+	LABL 0 0 0 b8;
+	INCR 1;				// do this because flags are actually 2 bytes but the second half is reserved
+	SUBG 1 7;
+	TNEQ 0 7 0 0 DNS::NetBIOS_Name();
+	DNS::NodeStats();
+}
+	
+//-----------------------------
+
+void DNS::NodeStats()
+{
+	LABL 0 0 0 b7 NODE STATISTICS;
+	HEX# 6 0 90 c2 Unit ID:;
+	HBYT 0 1 90 c2 Jumpers:;
+	HBYT 0 1 90 c2 Test Result:;
+	DWRD 0 1 90 c2 Version Number:;
+	DWRD 0 1 90 c2 Period of Statistics:;
+	DWRD 0 1 90 c2 CRC Errors:;
+	DWRD 0 1 90 c2 Alignment Errors:;
+	DWRD 0 1 90 c2 Collisions:;
+	DWRD 0 1 90 c2 Send Aborts:;
+	DLNG 0 1 90 c2 Good Sends:;
+	DLNG 0 1 90 c2 Good Receives:;
+	DWRD 0 1 90 c2 Retransmits:;
+	DWRD 0 1 90 c2 Resource Conditions:;
+	DWRD 0 1 90 c2 Free Command Blocks:;
+	DWRD 0 1 90 c2 Total Command Blocks:;
+	DWRD 0 1 90 c2 Max Total Command Blocks:;
+	DWRD 0 1 90 c2 Pending Sessions:;
+	DWRD 0 1 90 c2 Maximum Pending Sessions:;
+	DWRD 0 1 90 c2 Total Sessions Possible:;
+	DWRD 0 1 90 c2 Session Data Packets Size:;
+	DUMP 0 10 90 c2 "Extra Bytes:\Extra:";
+	LABL 0 0 0 b8;
+}
+  
+
+//---------------------------------
+
+void DNS::Fin()
+{
+	TRTS;
+}
+
+//---------------------------------
+
+void DNS::Dump()
+{
+	TRTS;
+}

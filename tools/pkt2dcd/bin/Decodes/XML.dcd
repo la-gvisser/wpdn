@@ -1,0 +1,296 @@
+
+void XML::Test;
+	g[1] = 0;
+	l[3] = pb[0];
+	
+	//check how many bytes are remaining, excluding FCS
+	BREM 1 45;
+	
+	if (l[5] > 4)
+	{
+		if (l[3] == 0x3c)	//"<"
+		{
+			l[4] = pl[1];
+			if (l[4] == 0x3f786d6c)	//"?xml"
+			{
+				g[1] = 1;
+				l[1] = 0;
+			}
+			
+			if (l[4] == 0x3f584d4c)	//"?XML"
+			{
+				g[1] = 1;
+				l[1] = 0;
+			}
+		}
+	}
+	TRTS;
+
+void XML;
+	l[2] = g[2];
+	l[3] = g[3];
+	LABL 0 0 0 c7 XML - eXtensible Markup Language;
+	XML::Header;
+
+	XML::SkipDelimiters;
+	SOAP::Test;
+	if (g[1] != 0)
+	{
+		SOAP;
+		g[1] = 1;
+	}
+	if (g[1] == 0)
+	{
+		XML::LineLoop;
+	}
+
+	LABL 0 0 0 c8 ;
+	g[2] = l[2];
+	g[3] = l[3];
+	TRTS;
+
+void XML::Header;
+	XML::SkipDelimiters;
+	if (g[1] <= 4)
+	{
+		TRTS;
+	}
+	GSTR 2000003e 2;	//">"
+	g[3] = 2;
+	CHR# 0 3 4 80 " ";
+	g[2] -= g[3];
+	GSTR 20000020 3;	//" "
+	XML::PrintKeySegment;
+	if (g[2] > 0)
+	{
+		CHR# 1 0 4 0;
+		g[2] -= 1;
+		while (g[2] > 1)
+		{
+			GSTR 2000003d 3;	//"="
+			XML::PrintKeySegment;
+			if g[2] > 0
+			{
+				CHR# 2 0 4 0;
+				g[2] -= 2;
+				GSTR 20000022 3;	//"
+				XML::PrintValueSegment;
+				CHR# 1 0 4 0;
+				g[2] -= 1;
+				XML::LocateNextSegment;
+			}
+		}
+	}
+	l[1] = pb[0];
+	g[2] += 1;
+	CHR# 0 2 4 0;
+	if (l[1] == 0x2f)	//"/"
+	{
+		LABL 0 0 0 88 ;
+	}
+	TRTS;
+
+void XML::LineLoop;
+	XML::SkipDelimiters;
+	if (g[1] <= 4)
+	{
+		TRTS;
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x3c)	//"<"
+	{
+		l[2] = pl[0];
+		XEQU 3c212d2d 42 0 0 XML::Comment;	//"<!--"
+		XLTE 0 0 0 0 XML::Mark;
+	}
+	if (l[1] != 0x3c)
+	{
+		XML::Text;
+	}
+	TNXT -XML::LineLoop;
+
+void XML::SkipDelimiters;
+	BREM 0 1;
+	if (g[1] <= 4)
+	{
+		TRTS;
+	}
+	l[1] = 1;
+	while (l[1] == 1)
+	{
+		l[1] = 0;
+		l[2] = pb[0];
+		if (l[2] < 0x20)
+		{
+			l[1] = 1;
+		}
+		if (l[2] == 0x7f)
+		{
+			l[1] = 1;
+		}
+		if (l[2] == 0x20)
+		{
+			l[1] = 1;
+		}
+		if (l[1] == 1)
+		{
+			INCR 1 0;
+			g[1] -= 1;
+			//if g[1] < 10
+			//{
+			//	DGLB 0 1 0 80 G1:;
+			//}
+			if g[1] <= 4
+			{
+				l[1] = 0;
+			}
+		}
+	}
+	TRTS;
+
+void XML::Mark;
+	l[1] = pb[1];
+	GSTR 2000003e 2;	//">"
+	if (l[1] == 0x2f)	//"/"
+	{
+		LABL 0 0 0 88 ;
+		g[3] = 2;
+		CHR# 0 3 4 80 " ";
+	}
+	if (l[1] != 0x2f)
+	{
+		if (l[1] == 0x3f)	//"?"
+		{
+			g[3] = 2;
+			CHR# 0 3 4 80 " ";
+		}
+		if (l[1] != 0x3f)
+		{
+			g[3] = 1;
+			CHR# 0 3 4 89 " ";
+		}
+	}
+	g[2] -= g[3];
+	GSTR 20000020 3;	//" "
+	XML::PrintKeySegment;
+	if (g[2] > 0)
+	{
+		CHR# 1 0 4 0;
+		g[2] -= 1;
+		l[3] = 0;
+		while (g[2] > 1)
+		{
+			GSTR 2000003d 3;	//"="
+			XML::PrintKeySegment;
+			if (g[2] > 0)
+			{
+				CHR# 2 0 4 0;
+				g[2] -= 2;
+				GSTR 20000022 3;	//"
+				XML::PrintValueSegment;
+				CHR# 1 0 4 0;
+				g[2] -= 1;
+				XML::LocateNextSegment;
+			}
+			l[3] += 1;
+			if (l[3] == 2)
+			{
+				l[3] = 0;
+				if (g[2] > 20)
+				{
+					LABL 0 0 0 83 "         ";
+				}
+			}
+		}
+	}
+	l[1] = pb[0];
+	g[2] += 1;
+	CHR# 0 2 4 0;
+	if (l[1] == 0x2f)	//"/"
+	{
+		LABL 0 0 0 88 ;
+	}
+	TRTS;
+
+void XML::PrintKeySegment;
+	if (g[3] == 0)
+	{
+		g[3] = g[2];
+	}
+	if (g[3] > g[2])
+	{
+		g[3] = g[2];
+	}
+	CHR# 0 3 2 0;
+	g[2] -= g[3];
+	TRTS;
+
+void XML::PrintValueSegment;
+	if (g[3] == 0)
+	{
+		g[3] = g[2];
+	}
+	if (g[3] > g[2])
+	{
+		g[3] = g[2];
+	}
+	CHR# 0 3 0 0;
+	g[2] -= g[3];
+	TRTS;
+
+void XML::LocateNextSegment;
+	l[1] = 1;
+	while (l[1] == 1)
+	{
+		l[1] = 0;
+		l[2] = pb[0];
+		if (l[2] < 0x20)
+		{
+			l[1] = 1;
+			INCR 1 0;
+			if l[2] == 0x0d	//new line
+			{
+				LABL 0 0 0 80;
+			}
+		}
+		if (l[2] == 0x7f)
+		{
+			l[1] = 1;
+			INCR 1 0;
+		}
+		if (l[2] == 0x20)
+		{
+			l[1] = 1;
+			CHR# 1 0 0 0;
+		}
+		if (l[1] == 1)
+		{
+			g[2] -= 1;
+		}
+	}
+	TRTS;
+
+void XML::Comment;
+	LABL 0 0 0 c0 Comment;
+	TRTS;
+
+void XML::Text;
+	GSTR 2000003c 2;	//"<"
+	while (g[2] > 1)
+	{
+		GSTR 2000000d 3;
+		GSTR 2000000a 41;
+		if (g[3] > l[1])
+		{
+			g[3] = l[1];
+		}
+		if (g[3] > g[2])
+		{
+			g[3] = g[2];
+		}
+		CHR# 0 3 0 80;
+		g[2] -= g[3];
+	}
+	TRTS;
+
+

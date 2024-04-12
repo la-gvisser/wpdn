@@ -1,0 +1,175 @@
+Engine Wizard 11.0 Change Log
+
+From v11.0 to 11.1
+
+PeekStrings
+- MakeLower() and MakeUpper
+- - Use const iterators in the transformations.
+- - PeekStringA - provide a lambda function to cast the chars to ints and back (tolower takes and returns ints).
+	CPeekStringA&	MakeLower() {
+		std::transform( cbegin(), cend(), begin(), [](const unsigned char i){ return static_cast<unsigned char>( tolower(i) ); });
+		return *this;
+	}
+- In Convert() specify an array type to the unique_ptr so proper destructor is called.
+- - std::unique_ptr<wchar_t[]>	spBuf( new wchar_t[nSize] );
+- -                        ^^  added.
+- - This is done in all 4 Convert() methods.
+
+Refactored #includes for better single file compilation and dependency errors.
+- Moved functions from PeekStream.h into new PeekStream.cpp.
+- Added namespace decorations where needed.
+
+
+From v9.2 to v11.0
+
+Copyrights extended to 2017.
+
+CaptureFile
+- Additional Linux support.
+- Read and write implementations that use fread/fwrite: switched count and size parameters 
+  to be correct.
+- ReadFilePackets: Added 'error' output parameter
+- Added GetFile()
+- Added #ifdef to tTimeFields and tLongTime to remove redefinition from PeekTime.
+ContextManager
+- in constructor added testing of m_pManager before accessing it.
+encodehex
+- Added missing namespace.
+FileEx
+- Added Regular Expression file name matching.
+- Added CFileDetail, GetFileDetail, GetFileDetailList.
+- Added CFileEx:DeleteFile, MoveFile
+GlobalId
+- Define GUID_NULL for Linux.
+hecom.h
+- Added IHePersistJSON.
+heid.h
+- Refactored the implementation of several methods.
+heunk.h
+- Refactored: C Style cast to cast keyword.
+hlbase.h
+- Refactored: LockFactory to use 0 and 1 instead of true and false.
+hldef.h
+- Refactored string formatting in the trace functions.
+hlid.h
+- CHeIDToString() added option to include (default) or exclude curly braces.
+hlptr.h
+- Refactored: C Style cast to cast keyword.
+hlstr.h
+- Refactored: C Style cast to cast keyword.
+hlvariant.h
+- Refactored: C Style cast to cast keyword.
+imemorystream.h
+- Added IMemoryStream2. Adds Attach, Detach, Clear, Reserve, GetCapacity, ShrinkToFit.
+iomniengineplugin.h
+- Added IEnginePluginCaptureEvents. Addes OnCaptureCreated, OnCaptureDeleted.
+- Added GetEngineType, GetOperatingSystem, GetDataFolder to IEngineInfo.
+IpHealpers.h
+- Refactored API by replacing pass objects by value to pass by const reference.
+- CIpAddressPort: Fixed logic operator error in IsNull.
+omnicommands.h
+- Added ids for new commands.
+OmniEngineContext
+- Add #ifdef to exclude code not being used via stdafx.h.
+OmniPlugin
+- Updated to use new full names from CAppConfig: GetLibraryDirectory was GetLibDir.
+- Implemented new notifications: OnCaptureCreated, OnCaptureDeleted.
+Options
+- Updated example code. Added ReplaceAll(CPeekString,...), xmlEncode. Added Notes field.
+Packet
+- Added CPacket::Initialize
+- Refactored: C Style cast to cast keyword.
+PacketArray
+- Added GetCount, RemoveAt.
+PCapCaptureFile
+- Added 'error' output parameter.
+- Refactored: C Style cast to cast keyword.
+- Added ReadFilePackets.
+- SeekToPacket: Fix checking EOF check.
+Peek.h
+- Added/Enhanced SummaryStat structs.
+PeekAdapter
+- Added.
+PeekCaptureFile
+- ReadFilePacket: Added 'error' output parameter.
+- ReadFilePackets: Added 'error' output parameter.
+PeekContext
+- Fixed formatting.
+- Reference to RemotePlugin changed from reference to pointer.
+PeekContextProxy
+- CPeekCapture: Added GetPacketHandler.
+- Added CMediaInfo, CPeekChannelData, CChannelManager, CStatsHandler, 
+        CAdapterInfo, CPluginAdapterInfo, CAdapterInfoList, CAdapterConfig,
+        CAdapterInitialize, CAdapterManager, CPacketHandler, CPacketHandlerArray
+- Added Remote Adapter support.
+- CPeekCapture: Added GetCaptureTemplate, GetId, 
+peekcore.h
+- IAppConfig - Added GetIndexDatabasePath, GetDatabaseDir.
+- IPluginAdapterInfo - Added SetAdapterFeatures.
+- Removed IGigUtil.
+- Added IFilterFile, IFilterSession, IProtocolTranslationsManager, 
+        IProtoSpecs3
+- IPeekSecurity interface changed.
+- IProtocolSpec2: Added SetProtocolTranslations, GetProtocolTranslations
+PeekDataModeler
+- CPeekDataModer: Added GetRoot.
+- CPeekDataElement: Added GetModeler, GetXml.
+PeekEngineContext
+- Add #ifdef to exclude code not being used.
+- Add #ifdef to exclude code not being used via stdafx.h.
+peekfilters.h
+- Added IPatternFilterNode3
+peeknotify.h
+- Added IEmailMessage, ISendEmailMessage, 
+- IEmailAction Added: GetScheme, SetScheme, GetUseAuthentication, SetUseAuthentication,
+                      GetUsername, SetUsername, GetPassword, SetPassword
+PeekPacket.h
+- Added PeekPacket12 as the new PeekPacket structure. Adds fFlowId.
+PeekPlugin
+- Added OnCaptureCreated, OnCaptureDeleted
+PeekProxy
+- CLogService: refactored to aquire ILogMessage interface per call, no longer cached.
+- - Caching the ILogMessage interface can prevent the plugin from unloading.
+- CAppConfig: API change: Abbriviations in method names have been expanded: GetLibDir becomes
+                          GetLibraryDirectory.
+- CAppConfig: Added GetPacketHeaderInfoStoragePath, GetSecurityFilePath, GetIndexDatabasePath, 
+              GetDatabaseDirectory, IsValid, IsNotValid
+- CPeekEngineProxy: Added GetAdapterManager, GetSite.
+PeekStream
+- CPeekStream: Added IHeStream* operator.
+PeekString
+- CPeekString::Convert: fixed comparison bug.
+- CPeekString, CPeekStringA: Removed Format(const std::string&, ...).
+- CArrayString, CArrayStringA: Added Parse.
+PeekTable.h
+- Replaced NULL with nullptr.
+PeekTime
+- Added keyword 'union' to references ot _tLongTime.
+- Refactored API by replacing pass objects by value to pass by const reference.
+peekutil.h
+- Added Class Id constants.
+PeekXml
+- CPeekXml::CreateChild: Added optional initial value.
+- CPeekXml constructor: Fixed handeling of inDocument and inElement.
+- CPeekXml: Added CPeekXmlDocument operator, GetLoadStore.
+Plugin.rc
+- Copyrights updated to 2017.
+PluginHandlersInterface
+- Replaced NULL with nullptr.
+RemoteAdapter
+- Added
+RemotePlugin
+- Added OnCaptureCreated, OnCaptureDeleted
+- SummarizePacket is excluded from Linux builds.
+RemoteStatsPlugin
+- Added
+SnapShot
+- CSnapShot::SetItem: Cast inSummaryStat to PeekSummaryStat2.
+- Add CSummaryStatItem
+- CSnapShot: Add GetStatsItem.
+StdAfx.h
+- Add: using HeLib::CHeQIPtr
+tagfile.h
+- Refactor declaratons to C++ 11 syntax.
+WPTypes
+- Add declaration of GUID_NULL

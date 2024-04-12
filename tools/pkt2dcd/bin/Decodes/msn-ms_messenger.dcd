@@ -1,0 +1,293 @@
+* MSN Messenger
+
+* Version 2.1
+
+void MSN_Messenger;
+	LABL 0 0 0 b1 MSN - Messenger;
+	GLNG 0 1;
+	 TEQU 01000000 1 0 0 MSN::Keep_Alive;
+	 TEQU 43484720 1 0 0 MSN::Client_State;
+	 TEQU 56455220 1 0 0 MSN::Dispatch_Server;
+	 TEQU 494E4620 1 0 0 MSN::Server_Response;
+	 TEQU 464E4420 1 0 0 MSN::Find_User;
+	 TEQU 43484C20 1 0 0 MSN::Challenge;
+	 TEQU 51525920 1 0 0 MSN::Successful_Challenge;
+	 TEQU 43565220 1 0 0 MSN::Client_Version;
+	 TEQU 55535220 1 0 0 MSN::Client_Authentication;
+	 TEQU 58465220 1 0 0 MSN::Connection;
+	 TEQU 4F55540D 1 0 0 MSN::Connection_Close;
+	 TEQU 4D534720 1 0 0 MSN::Message;
+	 TEQU 53594E20 1 0 0 MSN::Synchronization;
+	 TEQU 47544320 1 0 0 MSN::Change_Settings;
+	 TEQU 4C535420 1 0 0 MSN::List_Command;
+	*TEQU 53444320 1 0 0 MSN::SDC;
+	LABL 0 0 0 d4 Unknown Messenger Command;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Message()
+{
+	LABL( 0, 0, 0, 0xb7, "Message");
+	Display All Lines;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void MSN::List_Command;
+	LABL 0 0 0 b7 List Command;
+	INCR 4;
+	MSN::Transaction_Id;
+	CHR# 3 0 90 c2 Reverse List:;
+	DECR B;
+	Display Text Lines Only;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Keep_Alive;
+	LABL 0 0 90 c2 Keep Alive;
+	INCR 6;
+	TRTS;
+
+void MSN::Synchronization;
+	LABL 0 0 0 b7 Property Synchronization;
+	INCR 4;
+	MSN::Transaction_Id;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Unknown:;
+	INCR 2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Change_Settings;
+	LABL 0 0 0 b7 Change Settings;
+	INCR 4;
+	MSN::Transaction_Id;
+	DECR 7;
+	Display Text Lines Only;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Client_State;
+	LABL 0 0 0 b7 Client State;
+	INCR 4;
+	MSN::Transaction_Id;
+	GLNG 0 1;
+	 CEQU 4157590D 1 90 c2 Away;
+	 CEQU 4252420D 1 90 c2 Be Right Back;
+	 CEQU 4253590D 1 90 c2 Busy;
+	 CEQU 464C4E0D 1 90 c2 Offline;
+	 CEQU 48444E0D 1 90 c2 Appear Offline;
+	 CEQU 49444C0D 1 90 c2 Idle;
+	 CEQU 4C554E0D 1 90 c2 Out to Lunch;
+	 CEQU 4E4C4E0D 1 90 c2 Online;
+	 CEQU 50484E0D 1 90 c2 On the Phone;
+	INCR 5;	
+	LABL 0 0 0 b8;
+	TRTS;	
+
+void MSN::Dispatch_Server;
+	LABL 0 0 0 b7 Dispatch Server;
+	INCR 4;
+	MSN::Transaction_Id;
+	MSN::0D_Byte_Loop;
+	DECR 0 17;
+	CHR# 0 17 90 c2 Protocol Version:;
+	INCR 2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Server_Response;
+	LABL 0 0 0 b7 Server Response;
+	INCR 4;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Transaction ID:;
+	INCR 1;
+	GBYT 0 1;
+	 TEQU 0A 1 0 0 MSN::EOF;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Security Package:;
+	INCR 2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Find_User;
+	LABL 0 0 0 b7 Find User;
+	INCR 4;
+	MSN::Transaction_Id;
+	DECR 7;
+	Display Text Lines Only;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Challenge;
+	LABL 0 0 0 b7 Challenge;
+	INCR 4;
+	MSN::Transaction_Id;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Challenge Key:;
+	INCR 2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Successful_Challenge;
+	LABL 0 0 0 b7 Successful Challenge;
+	INCR 4;
+	MSN::Transaction_Id;
+	GBYT 0 1;
+	 TEQU 0A 1 0 0 MSN::EOF;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Client Response:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Unknown:;
+	INCR 2;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Client Response:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Connection_Close;
+	CHR# 3 0 90 c2 Connection Close:;
+	INCR 3;
+	TRTS;
+
+void MSN::Client_Version;
+	LABL 0 0 0 b7 Client Version;
+	INCR 4;
+	MSN::Transaction_Id;
+	GWRD 0 1;
+	 TEQU 3078 1 0 0 MSN::OS_Type;
+	MSN::Download;
+	TRTS;
+
+void MSN::OS_Type;
+	LABL 0 0 90 c9 User Configuration:;
+	INCR 7; * not sure what 0x0409 is
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 OS Type:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 OS Build:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Processor ID:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Application:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 App Build:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Client Type:;
+	INCR 2;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Download;
+	LABL 0 0 90 c9 MSN Download:;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Build:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Build:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Build:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Download Link:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Home Page:;
+	INCR 2;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Client_Authentication;
+	LABL 0 0 0 b7 Client Authentication;
+	INCR 4;
+	MSN::Transaction_Id;
+	MSN::MD5_Ok_Check;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::Connection;
+	LABL 0 0 0 b7 Connection to Notification Server;
+	INCR 4;
+	MSN::Transaction_Id;
+	CHR# 3 0 90 c2 Notification Server:;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 IP address:;
+	INCR 3;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 IP address:;
+	INCR 2;
+	LABL 0 0 0 b8;
+	TRTS;	
+
+void MSN::Transaction_Id;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Transaction ID:;
+	INCR 1;
+	TRTS;
+
+void MSN::MD5_Ok_Check;
+	GWRD 0 1;
+	 TEQU 4D44 1 0 0 MSN::MD5;
+	 TEQU 4F4B 1 0 0 MSN::OK;
+
+void MSN::OK;
+	CHR# 3 0 90 c2 Password:;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Passport Name:;
+	INCR 1;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Nickname:;
+	INCR 4;
+	TRTS;
+
+void MSN::MD5;
+	CHR# 4 0 90 c2 Security Package:;
+	GBYT 0 1;
+	 TEQU 53 1 0 0 MSN::String;
+	 TEQU 49 1 0 0 MSN::Passport_Info;
+
+void MSN::String;
+	CHR# 2 0 90 c2 String:;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 MD5 Hash:;
+	INCR 2;	
+	TRTS;
+
+void MSN::Passport_Info;
+	CHR# 2 0 90 c2 Information:;
+	MSN::Parse_Value;
+	CHR# 0 1e 90 c2 Passport Name:;
+	INCR 2;	
+	TRTS;
+
+void MSN::Parse_Value;
+	MOVE 0  1e;
+	GSTR 20000020  1e;
+	TRTS;
+
+void MSN::EOF;
+	INCR 1;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MSN::0D_Byte_Loop;
+	MOVE 0 17;
+	TNXT -MSN::0D_Byte_Loop_Helper;
+
+void MSN::0D_Byte_Loop_Helper;
+	GBYT 0 1;
+	TEQU 0D 1 0 0 RETURN;
+	INCR 1;
+	ADDG 1 17;
+	TNXT -MSN::0D_Byte_Loop_Helper;
+
+* end MSN Messenger
+

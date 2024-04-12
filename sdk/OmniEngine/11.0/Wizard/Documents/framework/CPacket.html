@@ -1,0 +1,1732 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CPacket Class</title>
+</head>
+<body>
+    <h1>CPacket Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        The CPacket class encapsulates an Ethernet packet.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CPacket
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top"><a href="#CPacket::CPacket">CPacket</a></td>
+            <td>&nbsp;</td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top: 20px; padding-bottom: 5px;">
+                <h2>
+                    Operators
+                </h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::operator_assign">operator =</a>
+            </td>
+            <td valign="top">
+                Copy the other packet to this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::operator_equal">operator ==</a>
+            </td>
+            <td valign="top">
+                Text whether the other packet is equal to this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::operator_notequal">operator !=</a>
+            </td>
+            <td valign="top">
+                Test whether the other packet is not equal to this packet.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="padding-bottom: 5px;">
+                <h2>
+                    Public Member Functions
+                </h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::ClearFlag">ClearFlag</a>
+            </td>
+            <td valign="top">
+                Clear a flag in the packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::ClearStatus">ClearStatus</a>
+            </td>
+            <td valign="top">
+                Clear the Status in the packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::CopyDetached">CopyDetached</a>
+            </td>
+            <td valign="top">
+                Copy the other packet into this packet, then if this packet is
+                attached to a Capture Buffer, then make a copy of the Packet
+                and Packet Data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::Copy">Copy</a>
+            </td>
+            <td valign="top">
+                Copy the other packet into this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::Detach">Detach</a>
+            </td>
+            <td valign="top">
+                if this packet is attached to a Capture Buffer, then make a
+                copy of the Packet and Packet Data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetFlags">GetFlags</a>
+            </td>
+            <td valign="top">
+                Get the Flags from this packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetFlowId">GetFlowId</a>
+            </td>
+            <td valign="top">
+                Get this packet's Flow Identifier. If this packet has not been
+                assigned to a Flow, then its Identifier will be zero.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetLayer">GetLayer</a>
+            </td>
+            <td valign="top">
+                The a Layer object of a particular protocol (Ethernet, IP, TCP or UDP)
+                of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetMediaSubType">GetMediaSubType</a>
+            </td>
+            <td valign="top">
+                Get the Media Sub-Type that was used to transmit this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetMediaType">GetMediaType</a>
+            </td>
+            <td valign="top">
+                Get the Media Type that was used to transmit this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketBuffer">GetPacketBuffer</a>
+            </td>
+            <td valign="top">
+                Get the Packet Buffer object that contains this packet. If this packet
+                is not associated with a Packet Buffer, then the CPacketBuffer object
+                will not be valid (IsValid() will return false).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketData">GetPacketData</a>
+            </td>
+            <td valign="top">
+                Get the Packet Data of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketDataRef">GetPacketDataRef</a>
+            </td>
+            <td valign="top">
+                Get a referenece to this packet's Packet Data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketDataLength">GetPacketDataLength</a>
+            </td>
+            <td valign="top">
+                Get the number of bytes in this packet's Packet Data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketLayers">GetPacketLayers</a>
+            </td>
+            <td valign="top">
+                Get the Packet Layers object of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketLength">GetPacketLength</a>
+            </td>
+            <td valign="top">
+                Get the length of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetPacketNumber">GetPacketNumber</a>
+            </td>
+            <td valign="top">
+                Get the Packet Number of this packet within the associated Packet
+                Buffer. If this packet is not associated with a Packet Buffer,
+                then its Packet Number will be zero.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetProtoSpecId">GetProtoSpecId</a>
+            </td>
+            <td valign="top">
+                Get the Protocol Specification (ProtoSpec) Identifier of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetSliceLength">GetSliceLength</a>
+            </td>
+            <td valign="top">
+                Get the Slice Length of this packet. If the packet has not been
+                sliced, then the Slice Length is zero.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetStatus">GetStatus</a>
+            </td>
+            <td valign="top">
+                Get the Status from this packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetTimeStamp">GetTimeStamp</a>
+            </td>
+            <td valign="top">
+                Get the date and time of when this packet was captured as a
+                Peek Time.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetVoIPCallFlowIndex">GetVoIPCallFlowIndex</a>
+            </td>
+            <td valign="top">
+                Get the VoIP Call Flow Index of that this packet is associated with.
+                If the packet is not associated with a VoIP Call Flow, then the
+                Index will be zero.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::GetVoIPCallId">GetVoIPCallId</a>
+            </td>
+            <td valign="top">
+                Get the VoIP Call Identifier of that this packet is associated with.
+                If the packet is not associated with a VoIP Call Flow, then the
+                Identifier will be zero.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsBroadcast">IsBroadcast</a>
+            </td>
+            <td valign="top">
+                Return true if this packet is a Broadcast packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsDescendentOf">IsDescendentOf</a>
+            </td>
+            <td valign="top">
+                Determine if this packet is a Descendent of a list of protocols.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsAttached">IsAttached</a>
+            </td>
+            <td valign="top">
+                Return true if this packet is attached (it own it Packet and
+                Packet Data).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsDetached">IsDetached</a>
+            </td>
+            <td valign="top">
+                Return true if this packet is detached (it own it Packet and
+                Packet Data).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsEmpty">IsEmpty</a>
+            </td>
+            <td valign="top">
+                Return true if this packet does not contain a Packet or Packet Data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsEqual">IsEqual</a>
+            </td>
+            <td valign="top">
+                Is the Packet and Packet Data of this packet equal to the Packet
+                and Packet Data of the other packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsError">IsError</a>
+            </td>
+            <td valign="top">
+                Is this an error packet: runt...
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsFullDuplex">IsFullDuplex</a>
+            </td>
+            <td valign="top">
+                Is this a Full Duplex packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsMultiCast">IsMultiCast</a>
+            </td>
+            <td valign="top">
+                Is this a Multi-Cast packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsDataOwner">IsDataOwner</a>
+            </td>
+            <td valign="top">
+                Does this packet own its Packet and Packet Data memory buffers.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsValid">IsValid</a>
+            </td>
+            <td valign="top">
+                Is this a valid object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::IsWireless">IsWireless</a>
+            </td>
+            <td valign="top">
+                Is this a Wireless packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::Reset">Reset</a>
+            </td>
+            <td valign="top">
+                Reset the packet, delete (or release) its Packet and Packet Data buffers.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::SetData">SetData</a>
+            </td>
+            <td valign="top">
+                Set the Packet Data of this packet.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::SetFlag">SetFlag</a>
+            </td>
+            <td valign="top">
+                Set a Flag in this packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::SetStatus">SetStatus</a>
+            </td>
+            <td valign="top">
+                Set the Status in this packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::TestFlag">TestFlag</a>
+            </td>
+            <td valign="top">
+                Test a Flag in this packet's meta-data.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPacket::TestStatus">TestStatus</a>
+            </td>
+            <td valign="top">
+                Test the Status of this packet's meta-data.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CPacket Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::CPacket"></a>CPacket::CPacket</h3>
+    <p class="onlyP">
+        Constructs a CPacket object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>void*</td>
+            <td><em>inPtr</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">CPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em>,</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>inDetach</em> = false</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPtr</em></dt>
+        <dd>A framework pointer to a packet proxy.</dd>
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to copy.</dd>
+        <dt><em>inDetach</em></dt>
+        <dd>Detach, make an independent copy of data, this packet.</dd>
+    </dl>
+
+    <!-- operator_assign details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::operator_assign"></a>CPacket::operator =</h3>
+    <p class="onlyP">
+        Copies the other packet to this packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPacket& operator=(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPackt&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to copy.</dd>
+    </dl>
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A reference to this packet.
+    </p>
+
+    <!-- operator_equal details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::operator_equal"></a>CPacket::operator ==</h3>
+    <p class="onlyP">
+        Compares this object with another object, return true if they are equivalent.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool operator ==(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if the packets are equal, false otherwise.
+    </p>
+
+    <!-- operator_notequal details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::operator_notequal"></a>CPacket::operator !=</h3>
+    <p class="onlyP">
+        Compares two objects and return true if they are not equivilant.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool operator !=(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>Reference to the other packet.</dd>
+    </dl>
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if the packets are not the same, false otherwise.
+    </p>
+
+    <!-- ClearFlag details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::ClearFlag"></a>CPacket::ClearFlag</h3>
+    <p class="onlyP">
+        Clear the indicated flag in the packet's meta-data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void ClearFlag(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nFlag</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>nFlag</em></dt>
+        <dd>Flag to clear.</dd>
+    </dl>
+
+    <!-- ClearStatus details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::ClearStatus"></a>CPacket::ClearStatus</h3>
+    <p class="onlyP">
+        Clear the status in the packet's meta-data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void ClearStatus(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nStatus</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>nStatus</em></dt>
+        <dd>The new value for the packet's status.</dd>
+    </dl>
+
+    <!-- CopyDetached details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::CopyDetached"></a>CPacket::CopyDetached</h3>
+    <p class="onlyP">
+        Make a copy of the data of the other packet into this packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void CopyDetached(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to copy.</dd>
+    </dl>
+
+    <!-- Copy details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::Copy"></a>CPacket::Copy</h3>
+    <p class="onlyP">
+        Copy the other packet into this packet. The various member data pointers
+        are copied. The data is not duplicated.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Copy(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to copy.</dd>
+    </dl>
+
+    <!-- Detach details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::Detach"></a>CPacket::Detach</h3>
+    <p class="onlyP">
+        If the packet's data is attached to another object, then make a copy of
+        the data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Detach();</td>
+        </tr>
+    </table>
+
+    <!-- GetFlags details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetFlags"></a>CPacket::GetFlags</h3>
+    <p class="onlyP">
+        Get the flags from the packet's meta-data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetFlags();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Packet's Flags.
+    </p>
+
+    <!-- GetFlowId details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetFlowId"></a>CPacket::GetFlowId</h3>
+    <p class="onlyP">
+        Get the Flow Identifier of this packet. If the packet is not part of a flow then
+        the Flow Identifier will be zero.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetFlowId();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Packet's Flow Identifier. A packet without a flow has a flow
+        identifier of zero.
+    </p>
+
+    <!-- GetLayer details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetLayer"></a>CPacket::GetLayer</h3>
+    <p class="onlyP">
+        Get a particular Layer, Ethernet, IP, TCP or UDP, of this packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool GetLayer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CLayerEthernet</td>
+            <td><em>outLayer</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">bool GetLayer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CLayerIP</td>
+            <td><em>outLayer</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">bool GetLayer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CLayerTCP</td>
+            <td><em>outLayer</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">bool GetLayer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CLayerUDP</td>
+            <td><em>outLayer</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>outLayer</em></dt>
+        <dd>A layer of the packet.</dd>
+    </dl>
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        True if successful.
+    </p>
+
+    <!-- GetMediaSubType details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetMediaSubType"></a>CPacket::GetMediaSubType</h3>
+    <p class="onlyP">
+        Get the Media Sub-Type of the packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">TMediaSubType GetMediaSubType() const</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Packet's Media Subtype.
+    </p>
+
+    <!-- GetMediaType details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetMediaType"></a>CPacket::GetMediaType</h3>
+    <p class="onlyP">
+        Get the Media Type of the packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">TMediaType GetMediaType() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Packet's Media Type.
+    </p>
+
+    <!-- GetPacketBuffer details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketBuffer"></a>CPacket::GetPacketBuffer</h3>
+    <p class="onlyP">
+        GetPacketBuffer description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPacketBuffer GetPacketBuffer() const</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        The Packet Buffer that this packet is associated with.
+    </p>
+    <p style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyP">
+        If the packet is not associated with a Packet Buffer, then the CPacketBuffer
+        returned will be Invalid.
+    </p>
+
+    <!-- GetPacketData details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketData"></a>CPacket::GetPacketData</h3>
+    <p class="onlyP">
+        Get the Packet Data of the packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt16 GetPacketData(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt8*&</td>
+            <td><em>outData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Parameters</b></p>
+    <dl style="margin-left:25px;">
+        <dt><em>outData</em></dt>
+        <dd>A reference to a pointer that receives the pointer to the Packet' data.</dd>
+    </dl>
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The number of bytes in the Packet's data.
+    </p>
+
+    <!-- GetPacketDataRef details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketDataRef"></a>CPacket::GetPacketDataRef</h3>
+    <p class="onlyP">
+        Get a reference to the Packet's data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CByteVectRef GetPacketDataRef() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A CByteVectRef, a length and pointer, of the Packet's data.
+    </p>
+
+    <!-- GetPacketLayers details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketLayers"></a>CPacket::GetPacketLayers</h3>
+    <p class="onlyP">
+        Get the CPacketLayers object of this packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPacketLayers GetPacketLayers()</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The CPacketLayers object of this packet.
+    </p>
+
+    <!-- GetPacketLength details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketLength"></a>CPacket::GetPacketLength</h3>
+    <p class="onlyP">
+        GetPacketLength description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt16 GetPacketLength() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetPacketNumber details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetPacketNumber"></a>CPacket::GetPacketNumber</h3>
+    <p class="onlyP">
+        GetPacketNumber description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt64 GetPacketNumber();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        Verify return type. method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetProtoSpec details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetProtoSpec"></a>CPacket::GetProtoSpec</h3>
+    <p class="onlyP">
+        The Protocol Specification of the packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetProtoSpec() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetProtoSpecId details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetProtoSpecId"></a>CPacket::GetProtoSpecId</h3>
+    <p class="onlyP">
+        The Protocol Specification Identifier of the packet.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt16 GetProtoSpecId() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetSliceLength details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetSliceLength"></a>CPacket::GetSliceLength</h3>
+    <p class="onlyP">
+        GetSliceLength description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt16 GetSliceLength() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetStatus details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetStatus"></a>CPacket::GetStatus</h3>
+    <p class="onlyP">
+        GetStatus description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetStatus() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetTimeStamp details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetTimeStamp"></a>CPacket::GetTimeStamp</h3>
+    <p class="onlyP">
+        GetTimeStamp description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt64 GetTimeStamp() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetVoIPCallFlowIndex details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetVoIPCallFlowIndex"></a>CPacket::GetVoIPCallFlowIndex</h3>
+    <p class="onlyP">
+        GetVoIPCallFlowIndex description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetVoIPCallFlowIndex() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- GetVoIPCallId details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::GetVoIPCallId"></a>CPacket::GetVoIPCallId</h3>
+    <p class="onlyP">
+        GetVoIPCallId description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt64 GetVoIPCallId() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsBroadcast details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsBroadcast"></a>CPacket::IsBroadcast</h3>
+    <p class="onlyP">
+        IsBroadcast description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsBroadcast() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsDescendentOf details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsDescendentOf"></a>CPacket::IsDescendentOf</h3>
+    <p class="onlyP">
+        IsDescendentOf description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsDescendentOf(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt16</td>
+            <td><em>inParents[]</em>,</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>SInt32</td>
+            <td><em>inCount</em>,</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32*</td>
+            <td><em>outMatchInstanceId</em>,</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>SInt32*</td>
+            <td><em>outMatchIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inParents[]</em></dt>
+        <dd>pointer to an array of Protocol Specification Identifiers (ProtoSpecId).</dd>
+        <dt><em>inCount</em></dt>
+        <dd>number of entries in inParent.</dd>
+        <dt><em>outMatchInstanceId</em></dt>
+        <dd>The ProtoSpecId that was matched.</dd>
+        <dt><em>outMatchIndex</em></dt>
+        <dd>the index of the matched entry in inParent.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the packet matches a ProtoSpecId in inParent.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsAttached details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsAttached"></a>CPacket::IsAttached</h3>
+    <p class="onlyP">
+        IsAttached description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsAttached() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the packet is Attached to a Capture Buffer.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsDetached details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsDetached"></a>CPacket::IsDetached</h3>
+    <p class="onlyP">
+        IsDetached description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsDetached() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the packet does not own the Packet and Packet Data buffers.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsEmpty details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsEmpty"></a>CPacket::IsEmpty</h3>
+    <p class="onlyP">
+        IsEmpty description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsEmpty() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the Packet or the Packet Data buffers is empty.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsEqual details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsEqual"></a>CPacket::IsEqual</h3>
+    <p class="onlyP">
+        IsEqual description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsEqual(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>Reference to the packet to compare.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the packets are the same.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsError details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsError"></a>CPacket::IsError</h3>
+    <p class="onlyP">
+        IsError description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsError() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if te packet has an error.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsFullDuplex details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsFullDuplex"></a>CPacket::IsFullDuplex</h3>
+    <p class="onlyP">
+        IsFullDuplex description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsFullDuplex() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsMultiCast details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsMultiCast"></a>CPacket::IsMultiCast</h3>
+    <p class="onlyP">
+        IsMultiCast description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsMultiCast();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsDataOwner details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsDataOwner"></a>CPacket::IsDataOwner</h3>
+    <p class="onlyP">
+        IsDataOwner description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsDataOwner() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsValid details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsValid"></a>CPacket::IsValid</h3>
+    <p class="onlyP">
+        IsValid description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsValid() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsWAN details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsWAN"></a>CPacket::IsWAN</h3>
+    <p class="onlyP">
+        IsWAN description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsWAN() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>parameter</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- IsWireless details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::IsWireless"></a>CPacket::IsWireless</h3>
+    <p class="onlyP">
+        IsWireless description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsWireless();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Reset details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::Reset"></a>CPacket::Reset</h3>
+    <p class="onlyP">
+        Reset description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Reset();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- SetData details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::SetData"></a>CPacket::SetData</h3>
+    <p class="onlyP">
+        SetData description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void SetData(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt8*</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inData</em></dt>
+        <dd>address of the data. This buffer should be at least as large as Packet.fPacket.fLength.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- SetFlag details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::SetFlag"></a>CPacket::SetFlag</h3>
+    <p class="onlyP">
+        SetFlag description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void SetFlag(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inFlag</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inFlag</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- SetStatus details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::SetStatus"></a>CPacket::SetStatus</h3>
+    <p class="onlyP">
+        SetStatus description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void SetStatus(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inStatus</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inStatus</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- TestFlag details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::TestFlag"></a>CPacket::TestFlag</h3>
+    <p class="onlyP">
+        TestFlag description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool TestFlag(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inFlag</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inFlag</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the flag is set.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- TestStatus details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPacket::TestStatus"></a>CPacket::TestStatus</h3>
+    <p class="onlyP">
+        TestStatus description.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool TestStatus(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inStatus</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inStatus</em></dt>
+        <dd>parameter description.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        method's return value description.
+    </p>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Remarks about method.
+    </p>
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

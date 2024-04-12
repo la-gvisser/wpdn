@@ -1,0 +1,445 @@
+// EPR - EtherPeek Remote Protocol
+
+/*
+ notes:
+  port6367
+  unique id: 0xB3D9
+
+ globals i use:
+	g[9]   = check global to see what type of epr data it is
+		- 0 = nothing matched
+		- 1 = epr
+		- 2 = epr continuation data
+		- 3 = epr server auth response
+		- 0x4e54 = ntlm authentication
+		- 0x7fbe = epr authentication
+	g[0xa] = command data length
+	g[0xb] = test flag for xml data
+	g[0xc] = flags
+	g[0xd] = length of sec msg hdr
+	g[0xe] = length of msg
+	g[0xf] = version
+
+*/
+
+void EPR()
+{
+	EPR::Init();
+	
+	g[9] = 0;
+	EPR::Check();
+	l[9] = g[9];
+	
+	if (l[9] == 1)
+	{
+		LABL 0 0 0 b1 Omnipeek Protocol:;
+		EPR::MSG_Header;
+		if (g[0xd] > 0)
+		{
+			TNXT -EPR::Encrypted_Data;
+		}
+		if (g[0xd] <= 0)
+		{
+			EPR::CMD_Header;
+		}
+
+		if (g[0xa] <= g[16])			//si: all data is contained in this packet
+		{
+			while (g[16] > 0)
+			{
+				g[0xb] = 0;
+				l[1] = pb[0];
+				if (l[1] == 0x3c)
+				{
+					LABL 0 0 0 b7 XML Command Data\XML Cmd:;
+					XML::Parser;
+					LABL 0 0 0 b8;
+					if (g[16] > 0)
+					{
+						g[1] = pw[0];
+						if (g[1] == 0xd9b3)
+						{
+							TNXT -EPR;
+						}
+					}
+				}
+				if (l[1] != 0x3c) 
+				{
+					LABL 0 0 0 b7 Binary Command Data\Bin Cmd:;
+					DUMP 0 10 90 c2 Command Data:\Data:;
+					LABL 0 0 0 b8;
+				}
+				s[1] = 0;
+			}
+			if (g[16] <= 0)
+			{
+				TRTS;
+			}
+		}
+		
+		if (g[0xa] > g[16])				//si: data continues on next packet
+		{
+			while (g[16] > 0)
+			{
+				g[0xb] = 0;
+				l[1] = pb[0];
+				if (l[1] == 0x3c)
+				{
+					LABL 0 0 0 b7 XML Command Data\XML Cmd:;
+					LABL 0 0 0 14 Data Continues on Next Packet;
+					XML::Parser;
+					LABL 0 0 0 b8;
+				}
+				if (l[1] != 0x3c)
+				{
+					LABL 0 0 0 b7 Binary Command Data\Bin Cmd:;
+					DUMP 0 10 90 c2 Command Data:\Data:;
+					LABL 0 0 0 14 Data Continues on Next Packet;
+					LABL 0 0 0 b8;
+				}
+				l[2] = g[0xa];
+				l[2] -= l[1];
+				s[1] = l[2];		//si: remaining length
+			}
+		}
+	}
+	
+	if (l[9] == 2)
+	{
+		LABL 0 0 0 b1 Omnipeek Protocol:;
+		EPR::Continuation_Data;
+		TRTS;
+	}
+	
+	if (l[9] == 3)
+	{
+		LABL 0 0 0 b1 Omnipeek Protocol:;
+		EPR::Auth_Response;
+		TRTS;
+	}
+
+	if (l[9] == 0x4e54)
+	{
+		TNXT -NTLM::Check;
+		TRTS;
+	} 
+
+	if (l[9] == 0x7fbe)
+	{
+		LABL 0 0 0 b1 Omnipeek Protocol:;
+		EPR::Auth_Header;
+		TRTS;
+	}
+	TRTS;
+}
+
+void EPR::Check()
+{
+	l[1] = pw[0];
+	// EPR
+	if (l[1] == 0xd9b3)
+	{
+		g[9] = 1;
+		TRTS;
+	}
+	
+	// EPR - AUTHENTICATION
+	if (l[1] == 0x7fbe)
+	{
+		l[2] = pw[2];
+		if (l[2] == 0xaef3)
+		{
+			g[9] = 0x7fbe;
+			TRTS;
+		}
+	}
+
+	// NTLM
+	l[1] = pl[0];
+	if (l[1] == 0x4e544c4d)
+	{
+		g[9] = 0x4e54;
+		TRTS;
+	}
+
+	// Server Authentiation Response
+	if (g[9] == 0)
+	{
+		g[1] = s[2];
+		if (g[1] == g[16])
+		{
+			g[9] = 3;
+			s[2] = 0;
+			TRTS;
+		}
+	}
+
+	//	CONTINUATION DATA
+	if (l[1] != 0xd9b3)
+	{
+		g[9] = 0;
+		if (s[1] > 0)
+		{
+			g[9] = 2;
+			TRTS;
+		}
+	}
+
+	TRTS;
+}
+
+// ---------------------------------------------
+
+void EPR::Continuation_Data()
+{
+	l[1] = g[16];
+	DUMP 0 10 90 c2 Command Data:;
+	LABL 0  0  0 14 Continuation Data From Previous Packet;
+	l[2] = g[0xa];
+	l[2] -= l[1];
+	s[1] = l[2];		//si: remaining length
+}
+
+// ---------------------------------------------
+
+void EPR::Init()
+{
+	g[0x9] = 0;
+	g[0xa] = 0; 
+	g[0xb] = 0;
+	g[0xc] = 0;
+	g[0xd] = 0;
+	g[0xe] = 0;
+	g[0xf] = 0;
+}
+
+// ---------------------------------------------
+
+void EPR::MSG_Header()
+{
+	LABL 0 0 0 b7 Message Header\Hdr:;
+	HWRD 40000000 1 90 c2 Unique Identifier:\;
+	GWRD 0 f;
+	TEQU 1 1 0 0 EPR::MSG_Header::v1;
+	TNXT 0 0 0 0 EPR::MSG_Header::v2;
+}
+
+void EPR::MSG_Header::v1()
+{
+	DWRD 40000000 1 90 c2 Version:\;
+	DLNG 40000000 e 90 c2 Msg Size:\;
+	DLNG 40000000 d 90 c2 Msg Security Hdr Size:\;
+	g[0xe] -= g[0xd];
+	DWRD 40000000 1 90 c2 Msg Type:\Msg:;
+	CEQU		1 1 00 14 Request;
+	CEQU		2 1 00 14 Response;
+	HWRD 40000000 1 90 c2 User Agent:\Usr:;
+	CEQU		1 1 00 14 Console;
+	CEQU		2 1 00 14 Management Console;
+	CEQU		3 1 00 14 Scripting Client;
+	LABL 0 0 0 b8;
+}
+
+void EPR::MSG_Header::v2()
+{
+	DBYT		0 1 90 c2 Version:\;
+	DBYT		0 1 00 02 .;
+	DLNG 40000000 e 90 c2 Msg Size:\;
+	DWRD 40000000 1 90 c2 Msg Type:\Msg:;
+	CST#		0 1 00 14 EPR::MSG_Header::v2::Msg_Type;
+	HWRD 40000000 1 90 c2 User Agent:\Usr:;
+	CST#		0 1 00 14 EPR::MSG_Header::v2::Agent_Type;
+	LABL 0 0 0 b8;
+}
+
+// ---------------------------------------------
+
+void EPR::CMD_Header()
+{
+	LABL 0 0 0 b7 Command Header\Cmd:;
+	DLNG 40000000 1 90 c2 Command ID:\Cmd:;
+	CST#		0 1 00 14 EPR::CMD_Header::CMD_ID;
+	DLNG 40000000 1 90 c2 Transaction ID:\;
+	HLNG 40000000 c 90 c2 Flags:\;
+	 CEQU 1 c 0 14 Compressed;
+	DLNG 40000000 a 90 c2 Cmd Data Length:\;
+	HLNG 40000000 1 90 c2 Cmd Exec Result:\;
+	//g[1] -= 8;
+	//HEX# b 0 90 c2 Command Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+// ---------------------------------------------
+
+void EPR::Encrypted_Data()
+{
+	LABL 0 0 0 b7 Encrypted Data;
+	DUMP 0 e 90 c2 Command Data:;
+	LABL 0 0 0 b8;
+	if (g[16] > 0)
+	{
+		TNXT -EPR;
+	}
+	TRTS;
+}
+
+// ---------------------------------------------
+
+void EPR::Auth_Header()
+{
+	LABL 0 0 0 b7 Authentication Header\Auth:;
+	HLNG 40000000 1 90 c2 Magic Num:\;
+	DLNG 40000000 1 90 c2 Version:\V:;
+	DLNG 40000000 1 90 c2 Message:\Msg:;
+	DLNG 40000000 1 90 c2 Total:\;
+	s[2] = g[1];
+	DLNG 40000000 1 90 c2 Msg Protection:\;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+// ---------------------------------------------
+
+void EPR::Auth_Response()
+{
+	LABL 0 0 0 b7 Server Authentication Response\Auth Rsp:;
+	HLNG 0 1 90 c2 Error Code:;
+	CHR#  20 0 90 c2 Domain Name:;
+	CHR# 200 0 90 c2 User Name:;
+	HLNG 40000000 1 90 c2 Flags:;
+	CEQU 0 1 0 14 Encryption Not Needed;
+	CEQU 1 1 0 14 Encryption Needed;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+// ---------------------------------------------
+
+void XML::Parser()
+{
+	g[1] = pb[0];
+	g[2] = pw[0];
+	if (g[2] == 0x0d0a)
+	{
+		HWRD 0 1 90 c2 End Tag:;
+		TRTS;	
+	}
+	if (g[1] == 0x3c)
+	{
+		g[0xb] = 1;
+		CHR# 1 0 90 c2 XML Line:;
+		g[1] = pb[0];
+		g[2] = 0;
+		while (g[1] != 0x3e)
+		{
+			if (g[16] <= 1)
+			{
+				INCR 1;
+				g[2] += 1;
+				DECR 0 2;
+				CHR# 0 2 90;
+				TNXT -RETURN;
+			}
+			INCR 1;
+			g[2] += 1;		//CHR# 1 0 90;
+			g[1] = pb[0];
+		}
+		INCR 1;
+		g[2] += 1;
+		DECR 0 2;
+		CHR# 0 2 90;
+		TNXT -XML::Parser;
+	}
+	if (g[1] != 0x3c)
+	{
+		if (g[0xb] == 1)
+		{
+			CHR# 1 0 90 c2 XML Line:;
+			g[1] = pb[0];
+			while (g[1] != 0x3c)
+			{
+				TGTE 0 10 0 0 RETURN;
+				CHR# 1 0 90;
+				g[1] = pb[0];
+			}
+			TNXT -XML::Parser;
+		}
+	}
+}
+
+// ---------------------------------------------
+
+str# EPR::MSG_Header::v2::Msg_Type;
+	0	| Request;
+	1	| Response;
+	2	| Broadcast;
+
+str# EPR::MSG_Header::v2::Agent_Type;
+	0	| Unknown;
+	1	| Console;
+	2	| Management Console;
+	3	| Scripting Client;
+
+str# EPR::CMD_Header::CMD_ID;
+	0	| ERROR;
+	1	| NOTIFY_CLIENT;
+	110 | GET_STATUS;
+	111 | GET_CAPABILITIES;
+	112 | GET_LOG_MSGS;
+	113 | GET_ADAPTER_LIST;
+	114 | GET_CAPTURE_LIST;
+	115 | GET_CAPTURE_PROPS;
+	116 | CREATE_CAPTURE;
+	117 | DELETE_CAPTURES;
+	118 | GET_CAPTURE_OPTIONS;
+	119 | SET_CAPTURE_OPTIONS;
+	120 | START_CAPTURES;
+	121 | STOP_CAPTURES;
+	122 | CLEAR_CAPTURES;
+	123 | GET_STATS;
+	124 | TAKE_SNAPSHOT;
+	125 | GET_FILTERS;
+	126 | SET_FILTERS;
+	127 | GET_FILTER_CONFIG;
+	128 | SET_FILTER_CONFIG;
+	129 | GET_NOTIFICATIONS;
+	130 | SET_NOTIFICATIONS;
+	131 | GET_PACKETS;
+	132 | SELECT_RELATED;
+	133 | CLEAR_LOG;
+	134 | GET_EXPERT_SETTINGS;
+	135 | SET_EXPERT_SETTINGS;
+	136 | GET_ACTIVE_STREAM_LIST;
+	137 | GET_FILE_LIST;
+	138 | GET_FILE;
+	139 | DELETE_FILES;
+	140 | SAVE_CAPTURE_FILE;
+	141 | GET_ALARMS;
+	142 | SET_ALARMS;
+	143 | GET_ALARM_CONFIG;
+	144 | SET_ALARM_CONFIG;
+	145 | GET_ALARM_STATES;
+	146 | MODIFY_ALARMS;
+	147 | DELETE_ALARMS;
+	148 | SELECT_FILTER;
+	149 | SAVE_SELECTED;
+	150 | DELETE_SNAPSHOTS;
+	151 | SELECT_FILTER_CONFIG;
+	152 | SWITCH_SETTINGS;
+	153 | EXPERT_PERFORM_QUERY;
+	154 | SELECT_EXPERT;
+	155 | GET_HARDWARE_OPTIONS;
+	156 | SET_HARDWARE_OPTIONS;
+	157 | GET_ADAPTER_CONFIG;
+	158 | SET_ADAPTER_CONFIG;
+	500 | GET_AGENT_SETTINGS;			// Command IDs for Administrative commands
+	501 | SET_AGENT_SETTINGS;
+	502 | GET_AGENT_STATS;
+	503 | GET_CLIENT_STATS;
+	504 | GET_OPS_CMD_LIST;
+	505 | GET_ADM_CMD_LIST;
+	506 | GET_COMPUTER_ACCT_LIST;
+	507 | GET_DIR_LIST;
+	508	| RESTART_ENGINE;
+

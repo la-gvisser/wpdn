@@ -1,0 +1,532 @@
+// SNMP - Simple Network Management Protocol
+
+void SNMP;
+	ASN1_Init;
+	MOVE 0 11;  //enum testing is off
+	LABL  0  0  0 b1 "SNMP - Simple Network Management Protocol\SNMP:";
+	WHOA  0  1  0  0 SNMP Exp Opt;
+	WHOA  0  2  0  0 SNMP Exp Opt;
+	SEQU a1  1;
+	SKIP  5  0;
+	SEQU a2  1;
+	SKIP  3  0;
+	MARK  2  2  0  0 SNMP Exp Opt;
+	WHOA  0  2  0  0 SNMP Exp Opt;
+	TNXT -Summary SNMP Fields;
+	MARK  2  1  0  0 SNMP Exp Opt;
+	WHOA  0  1  0  0 SNMP Exp Opt;
+	TNXT -Summary SNMP Fields;
+
+void Expanded SNMP Fields;
+	SEQU a1  1;
+	SKIP  4  0;
+	SEQU a2  1;
+	SKIP  2  0;
+	MARK  1  2  0  0 SNMP Exp Opt;
+	SKIP 8000001;
+	MARK  1  1  0  0 SNMP Exp Opt;
+	MOVE  1  b;
+	HBYT  0  2 d0 c2 Community/Auth Object Type:;
+	TEQU 30  2  0 30 Comm/Auth Type OK;
+	LABL  0  0  0 14 Invalid Type;
+	DUMP  0  0 d0 c2 Remaining SNMP Data:;
+
+void Comm/Auth Type OK;
+	LABL  0  0  0 d2 Community/Auth Object Length:;
+	Parse ASN Length;
+
+	LABL  0  0 90 c2 Version Number:;
+	ASN1_Value;
+	
+	LABL  0  0 90 c2 Community:;
+	ASN1_Value;
+
+	TNXT -PDU Message;
+
+void Parse ASN Length;
+	HBYT  0  3 d0;
+	TBIT  7  3  0 30 Start Long Len;
+	DGLB  0  3  4 14 "(";
+	LABL  0  0  0  4 ")";
+	TRTS;
+
+void Start Long Len;
+	MOVE  3 81;
+	ANDG 7f  1;
+	TLTE  5  1  0 30 Invalid SNMP;
+	TGTE  0  1  0 30 Invalid SNMP;
+	MOVE  0  3;
+	TNXT -Long Length;
+
+void Long Length;
+	HBYT 80000000 4 5;
+	MULG  100 3;
+	ADDG  4 83 ;
+	SUBG  1  1 ;
+	TLTE  1  1  0 0 Long Length;
+	DGLB  0  3  5;
+	TRTS;
+
+void PDU Message;
+	HBYT  0  2 d0 c2 PDU Message Type:;
+	MOVE  2 81;
+	ANDG a0  1;
+	TEQU a0  1  0 30 Message Type OK;
+	TNXT -Invalid SNMP;
+
+void Message Type OK;
+	CST# 9f  2  0 14 SNMP Message Types;
+	LABL  0  0 d0 c2 PDU Message Length:;
+	Parse ASN Length;
+	TEQU a4  2  0 30 Trap PDU;
+	TLTE a4  2  0 30 Invalid SNMP;
+	HBYT  0  2 d0 c2 Request ID Type:;
+	LABL  0  0 d0 c2 Request ID Length:;
+	Parse ASN Length;
+	HEX#  0  3 d0 c2 Request ID:;
+	HBYT  0  2 d0 c2 Error Status Type:;
+	LABL  0  0 d0 c2 Error Status Length:;
+	Parse ASN Length;
+	TEQU  1  3  0 30 One Byte Error;
+	HEX#  0  3 d0 c2 Error Status:;
+	TNXT -After Error Status;
+
+void One Byte Error;
+	HBYT  0  1 d0 c2 Error Status:;
+	CST# ffffffff 1 0 14 SNMP Error Status;
+	TNXT -After Error Status;
+
+void After Error Status;
+	HBYT  0  2 d0 c2 Error Index Type:;
+	LABL  0  0  0 d2 Error Index Length:;
+	Parse ASN Length;
+	HEX#  0  3 d0 c2 Error Index:;
+	TNXT -Variable Bindings;
+
+void One Byte Trap Type;
+	HBYT  0  1 d0 c2 Trap Type:;
+	CST# ffffffff 1 0 14 SNMP Trap Types;
+	TNXT -After Trap Type;
+
+void After Trap Type;
+	HBYT  0  2 d0 c2 Specific Trap Type Type:;
+	LABL  0  0 d0 c2 Specific Trap Type Length:;
+	Parse ASN Length;
+	HEX#  0  3 d0 c2 Specific Trap Type:;
+	HBYT  0  2 d0 c2 Time Stamp Type:;
+	LABL  0  0  0 c2 Time Stamp Length:;
+	Parse ASN Length;
+	HEX#  0  3 d0 c2 Time Stamp:;
+	TNXT -Variable Bindings;
+
+void Parse Subidentifiers;
+	TLTE 1 1 0 30 Subidentifier Line;
+	TRTS;
+
+void Subidentifier Line;
+	LABL 0 0 0 c2 Subidentifier:;
+	MOVE 0 5 0 30;
+	Subidentifier Loop;
+	TEQU 0 8 0 30 First Subidentifier;
+	DGLB 0 5 4 14 "(";
+	LABL 0 0 0 4 ")";
+	TNXT -Parse Subidentifiers;
+
+void First Subidentifier;
+	MOVE  1  8  0 30;
+	MOVE  5 89  0 30;
+	DIVG 28  9  0 30;
+	DGLB  0  9  4 14 "(";
+	LABL  0  0  0  4 ")";
+	MULG  ffffffd8 9 0 30;
+	ADDG  9 85  0 30;
+	DGLB  0  5  4 14 "(";
+	LABL  0  0  0  4 ")";
+	TNXT -Parse Subidentifiers;
+
+void Subidentifier Loop;
+	SEQU  0  5;
+	SKIP  2  0;
+	HBYT  80000000 4 d0 0; 
+	SKIP  80000001;
+	HBYT  0  4 d0 0;
+	SUBG  1  1;
+	TLTE  1  1  0 30 Subidentifier Next;
+	ADDG  4 85;
+	TRTS;
+
+void Subidentifier Next;
+	TBIT  7  4  0 30 Subidentifier Strip7;
+	ADDG  4 85;
+	TRTS;
+
+void Subidentifier Strip7;
+	ANDG 7f  4  0 30;
+	ADDG  4 85;
+	MULG 80  5;
+	TNXT -Subidentifier Loop;
+
+void Variable Bindings;
+	HBYT  0  2 d0 c2 Variable Bindings Type:;
+	TEQU 30  2  0 30 VB Type OK;
+	LABL  0  0  0 14 Invalid Type;
+	TNXT -Invalid SNMP;
+
+void VB Type OK;
+	LABL  0  0 d0 c2 Variable Bindings Length:;
+	Parse ASN Length;
+	TNXT -VarBind Object;
+
+void VarBind Object;
+	HBYT  0  2 d0 c2 Variable Binding Type:;
+	TEQU 30  2  0 30 VarBind OK;
+	LABL  0  0  0 14 Invalid Type;
+	TNXT -Invalid SNMP;
+
+void VarBind OK;
+	LABL  0  0 d0 c2 Variable Binding Length:;
+	Parse ASN Length;
+	HBYT  0  2 d0 c2 Object Type:;
+	TEQU  6  2  0 30 VarBind Obj OK;
+	LABL  0  0  0 14 Invalid Type;
+	TNXT -Invalid SNMP;
+
+void VarBind Obj OK;
+	LABL  0  0 d0 c2 Object Length:;
+	Parse ASN Length;
+	MOVE  3 81;
+	MOVE  0  8  0 30;
+	Parse Subidentifiers;
+	HBYT  0  2 d0 c2 Value Type:;
+	LABL  0  0 d0 c2 Value Length:;
+	Parse ASN Length;
+	VarBind Obj Value;
+	TLTE  1 10  0  0 VarBind Object;
+
+void VarBind Obj Value;
+	MOVE  3 82;
+	LABL  0  0 d0 c2 Value:;
+	SEQU  0  2;
+	SKIP 1a  0;
+	SLTE  a  2;
+	SKIP 18  0;
+	HEX#  0  2 d0 ;
+	DECR  0  2;
+	SNEQ  1  2;
+	SKIP  3  0;
+	DBYT  0  0  4 14 "(";
+	LABL  0  0  0  4 ")";
+	DECR  1  0;
+	SNEQ  2  2;
+	SKIP  3  0;
+	DWRD  0  0  4 14 "(";
+	LABL  0  0  0  4 ")";
+	DECR  2  0;
+	SNEQ  4  2;
+	SKIP  6  0;
+	DLNG  0  0  4 14 "(";
+	LABL  0  0  0  4 ")";
+	DECR  4  0;
+	IPLG  0  0  4 14 "(";
+	LABL  0  0  0  4 ")";
+	DECR  4  0;
+	CHR#  0  2 b4 14 "(";
+	LABL  0  0  0  4 ")";
+	SGTE  9  2;
+	SKIP  1  0;
+	DUMP  0  2 d0 ;
+	TRTS;
+
+void Summary SNMP Fields;
+	SEQU a1  1;
+	SKIP  4  0;
+	SEQU a2  1;
+	SKIP  2  0;
+	MARK  2  2  0  0 SNMP Exp Opt;
+	SKIP 8000001;
+	MARK  2  1  0  0 SNMP Exp Opt;
+	MOVE  1  b;
+	*HBYT  0  2 d0 c2 Comm/Auth Object Type/Len:;
+	GBYT  0  2;
+	INCR  1;
+	TEQU 30  2  0 30 Summary Comm/Auth Type OK;
+	LABL  0  0  0 14 Invalid Type;
+	DUMP  0  0 d0 d2 Remaining SNMP Data:;
+
+void Summary Comm/Auth Type OK;
+	Summ Parse ASN Len;
+
+	LABL  0  0 90 c2 Version Number;
+	ASN1_Value;
+	CEQU 0 3 0 14 Version 1;
+	CEQU 1 3 0 14 Version 2 (SNMPv2);
+	CEQU 3 3 0 14 Version 3 (SNMPv3);
+	g[10] = g[3];
+
+	TEQU 3 3 0 0 SNMPv3;
+	LABL  0  0 90 c2 Community;
+	ASN1_Value;
+	SNMP_PDU;
+
+void SNMP_PDU;
+	HBYT  0  2 90 c2 PDU Type:;
+
+	GBYT 0 41;
+	ANDG 80 41;
+	if (l[1] == 0x80)
+	{
+		GBYT 0 1;
+		ANDG 7f 1;
+		HEX# 1 0 5;		// si: skip past the 0x8X
+		HEX# 0 1 5;	// si: skip past whatever the length is
+	}
+	if (l[1] != 0x80)
+	{
+		HEX# 1 0 5;		//si: invisible
+	}
+
+	MOVE  2 81;
+	ANDG a0  1;
+	TEQU a0  1  0 0 Summ Msg Type OK;
+	TNXT -Invalid SNMP;
+
+	TRTS;
+
+void SNMPv3;
+	LABL 0 0 0 b7 Global Header;
+	ASN1_SkipValue;  //skip sequence
+	LABL 0 0 90 c2 ID;
+	ASN1_Value;
+	LABL 0 0 90 c2 Max size;
+	ASN1_Value;
+	LABL 0 0 90 c2 Flags;
+	ASN1_TypeLength;
+	MOVE 1 1;  //change type to integer;
+	ASN1_Integer;
+	CBIT 2 3 0 d4 .... .1.. Reportable: Set;
+	CLSE 0 0 0 d4 .... .0.. Reportable: Not Set;
+	CBIT 1 3 0 d4 .... ..1. Encrypted: Set;
+	CLSE 0 0 0 d4 .... ..0. Encrypted: Not Set;
+	CBIT 0 3 0 d4 .... ...1 Authenticated: Set;
+	CLSE 0 0 0 d4 .... ...0 Authenticated: Not Set;
+	LABL 0 0 90 c2 Security Model;
+	ASN1_Value;
+	CEQU 3 3 0 14 USM;
+	LABL 0 0 0 b8;
+
+	LABL 0 0 0 b7 Security Parameters;
+	INCR 1;
+	DBYT 0 3 90 c2 Sequence length:;
+	ASN1_SkipValue;  //skip sequence header
+	LABL 0 0 90 c2 Engine ID;
+	ASN1_TypeLength;
+	HEX# 0 2 90;
+	LABL 0 0 90 c2 Engine Boots;
+	ASN1_Value;
+	LABL 0 0 90 c2 Engine Time;
+	ASN1_Value;
+	LABL 0 0 90 c2 User name;
+	ASN1_Value;
+	LABL 0 0 90 c2 Auth Param;
+	ASN1_Value;
+	LABL 0 0 90 c2 Privacy Param;
+	ASN1_Value;
+	LABL 0 0 0 b8;
+
+	ASN1_SkipValue; //skip sequence header
+	LABL 0 0 90 c2 Context Engine ID;
+	ASN1_TypeLength;
+	HEX# 0 2 90;
+	LABL 0 0 90 c2 Context Name;
+	ASN1_Value;
+
+	SNMP_PDU;
+
+
+
+
+void Summ Parse ASN Len;
+	HBYT 0 3 5;
+	TBIT 7 3 0 30 Start Long Len;
+	DGLB 0 3 5;
+	TRTS;
+
+void Summ Msg Type OK;
+	CST#  9f 2  0 14 SNMP Message Types;
+	TEQU a4 2 0 0 Trap PDU;
+	TEQU a5 2 0 0 GetBulk PDU;
+	TEQU a6 2 0 0 SNMP::PDU::Inform_Request;
+	TEQU a7 2 0 0 SNMP::PDU::Trapv2;
+	TLTE a8 2 0 0 Invalid SNMP;
+
+	
+	//ASN1_FindNextInteger;
+	
+	LABL 0 0 90 c2 Request ID;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Error Status;
+	ASN1_Value;
+	CST# ffffffff 3 0 14 SNMP Error Status;
+
+	TEQU  1  3  0  0 Summ 1 Byte Err;
+	TNXT -Summ After Error Stat;
+
+void Trap PDU;							// 0xa4
+	LABL 0 0 90 c2 Enterprise;
+		ASN1_Value;
+	LABL 0 0 90 c2 Agent Address;
+		ASN1_Value;
+	LABL 0 0 90 c2 Trap Type;
+		ASN1_Value;
+		CST# 0 3 00 14 SNMP Trap Types;
+	LABL 0 0 90 c2 Specific Trap Type;
+		ASN1_Value;
+	LABL 0 0 90 c2 Timestamp;
+		ASN1_Value;
+	
+	ASN1_SkipValue;
+	while (g[16] > 10)
+	{
+		ASN1_SkipValue;
+		LABL 0 0 0 b7 Object;
+		LABL 0 0 90 c2 Identifier;
+		ASN1_Value;
+		LABL 0 0 90 c2 Value;
+		ASN1_Value;
+		LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void GetBulk PDU;						// 0xa5
+	//ASN1_FindNextInteger;
+	LABL 0 0 90 c2 Request ID;
+		ASN1_Value;
+	LABL 0 0 90 c2 Non-repeaters;
+		ASN1_Value;
+	LABL 0 0 90 c2 Max-repetitions;
+		ASN1_Value;
+	TNXT -Summ Var Binds;
+
+
+void SNMP::PDU::Inform_Request;			// 0xa6
+	LABL 0 0 90 c2 Request ID;
+		ASN1_Value;
+	LABL 0 0 90 c2 Error Status;
+		ASN1_Value;
+		CST# ffffffff 3 0 14 SNMP Error Status;
+	LABL 0 0 90 c2 Error Index;
+		ASN1_Value;
+	
+	ASN1_SkipValue;
+	while (g[16] > 10)
+	{
+		ASN1_SkipValue;
+		LABL 0 0 0 b7 Object;
+		LABL 0 0 90 c2 Value;
+		ASN1_Value;
+		ASN1_SkipValue;
+		LABL 0 0 0 b8;
+	}
+	TRTS;
+
+void SNMP::PDU::Trapv2;					// 0xa7
+	//ASN1_FindNextInteger;
+	LABL 0 0 90 c2 Request ID;
+		ASN1_Value;
+	LABL 0 0 90 c2 Error Status;
+		ASN1_Value;
+		CST# ffffffff 3 0 14 SNMP Error Status;
+	LABL 0 0 90 c2 Error Index;
+		ASN1_Value;	
+	ASN1_SkipValue;
+	while (g[16] > 10)
+	{
+		ASN1_SkipValue;
+		LABL 0 0 0 b7 Object;
+		LABL 0 0 90 c2 Identifier;
+		ASN1_Value;
+		//ASN1_SkipValue;
+		LABL 0 0 90 c2 Value;
+		ASN1_Value;					
+		//ASN1_SkipValue;
+		LABL 0 0 0 b8;
+	}
+	TRTS;
+
+
+
+void Summ 1 Byte Err;
+	HBYT  0  1 20 40;
+	CST#  ffffffff 1 0 14 SNMP Error Status;
+	TNXT -Summ After Error Stat;
+
+void Summ After Error Stat;
+	LABL 0 0 90 c2 Error Index;
+	ASN1_Value;
+
+	TNXT -Summ Var Binds;
+
+void Summ Var Binds;
+	ASN1_SkipValue;
+	TEQU 10  1  0 30 Summ VB Type OK;
+	LABL  0  0  0 14 Invalid Type;
+	TNXT -Invalid SNMP;
+
+void Summ VB Type OK;
+	TNXT -Summ VarBind Obj;
+
+// SNMP_Object
+
+void Summ VarBind Obj;
+	LABL 0 0 0 b7 Object;
+
+	//Skip the sequence
+	ASN1_FindNextOID;
+
+	LABL 0 0 90 c2 Identifier;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Value;
+	ASN1_Value;
+
+	LABL 0 0 0 b8;
+	TLTE  1  10 0  0 Summ VarBind Obj;
+
+
+void Invalid SNMP;
+	DUMP  0 10 c0 c2 Remaining SNMP Data:;
+
+
+str# SNMP Exp Opt;
+	Expanded SNMP Fields;
+	Summary SNMP Fields;
+
+str# SNMP Message Types;
+	Get Request;
+	Get Next Request;
+	Get Response;
+	Set Request;
+	Trap;
+	Get Bulk Request;
+	Inform Request;
+	SNMPv2 Trap;
+
+str# SNMP Error Status;
+	No Error;
+	Too Big;
+	No Such Name;
+	Bad Value;
+	Read Only;
+	Generic Error;
+
+str# SNMP Trap Types;
+	0 | Cold Start;
+	1 | Warm Start;
+	2 | Link Down;
+	3 | Link Up;
+	4 | Authentication Failure;
+	5 | EGP Neighbor Loss;
+	6 | Enterprise Specific;
+
+// end SNMP

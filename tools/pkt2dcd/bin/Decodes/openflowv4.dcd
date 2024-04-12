@@ -1,0 +1,21 @@
+//open network foundation Openflow
+//
+//
+//
+//ports config in Openflow.dcd
+
+str# OpenFlow::Versions::Ldr;
+05	|	OpenFlow::V4;
+
+void OpenFlow::V4()
+{
+	DBYT 0 7 90 c2 Type:;
+		CST# 0 7 0 14 OpenFlow::V5::Type;
+	DWRD 0 8 90 c2 Length(with Header):;
+	DLNG 0 9 90 c2 xid:;
+		CST#( 0, g[7], 0, 0xb7, OpenFlow::V5::Type );
+		TSB#( 0, g[7], 0, 0, OpenFlow::V5::Type::Ldr );
+		XLSE( 0, 0, 0, 0, OpenFlow::V3::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}

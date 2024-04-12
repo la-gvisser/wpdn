@@ -1,0 +1,118 @@
+//Cisco FabricPath Encapsulation
+//
+//EtherType == 0x8903
+
+str# Ether::Branching_3_Str;
+0x8903	|	CiscoFabricPath::Detection;
+
+str# EProto::Names_Str;
+0x8903	|	CiscoFabricPath;
+ 
+void CiscoFabricPath::Detection()
+{
+	GWRD( 12, l[1] );
+	if (l[1] == 0x8903)
+	{
+		CiscoFabricPath;
+	}
+	if (g[1] == 0x8903)
+	{
+		CiscoFabricPath;
+	}
+	if (l[1] != 0x8903)
+	{
+		TRTS;
+	}
+}
+
+void CiscoFabricPath()
+{
+	LABL( 0, 0, 0, 0xb1, "Cisco FabricPath Encapsulation");
+	
+	HEX#( 0, 6, 0x90, 0xc9, "Destination Adress:");
+	DECR 6;
+	DBIT( 16, l[9], 0x90, 0xc2, "Port ID:" );
+	DBIT( 8, l[8], 0x90, 0xc2, "Sub Switch ID:" );
+	DBIT( 12, l[7], 0x90, 0xc2, "Switch ID:" );
+	DBIT( 1, l[6], 0x90, 0xc2, "OOO/DL bit:" );
+		CEQU( 0, l[6], 0, 0x14 "not set" );
+		CEQU( 1, l[6], 0, 0x14 "set" );	
+	DBIT( 1, l[5], 0x90, 0xc2, "RSVD:" );
+		CEQU( 0, l[5], 0, 0x14 "not set" );
+		CEQU( 1, l[5], 0, 0x14 "set" );	
+	DBIT( 2, l[4], 0x90, 0xc2, "Endnode ID:" );
+	DBIT( 1, l[3], 0x90, 0xc2, "I/G bit:" );
+		CEQU( 0, l[3], 0, 0x14 "not set" );
+		CEQU( 1, l[3], 0, 0x14 "set" );	
+	DBIT( 1, l[2], 0x90, 0xc2, "U/L bit:" );
+		CEQU( 0, l[2], 0, 0x14 "not set" );
+		CEQU( 1, l[2], 0, 0x14 "set" );
+	DBIT( 6, l[1], 0x90, 0xc2, "Endnode ID:" );
+	LABL( 0, 0, 0, 0xb8);
+	
+	HEX#( 0, 6, 0x90, 0xc9, "Source Adress:");
+	DECR 6;
+	DBIT( 16, l[10], 0x90, 0xc2, "Port ID:" );
+	DBIT( 8, l[11], 0x90, 0xc2, "Sub Switch ID:" );
+	DBIT( 12, l[12], 0x90, 0xc2, "Switch ID:" );
+	DBIT( 1, l[13], 0x90, 0xc2, "OOO/DL bit:" );
+		CEQU( 0, l[13], 0, 0x14 "not set" );
+		CEQU( 1, l[13], 0, 0x14 "set" );	
+	DBIT( 1, l[14], 0x90, 0xc2, "RSVD:" );
+		CEQU( 0, l[14], 0, 0x14 "not set" );
+		CEQU( 1, l[14], 0, 0x14 "set" );	
+	DBIT( 2, l[15], 0x90, 0xc2, "Endnode ID:" );
+	DBIT( 1, l[16], 0x90, 0xc2, "I/G bit:" );
+		CEQU( 0, l[16], 0, 0x14 "not set" );
+		CEQU( 1, l[16], 0, 0x14 "set" );	
+	DBIT( 1, l[17], 0x90, 0xc2, "U/L bit:" );
+		CEQU( 0, l[17], 0, 0x14 "not set" );
+		CEQU( 1, l[17], 0, 0x14 "set" );
+	DBIT( 6, l[18], 0x90, 0xc2, "Endnode ID:" );
+	LABL( 0, 0, 0, 0xb8);
+	
+	HEX#( 0, 4, 0x90, 0xc9, "FP Tag:");
+	DECR 4;
+	HBIT( 16, l[19], 0x90, 0xc2, "Ethertype:" );
+		CST#( 0 ,l[19], 0, 0x14, EProto::Names_Str );
+		l[19] = g[1];
+	BBIT( 10, l[20], 0x90, 0xc2, "Flag:" );	
+	DBIT( 6, l[21], 0x90, 0xc2, "TTL:" );
+		CEQU( 32, l[21], 0, 0x14, "originally encapsulated" );
+		
+		if (l[21] < 32)
+		{
+			LABL( 32, l[21], 0, 0x14, "Not originally encapsulated - " );
+			l[22] = 32;
+			l[22] -= l[21];
+			LABL( 0, 0, 0, 0x04, "# of Hops:" );
+			DGLB( 0,  l[22], 0x04, 0x04 );
+		}
+	//PRTO( kEthernetProto, 1, 0x90, 0xc2, "Protocol Type:\" );
+	
+	//EProto::Names();
+	LABL( 0, 0, 0, 0xb8);
+	
+		LABL( 0, 0, 0, 0xb8);
+		LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+		ETHR 0 0 90 c2 Destination:\D:;
+		ETHR 0 0 90 c2 Source:\S:;
+		
+		g[1] = pw[0];
+		if (g[1] <= 0x5dc)
+		{
+			802_2();				
+			TRTS;					
+		}
+		if (g[1] == 0x8808)			
+		{
+			802.3::MAC_Control;
+			TRTS;
+		}
+		TGTE 0 10 0 0 RETURN;		
+		
+		Ether::Branching_2();
+	
+	Ether::Branching_3;
+
+}

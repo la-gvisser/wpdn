@@ -1,0 +1,293 @@
+//----------------------------------------------------------------------------
+//Open Network Foundation Openflow 
+//Version 1
+//----------------------------------------------------------------------------
+
+
+str# OpenFlow::Versions::Ldr;
+01	|	OpenFlow::V1;
+
+//Version 1.0.0
+void OpenFlow::V1()
+{
+	DBYT 0 7 90 c2 Type:;
+		CST# 0 7 0 14 OpenFlow::V1::Type;
+	DWRD 0 8 90 c2 Length(with Header):;
+	DLNG 0 9 90 c2 xid:;
+		CST#( 0, g[7], 0, 0xb7, OpenFlow::V1::Type );
+	g[8] -= 8;
+		TSB#( 0, g[7], 0, 0, OpenFlow::V1::Type::Ldr );
+		XLSE( 0, 0, 0, 0, OpenFlow::V1::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8	);
+	TRTS;
+}
+
+void OpenFlow::V1::DUMP()
+{
+	if (g[8] != 0)
+	{
+		DUMP( 0, g[8], 0x90, 0xc2, "Data:" );
+	}
+	TRTS;
+}
+str# OpenFlow::V1::Type;
+0	|	OFPT_HELLO;
+1	|	OFPT_ERROR;	
+2	|	OFPT_ECHO_REQUEST;
+3	|	OFPT_ECHO_REPLY;
+4	|	OFPT_Vendor;
+5	|	OFPT_FEATURES_REQUEST;
+6	|	OFPT_FEATURES_REPLY;
+7	|	OFPT_GET_CONFIG_REQUEST;
+8	|	OFPT_GET_CONFIG_REPLY;
+9	|	OFPT_SET_CONFIG;
+10	|	OFPT_PACKET_IN;
+11	|	OFPT_FLOW_REMOVED;
+12	|	OFPT_PORT_STATUS;
+13	|	OFPT_PACKET_OUT;
+14	|	OFPT_FLOW_MOD;
+15	|	OFPT_PORT_MOD;
+16	|	OFPT_STATS_REQUEST;
+17	|	OFPT_STATS_REPLY;
+18	|	OFPT_BARRIER_REQUEST;
+19	|	OFPT_BARRIER_REPLY;
+20	|	OFPT_QUEUE_GET_CONFIG_REQUEST;
+21	|	OFPT_QUEUE_GET_CONFIG_REPLY;
+
+str# OpenFlow::V1::Type::Ldr;
+0	|	OpenFlow::V1::Type::OFPT_HELLO;
+4	|	OpenFlow::V1::Type::OFPT_Vendor;
+5	|	OpenFlow::V1::Type::OFPT_FEATURES_REQUEST;
+6	|	OpenFlow::V1::Type::OFPT_FEATURES_REPLY;
+7	|	OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST;
+8	|	OpenFlow::V1::Type::OFPT_GET_CONFIG_REPLY;
+9	|	OpenFlow::V1::Type::OFPT_SET_CONFIG;
+10	|	OpenFlow::V1::Type::OFPT_PACKET_IN;
+11	|	OpenFlow::V1::Type::OFPT_FLOW_REMOVED;
+//12	|	OpenFlow::V1::Type::OFPT_PORT_STATUS;
+//13	|	OpenFlow::V1::Type::OFPT_PACKET_OUT;
+14	|	OpenFlow::V1::Type::OFPT_FLOW_REMOVED;
+15	|	OpenFlow::V1::Type::OFPT_STATS_REQUEST;
+16	|	OpenFlow::V1::Type::OFPT_STATS_REQUEST;
+17	|	OpenFlow::V1::Type::OFPT_STATS_REPLY;
+//18	|	OpenFlow::V1::Type::OFPT_BARRIER_REQUEST; //is empty
+//19	|	OpenFlow::V1::Type::OFPT_BARRIER_REPLY; //is empty
+20	|	OpenFlow::V1::Type::OFPT_QUEUE_GET_CONFIG_REQUEST;
+21	|	OpenFlow::V1::Type::OFPT_QUEUE_GET_CONFIG_REPLY;
+
+void OpenFlow::V1::Type::OFPT_HELLO()
+{
+	LABL 0 0 0 d0 Should transport no Data!;
+}
+
+//void OpenFlow::V1::Type::OFPT_ECHO_REQUEST;	//is emtpy
+//void OpenFlow::V1::Type::OFPT_ECHO_REPLY;		//is emtpy
+
+void OpenFlow::V1::Type::OFPT_Vendor()
+{
+	DLNG 0 0 90 c2 Vendor:;
+	g[8] -= 4;
+	DUMP( 0, g[8], 0x90, 0xc2, "Vendor Data:" );
+}
+
+void OpenFlow::V1::Type::OFPT_FEATURES_REQUEST()
+{
+	D64B 0 0 90 c9 datapath_id:;
+		DECR 8;
+		DLNG( 0, 0, 0x90, 0xc2, "implementer-defined:" );
+		ETHR 0 0 90 c2 MAC Adress:;
+	LABL( 0, 0, 0, 0xc8);
+	DLNG( 0, 0, 0x90, 0xc2, "n_buffers:" );
+	DBYT( 0, 0, 0x90, 0xc2, "n_tables:" );
+	DBYT( 0, 0, 0x90, 0xc2, "pad[3]:" );
+	DLNG( 0, l[7], 0x90, 0xc9, "capabilities:" );
+		BST#( 0, l[7], 0, 0xf4, OpenFlow::V1::Type::OFPT_FEATURES_REQUEST::ofp_capabilities);
+	LABL( 0, 0, 0, 0xc8);
+	DLNG( 0, l[8], 0x90, 0xc2, "actions:" );
+	g[8] -= 22;
+	DUMP( 0, g[8], 0x90, 0xc2, "struct ofp_phy_port ports[x]:" );
+}
+
+str# OpenFlow::V1::Type::OFPT_FEATURES_REQUEST::ofp_capabilities;
+7  | ........ 1....... OFPC_ARP_MATCH_IP supported;
+	 ........ 0....... OFPC_ARP_MATCH_IP not supported;
+6  | ........ .1...... OFPC_QUEUE_STATS supported;
+	 ........ .0...... OFPC_QUEUE_STATS not supported;
+5  | ........ ..1..... OFPC_IP_REASM supported;
+	 ........ ..0..... OFPC_IP_REASM not supported;
+4  | ........ ...1.... OFPC_RESERVED supported;
+	 ........ ...0.... OFPC_RESERVED not supported;
+3  | ........ ....1... OFPC_STP supported;
+	 ........ ....0... OFPC_STP not supported;
+2  | ........ .....1.. OFPC_PORT_STATS supported;
+	 ........ .....0.. OFPC_PORT_STATS not supported;
+1  | ........ ......1. OFPC_TABLE_STATS supported;
+	 ........ ......0. OFPC_TABLE_STATS not supported;
+0  | ........ .......1 OFPC_FLOW_STATS supported;
+	 ........ .......0 OFPC_FLOW_STATS not supported;
+		 
+void OpenFlow::V1::Type::OFPT_FEATURES_REPLY()
+{
+	OpenFlow::V1::Type::OFPT_FEATURES_REQUEST;
+}
+
+void OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST()
+{
+	DLNG( 0, l[1], 0x90, 0xc9, "Flags:" );
+		BST#( 0, l[1], 0, 0xf4, OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST::ofp_flags );
+		LABL( 0, 0, 0, 0xc8);
+	DLNG( 0, 0, 0x90, 0xc2, "Miss_send_len:" );
+	g[8] -= 12;
+}
+str# OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST::ofp_flags;
+3  | ........ ....1... OFPC_FRAG_MASK set;
+	 ........ ....0... OFPC_FRAG_MASK not set;
+2  | ........ .....1.. OFPC_FRAG_REASM set;
+	 ........ .....0.. OFPC_FRAG_REASM not set;
+1  | ........ ......1. OFPC_FRAG_DROP set;
+	 ........ ......0. OFPC_FRAG_DROP not set;
+0  | ........ .......1 OFPC_FRAG_NORMAL set;
+	 ........ .......0 OFPC_FRAG_NORMAL not set;
+	 
+void OpenFlow::V1::Type::OFPT_GET_CONFIG_REPLY()
+{
+	OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST;
+}
+void OpenFlow::V1::Type::OFPT_SET_CONFIG()
+{
+	OpenFlow::V1::Type::OFPT_GET_CONFIG_REQUEST;
+}
+void OpenFlow::V1::Type::OFPT_PACKET_IN()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "Buffer_id:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Total_len:" );
+	DWRD( 0, 0, 0x90, 0xc2, "In_port:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Reason:" );
+		CEQU( 1, l[4], 0, 0, "OFPR_ACTION");
+		CLSE( 0, l[4], 0, 0, "OFPR_NO_MATCH,");
+	DBYT( 0, 0, 0x90, 0xc2, "pad:" );
+	g[8] -= 10;
+	DUMP( 0, g[8], 0x90, 0xc2, "Ethernet frame:" );
+}
+
+void OpenFlow::V1::Type::OFPT_FLOW_REMOVED()
+{
+	// ofp_match match
+	DLNG( 0, l[3], 0x90, 0xc2, "Wildcards:" );
+	DWRD( 0, l[4], 0x90, 0xc2, "In Port:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Ethernet Source Adress:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Ethernet Destination Adress:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Input VLAN id:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Input VLAN priority:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Pad:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "Dl Type:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "IP ToS:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "IP Protocol:" );
+	DWRD( 0, l[11], 0x90, 0xc2, "Pad:" );
+	IPLG( 0, l[12], 0x90, 0xc2, "Source Adress:" );
+	IPLG( 0, l[13], 0x90, 0xc2, "Destination Adress:" );
+	DWRD( 0, l[14], 0x90, 0xc2, "Source Port:" );
+	DWRD( 0, l[15], 0x90, 0xc2, "Destination Port:" );
+	//
+	D64B( 0, 0, 0x90, 0xc2, "Cookie:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "Priority:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Reason:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V1::Type::OFPT_FLOW_REMOVED::Reason );
+		CLSE( 0, l[2], 0, 0x14, "Unknown" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Table ID:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Duration sec:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "Duration nsec:" );
+	DWRD( 0, 0, 0x90, 0xc2, "IDLE_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "HARD_timeout:" );
+	D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+	D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+}
+
+str# OpenFlow::V1::Type::OFPT_FLOW_REMOVED::Reason;
+0	|	OFPRR_IDLE_TIMEOUT;
+1	|	OFPRR_HARD_TIMEOUT;
+2	|	OFPRR_DELETE;
+
+//void OpenFlow::V1::Type::OFPT_PORT_STATUS()
+//{
+	//DBYT( 0, l[2], 0x90, 0xc2, "Reason:" );
+	//	CST#( 0, l[2], 0, 0x14, OpenFlow::V1::Type::OFPT_FLOW_REMOVED::Reason );
+	//	CLSE( 0, l[2], 0, 0x14, "Unknown" );
+	//	HEX#( 7, 0, 0x90, 0xc2, "pad[7]:" );
+//}
+
+//void OpenFlow::V1::Type::OFPT_PACKET_OUT()
+//{
+	
+//}
+
+void OpenFlow::V1::Type::OFPT_FLOW_MOD()
+{
+	//struct ofp_match 
+	D64B 0 0 90 c9 cookie:;
+}
+
+void OpenFlow::V1::Type::OFPT_PORT_MOD()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "port_no:" );
+	DBYT( 0, 0, 0x90, 0xc2, "hw_addr:" );
+	DLNG( 0, 0, 0x90, 0xc2, "config:" );
+	DLNG( 0, 0, 0x90, 0xc2, "mask:" );
+	DLNG( 0, 0, 0x90, 0xc2, "advertise:" );
+	HEX#( 4, 0, 0x90, 0xc2, "pad[4]:" );
+}
+
+void OpenFlow::V1::Type::OFPT_STATS_REQUEST()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+	BWRD( 0, l[2], 0x90, 0xc2, "Flags:" );
+	//struct ofp_match
+	DLNG( 0, l[3], 0x90, 0xc2, "Wildcards:" );
+	DWRD( 0, l[4], 0x90, 0xc2, "In Port:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Ethernet Source Adress:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Ethernet Destination Adress:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Input VLAN id:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Input VLAN priority:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Pad:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "Dl Type:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "IP ToS:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "IP Protocol:" );
+	DWRD( 0, l[11], 0x90, 0xc2, "Pad:" );
+	IPLG( 0, l[12], 0x90, 0xc2, "Source Adress:" );
+	IPLG( 0, l[13], 0x90, 0xc2, "Destination Adress:" );
+	DWRD( 0, l[14], 0x90, 0xc2, "Source Port:" );
+	DWRD( 0, l[15], 0x90, 0xc2, "Destination Port:" );
+	//eof struct ofp_match
+	DBYT( 0, l[16], 0x90, 0xc2, "Table ID:" );
+	DBYT( 0, l[17], 0x90, 0xc2, "Pad:" );
+	DWRD( 0, l[18], 0x90, 0xc2, "Out Port:" );
+	
+}
+
+void OpenFlow::V1::Type::OFPT_STATS_REPLY()
+{
+	OpenFlow::V1::Type::OFPT_STATS_REQUEST;
+}
+
+void OpenFlow::V1::Type::OFPT_BARRIER_REQUEST()
+{
+	//is empty
+}	
+				
+void OpenFlow::V1::Type::OFPT_BARRIER_REPLY()
+{
+	//is empty
+}
+
+void OpenFlow::V1::Type::OFPT_QUEUE_GET_CONFIG_REQUEST()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "port:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "pad[2]:" );
+}
+
+void OpenFlow::V1::Type::OFPT_QUEUE_GET_CONFIG_REPLY()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "port:" );
+	HEX#( 6, 0, 0x90, 0xc2, "pad[6]:" );
+}

@@ -1,0 +1,947 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>classname CPeekEngineContext</title>
+</head>
+<body>
+    <h1>classname CPeekEngineContext</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        The CPeekEngineContext class is the primary class of the plugin. It is a subclass of CContext.
+
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        CPeekEngineContext classname
+    </p>
+
+    <!-- CPeekEngineContext Member Overview -->
+    <!-- Constructor Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#CPeekEngineContext::CPeekEngineContext">CPeekEngineContext</a>
+            </td>
+            <td>
+                &nbsp;
+            </td>
+        </tr>
+    </table>
+
+    <!-- Operators Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Operators</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::operator_operation">operator operation</a>
+            </td>
+            <td valign="top">
+                Returns the object as an operation.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Member Functions Overview -->
+    <table cellspacing="4" style="margin-top:20px; padding-bottom:5px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::DoInsertPacket">DoInsertPacket</a>
+            </td>
+            <td valign="top">
+                Insert a packet into the Context's Capture Buffer.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::DoNotify">DoNotify</a>
+            </td>
+            <td valign="top">
+                Post a notification.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetCaptureName">GetCaptureName</a>
+            </td>
+            <td valign="top">
+                Get the name of the Capture.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetPeekContextProxy">GetPeekContextProxy</a>
+            </td>
+            <td valign="top">
+                Get a reference the CPeekContextProxy of this object. For framework use only.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetEngineProxy">GetEngineProxy</a>
+            </td>
+            <td valign="top">
+                Get a reference to the CPeekEngineProxy of this object. For framework use only.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetMediaUtils">GetMediaUtils</a>
+            </td>
+            <td valign="top">
+                Get a reference to a Media Utils object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetNotifyService">GetNotifyService</a>
+            </td>
+            <td valign="top">
+                Get a reference to a Notification object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetNameTable">GetNameTable</a>
+            </td>
+            <td valign="top">
+                Get a reference to a Name Table object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetOptions">GetOptions</a>
+            </td>
+            <td valign="top">
+                Get this object's Options (preferences or settings).
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::GetProtospecs">GetProtospecs</a>
+            </td>
+            <td valign="top">
+                Get a reference to a Protocol Specification (ProtoSpec) object.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnContextPrefs">OnContextPrefs</a>
+            </td>
+            <td valign="top">
+                The Context Preferences handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnCreateContext">OnCreateContext</a>
+            </td>
+            <td valign="top">
+                The Create Context handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnDisposeContext">OnDisposeContext</a>
+            </td>
+            <td valign="top">
+                The Dispose Context (delete or close) handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnFilter">OnFilter</a>
+            </td>
+            <td valign="top">
+                The Filter packet handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnProcessPacket">OnProcessPacket</a>
+            </td>
+            <td valign="top">
+                The Process packet handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnProcessPluginMessage">OnProcessPluginMessage</a>
+            </td>
+            <td valign="top">
+                The Plugin Message handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnProcessTime">OnProcessTime</a>
+            </td>
+            <td valign="top">
+                The Process Time handler. (Called once every second.)
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnReset">OnReset</a>
+            </td>
+            <td valign="top">
+                The Reset handler. (How is this different from OnResetContext?)
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnResetCapture">OnResetCapture</a>
+            </td>
+            <td valign="top">
+                The Reset Capture handler. (How is this different from OnReset?)
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnStartCapture">OnStartCapture</a>
+            </td>
+            <td valign="top">
+                The Start Capture handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::OnStopCapture">OnStopCapture</a>
+            </td>
+            <td valign="top">
+                The Stop Capture handler.
+            </td>
+        </tr>
+        <tr>
+            <td valign="top">
+                <a href="#classname::SetOptions">SetOptions</a>
+            </td>
+            <td valign="top">
+                The Set Options handler.
+            </td>
+        </tr>
+    </table>
+
+    <!-- CPeekEngineContext Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>classname Public Member Functions</h2>
+
+    <!-- constructor details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CPeekEngineContext::CPeekEngineContext"></a>CPeekEngineContext::CPeekEngineContext</h3>
+    <p class="onlyP">
+        Constructs a CPeekEngineContext object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CPeekEngineContext(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CGlobalId&</td>
+            <td><em>inId</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CRemotePlugin*</td>
+            <td><em>inPlugin</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CUnknown</td>
+            <td><em>inSite</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inId</em></dt>
+        <dd>The context id.</dd>
+        <dt><em>inPlugin</em></dt>
+        <dd>The CRemotePlugin object that owns this context.</dd>
+        <dt><em>inSite</em></dt>
+        <dd>The Site for this context.</dd>
+    </dl>
+
+    <!-- DoInsertPacket details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::DoInsertPacket"></a>CPeekEngineContext::DoInsertPacket
+    </h3>
+    <p class="onlyP">
+        Insert a packet into the Capture Buffer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">void DoInsertPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket&amp;</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to insert.</dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Need to determine if there are threading issues: can this method be called from
+        OnFilter.
+    </p>
+
+    <!-- DoNotify details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::DoNotify"></a>CPeekEngineContext::DoNotify
+    </h3>
+    <p class="onlyP">
+        Post a notification.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">void DoNotify(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inMessage</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">void DoNotify(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CGlobalId&</td>
+            <td><em>guidContext</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CGlobalId&</td>
+            <td><em>guidSource</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nSourceKey</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>nTimeStamp</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>int</td>
+            <td><em>Severity</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inShortMessage</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inLongMessage</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inMessage</em></dt>
+        <dd>The message to be posted.</dd>
+        <dt><em>guidContext</em></dt>
+        <dd>The GUID of the context to post the message to.</dd>
+        <dt><em>guidSource</em></dt>
+        <dd>The GUID of the source of the notification. Should be this context's GUID.</dd>
+        <dt><em>nSourceKey</em></dt>
+        <dd>The key of the source.</dd>
+        <dt><em>nTimeStamp</em></dt>
+        <dd>Time stamp of the message as a Peek Time. If zero the framework supplies the current time.</dd>
+        <dt><em>strShortMessage</em></dt>
+        <dd>The short message to post.</dd>
+        <dt><em>strLongMessage</em></dt>
+        <dd>The long message to post.</dd>
+    </dl>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        Need to determine if there are threading issues: can this method be called from
+        OnFilter.
+    </p>
+
+    <!-- GetCaptureName details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetCaptureName"></a>CPeekEngineContext::GetCaptureName
+    </h3>
+    <p class="onlyP">
+        Get the name of the Capture Buffer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CString GetCaptureName();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The name of the Capture Buffer.
+    </p>
+
+    <!-- GetEngineProxy details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetEngineProxy"></a>CPeekEngineContext::GetEngineProxy
+    </h3>
+    <p class="onlyP">
+        Used by the framework to get direct access to the underlying Proxy object.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CPeekContextProxy* GetEngineProxy();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The underlying Proxy of this object.
+    </p>
+    <p style="color: #000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        For framework use only.
+    </p>
+
+    <!-- GetMediaUtils details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetMediaUtils"></a>CPeekEngineContext::GetMediaUtils
+    </h3>
+    <p class="onlyP">
+        Get the Media Utility object of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CMediaUtils GetMediaUtils();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Media Utility object of this context.
+    </p>
+
+    <!-- GetNameTable details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetNameTable"></a>CPeekEngineContext::GetNameTable
+    </h3>
+    <p class="onlyP">
+        Get the Name Table object for this object.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CNameTable GetNameTable();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Name Table object of this context.
+    </p>
+
+    <!-- GetNotifyService details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetNotifyService"></a>CPeekEngineContext::GetNotifyService
+    </h3>
+    <p class="onlyP">
+        Get the Notification object of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CNotifyService GetNotifyService();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Notification Service object of this context.
+    </p>
+
+    <!-- GetOptions details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetOptions"></a>CPeekEngineContext::GetOptions
+    </h3>
+    <p class="onlyP">
+        Get the Options (preferences / settings) of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">const COptions& GetOptions();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        A constant reference to this contexts COptions object.
+    </p>
+
+    <!-- GetPeekContextProxy details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetPeekContextProxy"></a>CPeekEngineContext::GetPeekContextProxy
+    </h3>
+    <p class="onlyP">
+        Get the Peek Context Proxy object of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CPeekContextProxy* GetPeekContextProxy();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Peek Context Proxy object of this context.
+    </p>
+
+    <!-- GetProtospecs details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::GetProtospecs"></a>CPeekEngineContext::GetProtospecs
+    </h3>
+    <p class="onlyP">
+        Get the Protocol Specifications object of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">CProtospecs GetProtospecs();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        The Protocol Specifications object of this context.
+    </p>
+
+    <!-- OnContextPrefs details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnContextPrefs"></a>CPeekEngineContext::OnContextPrefs
+    </h3>
+    <p class="onlyP">
+        The Context Preferences handler for this context. Use the supplied Data
+        Modeler to get or set the preferences (options / settings) of this context.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnContextPrefs(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>COmniDataModeler&</td>
+            <td><em>ioPrefs</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>ioPrefs</em></dt>
+        <dd>The Data Modeler used to get or set this context's preferences.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnCreateContext details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnCreateContext"></a>CPeekEngineContext::OnCreateContext
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when this context is being created.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnCreateContext();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnDisposeContext details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnDisposeContext"></a>CPeekEngineContext::OnDisposeContext
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when this context is being destroyed (disposed of).
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnDisposeContext();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnFilter details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnFilter"></a>CPeekEngineContext::OnFilter
+    </h3>
+    <p class="onlyP">
+        The framework calls this method to filter a packet.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnFilter(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt16*</td>
+            <td><em>pcbBytesToAccept</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CGlobalId&</td>
+            <td><em>outFilterId</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet to filter.</dd>
+        <dt><em>pcbBytesToAccept</em></dt>
+        <dd>The number of bytes of the packet to accept. Set to zero to accept the entire packet.</dd>
+        <dt><em>outFilterId</em></dt>
+        <dd>The GUID of the filter. Ignored.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS to accept the packet. Return PEEK_PLUGIN_FAILURE to
+        reject the packet.
+    </p>
+
+    <!-- OnProcessPacket details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnProcessPacket"></a>CPeekEngineContext::OnProcessPacket
+    </h3>
+    <p class="onlyP">
+        The framework calls this method to have the packet processed. The packet
+        has been inserted into the Capture Buffer.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnProcessPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inPacket</em></dt>
+        <dd>The packet being inserted into the Capture Buffer to be processed.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnProcessPluginMessage details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnProcessPluginMessage"></a>CPeekEngineContext::OnProcessPluginMessage
+    </h3>
+    <p class="onlyP">
+        Called by the framework for the context to process a message. Messages are
+        normally sent by the plugin's CPeekConsoleContext.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnProcessPluginMessage(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>COmniStream&</td>
+            <td><em>inMessage</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>COmniStream&</td>
+            <td><em>outResponse</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inMessage</em></dt>
+        <dd>The message bytes from the originator of the message.</dd>
+        <dt><em>outResponse</em></dt>
+        <dd>The response generated by this object that will be returned to the originator.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnProcessTime details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnProcessTime"></a>CPeekEngineContext::OnProcessTime
+    </h3>
+    <p class="onlyP">
+        The framework calls this method once every second. This method provides a means of
+        for the context to perform periodic operations. This method is called by the
+        primary thread.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnProcessTime(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>ullCurrentTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>ullCurrentTime</em></dt>
+        <dd>The current time as a Peek Time.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnReset details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnReset"></a>CPeekEngineContext::OnReset
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when the context is being reset.
+        Need to determine how this differs from OnResetContext.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnReset();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnResetCapture details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnResetCapture"></a>CPeekEngineContext::OnResetCapture
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when the Capture is being reset.
+        Need to determine how this method differs from OnReset.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnResetCapture();</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnStartCapture details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnStartCapture"></a>CPeekEngineContext::OnStartCapture
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when the Capture is being started. The Capture will
+        first be reset. The context will receive this call before the first OnFilter or
+        OnProcessPacket.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnStartCapture(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>ullStartTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>ullStartTime</em></dt>
+        <dd>The time that the Capture was started as a Peek Time.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- OnStopCapture details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::OnStopCapture"></a>CPeekEngineContext::OnStopCapture
+    </h3>
+    <p class="onlyP">
+        The framework calls this method when the Capture has been stopped.
+        Need to determine if OnFilter or OnProcessPacket will ever be called after this
+        method is called.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int OnStopCapture(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>ullStopTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>ullStopTime</em></dt>
+        <dd>The time that the Capture was stopped as a Peek Time.</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- SetOptions details-->
+    <hr style="color: #4d92a8" />
+    <h3 style="margin-top: 10px;">
+        <a name="CPeekEngineContext::SetOptions"></a>CPeekEngineContext::SetOptions
+    </h3>
+    <p class="onlyP">
+        The framework calls this method with new options (preferences / settings).
+        The context should replace its current preferences with the COptions provided.
+    </p>
+    <table class="codeP" style="margin-left: 25px;">
+        <tr>
+            <td colspan="3">int SetOptions(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const COptions&</td>
+            <td><em>inOptions</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color: #000000"><b>Parameters</b></p>
+    <dl style="margin-left: 25px;">
+        <dt><em>inOptions</em></dt>
+        <dd>A const references to the new options (preferences / settings).</dd>
+    </dl>
+    <p style="color: #000000"><b>Return Value</b></p>
+    <p class="onlyP">
+        Return PEEK_PLUGIN_SUCCESS on success.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

@@ -1,0 +1,305 @@
+* ISAKMP - Internet Security Association and Key Management Protocol\ISAKMP
+
+void ISAKMP;
+	LABL 0 0 0 b1 ISAKMP - Internet Security Association and Key Management Protocol\ISAKMP:;
+	HEX# 8 0 90 c2 Initiator Cookie:;
+	HEX# 8 0 90 c2 Responder Cookie:;
+	DBYT 0 6 90 c2 Next Payload:;
+	CST# ffffffff 6 20 14 ISAKMP Next Payload;
+	DBIT 4 0 90 c2 MjVer:;
+	DBIT 4 0 90 c2 MnVer:;
+
+	DBYT 0 2 90 c2 Exchange Type:;
+	CEQU 0 2 90 14 None;
+	CEQU 1 2 90 14 Base;
+	CEQU 2 2 90 14 Identity Protection;
+	CEQU 3 2 90 14 Authentication Only;
+	CEQU 4 2 90 14 Aggressive;
+	CEQU 5 2 90 14 Informational;
+
+	HBYT 0 3 90 c9 Flags:;
+	CBIT 0 3  0 d4 .... ...1 Encryption;
+	CLSE 0 0  0 d4 .... ...0 No Encryption;
+	CBIT 1 3  0 d4 .... ..1. Commit;
+	CLSE 1 0  0 d4 .... ..0. No Commit;
+	CBIT 2 3  0 d4 .... .1.. Authentication Only;
+	CLSE 0 0  0 d4 .... .0.. No Authentication;
+	LABL 0 0 0 b8;
+
+	HLNG 0 0 90 c2 Message Id:;
+	DLNG 0 0 90 c2 Length:;
+
+	SBIT 0 3;
+	SKIP 1;
+	TNXT -ISAKMP_Next_Payload_Loop;
+
+	DUMP 0 10 90 c2 Encrypted Payload:;
+
+* g9 = did we find a payload type?
+
+void ISAKMP_Next_Payload_Loop;
+	TGTE 0 10 0 0 RETURN;
+	TEQU 0  6 0 0 RETURN;
+	ISAKMP Next Payload g6;
+	TEQU 1 9 0 0 ISAKMP_Next_Payload_Loop;
+
+void ISAKMP Next Payload g6;
+	TEQU 0 6 90 c2 RETURN;
+	MOVE 1 9;
+	TEQU 1 6 90 c2 ISAKMP Security Association;
+	TEQU 2 6 90 c2 ISAKMP Proposal;
+	TEQU 3 6 90 c2 ISAKMP Transform;
+	TEQU 4 6 90 c2 ISAKMP Key Exchange;
+	TEQU 5 6 90 c2 ISAKMP Identification;
+	TEQU 6 6 90 c2 ISAKMP Certificate;
+	TEQU 7 6 90 c2 ISAKMP Certificate Request;
+	TEQU 8 6 90 c2 ISAKMP Hash;
+	TEQU 9 6 90 c2 ISAKMP Signature;
+	TEQU a 6 90 c2 ISAKMP Nonce;
+	TEQU b 6 90 c2 ISAKMP Notification;
+	TEQU c 6 90 c2 ISAKMP Delete;
+	TEQU d 6 90 c2 ISAKMP Vendor Id;
+	MOVE 0 9;
+
+void ISAKMP_Common;
+	DBYT 0 6 90 c2 Next Payload:;
+	CST# ffffffff 6 20 14 ISAKMP Next Payload;
+	DBYT 0 0 90 c2 RESERVED;
+	DWRD 0 1 90 c2 Payload Length:;
+
+void ISAKMP Security Association;
+	LABL 0 0 0 b7 ISAKMP - Security Association;
+	ISAKMP_Common;
+	DLNG 0 2 90 c2 DOI:;
+	LABL 0 0  0 14 Domain of interpretation;
+	CEQU 1 2  0 14 IPSEC; 
+	SUBG 8 1;
+	DLNG 0 1 90 c2 Situation:;
+	MOVE 6 87; *save g6
+	MOVE 2 6; *force proposal
+	ISAKMP_Next_Payload_Loop;
+	MOVE 7 86; *put g6 back
+	LABL 0 0 0 b8;
+
+void ISAKMP Proposal;
+	LABL 0 0 0 b7 ISAKMP - Proposal;
+	ISAKMP_Common;
+	DBYT 0 0 90 c2 Proposal #:;
+	DBYT 0 0 90 c2 Protocol-Id:;
+	DBYT 0 1 90 c2 SPI Size:;
+	DBYT 0 0 90 c2 # of Transforms:;
+	MOVE 6 88; *save g6
+	MOVE 3 6; *force trasform
+	ISAKMP_Next_Payload_Loop;
+	MOVE 8 86; *put g6 back
+	LABL 0 0 0 b8;
+
+void ISAKMP Transform;
+	LABL 0 0 0 b7 ISAKMP - Transform;
+	ISAKMP_Common;
+	MOVE 1 91;  *length into g11
+	DBYT 0 0 90 c2 Transform #:;
+	DBYT 0 0 90 c2 Transform-Id:;
+	DWRD 0 0 90 c2 RESERVED;
+	SUBG 8 11;
+	ISAKMP_Transform_Loop;
+	LABL 0 0 0 b8;
+
+void ISAKMP_Transform_Loop;
+	TGTE 0 10 0 0 RETURN;
+	TGTE 0 11 0 0 RETURN;
+	INCR 1;
+	GBYT 0 1;
+	DECR 1;
+	CEQU 1 1  0 b7 Encryption algorithm;
+	CEQU 2 1  0 b7 Hash algorithm;
+	CEQU 3 1  0 b7 Auth method;
+	CEQU 4 1  0 b7 Group description;
+	CEQU b 1  0 b7 Life type;
+	CEQU c 1  0 b7 Life duration;
+	BBYT 0 1 90 c9 Flags:;
+	CBIT 7 1  0 d4 1... .... Data attribute following TV format;
+	CLSE 0 0  0 d4 0... .... Data attribute Not following TV format;
+	LABL 0 0 0 b8;
+	DBYT 0 1 90 c2 Type:;
+	DWRD 0 2 90 c2 Value:;
+
+	SNEQ 1 1;
+	SKIP 1;
+	CEQU 1 2 0 14 DES_CBC;
+
+	SNEQ 2 1;
+	SKIP 1;
+	CEQU 2 2 0 14 SHA;
+
+	SNEQ 3 1;
+	SKIP 1;
+	CEQU 2 2 0 14 DSS;
+
+	SNEQ 4 1;
+	SKIP 1;
+	CEQU 1 2 0 14 Default 768-bit MODP Group;
+
+	SNEQ b 1;
+	SKIP 1;
+	LABL 0 0 0 14 seconds;
+
+	SUBG 4 11;
+	LABL 0 0 0 b8;
+	TNXT -ISAKMP_Transform_Loop;
+
+void ISAKMP Key Exchange;
+	LABL 0 0 0 b7 ISAKMP - Key Exchange;
+	ISAKMP_Common;
+	SUBG 4 1;
+	DUMP 0 1 90 c2 Key Exchange Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Identification;
+	LABL 0 0 0 b7 ISAKMP - Identification;
+	ISAKMP_Common;
+	DBYT 0 0 90 c2 ID Type;
+	HEX# 3 0 90 c2 DOI Specific Id Data:;
+	SUBG 8 1 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Identification Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Certificate;
+	LABL 0 0 0 b7 ISAKMP - Certificate;
+	ISAKMP_Common;
+	DBYT 0 2 90 c2 Cert Encoding:;
+	CEQU 0 2 90 14 None;
+	CEQU 1 2 90 14 PKCS;
+	CEQU 2 2 90 14 PGP;
+	CEQU 3 2 90 14 DNS;
+	CEQU 4 2 90 14 X.509 Signature;
+	CEQU 5 2 90 14 X.509 Key Exchange;
+	CEQU 6 2 90 14 Kerberos;
+	CEQU 7 2 90 14 CRL;
+	CEQU 8 2 90 14 ARL;
+	CEQU 9 2 90 14 SPKI;
+	CEQU a 2 90 14 X.509 Attribute;
+	SUBG 5 1 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Identification Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Certificate Request;
+	LABL 0 0 0 b7 ISAKMP - Certificate Request;
+	ISAKMP_Common;
+	DBYT 0 2 90 c2 Cert Encoding:;
+	CEQU 0 2 90 14 None;
+	CEQU 1 2 90 14 PKCS;
+	CEQU 2 2 90 14 PGP;
+	CEQU 3 2 90 14 DNS;
+	CEQU 4 2 90 14 X.509 Signature;
+	CEQU 5 2 90 14 X.509 Key Exchange;
+	CEQU 6 2 90 14 Kerberos;
+	CEQU 7 2 90 14 CRL;
+	CEQU 8 2 90 14 ARL;
+	CEQU 9 2 90 14 SPKI;
+	CEQU a 2 90 14 X.509 Attribute;
+	SUBG 5 1 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Certificate Authority:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Hash;
+	LABL 0 0 0 b7 ISAKMP - Hash;
+	ISAKMP_Common;
+	SUBG 4 1 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Hash Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Signature;
+	LABL 0 0 0 b7 ISAKMP - Signature;
+	ISAKMP_Common;
+	SUBG 4 1;
+	HEX# 0 1 90 c2 Signature Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Nonce;
+	LABL 0 0 0 b7 ISAKMP - Nonce;
+	ISAKMP_Common;
+	SUBG 4 1;
+	DUMP 0 1 90 c2 Nonce Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Notification;
+	LABL 0 0 0 b7 ISAKMP - Notification;
+	ISAKMP_Common;
+	DLNG 0 0 90 c2 DOI:;
+	DBYT 0 0 90 c2 Protocol-Id:;
+	DBYT 0 2 90 c2 SPI Size:;
+	DWRD 0 3 90 c2 Notify Msg Type:;
+	CST# 0 3 20 44 ISAKMP Notify Msg Types;
+	HEX# 0 2 90 c2 SPI:;
+	SUBG c 1 90 c2 Payload Length:;
+	SUBG 2 81 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Notification Data:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Delete;
+	LABL 0 0 0 b7 ISAKMP - Delete;
+	ISAKMP_Common;
+	DLNG 0 0 90 c2 DOI:;
+	DBYT 0 0 90 c2 Protocol-Id:;
+	DBYT 0 2 90 c2 SPI Size:;
+	DWRD 0 3 90 c2 # of SPIs:;
+	HEX# 0 2 90 c2 SPI:;
+	LABL 0 0 0 b8;
+
+void ISAKMP Vendor Id;
+	LABL 0 0 0 b7 ISAKMP - Vendor Id;
+	ISAKMP_Common;
+	SUBG 4 1 90 c2 Payload Length:;
+	HEX# 0 1 90 c2 Vendor Id:;
+	LABL 0 0 0 b8;
+
+
+
+str# ISAKMP Next Payload;
+	None;
+	Security Association;
+	Proposal;
+	Transform;
+	Key Exchange;
+	Identification;
+	Certificate;
+	Certificate Request;
+	Hash;
+	Signature;
+	Nonce;
+	Notification;
+	Delete;
+	Vendor Id;
+
+str# ISAKMP Notify Msg Types;
+	INVALID PAYLOAD TYPE;
+	DOI NOT SUPPORTED;
+	SITUATION NOT SUPPORTED;
+	INVALID COOKIE;
+	INVALID MAJOR VERSION;
+	INVALID MINOR VERSION;
+	INVALID EXCHANGE TYPE;
+	INVALID FLAGS;
+	INVALID MESSAGE ID;
+	INVALID PROTOCOL ID;
+	INVALID SPI;
+	INVALID TRANSFORM ID;
+	ATTRIBUTES NOT SUPPORTED;
+	NO PROPOSAL CHOSEN;
+	BAD PROPOSAL SYNTAX;
+	PAYLOAD MALFORMED;
+	INVALID KEY INFORMATION;
+	INVALID ID INFORMATION;
+	INVALID CERT ENCODING;
+	INVALID CERTIFICATE;
+	CERT TYPE UNSUPPORTED;
+	INVALID CERT AUTHORITY;
+	INVALID HASH INFORMATION;
+	AUTHENTICATION FAILED;
+	INVALID SIGNATURE;
+	ADDRESS NOTIFICATION;
+	NOTIFY SA LIFETIME;
+	CERTIFICATE UNAVAILABLE;
+	UNSUPPORTED EXCHANGE TYPE;
+	UNEQUAL PAYLOAD LENGTH;

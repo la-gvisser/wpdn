@@ -1,0 +1,505 @@
+//MMSE - Multimedia Messaging Service Encapsulation
+
+void MMSE()
+{
+	LABL( 0, 0, 0, 0xb1, "MMSE - Multimedia Messaging Service Encapsulation");
+	MMSE::Message_Type();
+	l[1] = pb[0];
+	TSB#( 0, l[1], 0, 0, MMSE::FieldNames);
+}
+
+void MMSE::Message_Type()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::MessageTypes_Str);
+	TSB#( 0, l[1], 0, 0, MMSE::MessageTypes);
+}
+
+void MMSE::SendRequest()
+{
+	MMSE::EncodedString();
+	MMSE::Version();
+	l[1] = pb[0];
+	if (l[1] == 0x85)
+	{
+		MMSE::Date();
+	}
+	MMSE::From();
+	l[1] = pb[0];
+	if (l[1] == 0x97)
+	{
+		MMSE::EncodedString();	//To
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x82)
+	{
+		MMSE::EncodedString();	//Cc
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x81)
+	{
+		MMSE::EncodedString();	//Bcc
+	}
+	l[8] = 8;
+	while (l[8] > 0)
+	{
+		l[1] = pb[0];
+		if (l[1] == 0x84)
+		{
+			MMSE::ContentType();
+			TRTS;
+		}
+		TSB#( 0, l[1], 0, 0, MMSE::FieldNames);
+		l[8] -= 1;
+	}
+}
+
+void MMSE::SendConfirmation()
+{
+	MMSE::EncodedString();
+	MMSE::Version();
+	MMSE::ResponseStatus();
+	l[8] = 2;
+	while (l[8] > 0)
+	{
+		l[1] = pb[0];
+		TSB#( 0, l[1], 0, 0, MMSE::FieldNames);
+		l[8] -= 1;
+	}
+}
+
+void MMSE::NotificationInd()
+{
+	MMSE::EncodedString();
+	MMSE::Version();
+	l[1] = pb[0];
+	if (l[1] == 0x89)
+	{
+		MMSE::EncodedString();	//From
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x96)
+	{
+		MMSE::EncodedString();	//Subject
+	}
+	MMSE::MessageClass();
+	MMSE::MessageSize();
+	MMSE::Expiry();
+	MMSE::ContentLocation();
+}
+
+void MMSE::NotifyRespInd()
+{
+	MMSE::EncodedString();
+	MMSE::Version();
+	MMSE::Status();
+	l[1] = pb[0];
+	if (l[1] == 0x91)
+	{
+		MMSE::ReportAllowed();
+	}	
+}
+
+void MMSE::RetrieveConfirmation()
+{
+	l[1] = pb[0];
+	if (l[1] == 0x98)
+	{
+		MMSE::EncodedString();
+	}
+	MMSE::Version();
+	l[1] = pb[0];
+	if (l[1] == 0x8B)
+	{
+		MMSE::EncodedString();	//Message Id
+	}
+	l[8] = 0xA;
+	while (l[8] > 0)
+	{
+		l[1] = pb[0];
+		if (l[1] == 0x84)
+		{
+			MMSE::ContentType();
+			TRTS;
+		}
+		TSB#( 0, l[1], 0, 0, MMSE::FieldNames);
+		l[8] -= 1;
+	}
+}
+
+void MMSE::AcknowledgeInd()
+{
+	MMSE::EncodedString();
+	MMSE::Version();
+	l[1] = pb[0];
+	if (l[1] == 0x91)
+	{
+		MMSE::ReportAllowed();
+	}	
+}
+
+void MMSE::DeliveryInd()
+{
+	l[8] = 5;
+	while (l[8] > 0)
+	{
+		l[1] = pb[0];
+		TSB#( 0, l[1], 0, 0, MMSE::FieldNames);
+		l[8] -= 1;
+	}
+}
+
+void MMSE::ContentLocation()
+{
+	MMSE::FieldName();
+	DBYT( 0, l[1], 0x5, 0, "");			//length
+	CHR#( 0, l[1], 0x90, 0, "");		//uri value
+}
+
+void MMSE::Date()
+{
+	MMSE::FieldName();
+	DBYT( 0, l[1], 0x5, 0, "");			//length
+	TIME( 0, 0, 0x90, 0, "");			//date
+}
+
+void MMSE::DeliveryReport()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::Yes_No);
+}
+
+void MMSE::DeliveryTime()
+{
+	MMSE::FieldName();
+	DBYT( 0, l[1], 0x5, 0, "");						//length
+	HBYT( 0, l[1], 0x5, 0, "");						//Time Token Type
+	 CST#( 0, l[1], 0, 0x2, MMSE::TimeToken_Str);
+	DBYT( 0, l[2], 0x5, 0, "");						//length
+	HEX#( 0, l[2], 0x90, 0, "");					//time
+	LABL( 0, 0, 0, 0x14, "seconds");
+}
+
+void MMSE::From()
+{
+	MMSE::FieldName();
+	l[2] = pb[1];
+	DBYT( 0, l[1], 0x5, 0, "");		//length
+	CHR#( 0, l[1], 0x90, 0, "");	//from
+	 CEQU( 0x81, l[2], 0, 0x14, "Insert Address");
+}
+
+void MMSE::Expiry()
+{
+	MMSE::FieldName();
+	DBYT( 0, l[1], 0x5, 0, "");						//length
+	HBYT( 0, l[1], 0x5, 0, "");						//Time Token Type
+	 CST#( 0, l[1], 0, 0x2, MMSE::TimeToken_Str);
+	DBYT( 0, l[2], 0x5, 0, "");						//length
+	HEX#( 0, l[2], 0x90, 0, "");					//time
+	LABL( 0, 0, 0, 0x14, "seconds");
+}
+
+void MMSE::MessageClass()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::MessageClass_Str);
+}
+
+void MMSE::Version()
+{
+	MMSE::FieldName();
+	l[1] = pb[0];
+	l[2] = l[1];
+	l[2] -= 0x80;
+	DBIT( 4, l[1], 0x90, 0, "");
+	DBIT( 4, l[1], 0x90, 0, ".");
+	 CEQU( 0x10, l[2], 0, 0x14, "(1.0)");
+	 CEQU( 0x11, l[2], 0, 0x14, "(1.1)");
+}
+
+void MMSE::MessageSize()
+{
+	MMSE::FieldName();
+	DLNG( 0, l[1], 0x90, 0, "");	//Long-integer
+	LABL( 0, 0, 0, 0x14, "bytes");
+}
+
+void MMSE::Priority()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::Priority_Str);
+}
+
+void MMSE::ReadReply()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::Yes_No);
+}
+
+void MMSE::ReportAllowed()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::Yes_No);
+}
+
+void MMSE::ResponseStatus()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::ResponseStatus_Str);
+}
+
+void MMSE::SenderVisibility()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CEQU( 0x80, l[1], 0, 0x14, "Hide");
+	 CEQU( 0x81, l[1], 0, 0x14, "Show");
+}
+
+void MMSE::Status()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+	 CST#( 0, l[1], 0, 0x14, MMSE::Status_Str);
+}
+
+void MMSE::RetrieveStatus()
+{
+	MMSE::FieldName();
+	HBYT( 0, l[1], 0x90, 0, "");
+}
+
+void MMSE::FieldName()
+{
+	HBYT( 0, l[1], 0x5, 0, "");
+	 CST#( 0, l[1], 2, 0xc2, MMSE::FieldNames_Str);
+}
+
+void MMSE::EncodedString()
+{
+	MMSE::FieldName();
+	MMSE::String();
+	INCR 1;
+}
+
+void MMSE::String()
+{
+	MMSE::00_Parser();
+	CHR#( 0, g[4], 0x90, 0, "");
+}
+
+void MMSE::00_Parser()
+{
+	MOVE 0  4;
+	GSTR 20000000  4;
+}
+
+void MMSE::ContentType()
+{
+	MMSE::FieldName();
+	l[1] = pb[0];
+	if (l[1] == 0x1C)
+	{
+		INCR 1;
+	}
+	if (l[1] == 0x1F)
+	{
+		INCR 1;
+		DBYT( 0, l[10], 0x5, 0, "");
+	}
+	l[5] = g[16];
+	HBYT( 0, l[2], 0x90, 0, "");					//content type value
+	 CST#( 0, l[2], 0, 0x14, WSP::Content_Type_Str);
+	while (l[10] > 0)
+	{
+		MMSE::String();
+		INCR 1;
+		l[6] = g[16];
+		l[5] -= l[6];
+		l[3] -= l[5];
+	}
+	if (l[2] == 0xA3)
+	{
+		MMSE::MultipartData();
+	}
+}
+
+void MMSE::MultipartData()
+{
+	LABL( 0, 0, 0, 0xc9, "Multipart Data");
+	DBYT( 0, g[5], 0x90, 0xc2, "# of entries");
+	while (g[5] > 0)
+	{
+		MMSE::MultipartEntry();
+		g[5] -= 1
+	} 
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void MMSE::MultipartEntry()
+{
+	LABL( 0, 0, 0, 0xc9, "Multipart Entry");
+	DBYT( 0, l[3], 0x90, 0xc2, "Headers Length:");
+	DBYT( 0, l[4], 0x90, 0xc2, "Data Length:");
+	LABL( 0, 0, 0, 0xc9, "Content Type");
+	l[7] = g[16];
+	l[1] = pb[0];
+	if (l[1] > 0x30)
+	{
+		HWRD( 0, l[2], 0x90, 0xc2, "Value:");
+		SKIP 2;
+	}
+	DBYT( 0, l[2], 0x90, 0xc2, "Length:");
+	HEX#( 0, l[2], 0x90, 0xc2, "Value");
+	LABL( 0, 0, 0, 0xc8);
+	l[8] = g[16];
+	l[7] -= l[8];
+	l[3] -= l[7];
+	LABL( 0, 0, 0, 0xc9, "Headers");
+	while (l[3] > 0)
+	{
+		l[5] = g[16];
+		HBYT( 0, l[1], 0x5, 0, "");
+		CST#( 0, l[1], 2, 0xc2, MMSE::MultipartContentType_Str);
+		MMSE::String();
+		INCR 1;
+		l[6] = g[16];
+		l[5] -= l[6];
+		l[3] -= l[5];
+	}
+	LABL( 0, 0, 0, 0xc8);
+	DUMP( 0, l[4], 0x90, 0xc2, "Data:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str# MMSE::FieldNames;
+	0x81 | MMSE::EncodedString;
+	0x82 | MMSE::EncodedString;
+	0x83 | MMSE::ContentLocation;
+	0x84 | MMSE::ContentType;
+	0x85 | MMSE::Date;
+	0x86 | MMSE::DeliveryReport;
+	0x87 | MMSE::DeliveryTime;
+	0x88 | MMSE::Expiry;
+	0x89 | MMSE::From;
+	0x8A | MMSE::MessageClass;
+	0x8B | MMSE::EncodedString;
+	0x8C | MMSE::Message_Type;
+	0x8D | MMSE::Version;
+	0x8E | MMSE::MessageSize;
+	0x8F | MMSE::Priority;
+	0x90 | MMSE::ReadReply;
+	0x91 | MMSE::ReportAllowed;
+	0x92 | MMSE::ResponseStatus;
+	0x93 | MMSE::EncodedString;
+	0x94 | MMSE::SenderVisibility;
+	0x95 | MMSE::Status;
+	0x96 | MMSE::EncodedString;
+	0x97 | MMSE::EncodedString;
+	0x98 | MMSE::EncodedString;
+	0x99 | MMSE::RetrieveStatus;
+	0x9A | MMSE::EncodedString;
+	
+str# MMSE::FieldNames_Str;
+	0x81 | Bcc:;
+	0x82 | Cc:;
+	0x83 | Content Location:;
+	0x84 | Content Type:;
+	0x85 | Date:;
+	0x86 | Delivery Report:;
+	0x87 | Delivery Time ;
+	0x88 | Expiry ;
+	0x89 | From:;
+	0x8A | Message Class:;
+	0x8B | Message ID:;
+	0x8C | Message Type:;
+	0x8D | MMS version:;
+	0x8E | Message Size:;
+	0x8F | Priority:;
+	0x90 | Read Reply:;
+	0x91 | Report Allowed:;
+	0x92 | Response Status:;
+	0x93 | Response Text:;
+	0x94 | Sender Visibility:;
+	0x95 | Status:;
+	0x96 | Subject:;
+	0x97 | To:;
+	0x98 | Transaction ID:;
+	0x99 | Retrieve Status:;
+	0x9A | Retrieve Text:;
+
+str# MMSE::MessageClass_Str;
+	0x80 | Personal;
+	0x81 | Advertisement;
+	0x82 | Informational;
+	0x83 | Auto;
+	
+str# MMSE::MessageTypes;
+	0x80 | MMSE::SendRequest;
+	0x81 | MMSE::SendConfirmation;
+	0x82 | MMSE::NotificationInd;
+	0x83 | MMSE::NotifyRespInd;
+	0x84 | MMSE::RetrieveConfirmation;
+	0x85 | MMSE::AcknowledgeInd;
+	0x86 | MMSE::DeliveryInd;
+	
+str# MMSE::MessageTypes_Str;
+	0x80 | Send Request;
+	0x81 | Send Confirmation;
+	0x82 | M Notification Ind;
+	0x83 | M Notify Resp Ind;
+	0x84 | Retrieve Confirmation;
+	0x85 | M Acknowledge Ind;
+	0x86 | M Delivery Ind;
+
+str# MMSE::Priority_Str;
+	0x80 | Low;
+	0x81 | Normal;
+	0x82 | High;
+
+str# MMSE::ResponseStatus_Str;
+	 0x80 | OK;
+	 0x81 | Error Unspecified;
+	 0x82 | Error Service Denied;
+	 0x83 | Error Message Format Corrupt;
+	 0x84 | Error Sending Address Unresolved;
+	 0x85 | Error Message Not Found;
+	 0x86 | Error Network Problem;
+	 0x87 | Error Content Not Accepted;
+	 0x88 | Error Unsupported Message; 
+
+str# MMSE::Status_Str;
+	0x80 | Expired;
+	0x81 | Retrieved;
+	0x82 | Rejected;
+	0x83 | Deferred;
+	0x84 | Unrecognized;
+	
+str# MMSE::ContentType_Str;
+	0x89 | Type:;
+	0x8A | Start:;
+	
+str# MMSE::MultipartContentType_Str;
+	0x85 | Name;
+	0x8E | Content Location:;
+	0x9E | image/jpeg;
+	0xC0 | Content ID:;
+	
+str# MMSE::TimeToken_Str;
+	0x80 | (Absolute):;
+	0x81 | (Relative):;
+
+str# MMSE::Yes_No;
+	0x80 | Yes;
+	0x81 | No;
+	
+
+

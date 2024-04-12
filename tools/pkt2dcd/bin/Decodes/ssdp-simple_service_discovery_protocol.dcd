@@ -1,0 +1,136 @@
+* SSDP - Simple Service Discovery Protocol;
+
+void SSDP()
+{
+	LABL( 0, 0, 0, 0xb1, "SSDP - Simple Service Discovery Protocol");
+	SSDP::Loop();
+}
+
+void SSDP::Type()
+{
+	SSDP::3A_Delimiter();
+	SSDP::String();
+}
+
+void SSDP::Method()
+{
+	SSDP::20_Delimiter();
+	LABL( 0, 0, 0x90, 0xc2, "Uniform Resource Id:");
+	SSDP::20_Delimiter();
+	LABL( 0, 0, 0x90, 0xc2, "Version:");
+	SSDP::String();
+}
+
+void SSDP::Cache_Control()
+{
+	SSDP::Type();
+	LABL( 0, 0, 0, 0x14, "seconds until advertisement expires");
+}
+
+void SSDP::Location()
+{
+	SSDP::Type();
+	LABL( 0, 0, 0, 0x14, "URL for UPnP");
+}
+
+void SSDP::USN()
+{
+	SSDP::Type();
+	LABL( 0, 0, 0, 0x14, "UUID advertisement");
+}
+	
+void SSDP::Service_Type()
+{
+	SSDP::String();
+}
+
+void SSDP::Loop()
+{
+	l[1] = pw[0];
+	if (l[1] == 0x0D0A)
+	{
+		INCR 2;
+		TRTS;
+	}
+	l[2] = g[16];
+	CST#( 0, l[1], 0x90, 0xc2, SSDP::Types_Str);
+	TSB#( 0, l[1], 0, 0, SSDP::Types);
+	if ( g[16] == l[2])
+	{
+		MOVE 0 4;
+		GSTR 2000003A  4;
+		ADDG 1 4;
+		CHR# 0 4 2 c2;
+		SSDP::String();
+	}
+	TNXT -SSDP::Loop;
+}
+	
+void SSDP::String()
+{
+	MOVE 0  1e;
+	GSTR 2000000A  1e;
+	CHR# 0 1e 90 0;
+	INCR 2;
+}
+
+void SSDP::20_Delimiter()
+{
+	MOVE 0  1e;
+	GSTR 20000020  1e;
+	CHR# 0 1e 90 0;
+	INCR 1;
+}
+
+void SSDP::3A_Delimiter()
+{
+	MOVE 0  5;
+	GSTR 2000003A  5;
+	INCR 0 5;
+	l[1] = pb[1];
+	if (l[1] == 0x20)
+	{
+		INCR 1;
+	}
+	INCR 1;
+}
+
+str# SSDP::Types;
+	 0x4341 | SSDP::Cache_Control;
+	 0x4361 | SSDP::Cache_Control;
+	 0x484F | SSDP::Type;
+	 0x486F | SSDP::Type;
+	 0x4C4F | SSDP::Location;
+	 0x4C6F | SSDP::Location;
+	 0x4D2D | SSDP::Method;
+	 0x4D41 | SSDP::Type;
+	 0x4D61 | SSDP::Type;
+	 0x4D58 | SSDP::Type;
+	 0x4E4F | SSDP::Method;
+	 0x4F50	| SSDP::Type;
+	 0x5345 | SSDP::Type;
+	 0x5354 | SSDP::Type;
+	 0x5365 | SSDP::Type;
+	 0x5553 | SSDP::USN;
+	 0x4E54 | SSDP::Service_Type;
+	 
+str# SSDP::Types_Str;
+	 0x4341 | Cache Control:;
+	 0x4361 | Cache Control:;
+	 0x484F | Host:;
+	 0x486F | Host:;
+	 0x4C4F | Location:;
+	 0x4C6F | Location:;
+	 0x4D2D | Method:;
+	 0x4D41 | Mandatory Extension:;
+	 0x4D61 | Mandatory Extension:;
+	 0x4D58 | Maximum Wait:;
+	 0x4E4F | Method:;
+	 0x4F50	| Opt:;
+	 0x5345 | Server:;
+	 0x5354 | Search Target:;
+	 0x5365 | Server:;
+	 0x5553 | Unique Service Name:;
+	 0x4E54 | Service Type:;
+
+* end SSDP

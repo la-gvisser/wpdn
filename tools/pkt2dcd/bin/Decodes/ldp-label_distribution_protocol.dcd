@@ -1,0 +1,2229 @@
+// LDP - label distribution protocol
+
+// notes:
+// travels over tcp&udp port646
+// g[0xa] = tlv type
+// g[0xb] = pdu length
+
+// wooohooo! we now do CR-LDP...crappy ... but oh well
+//  limitation is that we don't have access to the [8] mentioned in rfc 3476
+
+
+// -----------------------------------------------------------------
+//	main
+// -----------------------------------------------------------------
+
+void LDP()
+{
+	LABL( 0, 0, 0, 0xb1, "LDP - Label Distribution Protocol\LDP:");
+	LDP::Header;
+	TRTS;
+}
+
+void LDP::Header()
+{
+	DWRD(   0, g[1], 0x90, 0xc2, "Version:");
+	DWRD(   0, g[0xb], 0x90, 0xc2, "PDU Length:");
+	IPLG(   0, g[1], 0x90, 0xc2, "LSR ID:");
+	HWRD(   0, g[1], 0x90, 0xc2, "Label Space:");
+	
+	g[0xb] -= 6;
+	l[0xb] = 0;
+	while (g[0xb] > 0)
+	{
+		l[0xa] = g[16];
+		
+		DBIT( 0x2,    0, 0x05, 0x05, "incr ahead...");
+		DBIT( 0xe, l[1], 0x05, 0x05, "msg type");
+		DECR( 2, 0);
+		TSB#( 0x0, l[1], 0x00, 0x00, "LDP::Message::List_Func");		//si: go to messages and they'll spit you to the tlv's
+		
+		l[0xa] -= g[16];
+		g[0xb] -= l[0xa];
+		
+		l[0xb] += 1;				//si: just in case, so we don't loop forever
+		if (l[0xb] > 10)
+		{
+			TRTS;
+		}
+	}
+	if (g[16] > 0)
+	{
+		g[1] = pw[0];
+		if (g[1] == 1)
+		{
+			TNXT -LDP;
+		}
+	}
+	TRTS;
+}
+
+void LDP::TLV::Check()
+{
+//	l[1] = 0;
+//	while( g[0x10] > 0 )
+//	{
+		DBIT( 0x2,    0, 0x05, 0x05, "incr ahead...");
+		DBIT( 0xe, l[2], 0x05, 0x05, "tlv type");
+		DECR( 2, 0);
+		l[3] = g[16];
+		TSB#( 0x0, l[2], 0x00, 0x00, "LDP::TLV::List_Func");
+		if (l[3] == g[16])
+		{
+			LDP::TLV::Generic;
+		}
+//		l[1] += 1;
+//		if (l[1] > 5)
+//		{
+//			TNXT -RETURN;
+//		}
+//	}
+}
+
+/*
+void LDP::TLV::Main()
+{
+	DBIT( 0x1, g[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, g[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, g[0xa], 0x90, 0xc2, "Type:");
+	CST#( 0x0, g[0xa], 0x00, 0x14, "LDP::TLV::List_Names");
+	TST#( 0x0, g[0xa], 0x00, 0x14, "LDP::TLV::List_Func");
+	
+	DWRD( 0x0, g[1], 0x90, 0xc2, "Length:");
+	DUMP( 0x0, g[1], 0x90, 0xc2, "Value:");
+	TRTS;
+}
+*/
+
+
+// -----------------------------------------------------------------
+
+str# LDP::Message::List_Func;
+	0x0001 | LDP::Message::Notification;
+	0x0100 | LDP::Message::Hello;
+	0x0200 | LDP::Message::Initialization;
+	0x0201 | LDP::Message::KeepAlive;
+	0x0300 | LDP::Message::Address;
+	0x0301 | LDP::Message::Address_Withdraw;
+	0x0400 | LDP::Message::Label_Mapping;
+	0x0401 | LDP::Message::Label_Request;
+	0x0402 | LDP::Message::Label_Withdraw;
+	0x0403 | LDP::Message::Label_Release;
+	0x0404 | LDP::Message::Label_Abort_Req;
+	0x0500 | CR-LDP::Message::Call_Setup;
+	0x0501 | CR-LDP::Message::Call_Release;
+	//0x3E00-0x3EFF LDP::Message::Vendor;
+	//0x3F00-0x3FFF LDP::Message::Exper_Ext;
+
+// -----------------------------------------------------------------
+
+str# LDP::TLV::List_Names;
+	0x0100 | FEC;
+	0x0101 | Address_List;
+	0x0103 | Hop Count;
+	0x0104 | Path Vector;
+	0x0201 | ATM Label;
+	0x0202 | Frame Relay Label;
+	0x0300 | Status;
+	0x0301 | Extended Status;
+	0x0302 | Returned PDU;
+	0x0303 | Returned Message;
+	0x0400 | Common Hello Params;
+	0x0401 | IPv4 Transport Address;
+	0x0402 | Config Seq Num;
+	0x0403 | IPv6 Transport Address;
+	0x0500 | Common Session Params;
+	0x0501 | ATM Session Params;
+	0x0502 | FR Session Params;
+	0x0503 | FT Session;
+	0x0504 | FT Ack;
+	0x0505 | FT Cork;
+	0x0800 | Explicit Route;							// CR-LDP stuff
+	0x0801 | ER-Hops - IPv4 Prefix;
+	0x0802 | ER-Hops - IPv6 Prefix;
+	0x0803 | ER-Hops - ASN;
+	0x0804 | ER-Hops - LSPID;
+	0x0810 | Traffic Paramaters;
+	0x0820 | Preemption;
+	0x0821 | LSPID;
+	0x0822 | Resource Class (Color);
+	0x0823 | Route Pinning;
+	0x0824 | Generalized Label Request;
+	0x0825 | Generalized Label;
+	0x0826 | Upstream Label;
+	0x0827 | Label Set;
+	0x0828 | Waveband Label;
+	0x0829 | ER-Hop;
+	0x082A | Acceptable Label Set;
+	0x082B | Admin Status;
+	0x082C | Interface ID;
+	0x082D | IPv4 Interface ID;
+	0x082E | IPv6 Interface ID;
+	0x082F | IPv4 IF_ID Status;
+	0x0830 | IPv6 IF_ID Status;
+	0x0831 | Op-Sp Call ID;
+	0x0832 | GU Call ID;
+	0x0833 | Call Capability;
+	0x0834 | Crankback;
+	0x0835 | Protection Information;
+	0x0836 | LSP Tunnel Interface ID;
+	0x0837 | Unnumbered Interface ID;
+	0x0901 | Diff Services;
+	0x0960 | IPv4 Source ID;
+	0x0961 | IPv6 Source ID;
+	0x0962 | NSAP Source ID;
+	0x0963 | IPv4 Destination ID;
+	0x0964 | IPv6 Destination ID;
+	0x0965 | NSAP Destination ID;
+	0x0966 | Egress Label;
+	0x0967 | Local Connection ID;
+	0x0968 | Diversity;
+	0x0969 | Contract ID;
+	0x0970 | UNI Service Level;
+	//0x3E 00-0x3EFF LDP::TLV::Vendor;
+
+str# LDP::TLV::List_Func;
+	0x0100 | LDP::TLV::FEC;									//RFC 3036
+	0x0101 | LDP::TLV::Address_List;						//RFC 3036
+	0x0103 | LDP::TLV::Hop_Count;							//RFC 3036
+	0x0104 | LDP::TLV::Path_Vector;							//RFC 3036
+	0x0201 | LDP::TLV::ATM_Label;							//RFC 3036
+	0x0202 | LDP::TLV::Frame_Relay_Label;					//RFC 3036
+	0x0300 | LDP::TLV::Status;								//RFC 3036
+	0x0301 | LDP::TLV::Extended_Status;						//RFC 3036
+	0x0302 | LDP::TLV::Returned_PDU;						//RFC 3036
+	0x0303 | LDP::TLV::Returned_Message;					//RFC 3036
+	0x0400 | LDP::TLV::Common_Hello_Params;					//RFC 3036
+	0x0401 | LDP::TLV::IPv4_Transport_Address;				//RFC 3036
+	0x0402 | LDP::TLV::Config_Seq_Num;						//RFC 3036
+	0x0403 | LDP::TLV::IPv6_Transport_Address;				//RFC 3036
+	0x0500 | LDP::TLV::Common_Sess_Parms;					//RFC 3036
+	0x0501 | LDP::TLV::ATM_Sess_Params;						//RFC 3036
+	0x0502 | LDP::TLV::FR_Sess_Params;						//RFC 3036
+	0x0800 | CR-LDP::TLV::ER;								//RFC 3212
+	0x0801 | CR-LDP::TLV::ER::Hops::IPv4_Prefix;			//RFC 3212
+	0x0802 | CR-LDP::TLV::ER::Hops::IPv6_Prefix;			//RFC 3212
+	0x0803 | CR-LDP::TLV::ER::Hops::ASN;					//RFC 3212
+	0x0804 | CR-LDP::TLV::ER::Hops::LSPID;					//RFC 3212
+	0x0810 | CR-LDP::TLV::Traffic_Params;					//RFC 3212
+	0x0820 | CR-LDP::TLV::Preemption;						//RFC 3212
+	0x0821 | CR-LDP::TLV::LSPID;							//RFC 3212
+	0x0822 | CR-LDP::TLV::Resource_Class;					//RFC 3212
+	0x0823 | CR-LDP::TLV::Route_Pinning;					//RFC 3212
+	0x0824 | CR-LDP::TLV::Generalized_Label_Request;		//RFC 3472
+	0x0825 | CR-LDP::TLV::Generalized_Label;				//RFC 3472
+	0x0826 | CR-LDP::TLV::Upstream_Label;					//RFC 3472
+	0x0827 | CR-LDP::TLV::Label_Set;						//RFC 3472
+	0x0828 | CR-LDP::TLV::Waveband_Label;					//RFC 3472
+	0x0829 | CR-LDP::TLV::ER-Hop;							//RFC 3472
+	0x082A | CR-LDP::TLV::Acceptable_Label_Set;				//RFC 3472
+	0x082B | CR-LDP::TLV::Admin_Status;						//RFC 3472
+	0x082C | CR-LDP::TLV::Interface_ID;						//RFC 3472
+	0x082D | CR-LDP::TLV::IPv4_Interface_ID;				//RFC 3472
+	0x082E | CR-LDP::TLV::IPv6_Interface_ID;				//RFC 3472
+	0x082F | CR-LDP::TLV::IPv4_IF_ID_Status;				//RFC 3472
+	0x0830 | CR-LDP::TLV::IPv6_IF_ID_Status;				//RFC 3472
+	0x0831 | CR-LDP::TLV::Op-Sp_Call_ID;					//RFC 3475
+	0x0832 | CR-LDP::TLV::GU_Call_ID;						//RFC 3475
+	0x0833 | CR-LDP::TLV::Call_Capability;					//RFC 3475
+	0x0834 | CR-LDP::TLV::Crankback;						//RFC 3475
+	0x0835 | CR-LDP::TLV::Protection_Info;					//RFC 3472
+	0x0836 | CR-LDP::TLV::LSP_TUNNEL_INTERFACE_ID;			//RFC 3480
+	0x0837 | CR-LDP::TLV::Unnumbered_Interface_ID;			//RFC 3480
+	0x0901 | CR-LDP::TLV::Diff-Serv;						//RFC 3270
+	0x0960 | CR-LDP::TLV::IPv4_SID;							//RFC 3476
+	0x0961 | CR-LDP::TLV::IPv6_SID;							//RFC 3476
+	0x0962 | CR-LDP::TLV::NSAP_SID;							//RFC 3476
+	0x0963 | CR-LDP::TLV::IPv4_DID;							//RFC 3476
+	0x0964 | CR-LDP::TLV::IPv6_DID;							//RFC 3476
+	0x0965 | CR-LDP::TLV::NSAP_DID;							//RFC 3476
+	0x0966 | CR-LDP::TLV::Egress_Label;						//RFC 3476
+	0x0967 | CR-LDP::TLV::Local_Connection_ID;				//RFC 3476
+	0x0968 | CR-LDP::TLV::Diversity;						//RFC 3476
+	0x0969 | CR-LDP::TLV::Contract_ID;						//RFC 3476
+	0x0970 | CR-LDP::TLV::UNI_Service_Level;				//RFC 3476
+	//0x3E00-0x3EFF LDP::TLV::Vendor;
+
+
+
+// -----------------------------------------------------------------
+//  Messages
+// -----------------------------------------------------------------
+
+
+void LDP::Message()
+{
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+}
+
+// 0x0001 ----- ----- -----
+void LDP::Message::Notification()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Notification Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Notification");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::Status;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0100 ----- ----- -----
+void LDP::Message::Hello()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Hello Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Hello");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::Common_Hello_Params;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0200 ----- ----- -----
+void LDP::Message::Initialization()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Initialization Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Initialization");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::Common_Sess_Parms;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0201 ----- ----- -----
+void LDP::Message::KeepAlive()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Keep Alive Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Keep Alive");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0300 ----- ----- -----
+void LDP::Message::Address()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Address Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Address");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::Address_List;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0301 ----- ----- -----
+void LDP::Message::Address_Withdraw()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Address Withdraw Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Address Withdraw");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::Address_List;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0400 ----- ----- -----
+void LDP::Message::Label_Mapping()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Label Mapping Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Label Mapping");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+						//l[4] = g[16];
+	l[1] = g[16];
+	LDP::TLV::FEC;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+//	l[4] -= g[16];
+//	l[2] -= l[4];
+//	l[1] = 0;
+//	while (l[2] > 0)
+//	{
+//		l[4] = g[16];
+//		LDP::TLV::Generic;
+//		l[4] -= g[16];
+//		l[2] -= l[4];
+//		
+//		l[1] += 1;				//si: just in case, so we don't loop forever
+//		if (l[1] > 5)
+//		{
+//			TRTS;
+//		}
+//	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//3.5.7			- CHECK THAT
+
+//0x0401 ----- ----- -----
+void LDP::Message::Label_Request()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Label Request Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Label Request");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::FEC;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0402 ----- ----- -----
+void LDP::Message::Label_Withdraw()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Label Withdraw Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Label Withdraw");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	//l[2] -= 4;
+	//l[4] = g[16];
+	
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::FEC;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+
+/*
+	l[4] -= g[16];
+	l[2] -= l[4];
+	l[1] = 0;
+	while (l[2] > 0)
+	{
+		l[4] = g[16];
+		LDP::TLV::Generic;
+		l[4] -= g[16];
+		l[2] -= l[4];
+		
+		l[1] += 1;				//si: just in case, so we don't loop forever
+		if (l[1] > 5)
+		{
+			TRTS;
+		}
+	}
+*/
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0403 ----- ----- -----
+void LDP::Message::Label_Release()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Label Release Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Label Release");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	//LDP::TLV::FEC;
+	l[2] -= 4;
+	//l[1] = g[16];
+	//LDP::TLV::Status;
+	//l[1] -= g[16];
+	//l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0404 ----- ----- -----
+void LDP::Message::Label_Abort_Req()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Label Abort Request Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Label Abort Request");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	
+	//LDP::TLV::Label_Req_Msg_ID;
+	l[2] -= 4;
+	l[1] = g[16];
+	LDP::TLV::FEC;
+	l[1] -= g[16];
+	l[2] -= l[1];
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0500 ----- ----- -----
+void CR-LDP::Message::Call_Setup;
+	LABL 0 0 00 b7 Call Setup Message;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	HBIT f 1 90 c2 Msg Type:;
+	LABL 0 0 00 14 Call Setup;
+	DWRD 0 2 90 c2 Msg Length:;
+	HLNG 0 1 90 c2 Msg ID:;
+	// WTF!?
+	//Source ID TLV
+	//Dest ID TLV
+	//Call ID TLV
+	//Optional Params
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0500 ----- ----- -----
+void CR-LDP::Message::Call_Release;
+	LABL 0 0 00 b7 Call Release Message;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	HBIT f 1 90 c2 Msg Type:;
+	LABL 0 0 00 14 Call Release;
+	DWRD 0 2 90 c2 Msg Length:;
+	HLNG 0 1 90 c2 Msg ID:;
+	// WTF!?
+	//Source ID TLV
+	//Dest ID TLV
+	//Call ID TLV
+	//Optional Params
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x3E00-0x3EFF ----- ----- -----
+void LDP::Message::Vendor()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Vendor Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Vendor Specific Request");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Vendor ID:");
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	
+	
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x3F00-0x3FFF ----- ----- -----
+void LDP::Message::Exper_Ext()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Experiment Extension Message");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	HBIT( 0xf, l[1], 0x90, 0xc2, "Msg Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Experimental Extension Request");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Msg Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Msg ID:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Experiment ID:");
+	while (l[2] > 0)
+	{
+		l[1] = g[16];
+		LDP::TLV::Check;
+		l[1] -= g[16];
+		l[2] -= l[1];
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+
+
+
+
+// -----------------------------------------------------------------
+//  TLV's
+// -----------------------------------------------------------------
+
+// generic tlv
+void LDP::TLV::Generic()
+{
+	//si: do a check before doin the generic
+	DBIT( 0x2,    0, 0x05, 0x05, "incr ahead...");
+	DBIT( 0xe, l[2], 0x05, 0x05, "tlv type");
+	DECR( 2, 0);
+	TSB#( 0x0, l[2], 0x00, 0x00, "LDP::TLV::List_Func");
+	SKIP( 0x5, 0x0 );
+		LABL( 0x0, 0x00, 0x00, 0xb7, "Generic TLV");
+		DBIT( 0x1, g[1], 0x90, 0xc2, "Unknown Bit:");
+		DBIT( 0x1, g[1], 0x90, 0xc2, "Forward U Bit:");
+		HBIT( 0xe, g[1], 0x90, 0xc2, "Type:");
+		LABL( 0x0, 0x00, 0x00, 0x14, "Generic");
+		DWRD( 0x0, g[1], 0x90, 0xc2, "Length:");
+		DLNG( 0x0, g[1], 0x90, 0xc2, "Label:");
+		LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0201 ----- ----- -----
+void LDP::TLV::ATM_Label()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "ATM Label TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "ATM Label");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "TLV Length:");
+	HBIT( 0x2, 0x00, 0x90, 0xc2, "Reserved:");
+	HBIT( 0x2, 0x00, 0x90, 0xc2, "V-bits:");
+	HBIT( 0xc, 0x00, 0x90, 0xc2, "Virt Path Identifier:");
+	HWRD( 0x0, l[1], 0x90, 0xc2, "Virt Channel Identifier:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0202 ----- ----- -----
+void LDP::TLV::Frame_Relay_Label()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Frame Relay Label TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Frame Relay Label");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "TLV Length:");
+	HBIT( 0x7, 0x00, 0x90, 0xc2, "Reserved:");
+	DBIT( 0x2, l[1], 0x90, 0xc2, "Length:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "10 bits DLCI");
+	CEQU( 0x2, l[1], 0x00, 0x14, "23 bits DLCI");
+	DBIT( 0x0, g[1], 0x90, 0xc2, "DLCI:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0100 ----- ----- -----
+void LDP::TLV::FEC()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "FEC TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Foward Equivalence Class");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "TLV Length:");
+	while (l[1] > 0)
+	{
+		l[3] = pb[0];
+		l[4] = g[16];
+		TSB# 0 43 0 0 LDP::TLV::FEC::Elements;
+		l[4] -= g[16];
+		l[1] -= l[4];
+		if (l[4] == 0)
+		{
+			DUMP( 0x0, l[1], 0x90, 0xc2, "FEC Elements:");
+			l[1] = 0;
+		}
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+str# LDP::TLV::FEC::Elements;
+	2	| LDP::TLV::FEC::0x02;
+	3	| LDP::TLV::FEC::0x03;
+	128	| LDP::TLV::FEC::0x80;
+	//129	| LDP::TLV::FEC::0x81;
+
+void LDP::TLV::FEC::0x02()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb9, "FEC Element Prefix");
+	HBYT( 0x0, l[1], 0x90, 0xc2, "FEC Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Prefix");
+	HWRD( 0x0, l[1], 0x90, 0xc2, "Address Family:");
+	CEQU( 0x1, l[1], 0x00, 0x14, "IPv4");
+	CEQU( 0x2, l[1], 0x00, 0x14, "IPv6");
+	DBYT( 0x0, l[1], 0x90, 0xc2, "Prefix Length:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "in bits");
+	if (l[1] == 32)
+	{
+		IPLG 0 0 90 c2 Address:;
+	}
+	if (l[1] == 128)
+	{
+		IPV6 0 0 90 c2 Address:;
+	}
+	if (l[1] < 32)
+	{
+		l[1] /= 8;
+		if (l[1] == 3)
+		{
+			DBYT 0 0 90 c2 Address:;
+			DBYT 0 0 00 00 .;
+			DBYT 0 0 00 00 .;
+			LABL 0 0 00 00 .0; 
+		}
+		if (l[1] == 2)
+		{
+			DBYT 0 0 90 c2 Address:;
+			DBYT 0 0 00 00 .;
+			LABL 0 0 00 00 .0;
+			LABL 0 0 00 00 .0; 
+		}
+		if (l[1] == 1)
+		{
+			DBYT 0 0 90 c2 Address:;
+			LABL 0 0 00 00 .0;
+			LABL 0 0 00 00 .0;
+			LABL 0 0 00 00 .0; 
+		}
+	}
+	if (l[1] > 32)
+	{
+		if (l[1] != 128)
+		{
+			DUMP 0 41 90 c2 Address:;
+		}
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+void LDP::TLV::FEC::0x03()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb9, "FEC Element Host Address");
+	HBYT( 0x0, l[1], 0x90, 0xc2, "FEC Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Host Address");
+	HWRD( 0x0, l[1], 0x90, 0xc2, "Address Family:");
+	CEQU( 0x1, l[1], 0x00, 0x14, "IPv4");
+	CEQU( 0x2, l[1], 0x00, 0x14, "IPv6");
+	DBYT( 0x0, l[1], 0x90, 0xc2, "Host Addr Length:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "in bits");
+	if (l[1] == 32)
+	{
+		IPLG 0 0 90 c2 Address:;
+	}
+	if (l[1] == 128)
+	{
+		IPV6 0 0 90 c2 Address:;
+	}
+	if (l[1] != 32)
+	{
+		if (l[1] != 128)
+		{
+			l[1] /= 8;
+			DUMP 0 41 90 c2 Address:;
+		}
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+void LDP::TLV::FEC::0x80()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "FEC Element PWid");
+	HBYT( 0x0, l[1], 0x90, 0xc2, "FEC Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "PWid");
+	DBIT( 0x0, l[2], 0x90, 0xc2, "Control Bit:");
+	CEQU( 0x1, l[2], 0x00, 0x14, "Control word present");
+	CLSE( 0x0, 0x00, 0x00, 0x14, "Control word not present");
+	INCR 1;
+	DECR 1;
+	HWRD 0 43 90 c2 PW Type:;
+	CST# 0 43 00 14 LDP::TLV::FEC::0x80::PWType;
+	DBYT 0 41 90 c2 PW Info Length:;
+	DLNG 0 00 90 c2 Group ID:;
+	if (l[1] > 0)
+	{
+		DLNG 0 00 90 c2 PW ID:;
+		l[1] -= 4;
+		while (l[1] > 0)
+		{
+			LABL 0 00 00 b7 Interface Param;
+			DBYT 0 45 90 c2 Parameter ID:;
+			CST# 0 45 00 14 LDP::TLV::FEC::0x80::ParamID;
+			DBYT 0 46 90 c2 Length:;
+			l[6] -= 2;
+			g[6] = l[6];
+			TSB# 0 45 00 00 LDP::TLV::FEC::0x80::ParamIDFunc;
+			TLSE 0 00 00 00 LDP::TLV::FEC::0x80::InterfaceParam::Generic;
+			LABL 0 00 00 b8;
+			l[1] -= 2;
+			l[1] -= l[6];
+		}
+	}
+	LABL 0 0 0 b8;
+}
+
+str# LDP::TLV::FEC::0x80::PWType;
+	0x0001 | Frame Relay DLCI;
+	0x0002 | ATM AAL5 VCC transport;
+	0x0003 | ATM transparent cell transport;
+	0x0004 | Ethernet VLAN;
+	0x0005 | Ethernet;
+	0x0006 | HDLC ( Cisco );
+	0x0007 | PPP;
+	0x8008 | CEM [8];
+	0x0009 | ATM VCC cell transport;
+	0x000A | ATM VPC cell transport;
+
+str# LDP::TLV::FEC::0x80::ParamID;
+	0x01 | Interface MTU;
+	0x02 | Maximum Number of concatenated ATM cells;
+	0x03 | Optional Interface Description string;
+	0x04 | CEM [8] Payload Bytes;
+	0x05 | CEM options;
+
+str# LDP::TLV::FEC::0x80::ParamIDFunc;
+	0x01 | LDP::TLV::FEC::0x80::InterfaceParam::0x01;
+	0x02 | LDP::TLV::FEC::0x80::InterfaceParam::0x02;
+	0x03 | LDP::TLV::FEC::0x80::InterfaceParam::0x03;
+	0x04 | LDP::TLV::FEC::0x80::InterfaceParam::0x04;
+	0x05 | LDP::TLV::FEC::0x80::InterfaceParam::0x05;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::Generic;
+	HEX# 0 6 90 c2 Var Length Value:;
+	TRTS;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::0x01;
+	DWRD 0 0 90 c2 MTU:;
+	TRTS;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::0x02;
+	DWRD 0 0 90 c2 MTU:;
+	TRTS;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::0x03;
+	CHR# 0 6 90 c2 Text:;
+	TRTS;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::0x04;
+	DWRD 0 0 90 c2 TDM Payload Octes:;
+	TRTS;
+
+void LDP::TLV::FEC::0x80::InterfaceParam::0x05;
+	BBYT 0 41 90 c9 CEM Options:;
+	CBIT 0 41 00 d4 CEM-DBA in operation;
+	CLSE 0 00 00 d4 CEM-DBA Not in operation;
+	LABL 0 00 00 c8;
+	TRTS;
+
+/*
+void LDP::TLV::FEC::0x81;
+	LABL 0 0 00 b7 FEC Element Generalized ID;
+	HBYT 0 41 90 c2 FEC Type:;
+	LABL 0 00 00 14 Generalized ID;
+	DBIT 0 42 90 c2 Control Bit:;
+	CEQU 1 42 00 14 Control word present;
+	CLSE 0 00 00 14 Control word not present;
+	INCR 1;
+	DECR 1;
+	HWRD 0 43 90 c2 PW Type:;
+	CST# 0 43 00 14 LDP::TLV::FEC::0x80::PWType;
+	DBYT 0 41 90 c2 PW Info Length:;
+	DBYT 0 41 90 c2 AGI Type:;
+	DBYT 0 00 90 c2 Length:;
+
+	LABL 0 0 00 b8;
+	TRTS;
+*/
+
+//0x0101 ----- ----- -----
+void LDP::TLV::Address_List()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Address List TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Address List");
+	g[0xc] -= 2;
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	g[0xc] -= 2;
+	g[0xc] -= l[2];
+	HWRD( 0x0, l[1], 0x90, 0xc2, "Address Family:");
+	CEQU( 0x1, l[1], 0x00, 0x14, "IPv4");
+	CEQU( 0x2, l[1], 0x00, 0x14, "IPv6");
+	l[2] -= 2;
+	if (l[1] == 1)
+	{
+		while (l[2] > 0)
+		{
+			IPLG 0 0 90 c2 Address:;
+			l[2] -= 4;
+		}
+	}
+	if (l[1] == 2)
+	{
+		while (l[2] > 0)
+		{
+			IPV6 0 0 90 c2 Address:;
+			l[2] -= 16;
+		}
+	}
+	if (l[1] != 1)
+	{
+		if (l[1] != 2)
+		{
+			DUMP( 0x0, l[2], 0x90, 0xc2, "Addresses:");
+		}
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0103 ----- ----- -----
+void LDP::TLV::Hop_Count()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Hop Count TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Hop Count");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DUMP( 0x0, l[2], 0x90, 0xc2, "Hop Count Value:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0104 ----- ----- -----
+void LDP::TLV::Path_Vector()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Path Vector TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Path Vector");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	while (l[2] > 0)
+	{
+		IPLG 0 0 90 c2 LSR ID:;
+		l[2] -= 4;
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0300 ----- ----- -----
+void LDP::TLV::Status()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Status TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Status");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Fatal Error Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "Advisory Notification");
+	CEQU( 0x1, l[1], 0x00, 0x14, "Fatal Error Notification");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "notification should not be forwarded");
+	CEQU( 0x1, l[1], 0x00, 0x14, "notification should be forwarded to the LSR for the next-hop or previous-hop for the LSP");
+	DBIT( 0x1e, l[1], 0x90, 0xc2, "Status Data:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Message ID:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "no specific peer message is being identified");
+	HWRD( 0x0, l[1], 0x90, 0xc2, "Message Type:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "the type of the peer message to which the Status TLV refers");
+	CLSE( 0x0, 0x00, 0x00, 0x14, "Status TLV does not refer to any specific message type");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0301 ----- ----- -----
+void LDP::TLV::Extended_Status()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Extended Status TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Extended Status");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DUMP( 0x4, 0x00, 0x90, 0xc2, "Extended Status:");				//si: might be wrong :(
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0302 ----- ----- -----
+void LDP::TLV::Returned_PDU()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Returned PDU TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Returned PDU");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DUMP( 0x0, l[2], 0x90, 0xc2, "PDU:");				//si: might be wrong :(
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0303 ----- ----- -----
+void LDP::TLV::Returned_Message()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Returned Message TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Returned Message");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DUMP( 0x0, l[2], 0x90, 0xc2, "Message:");				//si: might be wrong :(
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0400 ----- ----- -----
+void LDP::TLV::Common_Hello_Params;
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Common Hello Parameters TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Common Hello Parms");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Hold Time:");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "T Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "Link Hello");
+	CEQU( 0x1, l[1], 0x00, 0x14, "Targeted Hello");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "R Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "No Request");
+	CEQU( 0x1, l[1], 0x00, 0x14, "send periodic Targeted Hellos");
+	DBIT( 0xe, l[1], 0x90, 0xc2, "Reserved:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0401 ----- ----- -----
+void LDP::TLV::IPv4_Transport_Address()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "IPv4 Transport Address TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "IPv4 Transport Address");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	IPLG( 0x0, l[1], 0x90, 0xc2, "IPv4 Address:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0402 ----- ----- -----
+void LDP::TLV::Config_Seq_Num()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Configuration Sequence Number TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Configuration Seq Num");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Config Seq Num:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0403 ----- ----- -----
+void LDP::TLV::IPv6_Transport_Address()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "IPv6 Transport Address TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "IPv6 Transport Address");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	IPV6( 0x0, l[1], 0x90, 0xc2, "IPv6 Address:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+}
+
+//0x0500 ----- ----- -----
+void LDP::TLV::Common_Sess_Parms()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Common Session Parameters TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Common Sess Params");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Protocol Vers:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Keep Alive Time:");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Label Adver Discipline:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "downstream unsolicited advertisement");
+	CEQU( 0x1, l[1], 0x00, 0x14, "downstream on demand");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Loop Detection:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "loop detection is disabled");
+	CEQU( 0x1, l[1], 0x00, 0x14, "loop detection is enabled");
+	HBYT( 0x0, l[1], 0x90, 0xc2, "Reserved:");
+	DBYT( 0x0, l[1], 0x90, 0xc2, "Path Vector Limiter:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Max PDU Length:");
+	IPLG( 0x0, l[1], 0x90, 0xc2, "Receiver LSP Id:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Label Space Id:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+//0x0501 ----- ----- -----
+void LDP::TLV::ATM_Sess_Params()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "ATM Session Parameters TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "ATM Session Params");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DBIT( 0x2, l[3], 0x90, 0xc2, "ATM Merge Capabilities:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "Merge not supported");
+	CEQU( 0x1, l[1], 0x00, 0x14, "VP Merge supported");
+	CEQU( 0x2, l[1], 0x00, 0x14, "VC Merge supported");
+	CEQU( 0x3, l[1], 0x00, 0x14, "VP & VC Merge supported");
+	DBIT( 0x4, l[1], 0x90, 0xc2, "Num of label range components:");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "VC Directionality:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "bidirectional VC capability");
+	CEQU( 0x1, l[1], 0x00, 0x14, "unidirectional VC capability");
+	INCR 1;			//si: fix the bit alignment
+	HEX#( 0x3, 0x00, 0x90, 0xc2, "Reserved:");
+	l[2] -= 4;
+	while (l[3] > 0)
+	{												//si: each component is 8 bytes
+		TGTE( 0, 0x10, 0, 0, "RETURN");
+		LDP::TLV::ATM_Sess_Params::Component;
+		l[2] -= 8;
+		l[3] -= 1;
+	}
+	if (l[2] > 0)
+	{
+		DUMP( 0x0, l[2], 0x90, 0xc2, "Remaining Component Data:");
+	}
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+void LDP::TLV::ATM_Sess_Params::Component()
+{
+	DBIT( 0x4, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT( 0xc, l[1], 0x90, 0xc2, "Min VPI:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Min VCI:");
+	DBIT( 0x4, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT( 0xc, l[1], 0x90, 0xc2, "Min VPI:");
+	DWRD( 0x0, l[1], 0x90, 0xc2, "Min VCI:");
+}
+
+//0x0502 ----- ----- -----
+void LDP::TLV::FR_Sess_Params()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "ATM Session Parameters TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "TLV Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Frame Relay Session Parameters");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "TLV Length:");
+	DBIT( 0x2, l[1], 0x90, 0xc2, "ATM Merge Capabilities:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "Merge not supported");
+	CEQU( 0x1, l[1], 0x00, 0x14, "Merge supported");
+	DBIT( 0x4, l[3], 0x90, 0xc2, "Num of label range components:");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "VC Directionality:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "bidirectional VC capability");
+	CEQU( 0x1, l[1], 0x00, 0x14, "unidirectional VC capability");
+	INCR 1;			//si: fix the bit alignment
+	HEX#( 0x3, 0x00, 0x90, 0xc2, "Reserved:");
+	l[2] -= 4;
+	while (l[3] > 0)
+	{
+		TGTE( 0, 0x10, 0, 0, "RETURN");
+		LDP::TLV::FR_Sess_Params::Component;
+		l[2] -= 8;								//si: each component is 8 bytes
+		l[3] -= 1;
+	}
+	if (l[2] > 0)
+	{
+		DUMP( 0x0, l[2], 0x90, 0xc2, "Remaining Component Data:");
+	}
+	TRTS;
+}
+
+void LDP::TLV::FR_Sess_Params::Component()
+{
+	DBIT(  0x7, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT(  0x2, l[1], 0x90, 0xc2, "Length:");
+	CEQU(  0x0, l[1], 0x00, 0x14, "10 DLCI Bits");
+	CEQU(  0x1, l[1], 0x00, 0x14, "Reserved");
+	CEQU(  0x2, l[1], 0x00, 0x14, "23 DLCI Bits");
+	CEQU(  0x3, l[1], 0x00, 0x14, "Reserved");
+	DBIT( 0x17, l[1], 0x90, 0xc2, "Min DLCI:");
+	DBIT(  0x9, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT( 0x17, l[1], 0x90, 0xc2, "Max DLCI:");
+}
+
+//0x3E00-0x3EFF ----- ----- -----
+void LDP::TLV::Vendor()
+{
+	LABL( 0x0, 0x00, 0x00, 0xb7, "Vendor Specific Extension TLV");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Unknown Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "a notification is returned to the message originator");
+	CEQU( 0x1, l[1], 0x00, 0x14, "the unknown message is silently ignored");
+	DBIT( 0x1, l[1], 0x90, 0xc2, "Forward U Bit:");
+	CEQU( 0x0, l[1], 0x00, 0x14, "not forwarded with the containing message");
+	CEQU( 0x1, l[1], 0x00, 0x14, "forwarded with the containing message");
+	HBIT( 0xe, l[1], 0x90, 0xc2, "Type:");
+	LABL( 0x0, 0x00, 0x00, 0x14, "Vendor-Private Extension");
+	DWRD( 0x0, l[2], 0x90, 0xc2, "Length:");
+	HLNG( 0x0, l[1], 0x90, 0xc2, "Vendor ID:");
+	l[2] -= 4;
+	DUMP( 0x0, l[2], 0x90, 0xc2, "Data:");
+	LABL( 0x0, 0x00, 0x00, 0xb8);
+	TRTS;
+}
+
+// -----------------------------------------------------------------
+//  CR-LDP TLVs
+
+//0x0800 ----- ----- ----- ----- -----
+void CR-LDP::TLV::ER;
+	LABL 0 0 00 b7 Explicit Route TLV;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Explicit Route;
+	DWRD 0 5 90 c2 TLV Length:;
+	while (g[5] > 0)
+	{
+		g[1] = pw[0];
+		l[1] = g[11];
+		TSB# 0 1 0 0 CR-LDP::TLV::ER::Hops::Func;
+		if (l[1] == g[11])
+		{
+			DUMP 0 5 90 c2 TLV Data:;
+		}
+	}
+	LABL 0 0 00 b8;
+	TRTS; 
+
+str# CR-LDP::TLV::ER::Hops::Func;
+	0x0801	| CR-LDP::TLV::ER::Hops::IPv4_Prefix;
+	0x0802	| CR-LDP::TLV::ER::Hops::IPv6_Prefix;
+	0x0803	| CR-LDP::TLV::ER::Hops::ASN;
+	0x0804	| CR-LDP::TLV::ER::Hops::LSPID;
+
+//0x0801 ----- ----- -----
+void CR-LDP::TLV::ER::Hops::IPv4_Prefix;
+	LABL 0 0 00 b7 IPv4 Prefix TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv4 Prefix;
+	DWRD 0 4 90 c2 TLV Length:;
+	g[5] -= g[4];
+	g[5] -= 4;
+	DBIT 0 1 90 c2 L Bit:;
+	 CEQU 1 1 00 14 Loose;
+	 CLSE 0 0 00 14 Strict;
+	HEX# 3 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Prefix Length:;
+	IPLG 0 0 90 c2 IP Address:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0802 ----- ----- -----
+void CR-LDP::TLV::ER::Hops::IPv6_Prefix;
+	LABL 0 0 00 b7 IPv6 Prefix TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv6 Prefix;
+	DWRD 0 4 90 c2 TLV Length:;
+	g[5] -= g[4];
+	g[5] -= 4;
+	DBIT 0 1 90 c2 L Bit:;
+	 CEQU 1 1 00 14 Loose;
+	 CLSE 0 0 00 14 Strict;
+	HEX# 3 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Prefix Length:;
+	IPV6 0 0 90 c2 IPv6 Address:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0803 ----- ----- -----
+void CR-LDP::TLV::ER::Hops::ASN;
+	LABL 0 0 00 b7 Autonomous System Number TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 Autonomous System Number;
+	DWRD 0 4 90 c2 TLV Length:;
+	g[5] -= g[4];
+	g[5] -= 4;
+	DBIT 0 1 90 c2 L Bit:;
+	 CEQU 1 1 00 14 Loose;
+	 CLSE 0 0 00 14 Strict;
+	HWRD 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 AS Number:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0804 ----- ----- -----
+void CR-LDP::TLV::ER::Hops::LSPID;
+	LABL 0 0 00 b7 LSPID TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 LSPID;
+	DWRD 0 4 90 c2 TLV Length:;
+	g[5] -= g[4];
+	g[5] -= 4;
+	DBIT 0 1 90 c2 L Bit:;
+	 CEQU 1 1 00 14 Loose;
+	 CLSE 0 0 00 14 Strict;
+	HWRD 0 0 90 c2 Reserved:;
+	HWRD 0 0 90 c2 Local LSPID:;
+	IPLG 0 0 90 c2 Ingress LSR Router ID:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0810 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Traffic_Params;
+	LABL 0 0 00 b7 Traffic Parameters TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 Traffic Parameters;
+	DWRD 0 1 90 c2 TLV Length:;
+	BBYT 0 1 90 c9 Flags:;
+	 CBIT 7 1 00 d4 1... .... Reserved;
+	 CLSE 0 0 00 d4 0... .... Reserved;
+	 CBIT 6 1 00 d4 .1.. .... Reserved;
+	 CLSE 0 0 00 d4 .0.. .... Reserved;
+	 CBIT 5 1 00 d4 ..1. .... Weight - Negotiable;
+	 CLSE 0 0 00 d4 ..0. .... Weight - Not Negotiable;
+	 CBIT 4 1 00 d4 ...1 .... EBS - Negotiable;
+	 CLSE 0 0 00 d4 ...0 .... EBS - Not Negotiable;
+	 CBIT 3 1 00 d4 .... 1... CBS - Negotiable;
+	 CLSE 0 0 00 d4 .... 0... CBS - Not Negotiable;
+	 CBIT 2 1 00 d4 .... .1.. CDR - Negotiable;
+	 CLSE 0 0 00 d4 .... .0.. CDR - Not Negotiable;
+	 CBIT 1 1 00 d4 .... ..1. PBS - Negotiable;
+	 CLSE 0 0 00 d4 .... ..0. PBS - Not Negotiable;
+	 CBIT 0 1 00 d4 .... ...1 PDR - Negotiable;
+	 CLSE 0 0 00 d4 .... ...0 PDR - Not Negotiable;
+	 LABL 0 0 00 c8;
+	DBYT 0 1 90 c2 Frequency:;
+	 CEQU 0 1 00 14 Unspecified;
+	 CEQU 1 1 00 14 Frequent;
+	 CEQU 2 1 00 14 VeryFrequent;
+	HBYT 0 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Weight:;
+	DLNG 0 0 90 c2 Peak Data Rate:;
+	DLNG 0 0 90 c2 Peak Burst Size:;
+	DLNG 0 0 90 c2 Committed Data Rate:;
+	DLNG 0 0 90 c2 Committed Burst Size:;
+	DLNG 0 0 90 c2 Excess Burst Size:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0820 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Preemption;
+	LABL 0 0 00 b7 Preemption TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 Preemption;
+	DWRD 0 1 90 c2 TLV Length:;
+	DWRD 0 1 90 c2 Setup Priority:;
+	LABL 0 0 00 14 0 highest, 7 lowest;
+	DWRD 0 1 90 c2 Holding Priority:;
+	LABL 0 0 00 14 0 highest, 7 lowest;
+	HWRD 0 0 90 c2 Reserved:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0821 ----- ----- ----- ----- -----
+void CR-LDP::TLV::LSPID;
+	LABL 0 0 00 b7 LSPID TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 LSPID;
+	DWRD 0 1 90 c2 TLV Length:;
+	HBIT c 0 90 c2 Reserved:;
+	BBIT 4 1 90 c2 Action Indic Flag:;
+	 CEQU 0 1 00 14 Initial LSP Setup;
+	 CEQU 1 1 00 14 Modify LSP;
+	HWRD 0 0 90 c2 Local CR-LSP ID:;
+	IPLG 0 0 90 c2 Ingress LSR Router ID:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0822 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Resource_Class;
+	LABL 0 0 00 b7 Resource Class TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 Resource Class;
+	DWRD 0 1 90 c2 TLV Length:;
+	HLNG 0 0 90 c2 Resource Class:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0823 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Route_Pinning;
+	LABL 0 0 00 b7 Route Pinning TLV;
+	HWRD 0 0 90 c2 TLV Type:;
+	LABL 0 0 00 14 Route Pinning;
+	DWRD 0 1 90 c2 TLV Length:;
+	BBIT 1 1 90 c2 P Bit:;
+	 CEQU 0 1 00 14 Route pinning is NOT requested;
+	 CEQU 1 1 00 14 Route pinning is requested;
+	HLNG 0 0 90 c2 Reserved:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0824 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Generalized_Label_Request;
+	LABL 0 0 00 b7 Generalized Label Request TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Generalized Label Request;
+	DWRD 0 1 90 c2 TLV Length:;
+	DBYT 0 1 90 c2 LSP Enc Type:;
+	CST# 0 1 00 14 CR-LDP::TLV::Generalized_Label_Request::LSP_List;
+	DBYT 0 1 90 c2 Switching Type:;
+	CST# 0 1 00 14 CR-LDP::TLV::Generalized_Label_Request::Switch_List;
+	DWRD 0 1 90 c2 Generalized PID:;
+	CST# 0 1 00 14 CR-LDP::TLV::Generalized_Label_Request::GPID_List;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# CR-LDP::TLV::Generalized_Label_Request::LSP_List;
+	 1 | Packet;
+	 2 | Ethernet;
+	 3 | ANSI-ETSI PDH;
+	 4 | Reserved;
+	 5 | SDH ITU-T G.707 - SONET ANSI T1.105;
+	 6 | Reserved;
+	 7 | Digital Wrapper;
+	 8 | Lambda (photonic);
+	 9 | Fiber;
+	10 | Reserved;
+	11 | FiberChannel;
+
+str# CR-LDP::TLV::Generalized_Label_Request::Switch_List;
+	  1 | Packet-Switch Capable-1;
+	  2 | Packet-Switch Capable-2;
+	  3 | Packet-Switch Capable-3;
+	  4 | Packet-Switch Capable-4;
+	 51 | Layer-2 Switch Capable;
+	100 | Time-Division-Multiplex Capable;
+	150 | Lambda-Switch Capable;
+	200 | Fiber-Switch Capable;
+
+str# CR-LDP::TLV::Generalized_Label_Request::GPID_List;
+	 0 | Unknown;
+	 1 | Reserved;
+	 2 | Reserved;
+	 3 | Reserved;
+	 4 | Reserved;
+	 5 | Asynchronous mapping of E4;
+	 6 | Asynchronous mapping of DS3-T3;
+	 7 | Asynchronous mapping of E3;
+	 8 | Bit synchronous mapping of E3;
+	 9 | Byte synchronous mapping of E3;
+	10 | Asynchronous mapping of DS2-T2;
+	11 | Bit synchronous mapping of DS2-T2;
+	12 | Reserved;
+	13 | Asynchronous mapping of E1;
+	14 | Byte synchronous mapping of E1;
+	15 | Byte synchronous mapping of 31;
+	16 | Asynchronous mapping of DS1-T1;
+	17 | Bit synchronous mapping of DS1-T1;
+	18 | Byte synchronous mapping of DS1-T1;
+	19 | VC-11 in VC-12;
+	20 | Reserved;
+	21 | Reserved;
+	22 | DS1 SF Asynchronous;
+	23 | DS1 ESF Asynchronous;
+	24 | DS3 M23 Asynchronous;
+	25 | DS3 C-Bit Parity Asynchronous;
+	26 | VT-LOVC;
+	27 | STS SPE-HOVC;
+	28 | POS - No Scrambling, 16 bit CRC;
+	29 | POS - No Scrambling, 32 bit CRC;
+	30 | POS - Scrambling, 16 bit CRC;
+	31 | POS - Scrambling, 32 bit CRC;
+	32 | ATM mapping;
+	33 | Ethernet;
+	34 | SONET-SDH;
+	35 | Reserved (SONET deprecated);
+	36 | Digital Wrapper;
+	37 | Lambda;
+	38 | ANSI-ETSI PDH;
+	39 | Reserved;
+	40 | Link Access Protocol SDH;
+	41 | FDDI;
+	42 | DQDB (ETSI ETS 300 216);
+	43 | FiberChannel-3 (Services);
+	44 | HDLC;
+	45 | Ethernet V2/DIX (only);
+	46 | Ethernet 802.3 (only);
+
+//0x0825 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Generalized_Label;
+	LABL 0 0 00 b7 TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 ;
+	DWRD 0 1 90 c2 TLV Length:;
+	CHR# 0 1 90 c2 Label:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0826 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Upstream_Label;
+	LABL 0 0 00 b7 Upstream Label TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Upstream Label;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 TLV Data:;						//?????????????????????
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0827 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Label_Set;
+	LABL 0 0 00 b7 Label Set TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Label Set;
+	DWRD 0 2 90 c2 TLV Length:;
+	BBIT 0 1 90 c9 Action:;
+	 LABL 0 0 0 d4 xxxx x... Reserved;
+	 CBIT 0 1 00 d4 .... .1.. Inclusive Range;
+	 CLSE 0 0 00 d4 .... .0.. Not an Inclusive Range;
+	 CBIT 0 1 00 d4 .... ..1. Exclusive List;
+	 CLSE 0 0 00 d4 .... ..0. Not an Exclusive List;
+	 CBIT 0 1 00 d4 .... ...1 Inclusive List;
+	 CLSE 0 0 00 d4 .... ...0 Not an Inclusive List;
+	 LABL 0 0 00 c8;
+	HBIT a 0 90 c2 Reserved:;
+	HBIT e 0 90 c2 Label Type:;
+	g[2] -= 4;
+	DUMP 0 2 90 c2 Subchannels:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0828 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Waveband_Label;
+	LABL 0 0 00 b7 Waveband Label TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Waveband Label;
+	DWRD 0 1 90 c2 TLV Length:;
+	HLNG 0 0 90 c2 Waveband ID:;
+	HLNG 0 0 90 c2 Start Label:;
+	HLNG 0 0 90 c2 End Label:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0829 ----- ----- ----- ----- -----
+void CR-LDP::TLV::ER-Hop;
+	LABL 0 0 00 b7 ER-HopTLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 ER-Hop;
+	DWRD 0 2 90 c2 TLV Length:;
+	DBIT 1 0 90 c2 L Bit:;
+	DBIT 1 1 90 c2 U Bit:;
+	 CEQU 0 1 00 14 Downstream;
+	 CEQU 1 1 00 14 Upstream;
+	HBIT e 0 90 c2 Reserved:;
+	g[2] -= 2;
+	CHR# 0 2 90 c2 Label:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x082A ----- ----- ----- ----- -----
+void CR-LDP::TLV::Acceptable_Label_Set;
+	LABL 0 0 00 b7 Acceptable Label TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Acceptable Label;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 TLV Data:;				//si: ??????????????
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x082B ----- ----- ----- ----- -----
+void CR-LDP::TLV::Admin_Status;
+	LABL 0 0 00 b7 Administrative Status TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Administrative Status;
+	DWRD 0 1 90 c2 TLV Length:;
+	BLNG 0 1 90 c9 Flags:;
+	 CBIT 0 1 00 d4 1....... ........ ........ ........ R: Edge node should refect the object-TLV back in appropriate message;
+	 CLSE 0 0 00 d4 0....... ........ ........ ........ R: Not Set;
+	 LABL 0 0 00 d4 .xxxxxxx xxxxxxxx xxxxxxxx xxxxx... Reserved;
+	 CBIT 0 1 00 d4 ........ ........ ........ .....1.. T: Local actions related to the testing mode should be taken;
+	 CLSE 0 0 00 d4 ........ ........ ........ .....0.. T: Not Set;
+	 CBIT 0 1 00 d4 ........ ........ ........ ......1. A: Local actions related to the admin mode should be taken;
+	 CLSE 0 0 00 d4 ........ ........ ........ ......0. A: Not Set;
+	 CBIT 0 1 00 d4 ........ ........ ........ .......1 D: Local actions related to LSP teardown should be taken;
+	 CLSE 0 0 00 d4 ........ ........ ........ .......0 A: Not Set;
+	 LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+//0x082C ----- ----- ----- ----- -----
+void CR-LDP::TLV::Interface_ID;
+	LABL 0 0 00 b7 Interface ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Interface ID;
+	DWRD 0 5 90 c2 TLV Length:;
+	while (g[5] > 0)
+	{
+		l[1] = g[16]
+		l[2] = pw[1];		//si: get the length
+		CR-LDP::TLV::Interface_ID::TLV;
+		if (l[1] == g[16])
+		{
+			DUMP 0 5 90 c2 TLV Data:;
+			g[5] = 0;
+		}
+		g[5] -= l[2];
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x082D ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv4_Interface_ID;
+	LABL 0 0 00 b7 IPV4 Interface ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPV4 Interface ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	IPLG 0 0 90 c2 IPv4 Next - Prev Hop Address:;
+	HLNG 0 0 90 c2 Logical Interface ID:;
+	while (g[5] > 0)
+	{
+		l[1] = g[16];
+		l[2] = pw[1];		//si: get the length
+		CR-LDP::TLV::Interface_ID::TLV;
+		if (l[1] == g[16])
+		{
+			DUMP 0 5 90 c2 TLV Data:;
+			g[5] = 0;
+		}
+		g[5] -= l[2];
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x082E ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv6_Interface_ID;
+	LABL 0 0 00 b7 IPV6 Interface ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPV6 Interface ID;
+	DWRD 0 5 90 c2 TLV Length:;
+	IPLG 0 0 90 c2 IPv6 Next - Prev Hop Address:;
+	HLNG 0 0 90 c2 Logical Interface ID:;
+	while (g[5] > 0)
+	{
+		l[1] = g[16];
+		l[2] = pw[1];		//si: get the length
+		CR-LDP::TLV::Interface_ID::TLV;
+		if (l[1] == g[16])
+		{
+			DUMP 0 5 90 c2 TLV Data:;
+			g[5] = 0;
+		}
+		g[5] -= l[2];
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void CR-LDP::TLV::Interface_ID::TLV;
+	g[3] = pw[0];
+	CST# 0 3 00 b7 CR-LDP::TLV::Interface_ID::TLV::List;
+	DWRD 0 3 90 c2 Type:;
+	CST# 0 3 00 14 CR-LDP::TLV::Interface_ID::TLV::List;
+	DWRD 0 2 90 c2 Length:;
+	TSB# 0 3 00 00 CR-LDP::TLV::Interface_ID::TLV::Func;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# CR-LDP::TLV::Interface_ID::TLV::List;
+	1 | IPv4 Addr;
+	2 | IPv6 Addr;
+	3 | IF Index;
+	4 | Component IF Downstream;
+	5 | Component IF Upstream;
+
+str# CR-LDP::TLV::Interface_ID::TLV::Func;
+	1 | CR-LDP::TLV::Interface_ID::TLV::IPv4_Addr;
+	2 | CR-LDP::TLV::Interface_ID::TLV::IPv6_Addr;
+	3 | CR-LDP::TLV::Interface_ID::TLV::Generic;
+	4 | CR-LDP::TLV::Interface_ID::TLV::Generic;
+	5 | CR-LDP::TLV::Interface_ID::TLV::Generic;
+
+void CR-LDP::TLV::Interface_ID::TLV::IPv4_Addr;
+	IPLG 0 0 90 c2 IP Address:;
+	TRTS;
+
+void CR-LDP::TLV::Interface_ID::TLV::IPv6_Addr;
+	IPV6 0 0 90 c2 IPv6 Address:;
+	TRTS;
+
+void CR-LDP::TLV::Interface_ID::TLV::Generic;
+	IPLG 0 0 90 c2 IP Address:;
+	HLNG 0 0 90 c2 Interface ID:;
+	TRTS;
+
+
+//0x082F ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv4_IF_ID_Status;
+	LABL 0 0 00 b7 IPv4 IF_ID StatusTLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv4 IF_ID Status;
+	DWRD 0 1 90 c2 TLV Length:;
+	IPLG 0 0 90 c2 IPv4 Next-Previous Hop Addr:;
+	HLNG 0 0 90 c2 Status Code:;			//si: ???
+	DUMP 0 1 90 c2 TLV Data:;
+	// si: tlv's... i wonder if these are the same as the ones above
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0830 ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv6_IF_ID_Status;
+	LABL 0 0 00 b7 IPv6 IF_ID StatusTLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv6 IF_ID Status;
+	DWRD 0 1 90 c2 TLV Length:;
+	IPV6 0 0 90 c2 IPv6 Error Node Addr:;
+	HLNG 0 0 90 c2 Status Code:;			//si: ???
+	DUMP 0 1 90 c2 TLV Data:;
+	// si: tlv's... i wonder if these are the same as the ones above
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0831 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Op-Sp_Call_ID;
+	LABL 0 0 00 b7 (Op-Sp) Call ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 (Op-Sp) Call ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	CR-LDP::TLV::Op-Sp_Call_ID::NEA_Sub_TLV;
+	HEX# 8 0 90 c2 Local Identifier:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void CR-LDP::TLV::Op-Sp_Call_ID::NEA_Sub_TLV;
+	LABL 0 0 00 b7 NEA Sub TLV;
+	HWRD 0 1 90 c2 Type:;
+	DWRD 0 1 90 c2 Length:;
+	g[1] -= 4;
+	HEX# 0 1 90 c2 Value:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0832 ----- ----- ----- ----- -----
+void CR-LDP::TLV::GU_Call_ID;
+	LABL 0 0 00 b7 Globally Unique Call ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Globally Unique Call ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	HBYT 0 0 90 c2 Reserved:;
+	HEX# 3 0 90 c2 nternational Segment:;
+	LABL 0 0 00 b7 National Segment:;
+	 CHR# 6 0 90 c2 ITU Carrier Code:;
+	 CHR# 6 0 90 c2 Unique AP Code:;
+	LABL 0 0 00 b8;
+	CR-LDP::TLV::Op-Sp_Call_ID::NEA_Sub_TLV;
+	HEX# 8 0 90 c2 Local Identifier:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0833 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Call_Capability;
+	LABL 0 0 00 b7 Call Capability TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Call Capability;
+	DWRD 0 1 90 c2 TLV Length:;
+	HLNG 0 1 90 c2 Call Capability:;
+	CEQU 0 1 00 14 Point to Point Call;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0834 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Crankback;
+	LABL 0 0 00 b7 Crankback TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Crankback;
+	DWRD 0 1 90 c2 TLV Length:;
+	CR-LDP::TLV::ER;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0835 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Protection_Info;
+	LABL 0 0 00 b7 Protection Information TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Protection Information;
+	DWRD 0 1 90 c2 TLV Length:;
+	DBIT 1 1 90 c2 S Bit:;
+	CEQU 1 1 00 14 Secondary LSP;
+	HBIT 19 0 90 c2 Reserved:;
+	BBIT 6 1 90 c9 Link Flags:;
+	 CBIT 5 1 00 d4 1. .... Enhanced;
+	 CLSE 0 0 00 d4 0. .... Not Enhanced;
+	 CBIT 4 1 00 d4 .1 .... Dedicated 1+1;
+	 CLSE 0 0 00 d4 .0 .... Not Dedicated 1+1;
+	 CBIT 3 1 00 d4 .. 1... Dedicated 1:1;
+	 CLSE 0 0 00 d4 .. 0... Not Dedicated 1:1;
+	 CBIT 2 1 00 d4 .. .1.. Shared;
+	 CLSE 0 0 00 d4 .. .0.. Not Shared;
+	 CBIT 1 1 00 d4 .. ..1. Unprotected;
+	 CLSE 0 0 00 d4 .. ..0. Protected;
+	 CBIT 0 1 00 d4 .. ...1 Extra Traffic;
+	 CLSE 0 0 00 d4 .. ...0 No Extra Traffic;
+	 LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+	TRTS; 
+	 
+
+//0x0836 ----- ----- ----- ----- -----			RFC 3480
+void CR-LDP::TLV::LSP_TUNNEL_INTERFACE_ID;
+	LABL 0 0 00 b7 LSP_TUNNEL_INTERFACE_ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 LSP_TUNNEL_INTERFACE_ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	HLNG 0 0 90 c2 LSR's Router ID:;
+	HLNG 0 0 90 c2 Interface ID:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0837 ----- ----- ----- ----- -----			RFC 3480
+void CR-LDP::TLV::Unnumbered_Interface_ID;
+	LABL 0 0 00 b7 Unnumbered Interface ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Unnumbered Interface ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DBIT 1 1 90 c2 L Bit:;
+	CEQU 1 1 00 14 Loose Hop;
+	CLSE 0 0 00 14 Strict Hop;
+	HLNG 0 0 90 c2 Reserved:;
+	HLNG 0 0 90 c2 Router ID:;
+	HLNG 0 0 90 c2 Interface ID:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0901 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Diff-Serv;
+	LABL 0 0 00 b7 Diff-ServTLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Diff-Serv;
+	DWRD 0 1 90 c2 TLV Length:;
+	DBIT 1 1 90 c2 T Bit:;
+	CEQU 0 1 00 14 E-LSP;
+	CEQU 1 1 00 14 L-LSP;
+	if (g[1] == 0)
+	{
+		HLNG 0 0 90 c2 Reserved:;
+		DECR 1;
+		DBIT 4 0 05 05 invis;
+		DBIT 4 2 90 c2 Num of MAPs:;
+		while (g[2] > 0)
+		{
+			LABL 0 0 00 b7 MAP;
+			HBIT d 0 90 c2 Reserved:;
+			HBIT 3 0 90 c2 EXP:;
+			HWRD 0 0 90 c2 PHBID:;
+			LABL 0 0 00 b8;
+			g[2] -= 1;
+		}
+		LABL 0 0 00 b8;
+		TRTS;
+	}
+	if (g[1] == 1)
+	{
+		HWRD 0 0 90 c2 Reserved:;
+		HWRD 0 0 90 c2 PSC:;
+		LABL 0 0 00 b8;
+		TRTS;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0960 ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv4_SID;
+	LABL 0 0 00 b7 IPv4 Source ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv4 Source ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+//0x0961 ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv6_SID;
+	LABL 0 0 00 b7 IPv6 Source ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv6 Source ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0962 ----- ----- ----- ----- -----
+void CR-LDP::TLV::NSAP_SID;
+	LABL 0 0 00 b7 NSAP Source ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 NSAP Source ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0963 ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv4_DID;
+	LABL 0 0 00 b7 IPv4 Destination ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv4 Destination ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0964 ----- ----- ----- ----- -----
+void CR-LDP::TLV::IPv6_DID;
+	LABL 0 0 00 b7 IPv6 Destination ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 IPv6 Destination ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0965 ----- ----- ----- ----- -----
+void CR-LDP::TLV::NSAP_DID;
+	LABL 0 0 00 b7 NSAP Destination ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 NSAP Destination ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0966 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Egress_Label;
+	LABL 0 0 00 b7 Egress Label TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Egress Label;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0967 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Local_Connection_ID;
+	LABL 0 0 00 b7 Local Connection ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Local Connection ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0968 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Diversity;
+	LABL 0 0 00 b7 Diversity TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Diversity;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0969 ----- ----- ----- ----- -----
+void CR-LDP::TLV::Contract_ID;
+	LABL 0 0 00 b7 Contract ID TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 Contract ID;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//0x0970 ----- ----- ----- ----- -----
+void CR-LDP::TLV::UNI_Service_Level;
+	LABL 0 0 00 b7 UNI Service Level TLV;
+	DBIT 1 1 90 c2 Unknown Bit:;
+	CEQU 0 1 00 14 a notification is returned to the message originator;
+	CEQU 1 1 00 14 the unknown message is silently ignored;
+	DBIT 1 1 90 c2 Forward U Bit:;
+	HBIT e 1 90 c2 TLV Type:;
+	LABL 0 0 00 14 UNI Service Level;
+	DWRD 0 1 90 c2 TLV Length:;
+	DUMP 0 1 90 c2 Contents:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+

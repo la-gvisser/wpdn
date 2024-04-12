@@ -1,0 +1,1212 @@
+// WASSP  - Wireless Access Station Session Protocol
+// supported Version: 3
+// Ports: TCP/UDP - 13910
+str# IP::Ports_Str;
+	13910 | WASSP::Check;
+
+void WASSP::Check()
+{
+	g[20] = g[1];
+	g[21] = g[2];
+	//get the Version and distribute
+	l[1] = pb[0];
+	if( l[1] == 0x00 )
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Not supported Data:" );
+	}
+	if( l[1] == 0x01 )
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Not supported Data:" );
+	}
+	if( l[1] == 0x02 )
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Not supported Data:" );
+	}
+	if( l[1] == 0x03 )
+	{
+		WASSP::Main::3;
+	}
+}
+
+void WASSP::Main::3()
+{	
+	LABL( 0, 0, 0, 0xb1, "WASSP - Wireless Access Station Session Protocol - Version 3" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Version:\V:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "PDU Type:\T:" );
+	CST# 0 42 0 14 WASSP::Main::3::PDUType;
+	CLSE 0 0 0 14 Reserved;
+	DBYT( 0, l[3], 0x90, 0xc2, "Sequence No:\S#:" );
+	BBYT( 0, l[4], 0x90, 0xc2, "Flags:\F:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Session ID:\SID:" );
+	DWRD( 0, l[6], 0x90, 0xc2, "PDU Length:\Lngth:" );
+	l[6] -= 8;
+	//DGLB( 0, l[6], 0x90, 0xc2, "PDU Lengthglb:\Lngth:" );
+	if (l[2] == 15)
+	{/*
+		g[1] == 0;		g[2] == 0;		g[3] == 0;		g[4] == 0;		g[5] == 0;
+		g[6] == 0;		g[7] == 0;		g[8] == 0;		g[9] == 0;		g[10] == 0;
+		g[11] == 0;		g[12] == 0;		g[13] == 0;		g[14] == 0;		g[15] == 0;
+		g[6] == 0;		g[17] == 0;		g[18] == 0;		g[19] == 0;		g[20] == 0;
+		g[21] == 0;		g[22] == 0;		g[23] == 0;		g[24] == 0;		g[25] == 0;
+		g[26] == 0;		g[27] == 0;		g[28] == 0;		g[29] == 0;		g[30] == 0;
+		g[31] == 0;		g[32] == 0;		g[33] == 0;		g[34] == 0;		g[35] == 0;
+		g[36] == 0;		g[37] == 0;		g[38] == 0;		g[39] == 0;		g[40] == 0;
+		g[41] == 0;		g[42] == 0;		g[43] == 0;		g[44] == 0;		g[45] == 0;
+		g[46] == 0;		g[47] == 0;		g[48] == 0;		g[49] == 0;		g[50] == 0;
+		g[51] == 0;		g[57] == 0;		g[53] == 0;		g[54] == 0;		g[55] == 0;
+		g[56] == 0;		g[57] == 0;		g[58] == 0;		g[59] == 0;		g[60] == 0;
+		g[61] == 0;		//g[62] == 0;*/
+		802_11::Main2;
+	}
+	if (l[2] != 15)
+	{
+		g[60] = l[6];
+		while (g[60] > 0)
+		{
+			GWRD( 0, l[11]);
+			CST#( 0, l[11], 0, 0xb7, WASSP::Main::3::TLVs );
+			CLSE( 0, l[11], 0, 0xb7, "Unknown" );
+				SKIP 6;			//Unknown TLV Type DUMP
+					HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+					//LABL( 0, 0, 0, 0x02, 
+					DWRD( 0, g[51], 0x90, 0xc2, "TlvLength:" );
+					g[52] = g[51];
+					g[51] -= 4;
+					HEX#( 0, g[51], 0x90, 0xc2, "Data:" );
+					LABL 0 0 0 b8;
+					//DGLB(0, g[51], 0x90, 0xc2, "g51:" );
+				SKIP 80000005;	// if TLV wasn't unknown get the detailed data:
+				HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+				DWRD( 0, g[51], 0x90, 0xc2, "TlvLength:" );
+				g[52] = g[51];
+				g[51] -= 4;
+				TSB#( 0, l[11], 0, 0, WASSP::Main::3::TLVs::Ldr );
+				SKIP  1;	// if TLV wasn't unknown get the detailed data:
+				//TSB#( 0, l[11], 0, 0, WASSP::Main::3::TLVs::Ldr );
+				HEX#( 0, g[51], 0x90, 0xc2, "Data:" );
+			g[51] += 4;
+			g[60] -= g[52];
+			LABL 0 0 0 b8;
+		}
+	}
+	if (g[60] > 0)
+	{
+		DUMP( 0, l[6], 0x90, 0xc2, "PDU Data:\DTA:" );
+	}
+	LABL 0 0 0 b8;
+}
+
+//TLvs--------------------------------------------------------------------------------------
+void WASSP::Main::3::TLVs::STATUS()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "STATUS:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SOFT-VERSION()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU-SOFT-VERSION:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-SERIAL-NUMBER()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU-SERIAL-NUMBER:" );
+	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-REG-CHALLENGE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "RU-REG-CHALLENGE:" );
+	g[51] -= 1;
+}
+void WASSP::Main::3::TLVs::RU-REG-RESPONSE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "RU-REG-RESPONSE:" );
+	g[51] -= 1;
+}
+void WASSP::Main::3::TLVs::AC-IPADDR()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "RU-REG-RESPONSE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-VNS-ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-VNS-ID:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::TFTP-SERVER()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "RU-REG-RESPONSE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::IMAGE-PATH()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "IMAGE-PATH:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-CONFIG()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "IMAGE-PATH:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-STATE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-STATE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SESSION-KEY()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU-SESSION-KEY:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::MESSAGE-TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MESSAGE-TYPE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RANDOM-NUMBER()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "RANDOM-NUMBER:" );	g[51] -= 1;
+}
+void WASSP::Main::3::TLVs::STANDBY-TIMEOUT()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MESSAGE-TYPE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-CHALLENGE-ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MESSAGE-TYPE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-MODEL()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU-SESSION-KEY:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-SCAN-MODE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-MODE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SCAN-TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-TYPE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SCAN-INTERVAL()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-INTERVAL:" );
+}
+void WASSP::Main::3::TLVs::RU-RADIO-TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-RADIO-TYPE:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-CHANNEL-DWELL-TIME()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-CHANNEL-DWELL-TIME:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-CHANNEL-LIST()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-CHANNEL-DWELL-TIME:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-TRAP()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU-TRAP:" );	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU-SCAN-TIMES()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-TIMES:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SCAN-DELAY()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-DELAY:" ); 	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RU-SCAN-REQ-ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RU-SCAN-REQ-ID:" ); 	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATIC-CONFIG()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "STATIC-CONFIG:" ); 	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::LOCAL-BRIDGING()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "LOCAL-BRIDGING:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATIC-BP-IPADDR()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "STATIC-BP-IPADDR:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATIC-BP-NETMASK()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "STATIC-BP-NETMASK:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATIC-BP-GATEWAY()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "STATIC-BP-GATEWAY:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATIC-BM-IPADDR()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "STATIC-BP-IPADDR:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::TUNNEL_PROTOCOL/BSSID()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "TUNNEL_PROTOCOL/BSSID:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::BP_WIRED_MACADDR()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "BP_WIRED_MACADDR:" );		g[51] -= 6;
+}
+void WASSP::Main::3::TLVs::RU_CAPABILITY()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU_CAPABILITY:" ); 	g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU_SSID_NAME()
+{
+	CHR#( 0, g[51], 0x90, 0xc2, "RU_SSID_NAME:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::RU_ALARM()
+{
+	HEX#( 0, g[51], 0x90, 0xc2, "RU_ALARM:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::PREAUTH_RESP()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "PREAUTH_RESP:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::BP_PMK()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "BP_PMK:" );	g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AC_REG_CHALLENGE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "AC_REG_CHALLENGE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AC_REG_RESPONSE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "AC_REG_RESPONSE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATS()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "STATS:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::CERTIFICATE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "CERTIFICATE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RADIO_ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RADIO_ID:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::BP-REQUEST-ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "BP-REQUEST-ID:" );		g[51] -= 4;
+}
+
+void WASSP::Main::3::TLVs::NETWORK_ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "BP-REQUEST-ID:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::MU_MAC()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "MU_MAC:" );	g[51] -= 6;	
+}
+void WASSP::Main::3::TLVs::TIME()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "TIME:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::NUM_RADIOS()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "NUM_RADIOS:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RADIO_INFO()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RADIO_INFO:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::NETWORK_INFO()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "NETWORK_INFO:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::VENDOR_ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "VENDOR_ID:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::PRODUCT_ID()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "PRODUCT_ID:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::RADIO_INFO_ACK()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RADIO_INFO_ACK:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::SNMP-ERROR-STATUS()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "SNMP-ERROR-STATUS:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::SNMP-ERROR-INDEX()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "SNMP-ERROR-INDEX:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::ALTERNATE_AC_IPADDR()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "ALTERNATE_AC_IPADDR:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-IMG-TO-RAM()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "AP-IMG-TO-RAM:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-IMG-ROLE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "AP-IMG-ROLE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP_STATS_BLOCK()
+{
+	while (g[51] > 0)
+		{
+			GWRD( 0, l[12]);
+			CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+			CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+				SKIP 5;			//Unknown TLV Type DUMP
+					HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+					DWRD( 0, g[57], 0x90, 0xc2, "TlvLength:" );
+					g[54] = g[57];
+					g[57] -= 4;		
+					HEX#( 0, g[57], 0x90, 0xc2, "Data:" );
+					//LABL 0 0 0 b8;
+				SKIP 80000007;	// if TLV wasn't unknown get the detailed data:
+				HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+				DWRD( 0, g[57], 0x90, 0xc2, "TlvLength:" );
+				g[54] = g[57];
+				g[57] -= 4;		
+				TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+				SKIP  1;	// if TLV wasn't unknown get the detailed data:
+				HEX#( 0, g[57], 0x90, 0xc2, "Data:" );
+			LABL 0 0 0 b8;
+			g[51] -= g[54];
+		}
+}
+void WASSP::Main::3::TLVs::MU_RF_STATS_BLOCK()
+{
+	while (g[51] > 0)
+		{
+			GWRD( 0, l[12]);
+			CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+			CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+				SKIP 5;			//Unknown TLV Type DUMP
+					HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+					DWRD( 0, g[57], 0x90, 0xc2, "TlvLength:" );
+					g[54] = g[57];
+					g[57] -= 4;		
+					HEX#( 0, g[57], 0x90, 0xc2, "Data:" );
+					//LABL 0 0 0 b8;
+				SKIP 80000006;	// if TLV wasn't unknown get the detailed data:
+				HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+				DWRD( 0, g[57], 0x90, 0xc2, "TlvLength:" );
+				g[54] = g[57];
+				g[57] -= 4;
+				//TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+				SKIP  1;	// if TLV wasn't unknown get the detailed data:
+				HEX#( 0, g[57], 0x90, 0xc2, "Data:" );
+			LABL 0 0 0 b8;
+			g[51] -= g[54];
+		}
+}
+void WASSP::Main::3::TLVs::STATS_REQUEST_TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "STATS_REQUEST_TYPE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::STATS_LAST()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "STATS_LAST:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::TLV_CONFIG()
+{
+	HEX#( 0, g[51], 0x90, 0xc2, "TLV_CONFIG:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::CONFIG_ERROR_BLOCK()
+{
+	HEX#( 0, g[51], 0x90, 0xc2, "CONFIG_ERROR_BLOCK:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::CONFIG_MODIFIED_BLOCK()
+{
+	HEX#( 0, g[51], 0x90, 0xc2, "CONFIG_MODIFIED_BLOCK:" );		g[51] -= g[51];
+}
+void WASSP::Main::3::TLVs::MU_PMKID_LIST()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_PMKID_LIST:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::MU_PMK_BP()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_PMK_BP:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::MU_PMKID_BP()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_PMKID_BP:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::COUNTDOWN_TIME()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "COUNTDOWN_TIME:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::WASSP-VLAN-TAG()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "WASSP-VLAN-TAG:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::WASSP-TUNNEL-TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "WASSP-TUNNEL-TYPE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-DHCP-MODE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "AP-DHCP-MODE:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-IPADDR()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "AP-IPADDR:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-NETMASK()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "AP-NETMASK:" );		g[51] -= 4;
+}
+void WASSP::Main::3::TLVs::AP-GATEWAY()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "AP-GATEWAY:" );		g[51] -= 4;
+}
+//------WASSP TLVS
+
+void WASSP::Main::3::APStats_TLVs::DOT11_ACKFailureCount()
+{
+	//IPLG( 0, 0, 0x90, 0xc2, "AP-GATEWAY:" );		
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_ACKFailureCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_FCSErrorCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_FCSErrorCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_FailedCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_FailedCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_FrameDuplicateCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_FrameDuplicateCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_MulticastReceivedFrameCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_MulticastReceivedFrameCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_MulticastTransmittedFrameCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_MulticastTransmittedFrameCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_MultipleRetryCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_MultipleRetryCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_RTSFailureCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_RTSFailureCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_RTSSuccessCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_RTSSuccessCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_ReceivedFragementCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_ReceivedFragementCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_RetryCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_RetryCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_TransmittedFragmentCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_TransmittedFragmentCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_TransmittedFrameCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_TransmittedFrameCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_WEBUndecryptableCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_WEBUndecryptableCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_WEPExcludedCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_WEPExcludedCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DOT11_WEPICVErrorCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT11_WEPICVErrorCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_AllocFailures()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_AllocFailures:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_CurrentChannel()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_CurrentChannel:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_CurrentPower()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_CurrentPower:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_DataTxFailures()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_DataTxFailures:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_DeviceType()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_DeviceType:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_InDataPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_InDataPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_InMgmtPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_InMgmtPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_LoadFactor()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_LoadFactor:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_MgmtTxFailures()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_MgmtTxFailures:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_MsgQFailures()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_MsgQFailures:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_NoDRMCurrentChannel()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_NoDRMCurrentChannel:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_OutDataPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_OutDataPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::DRM_OutMgmtPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DRM_OutMgmtPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InBcastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InBcastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InDiscards()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InDiscards:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InErrors()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InErrors:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InMcastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InMcastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InOctets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InOctets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_InUcastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_InUcastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_MTU()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_MTU:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutBcastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutBcastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutDiscards()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutDiscards:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutErrors()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutErrors:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutOctets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutOctets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutUcastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutUcastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::IF_OutMCastPackets()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "IF_OutMCastPackets:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_Address()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "MU_Address:" );		g[51] -= 4;
+}
+void WASSP::Main::3::APStats_TLVs::MU_AssociationCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_AssociationCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_AuthenticationCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_AuthenticationCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_DeAssociationCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_DeAssociationCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_DeAuthenticationCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_DeAuthenticationCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_IfIndex()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_IfIndex:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReAssociationCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReAssociationCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReceivedBytes()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReceivedBytes:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReceivedErrors()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReceivedErrors:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReceivedFrameCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReceivedFrameCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReceivedRSSI()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReceivedRSSI:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_ReceivedRate()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_ReceivedRate:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_TransmittedBytes()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_TransmittedBytes:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_TransmittedErrors()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_TransmittedErrors:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_TransmittedFrameCount()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_TransmittedFrameCount:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_TransmittedRSSI()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_TransmittedRSSI:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_TransmittedRate()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_TransmittedRate:" );		
+}
+void WASSP::Main::3::APStats_TLVs::MU_RF_STATS_END()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "MU_RF_STATS_END:" );
+}
+void WASSP::Main::3::APStats_TLVs::RFC_1213_SYSUPTIME()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "RFC_1213_SYSUPTIME:" );
+}
+void WASSP::Main::3::APStats_TLVs::STATS_ETHER_BLOCK()
+{
+	while (g[57] > 0)
+		{
+			GWRD( 0, l[12]);
+			CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+			CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+				SKIP 5;			//Dump unknown TLV
+				HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+				DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+				l[58] = g[55];
+				l[58] -= 4;
+				HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+				SKIP 80000004;			//Get known TLV 
+				HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+				DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+				l[58] -= 4;
+				TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+				//SKIP  1;	// if TLV wasn't unknown get the detailed data:
+				//HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			l[58] += 4;
+			g[57] -= l[58];
+			LABL 0 0 0 b8;
+		}
+}
+void WASSP::Main::3::APStats_TLVs::STATS_RADIO_A_BLOCK()
+{
+	while (g[57] > 0)
+	{
+		GWRD( 0, l[12]);
+		CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+		CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+			SKIP 5;			//Dump unknown TLV
+			HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+			DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+			l[58] = g[55];
+			l[58] -= 4;
+			HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			SKIP 80000004;			//Get known TLV 
+			HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+			DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+			l[58] -= 4;
+			TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+			//SKIP  1;	// if TLV wasn't unknown get the detailed data:
+			//HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+		l[58] += 4;
+		g[57] -= l[58];
+		LABL 0 0 0 b8;
+	}
+		//HEX#( 0, g[57], 0x90, 0xc2, "STATS_RADIO_A_BLOCK:" );
+}
+void WASSP::Main::3::APStats_TLVs::STATS_RADIO_B_G_BLOCK()
+{
+	while (g[57] > 0)
+	{
+		GWRD( 0, l[12]);
+		CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+		CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+			SKIP 5;			//Dump unknown TLV
+			HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+			DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+			l[58] = g[55];
+			l[58] -= 4;
+			HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			SKIP 80000004;			//Get known TLV 
+			HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+			DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+			l[58] -= 4;
+			TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+		l[58] += 4;
+		g[57] -= l[58];
+		
+		LABL 0 0 0 b8;
+	}
+}
+void WASSP::Main::3::APStats_TLVs::MU_STATS_BLOCK()
+{
+	while (g[57] > 0)
+	{
+		GWRD( 0, l[12]);
+		CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+		CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+			SKIP 5;			//Dump unknown TLV
+			HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+			DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+			l[58] = g[55];
+			l[58] -= 4;
+			HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			SKIP 80000004;			//Get known TLV 
+			HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+			DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+			l[58] -= 4;
+			TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+		l[58] += 4;
+		g[57] -= l[58];
+		LABL 0 0 0 b8;
+	}
+}
+void WASSP::Main::3::APStats_TLVs::WDS_BLOCK()
+{
+	while (g[57] > 0)
+	{
+		GWRD( 0, l[12]);
+		CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+		CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+			SKIP 5;			//Dump unknown TLV
+			HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+			DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+			l[58] = g[55];
+			l[58] -= 4;
+			HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			SKIP 80000004;			//Get known TLV 
+			HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+			DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+			l[58] -= 4;
+			TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+		l[58] += 4;
+		g[57] -= l[58];
+		LABL 0 0 0 b8;
+	}
+}
+void WASSP::Main::3::APStats_TLVs::WDS_Role()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "WDS_Role:" );
+}
+void WASSP::Main::3::APStats_TLVs::WDS_PARENT_MAC()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "WDS_PARENT_MAC:" );
+}
+void WASSP::Main::3::APStats_TLVs::WDS_BSSID()
+{
+	HEX#( 0, g[57], 0x90, 0xc2, "WDS_BSSID:" );
+}
+void WASSP::Main::3::APStats_TLVs::DOT1x_STATS_BLOCK()
+{
+	while (g[57] > 0)
+	{
+		GWRD( 0, l[12]);
+		CST#( 0, l[12], 0, 0xb7, WASSP::Main::3::APStats_TLVs );
+		CLSE( 0, l[12], 0, 0xb7, "Unknown" );
+			SKIP 5;			//Dump unknown TLV
+			HWRD( 0, 0, 0x90, 0xc2, "TlvTyped:" );
+			DWRD( 0, g[55], 0x90, 0xc2, "TlvLengthd:" ); 
+			l[58] = g[55];
+			l[58] -= 4;
+			HEX#( 0, l[58], 0x90, 0xc2, "Data:" );
+			SKIP 80000004;			//Get known TLV 
+			HWRD( 0, 0, 0x90, 0xc2, "TlvType:" );
+			DWRD( 0, l[58], 0x90, 0xc2, "TlvLength:" );
+			l[58] -= 4;
+			TSB#( 0, l[12], 0, 0, WASSP::Main::3::APStats_TLVs::Ldr );
+		l[58] += 4;
+		g[57] -= l[58];
+		LABL 0 0 0 b8;
+	}
+}
+void WASSP::Main::3::APStats_TLVs::DOT1x_CREDENT()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT1x_CREDENT:" );
+}
+void WASSP::Main::3::APStats_TLVs::DOT1x_END_DATE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "DOT1x_END_DATE:" );
+}
+void WASSP::Main::3::APStats_TLVs::TLV_MAX()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "TLV_MAX:" );
+}
+
+str# WASSP::Main::3::PDUType;
+	1	|	Discover;
+	2	|	U Registration Request;
+	3	|	U Registration Response;
+	4	|	U Authentication Request;
+	5	|	U Authentication Response;
+	6	|	RU Software Version Validate Request;
+	7	|	RU Software Version Validate Response;
+	8	|	RU Configuration Request;
+	9	|	RU Configuration Response;
+	10	|	RU Acknowledge;
+	11	|	RU Configuration Status Notify;
+	12	|	RU Set State Request;
+	13	|	RU Set State Response;
+	14	|	RU Statistics Notify;
+	15	|	Data;
+	16	|	Poll;
+	17	|	SNMP Request;
+	18	|	SNMP Response;
+	19	|	BP Trap Notify;
+	20	|	BP Scan Request;
+	21	|	RFM Notify;
+	22	|	RU SNMP Alarm Notify;
+	23	|	RU SNMP Set Alarm;
+	24	|	RU SNMP Set Log Status;
+	25	|	RU SNMP Get Log Request;
+	26	|	RU SNMP Get Log Response;
+	27	|	SEC Update Notify;
+	28	|	RU Stats Req;
+	29	|	RU Stats Resp;
+	30	|	MU Stats Req;
+	31	|	MU Stats Response;
+
+
+str# WASSP::Main::3::TLVs;
+	1	|	STATUS;
+	2	|	RU-SOFT-VERSION;
+	3	|	RU-SERIAL-NUMBER;
+	4	|	RU-REG-CHALLENGE;
+	5	|	RU-REG-RESPONSE;
+	6	|	AC-IPADDR;
+	7	|	RU-VNS-ID;
+	8	|	TFTP-SERVER;
+	9	|	IMAGE-PATH;
+	10	|	RU-CONFIG;
+	11	|	RU-STATE;
+	12	|	RU-SESSION-KEY;
+	13	|	MESSAGE-TYPE;
+	14	|	RANDOM-NUMBER;
+	15	|	STANDBY-TIMEOUT;
+	16	|	RU-CHALLENGE-ID;	
+	17	|	RU-MODEL;
+	18	|	RU-SCAN-MODE;
+	19	|	RU-SCAN-TYPE;
+	20	|	RU-SCAN-INTERVAL;
+	21	|	RU-RADIO-TYPE;
+	22	|	RU-CHANNEL-DWELL-TIME;
+	23	|	RU-CHANNEL-LIST;
+	24	|	RU-TRAP;
+	25	|	RU-SCAN-TIMES;
+	26	|	RU-SCAN-DELAY;
+	27	|	RU-SCAN-REQ-ID;
+	28	|	STATIC-CONFIG;
+	29	|	LOCAL-BRIDGING;
+	30	|	STATIC-BP-IPADDR;
+	31	|	STATIC-BP-NETMASK;
+	32	|	STATIC-BP-GATEWAY;
+	33	|	STATIC-BM-IPADDR;
+	34	|	TUNNEL_PROTOCOL/BSSID;
+	35	|	BP_WIRED_MACADDR;
+	36	|	RU_CAPABILITY;
+	37	|	RU_SSID_NAME;
+	38	|	RU_ALARM;
+	39	|	PREAUTH_RESP;
+	40	|	BP_PMK;
+	41	|	AC_REG_CHALLENGE;
+	42	|	AC_REG_RESPONSE;
+	43	|	STATS;
+	44	|	CERTIFICATE;
+	45	|	RADIO_ID;
+	46	|	BP-REQUEST-ID;
+	47	|	NETWORK_ID;
+	48	|	MU_MAC;
+	49	|	TIME;
+	50	|	NUM_RADIOS;
+	51	|	RADIO_INFO;
+	52	|	NETWORK_INFO;
+	53	|	VENDOR_ID;
+	54	|	PRODUCT_ID;
+	55	|	RADIO_INFO_ACK;
+	60	|	SNMP-ERROR-STATUS;
+	61	|	SNMP-ERROR-INDEX;
+	62	|	ALTERNATE_AC_IPADDR;
+	63	|	AP-IMG-TO-RAM;
+	64	|	AP-IMG-ROLE;
+	65	|	AP_STATS_BLOCK;
+	66	|	MU_RF_STATS_BLOCK;
+	67	|	STATS_REQUEST_TYPE;
+	68	|	STATS_LAST;
+	69	|	TLV_CONFIG;
+	70	|	CONFIG_ERROR_BLOCK;
+	71	|	CONFIG_MODIFIED_BLOCK;
+	72	|	MU_PMKID_LIST;
+	73	|	MU_PMK_BP;
+	74	|	MU_PMKID_BP;
+	75	|	COUNTDOWN_TIME;
+	76	|	WASSP-VLAN-TAG;
+	81	|	WASSP-TUNNEL-TYPE;
+	88	|	AP-DHCP-MODE;
+	89	|	AP-IPADDR;
+	90	|	AP-NETMASK;
+	91	|	AP-GATEWAY;
+	
+str# WASSP::Main::3::TLVs::Ldr;
+	1	|	WASSP::Main::3::TLVs::STATUS;
+	2	|	WASSP::Main::3::TLVs::RU-SOFT-VERSION;
+	3	|	WASSP::Main::3::TLVs::RU-SERIAL-NUMBER;
+	4	|	WASSP::Main::3::TLVs::RU-REG-CHALLENGE;
+	5	|	WASSP::Main::3::TLVs::RU-REG-RESPONSE;
+	6	|	WASSP::Main::3::TLVs::AC-IPADDR;
+	7	|	WASSP::Main::3::TLVs::RU-VNS-ID;
+	8	|	WASSP::Main::3::TLVs::TFTP-SERVER;
+	9	|	WASSP::Main::3::TLVs::IMAGE-PATH;
+	10	|	WASSP::Main::3::TLVs::RU-CONFIG;
+	11	|	WASSP::Main::3::TLVs::RU-STATE;
+	12	|	WASSP::Main::3::TLVs::RU-SESSION-KEY;
+	13	|	WASSP::Main::3::TLVs::MESSAGE-TYPE;
+	14	|	WASSP::Main::3::TLVs::RANDOM-NUMBER;
+	15	|	WASSP::Main::3::TLVs::STANDBY-TIMEOUT;
+	16	|	WASSP::Main::3::TLVs::RU-CHALLENGE-ID;	
+	17	|	WASSP::Main::3::TLVs::RU-MODEL;
+	18	|	WASSP::Main::3::TLVs::RU-SCAN-MODE;
+	19	|	WASSP::Main::3::TLVs::RU-SCAN-TYPE;
+	20	|	WASSP::Main::3::TLVs::RU-SCAN-INTERVAL;
+	21	|	WASSP::Main::3::TLVs::RU-RADIO-TYPE;
+	22	|	WASSP::Main::3::TLVs::RU-CHANNEL-DWELL-TIME;
+	23	|	WASSP::Main::3::TLVs::RU-CHANNEL-LIST;
+	24	|	WASSP::Main::3::TLVs::RU-TRAP;
+	25	|	WASSP::Main::3::TLVs::RU-SCAN-TIMES;
+	26	|	WASSP::Main::3::TLVs::RU-SCAN-DELAY;
+	27	|	WASSP::Main::3::TLVs::RU-SCAN-REQ-ID;
+	28	|	WASSP::Main::3::TLVs::STATIC-CONFIG;
+	29	|	WASSP::Main::3::TLVs::LOCAL-BRIDGING;
+	30	|	WASSP::Main::3::TLVs::STATIC-BP-IPADDR;
+	31	|	WASSP::Main::3::TLVs::STATIC-BP-NETMASK;
+	32	|	WASSP::Main::3::TLVs::STATIC-BP-GATEWAY;
+	33	|	WASSP::Main::3::TLVs::STATIC-BM-IPADDR;
+	34	|	WASSP::Main::3::TLVs::TUNNEL_PROTOCOL/BSSID;
+	35	|	WASSP::Main::3::TLVs::BP_WIRED_MACADDR;
+	36	|	WASSP::Main::3::TLVs::RU_CAPABILITY;
+	37	|	WASSP::Main::3::TLVs::RU_SSID_NAME;
+	38	|	WASSP::Main::3::TLVs::RU_ALARM;
+	39	|	WASSP::Main::3::TLVs::PREAUTH_RESP;
+	40	|	WASSP::Main::3::TLVs::BP_PMK;
+	41	|	WASSP::Main::3::TLVs::AC_REG_CHALLENGE;
+	42	|	WASSP::Main::3::TLVs::AC_REG_RESPONSE;
+	43	|	WASSP::Main::3::TLVs::STATS;
+	44	|	WASSP::Main::3::TLVs::CERTIFICATE;
+	45	|	WASSP::Main::3::TLVs::RADIO_ID; 
+	46	|	WASSP::Main::3::TLVs::BP-REQUEST-ID;
+	47	|	WASSP::Main::3::TLVs::NETWORK_ID;
+	48	|	WASSP::Main::3::TLVs::MU_MAC;
+	49	|	WASSP::Main::3::TLVs::TIME;
+	50	|	WASSP::Main::3::TLVs::NUM_RADIOS;
+	51	|	WASSP::Main::3::TLVs::RADIO_INFO;
+	52	|	WASSP::Main::3::TLVs::NETWORK_INFO;
+	53	|	WASSP::Main::3::TLVs::VENDOR_ID;
+	54	|	WASSP::Main::3::TLVs::PRODUCT_ID;
+	55	|	WASSP::Main::3::TLVs::RADIO_INFO_ACK;
+	60	|	WASSP::Main::3::TLVs::SNMP-ERROR-STATUS;
+	61	|	WASSP::Main::3::TLVs::SNMP-ERROR-INDEX;
+	62	|	WASSP::Main::3::TLVs::ALTERNATE_AC_IPADDR;
+	63	|	WASSP::Main::3::TLVs::AP-IMG-TO-RAM;
+	64	|	WASSP::Main::3::TLVs::AP-IMG-ROLE;
+	65	|	WASSP::Main::3::TLVs::AP_STATS_BLOCK;
+	66	|	WASSP::Main::3::TLVs::MU_RF_STATS_BLOCK;
+	67	|	WASSP::Main::3::TLVs::STATS_REQUEST_TYPE;
+	68	|	WASSP::Main::3::TLVs::STATS_LAST;
+	69	|	WASSP::Main::3::TLVs::TLV_CONFIG;
+	70	|	WASSP::Main::3::TLVs::CONFIG_ERROR_BLOCK;
+	71	|	WASSP::Main::3::TLVs::CONFIG_MODIFIED_BLOCK;
+	72	|	WASSP::Main::3::TLVs::MU_PMKID_LIST;
+	73	|	WASSP::Main::3::TLVs::MU_PMK_BP;
+	74	|	WASSP::Main::3::TLVs::MU_PMKID_BP;
+	75	|	WASSP::Main::3::TLVs::COUNTDOWN_TIME;
+	76	|	WASSP::Main::3::TLVs::WASSP-VLAN-TAG;
+	81	|	WASSP::Main::3::TLVs::WASSP-TUNNEL-TYPE;
+	88	|	WASSP::Main::3::TLVs::AP-DHCP-MODE;
+	89	|	WASSP::Main::3::TLVs::AP-IPADDR;
+	90	|	WASSP::Main::3::TLVs::AP-NETMASK;
+	91	|	WASSP::Main::3::TLVs::AP-GATEWAY;
+	
+str# WASSP::Main::3::APStats_TLVs;
+	1	|	DOT11_ACKFailureCount;
+	2	|	DOT11_FCSErrorCount;
+	3	|	DOT11_FailedCount;
+	4	|	DOT11_FrameDuplicateCount;
+	5	|	DOT11_MulticastReceivedFrameCount;
+	6	|	DOT11_MulticastTransmittedFrameCount;
+	7	|	DOT11_MultipleRetryCount;
+	8	|	DOT11_RTSFailureCount;
+	9	|	DOT11_RTSSuccessCount;
+	10	|	DOT11_ReceivedFragementCount;
+	11	|	DOT11_RetryCount;
+	12	|	DOT11_TransmittedFragmentCount;
+	13	|	DOT11_TransmittedFrameCount;
+	14	|	DOT11_WEBUndecryptableCount;
+	15	|	DOT11_WEPExcludedCount;
+	16	|	DOT11_WEPICVErrorCount;
+	17	|	DRM_AllocFailures;
+	18	|	DRM_CurrentChannel;
+	19	|	DRM_CurrentPower;
+	20	|	DRM_DataTxFailures;
+	21	|	DRM_DeviceType;
+	22	|	DRM_InDataPackets;
+	23	|	DRM_InMgmtPackets;
+	24	|	DRM_LoadFactor;
+	25	|	DRM_MgmtTxFailures;
+	26	|	DRM_MsgQFailures;
+	27	|	DRM_NoDRMCurrentChannel;
+	28	|	DRM_OutDataPackets;
+	29	|	DRM_OutMgmtPackets;
+	30	|	IF_InBcastPackets;
+	31	|	IF_InDiscards;
+	32	|	IF_InErrors;
+	33	|	IF_InMcastPackets;
+	34	|	IF_InOctets;
+	35	|	IF_InUcastPackets;
+	36	|	IF_MTU;
+	37	|	IF_OutBcastPackets;
+	38	|	IF_OutDiscards;
+	39	|	IF_OutErrors;
+	40	|	IF_OutOctets;
+	41	|	IF_OutUcastPackets;
+	42	|	IF_OutMCastPackets;
+	43	|	MU_Address;
+	44	|	MU_AssociationCount;
+	45	|	MU_AuthenticationCount;
+	46	|	MU_DeAssociationCount;
+	47	|	MU_DeAuthenticationCount;
+	48	|	MU_IfIndex;
+	49	|	MU_ReAssociationCount;
+	50	|	MU_ReceivedBytes;
+	51	|	MU_ReceivedErrors;
+	52	|	MU_ReceivedFrameCount;
+	53	|	MU_ReceivedRSSI;
+	54	|	MU_ReceivedRate;
+	55	|	MU_TransmittedBytes;
+	56	|	MU_TransmittedErrors;
+	57	|	MU_TransmittedFrameCount;
+	58	|	MU_TransmittedRSSI;
+	59	|	MU_TransmittedRate;
+	60	|	MU_RF_STATS_END;
+	61	|	RFC_1213_SYSUPTIME;
+	62	|	STATS_ETHER_BLOCK;
+	63	|	STATS_RADIO_A_BLOCK;
+	64	|	STATS_RADIO_B_G_BLOCK;
+	65	|	MU_STATS_BLOCK;
+	66	|	WDS_BLOCK;
+	67	|	WDS_Role;
+	68	|	WDS_PARENT_MAC;
+	69	|	WDS_BSSID;
+	70	|	DOT1x_STATS_BLOCK;
+	71	|	DOT1x_CREDENT;
+	72	|	DOT1x_END_DATE;
+	73	|	TLV_MAX;
+	
+str# WASSP::Main::3::APStats_TLVs::Ldr;
+	1	|	WASSP::Main::3::APStats_TLVs::DOT11_ACKFailureCount;
+	2	|	WASSP::Main::3::APStats_TLVs::DOT11_FCSErrorCount;
+	3	|	WASSP::Main::3::APStats_TLVs::DOT11_FailedCount;
+	4	|	WASSP::Main::3::APStats_TLVs::DOT11_FrameDuplicateCount;
+	5	|	WASSP::Main::3::APStats_TLVs::DOT11_MulticastReceivedFrameCount;
+	6	|	WASSP::Main::3::APStats_TLVs::DOT11_MulticastTransmittedFrameCount;
+	7	|	WASSP::Main::3::APStats_TLVs::DOT11_MultipleRetryCount;
+	8	|	WASSP::Main::3::APStats_TLVs::DOT11_RTSFailureCount;
+	9	|	WASSP::Main::3::APStats_TLVs::DOT11_RTSSuccessCount;
+	10	|	WASSP::Main::3::APStats_TLVs::DOT11_ReceivedFragementCount;
+	11	|	WASSP::Main::3::APStats_TLVs::DOT11_RetryCount;
+	12	|	WASSP::Main::3::APStats_TLVs::DOT11_TransmittedFragmentCount;
+	13	|	WASSP::Main::3::APStats_TLVs::DOT11_TransmittedFrameCount;
+	14	|	WASSP::Main::3::APStats_TLVs::DOT11_WEBUndecryptableCount;
+	15	|	WASSP::Main::3::APStats_TLVs::DOT11_WEPExcludedCount;
+	16	|	WASSP::Main::3::APStats_TLVs::DOT11_WEPICVErrorCount;
+	17	|	WASSP::Main::3::APStats_TLVs::DRM_AllocFailures;
+	18	|	WASSP::Main::3::APStats_TLVs::DRM_CurrentChannel;
+	19	|	WASSP::Main::3::APStats_TLVs::DRM_CurrentPower;
+	20	|	WASSP::Main::3::APStats_TLVs::DRM_DataTxFailures;
+	21	|	WASSP::Main::3::APStats_TLVs::DRM_DeviceType;
+	22	|	WASSP::Main::3::APStats_TLVs::DRM_InDataPackets;
+	23	|	WASSP::Main::3::APStats_TLVs::DRM_InMgmtPackets;
+	24	|	WASSP::Main::3::APStats_TLVs::DRM_LoadFactor;
+	25	|	WASSP::Main::3::APStats_TLVs::DRM_MgmtTxFailures;
+	26	|	WASSP::Main::3::APStats_TLVs::DRM_MsgQFailures;
+	27	|	WASSP::Main::3::APStats_TLVs::DRM_NoDRMCurrentChannel;
+	28	|	WASSP::Main::3::APStats_TLVs::DRM_OutDataPackets;
+	29	|	WASSP::Main::3::APStats_TLVs::DRM_OutMgmtPackets;
+	30	|	WASSP::Main::3::APStats_TLVs::IF_InBcastPackets;
+	31	|	WASSP::Main::3::APStats_TLVs::IF_InDiscards;
+	32	|	WASSP::Main::3::APStats_TLVs::IF_InErrors;
+	33	|	WASSP::Main::3::APStats_TLVs::IF_InMcastPackets;
+	34	|	WASSP::Main::3::APStats_TLVs::IF_InOctets;
+	35	|	WASSP::Main::3::APStats_TLVs::IF_InUcastPackets;
+	36	|	WASSP::Main::3::APStats_TLVs::IF_MTU;
+	37	|	WASSP::Main::3::APStats_TLVs::IF_OutBcastPackets;
+	38	|	WASSP::Main::3::APStats_TLVs::IF_OutDiscards;
+	39	|	WASSP::Main::3::APStats_TLVs::IF_OutErrors;
+	40	|	WASSP::Main::3::APStats_TLVs::IF_OutOctets;
+	41	|	WASSP::Main::3::APStats_TLVs::IF_OutUcastPackets;
+	42	|	WASSP::Main::3::APStats_TLVs::IF_OutMCastPackets;
+	43	|	WASSP::Main::3::APStats_TLVs::MU_Address;
+	44	|	WASSP::Main::3::APStats_TLVs::MU_AssociationCount;
+	45	|	WASSP::Main::3::APStats_TLVs::MU_AuthenticationCount;
+	46	|	WASSP::Main::3::APStats_TLVs::MU_DeAssociationCount;
+	47	|	WASSP::Main::3::APStats_TLVs::MU_DeAuthenticationCount;
+	48	|	WASSP::Main::3::APStats_TLVs::MU_IfIndex;
+	49	|	WASSP::Main::3::APStats_TLVs::MU_ReAssociationCount;
+	50	|	WASSP::Main::3::APStats_TLVs::MU_ReceivedBytes;
+	51	|	WASSP::Main::3::APStats_TLVs::MU_ReceivedErrors;
+	52	|	WASSP::Main::3::APStats_TLVs::MU_ReceivedFrameCount;
+	53	|	WASSP::Main::3::APStats_TLVs::MU_ReceivedRSSI;
+	54	|	WASSP::Main::3::APStats_TLVs::MU_ReceivedRate;
+	55	|	WASSP::Main::3::APStats_TLVs::MU_TransmittedBytes;
+	56	|	WASSP::Main::3::APStats_TLVs::MU_TransmittedErrors;
+	57	|	WASSP::Main::3::APStats_TLVs::MU_TransmittedFrameCount;
+	58	|	WASSP::Main::3::APStats_TLVs::MU_TransmittedRSSI;
+	59	|	WASSP::Main::3::APStats_TLVs::MU_TransmittedRate;
+	60	|	WASSP::Main::3::APStats_TLVs::MU_RF_STATS_END;
+	61	|	WASSP::Main::3::APStats_TLVs::RFC_1213_SYSUPTIME;
+	62	|	WASSP::Main::3::APStats_TLVs::STATS_ETHER_BLOCK;
+	63	|	WASSP::Main::3::APStats_TLVs::STATS_RADIO_A_BLOCK;
+	64	|	WASSP::Main::3::APStats_TLVs::STATS_RADIO_B_G_BLOCK;
+	65	|	WASSP::Main::3::APStats_TLVs::MU_STATS_BLOCK;
+	66	|	WASSP::Main::3::APStats_TLVs::WDS_BLOCK;
+	67	|	WASSP::Main::3::APStats_TLVs::WDS_Role;
+	68	|	WASSP::Main::3::APStats_TLVs::WDS_PARENT_MAC;
+	69	|	WASSP::Main::3::APStats_TLVs::WDS_BSSID;
+	70	|	WASSP::Main::3::APStats_TLVs::DOT1x_STATS_BLOCK;
+	71	|	WASSP::Main::3::APStats_TLVs::DOT1x_CREDENT;
+	72	|	WASSP::Main::3::APStats_TLVs::DOT1x_END_DATE;
+	73	|	WASSP::Main::3::APStats_TLVs::TLV_MAX;

@@ -1,0 +1,517 @@
+// MGCP - Media Gateway Control Protocol
+
+void MGCP()
+{
+	l[1] = pb[4];
+	if( l[1] != 0x20 )
+	{
+		l[1] = pb[3];
+		if( l[1] != 0x20 )
+		{
+			// We're not MGCP.
+			g[9] = 2;
+			TRTS;
+		}
+		l[1] = pb[0];
+		if( l[1] <= 0x30 )
+		{
+			// We're not MGCP.
+			g[9] = 2;
+			TRTS;			
+		}
+		if( l[1] >= 0x39 )
+		{
+			// We're not MGCP.
+			g[9] = 2;
+			TRTS;			
+		}		
+	}
+	
+	MGCP::Main();
+}
+
+void MGCP::Main()
+{	
+	LABL 0 0 0 b1 MGCP - Media Gateway Control Protocol\MGCP:;
+	
+	l[1] = pb[0];	// MGCP::2 messes with g[1] so lets save a local copy	
+	
+	//if the first byte is between 'A' and 'Z' then this is a verb
+	if( l[1] >= 0x41 )
+	{
+		if( l[1] <= 0x5A )
+		{
+			MGCP::Verb_Commands;
+		}
+	}
+
+	TGTE 0 10 0 0 RETURN;
+
+	MGCP::Return_Codes;
+
+	LABL 0 0 0 b8;
+
+	*TNEQ 30 1 0 0 Display Fields And Lines;
+	*TNEQ 30 1 0 0 Display Fields And Lines;
+	*TNXT -Display Fields And Lines;
+}
+
+str# MGCP::ReturnCodeDetails;
+	0x0000 | Response ACK;
+	0x3230 | Transaction Executed Normally;
+	0x3235 | Connection was Deleted;
+	0x3400 | Transient Error;
+	0x340A | No Endpoint Available;
+	
+void MGCP::Return_Codes;
+	LABL 0 0  0 c2 Return Code:\Code:;
+	l[1] = pb[0];	// save the first character, we need it later
+	l[2] = pb[1];	// we need the 2nd char to get the return code details
+	MGCP::PrintToken;
+	MGCP::Skip_Whitespace;
+	
+	SHFL( 0x08, l[1], 0, 0 );
+	l[1] |= l[2];
+	
+	CST#( 0, l[1], 0, 0x14, MGCP::ReturnCodeDetails );	
+	
+	LABL 0 0 0 c2 "Transaction ID:\TID:";
+	MGCP::PrintToken;
+	MGCP::Skip_Whitespace;
+	
+	//if this is an 8xx response we might have a packagename field
+	if( l[1] == 0x38 )
+	{
+		//package name starts with a /
+		if( pb[0] == 0x2F )
+		{
+			MGCP::PrintToken;
+			MGCP::Skip_Whitespace;
+		}
+	}
+	
+	l[2] = 1;
+	l[3] = pb[0];
+	
+	//if this is a carriage return we have reached the end of the line
+	if( l[3] == 0x0d )
+	{
+		l[2] = 0;
+	}
+	
+	//a line feed can also mark the end of the line
+	if( l[3] == 0x0a )
+	{
+		l[2] = 0;
+	}
+	
+	if( l[2] == 1 )
+	{
+		//if we make it here we have a response string
+		LABL 0 0 90 c2 Response:;
+		MGCP::PrintLine;
+	}
+
+	MGCP::Skip_Whitespace;
+	MGCP::ReadEOL;
+	MGCP::Parameters;			//print out any parameters
+	MGCP::Skip_Whitespace;
+	MGCP::ReadEOL;
+	
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 b8;
+	TNXT -SDP;
+
+void MGCP::Verb_Commands;
+	MGCP::PrintVerb;
+	MGCP::Skip_Whitespace;
+	LABL 0 0 90 c2 "Transaction ID:\TID:";
+	MGCP::PrintToken;
+	MGCP::Skip_Whitespace;
+	LABL 0 0 90 c2 EndPoint:;
+	MGCP::PrintToken;
+	MGCP::Skip_Whitespace;
+	LABL 0 0 90 c2 Version:;
+	MGCP::PrintLine;
+	MGCP::ReadEOL;
+	
+	TGTE 0 10 0 0 RETURN;
+	MGCP::Parameters;
+	MGCP::Skip_Whitespace;
+	MGCP::ReadEOL;
+	
+	TEQU 0 10 0 0 RETURN;
+	LABL 0 0 0 b8;
+	TNXT -SDP;
+
+//the verbs are all 4 bytes long and they can be upper or lower case.
+//the strings are only encoded for upper case so any
+//lower case verbs need to be converted to upper case first
+str# MGCP::VerbLabelStrings
+	0x41554358 | AuditConnection;		// AUCX
+	0x41554550 | AuditEndPoint;			// AUEP
+	0x43524358 | CreateConnection;		// CRCX
+	0x444C4358 | DeleteConnection;		// DLCX
+	0x45504346 | EndpointConfiguration;	// EPCF
+	0x4D444358 | ModifyConnection;		// MDCX
+	0x4E544659 | Notify;				// NTFY
+	0x52514E54 | NotificationRequest;	// RQNT
+	0x52534950 | RestartInProgress;		// RSIP
+
+void MGCP::PrintVerb()
+{
+	//make sure we have at least 4 bytes of data
+	TGTX 4 10 0 0 RETURN;
+	
+	l[1] = pb[0];	//get first byte
+	
+	if( l[1] < 0x41 )
+	{
+		l[1] += 0x20;
+	}
+	
+	l[2] = 1;
+	
+	// loop to convert the verb to uppercase if it is lowercase
+	while( l[2] < 4 )
+	{
+		l[3] = pb[ l[2] ];
+		
+		if( l[3] < 0x41 )
+		{
+			l[3] += 0x20;
+		}
+		
+		SHFL( 0x8, l[1], 0, 0 );
+		l[1] |= l[3];
+			
+		l[2] += 1;
+	}
+	
+	LABL 0 0 0 c2 Verb:;
+	
+	CHR# 4, 0, 90 0;	// print out the verb
+	
+	CST#( 0, l[1], 0, 0x14, MGCP::VerbLabelStrings );	// print out the verb label	
+}
+
+//print characters until we hit a non printable character or a whitespace
+void MGCP::PrintToken()
+{
+	//skip any preceding whitespace
+	MGCP::Skip_Whitespace;
+	
+	l[1] = g[0x10];	//store the number of bytes left
+	l[2] = 0;
+	
+	while( l[1] > 0 )
+	{
+		l[3] = pb[ l[2] ];
+		
+		//break out when we reach a non printable character or whitespace
+		if( l[3] < 0x21 )
+		{
+			l[1] = 0;
+		}
+		
+		if( l[1] > 0 )
+		{
+			l[1] -= 1;
+			l[2] += 1;
+		}
+	}
+	
+	if( l[2] > 0 )
+	{
+		CHR#( 0, l[2], 0x90, 0 );
+	}	
+}
+
+//print characters until we hit a CR or LF
+void MGCP::PrintLine()
+{
+	//skip any preceding whitespace
+	MGCP::Skip_Whitespace;
+	
+	l[1] = g[0x10];	//store the number of bytes left
+	l[2] = 0;
+	
+	while( l[1] > 0 )
+	{
+		l[3] = pb[ l[2] ];
+		
+		// LF?
+		if( l[3] == 0x0a )
+		{
+			l[1] = 0;
+		}
+	
+		// CR?
+		if( l[3] == 0x0d )
+		{
+			l[1] = 0;
+		}
+			
+		if( l[1] > 0 )
+		{
+			l[1] -= 1;	// decrement the number of bytes left
+			l[2] += 1;	// increment the number of bytes to print	
+		}
+	}
+	
+	if( l[2] > 0 )
+	{
+		CHR#( 0, l[2], 0x90, 0 );
+	}
+}
+
+//this is exactly the same as PrintLine except with a different output style
+void MGCP::Params_Line()		
+{
+	//skip any preceding whitespace
+	MGCP::Skip_Whitespace;
+	
+	l[1] = g[0x10];	//store the number of bytes left
+	l[2] = 0;
+	
+	while( l[1] > 0 )
+	{
+		l[3] = pb[ l[2] ];
+		
+		// LF?
+		if( l[3] == 0x0a )
+		{
+			l[1] = 0;
+		}
+	
+		// CR?
+		if( l[3] == 0x0d )
+		{
+			l[1] = 0;
+		}
+			
+		if( l[1] > 0 )
+		{
+			l[1] -= 1;	// decrement the number of bytes left
+			l[2] += 1;	// increment the number of bytes to print	
+		}
+	}
+	
+	if (l[2] > 0)
+	{
+		CHR#( 0, l[2], 0x80, 0 );
+	}
+}
+
+void MGCP::Parameters()
+{
+	MGCP::Skip_Whitespace;
+	TGTE  0 10  0  0 RETURN;
+	
+	l[1] = 1;
+	l[2] = pb[0];
+		
+	//there may not be any parameters see if we are at an EOL
+	if( l[2] == 0x0a )
+	{
+		l[1] = 0;
+	}
+	
+	if( l[2] == 0x0d )
+	{
+		l[1] = 0;
+	}
+	
+	if( l[1] == 1 )
+	{
+		LABL 0 0 0 c9 "Parameters\Params:";
+		MGCP::Params;
+	}
+}
+
+void MGCP::Params;
+	MGCP::Skip_Whitespace;
+	MGCP::ReadEOL;
+	
+	TGTE  0 10  0  0 RETURN;
+	GBYT  0  1;
+	TEQU 0D  1  0  0 RETURN;
+	TEQU 0A  1  0  0 RETURN;
+	TEQU 76  1  0  0 RETURN;		//this means we hit the SDP
+
+	MGCP::Params_ID;
+	MGCP::Params_Line;	//print the parameter value
+	TNXT -MGCP::Params;
+
+
+// C 0x43 = CallId
+// I 0x49 = ConnectionIdentifier
+// K 0x4b = ResponseAck
+// L 0x4c = Local Connection Options
+// M 0x4d = Connection Mode
+// O 0x4f = Observed Events
+// P 0x50 = Connection Parameters
+// R 0x52 = Requested Events
+// S 0x53 = SignalRequests
+// X 0x58 = Request Identifier
+void MGCP::Params_ID()
+{
+	g[2] = pb[0];
+	
+	if (g[2] == 0x43)
+	{
+		LABL 0 0 0 c2 Call ID:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x49)
+	{
+		LABL 0 0 0 c2 Connection ID:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x4b)
+	{
+		LABL 0 0 0 c2 ResponseAck:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x4c)
+	{
+		LABL 0 0 0 c2 LocalConnect Opts:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x4d)
+	{
+		LABL 0 0 0 c2 Connection Mode:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x4f)
+	{
+		LABL 0 0 0 c2 Observed Events:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x50)
+	{
+		LABL 0 0 0 c2 Connection Params:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x52)
+	{
+		LABL 0 0 0 c2 Requested Events:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x53)
+	{
+		LABL 0 0 0 c2 Signal Requests:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	if (g[2] == 0x58)
+	{
+		LABL 0 0 0 c2 Request ID:;
+		CHR# 2 0 5 5;
+		TRTS;
+	}
+	
+	// si: default case ... search for ":"
+	l[1] = pb[0];
+	l[2] = 0;
+	while (l[1] != 0x3a)
+	{
+		if (g[16] <= 0)
+		{
+			DECR 0 42;
+			CHR# 0 42 90 c0;
+		}
+		INCR 1;
+		l[2] += 1;
+		l[1] = pb[0];
+	}
+	if (g[16] > 0)
+	{
+		INCR 1;								// si: account for the ":"
+		l[2] += 1;
+		
+		DECR 0 42;
+		CHR# 0 42 12 0;
+	}
+	TRTS;
+}
+
+void MGCP::ReadEOL()
+{
+	TEQU 0 10 0 0 RETURN;
+	//the MGCP rfc states that an eol can be CRLF or LF
+
+	l[1] = pb[0];
+	
+	// check for CR
+	if( l[1] == 0x0d )
+	{
+		DBYT 0 0 5 04 <CR>;
+		TEQU 0 10 0 0 RETURN;
+				
+		l[1] = pb[0];	
+	}
+	
+	// check for LF
+	if( l[1] == 0x0a )
+	{
+		DBYT 0 0 5 04 <LF>;
+	}
+}
+
+//helper function to skip over whitespace
+void MGCP::Skip_Whitespace;
+{
+	l[1] = 1;
+	l[3] = 0;
+	
+	while ( l[1] == 1 )
+	{
+		TEQU 0 10 0 0 RETURN;	//return if we run out of data
+		
+		l[2] = pb[0];
+		l[3] = 0;
+		
+		// tab?
+		if( l[2] == 0x09 )
+		{
+			l[3] = 1;
+		}
+		
+		// white space?
+		if( l[2] == 0x20 )
+		{
+			l[3] = 1;
+		}
+		
+		if( l[3] == 1 )
+		{
+			DBYT 0 0 5 5;
+		}
+		
+		l[1] = l[3];
+	}
+}
+
+//the SDP decoder makes reference
+//to functions in the MGCP decoder.
+//Make wrappers around the new functions with the old function names
+void MGCP::PrintLoop()
+{
+	MGCP::PrintToken;
+}
+
+void MGCP::Cleanup()
+{
+	MGCP::Skip_Whitespace;
+	MGCP::ReadEOL;
+}
+

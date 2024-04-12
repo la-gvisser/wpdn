@@ -1,0 +1,780 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>Options Setting and Data Modeling With Peek Data Modeler</title>
+</head>
+<body>
+    <h1>Options Setting and Data Modeling With Peek Data Modeler</h1><br>
+
+    <h6 class="breakAfterS" style="margin-top:1px">Introduction</h6>
+
+    <h3 class="breakNone">What are Options?</h3>
+    <p class="breakAfterL">
+        Options are the expression of user preferences in the COptions class and any
+        subordinate classes. COptions as delivered is a shell into which data members,
+        and if necessary additional methods, are added by the developer. There is
+        existing example code that is generated from the wizard if selected, which
+        serves to demonstrate how the needed items are added to the class. Note that
+        options are set by a user from dialog(s) displayed by OmniPeek, then once set
+        they are transported over the network to the engine. In effect what this
+        means is that COptions is a class whose data definitions are “shared” by the
+        instances of the plugin on the console and instances on the engine.
+    </p>
+
+    <h3 class="breakNone">What is the Peek Data Modeler?</h3>
+    <p class="breakAfterL">
+        The peek data modeler is a class, <a href="CPeekDataModeler.html">CPeekDataModeler</a>,
+        that supports easy structuring of data that will be transported across the network
+        between a plugin running on Omnipeek and its correlate on an Engine. The
+        data is actually modeled (structured) in a method in the COptions class called Model.
+        COptions::Model is called from the OnContextPrefs method in the engine context and
+        in the console context, as well as from some loading and saving functions in the plugin
+        framework code. The argument to the Model method is a reference to the
+        <a href="CPeekDataModeler.html">CPeekDataModeler</a> class.
+        Internally the data modeler converts data that is being transported into XML, but
+        to the user no XML coding is required.
+    </p>
+
+    <h3 class="breakNone">Benefits of the Peek Data Modeler</h3>
+    <p class="breakAfterS">
+        As noted, the data modeler completely removes the requirement for XML coding by
+        the plugin developer. Since XML is really the data transport medium, it has no
+        intrinsic relationship to the plugin data itself. So, instead of being required to
+        write any XML coding and decoding, the developer will simply “model” the plugin data using
+        a syntax that is visually very much like the textual representation of the XML when it is viewed
+        with an XML or text editor. This includes indentation of nested elements (nodes). The
+        modeling process makes it very straightforward to structure data in the context of
+        its usage in the plugin.
+    </p>
+    <p class="breakAfterL">
+        As mentioned data is modeled in a single function for both sending and for receiving.
+         Sending and receiving have thus become a state that is managed internally by the
+        modeler class. This removes the requirement for writing separate functions for XML
+        sending (encoding) vs. XML receiving (decoding), and thus guarantees that sending and
+        receiving data will be parsed the same. The process is analogous to the MFC
+        DoDataExchange method which allows reading from and writing to member variables from
+        within a single function for populating the controls in a dialog box and subsequently
+        for reading the data back from the dialog box.
+    </p>
+    <h3 class="breakNone">
+        Current Implementations of the Peek Data Modeler in the Omni Plugin Wizard
+    </h3>
+    <p class="breakAfterS">
+        Currently there are two implementations of the peek data modeler in the plugin wizard.
+         Both are accompanied by a well developed repository of example code that may be
+        leveraged for new development. The two types of implementation are:
+    </p>
+    <ol class="onlyG">
+        <li class="breakAfterS">
+            Facilitation of the sending of a plugin user’s preferences (called options or context
+            prefs) from the console side to the engine side. Options for a plugin are user-modifiable
+            via options dialogs that the plugin developer creates, and which are invoked on the
+            console (OmniPeek) side. The plumbing for sending user preferences (options) from the
+            plugin on the console side to its correlate on the engine side is via xml implemented
+            inside OmniPeek. The peek data modeler provides the interface for creating the internal
+            xml in the plugin wizard. This implementation is described in the current document.
+        </li>
+        <li>
+            As an optional tool to support message streaming between the console and engine plugin
+            instances. Messaging, i.e. developer-created communications, between console and
+            engine side plugin instances is implemented via the DoSendPluginMessage and
+            OnProcessPluginMessage methods. The “messages” are data streams that do not intrinsically
+            require xml. However, the peek data modeler facilitates easily marshaling of data for
+            plugin messaging. This methodology is covered in the document
+            <a href="MessageSending.html">Sending Plugin Messages Between Console and Engine</a>.
+        </li>
+    </ol>
+
+    <h6 class="breakAfterS" style="margin-top:14px">
+        Implementing Preferences from COptions
+    </h6>
+    <p class="breakAfterS">
+        As mentioned in the prior section, “preferences” are the plugin options that a user can
+        modify. As a necessary correlate to the data modeling process, the data must be defined
+        and the dialog(s) created for data entry by users.
+    </p>
+    <p class="breakAfterS">
+        A requirement in the data design is that variables of an appropriate type be passed to
+        the data modeler functions. The data modeler functions in turn use overloading to determine
+        the data parsing algorithm based on type. The variables might very well be member variables
+        of the class, but they do not have to be member variables.
+    </p>
+    <p class="breakAfterS">
+        The steps involved in data modeling follow. There is not always an explicit order, as for
+        example, creation of the dialogs does not of course need to always be the second step as it
+        is expressed below.
+    </p>
+
+    <p class="breakNone" style="margin-left:25px"><b>1.Create the data itself</b></p>
+    <p class="breakAfterS" style="margin-left:44px">
+        This is done by modifying the class COptions to add any member variables and methods
+        that express the plugin data. With this, it is perfectly fine to have any number of
+        subordinate data classes in order to modularize the data according to its function.
+    </p>
+
+    <p class="breakNone" style="margin-left:25px">
+        <b>
+            2.Create the dialogs the users will
+            use when setting options
+        </b>
+    </p>
+    <p class="breakAfterS" style="margin-left:44px">
+        Note that the options dialog will be invoked when the user creates a new capture and
+        accesses “Analysis Modules” from the left pane in the Capture Options window in OmniPeek,
+        then highlights the plugin (analysis module), and presses “Options”. If the plugin
+        is called <i>MyOmniPlugin</i>, the window will look as follows:
+    </p>
+    <img src="CaptureOptionsDlg.png" width="620" height="360" style="margin-left:44px;margin-bottom:0px" />
+    <p class="onlyG" style="margin-left:44px;margin-top:0px">
+        The above process will display your dialogs, as implemented from the
+        &lt;<i>CMyOmniPlugin</i>&gt;Plugin::OnOptions function. This function will invoke
+        your dialog via the COptionsDialog::DoModal() method.
+        Once the OnOptions method has completed, your data should have been established in all the
+        data member variables within COptions and any of its subordinate data classes.
+    </p>
+
+    <p class="breakNone" style="margin-left:25px">
+        <b>
+            3.Implement the code inside the
+            COptions::Model() method
+        </b>
+    </p>
+    <p class="breakAfterL" style="margin-left:44px">
+        COptions::Model() will be called by the system whenever options loading or saving needs to
+        occur. The single argument to the Model() method is a reference to the peek data modeler class:
+        <i>CPeekDataModeler&ioPrefs</i>. Internally, ioPrefs has pointers to the xml
+        data stream as well as an indicator of whether data is currently being written or read. This
+        positions us for the data modeling process, which means expanding the COptions::Model() function,
+        or creating nested functions that are called by Model(), that express the data in modeled format.
+         It is important to note that, in support of nesting data modeling functions, the elements
+        (i.e. nodes) of data that is being modeled can be passed as arguments to subordinate functions.
+         These subordinate functions can of course reside in separate classes and files. This allows
+        for very flexible partitoining of data.
+    </p>
+    <p class="breakAfterL" style="margin-left:44px">
+        <b>
+            <i>
+                That’s all there is it so far as the overall process is concerned.
+            </i>
+        </b>
+    </p>
+
+    <h6 class="breakAfterS" style="margin-top:7px">
+        Essential Peek Data Modeler Terminology
+        and Syntax with Examples
+    </h6><!-- Element -->
+    <h3 class="breakNone">Element</h3>
+    <p class="breakAfterS">
+        An element is an unique Peek Data Modeler item that can express data and have subordinate
+        elements.Internally an XML element (i.e. node) is created. An
+        element has a scope that is ended using the End statement. Note that
+        an iterative expression of Elements will be shown under the section on repeated
+        data. This utilizes an optional third parameter to the CPeekDataElement
+        constructor that we are conveniently omitting here.
+    </p>
+    <p class="breakNone">&nbsp;&nbsp;<b>Syntax:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            <b>CPeekDataElement</b>
+            ( PCWSTR <i>inName</i>,
+            <b>CPeekDataElement&</b> <i>inParent</i> );
+        </p>
+    </div>
+    <p class="breakNone">&nbsp;&nbsp;<b>Usage:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            <b>CPeekDataElement</b> <i>ElementName</i>
+            ( <i>ElementIdentifier</i>, <i>ParentElementName</i> );
+        </p>
+        <p class="breakNone" style="font:14px Courier New; margin-left:20px; margin-bottom:5px;">...</p>
+        <p class="breakNone" style="margin-top:5px"><i>ElementName</i><b>.End()</b>;</p>
+    </div>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1" style="color:Blue">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px; margin-bottom:5px; color:Blue" ;=;>...</p>
+    <p class="codeI1" style="color:Blue">elemGeneral.End();</p>
+    <p class="codeI0">}</p>
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Creates in xml:</b></p>
+    <p class="codeI0" style="color:Purple">&lt;General&gt;</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:43px; margin-bottom:5px; color:Purple" ;=;>...</p>
+    <p class="codeI0" style="color:Purple">&lt;/General&gt;</p>
+
+    <!-- Child Element -->
+    <h3 class="breakBeforeL">Child Elements and Element Nesting</h3>
+    <p class="breakNone">
+        A child element is a subordinate element with its own scope.An element that
+        is subordinate to a parent element references the parent in its second parameter.The
+        developer is encouraged to use indentation to clarify element scope.Elements may be nested
+        to any level and the End statement is the delimiter for scope of each nested level.
+    </p>
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI1" style="color:Blue">CPeekDataElement elemUser( _T("NumUsers"), elemGeneral );</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px; margin-bottom:5px; color:Blue" ;=;>...</p>
+    <p class="codeI1" style="color:Blue">elemUser.End();</p>
+    <p class="codeI0">elemGeneral.End();</p>
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Creates in xml:</b></p>
+    <p class="codeI0">&lt;General&gt;</p>
+    <p class="codeI1" style="color:Purple">&lt;User&gt;</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:56px; margin-bottom:5px; color:Purple" ;=;>...</p>
+    <p class="codeI1" style="color:Purple">&lt;/User&gt;</p>
+    <p class="codeI0">&lt;/General&gt;</p>
+
+    <!-- Attribute -->
+    <h3 class="breakBeforeL">Attribute</h3>
+    <p class="breakAfterS">
+        A linking of an element to a data member. This will create in the resulting xml
+        a line of text that includes, in addition to the bracket node name, an attribute
+        name followed by the equal sign followed by the attribute value. There may be
+        multiple attributes associated with an element. The resulting xml text will all
+        be contained within the xml scope brackets of the owning element.
+    </p>
+    <p class="breakNone">&nbsp;&nbsp;<b>Syntax:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            bool <b>Attribute</b>
+            ( PCWSTR <i>inName</i>,
+            &lt;DataType&gt;& <i>ioAttribute</i> );
+        </p>
+    </div>
+    <p class="breakNone">&nbsp;&nbsp;<b>Usage:</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        <i>ElementName</i>.<b>
+            Attribute
+        </b>( <i>AttributeName</i>, <i>DataName</i> );
+    </p>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">class COptions</p>
+    <p class="codeI0">{</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px;margin-top:0px;margin-bottom:9px;">...</p>
+    <p class="codeI0">&nbsp;protected:</p>
+    <p class="codeI1" style="color:Blue">CString m_strUserName;</p>
+    <p class="codeI1" style="color:Blue">UInt32  m_nUserAge;</p>
+    <p class="codeI0">};</p>
+    <p class="codeI0" style="margin-top:11px">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">m_strUserName = _T("Frank Smith");</p>
+    <p class="codeI1">m_nUserAge = 25;</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2">CPeekDataElement elemUser( _T("User"), elemGeneral );</p>
+    <p class="codeI3" style="color:blue">elemUser.Attribute( _T("Name"), m_strUserName );</p>
+    <p class="codeI3" style="color:blue">elemUser.Attribute( _T("Age"), m_nUserAge );</p>
+    <p class="codeI2">elemUser.End();</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeI0">}</p>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Creates in xml:</b></p>
+    <p class="codeI0">&lt;General&gt;</p>
+    <p class="codeI1">&lt;User  <span style="color:Purple">Name="Frank Smith" Age="25" /&gt;</span></p>
+    <p class="codeI0">&lt;/General&gt;</p>
+
+    <!-- Enabled Attribute -->
+    <h3 class="breakBeforeL">Enabled Attribute</h3>
+    <p class="breakAfterS">
+        A special expression of an attribute that creates a simple boolean association. The "Enabled"
+        keyword indicates that the element that owns this attribute is either enabled or not. This
+        attribute element only requires one argument, which is the name of a variable of boolean type.
+    </p>
+
+    <p class="breakNone">&nbsp;&nbsp;<b>Syntax:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            bool <b>Enabled</b>
+            ( bool& <i>ioEnabled</i> );
+        </p>
+    </div>
+    <p class="breakNone">&nbsp;&nbsp;<b>Usage:</b></p>
+    <p class="onlyG" style="margin-left:25px"><i>ElementName</i>.<b>Enabled</b>( <i>DataName</i> );</p>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">class COptions</p>
+    <p class="codeI0">{</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px;margin-top:0px;margin-bottom:9px;">...</p>
+    <p class="codeI0">&nbsp;protected:</p>
+    <p class="codeI1">CString&nbsp;m_strUserName;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nUserAge;</p>
+    <p class="codeI1" style="color:Blue">bool&nbsp;&nbsp;&nbsp;&nbsp;m_bIsChecked;</p>
+    <p class="codeI0">};</p>
+    <p class="codeI0" style="margin-top:11px">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">m_strUserName = _T("Frank Smith");</p>
+    <p class="codeI1">m_nUserAge = 25;</p>
+    <p class="codeI1" style="color:Blue">m_bIsChecked =  true;</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2">CPeekDataElement elemUser( _T("User"), elemGeneral );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Name"), m_strUserName );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Age"), m_nUserAge );</p>
+    <p class="codeI3" style="color:blue">elemUser.Enabled( m_bIsChecked );</p>
+    <p class="codeI2">elemUser.End();</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeI0">}</p>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Creates in xml:</b></p>
+    <p class="codeI0">&lt;General&gt;</p>
+    <p class="codeI1">
+        &lt;User Name="Frank Smith" Age="25"
+        <span style="color:Purple">Enabled="True" /&gt;</span>
+    </p>
+    <p class="codeI0">&lt;/General&gt;</p>
+
+    <!-- ChildValue  -->
+    <h3 class="breakBeforeL">ChildValue</h3>
+    <p class="breakAfterS">
+        This is another way of expressing data associated with an element. In this case a
+        sub (or child) element is created in the underlying xml that simply brackets the data
+        item. This is a nice way of expressing data. Note that an iterative expression
+        of ChildValue will be shown under the section on repeated data.
+    </p>
+
+    <p class="breakNone">&nbsp;&nbsp;<b>Syntax:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            <b>ChildValue</b>
+            ( PCWSTR <i>inName</i>, &lt;DataType&gt;&amp; <i>ioValue</i> );</i>
+        </p>
+    </div>
+    <p class="breakNone">&nbsp;&nbsp;<b>Usage:</b></p>
+    <p class="onlyG" style="margin-left:25px"><i>ElementName</i>.<b>ChildValue</b>( <i>ValueName</i>, <i>DataName</i> );</p>
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">class COptions</p>
+    <p class="codeI0">{</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px;margin-top:0px;margin-bottom:9px;">...</p>
+    <p class="codeI0">&nbsp;protected:</p>
+    <p class="codeI1">CString&nbsp;m_strUserName;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nUserAge;</p>
+    <p class="codeI1">bool&nbsp;&nbsp;&nbsp;&nbsp;m_bIsChecked;</p>
+    <p class="codeI1" style="color:Blue">UInt32&nbsp;&nbsp;m_nNumChildren;</p>
+    <p class="codeI1" style="color:Blue">CString&nbsp;m_strStatus;</p>
+    <p class="codeI0">};</p>
+    <p class="codeI0" style="margin-top:15px">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">m_strUserName = _T("Frank Smith");</p>
+    <p class="codeI1">m_nUserAge = 25;</p>
+    <p class="codeI1">m_bIsChecked =  true;</p>
+    <p class="codeI1" style="color:Blue">m_nNumChildren = 4;</p>
+    <p class="codeI1" style="color:Blue">m_strStatus = _T("Married");</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2">CPeekDataElement elemUser( _T("User"), elemGeneral );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Name"), m_strUserName );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Age"), m_nUserAge );</p>
+    <p class="codeI3">elemUser.Enabled( m_bIsChecked );</p>
+    <p class="codeI3" style="color:blue">elemUser.ChildValue( _T("NumberChildren"), m_nNumChildren );</p>
+    <p class="codeI3" style="color:blue">elemUser.ChildValue( _T("Status"), m_strStatus );</p>
+    <p class="codeI2">elemUser.End();</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeI0">}</p>
+
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Creates in xml:</b></p>
+    <p class="codeI0">&lt;General&gt;</p>
+    <p class="codeI1">&lt;User Name="Frank Smith" Age="25" Enabled="True"&gt;</p>
+    <p class="codeI2" style="color:Purple">&lt;NumberChildren&gt;4&lt;/NumberChildren&gt;</p>
+    <p class="codeI2" style="color:Purple">&lt;Status&gt;Married&lt;/Status&gt;</p>
+    <p class="codeI1">&lt;/User</p>
+    <p class="codeI0">&lt;/General&gt;</p>
+
+    <!-- State Sensitive Code -->
+    <h3 class="breakBeforeL">State sensitive code</h3>
+    <p class="breakBeforeS">
+        Inside the data modeler a boolean state is maintained that drives data modeling functionality in a
+        fundamental way. The state is either &quot;storing&quot; or &quot;loading&quot;.
+        If the state is &quot;storing&quot;, then data will be written from member variables in
+        code to an xml data stream that will travel across the network. If the state is
+        &quot;loading&quot;, then member variables will be written to from the incoming data
+        stream. It should be emphasized again that typically a single block of code is utilized
+        to accomplish both the storing and loading functions.
+    </p>
+    <p class="breakBeforeS">
+        That said, there are times when state-sensitive code needs to be written.
+        This typically will be at the times when different code is needed to put data
+        into the member variables than is needed to get the data out of the member
+        varables. Example cases of this might be when getting data into or out of
+        a dialog box or when communicating with other functions in code. The
+        boolean
+        <b>IsLoading()</b> and <b>IsStoring()</b> member functions can be used to query the
+        loading (receiving data) or storing (saving off data) state.
+        Any <a href="CPeekDataModeler.html">CPeekDataModeler</a> or CPeekDataElement
+        object can be queried to find out the current state. The expedient way to do this is
+        at the top of a given function to create boolean variables that query the
+        <a href="CPeekDataModeler.html">CPeekDataModeler</a> or CPeekDataElement parameter that
+        has been passed into the function. This is all demonstrated in the example code
+        below. Note that state sensitive code is highlighted in blue. There is a section with
+        green comment lines above it that introduce the section where Peek data modeler does its
+        storing and loading to / from member variables.
+    </p>
+    <p class="breakBeforeS">&nbsp;&nbsp;<b>Example:</b></p>
+    <p class="codeI0">class COptions</p>
+    <p class="codeI0">
+        {p>
+    </p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px;margin-top:0px;margin-bottom:9px;">...</p>
+    <p class="codeI0">&nbsp;protected:</p>
+    <p class="codeI1">CString&nbsp;m_strUserName;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nUserAge;</p>
+    <p class="codeI1">bool&nbsp;&nbsp;&nbsp;&nbsp;m_bIsChecked;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nNumChildren;</p>
+    <p class="codeI1">CString&nbsp;m_strStatus;</p>
+    <p class="codeI0">};</p>
+    <p class="codeI0" style="margin-top:11px">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+
+    <p class="codeI1" style="color:Blue">bool bIsLoading = ioPrefs.IsLoading();</p>
+    <p class="codeI1" style="color:Blue">bool bIsStoring = ioPrefs.IsStoring();</p>
+    <p class="codeBreak" />
+    <p class="codeI1" style="color:Blue">if ( bIsStoring ) {</p>
+    <p class="codeI2" style="color:Blue">// Data is hard coded just for the example:</p>
+    <p class="codeI2" style="color:Blue">m_strUserName = _T("Frank Smith");</p>
+    <p class="codeI2" style="color:Blue">m_nUserAge = 25;</p>
+    <p class="codeI2" style="color:Blue">m_bIsChecked =  true;</p>
+    <p class="codeI2" style="color:Blue">m_nNumChildren = 4;</p>
+    <p class="codeI2" style="color:Blue">m_strStatus = _T("Married");</p>
+    <p class="codeI1" style="color:Blue">}</p>
+    <p class="codeBreak"></p>
+
+
+    <p class="codeI1" style="color:green">
+        // This block is always executed regardless of state.
+        If bIsStoring
+    </p>
+    <p class="codeI1" style="color:green">
+        //  is true, then contents of the member variables
+        will be written out
+    </p>
+    <p class="codeI1" style="color:green">
+        // to the xml data stream. Otherwise if bIsLoading is
+        true then the
+    </p>
+    <p class="codeI1" style="color:green">
+        //  member variables will receive data from the
+        xml stream.
+    </p>
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2">CPeekDataElement elemUser( _T("User"), elemGeneral );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Name"), m_strUserName );</p>
+    <p class="codeI3">elemUser.Attribute( _T("Age"), m_nUserAge );</p>
+    <p class="codeI3">elemUser.Enabled( m_bIsChecked );</p>
+    <p class="codeI3">elemUser.ChildValue( _T("NumberChildren"), m_nNumChildren );</p>
+    <p class="codeI3">elemUser.ChildValue( _T("Status"), m_strStatus );</p>
+    <p class="codeI2">elemUser.End();</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1" style="color:Blue">if ( bIsLoading) {</p>
+    <p class="codeI2" style="color:Blue">// Assertions are just to clarify the example:</p>
+    <p class="codeI2" style="color:Blue">ASSERT( m_strUserName == _T( "Frank Smith" ) );</p>
+    <p class="codeI2" style="color:Blue">ASSERT( m_nUserAge == 25 );</p>
+    <p class="codeI2" style="color:Blue">ASSERT( m_bIsChecked == true );</p>
+    <p class="codeI2" style="color:Blue">ASSERT( m_nNumChildren == 4 );</p>
+    <p class="codeI2" style="color:Blue">ASSERT( m_strStatus == _T("Married") );</p>
+    <p class="codeI1" style="color:Blue">}</p>
+    <p class="codeI0">}</p>
+
+    <!-- Passing Elements as Function Arguments -->
+    <h6 class="breakAfterS" style="margin-top:14px">Passing Elements as Function Arguments</h6>
+    <p class="breakAfterL">
+        A reference to an element may be passed as a function argument. This allows for
+        breaking up the modeling of data into functional sections. These may of course be
+        in separate (probably subordinate) classes.  The nesting of subordinate data /
+        functions can continue to any level.
+    </p>
+
+    <p class="breakAfterS">
+        <b>Following is an example:</b>
+    </p>
+    <p class="codeI0">class COptions</p>
+    <p class="codeI0">{</p>
+    <p class="breakNone" style="font:14px Courier New; margin-left:64px;margin-top:0px;margin-bottom:9px;">...</p>
+    <p class="codeI0">&nbsp;protected:</p>
+    <p class="codeI1">CString&nbsp;m_strUserName;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nUserAge;</p>
+    <p class="codeI1">bool&nbsp;&nbsp;&nbsp;&nbsp;m_bIsChecked;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;m_nNumChildren;</p>
+    <p class="codeI1">CString&nbsp;m_strStatus;</p>
+    <p class="codeI0">};</p>
+    <p class="codeI0" style="margin-top:11px">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">bool bUserResult( false );</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2" style="color:Blue">bUserResult = ModelUserData( elemGeneral );</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">return bUserResult;</p>
+    <p class="codeI0">}</p>
+
+    <p class="codeBreak"></p>
+    <p class="codeI0" style="margin-top:11px; color:Blue;">bool</p>
+    <p class="codeI0" style="color:Blue">COptions::ModelUserData(</p>
+    <p class="codeI1" style="color:Blue">CPeekDataElement& ioParentElem )</p>
+    <p class="codeI0">{</p>
+
+    <p class="codeI1">bool bIsLoading = ioParentElem.IsLoading();</p>
+    <p class="codeI1">bool bIsStoring = ioParentElem.IsStoring();</p>
+    <p class="codeBreak" />
+    <p class="codeI1">if ( bIsStoring ) {</p>
+    <p class="codeI2">m_strUserName = _T("Frank Smith");</p>
+    <p class="codeI2">m_nUserAge = 25;</p>
+    <p class="codeI2">m_bIsChecked =  true;</p>
+    <p class="codeI2">m_nNumChildren = 4;</p>
+    <p class="codeI2">m_strStatus = _T("Married");</p>
+    <p class="codeI1">}</p>
+
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement elemUser( _T("User"),<span style="color:Blue">ioParentElem</span> );</p>
+    <p class="codeI2">elemUser.Attribute( _T("Name"), m_strUserName );</p>
+    <p class="codeI2">elemUser.Attribute( _T("Age"), m_nUserAge );</p>
+    <p class="codeI2">elemUser.Enabled( m_bIsChecked );</p>
+    <p class="codeI2">elemUser.ChildValue( _T("NumberChildren"), m_nNumChildren );</p>
+    <p class="codeI2">elemUser.ChildValue( _T("Status"), m_strStatus );</p>
+    <p class="codeI1">elemUser.End();</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">return true;</p>
+
+    <p class="codeI0">}</p>
+
+    <!-- Handling Iterative Data -->
+    <h6 class="breakAfterS" style="margin-top:12px">
+        Handling Iterative Data
+    </h6>
+    <p class="breakAfterS">
+    </p>
+    <p>
+        Iterative data, that is, data which will create repeated sections of the same
+        element names in xml, is supported in data modeling through a slight extension
+        to the syntax of a some members. In particular, the CPeekDataElement class
+        constructor and the member function ChildValue both have an optional third
+        parameter that is an index value. This optional index parameter has a
+        default value of zero, thus allowing for non-iterative behavior by default.
+        Typically data to be accessed in an iterative manner will be held in code in an
+        array or collection class. This will be accessed inside of a for loop.
+        The loop index will then be passed into the relevant data modeler function,
+        resulting in the required iterative data modeling with its expression in
+        resultant xml.
+    </p>
+    <p class="breakNone">&nbsp;&nbsp;<b>Syntax:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            <b>CPeekDataElement</b>
+            ( PCWSTR <i>inName</i>,
+            <b>CPeekDataElement&</b> <i>inParent</i>,
+            size_t <i>inIndex</i> = 0 );</i>
+        </p>
+        <p class="breakNone">
+            <b>ChildValue</b>
+            ( PCWSTR <i>inName</i>,
+            &lt;DataType&gt;&amp; <i>ioValue,</i>
+            size_t <i>inIndex</i> = 0 );</i>
+        </p>
+    </div>
+    <p class="breakNone">&nbsp;&nbsp;<b>Usage:</b></p>
+    <div class="onlyG" style="margin-left:25px">
+        <p class="breakNone">
+            <b>CPeekDataElement</b> <i>ElementName</i>
+            ( <i>ElementIdentifier</i>, <i>ParentElementName</i>, <i>IndexValue</i> );
+        </p>
+        <p class="breakNone">
+            <i>ElementName</i>.<b>ChildValue</b>( <i>ValueName</i>, <i>
+                DataName,
+                IndexValue
+            </i> );
+        </p>
+    </div>
+
+    <p class="breakNone">&nbsp;&nbsp;<b>Example:</b></p>
+
+    <p class="codeI0" style="margin-top:11px;">bool</p>
+    <p class="codeI0">COptions::Model(</p>
+    <p class="codeI1">CPeekDataModeler& ioPrefs )</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">bool bIsLoading = ioPrefs.IsLoading();</p>
+    <p class="codeI1">bool bIsStoring = ioPrefs.IsStoring();</p>
+    <p class="codeBreak" />
+    <p class="codeI1">CString&nbsp;&nbsp;strFather;</p>
+    <p class="codeI1">CString&nbsp;&nbsp;strMother;</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1">if ( bIsStoring ) {</p>
+    <p class="codeI2">strFather = L"Frank Smith";</p>
+    <p class="codeI2">strMother = L"Mary Smith";</p>
+    <p class="codeI1">}</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1">CPeekDataElement elemGeneral( _T("General"), ioPrefs );</p>
+    <p class="codeI2">CPeekDataElement elemParents( _T("Parents"), elemGeneral );</p>
+    <p class="codeI3">elemParents.Attribute( _T("Father"), strFather );</p>
+    <p class="codeI3">elemParents.Attribute( _T("Mother"), strMother );</p>
+    <p class="codeI3">ModelKids( elemParents );</p>
+    <p class="codeI2">elemParents.End();</p>
+    <p class="codeI1">elemGeneral.End();</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">if ( bIsLoading ) {</p>
+    <p class="codeI2">ASSERT( strFather == L"Frank Smith" );</p>
+    <p class="codeI2">ASSERT( strMother == L"Mary Smith" );</p>
+    <p class="codeI1">}</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">return true;</p>
+    <p class="codeI0">}</p>
+
+    <p class="codeI0" style="margin-top:25px;">const UInt32 kNumElems(3);</p>
+    <p class="codeBreak"></p>
+    <p class="codeI0">typedef struct</p>
+    <p class="codeI0">{</p>
+    <p class="codeI1">CString&nbsp;&nbsp;strName;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;&nbsp;nAge;</p>
+    <p class="codeI1">CString&nbsp;&nbsp;ToyList[kNumElems];</p>
+    <p class="codeI0">} Kid;</p>
+
+
+    <p class="codeI0" style="margin-top:20px;">bool</p>
+    <p class="codeI0">COptions::ModelKids(</p>
+    <p class="codeI1">CPeekDataElement& ioParentElem )</p>
+    <p class="codeI0">{</p>
+
+    <p class="codeI1">bool bIsLoading = ioParentElem.IsLoading();</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">Kid KidList[kNumElems];</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">Kid ExampleKids[] = { CString(L"Tim"), &nbsp;5, CString(L"Car"), &nbsp;&nbsp;CString(L"Horse"), CString(L"Truck"),</p>
+    <p class="codeI1" style="margin-left:200px">CString(L"Jane"), 4, CString(L"Doll"), &nbsp;CString(L"Purse"), CString(L"Dishes"),</p>
+    <p class="codeI1" style="margin-left:200px">CString(L"Fred"), 7, CString(L"Train"), CString(L"Boat"), &nbsp;CString(L"Blocks") };</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">Kid EmptyKid =&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ CString(L""), 0, CString(L""), CString(L""), CString(L"") };</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;&nbsp;nNumKids = 0;</p>
+    <p class="codeI1">UInt32&nbsp;&nbsp;&nbsp;nNumToys = 0;</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">CPeekDataElement&nbsp;&nbsp;&nbsp;&nbsp;elemKidList( L"Kids", ioParentElem );</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1">
+        if ( bIsLoading ) {&nbsp;&nbsp;&nbsp;// Is reading data from xml stream
+    </p>
+    <p class="codeI2">
+        // Empty the list
+    </p>
+    <p class="codeI2">
+        for ( UInt32 i = 0; i < nNumKids; i++ ) {
+    </p>
+    <p class="codeI3">
+        KidList[i] = EmptyKid;
+    </p>
+    <p class="codeI2">
+        }
+    </p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI2">// Retrieve number of kids from data stream</p>
+    <p class="codeI2">nNumKids = elemKidList.GetChildCount();</p>
+    <p class="codeI1">}</p>
+    <p class="codeI1">else {&nbsp;&nbsp;&nbsp;// Is saving data to xml stream</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI2">// Set number of kids and toys to be loaded for our test</p>
+    <p class="codeI2">nNumKids = nNumToys = kNumElems;</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI2">// Fill with test values</p>
+    <p class="codeI2">for ( UInt32 i = 0; i < nNumKids; i++ ) {</p>
+    <p class="codeI3">KidList[i].strName = ExampleKids[i].strName;</p>
+    <p class="codeI3">KidList[i].nAge = ExampleKids[i].nAge;</p>
+    <p class="codeI3">for ( UInt32 j = 0; j < nNumToys; j++ ) {</p>
+    <p class="codeI4">KidList[i].ToyList[j] = ExampleKids[i].ToyList[j];</p>
+    <p class="codeI3">}</p>
+    <p class="codeI2">}</p>
+    <p class="codeI1">}</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1">// Load or store the values</p>
+    <p class="codeI1">for ( UInt32 <span style="color:Purple">nKidCount</span> = 0; nKidCount < nNumKids; nKidCount++ ) {</p>
+    <p class="codeI2" style="color:Blue">
+        CPeekDataElement	elemKid( L"Kid", elemKidList,
+        <span style="color:Purple">nKidCount</span> );
+    </p>
+    <p class="codeI2">if ( elemKid.IsValid() ) {</p>
+    <p class="codeI3">elemKid.Attribute( L"Name", KidList[nKidCount].strName );</p>
+    <p class="codeI3">elemKid.ChildValue( L"Age", KidList[nKidCount].nAge );</p>
+    <p class="codeI3">CPeekDataElement elemToys( L"Toys", elemKid );</p>
+    <p class="codeI3">UInt32 nNumToys = bIsLoading ? elemToys.GetChildCount() : kNumElems;</p>
+    <p class="codeI3">
+        for ( UInt32 <span style="color:Purple">nToyCount</span> = 0; nToyCount
+        < nNumToys; nToyCount++ ) {
+    </p>
+    <p class="codeI4" style="color:Blue">
+        elemToys.ChildValue( L"Toy", KidList[nKidCount].ToyList[nToyCount],
+        <span style="color:Purple">nToyCount</span> );
+    </p>
+    <p class="codeI3">}</p>
+    <p class="codeI2">}</p>
+    <p class="codeI1">}</p>
+    <p class="codeBreak"></p>
+
+    <p class="codeI1">// Validate that the test entries were received</p>
+    <p class="codeI1">if ( bIsLoading ) {</p>
+    <p class="codeI2">ASSERT( KidList[1].strName ==  L"Jane" );</p>
+    <p class="codeI2">ASSERT( KidList[1].nAge == 4 );</p>
+    <p class="codeI2">ASSERT( KidList[1].ToyList[2] == L"Dishes" );</p>
+    <p class="codeI1">}</p>
+    <p class="codeBreak"></p>
+    <p class="codeI1">return true;</p>
+    <p class="codeI0">}</p>
+    <p class="codeBreak"></p>
+
+    <p class="onlyG" style="margin:15px 0px 0px 4px;"><b>Creates In Xml:</b></p>
+    <p class="onlyG" style="margin:1px 0px 3px 4px;">
+    </p>
+
+
+    <p class="codeI0">&lt;General&gt;</p>
+    <p class="codeI1">&lt;Parents Father="Frank Smith" Mother="Mary Smith"&gt;</p>
+
+    <p class="codeI2">&lt;Kids&gt;</p>
+    <p class="codeI3">&lt;Kid Name="Tim"&gt;</p>
+    <p class="codeI4">&lt;Age&gt;5&lt;/Age&gt;</p>
+    <p class="codeI4">&lt;Toys&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Car&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Horse&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Truck&lt;/Toy&gt;</p>
+    <p class="codeI4">&lt;/Toys&gt;</p>
+    <p class="codeI3">&lt;/Kid&gt;</p>
+    <p class="codeI3">&lt;Kid Name="Jane"&gt;</p>
+    <p class="codeI4">&lt;Age>4&gt;&lt;/Age&gt;</p>
+    <p class="codeI4">&lt;Toys&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Doll&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Purse&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Dishes&lt;/Toy&gt;</p>
+    <p class="codeI4">&lt;/Toys&gt;</p>
+    <p class="codeI3">&lt;/Kid&gt;</p>
+    <p class="codeI3">&lt;Kid Name="Fred"&gt;</p>
+    <p class="codeI4">&lt;Age&gt;7&lt;/Age&gt;</p>
+    <p class="codeI4">&lt;Toys&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Train&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Boat&lt;/Toy&gt;</p>
+    <p class="codeI5">&lt;Toy&gt;Blocks&gt;&lt;/Toy&gt;</p>
+    <p class="codeI4">&lt;/Toys&gt;</p>
+    <p class="codeI3">&lt;/Kid&gt;</p>
+    <p class="codeI2">&lt;/Kids&gt;</p>
+    <p class="codeI1">&lt/Parents&gt;</p>
+    <p class="codeI0">&lt;/General&gt;</p>
+</body>
+</html>

@@ -1,0 +1,252 @@
+// iSNS - Internet Storage Name Service
+
+/*
+globals:
+g[0xa] = function id
+g[0xb] = pdu length
+*/
+
+//si: in progress ... need more info!
+//    port 3205 [tcp / udp]
+
+
+void iSNS;
+	LABL 0 0 0 b1 iSNS - Internet Storage Name Service\iSNS:;
+	DWRD 0 1 90 c2 Version:;
+	 if (g[1] != 1)
+	 {
+		LABL 0 0 0 14 Invalid Version Number;
+	 }
+	HWRD 0 a 90 c2 Function ID:;
+	 CST# 0 a 0 14 iSNS::List::Req;
+	 CST# 0 a 0 14 iSNS::List::Rsp;
+	DWRD 0 b 90 c2 PDU Length:;
+	HWRD 0 1 90 c9 Flags:;
+	 CBIT 7 1 0 d4 ........ 1....... Reserved;
+	 CLSE 0 0 0 d4 ........ 0....... Reserved;
+	 CBIT 6 1 0 d4 ........ .1...... Reserved;
+	 CLSE 0 0 0 d4 ........ .0...... Reserved;
+	 CBIT 5 1 0 d4 ........ ..1..... First PDU of the iSNS message;
+	 CLSE 0 0 0 d4 ........ ..0..... Not the First PDU of the iSNS message;
+	 CBIT 4 1 0 d4 ........ ...1.... Last PDU of the iSNS message;
+	 CLSE 0 0 0 d4 ........ ...0.... Not the Last PDU of the iSNS message;
+	 CBIT 3 1 0 d4 ........ ....1... Replace Flag (for DevAttrReg);
+	 CLSE 0 0 0 d4 ........ ....0... Replace Flag (for DevAttrReg) Not Set;
+	 CBIT 2 1 0 d4 ........ .....1.. Reserved;
+	 CLSE 0 0 0 d4 ........ .....0.. Reserved;
+	 CBIT 1 1 0 d4 ........ ......1. Sender is the iSNS server;
+	 CLSE 0 0 0 d4 ........ ......0. Sender is not the iSNS server;
+	 CBIT 0 1 0 d4 ........ .......1 Sender is the iSNS client;
+	 CLSE 0 0 0 d4 ........ .......0 Sender is not the iSNS client;
+	 LABL 0 0 0 c8;
+	HWRD 0 1 90 c2 Transaction ID:;
+	HWRD 0 1 90 c2 Sequence ID:;
+
+
+	if (g[a] > 0x8000)
+	{
+		iSNS::Status;						//si: only rsp pkts have this field as first pdu
+	} 
+
+	//TST# 0 a 0 0 iSNS::Func_List::Rsp;				//si: bad...no functions for now
+	TRTS;
+
+void iSNS::Status;
+	DLNG 0 1 90 c2 Status Code:;
+	 CST# 0 1 0 14 iSNS::Status_List;
+	TRTS;
+
+void iSNS::Attributes;
+	DLNG 0 1 90 c2 Tag:;
+	 CST# 0 1 0 14 iSNS::Attributes::List;
+	DLNG 0 1 90 c2 Length:;
+	if (g[1] != 0)
+	{
+	 DUMP 0 1 90 c2 Value:;
+	}
+	TRTS;
+
+
+
+str# iSNS::Func_List::Req;
+	0x0001 | iSNS::DevAttrReg::Req;
+	0x0002 | iSNS::DevAttrQry::Req;
+	0x0003 | iSNS::DevGetNext::Req;
+	0x0004 | iSNS::DevDereg::Req;
+	0x0005 | iSNS::SCNReg::Req;
+	0x0006 | iSNS::SCNDereg::Req;
+	0x0007 | iSNS::SCNEvent::Req;
+	0x0008 | iSNS::SCN::Req;
+	0x0009 | iSNS::DDReg::Req;
+	0x000A | iSNS::DDDereg::Req;
+	0x000B | iSNS::DDSReg::Req;
+	0x000C | iSNS::DDSDereg::Req;
+	0x000D | iSNS::ESI::Req;
+	0x000E | iSNS::Heartbeat::Req;
+ //0x000F-0x00FF  RESERVED
+ //0x0100-0x01FF  Vendor Specific
+ //0x0200-0x8000  RESERVED
+
+str# iSNS::List::Req;
+	0x0001 | Device Attr Reg Request;
+	0x0002 | Dev Attr Query Request;
+	0x0003 | Dev Get Next Request;
+	0x0004 | Deregister Dev Request;
+	0x0005 | SCN Register Request;
+	0x0006 | SCN Deregister Request;
+	0x0007 | SCN Event;
+	0x0008 | State Change Notification;
+	0x0009 | DD Register;
+	0x000A | DD Deregister;
+	0x000B | DDS Register;
+	0x000C | DDS Deregister;
+	0x000D | Entity Status Inquiry;
+	0x000E | Name Service Heartbeat;
+
+str# iSNS::Func_List::Rsp;
+	0x8001 | iSNS::DevAttrReg::Rsp;
+	0x8002 | iSNS::DevAttrQry::Rsp;
+	0x8003 | iSNS::DevGetNext::Rsp;
+	0x8004 | iSNS::DevDereg::Rsp;
+	0x8005 | iSNS::SCNReg::Rsp;
+	0x8006 | iSNS::SCNDereg::Rsp;
+	0x8007 | iSNS::SCNEvent::Rsp;
+	0x8008 | iSNS::SCN::Rsp;
+	0x8009 | iSNS::DDReg::Rsp;
+	0x800A | iSNS::DDDereg::Rsp;
+	0x800B | iSNS::DDSReg::Rsp;
+	0x800C | iSNS::DDSDereg::Rsp;
+	0x800D | iSNS::ESI::Rsp;
+
+str# iSNS::List::Rsp;
+	0x8001 | Device Attr Register Rsp;
+	0x8002 | Device Attr Query Rsp;
+	0x8003 | Device Get Next Rsp;
+	0x8004 | Device Dereg Rsp;
+	0x8005 | SCN Register Rsp;
+	0x8006 | SCN Deregister Rsp;
+	0x8007 | SCN Event Rsp;
+	0x8008 | SCN Response;
+	0x8009 | DD Register Rsp;
+	0x800A | DD Deregister Rsp;
+	0x800B | DDS Register Rsp;
+	0x800C | DDS Deregister Rsp;
+	0x800D | Entity Stat Inquiry Rsp;
+//   RESERVED                                0x800E-0x80FF 
+//   Vendor Specific                         0x8100-0x81FF 
+//   RESERVED                                0x8200-0xFFFF 
+
+str# iSNS::Status_List;
+	Successful;
+	Unknown Error;
+	Message Format Error;
+	Invalid Registration;
+	Reserved;
+	Invalid Query;							//5
+	Source Unknown; 
+	Source Absent;
+	Source Unauthorized;
+	No Such Entry;
+	Version Not Supported;					//10
+	Internal Error;
+	Busy;
+	Option Not Understood;
+	Invalid Update;
+	Message (FUNCTION_ID) Not Supported;	//15
+	SCN Event Rejected;
+	SCN Registration Rejected;
+	Attribute not Implemented;
+	FC_DOMAIN_ID not available;
+	FC_DOMAIN_ID not allocated;				//20
+	ESI Not Available;
+	Invalid Deregistration;
+	Reserved;
+
+str# iSNS::Attributes::List;
+	 0 | Delimiter;
+	 1 | Entity Identifier (EID);
+	 2 | Entity Protocol;
+	 3 | Management IP Address;
+	 4 | Timestamp;
+	 5 | Protocol Version Range;
+	 6 | Registration Period;
+	 7 | Entity Index;
+	 8 | Entity Next Index;
+	11 | Entity ISAKMP Phase-1;
+	12 | Entity Certificate;
+	16 | Portal IP Address;
+	17 | Portal TCP/UDP Port;
+	18 | Portal Symbolic Name;
+	19 | ESI Interval;
+	20 | ESI Port;
+	21 | Portal Group Tag;
+	22 | Portal Index;
+	23 | SCN Port;
+	24 | Portal Next Index;
+	27 | Portal Security Bitmap;
+	28 | Portal ISAKMP Phase-1;
+	29 | Portal ISAKMP Phase-2;
+	31 | Portal Certificate;
+	32 | iSCSI Name;
+	33 | iSCSI Node Type;
+	34 | iSCSI Alias;
+	35 | iSCSI SCN Bitmap;
+	36 | iSCSI Node Index;
+	37 | WWNN Token;
+	38 | iSCSI Node Next Index;
+	42 | iSCSI AuthMethod;
+	43 | iSCSI Node Certificate;
+	64 | FC Port Name WWPN;
+	65 | Port ID;
+	66 | FC Port Type;
+	67 | Symbolic Port Name;
+	68 | Fabric Port Name;
+	69 | Hard Address;
+	70 | Port IP-Address;
+	71 | Class of Service;
+	72 | FC-4 Types;
+	73 | FC-4 Descriptor;
+	74 | FC-4 Features;
+	75 | iFCP SCN bitmap;
+	76 | Port Role;
+	77 | Permanent Port Name;
+	83 | Port Certificate;
+	95 | FC-4 Type Code;
+	96 | FC Node Name WWNN;
+	97 | Symbolic Node Name;
+	98 | Node IP-Address;
+	99 | Node IPA;
+	100 | Node Certificate;
+	101 | Proxy iSCSI Name;
+	128 | Switch Name;
+	129 | Preferred ID;
+	130 | Assigned ID;
+	131 | Virtual_Fabric_ID;
+	256 | iSNS Server Vendor OUI;
+	2049 | DD_Set ID;
+	2050 | DD_Set Sym Name;
+	2051 | DD_Set Status;
+	2052 | DD_Set_Next_ID;
+	2065 | DD_ID;
+	2066 | DD_Symbolic Name;
+	2067 | DD_Member iSCSI Index;
+	2068 | DD_Member iSCSI Name;
+	2069 | DD_Member iFCP Node;
+	2070 | DD Member Portal Index;
+	2071 | DD_Member Portal IP Addr;
+	2072 | DD Member Portal TCP/UDP;
+	2078 | DD_Features;
+	2079 | DD_ID Next ID;
+
+/*
+ 257-384 Vendor-Spec iSNS Srvr   
+ 385-512 Vendor-Spec Entity      
+ 513-640 Vendor-Spec Portal      
+ 641-768 Vendor-Spec iSCSI Node  
+ 769-896 Vendor-Spec FC Port Name
+ 897-1024Vendor-Spec FC Node Name
+1025-1280Vendor-Specific DDS     
+1281-1536Vendor-Specific DD      
+1537-2048Other Vendor-Specific  
+*/
+

@@ -1,0 +1,30 @@
+//TiVo Connect Automatic Machine Discovery Protocol v1.5.1
+
+void Tivo()
+{
+	LABL( 0, 0, 0, 0xb1, "TiVo Connect Automatic Machine Discovery Protocol");
+	while (g[16] != 0)
+	{
+		Tivo::Equal_Parser();
+		CHR# 0 5 2 c2;
+		INCR 1;
+		LABL(0, 0, 0x2, 0, ":");
+		Tivo::0A_Parser();
+		CHR# 0 4 90 0;
+		INCR 1;
+	}
+}
+
+void Tivo::Equal_Parser()
+{
+	MOVE 0  5;
+	GSTR 2000003D  5;
+}
+
+void Tivo::0A_Parser()
+{
+	MOVE 0  4;
+	GSTR 2000000A  4;
+}
+
+

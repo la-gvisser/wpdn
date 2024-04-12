@@ -1,0 +1,101 @@
+// BitTorrent
+
+void BitTorrent()
+{
+	LABL( 0, 0, 0, 0xb1 "BitTorrent");
+	l[2] = pb[0];
+	if (l[2] == 0x13)
+	{
+		BitTorrent::Handshake();
+		TRTS;
+	}
+	l[3] = pw[0];
+	if (l[3] > 0)
+	{
+		BitTorrent::Data();
+	}
+	while (g[16] > 4)
+	{
+		BitTorrent::Message();
+	}
+}
+
+void BitTorrent::Handshake()
+{
+	LABL( 0, 0, 0, 0xb7, "Handshake");
+	DBYT( 0, l[2], 0x90, 0xc2, "Protocol Length:");
+	CHR#( 0, l[2], 0x90, 0xc2, "Protocol:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Reserved:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Reserved:");
+	HEX#( 0x14, 0, 0x90, 0xc2, "sha1 hash:");
+	HEX#( 0x14, 0, 0x90, 0xc2, "Peer Id:");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BitTorrent::Message()
+{
+	LABL( 0, 0, 0, 0xb7, "Message");
+	DLNG( 0, g[3], 0x90, 0xc2, "Length:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Type:");
+	CST#( 0, l[1], 0, 0x14, BitTorrent::Type_Str);
+	TSB#( 0, l[1], 0, 0x14, BitTorrent::Message_Type);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void BitTorrent::Have()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece:");
+}
+
+void BitTorrent::Bitfield()
+{
+	g[3] -= 1;
+	HEX#( 0, g[3], 0x90, 0xc2, "Bitfield Data:");
+}
+
+void BitTorrent::Request()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece Index:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Begin Offset:");
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece Length:");
+}
+
+void BitTorrent::Piece()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece Index:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Begin Offset:");
+	DUMP( 1, 0, 0x90, 0xc2, "Data Block:");
+}
+
+void BitTorrent::Cancel()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece Index:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Begin Offset:");
+	DLNG( 0, l[1], 0x90, 0xc2, "Piece Length:");
+}
+
+void BitTorrent::Data()
+{
+	LABL( 0, 0, 0x90, 0xc4, "Continuation of Data Block");
+	DUMP( 1, 0, 0x90, 0xc2, "Data Block:");
+}
+
+str# BitTorrent::Message_Type;
+	4 | BitTorrent::Have;
+	5 | BitTorrent::Bitfield;
+	6 | BitTorrent::Request;
+	7 | BitTorrent::Piece;
+	8 | BitTorrent::Cancel;
+
+str# BitTorrent::Type_Str;
+	0 | Choke;
+	1 | Unchoke;
+	2 | Interested;
+	3 | Not Interested;
+	4 | Have;
+	5 | Bitfield;
+	6 | Request;
+	7 | Piece;
+	8 | Cancel;
+
+

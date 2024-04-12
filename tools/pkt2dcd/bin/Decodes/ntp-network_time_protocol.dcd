@@ -1,0 +1,163 @@
+* NTP - Network Time Protocol
+
+void NTP;
+	LABL 0   0   0 b1 NTP/SNTP - Network Time Protocol\NTP/SNTP:;
+	NTP Common;
+	NTP Timestamps;
+	NTP Authentication Data;
+
+* NTP 
+* g[2] = stratum
+* g[3] = version
+* g[4] = secondary server flag
+
+void NTP Common;
+	DBIT 2 1  90 c2 Leap Indicator:;
+	CEQU 0 1   0 24 no warning;
+	CEQU 1 1   0 24 last minute has 61 seconds;
+	CEQU 2 1   0 24 last minute has 59 seconds;
+	CEQU 3 1   0 24 alarm condition (clock not synchronized);
+	DBIT 3 3  90 c2 Version Number:;
+	DBIT 3 1  90 c2 Mode:;
+	CEQU 0 1   0 24 reserved;
+	CEQU 1 1   0 24 symmetric active;
+	CEQU 2 1   0 24 symmetric passive;
+	CEQU 3 1   0 24 client;
+	CEQU 4 1   0 24 server;
+	CEQU 5 1   0 24 broadcast;
+	CEQU 7 1   0 24 NTP control message;
+	CEQU 7 1   0 24 reserved for private use;
+	TEQU 6 1   0  0 NTP Control;
+
+	*stratum
+	MOVE 0 4;
+	DBYT 0 2  90 c2 Stratum:;
+	CEQU 0 2   0 24 unspecified;
+	CEQU 1 2   0 24 primary reference;
+	SGTE 1 2;    *  check for value 2 - 255
+	SKIP 4;
+	SLTE 10 2;
+	SKIP 2;
+	LABL 0 0  0 24 secondary reference;
+	MOVE 1 4;  * secondary server flag
+	CEQU 10 2  0 24 reserved;
+
+	DBYT 80000000 1  90 c2 Poll:;
+	DBYT 80000000 1  90 c2 Precision:;
+	DLNG 80000000 1  90 c2 Root Delay:;
+	LABL 0   0  0 24 signed fixed point;
+	DLNG 0   1  90 c2 Root Dispersion:;
+	LABL 0   0  0 24 unsigned fixed point;
+	NTP Reference Clock ID Address;	
+	NTP Reference Clock ID String;	
+	TRTS;
+
+void NTP Timestamps;
+	TIME 3   0  90 c2 Reference Timestamp:;
+	DLNG 0   0  90 c2 Fraction:;
+	TIME 3   0  90 c2 Originate Timestamp:;
+	DLNG 0   0  90 c2 Fraction:;
+	TIME 3   0  90 c2 Receive Timestamp:;
+	DLNG 0   0  90 c2 Fraction:;
+	TIME 3   0  90 c2 Transmit Timestamp:;
+	DLNG 0   0  90 c2 Fraction:;
+	TRTS;
+
+void NTP Authentication Data;
+	BREM 0   1;
+	SNEQ 0   1;
+	SKIP 1;
+	TRTS;
+	GBIT 1   1;
+	SNEQ 0   1;
+	SKIP 1;
+	TRTS;
+	HLNG 0   1 90 c2 Key Identifier:; 
+	BREM 0   1;
+	SNEQ 0   1;
+	SKIP 1;
+	TRTS;
+	HEX# 0   1 90 c2 Authentication Data:; 
+	TRTS;
+
+void NTP Reference Clock ID String;
+	SEQU 0 4;  * if the secondary server flag is not set then return
+	SKIP 1;
+	TRTS;
+	GLNG 0 4;
+	CHR# 4 0  90 c2 Reference Clock ID:;
+	CEQU 41435453 4 0 24 NIST dialup modem service.;
+	CEQU 43485500 4 0 24 Ottawa (Canada) Radio 3330, 7335, 14670 kHz.;
+	CEQU 44434600 4 0 24 Mainflingen (Germany) Radio 77.5 kHz.;
+	CEQU 474f4553 4 0 24 Geostationary Orbit Environment Satellite.;
+	CEQU 47505300 4 0 24 Global Positioning Service.;
+	CEQU 4c4f434c 4 0 24 Uncalibrated local clock used as a primary reference for a subnet without external means of synchronization.;
+	CEQU 4c4f5243 4 0 24 LORAN-C radionavigation system.;
+	CEQU 4d534600 4 0 24 Rugby (UK) Radio 60 kHz.;
+	CEQU 4f4d4547 4 0 24 OMEGA radionavigation system.;
+	CEQU 50505300 4 0 24 Atomic clock or other pulse-per-second source individually calibrated to national standards.;
+	CEQU 50544200 4 0 24 PTB (Germany) modem service.;
+	CEQU 54444600 4 0 24 Allouis (France) Radio 164 kHz.;
+	CEQU 55534e4f 4 0 24 USNO modem service; 
+	CEQU 57575600 4 0 24 Ft. Collins (US) Radio 2.5, 5, 10, 15, 20 MHz; 
+	CEQU 57575642 4 0 24 Boulder (US) Radio 60 kHz.;
+	CEQU 57575648 4 0 24 Kaui Hawaii (US) Radio 2.5, 5, 10, 15 MHz.;
+	
+void NTP Reference Clock ID Address;
+	SEQU 1 4;  * if the secondary server flag is set then skip
+	SKIP 1;
+	TRTS;
+	IPLG 0 1  90 c2 Reference Clock ID:;
+	LABL 0 0  0  24 primary host address:;
+
+void NTP Control;
+	DBIT 1 1  90 c2 Response Bit:;
+	CEQU 0 1   0 24 Command;
+	CEQU 1 1   0 24 Response;
+	DBIT 1 1  90 c2 Error Bit:;
+	CEQU 0 1   0 24 Normal;
+	CEQU 1 1   0 24 Error;
+	DBIT 1 1  90 c2 Mpre Bit:;
+	CEQU 0 1   0 24 last fragment;
+	CEQU 1 1   0 24 all others;
+	DBIT 5 1  90 c2 Operation:;
+	CEQU 0 1   0 24 reserved;
+	CEQU 1 1   0 24 read status;
+	CEQU 2 1   0 24 read variables;
+	CEQU 3 1   0 24 write variables;
+	CEQU 4 1   0 24 read clock variables;
+	CEQU 5 1   0 24 write clock variables;
+	CEQU 6 1   0 24 set trap address/port;
+	CEQU 7 1   0 24 trap response; 
+	DWRD 0 1  90 c2 Sequence Number:;
+	DWRD 0 1  90 c2 Status:;
+	DBIT 2 1  90 c2 Leap Indicator:;
+	CEQU 0 1   0 24 no warning;
+	CEQU 0 1   0 24 last minute has 61 seconds;
+	CEQU 0 1   0 24 last minute has 59 seconds;
+	CEQU 0 1   0 24 alarm condition (clock not synchronized);
+	DBIT 6 1  90 c2 Close Source:;
+	CEQU 0 1   0 24 unknown;
+	CEQU 1 1   0 24 Calibrated atomic clock;
+	CEQU 2 1   0 24 VLF or LF radio;
+	CEQU 3 1   0 24 HF radio;
+	CEQU 4 1   0 24 UHF satellite;
+	CEQU 5 1   0 24 local net;
+	CEQU 6 1   0 24 UDP/NTP;
+	CEQU 7 1   0 24 UDP/TIME;
+	CEQU 8 1   0 24 eyeball-and-wristwatch;
+	CEQU 9 1   0 24 telephone modem;
+	DBIT 4 1  90 c2 System Event Counter:;
+	DBIT 4 1  90 c2 System Event Code:;
+	CEQU 0 1   0 24 unspecified;
+	CEQU 1 1   0 24 system restart;
+	CEQU 2 1   0 24 system or hardware fault;
+	CEQU 3 1   0 24 system new status word;
+	CEQU 4 1   0 24 system new synchronization source or stratum;
+	CEQU 5 1   0 24 system clock reset;
+	CEQU 6 1   0 24 system invalid time or date;
+	CEQU 7 1   0 24 system clock exception;
+	DWRD 0 1  90 c2 Assocation ID:;
+	DWRD 0 1  90 c2 Offset:;
+	DWRD 0 1  90 c2 Count:;
+	CHR# 0 1  90 c2 Data:;

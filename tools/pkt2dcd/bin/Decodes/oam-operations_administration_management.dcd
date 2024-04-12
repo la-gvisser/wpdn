@@ -1,0 +1,415 @@
+// -----------------------------------------------------------
+// OAM - Operations, Administration & Maintenance
+// -----------------------------------------------------------
+
+// notes:
+//	oam = Operations, Administration & Maintenance
+//	destination mac address must be: 01.80.c2.00.00.02 --> altho we're not checking for this
+//	protocol type must be: 0x8809 --> this is checked
+//	after the protocol type, there is a subtype field, must be: 3 --> this is checked by lacp
+
+void OAM;
+	LABL 0 0 0 b1 OAM - Operations, Administration & Maintenance\OAM:;
+	DBYT 0 1 90 c2 SubType:;
+	LABL 0 0 0 14 OAM;
+	BWRD 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 xxxxxxxx x....... Reserved;
+	 CBIT 6 1 0 d4 ........ .1...... Remote Stable: True;
+	 CLSE 0 0 0 d4 ........ .0...... Remote Stable: False;
+	 CBIT 5 1 0 d4 ........ ..1..... Remote Evaluating: True;
+	 CLSE 0 0 0 d4 ........ ..0..... Remote Evaluating: False;
+	 CBIT 4 1 0 d4 ........ ...1.... Local Stable: True;
+	 CLSE 0 0 0 d4 ........ ...0.... Local Stable: False;
+	 CBIT 3 1 0 d4 ........ ....1... Local Evaluating: True;
+	 CLSE 0 0 0 d4 ........ ....0... Local Evaluating: False;
+	 CBIT 2 1 0 d4 ........ .....1.. Critical Event: Critical Event has Occurred;
+	 CLSE 0 0 0 d4 ........ .....0.. Critical Event: Critical Event has Not Occurred;
+	 CBIT 1 1 0 d4 ........ ......1. Dying Gasp: Unrecoverable Local Failure Condition has Occurred;
+	 CLSE 0 0 0 d4 ........ ......0. Dying Gasp: Unrecoverable Local Failure Condition has Not Occurred;
+	 CBIT 0 1 0 d4 ........ .......1 Link Fault: Receive Path has Detected a Fault;
+	 CLSE 0 0 0 d4 ........ .......0 Link Fault: Receive Path has Not Detected a Fault;
+	 LABL 0 0 0 c8;
+	g[1] = pb[0];
+	TST# 0 1 00 00 OAM::Codes::Func;
+	
+str# OAM::Codes::Descrip;
+	0x00 | Information;
+	0x01 | Event Notification;
+	0x02 | Variable Request;
+	0x03 | Variable Response;
+	0x04 | Loopback Control;
+	0xfe | Organization Specific;
+	0xff | Reserved;
+
+str# OAM::Codes::Func;
+	0x00 | OAM::PDU::Information;
+	0x01 | OAM::PDU::Event_Notification;
+	0x02 | OAM::PDU::Var_Request;
+	0x03 | OAM::PDU::Var_Response;
+	0x04 | OAM::PDU::Loopback_Control;
+	0xfe | OAM::PDU::Organization_Specific;
+
+
+// -----------------------------------------------------------
+//	PDU's
+// -----------------------------------------------------------
+
+
+void OAM::PDU::Information;								// 0x00
+	LABL 0 0 0 b7 OAM Information PDU\Info:;
+	HEX# 1 0 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	l[1] = 0;											// si: just in case... if it loops
+	while (g[16] > 2)
+	{
+		if (l[1] > 10) {
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		g[10] = 0;
+		OAM::TLV::Information;
+		if (g[10] == 1)
+		{
+			LABL 0 0 0 b8;								// si: we've hit the end of tlv marker
+			TRTS;
+		}
+		l[1] += 1;
+	}
+	if (g[16] > 0) {
+		DUMP 0 10 90 c2 Data/Padding:\;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void OAM::PDU::Event_Notification;						// 0x01
+	LABL 0 0 0 b7 OAM Event Notification PDU\Event:;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	l[1] = 0;											// si: just in case... if it loops
+	while (g[16] > 2)
+	{
+		if (l[1] > 10) {
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		g[1] = pb[0];
+		if (g[1] == 0)
+		{
+			l[1] = 10;
+		}
+		OAM::TLV::Events;
+		l[1] += 1;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void OAM::PDU::Var_Request;								// 0x02
+	LABL 0 0 0 b7 OAM Variable Request PDU\Req:;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	while (g[16] >= 2)
+	{
+		LABL 0 0 0 b9 Variable Descriptor;
+		HBYT 0 1 90 c2 Branch:;
+		HBYT 0 1 90 c2 Leaf:;
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void OAM::PDU::Var_Response;							// 0x03
+	LABL 0 0 0 b7 OAM Variable Response PDU\Rsp:;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	while (g[16] >= 2)
+	{
+		LABL 0 0 0 b9 Variable Container;
+		HBYT 0 1 90 c2 Branch:;
+		HBYT 0 1 90 c2 Leaf:;
+		HBYT 0 1 90 c2 Width:;
+		if (g[1] > 0)
+		{
+			HEX# 0 1 90 c2 Value:;
+		}
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void OAM::PDU::Loopback_Control;						// 0x04
+	LABL 0 0 0 b7 OAM Loopback Control PDU\Loopback:;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	HBYT 0 1 90 c2 Loopback Command:;
+	 CEQU 0 1 0 14 Reserved;
+	 CEQU 1 1 0 14 Enable Remote Loopback;
+	 CEQU 2 1 0 14 Disable Remote Loopback;
+	 if (g[1] >= 3) {
+		if (g[1] <= 0xff) {
+			LABL 0 0 0 14 Reserved;
+		}
+	 }
+	DUMP 0 10 90 c2 Data/Padding:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void OAM::PDU::Organization_Specific;					// 0xfe
+	LABL 0 0 0 b7 OAM Loopback Control PDU\Loopback:;
+	HBYT 0 1 90 c2 Code:;
+	CST# 0 1 00 14 OAM::Codes::Descrip;
+	HEX# 80000001 0 90 c2 OUI:;
+	HEX# 80000001 0 90 0a -;
+	HEX# 80000001 0 90 0a -;
+	DUMP 0 10 90 c2 Data/Padding:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+// -----------------------------------------------------------
+//	TLV's
+// -----------------------------------------------------------
+
+
+void OAM::TLV::Information;
+	l[1] = pb[0];
+	if (l[1] == 1) {
+		LABL 0 0 00 b7 Local Information TLV\Local:;
+		TNXT -OAM::TLV::Information::Local_Remote;
+	}
+	if (l[1] == 2) {
+		LABL 0 0 00 b7 Remote Information TLV\Remote:;
+		TNXT -OAM::TLV::Information::Local_Remote;
+	}
+	if (l[1] == 0xfe) {
+		TNXT -OAM::TLV::Information::Organization;
+	}
+	// si: this is the default
+	LABL 0 0 00 b7 Information TLV;
+	HBYT 0 1 90 c2 Information Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Local_Remote_Information::Type_Str;
+	if (g[1] == 0)
+	{
+		g[10] = 1;								// si: we've hit the end of TLV marker
+	}
+	DBYT 0 1 90 c2 Information Len:\;
+	g[1] -= 2;
+	if (g[1] > 0) {
+		if (g[16] > 0) {
+			DUMP 0 1 90 c2 Information TLV Data:\;
+		}
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void OAM::TLV::Information::Local_Remote;
+	HBYT 0 1 90 c2 Information Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Local_Remote_Information::Type_Str;
+	DBYT 0 1 90 c2 Information Len:\;
+	DBYT 0 1 90 c2 OAM Version:\;
+	DWRD 0 1 90 c2 Revision:\;
+	BBYT 1 1 90 c9 State:\St=;
+	DECR 1;
+	 DBIT 4 0 5 d4 xxxx .... Reserved;		// 7-4
+	 DBIT 1 1 5 5;							// 3
+	  CEQU 1 1 0 d4 .... 1... Multiplexer Action: Discarding non-OAMPDUs;
+	  CEQU 0 1 0 d4 .... 0... Multiplexer Action: Forwaring non-OAMPDUs to the lower sublayer;
+	 DBIT 2 1 5 5;							// 2-1
+	  CEQU 0 1 0 d4 .... .00. Parser Action: forwarding non-OAMPDUs to higher sublayer;
+	  CEQU 1 1 0 d4 .... .01. Parser Action: looping back non-OAMPDUs to lower sublayer;
+	  CEQU 2 1 0 d4 .... .10. Parser Action: discarding non-OAMPDUs;
+	  CEQU 3 1 0 d4 .... .11. Reserved;
+	 DBIT 1 1 5 d4 .... ...x Reserved;		// 0
+	 LABL 0 0 00 c8;
+	BBYT 0 1 90 c9 OAM Configuration:\;
+	 CBIT 7 1 0 d4 1... .... Organization Specific Information TLV: Set;
+	 CLSE 0 0 0 d4 0... .... Organization Specific Information TLV: Not Set;
+	 CBIT 6 1 0 d4 .1.. .... Organization Specific Events: Set;
+	 CLSE 0 0 0 d4 .0.. .... Organization Specific Events: Not Set;
+	 CBIT 5 1 0 d4 ..1. .... Organization Specific OAMPDU: Set;
+	 CLSE 0 0 0 d4 ..0. .... Organization Specific OAMPDU: Not Set;
+	 CBIT 4 1 0 d4 ...1 .... Variable Retrieval;
+	 CLSE 0 0 0 d4 ...0 .... No Variable Retrieval;
+	 CBIT 3 1 0 d4 .... 1... Link Events;
+	 CLSE 0 0 0 d4 .... 0... No Link Events;
+	 CBIT 2 1 0 d4 .... .1.. Loopback Support;
+	 CLSE 0 0 0 d4 .... .0.. Loopback Not Supported;
+	 CBIT 1 1 0 d4 .... ..1. Unidirectional Support;
+	 CLSE 0 0 0 d4 .... ..0. Unidirectional Not Supported;
+	 CBIT 0 1 0 d4 .... ...1 OAM Mode: Active;
+	 CLSE 0 0 0 d4 .... ...0 OAM Mode: Passive;
+	 LABL 0 0 0 c8;
+	BWRD 0 1 90 c9 OAM PDU Configuration:\;
+	 DECR 2;
+	 DBIT 5 0 5 d4 xxxxx... ........ Reserved;
+	 DBIT b 0 4 d4 .....xxx xxxxxxxx Max OAM PDU Size: ;
+	 LABL 0 0 0 c8;
+	HWRD 0 1 90 c2 Version Identifier:\Vers=;
+	HWRD 0 1 90 c2 Device Identifier:\Dev=;
+	HEX# 80000001 0 90 c2 OUI:\OUI=;
+	HEX# 80000001 0 90 0a -;
+	HEX# 80000001 0 90 0a -;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void OAM::TLV::Information::Organization;
+	LABL 0 0 00 b7 Organization Specific Information TLV\Org:;
+	HBYT 0 1 90 c2 Information Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Local_Remote_Information::Type_Str;
+	DBYT 0 1 90 c2 Information Len:\;
+	HEX# 80000001 0 90 c2 OUI:\OUI=;
+	HEX# 80000001 0 90 0a -;
+	HEX# 80000001 0 90 0a -;
+	g[1] -= 5;
+	if (g[1] > 0) {
+		if (g[16] > 0) {
+			DUMP 0 1 90 c2 Information TLV Data:\;
+		}	
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# OAM::TLV::Local_Remote_Information::Type_Str;
+	0x00 | Reserved - End of TLV Marker;
+	0x01 | Local Information;
+	0x02 | Remote Information;
+	0xfe | Organization Specific;
+
+// -----------------------------------------------------------
+
+void OAM::TLV::Events;
+	g[1] = pb[0];
+	TST# 0 1 0 0 OAM::TLV::Events_Func;
+	
+	// the default case ... 
+	LABL 0 0 00 b7 OAM Event TLV\Event_TLV:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	g[2] -= 2;
+	if (g[2] > 0) {
+		if (g[16] > 0) {
+			DUMP 0 2 90 c2 Event TLV Data:;
+		}	
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# OAM::TLV::Events_List;
+	0x00 | Reserved - End of TLV Marker;
+	0x01 | Errored Symbol Period Event;
+	0x02 | Errored Frame Event;
+	0x03 | Errored Frame Period Event;
+	0x04 | Errored Frame Seconds Summary Event;
+	0xfe | Organization Specific Event TLV;
+
+str# OAM::TLV::Events_Func;
+	0x00 | OAM::TLV::Events::00;
+	0x01 | OAM::TLV::Events::01;
+	0x02 | OAM::TLV::Events::02;
+	0x03 | OAM::TLV::Events::03;
+	0x04 | OAM::TLV::Events::04;
+	0xfe | OAM::TLV::Events::FE;
+
+void OAM::TLV::Events::00;
+	LABL 0 0 00 b7 OAM Event TLV - End Marker\End:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	LABL 0 0 00 b8;
+	TRTS;	
+
+void OAM::TLV::Events::01;
+	LABL 0 0 00 b7 OAM Event TLV - Errored Symbol Period Event\Symbol Err:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	DWRD 0 1 90 c2 Timestamp:\TS=;
+	DLNG 0 1 90 c2 Window (lower):\;
+	LABL 0 0 00 14 Symbols in 1 second;
+	DLNG 0 1 90 c2 Window (upper):\;
+	LABL 0 0 00 14 Symbols in 60 seconds;
+	DLNG 0 1 90 c2 Threshold (lower):\;
+	DLNG 0 1 90 c2 Threshold (upper):\;
+	D64B 0 1 90 c2 Errors:\Errs=;
+	LABL 0 0 00 14 # of symbol errors in Window;
+	D64B 0 1 90 c2 Total Errors:\TErrs=;
+	LABL 0 0 00 14 Total # symbol errors causing events to be sent;
+	DLNG 0 1 90 c2 Total Events:\TEvents=;
+	LABL 0 0 00 b8; 
+	TRTS;
+
+void OAM::TLV::Events::02;
+	LABL 0 0 00 b7 OAM Event TLV - Errored Frame Event\Frame Err:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	DWRD 0 1 90 c2 Timestamp:\Time=;
+	DBYT 0 1 90 c2 Window (lower):\;
+	LABL 0 0 00 14 1 second;
+	DBYT 0 1 90 c2 Window (upper):\;
+	LABL 0 0 00 14 60 seconds;
+	DWRD 0 1 90 c2 Threshold (lower):\;
+	DWRD 0 1 90 c2 Threshold (upper):\;
+	DLNG 0 1 90 c2 Errors:\Errs=;
+	LABL 0 0 00 14 # of frame errors in Window;
+	D64B 0 1 90 c2 Total Errors:\TErr=;
+	LABL 0 0 00 14 Total # symbol errors causing events to be sent;
+	DLNG 0 1 90 c2 Total Events:\TEvents=;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void OAM::TLV::Events::03;
+	LABL 0 0 00 b7 OAM Event TLV - Errored Frame Period Event\Frame Period Err:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	DWRD 0 1 90 c2 Timestamp:\TS=;
+	DWRD 0 1 90 c2 Window (lower):\;
+	LABL 0 0 00 14 # of 64B frames in 1 second;
+	DWRD 0 1 90 c2 Window (upper):\;
+	LABL 0 0 00 14 # of 64B frames in 60 seconds;
+	DWRD 0 1 90 c2 Threshold (lower):\;
+	DWRD 0 1 90 c2 Threshold (upper):\;
+	DLNG 0 1 90 c2 Errors:\Errs=;
+	LABL 0 0 00 14 # of frame errors in Window;
+	D64B 0 1 90 c2 Total Errors:\TErrs=;
+	LABL 0 0 00 14 Total # symbol errors causing events to be sent;
+	DLNG 0 1 90 c2 Total Events:\TEvents=;
+	LABL 0 0 00 b8; 
+	TRTS;
+
+void OAM::TLV::Events::04;
+	LABL 0 0 00 b7 OAM Event TLV - Errored Frame Seconds Summary Event\Frame Secs Err:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	DWRD 0 1 90 c2 Timestamp:\TS=;
+	DBYT 0 1 90 c2 Window (lower):\;
+	LABL 0 0 00 14 10 seconds;
+	DBYT 0 1 90 c2 Window (upper):\;
+	LABL 0 0 00 14 900 seconds;
+	DBYT 0 1 90 c2 Threshold (lower):\;
+	DBYT 0 1 90 c2 Threshold (upper):\;
+	DWRD 0 1 90 c2 Errors:\Errs=;
+	LABL 0 0 00 14 # of frame errors in Window;
+	D64B 0 1 90 c2 Total Errors:\TErrs=;
+	LABL 0 0 00 14 Total # symbol errors causing events to be sent;
+	DLNG 0 1 90 c2 Total Events:\TEvents=;
+	LABL 0 0 00 b8; 
+	TRTS;
+	
+void OAM::TLV::Events::FE;
+	LABL 0 0 00 b7 OAM Event TLV - Organization Specific Event\Org Event:;
+	HBYT 0 1 90 c2 Event Type:\Type=;
+	CST# 0 1 00 14 OAM::TLV::Events_List;
+	DBYT 0 2 90 c2 Event Length:\;
+	HEX# 80000001 0 90 c2 OUI:\OUI=;
+	HEX# 80000001 0 90 0a -;
+	HEX# 80000001 0 90 0a -;
+	g[2] -= 5;
+	DUMP 0 2 90 c2 Org Specific Data:;
+	LABL 0 0 00 b8; 
+	TRTS;
+
+// -----------------------------------------------------------
+// -----------------------------------------------------------

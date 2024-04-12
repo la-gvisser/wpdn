@@ -1,0 +1,858 @@
+// Mobile IP v6
+// 
+// last update from http://www.iana.org/assignments/mobility-parameters/mobility-parameters.xhtml
+// Last Updated from IANA 2015-09-23, 
+// written by DW - 2015-10-19
+str# IP::Common_Str;
+	0x87 | MobileIPv6;
+	
+str# IP Protocols;
+	0x87	|	Mobile IPv6 - Mobility Header;
+	
+void MobileIPv6()
+{
+	LABL( 0, 0, 0, 0xb1, "Mobile IPv6 - Mobility Header");
+		DBYT( 0, l[1], 0x90, 0xc2, "Payload Proto:" );
+		 CEQU( 59, l[1], 0, 0x14, "IPPROTO_NONE - RFC6275" );
+		if (l[1] == 59)
+		{
+			DBYT( 0, l[2], 0x90, 0xc2, "Header Len:" );
+			DBYT( 0, l[3], 0x90, 0xc2, "MH Type:" );
+				DGLB( 0, l[3], 0x90, 0xc2, "MH Type:" );
+			CST#( 0, l[3], 0, 0x14, MobileIPv6::MHType );
+				CLSE( 0, l[3], 0, 0, "Unknown" );
+			DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+				CEQU( 0, l[4], 0, 0x14, "correct" );
+				CLSE( 0, l[4], 0, 0x14, "should be 0" );
+			HWRD( 0, l[5], 0x90, 0xc2, "Checksum:" );
+			CST#( 0, l[3], 0, 0xb7, MobileIPv6::MHType );
+			TSB#( 0, l[3], 0, 0, MobileIPv6::MHType::Ldr );
+			
+			l[1] = 59;
+		}
+		if (l[1] != 59)
+		{
+			DBYT( 0, l[2], 0x90, 0xc2, "Header Len:" );
+			DBYT( 0, l[3], 0x90, 0xc2, "MH Type:" );
+				DGLB( 0, l[3], 0x90, 0xc2, "MH Type:" );
+			CST#( 0, l[3], 0, 0x14, MobileIPv6::MHType );
+				CLSE( 0, l[3], 0, 0, "Unknown" );
+			DBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+				CEQU( 0, l[4], 0, 0x14, "correct" );
+				CLSE( 0, l[4], 0, 0x14, "should be 0" );
+			HWRD( 0, l[5], 0x90, 0xc2, "Checksum:" );
+			CST#( 0, l[3], 0, 0xb7, MobileIPv6::MHType );
+			TSB#( 0, l[3], 0, 0, MobileIPv6::MHType::Ldr );
+			
+			l[1] = 59;
+		}
+		if (l[1] != 59)
+		{
+			DUMP( 0, g[16], 0x90, 0xc2, "Unsupported Mobility Extension:" );
+			
+		}
+	LABL( 0, 0, 0, 0xb8);
+}
+
+str# MobileIPv6::MHType;
+0 |	Binding Refresh Request Message (BRR);
+1 | Home Test Init (HoTI);
+2 |	Care-of Test Init (CoTI);
+3 | Home Test (HoT);
+4 |	Care-of Test (CoT);
+5 | Binding Update (BU);
+6 | Binding Acknowledgement (BA);
+7 | Binding Error (BE);
+8 | Fast Binding Update (FBU);
+9 | Fast Binding Acknowledgment (FBACK);			/* [RFC5568] */
+10 | Fast Neighbor Advertisement (FNA);				/* [RFC5568] */
+11 | Experimental Mobility Header (EMH); 			/* [RFC5096] */
+12 | Home Agent Switch (HAS);            			/* [RFC5142] */
+13 | Heartbeat  (HB);                         		/* [RFC5847] */
+14 | Handover Initiate (HI);             			/* [RFC5568] */
+15 | Handover Acknowledge (HAck);            		/* [RFC5568] */
+16 | Binding Revocation  (BR);						/* [RFC5846] */
+17 | Localized Routing Initiation (MIP6_LRI);		/* [RFC6705] */
+18 | Localized Routing Acknowledgment (LRA);		/* [RFC6705] */
+19 | Update Notification (UN);						/* [RFC7077] */
+20 | Update Notification Acknowledgement(UNAck);	/* [RFC7077] */
+21 | Flow Binding Message (FBM);					/* [RFC7109] */
+22 | Subscription Query (SQ);						/* [RFC7161] */
+23 | Subscription Response (SR);					/* [RFC7161] */
+
+str# MobileIPv6::MHType::Ldr;
+0 |	MobileIPv6::MHType::BRR;
+1 |	MobileIPv6::MHType::HoTI;
+2 |	MobileIPv6::MHType::CoTI;
+3 |	MobileIPv6::MHType::HoT;
+4 |	MobileIPv6::MHType::CoT;
+5 |	MobileIPv6::MHType::BU;
+6 |	MobileIPv6::MHType::BA;
+7 | MobileIPv6::MHType::BE;
+8 | MobileIPv6::MHType::FBU;
+9 | MobileIPv6::MHType::FBACK;						/* [RFC5568] */
+10 | MobileIPv6::MHType::FNA;						/* [RFC5568] */
+11 | MobileIPv6::MHType::EMH;						/* [RFC5096] */
+12 | MobileIPv6::MHType::HAS;            			/* [RFC5142] */
+13 | MobileIPv6::MHType::HB;						/* [RFC5847] */
+14 | MobileIPv6::MHType::HI;             			/* [RFC5568] */
+15 | MobileIPv6::MHType::HAck;						/* [RFC5568] */
+16 | MobileIPv6::MHType::BR;						/* [RFC5846] */
+17 | MobileIPv6::MHType::MIP6_LRI;					/* [RFC6705] */
+18 | MobileIPv6::MHType::LRA;						/* [RFC6705] */
+19 | MobileIPv6::MHType::UN;						/* [RFC7077] */
+20 | MobileIPv6::MHType::UNAck;						/* [RFC7077] */
+21 | MobileIPv6::MHType::FBM;						/* [RFC7109] */
+22 | MobileIPv6::MHType::SQ;						/* [RFC7161] */
+23 | MobileIPv6::MHType::SR;						/* [RFC7161] */
+
+
+void MobileIPv6::MHType::BRR()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::HoTI()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	D64B( 0, l[2], 0x90, 0xc2, "Home Init Cookie:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::CoTI()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	D64B( 0, l[2], 0x90, 0xc2, "Care-of Init Cookie:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::HoT()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	D64B( 0, l[2], 0x90, 0xc2, "Home Init Cookie:" );
+	D64B( 0, l[3], 0x90, 0xc2, "Home Keygen Token:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::CoT()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	D64B( 0, l[2], 0x90, 0xc2, "Care-of Init Cookie:" );
+	D64B( 0, l[3], 0x90, 0xc2, "Care-of Keygen Token:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::BU()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence #:" );
+	HWRD( 0, l[2], 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[3], 0x90, 0xc2, "Lifetime:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::BA()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::MHType::BA::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	BBIT( 1, l[2], 0x90, 0xc2, "K:" );
+	BBIT( 7, l[3], 0x90, 0xc2, "Reserved:" );
+	HWRD( 0, l[4], 0x90, 0xc2, "Sequence #:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Lifetime:" );
+	MobileIPv6::Options;
+}
+str# MobileIPv6::MHType::BA::Status;
+0	|	Binding Update accepted;
+1	|	Accepted but prefix discovery necessary;
+2	|	GRE_KEY_OPTION_NOT_REQUIRED;						//[RFC5845]
+3	|	GRE_TUNNELING_BUT_TLV_HEADER_NOT_SUPPORTED;			//[RFC5845]
+4	|	MCOA NOTCOMPLETE;									//[RFC5648]
+5	|	MCOA RETURNHOME WO/NDP;								//[RFC5648]
+6	|	PBU_ACCEPTED_TB_IGNORED_SETTINGSMISMATCH;			//[RFC6058]
+128	|	Reason unspecified;
+129	|	Administratively prohibited;
+130	|	Insufficient resources;
+131	|	Home registration not supported;
+132	|	Not home subnet;
+133	|	Not home agent for this mobile node;
+134	|	Duplicate Address Detection failed;
+135	|	Sequence number out of window;
+136	|	Expired home nonce index;
+137	|	Expired care-of nonce index;
+138	|	Expired nonces;
+139	|	Registration type change disallowed;
+140	|	Mobile Router Operation not permitted;				//[RFC3963]
+141	|	Invalid Prefix;										//[RFC3963]
+142	|	Not Authorized for Prefix;							//[RFC3963]
+143	|	Forwarding Setup failed;							//[RFC3963]
+144	|	MIPV6-ID-MISMATCH;										//[RFC4285]
+145	|	MIPV6-MESG-ID-REQD;										//[RFC4285]
+146	|	MIPV6-AUTH-FAIL;										//[RFC4285]
+147	|	Permanent home keygen token unavailable;			//[RFC4866]
+148	|	CGA and signature verification failed;			//[RFC4866]
+149	|	Permanent home keygen token exists;				//[RFC4866]
+150	|	Non-null home nonce index expected;				//[RFC4866]
+151	|	SERVICE_AUTHORIZATION_FAILED;					//[RFC5149]
+152	|	PROXY_REG_NOT_ENABLED;							//[RFC5213]
+153	|	NOT_LMA_FOR_THIS_MOBILE_NODE;					//[RFC5213]
+154	|	MAG_NOT_AUTHORIZED_FOR_PROXY_REG;				//[RFC5213]
+155	|	NOT_AUTHORIZED_FOR_HOME_NETWORK_PREFIX;			//[RFC5213]
+156	|	TIMESTAMP_MISMATCH;								//[RFC5213]
+157	|	TIMESTAMP_LOWER_THAN_PREV_ACCEPTED;			//[RFC5213]
+158	|	MISSING_HOME_NETWORK_PREFIX_OPTION;			//[RFC5213]
+159	|	BCE_PBU_PREFIX_SET_DO_NOT_MATCH;			//[RFC5213]
+160	|	MISSING_MN_IDENTIFIER_OPTION;				//[RFC5213]
+161	|	MISSING_HANDOFF_INDICATOR_OPTION;			//[RFC5213]
+162	|	MISSING_ACCESS_TECH_TYPE_OPTION;			//[RFC5213]
+163	|	GRE_KEY_OPTION_REQUIRED;					//[RFC5845]
+164	|	MCOA MALFORMED;								//[RFC5648]
+165	|	MCOA NON-MCOA BINDING EXISTS;					//[RFC5648]
+166	|	MCOA PROHIBITED;								//[RFC5648]
+167	|	MCOA UNKNOWN COA;								//[RFC5648]
+168	|	MCOA BULK REGISTRATION PROHIBITED;			//[RFC5648]
+169	|	MCOA SIMULTANEOUS HOME AND FOREIGN PROHIBITED;		//[RFC5648]
+170	|	NOT_AUTHORIZED_FOR_IPV4_MOBILITY_SERVICE;			//[RFC5844]
+171	|	NOT_AUTHORIZED_FOR_IPV4_HOME_ADDRESS;			//[RFC5844]
+172	|	NOT_AUTHORIZED_FOR_IPV6_MOBILITY_SERVICE;			//[RFC5844]
+173	|	MULTIPLE_IPV4_HOME_ADDRESS_ASSIGNMENT_NOT_SUPPORTED;			//[RFC5844]
+174	|	Invalid Care-of Address;
+175	|	INVALID_MOBILE_NODE_GROUP_IDENTIFIER;			//[RFC6602]
+176	|	REINIT_SA_WITH_HAC;								//[RFC6618]
+177	|	NOT_AUTHORIZED_FOR_DELEGATED_MNP;			//[RFC7148]
+178	|	REQUESTED_DMNP_IN_USE;						//[RFC7148]
+179	|	CANNOT_MEET_QOS_SERVICE_REQUEST;			//[RFC7222]
+
+void MobileIPv6::MHType::BE()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::MHType::BE::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	IPv6( 0, 0, 0x90, 0xc2, "Homeadress:" );
+	MobileIPv6::Options;
+}
+str# MobileIPv6::MHType::BE::Status;
+1	|	Unknown binding for Home Address destination option;
+2	|	Unrecognized MH Type value;
+
+//8 | MobileIPv6::MHType::FBU;
+void MobileIPv6::MHType::FBACK()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::MHType::FBACK::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	BBIT( 1, l[2], 0x90, 0xc2, "K:" );
+	BBIT( 7, l[3], 0x90, 0xc2, "Reserved:" );
+	HWRD( 0, l[4], 0x90, 0xc2, "Sequence #:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Lifetime:" );
+	
+	MobileIPv6::Options;
+}
+str# MobileIPv6::MHType::FBACK::Status;
+0	|	Fast Binding Update accepted;
+1	|	Fast Binding Update accepted but NCoA is invalid.  Use NCoA supplied in "alternate" CoA.;
+128	|	Reason unspecified;
+129	|	Administratively prohibited;
+130	|	Insufficient resources;
+131	|	Incorrect interface identifier length;
+void MobileIPv6::MHType::FNA()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	MobileIPv6::Options;
+}
+//11 | MobileIPv6::MHType::EMH; 			/* [RFC5096] */
+//12 | MobileIPv6::MHType::HAS;            			/* [RFC5142] */
+//13 | MobileIPv6::MHType::HB;                         		/* [RFC5847] */
+void MobileIPv6::MHType::HI()
+{
+	/* [RFC5568] */
+	HWRD( 0, l[1], 0x90, 0xc2, "Sequence #:" );
+	BBIT( 1, l[2], 0x90, 0xc2, "S:" );
+		CEQU( 0, l[2], 0, 0x14, "Assigned address configuration flag not set" );
+		CEQU( 1, l[2], 0, 0x14, "Assigned address configuration flag set" );
+	BBIT( 1, l[3], 0x90, 0xc2, "U:" );
+		CEQU( 0, l[3], 0, 0x14, "Buffer flag not set" );
+		CEQU( 1, l[3], 0, 0x14, "Buffer flag set" );
+	BBIT( 6, l[4], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[5], 0x90, 0xc2, "Code:" );
+	MobileIPv6::Options;
+}
+void MobileIPv6::MHType::HAck()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Sequence #:" );
+	BBIT( 8, l[2], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[3], 0x90, 0xc2, "Code:" );
+	MobileIPv6::Options;
+}
+//16 | MobileIPv6::MHType::BR;						/* [RFC5846] */
+//17 | MobileIPv6::MHType::MIP6_LRI;				/* [RFC6705] */
+//18 | MobileIPv6::MHType::LRA;		 				/* [RFC6705] */
+//19 | MobileIPv6::MHType::UN;						/* [RFC7077] */
+//20 | MobileIPv6::MHType::UNAck;					/* [RFC7077] */
+//21 | MobileIPv6::MHType::FBM;						/* [RFC7109] */
+//22 | MobileIPv6::MHType::SQ;						/* [RFC7161] */
+//23 | MobileIPv6::MHType::SR;						/* [RFC7161] */
+//----------------------------------------------------------------------------------------------------
+void MobileIPv6::Options()
+{
+	while (g[16] > 0)
+	{
+		GBYT( 0, l[1]);
+		CST#( 0, l[1], 0, 0xb7, MobileIPv6::Options::Type );
+		CLSE( 0, 0, 0, 0xb7, "unknown" );
+			DBYT( 0, g[30], 0x90, 0xc2, "Type:" );
+				CST#( 0, g[30], 0, 0x14, MobileIPv6::Options::Type );
+				CLSE( 0, 0, 0, 0x14, "unknown" );
+			DBYT( 0, g[26], 0x90, 0xc2, "Length:" );
+			BREM( 0, g[28]);
+			DGLB( 0, g[30], 0x90, 0xc2, "g30:" );
+			if (g[26] != 0)
+			{
+				//g[26] -= 2;
+				TSB#( 0, g[30], 0, 0x14, MobileIPv6::Options::Ldr );
+			}
+			BREM( 0, g[29]);
+			if (g[29] == g[28])
+			{
+				if (g[26] != 0)
+				{
+					DUMP( 0, g[26], 0x90, 0xc2, "Data DUMP:" );
+				}
+			}
+		LABL( 0, 0, 0, 0xb8);
+	}
+}
+
+str# MobileIPv6::Options::Type;
+0	|	Pad1;
+1	|	PadN;
+2	|	Binding Refresh Advice;
+3	|	Alternate Care-of Address;
+4	|	Nonce Indices;
+5	|	Binding Authorization Data;
+6	|	Mobile Network Prefix Option;
+7	|	 Mobility Header Link-Layer Address option;
+8	|	 MN-ID-OPTION-TYPE;
+9	|	 AUTH-OPTION-TYPE;
+10	|	 MESG-ID-OPTION-TYPE;						// [RFC4285]
+11	|	 CGA Parameters Request;					//  [RFC4866];
+12	|	 CGA Parameters;							//  [RFC4866];
+13	|	 Signature;									//  [RFC4866];
+14	|	 Permanent Home Keygen Token;				//  [RFC4866];
+15	|	 Care-of Test Init;							//  [RFC4866];
+16	|	 Care-of Test;								//  [RFC4866];
+17	|	 DNS-UPDATE-TYPE;							//  [RFC5026];
+18	|	 Experimental Mobility Option;				//  [RFC5096];
+19	|	 Vendor Specific Mobility Option;			//  [RFC5094];
+20	|	 Service Selection Mobility Option;			//  [RFC5149];
+21	|	 Binding Authorization Data for FMIPv6 (BADF);			//  [RFC5568];
+22	|	 Home Network Prefix Option;				//  [RFC5213];
+23	|	 Handoff Indicator Option;					// [RFC5213];
+24	|	 Access Technology Type Option;				//  [RFC5213];
+25	|	 Mobile Node Link-layer Identifier Option;	//  [RFC5213];
+26	|	 Link-local Address Option;					//  [RFC5213;
+27	|	 Timestamp;
+28	|	 Restart Counter;							//  [RFC5847];
+29	|	 IPv4 Home Address;							// [RFC5555];
+30	|	 IPv4 Address Acknowledgement;				// [RFC5555];
+31	|	 NAT Detection;								// [RFC5555];
+32	|	 IPv4 Care-of Address;						// [RFC5555];
+33	|	 GRE Key Option;								// [RFC5845];
+34	|	 Mobility Header IPv6 Address/Prefix;			// [RFC5568];
+35	|	 Binding Identifier;							// [RFC5648];
+36	|	 IPv4 Home Address Request;						// [RFC5844];
+37	|	 IPv4 Home Address Reply;						// [RFC5844];
+38	|	 IPv4 Default-Router Address;					// [RFC5844];
+39	|	 IPv4 DHCP Support Mode;						// [RFC5844];
+40	|	 Context Request Option;						// [RFC5949];
+41	|	 Local Mobility Anchor Address Option;			// [RFC5949];
+42	|	 Mobile Node Link-local Address Interface Identifier Option;			// [RFC5949];
+43	|	 Transient Binding;								// [RFC-ietf-mipshop-transient-bce-pmipv6-07];
+44	|	 Flow Summary Mobility Option;					// [RFC-ietf-mext-flow-binding-11];
+45	|	 Flow Identification Mobility Option;			// [RFC-ietf-mext-flow-binding-11]];
+46	|	 Redirect-Capability Mobility Option;			// [RFC6463];
+47	|	 Redirect Mobility Option;						// [RFC6463];
+48	|	 Load Information Mobility Option;			// [RFC6463];
+49	|	 Alternate IPv4 Care-of Address;			// [RFC6463];
+50	|	 Mobile Node Group Identifier;				// [RFC6602];
+51	|	 MAG IPv6 Address;							// [RFC6705];
+52	|	 Access Network Identifier;					// [RFC6757];
+53	|	 AIPv4 Traffic Offload Selector;					//[RFC6909]
+54	|	 ADynamic IP Multicast Selector;					//[RFC7028]
+55	|	 ADelegated Mobile Network Prefix;					//[RFC7148]
+56	|	 AActive Multicast Subscription IPv4;				//[RFC7161]
+57	|	 AActive Multicast Subscription IPv6;				//[RFC7161]
+58	|	 AQuality-of-Service;							//[RFC7222]
+59	|	 ALMA User-Plane Address;						//[RFC7389]
+60	|	 AMulticast Mobility Option;					//[RFC7411]
+61	|	 AMulticast Acknowledgement Option;					//[RFC7411]
+str# MobileIPv6::Options::Ldr;
+//0	|	MobileIPv6::Options::Pad1;
+1	|	MobileIPv6::Options::PadN;
+2	|	MobileIPv6::Options::Binding Refresh Advice;
+3	|	MobileIPv6::Options::Alternate Care-of Address;
+//4	|	MobileIPv6::Options::Nonce Indices;
+//5	|	MobileIPv6::Options::Binding Authorization Data;
+//6	|	MobileIPv6::Options::Mobile Network Prefix Option;
+7	|	 MobileIPv6::Options::Mobility Header Link-Layer Address option;
+8	|	 MobileIPv6::Options::MN-ID-OPTION-TYPE;
+9	|	 MobileIPv6::Options::AUTH-OPTION-TYPE;
+10	|	 MobileIPv6::Options::MESG-ID-OPTION-TYPE;						// [RFC4285]
+//11	|	 MobileIPv6::Options::CGA Parameters Request;					//  [RFC4866];
+//12	|	 MobileIPv6::Options::CGA Parameters;							//  [RFC4866];
+//13	|	 MobileIPv6::Options::Signature;									//  [RFC4866];
+//14	|	 MobileIPv6::Options::Permanent Home Keygen Token;				//  [RFC4866];
+//15	|	 MobileIPv6::Options::Care-of Test Init;							//  [RFC4866];
+//16	|	 MobileIPv6::Options::Care-of Test;								//  [RFC4866];
+//17	|	 MobileIPv6::Options::DNS-UPDATE-TYPE;							//  [RFC5026];
+//18	|	 MobileIPv6::Options::Experimental Mobility Option;				//  [RFC5096];
+//19	|	 MobileIPv6::Options::Vendor Specific Mobility Option;			//  [RFC5094];
+//20	|	 MobileIPv6::Options::Service Selection Mobility Option;			//  [RFC5149];
+//21	|	 MobileIPv6::Options::Binding Authorization Data for FMIPv6;			//  [RFC5568];
+//22	|	 MobileIPv6::Options::Home Network Prefix Option;				//  [RFC5213];
+//23	|	 MobileIPv6::Options::Handoff Indicator Option;					// [RFC5213];
+//24	|	 MobileIPv6::Options::Access Technology Type Option;				//  [RFC5213];
+//25	|	 MobileIPv6::Options::Mobile Node Link-layer Identifier Option;	//  [RFC5213];
+//26	|	 MobileIPv6::Options::Link-local Address Option;					//  [RFC5213;
+//27	|	 MobileIPv6::Options::Timestamp;
+//28	|	 MobileIPv6::Options::Restart Counter;							//  [RFC5847];
+//29	|	 MobileIPv6::Options::IPv4 Home Address;							// [RFC5555];
+//30	|	 MobileIPv6::Options::IPv4 Address Acknowledgement;				// [RFC5555];
+//31	|	 MobileIPv6::Options::NAT Detection;								// [RFC5555];
+//32	|	 MobileIPv6::Options::IPv4 Care-of Address;						// [RFC5555];
+//33	|	 MobileIPv6::Options::GRE Key Option;								// [RFC5845];
+//34	|	 MobileIPv6::Options::Mobility Header IPv6 AddressPrefix;			// [RFC5568];
+//35	|	 MobileIPv6::Options::Binding Identifier;							// [RFC5648];
+//36	|	 MobileIPv6::Options::IPv4 Home Address Request;						// [RFC5844];
+//37	|	 MobileIPv6::Options::IPv4 Home Address Reply;						// [RFC5844];
+//38	|	 MobileIPv6::Options::IPv4 Default-Router Address;					// [RFC5844];
+//39	|	 MobileIPv6::Options::IPv4 DHCP Support Mode;						// [RFC5844];
+//40	|	 MobileIPv6::Options::Context Request Option;						// [RFC5949];
+//41	|	 MobileIPv6::Options::Local Mobility Anchor Address Option;			// [RFC5949];
+//42	|	 MobileIPv6::Options::Mobile Node Link-local Address Interface Identifier Option;			// [RFC5949];
+//43	|	 MobileIPv6::Options::Transient Binding;								// [RFC-ietf-mipshop-transient-bce-pmipv6-07];
+//44	|	 MobileIPv6::Options::Flow Summary Mobility Option;					// [RFC-ietf-mext-flow-binding-11];
+//45	|	 MobileIPv6::Options::Flow Identification Mobility Option;			// [RFC-ietf-mext-flow-binding-11]];
+//46	|	 MobileIPv6::Options::Redirect-Capability Mobility Option;			// [RFC6463];
+//47	|	 MobileIPv6::Options::Redirect Mobility Option;						// [RFC6463];
+//48	|	 MobileIPv6::Options::Load Information Mobility Option;			// [RFC6463];
+//49	|	 MobileIPv6::Options::Alternate IPv4 Care-of Address;			// [RFC6463];
+//50	|	 MobileIPv6::Options::Mobile Node Group Identifier;				// [RFC6602];
+//51	|	 MobileIPv6::Options::MAG IPv6 Address;							// [RFC6705];
+//52	|	 MobileIPv6::Options::Access Network Identifier;					// [RFC6757];
+//53	|	 MobileIPv6::Options::AIPv4 Traffic Offload Selector;					//[RFC6909]
+//54	|	 MobileIPv6::Options::ADynamic IP Multicast Selector;					//[RFC7028]
+//55	|	 MobileIPv6::Options::ADelegated Mobile Network Prefix;					//[RFC7148]
+//56	|	 MobileIPv6::Options::AActive Multicast Subscription IPv4;				//[RFC7161]
+//57	|	 MobileIPv6::Options::AActive Multicast Subscription IPv6;				//[RFC7161]
+//58	|	 MobileIPv6::Options::AQuality-of-Service;							//[RFC7222]
+//59	|	 MobileIPv6::Options::ALMA User-Plane Address;						//[RFC7389]
+//60	|	 MobileIPv6::Options::AMulticast Mobility Option;					//[RFC7411]
+//61	|	 MobileIPv6::Options::AMulticast Acknowledgement Option;					//[RFC7411]
+void MobileIPv6::Options::PadN()
+{
+	HEX#( 0, g[26], 0x90, 0xc2, "Padding:" );
+}
+void MobileIPv6::Options::Binding Refresh Advice()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "Refresh Interval:" );
+}
+void MobileIPv6::Options::Alternate Care-of Address()
+{
+	IPv6( 0, 0, 0x90, 0xc2, "Alternate Care-of Address:" );	
+}
+void MobileIPv6::Options::Nonce Indices()
+{
+	//t.b.c
+}
+void MobileIPv6::Options::Binding Authorization Data()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "Security Parameter Index:" );
+	IPv6( 0, 0, 0x90, 0xc2, "Authenticator:" );
+}
+void MobileIPv6::Options::Mobile Network Prefix Option()
+{
+	//t.b.c
+}
+void MobileIPv6::Options::Mobility Header Link-Layer Address option()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "Option-Code:" );
+	g[26] -= 1;
+	HEX#( 0, g[26], 0x90, 0xc2, "link-layer address:" );
+}
+void MobileIPv6::Options::MN-ID-OPTION-TYPE()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "Subtype:" );
+	g[26] -= 1;
+	HEX#( 0, g[26], 0x90, 0xc2, "Identifier:" );
+}
+void MobileIPv6::Options::AUTH-OPTION-TYPE()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "Mobility SPI:" );
+	g[26] -= 4;
+	HEX#( 0, g[26], 0x90, 0xc2, "Authentication Data:" );
+}
+void MobileIPv6::Options::MESG-ID-OPTION-TYPE()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Timestamp:" );
+}
+void MobileIPv6::Options::CGA Parameters Request()
+{
+	//Length is 0
+}
+void MobileIPv6::Options::CGA Parameters()
+{
+	//  [RFC4866];
+	HEX#( 0, g[26], 0x90, 0xc2, "CGA Parameters:" );
+}
+void MobileIPv6::Options::Signature()
+{
+	//  [RFC4866];
+	HEX#( 0, g[26], 0x90, 0xc2, "Signature:" );
+}
+void MobileIPv6::Options::Permanent Home Keygen Token()
+{
+	//[RFC4866];
+	HEX#( 0, g[26], 0x90, 0xc2, "Permanent Home Keygen Token:" );
+}
+void MobileIPv6::Options::Care-of Test Init()
+{
+	//[RFC4866]; Length is 0
+}
+void MobileIPv6::Options::Care-of Test()
+{
+	//[RFC4866];
+	HEX#( 0, g[26], 0x90, 0xc2, "Care-of Keygen Token:" );
+}
+void MobileIPv6::Options::DNS-UPDATE-TYPE()
+{
+	//[RFC5026];
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::DNS-UPDATE-TYPE::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	BBIT( 1, l[2], 0x90, 0xc2, "R:" );
+		CEQU( 0, l[2], 0, 0x14, "the Mobile Node is requesting the HA to create or update a DNS entry" );
+		CLSE( 0, l[2], 0, 0x14, "the Mobile Node is requesting the HA to remove the DNS entry" );
+	BBIT( 7, l[3], 0x90, 0xc2, "Reserved:" );
+	g[26] -= 2;
+	CHR#( 0, g[26], 0x90, 0xc2, "MN identity:" );
+}
+str# MobileIPv6::Options::DNS-UPDATE-TYPE::Status;
+0	|	 DNS update performed;
+128	|	 Reason unspecified;
+129	|	 Administratively prohibited;
+130	|	 DNS update failed;
+void MobileIPv6::Options::Experimental Mobility Option()
+{
+	CHR#( 0, g[26], 0x90, 0xc2, "Experimental Mobility Option:" );
+}
+void MobileIPv6::Options::Vendor Specific Mobility Option()
+{
+	CHR#( 0, g[26], 0x90, 0xc2, "Vendor Specific Mobility Option:" );
+}
+void MobileIPv6::Options::Service Selection Mobility Option()
+{
+	CHR#( 0, g[26], 0x90, 0xc2, "Service Selection Mobility Option:" );
+}
+void MobileIPv6::Options::Binding Authorization Data for FMIPv6()
+{
+	DLNG( 0, 0, 0x90, 0xc2, "Security Parameter Index:" );
+	IPv6( 0, 0, 0x90, 0xc2, "Authenticator:" );
+}
+void MobileIPv6::Options::Home Network Prefix Option()
+{
+	//  [RFC5213];
+}
+void MobileIPv6::Options::Handoff Indicator Option()
+{
+	// [RFC5213];
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "HI:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::Handoff Indicator Option::HI );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+}
+str# MobileIPv6::Options::Handoff Indicator Option::HI;
+1	|	 Attachment over a new interface;
+2	|	 Handoff between two different interfaces of the mobile node;
+3	|	 Handoff between mobile access gateways for the same interface;
+4	|	 Handoff state unknown;
+5	|	 Handoff state not changed (Re-registration);
+void MobileIPv6::Options::Access Technology Type Option()
+{
+	//  [RFC5213];
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "ATT:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::Access Technology Type Option::ATT );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+}
+str# MobileIPv6::Options::Access Technology Type Option::ATT;
+0	|	  Reserved;
+1	|	 Virtual;
+2	|	 PPP;
+3	|	 IEEE 802.3;
+4	|	 IEEE 802.11a/b/g;
+5	|	 IEEE 802.16e / WIMAX ;
+void MobileIPv6::Options::Mobile Node Link-layer Identifier Option()
+{
+	//  [RFC5213];
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	g[26] -= 2;
+	CHR#( 0, g[26], 0x90, 0xc2, "Link-layer Identifier:" );
+}
+void MobileIPv6::Options::Link-local Address Option()
+{
+	IPv6( 0, 0, 0x90, 0xc2, "Link-local Address:" );
+}
+void MobileIPv6::Options::Timestamp()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Timestamp:" );
+}
+void MobileIPv6::Options::Restart Counter()
+{
+	//  [RFC5847];
+	DLNG( 0, l[1], 0x90, 0xc2, "Restart Counter:" );
+}
+void MobileIPv6::Options::IPv4 Home Address()
+{
+	// [RFC5555];
+	IPLG( 0, l[1], 0x90, 0xc2, "IPv4 Home Address:" );
+}
+void MobileIPv6::Options::IPv4 Address Acknowledgement()
+{
+	// [RFC5555];
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::IPv4 Address Acknowledgement::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	BBIT( 6, l[2], 0x90, 0xc2, "Pref-len:" );
+	BBIT( 2, l[3], 0x90, 0xc2, "Reserved:" );
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Home Address:" );
+}
+str# MobileIPv6::Options::IPv4 Address Acknowledgement::Status;
+0 	|	 Success;
+128 	|	 Failure, reason unspecified;
+129 	|	 Administratively prohibited;
+130 	|	 Incorrect IPv4 home address;
+131 	|	 Invalid IPv4 address;
+132 	|	 Dynamic IPv4 home address assignment not available;
+133 	|	 Prefix allocation unauthorized;
+void MobileIPv6::Options::NAT Detection()
+{
+	// [RFC5555];
+	BBIT( 1, l[1], 0x90, 0xc2, "F:" );
+	BBIT( 15, l[2], 0x90, 0xc2, "Reserved:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "Restart Counter:" );
+}
+void MobileIPv6::Options::IPv4 Care-of Address()
+{
+	// [RFC5555];
+	BBIT( 1, l[1], 0x90, 0xc2, "P:" );
+	BBIT( 15, l[2], 0x90, 0xc2, "Reserved:" );
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Home Address:" );
+}
+void MobileIPv6::Options::GRE Key Option()
+{
+	// [RFC5845];
+	
+}
+void MobileIPv6::Options::Mobility Header IPv6 AddressPrefix()
+{
+	// [RFC5568];
+	HBYT( 0, l[1], 0x90, 0xc2, "Option-Code:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::Mobility Header IPv6 AddressPrefix::Option );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Prefix Length:" );
+	HEX#( 0, l[2], 0x90, 0xc2, "IPv6 Address/Prefix:" );
+}
+str# MobileIPv6::Options::Mobility Header IPv6 AddressPrefix::Option;
+1 	|	 Old Care-of Address;
+2 	|	 New Care-of Address;
+3 	|	 NAR's IP address;
+4 	|	 NAR's Prefix, sent in PrRtAdv;
+void MobileIPv6::Options::Binding Identifier()
+{
+	// [RFC5648];
+	DWRD( 0, l[1], 0x90, 0xc2, "Binding ID:" );
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+	BBIT( 1, l[2], 0x90, 0xc2, "Simultaneous Home and Foreign Binding (H) flag:" );
+		CEQU( 0, l[2], 0, 0x14, "not set" );
+		CLSE( 0, l[2], 0, 0x14, "set" );
+	BBIT( 7, l[3], 0x90, 0xc2, "Reserved:" );
+	if (g[26] == 8)
+	{
+		IPLG( 0, 0, 0x90, 0xc2, "IPv4 care-of address:" );
+	}
+	if (g[26] == 20)
+	{
+		IPv6( 0, 0, 0x90, 0xc2, "IPv6 care-of address:" );
+	}
+}
+void MobileIPv6::Options::IPv4 Home Address Request()
+{
+	// [RFC5844];
+	DBIT( 6, l[1], 0x90, 0xc2, "Prefix-len:" );
+	BBIT( 12, l[2], 0x90, 0xc2, "Reserved:" );
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Home Address:" );
+}
+void MobileIPv6::Options::IPv4 Home Address Reply()
+{
+	// [RFC5844];
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, MobileIPv6::Options::IPv4 Home Address Reply::Status );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	DBIT( 6, l[2], 0x90, 0xc2, "Prefix-len:" );
+	BBIT( 2, l[3], 0x90, 0xc2, "Reserved:" );
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Home Address:" );
+}
+str# MobileIPv6::Options::IPv4 Home Address Reply::Status;
+0 	|	 Success;
+128 	|	 Failure, reason unspecified;
+129 	|	 Administratively prohibited;
+130 	|	 Incorrect IPv4 home address;
+131 	|	 Invalid IPv4 address;
+132 	|	 Dynamic IPv4 home address assignment not available;
+void MobileIPv6::Options::IPv4 Default-Router Address()
+{
+	// [RFC5844];
+	DWRD( 0, l[1], 0x90, 0xc2, "Reserved (R):" );
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Default-Router Address:" );
+}
+void MobileIPv6::Options::IPv4 DHCP Support Mode()
+{
+	// [RFC5844];
+	BBIT( 15, l[1], 0x90, 0xc2, "Reserved:" );
+	BBIT( 1, l[2], 0x90, 0xc2, "S:" );
+		CEQU( 0, l[2], 0, 0x14, "the mobile access gateway should act as a DHCP Relay" );
+		CLSE( 0, l[2], 0, 0x14, "the mobile access gateway should act as a DHCP Server" );
+}
+void MobileIPv6::Options::Context Request Option()
+{
+	// [RFC5949];
+	BBIT( 16, l[1], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[1], 0x90, 0xc2, "Req-type-1:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Req-length-1:" );
+	HBYT( 0, l[3], 0x90, 0xc2, "Req-type-2:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Req-length-2:" );
+	HBYT( 0, l[5], 0x90, 0xc2, "Req-type-3:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Req-length-3:" );
+	HEX#( 0, l[6], 0x90, 0xc2, "Req-option-3:" );
+}
+void MobileIPv6::Options::Local Mobility Anchor Address Option()
+{
+	// [RFC5949];
+	DBYT( 0, l[1], 0x90, 0xc2, "Option-Code:" );
+		CEQU( 2, l[1], 0, 0x14, "IPv4 address of the local mobility anchor" );
+		CEQU( 1, l[1], 0, 0x14, "IPv6 address of the local mobility anchor" );		
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Reserved:" );
+	if (l[1] == 1)
+	{
+		IPv6( 0, 0, 0x90, 0xc2, "IPv6 care-of address:" );
+	}
+	if (l[1] == 2)
+	{
+		IPLG( 0, 0, 0x90, 0xc2, "IPv4 care-of address:" );
+	}
+}
+void MobileIPv6::Options::Mobile Node Link-local Address Interface Identifier Option()
+{
+	// [RFC5949];
+	BBIT( 16, l[1], 0x90, 0xc2, "Reserved:" );
+	D64B( 0, l[2], 0x90, 0xc2, "Interface Identifier:" );
+}
+//43	|	 MobileIPv6::Options::Transient Binding;								// [RFC-ietf-mipshop-transient-bce-pmipv6-07];
+//44	|	 MobileIPv6::Options::Flow Summary Mobility Option;						// [RFC-ietf-mext-flow-binding-11];
+//45	|	 MobileIPv6::Options::Flow Identification Mobility Option;				// [RFC-ietf-mext-flow-binding-11]];
+void MobileIPv6::Options::Redirect-Capability Mobility Option()
+{
+	// [RFC6463];
+	BBIT( 16, l[1], 0x90, 0xc2, "Reserved:" );
+}
+void MobileIPv6::Options::Redirect Mobility Option()
+{
+	// [RFC6463];
+	BBIT( 1, l[1], 0x90, 0xc2, "K:" );
+	BBIT( 1, l[2], 0x90, 0xc2, "N:" );
+	BBIT( 14, l[1], 0x90, 0xc2, "Reserved:" );
+	if (l[1] == 1)
+	{
+		IPv6( 0, 0, 0x90, 0xc2, "Optional IPv6 r2LMA Address:" );
+	}
+	if (l[2] == 1)
+	{
+		IPLG( 0, 0, 0x90, 0xc2, "Optional IPv4 r2LMA Address:" );
+	}
+	
+}
+void MobileIPv6::Options::Load Information Mobility Option()
+{
+	// [RFC6463];
+	HBYT( 0, l[1], 0x90, 0xc2, "Priority:" );
+	DLNG( 0, l[1], 0x90, 0xc2, "Sessions in Use:" );
+	DLNG( 0, l[2], 0x90, 0xc2, "Maximum Sessions:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "Used Capacity:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Maximum Capacity:" );	
+}
+void MobileIPv6::Options::Alternate IPv4 Care-of Address()
+{
+	// [RFC6463];
+	IPLG( 0, 0, 0x90, 0xc2, "Alternate IPv4 Care-of Address:" );
+}
+void MobileIPv6::Options::Mobile Node Group Identifier()
+{
+	// [RFC6602];
+	HBYT( 0, l[1], 0x90, 0xc2, "Sub-type:" );
+		CEQU( 1, l[1], 0, 0x14, "Bulk Binding Update Group" );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Reserved:" );
+	
+	DLNG( 0, l[4], 0x90, 0xc2, "Mobile Node Group Identifier:" );
+}
+void MobileIPv6::Options::MAG IPv6 Address()
+{
+	// [RFC6705];
+	IPv6( 0, 0, 0x90, 0xc2, "MAG IPv6 Address:" );
+}
+void MobileIPv6::Options::Access Network Identifier()
+{
+	// [RFC6757]
+	HEX#( 0, g[26], 0x90, 0xc2, "Access Network Identifier:" );
+}
+void MobileIPv6::Options::AIPv4 Traffic Offload Selector()
+{
+	//[RFC6909]
+	HEX#( 0, g[26], 0x90, 0xc2, "AIPv4 Traffic Offload Selector:" );
+}
+void MobileIPv6::Options::ADynamic IP Multicast Selector()
+{
+	//[RFC7028]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADynamic IP Multicast Selector:" );
+}
+void MobileIPv6::Options::ADelegated Mobile Network Prefix()
+{
+	//[RFC7148]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void MobileIPv6::Options::AActive Multicast Subscription IPv4()
+{
+	//[RFC7161]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void MobileIPv6::Options::AActive Multicast Subscription IPv6()
+{
+	//[RFC7161]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void MobileIPv6::Options::AQuality-of-Service()
+{
+	//[RFC7222]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void Alternate IPv4 Care-of Address MobileIPv6::Options::ALMA User-Plane Address()
+{
+	//[RFC7389]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void MobileIPv6::Options::AMulticast Mobility Option()
+{
+	//[RFC7411]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}
+void MobileIPv6::Options::AMulticast Acknowledgement Option()
+{
+	//[RFC7411]
+	HEX#( 0, g[26], 0x90, 0xc2, "ADelegated Mobile Network Prefix:" );
+}

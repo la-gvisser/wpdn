@@ -1,0 +1,23 @@
+//MSRP
+
+
+
+str# TCP::Ports_Str;
+0x0BC2 	|	MSRP::Main;
+0x0B27	|	MSRP::Main;
+
+void MSRP::Detect()
+{
+	l[1] = pl[0];
+	TEQU( 0x4d535250, l[1], 0x90, 0xc2, MSRP::Main );
+}
+
+void MSRP::Main()
+{
+	LABL( 0, 0, 0, 0xb1, "MSRP - Message Session Relay Protocol" );
+	HLNG( 0, l[1], 0x90, 0xc2, "ID:");
+	DECR 4;
+	Init Line Variables;
+	Display Fields And Lines No Init;
+	LABL( 0, 0, 0, 0xb8 );
+}

@@ -1,0 +1,307 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "wplogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PLUGIN_ABOUT DIALOGEX 0, 0, 169, 174
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About FTPCaptureOE"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         101,IDC_PLUGIN_ABOUT_LOGO,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,155,52
+    CTEXT           "FTPCaptureOE",IDC_PLUGIN_ABOUT_NAME,7,68,155,8
+    CTEXT           "Version 1.1.0.0",IDC_PLUGIN_VERSION,7,85,155,8
+    CTEXT           "Copyright © 2011-2012 WildPackets, Inc.",IDC_STATIC,7,102,155,8
+    CTEXT           "Monitor and capture FTP traffic from specified users.",IDC_STATIC,7,119,155,24
+    DEFPUSHBUTTON   "Close",IDOK,60,153,50,14
+END
+
+IDD_TARGET_NAMES DIALOGEX 0, 0, 300, 218
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Target Names"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
+BEGIN
+    CONTROL         "Capture any name.",IDC_ANY_NAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,9,178,8
+    CONTROL         "",IDC_TARGET_LIST,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_GROUP | WS_TABSTOP,8,24,284,120
+    PUSHBUTTON      "Remove",IDC_REMOVE_TARGET,234,153,52,16
+    GROUPBOX        "Add a target name",IDC_TARGET_GROUP,8,174,284,36
+    EDITTEXT        IDC_TARGET_NAME,16,187,192,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Add",IDC_ADD_TARGET,234,186,52,16
+END
+
+IDD_PORT_NUMBERS DIALOGEX 0, 0, 300, 201
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ports"
+FONT 8, "MS Sans Serif", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_PORT_LIST,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,8,8,284,120
+    PUSHBUTTON      "Remove",IDC_REMOVE_PORT,234,137,52,16
+    GROUPBOX        "Add a port number",IDC_STATIC,8,158,284,36
+    EDITTEXT        IDC_PORT_NUMBER,16,171,192,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "Add",IDC_ADD_PORT,234,170,52,16
+END
+
+IDD_GENERAL DIALOGEX 0, 0, 300, 201
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "General"
+FONT 8, "MS Sans Serif", 400, 0, 0x1
+BEGIN
+    LTEXT           "Output Directory:",IDC_STATIC,8,7,64,12
+    EDITTEXT        IDC_OUTPUT_DIRECTORY,8,20,284,13,ES_AUTOHSCROLL
+END
+
+IDD_ALERT DIALOGEX 0, 0, 298, 166
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Logging and Alerting"
+FONT 8, "MS Sans Serif", 400, 0, 0x0
+BEGIN
+    GROUPBOX        "",IDC_STATIC,7,14,285,47
+    CONTROL         "Log Messages to the Screen (Log Tab)",IDC_ENABLE_LOGGING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,23,165,10
+    CONTROL         "Block User names and File names in Logs (obscuring).",IDC_OBSCURE_NAMES,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,36,193,10
+    CONTROL         "Show Password in Log",IDC_SHOW_PASSWORD,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,15,49,90,10
+    CONTROL         "Enable Alerts",IDC_DO_ALERTS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,73,57,10
+    GROUPBOX        " ",IDC_STATIC,7,82,285,74
+    LTEXT           "Alert Source:",IDC_STATIC,18,95,56,8
+    EDITTEXT        IDC_ALERT_SOURCE,83,93,199,12,ES_AUTOHSCROLL
+    LTEXT           "Facility:",IDC_STATIC,18,115,56,8
+    EDITTEXT        IDC_FACILITY,83,113,199,12,ES_AUTOHSCROLL
+    LTEXT           "Output Directory:",IDC_STATIC,18,135,56,8
+    EDITTEXT        IDC_OUTPUT_DIRECTORY,83,133,199,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "...",IDC_BROWSE,275,156,14,9,NOT WS_VISIBLE
+END
+
+IDD_DATA_TRANSFER DIALOGEX 0, 0, 300, 236
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Data Transfer"
+FONT 8, "MS Sans Serif", 400, 0, 0x1
+BEGIN
+    CONTROL         "Enable Capturing Data To Disk File",IDC_DO_DATATRANSFER,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,8,135,10
+    LTEXT           "Enable any desired save to disk options with the given check box.  These items will be saved to disk file.  Enter the directory path for each into the given edit box.",IDC_DATA_CAPTURE_EXPLANATION,32,28,207,26
+    CONTROL         "Capture files transferred",IDC_CAPTURE_FILE_TO_DISK_CHK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,69,134,10
+    EDITTEXT        IDC_CAPTURE_FILE_TO_DISK_EDT,16,79,237,14,ES_AUTOHSCROLL
+    CONTROL         "Save directory command results to file",IDC_LIST_RESULTS_TO_FILE_CHK,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,109,148,10
+    EDITTEXT        IDC_LIST_RESULTS_TO_FILE_EDT,16,120,237,14,ES_AUTOHSCROLL
+    CONTROL         "Save Ftp commands to file",IDC_LOG_FTP_CMDS_CHK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,151,139,10
+    EDITTEXT        IDC_LOG_FTP_CMDS_EDT,16,161,237,14,ES_AUTOHSCROLL
+    LTEXT           "Save to disk options are not enabled when obscuring is selected (see Logging and Alerting page).",IDC_OBSCURE_MESSAGE,61,196,173,20,WS_BORDER
+END
+
+IDD_PLUGIN_TAB DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,116,27,193,149,WS_BORDER
+    LISTBOX         IDC_CONTEXT_LIST,7,27,100,149,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_OPTIONS_VIEW DIALOGEX 0, 0, 397, 409
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_TARGET_LIST_2,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_DISABLED | WS_BORDER | WS_TABSTOP,10,30,284,55
+    CONTROL         "",IDC_PORT_LIST_2,"SysListView32",LVS_LIST | LVS_SINGLESEL | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_DISABLED | WS_BORDER | WS_TABSTOP,10,109,284,44
+    LTEXT           "Output Directory:",IDC_OUTPUT_DIRECTORY_2_LBL,20,255,64,12
+    EDITTEXT        IDC_OUTPUT_DIRECTORY_2,20,267,262,13,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Port List:",IDC_STATIC,10,98,76,8
+    LTEXT           "Alert Source:",IDC_ALERT_SOURCE_2_LBL,20,223,56,8
+    EDITTEXT        IDC_ALERT_SOURCE_2,83,221,199,12,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "Facility:",IDC_FACILITY_2_LBL,20,240,56,8
+    EDITTEXT        IDC_FACILITY_2,83,239,199,12,ES_AUTOHSCROLL | ES_READONLY
+    GROUPBOX        "",IDC_ALERT_2_GRP,8,210,286,79
+    EDITTEXT        IDC_CAPTURE_ALL_VIEW,8,17,122,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_OBSCURE_VIEW,8,180,173,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_DO_ALERTS_VIEW,8,201,173,12,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+    EDITTEXT        IDC_LOG_MESSAGES_VIEW,8,160,173,14,ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+END
+
+IDD_CONTEXT_TAB DIALOGEX 0, 0, 340, 336
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS,7,27,310,290,WS_BORDER
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PLUGIN_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 167
+    END
+
+    IDD_DATA_TRANSFER, DIALOG
+    BEGIN
+        BOTTOMMARGIN, 232
+    END
+
+    IDD_PLUGIN_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_OPTIONS_VIEW, DIALOG
+    BEGIN
+        RIGHTMARGIN, 296
+        BOTTOMMARGIN, 288
+    END
+
+    IDD_CONTEXT_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 337
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 335
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "FTPCaptureOE"
+#ifdef X64
+            " 64-bit"
+#else
+            " 32-bit"
+#endif
+            VALUE "FileVersion", "1.1.0.0"
+            VALUE "InternalName", "FTPCaptureOE"
+            VALUE "LegalCopyright", "Copyright © 2011-2012 WildPackets, Inc."
+            VALUE "OriginalFilename", "FTPCaptureOE.dll"
+            VALUE "ProductName", "FTPCaptureOE"
+            VALUE "ProductVersion", "1.1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_PLUGIN_NAME         "FTPCaptureOE"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_VERSION_TEMPLATE    "Version %d.%d.%d.%d"
+    IDS_OPTIONS_TITLE       "FTPCaptureOE"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

@@ -1,0 +1,5051 @@
+//---------------------------------------------------------------------------------
+
+
+
+str# SigTran::M3UA::SIO::SerIndVal::Calls;
+0x00	|	SigTran::SSCMDW;
+0x01	|	SigTran::SSCMDW;
+0x02	|	SigTran::SSCMDW;
+0x03	|	SigTran::SCCP;
+0x04	|	SigTran::TUP;
+0x05	|	ISUP;
+0x06	|	SigTran::SSCMDW;
+0x07	|	SigTran::SSCMDW;
+0x08	|	SigTran::SSCMDW;
+0x09	|	SigTran::SSCMDW;
+0x0a	|	SigTran::SSCMDW;
+0x0d	|	SigTran::BICC;
+0x0e	|	MegacoText;
+
+// 0x00	|	.... 0000 Signaling Network Management Messages; SNMM
+// 0x01	|	.... 0001 Signaling Network Testing and Maintenance Messages; SNTMM
+// 0x02	|	.... 0010 Signaling Network Testing and Maintenance Special Messages (ANSI) or Spare (ITU-T);
+// 0x03	|	.... 0011 SCCP;
+// 0x04	|	.... 0100 Telephone User Part; TUP //Q.723 
+// 0x05	|	.... 0101 ISDN User Part; ISUP
+// 0x06	|	.... 0110 Data User Part (call and circuit-related messages); DUP //ITU-T Q.741 (oder X.61) 
+// 0x07	|	.... 0111 Data User Part (facility registration and cancellation messages); DUP //ITU-T Q.741 (oder X.61) 
+// 0x08	|	.... 1000 Reserved for MTP Testing User Part; MTP Testing
+// 0x09	|	.... 1001 Broadband ISDN User Part; BISUP //Q.2762 Q.2763 
+// 0x0a	|	.... 1010 Satellite ISDN User Part;
+// 0x0d |		BICC; Linus PKT File;
+// 0x0e | Megaco;
+//--------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------
+// 0x04	|	.... 0100 Telephone User Part; TUP //Q.723
+
+void SigTran::TUP( )
+{
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0, 0, 0xb1, "Telephone User Part" );	
+	HBIT( 8, g[6], 0x90, 0xc2, "Message Type Code:" ); 
+	CST#( 0, g[6], 0x90, 0x14, SigTran::TUP::MTCTYP);
+	g[25] -= 1;
+	DGLB( 0, g[25], 0x90, 0xc2, "Parameter Length: :\PRMLNGTH:" );
+	DUMP( 0, g[25], 0x90, 0xc2, "Data:" );
+}
+
+str# SigTran::TUP::MTCTYP;
+0x11  | Initial Address;
+0x21  | Initial Address With Additional Information;
+0x31  | Subsequent Address;
+0x41  | Subsequent Address With One Signal;
+0x12  | General Forward Setup Information;
+0x32  | Continuity Signal;
+0x42  | Continuity Failure Signal;
+0x13  | General Request;
+0x14  | Address Complete;
+0x24  | Charging;
+0x15  | Switching Equipment Congestion Signal;
+0x25  | Circuit Group Congestion Signal;
+0x35  | National Network Congestion Signal;
+0x45  | Address Incomplete signal;
+0x55  | Call Failure Signal;
+0x65  | Subscriber Busy Signal (electrical);
+0x75  | Unallocated Number Signal;
+0x85  | Line Out Of Service Signal;
+0x95  | Send Special Information Tone Signal;
+0xA5  | Access Barred Signal;
+0xB5  | Digital Path Not Provided Signal;
+0xC5  | Misdialled Trunk Prefix;
+0xF5  | Extended Unsuccessful Backward Setup Information;
+0x06  | Answer Signal, Unqualified;
+0x16  | Answer Signal, Charge;
+0x26  | Answer Signal, No Charge;
+0x36  | Clear Back Signal;
+0x46  | Clear Forward Signal;
+0x56  | Reanswer Signal;
+0x66  | Forward Transfer Signal;
+0x76  | Calling Party Clear Signal;
+0x17  | Release Guard Signal;
+0x27  | Blocking Signal;
+0x37  | Blocking Acknowledgement Signal;
+0x47  | Unblocking Signal;
+0x57  | Unblocking Acknowledgement Signal;
+0x67  | Continuity Check Request Signal;
+0x77  | Reset Circuit Signal;
+0x18  | Maintenance Oriented Group Blocking;
+0x28  | Maintenance Oriented Group Blocking Acknowledgement;
+0x38  | Maintenance Oriented Group Unblocking;
+0x48  | Maintenance Oriented Group Unblocking Acknowledgement;
+0x58  | Hardware Failure Oriented Group Blocking;
+0x68  | Hardware Failure Oriented Group Blocking Acknowledgement;
+0x78  | Hardware Failure Oriented Group Unblocking;
+0x88  | Hardware Failure Oriented Group Unblocking Acknowledgement;
+0x98  | Circuit Group Reset;
+0xA8  | Circuit Group Reset Acknowledgement;
+0xB8  | Software Generated Group Blocking;
+0xC8  | Software Generated Group Blocking Acknowledgement;
+0xD8  | Software Generated Group Unblocking;
+0xE8  | Software Generated Group Unblocking Acknowledgement;
+0x1A  | Automatic Congestion Control Information;
+0x2C  | Metering Pulse Message;
+0x1D  | Operator Signal;
+0x1E  | Subscriber Local - Busy Signal;
+0x2E  | Subscriber Toll - Busy Signal;
+0x1F  | Malicious Call Tracing Signal;
+//--------------------------------------------------------------------------------
+
+//------------------------Begin ISUP---------------------------------------------
+// Q.763 ITU-T / Status: in work
+// ANSI / Status: not begun 
+// g[46] == Length of Information Element
+
+// ISUP Message Decode only fo ITU-T ISUP Message. 
+void ISUP( )
+{
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0, 0, 0xb1, "ISDN User Part" );	
+	ISUP::CiC;
+	HBIT( 8, g[6], 0x90, 0xc2, "Message Type" ); 
+	CST#( 0, g[6], 0x90, 0x14, ISUP::MSGTYP);
+	g[25] -= 1;
+	DGLB( 0, g[25], 0x90, 0xc2, "ISUP MSG Length: :\PRMLNGTH:" );
+	
+	TSB#( 0, g[6], 0x90, 0xb7, ISUP::MSGTYP::Calls);
+	LABL( 0, 0 , 0, 0xb8, );
+}
+
+void ISUP::CiC( )
+{
+	DBIT( 8, l[1], 0x05, 0x5, "CiC Low-Order Octet:" ); 
+	BBIT( 4, 0, 0x5, 0x5, "4-bits spare\Spare4b:" );
+	DBIT( 4, l[2], 0x05, 0x5, "CiC HI-Order 4-bits" );
+	SHFL( 8, l[2]);
+	l[2] += l[1];
+	DGLB( 0, l[2], 0x90, 0xc2, "CIC: :\CIC:" );
+	g[25] -= 2;
+	
+}
+
+void ISUP::Interpreter( )
+{
+	
+}
+
+void ISUP::GETIT( )
+{
+	LABL( 0, 0, 0, 0 , "Not Decoded");
+	DUMP( 0, g[46], 0, 0, "Data:");
+}
+
+str# ISUP::MSGTYP::Calls;
+0x01 | ISUP::IAM;
+0x02 | ISUP::Subsequentaddress;
+0x03 | ISUP::Informationrequestnationaluse;
+0x04 | ISUP::Informationnationaluse;
+0x05 | ISUP::Continuity;
+0x06 | ISUP::Addresscomplete;
+0x07 | ISUP::Connect;
+0x08 | ISUP::Forwardtransfer;
+0x09 | ISUP::Answer;
+0x0A | ISUP::Reservedusedin1984version;
+0x0B | ISUP::Reservedusedin1984version;
+0x0C | ISUP::Release;
+0x0D | ISUP::Suspend;
+0x0E | ISUP::Resume;
+0x0F | ISUP::Reservedusedin1984version;
+0x10 | ISUP::RLC;
+0x11 | ISUP::Continuitycheckrequest;
+0x12 | ISUP::Resetcircuit;
+0x13 | ISUP::Blocking;
+0x14 | ISUP::Unblocking;
+0x15 | ISUP::Blockingacknowledgement;
+0x16 | ISUP::Unblockingacknowledgement;
+0x17 | ISUP::Circuitgroupreset;
+0x18 | ISUP::Circuitgroupblocking;
+0x18 | ISUP::Release;
+0x19 | ISUP::Circuitgroupunblocking;
+0x1A | ISUP::Circuitgroupblockingacknowledgement;
+0x1B | ISUP::Circuitgroupunblockingacknowledgement;
+0x1C | ISUP::Reservedusedin1988version;
+0x1D | ISUP::Reservedusedin1988version;
+0x1E | ISUP::Reservedusedin1988version;
+0x1F | ISUP::Facilityrequest;
+0x20 | ISUP::Facilityaccepted;
+0x21 | ISUP::Facilityreject;
+0x22 | ISUP::Reservedusedin1984version;
+0x23 | ISUP::Reservedusedin1984version;
+0x24 | ISUP::Loopbackacknowledgementnationaluse;
+0x25 | ISUP::Reservedusedin1984version;
+0x26 | ISUP::Reservedusedin1984version;
+0x27 | ISUP::Reservedusedin1988version;
+0x28 | ISUP::Pass-alongnationaluse;
+0x29 | ISUP::Circuitgroupresetacknowledgement;
+0x2A | ISUP::Circuitgroupquerynationaluse;
+0x2B | ISUP::Circuitgroupqueryresponsenationaluse;
+0x2C | ISUP::Callprogress;
+0x2D | ISUP::User-to-userinformation;
+0x2E | ISUP::UnequippedCICnationaluse;
+0x2F | ISUP::Confusion;
+0x30 | ISUP::Overloadnationaluse;
+0x31 | ISUP::Chargeinformationnationaluse;
+0x32 | ISUP::Networkresourcemanagement;
+0x33 | ISUP::Facility;
+0x34 | ISUP::UserParttest;
+0x35 | ISUP::UserPartavailable;
+0x36 | ISUP::Identificationrequest;
+0x37 | ISUP::Identificationresponse;
+0x38 | ISUP::Segmentation;
+0x39 | ISUP::ReservedusedinB-ISUP;
+0x3A | ISUP::ReservedusedinB-ISUP;
+0x3B | ISUP::ReservedusedinB-ISUP;
+0x3C | ISUP::ReservedusedinB-ISUP;
+0x3D | ISUP::ReservedusedinB-ISUP;
+0x40 | ISUP::Loopprevention;
+0x41 | ISUP::Applicationtransport;
+0x42 | ISUP::Pre-releaseinformation;
+0x43 | ISUP::SubsequentDirectoryNumbernationaluse;
+0x80 | ISUP::Reservedforfutureextension;
+
+str# ISUP::MSGTYP;
+0x01 | 0000 0001 Initial address;
+0x02 | 0000 0010 Subsequent address;
+0x03 | 0000 0011 Information request (national use) ;
+0x04 | 0000 0100 Information (national use) ;
+0x05 | 0000 0101 Continuity ;
+0x06 | 0000 0110 Address complete;
+0x07 | 0000 0111 Connect;
+0x08 | 0000 1000 Forward transfer;
+0x09 | 0000 1001 Answer;
+0x0A | 0000 1010 Reserved (used in 1984 version) ;
+0x0B | 0000 1011 Reserved (used in 1984 version) ;
+0x0C | 0000 1100 Release;
+0x0D | 0000 1101 Suspend ;
+0x0E | 0000 1110 Resume ;
+0x0F | 0000 1111 Reserved (used in 1984 version) ;
+0x10 | 0001 0000 Release complete ;
+0x11 | 0001 0001 Continuity check request ;
+0x12 | 0001 0010 Reset circuit ;
+0x13 | 0001 0011 Blocking ;
+0x14 | 0001 0100 Unblocking ;
+0x15 | 0001 0101 Blocking acknowledgement ;
+0x16 | 0001 0110 Unblocking acknowledgement ;
+0x17 | 0001 0111 Circuit group reset ;
+0x18 | 0001 1000 Circuit group blocking ;
+0x18 | 0001 1000 Release ;
+0x19 | 0001 1001 Circuit group unblocking ;
+0x1A | 0001 1010 Circuit group blocking acknowledgement ;
+0x1B | 0001 1011 Circuit group unblocking acknowledgement ;
+0x1C | 0001 1100 Reserved (used in 1988 version) ;
+0x1D | 0001 1101 Reserved (used in 1988 version) ;
+0x1E | 0001 1110 Reserved (used in 1988 version) ;
+0x1F | 0001 1111 Facility request ;
+0x20 | 0010 0000 Facility accepted ;
+0x21 | 0010 0001 Facility reject ;
+0x22 | 0010 0010 Reserved (used in 1984 version) ;
+0x23 | 0010 0011 Reserved (used in 1984 version) ;
+0x24 | 0010 0100 Loop back acknowledgement (national use) ;
+0x25 | 0010 0101 Reserved (used in 1984 version) ;
+0x26 | 0010 0110 Reserved (used in 1984 version) ;
+0x27 | 0010 0111 Reserved (used in 1988 version) ;
+0x28 | 0010 1000 Pass-along (national use) ;
+0x29 | 0010 1001 Circuit group reset acknowledgement ;
+0x2A | 0010 1010 Circuit group query (national use) ;
+0x2B | 0010 1011 Circuit group query response (national use);
+0x2C | 0010 1100 Call progress ;
+0x2D | 0010 1101 User-to-user information ;
+0x2E | 0010 1110 Unequipped CIC (national use) ;
+0x2F | 0010 1111 Confusion ;
+0x30 | 0011 0000 Overload (national use) ;
+0x31 | 0011 0001 Charge information (national use) (Note) ;
+0x32 | 0011 0010 Network resource management ;
+0x33 | 0011 0011 Facility ;
+0x34 | 0011 0100 User Part test ;
+0x35 | 0011 0101 User Part available ;
+0x36 | 0011 0110 Identification request ;
+0x37 | 0011 0111 Identification response ;
+0x38 | 0011 1000 Segmentation ;
+0x39 | 0011 1001 Reserved (used in B-ISUP) ;
+0x3A | 0011 1010 Reserved (used in B-ISUP) ;
+0x3B | 0011 1011 Reserved (used in B-ISUP) ;
+0x3C | 0011 1100 Reserved (used in B-ISUP) ;
+0x3D | 0011 1101 Reserved (used in B-ISUP) ;
+0x40 | 0100 0000 Loop prevention ;
+0x41 | 0100 0001 Application transport ;
+0x42 | 0100 0010 Pre-release information ;
+0x43 | 0100 0011 Subsequent Directory Number (national use) ;
+0x80 | 1000 0000 Reserved for future extension ;
+
+str# ISUP::Parameters;
+0x00  | 0000 0000 End of optional parameters;
+0x01  | 0000 0001 Call reference (national use);
+0x02  | 0000 0010 Transmission medium requirement;
+0x03  | 0000 0011 Access transport;
+0x04  | 0000 0100 Called party number;
+0x05  | 0000 0101 Subsequent number;
+0x06  | 0000 0110 Nature of connection indicators;
+0x07  | 0000 0111 Forward call indicators;
+0x08  | 0000 1000 Optional forward call indicators;
+0x09  | 0000 1001 Calling party's category;
+0x0A  | 0000 1010 Calling party number;
+0x0B  | 0000 1011 Redirecting number;
+0x0C  | 0000 1100 Redirection number;
+0x0D  | 0000 1101 Connection request;
+0x0E  | 0000 1110 Information request indicators (national use);
+0x0F  | 0000 1111 Information indicators (national use);
+0x10  | 0001 0000 Continuity indicators;
+0x11  | 0001 0001 Backward call indicators;
+0x12  | 0001 0010 Cause indicators;
+0x13  | 0001 0011 Redirection information;
+0x14  | 0001 0100 Reserved (used in 1984 version, Red Book);
+0x15  | 0001 0101 Circuit group supervision message type;
+0x16  | 0001 0110 Range and status;
+0x17  | 0001 0111 Reserved (used in 1988 version, Blue Book);
+0x18  | 0001 1000 Facility indicator;
+0x19  | 0001 1001 Reserved (used in 1984 version, Red Book);
+0x1A  | 0001 1010 Closed user group interlock code;
+0x1B  | 0001 1011 Reserved (used in 1984 version, Red Book);
+0x1C  | 0001 1100 Reserved (used in 1984 version, Red Book);
+0x1D  | 0001 1101 User service information;
+0x1E  | 0011 1110 Signalling point code (national use);
+0x1F  | 0001 1111 Reserved (used in 1984 version, Red Book);
+0x20  | 0010 0000 User-to-user information;
+0x21  | 0010 0001 Connected number;
+0x22  | 0010 0010 Suspend/Resume indicators;
+0x23  | 0010 0011 Transit network selection (national use);
+0x24  | 0010 0100 Event information;
+0x25  | 0010 0101 Circuit assignment map 25263;
+0x26  | 0010 0110 Circuit state indicator (national use);
+0x27  | 0010 0111 Automatic congestion level;
+0x28  | 0010 1000 Original called number;
+0x29  | 0010 1001 Optional backward call indicators;
+0x2A  | 0010 1010 User-to-user indicators;
+0x2B  | 0010 1011 Origination ISC point code;
+0x2C  | 0010 1100 Generic notification indicator;
+0x2D  | 0010 1101 Call history information;
+0x2E  | 0010 1110 Access delivery information;
+0x2F  | 0010 1111 Network specific facility (national use);
+0x30  | 0011 0000 User service information prime;
+0x31  | 0011 0001 Propagation delay counter;
+0x32  | 0011 0010 Remote operations (national use);
+0x33  | 0011 0011 Service activation;
+0x34  | 0011 0100 User teleservice information;
+0x35  | 0011 0101 Transmission medium used;
+0x36  | 0011 0110 Call diversion information;
+0x37  | 0011 0111 Echo control information;
+0x38  | 0011 1000 Message compatibility information;
+0x39  | 0011 1001 Parameter compatibility information;
+0x3A  | 0011 1010 MLPP precedence;
+0x3B  | 0011 1011 MCID request indicators;
+0x3C  | 0011 1100 MCID response indicators;
+0x3D  | 0011 1101 Hop counter;
+0x3E  | 0011 1110 Transmission medium requirement prime;
+0x3F  | 0011 1111 Location number;
+0x40  | 0100 0000 Redirection number restriction;
+0x41  | 0100 0001 Reserved (used in 1992 version);
+0x42  | 0100 0010 Reserved (used in 1992 version);
+0x43  | 0100 0011 Call transfer reference;
+0x44  | 0100 0100 Loop prevention indicators;
+0x45  | 0100 0101 Call transfer number;
+0x4B  | 0100 1011 CCSS ;
+0x4C  | 0100 1100 Forward GVNS;
+0x4D  | 0100 1101 Backward GVNS;
+0x4E  | 0100 1110 Redirect capability (national use);
+0x5B  | 0101 1011 Network management controls;
+0x65  | 0110 0101 Correlation id;
+0x66  | 0110 0110 SCF id;
+0x6E  | 0110 1110 Call diversion treatment indicators;
+0x6F  | 0110 1111 Called IN number;
+0x70  | 0111 0000 Call offering treatment indicators;
+0x71  | 0111 0001 Charged party identification (national use);
+0x72  | 0111 0010 Conference treatment indicators;
+0x73  | 0111 0011 Display information;
+0x74  | 0111 0100 UID action indicators;
+0x75  | 0111 0101 UID capability indicators;
+0x77  | 0111 0111 Redirect counter (national use);
+0x78  | 0111 1000 Application transport;
+0x79  | 0111 1001 Collect call request;
+0x7A  | 0111 1010 CCNR possible indicator;
+0x7B  | 0111 1011 Pivot capability;
+0x7C  | 0111 1100 Pivot routing indicators;
+0x7D  | 0111 1101 Called directory number (national use);
+0x7F  | 0111 1111 Original called IN number;
+0x80  | 1000 0000 Reserved for future extension;
+0x81  | 1000 0001 Calling geodetic location;
+0x82  | 1000 0010 HTR information;
+0x84  | 1000 0100 Network routing number (national use);
+0x85  | 1000 0101 Query on release capability (network option);
+0x86  | 1000 0110 Pivot status (national use);
+0x87  | 1000 0111 Pivot counter;
+0x88  | 1000 1000 Pivot routing forward information;
+0x89  | 1000 1001 Pivot routing backward information;
+0x8A  | 1000 1010 Redirect status (national use);
+0x8B  | 1000 1011 Redirect forward information (national use);
+0x8C  | 1000 1100 Redirect backward information (national use);
+0x8D  | 1000 1101 Number portability forward information (network option);
+0xC0  | 1100 0000 Generic number;
+0xC1  | 1100 0001 Generic digits (national use);
+
+str# ISUP::PARA::Calls;
+0x00  |  ISUP::PARA::End_of_optional_parameters;
+0x01  |  ISUP::PARA::Call_reference__national_use_;
+0x02  |  ISUP::PARA::Transmission_medium_requirement;
+0x03  |  ISUP::PARA::Access_transport;
+0x04  |  ISUP::PARA::Called_party_number;
+0x05  |  ISUP::PARA::Subsequent_Number;
+0x06  |  ISUP::PARA::Nature_of_connection_indicators;
+0x07  |  ISUP::PARA::Forward_call_indicators;
+0x08  |  ISUP::PARA::Optional_forward_call_indicators;
+0x09  |  ISUP::PARA::Calling_partys_category;
+0x0A  |  ISUP::PARA::Calling_party_number;
+0x0B  |  ISUP::PARA::Redirecting_number;
+0x0C  |  ISUP::PARA::Redirection_number;
+0x0D  |  ISUP::PARA::Connection_request;
+0x0E  |  ISUP::PARA::Information_request_indicators__national_use_;
+0x0F  |  ISUP::PARA::Information_indicators__national_use_;
+0x10  |  ISUP::PARA::Continuity_indicators;
+0x11  |  ISUP::PARA::Backward_call_indicators;
+0x12  |  ISUP::PARA::Cause_indicators;
+0x13  |  ISUP::PARA::Redirection_information;
+0x14  |  ISUP::PARA::Reserved__used_in_1984_version_Red_Book_;
+0x15  |  ISUP::PARA::Circuit_group_supervision_message_type;
+0x16  |  ISUP::PARA::Range_and_status;
+0x17  |  ISUP::PARA::Reserved__used_in_1988_version_Blue_Book_;
+0x18  |  ISUP::PARA::Facility_indicator;
+0x19  |  ISUP::PARA::Reserved__used_in_1984_version_Red_Book_;
+0x1A  |  ISUP::PARA::Closed_user_group_interlock_code;
+0x1B  |  ISUP::PARA::Reserved__used_in_1984_version_Red_Book_;
+0x1C  |  ISUP::PARA::Reserved__used_in_1984_version_Red_Book_;
+0x1D  |  ISUP::PARA::User_service_information;
+0x1E  |  ISUP::PARA::Signalling_point_code__national_use_;
+0x1F  |  ISUP::PARA::Reserved__used_in_1984_version_Red_Book_;
+0x20  |  ISUP::PARA::User-to-user_information;
+0x21  |  ISUP::PARA::Connected_number;
+0x22  |  ISUP::PARA::Suspend_Resume_indicators;
+0x23  |  ISUP::PARA::Transit_network_selection__national_use_;
+0x24  |  ISUP::PARA::Event_information;
+0x25  |  ISUP::PARA::Circuit_assignment_map_25263;
+0x26  |  ISUP::PARA::Circuit_state_indicator__national_use_;
+0x27  |  ISUP::PARA::Automatic_congestion_level;
+0x28  |  ISUP::PARA::Original_called_number;
+0x29  |  ISUP::PARA::Optional_backward_call_indicators;
+0x2A  |  ISUP::PARA::User-to-user_indicators;
+0x2B  |  ISUP::PARA::Origination_ISC_point_code;
+0x2C  |  ISUP::PARA::Generic_notification_indicator;
+0x2D  |  ISUP::PARA::Call_history_information;
+0x2E  |  ISUP::PARA::Access_delivery_information;
+0x2F  |  ISUP::PARA::Network_specific_facility__national_use_;
+0x30  |  ISUP::PARA::User_service_information_prime;
+0x31  |  ISUP::PARA::Propagation_delay_counter;
+0x32  |  ISUP::PARA::Remote_operations__national_use_;
+0x33  |  ISUP::PARA::Service_activation;
+0x34  |  ISUP::PARA::User_teleservice_information;
+0x35  |  ISUP::PARA::Transmission_medium_used;
+0x36  |  ISUP::PARA::Call_diversion_information;
+0x37  |  ISUP::PARA::Echo_control_information;
+0x38  |  ISUP::PARA::Message_compatibility_information;
+0x39  |  ISUP::PARA::Parameter_compatibility_information;
+0x3A  |  ISUP::PARA::MLPP_precedence;
+0x3B  |  ISUP::PARA::MCID_request_indicators;
+0x3C  |  ISUP::PARA::MCID_response_indicators;
+0x3D  |  ISUP::PARA::Hop_counter;
+0x3E  |  ISUP::PARA::Transmission_medium_requirement_prime;
+0x3F  |  ISUP::PARA::Location_number;
+0x40  |  ISUP::PARA::Redirection_number_restriction;
+0x41  |  ISUP::PARA::Reserved__used_in_1992_version_;
+0x42  |  ISUP::PARA::Reserved__used_in_1992_version_;
+0x43  |  ISUP::PARA::Call_transfer_reference;
+0x44  |  ISUP::PARA::Loop_prevention_indicators;
+0x45  |  ISUP::PARA::Call_transfer_number;
+0x4B  |  ISUP::PARA::CCSS_;
+0x4C  |  ISUP::PARA::Forward_GVNS;
+0x4D  |  ISUP::PARA::Backward_GVNS;
+0x4E  |  ISUP::PARA::Redirect_capability__national_use_;
+0x5B  |  ISUP::PARA::Network_management_controls;
+0x65  |  ISUP::PARA::Correlation_id;
+0x66  |  ISUP::PARA::SCF_id;
+0x6E  |  ISUP::PARA::Call_diversion_treatment_indicators;
+0x6F  |  ISUP::PARA::Called_IN_number;
+0x70  |  ISUP::PARA::Call_offering_treatment_indicators;
+0x71  |  ISUP::PARA::Charged_party_identification__national_use_;
+0x72  |  ISUP::PARA::Conference_treatment_indicators;
+0x73  |  ISUP::PARA::Display_information;
+0x74  |  ISUP::PARA::UID_action_indicators;
+0x75  |  ISUP::PARA::UID_capability_indicators;
+0x77  |  ISUP::PARA::Redirect_counter__national_use_;
+0x78  |  ISUP::PARA::Application_transport;
+0x79  |  ISUP::PARA::Collect_call_request;
+0x7A  |  ISUP::PARA::CCNR_possible_indicator;
+0x7B  |  ISUP::PARA::Pivot_capability;
+0x7C  |  ISUP::PARA::Pivot_routing_indicators;
+0x7D  |  ISUP::PARA::Called_directory_number__national_use_;
+0x7F  |  ISUP::PARA::Original_called_IN_number;
+0x80  |  ISUP::PARA::Reserved_for_future_extension;
+0x81  |  ISUP::PARA::Calling_geodetic_location;
+0x82  |  ISUP::PARA::HTR_information;
+0x84  |  ISUP::PARA::Network_routing_number__national_use_;
+0x85  |  ISUP::PARA::Query_on_release_capability__network_option_;
+0x86  |  ISUP::PARA::Pivot_status__national_use_;
+0x87  |  ISUP::PARA::Pivot_counter;
+0x88  |  ISUP::PARA::Pivot_routing_forward_information;
+0x89  |  ISUP::PARA::Pivot_routing_backward_information;
+0x8A  |  ISUP::PARA::Redirect_status__national_use_;
+0x8B  |  ISUP::PARA::Redirect_forward_information__national_use_;
+0x8C  |  ISUP::PARA::Redirect_backward_information__national_use_;
+0x8D  |  ISUP::PARA::Number_portability_forward_information__network_option_;
+0xC0  |  ISUP::PARA::Generic_number;
+0xC1  |  ISUP::PARA::Generic_digits__national_use_;
+
+
+
+//----------------------------------------------
+void ISUP::Chargeinformationnationaluse( )
+{
+	//the format is a national matter
+	DUMP( 0, g[25], 0x90, 0xc2, "Not decoded" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+void ISUP::Resume( )
+{
+	ISUP::PARA::Suspend_Resume_indicators;
+	LABL( 0, 0, 0, 0xb8 );
+	DBIT( 8, l[3], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	g[45] = l[3];
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	g[1] = g[16];
+	g[1] -= 2;
+	ISUP::RUN;
+}
+
+void ISUP::Suspend( )
+{
+	ISUP::PARA::Suspend_Resume_indicators;
+	LABL( 0, 0, 0, 0xb8 );
+	DBIT( 8, l[3], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	g[45] = l[3];
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	g[1] = g[16];
+	g[1] -= 1;
+	ISUP::RUN;
+}
+
+void ISUP::Facility( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	
+	ISUP::RUN;
+}
+
+void ISUP::UserParttest( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	ISUP::RUN;
+}
+
+void ISUP::UserPartavailable( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	ISUP::RUN;
+}
+
+void ISUP::IAM( )
+{
+	ISUP::PARA::Nature_of_connection_indicators;
+	ISUP::PARA::Forward_call_indicators;
+	ISUP::PARA::Calling_partys_category;
+	ISUP::PARA::Transmission_medium_requirement;
+	//LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	DBIT( 8, l[3], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	g[45] = l[3];
+	DBIT( 8, l[4], 0x90, 0xc2, "Length of Called Party Number:" );
+	g[46] = l[4];
+	LABL( 0, 0, 0xd8, 0xb7, "Called Party Number" );
+		ISUP::PARA::Called_party_number;
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0xd8, 0xb7, "Optional Part:" );
+	g[1] = g[16];
+	g[1] -= 2;
+	ISUP::RUN;
+}
+
+void ISUP::Release( )
+{
+	g[1] =1;
+	LABL( 0, 0, 0xd8, 0xb7, "Release" );
+	DBYT( 8, l[4], 0x90, 0xc2, "Offset to Mand. Parameter:" );
+	DBYT( 8, g[1], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	g[46] = l[4];
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	LABL( 0, 0, 0xd8, 0xb7, "Cause Indicators" );
+	ISUP::PARA::Cause_indicators;
+	if (g[1] != 0)
+	{
+		ISUP::RUN;
+	}
+	if (g[1] == 0)
+	{
+		 ISUP::PARA::End_of_optional_parameters;
+	}
+}
+
+void ISUP::Subsequentaddress( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Subsequent address" );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	g[46] = l[2];
+	ISUP::PARA::Subsequent_Number;
+	ISUP::RUN;
+}
+
+void ISUP::Answer( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Answer" );
+	DBIT( 8, l[3], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	g[45] = l[3];
+	g[25] -= 1;
+	ISUP::RUN;
+}
+
+void ISUP::Addresscomplete( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Address complete" );
+	ISUP::PARA::Backward_call_indicators;
+	ISUP::RUN;
+}
+
+void ISUP::Callprogress( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Call Progress" );
+	ISUP::PARA::Event_information;
+	ISUP::RUN;
+}
+
+void ISUP::Circuitgroupqueryresponsenationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group query response" );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	DBIT( 8, l[5], 0x90, 0xc2, "Pointer to Parameter P:" );
+	ISUP::PARA::Range_and_status;
+	ISUP::PARA::Circuit_state_indicator__national_use_;
+	ISUP::RUN;
+}
+
+void ISUP::Circuitgroupresetacknowledgement( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group reset acknowledgement" );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	ISUP::PARA::Range_and_status;
+}
+
+void ISUP::Connect( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Connect" );
+	ISUP::PARA::Backward_call_indicators;
+	ISUP::RUN;
+}
+
+void ISUP::Continuity( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Continuity" );
+	ISUP::PARA::Continuity_indicators;
+	ISUP::RUN;
+}
+
+void ISUP::Confusion( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Confusion (CFN)" );
+	ISUP::PARA::Cause_indicators;
+	ISUP::RUN;
+}
+
+void ISUP::Facilityreject( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Facility reject" );
+	ISUP::PARA::Facility_indicator;
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	DBIT( 8, l[3], 0x90, 0xc2, "Offset to start Opt. Part:" );
+	DBIT( 8, l[4], 0x90, 0xc2, "Length of Cause indicators:" );
+	g[46] = l[4];
+	LABL( 0, 0, 0xd8, 0xb7, "Cause indicators" );
+		ISUP::PARA::Cause_indicators;
+	g[45] = l[3];
+	ISUP::RUN;
+}
+
+void ISUP::RLC( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Release complete" );
+	ISUP::RUN;
+}
+
+void ISUP::Informationnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Information (national use)" );
+	ISUP::PARA::Information_indicators__national_use_;
+	ISUP::RUN;
+}
+
+void ISUP::Informationrequestnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Information request (national use)" );
+	ISUP::PARA::Information_indicators__national_use_;
+	ISUP::RUN;
+}
+
+void  ISUP::User-to-userinformation( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "User-to-user information" );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	g[46] = l[2];
+	ISUP::PARA::User-to-user_information;
+	ISUP::RUN;
+}
+
+void ISUP::Forwardtransfer( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Forward transfer" );
+	ISUP::RUN;
+}
+ 
+void ISUP::Blocking( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Blocking" );
+	
+}
+ 
+void ISUP::Unblocking( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Unblocking" );
+	
+}
+
+void ISUP::Blockingacknowledgement( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Blocking acknowledgement" );
+	
+}
+ 
+void ISUP::Continuitycheckrequest( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Continuity check request" );
+	
+}
+void ISUP::Loopbackacknowledgementnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Loopback acknowledgement (nationaluse)" );
+	
+}
+
+void ISUP::Overloadnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Overload nationaluse" );
+	
+}
+
+void ISUP::Resetcircuit( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Reset circuit" );
+}
+
+void ISUP::Unblockingacknowledgement( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Unblocking acknowledgement" );
+	
+}
+
+void ISUP::UnequippedCICnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Unequipped circuit identification code, (national use)" );
+	
+}
+
+void ISUP::Circuitgroupblocking( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group blocking" );
+	ISUP::PARA::Circuit_group_supervision_message_type;
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+	g[46] = l[2];
+	ISUP::PARA::Range_and_status;
+	ISUP::RUN;
+}
+
+void ISUP::Circuitgroupunblocking( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group unblocking" );
+	ISUP::PARA::Circuit_group_supervision_message_type;
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer:" );
+		if l[2] != 0{
+		DBIT( 8, l[2], 0x90, 0xc2, "Length of Parameter:" );
+		g[46] = l[2];
+		ISUP::PARA::Range_and_status;
+		}
+}
+
+void ISUP::Circuitgroupunblockingacknowledgement( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group unblocking acknowledgement" );
+	ISUP::PARA::Circuit_group_supervision_message_type;
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer:" );
+		if l[2] != 0{
+		DBIT( 8, l[2], 0x90, 0xc2, "Length of Parameter:" );
+		g[46] = l[2];
+		ISUP::PARA::Range_and_status;
+		}
+}
+
+void ISUP::Circuitgroupreset( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group reset" );
+		DBIT( 8, l[2], 0x90, 0xc2, "Pointer:" );
+		if l[2] != 0{
+		DBIT( 8, l[2], 0x90, 0xc2, "Length of Parameter:" );
+		g[46] = l[2];
+	ISUP::PARA::Range;
+		}
+		
+	
+}
+
+void ISUP::Circuitgroupquerynationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group query (national use)" );
+	DBIT( 8, l[2], 0x90, 0xc2, "Pointer to Parameter M:" );
+		if l[2] != 0{
+			DBIT( 8, l[2], 0x90, 0xc2, "Length of Parameter:" );
+			g[46] = l[2];
+			ISUP::PARA::Range;
+		}
+}		
+
+void ISUP::Facilityaccepted( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Facility accepted" );
+	ISUP::PARA::Facility_indicator;
+	ISUP::RUN;
+}
+
+void ISUP::Facilityrequest( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Facility request" );
+	ISUP::PARA::Facility_indicator;
+	ISUP::RUN;
+}
+
+void ISUP::Pass-alongnationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Pass-along (national use)" );
+	ISUP::RUN;
+}
+
+void ISUP::Networkresourcemanagement( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Network resource management" );
+	ISUP::RUN;
+}
+
+void ISUP::Identificationrequest( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Identification request" );
+	ISUP::RUN;
+}
+
+void ISUP::Identificationresponse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Identification response" );
+	ISUP::RUN;
+}
+
+void ISUP::Segmentation( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Segmentation" );
+	ISUP::RUN;
+}
+
+void ISUP::Loopprevention( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Loop prevention" );
+	ISUP::RUN;
+}
+
+void ISUP::Applicationtransport( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Application transport" );
+	ISUP::RUN;
+}
+
+void ISUP::Pre-Releaseinformation( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Pre-Release information" );
+	ISUP::RUN;
+}
+
+void ISUP::SubsequentDirectoryNumbernationaluse( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Subsequent directory number (national use)" );
+	ISUP::RUN;
+}
+
+void ISUP::Reservedforfutureextension( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Reserved for future extension" );
+	ISUP::RUN;
+}
+
+void ISUP::ReservedusedinB-ISUP( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "ReservedusedinB-ISUP" );
+	ISUP::RUN;
+}
+
+void ISUP::Reservedusedin1988version( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Reservedusedin1988version" );
+	ISUP::RUN;
+}
+
+void ISUP::Reservedusedin1984version( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Reservedusedin1984version" );
+	ISUP::RUN;
+}
+
+void ISUP::Reservedusedin1986version( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Reservedusedin1986version" );
+	ISUP::RUN;
+}
+
+//---Helpers-------------------------------------
+void ISUP::RUN( )
+{
+	
+
+			if (g[16] >= 1)
+			{
+				BBIT( 8, l[56], 0x5, 0x5, "Parameter Code:" );
+				g[33] = l[56];
+				if (g[33] != 0)
+				{
+					DBYT( 0, l[55], 0x5, 0x5, "Parameter Length:" );
+					g[46] = l[55];
+				
+				}
+				DGLB( 0, g[16], 0x5, 0x5, "Left Packet Length:" );
+				//LABL( 0, 0, 0, 0xb8);
+				CST#( 0, l[56], 0x05, 0xb7, ISUP::Parameters );
+				TSB#( 0, l[56], 0, 0x14, ISUP::PARA::Calls );
+				//TLSE( 0, l[56], 0, 0xc2, ISUP::GETIT );
+				LABL( 0, 0, 0, 0xb8 );
+/* 				if (g[33] == 0x00 )
+				{
+					TRTS;
+				} */
+				
+				}
+		if ( g[45] == 00 )
+		{
+			LABL( 0, 0, 0, 0xb8);
+			TRTS;
+		}
+		if ( g[33] == 00 )
+		{
+			LABL( 0, 0, 0, 0xb8);
+			TRTS;
+		}
+	ISUP::RUN;
+	
+}
+
+void ISUP::DetectPadding( )
+{
+	
+	
+		TRTS;
+
+}
+//------------------------------------------------
+
+
+//----------------Parameters----------------------
+void ISUP::PARA::Connection_request( )
+{
+	//DUMP( 0, g[46], 0x90, 0xc2 );
+	//LABL( 0, 0, 0, 0xb8 );
+	BBYT( 3, 0, 0x90, 0xc2, "Local reference:" );
+	ISUP::PARA::Signalling_point_code__national_use_;
+	BBYT( 0, 0, 0x90, 0xc2, "Protocol class:");
+	BBYT( 0, 0, 0x90, 0xc2, "Credit:");
+}
+
+void ISUP::PARA::Information_indicators__national_use__( )
+{
+//	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"Information indicators (national use)" );
+	BBIT( 1, l[2], 0x90, 0xc2, "Solicited information indicator:" );
+		CEQU( 0, l[2], 0, 0x14, "solicited");
+		CEQU( 1, l[2], 0, 0x14, "unsolicited");
+	BBIT( 1, l[2], 0x90, 0xc2, "Charge information response indicator:" );
+		CEQU( 0, l[2], 0, 0x14, "charge information not included");
+		CEQU( 1, l[2], 0, 0x14, "charge information included");
+	BBIT( 1, l[2], 0x90, 0xc2, "Calling party's category response indicator:" );
+		CEQU( 0, l[2], 0, 0x14, "calling party's category not included");
+		CEQU( 1, l[2], 0, 0x14, "calling party's category included");
+	BBIT( 2, l[2], 0x90, 0xc2, "spare:" );
+	BBIT( 1, l[2] 0x90, 0xc2, "Hold provided indicator:" );
+		CEQU( 0, l[2], 0, 0x14, "hold provided");
+		CEQU( 1, l[2], 0, 0x14, "hold not provided");
+	BBIT( 2, l[2], 0x90, 0xc2, "Calling party address response indicator:" );
+		CEQU( 0, l[2], 0, 0x14, "calling party address not included");
+		CEQU( 1, l[2], 0, 0x14, "calling party address not available");
+		CEQU( 2, l[2], 0, 0x14, "spare");
+		CEQU( 3, l[2], 0, 0x14, "calling party address included");
+	BBIT( 4, 0, 0x90, 0xc2, "reserved:" );
+	BBIT( 4, 0, 0x90, 0xc2, "spare:" );
+	g[46] -= 2;
+}
+
+void ISUP::PARA::Range( ) 
+{
+//link to circuit identification code etc.. more packets needed to be clear
+	DBYT( 0, 0, 0x90, 0xc2, "Range:" );
+	g[46] -= 1;
+}
+
+void ISUP::PARA::Range_and_status( ) 
+{
+//link to circuit identification code etc.. more packets needed to be clear
+	DBYT( 0, 0, 0x90, 0xc2, "Range:" );
+	g[46] -= 1;
+	DUMP( 0, g[46], 0x90, 0xc2, "Status:" );
+}
+
+void ISUP::PARA::Signalling_point_code__national_use_( )
+{
+	BBIT( 8, l[2], 0x90, 0xc2, "Signalling point code LSB Part:" );
+	BBIT( 2, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 2, l[3], 0x90, 0xc2, "Signalling point code MSB Part:" );
+	SHFL( 8, l[3]);
+	ANDG( l[2], l[3]);
+	LABL( 0, 0, 0x90, 0xc2,"Signalling point code:" );
+	DGLB( 0, l[3], 0x90, 0x14);
+}
+
+void ISUP::PARA::Suspend_Resume_indicators( )
+{
+	BBIT( 7, 0, 0x90, 0xc2, "spare" );
+	BBIT( 1, l[2], 0x90, 0xc2, "Suspend/resume indicator:" );
+	CEQU( 0, l[2], 0, 0x14, "ISDN subscriber initiated" );
+	CEQU( 1, l[2], 0, 0x14, "network initiated" );
+}
+
+void ISUP::PARAH::OE( )
+{
+	BBIT( 0, l[3], 0x90, 0xc2, "Odd/even indicator:" );
+	CEQU( 0, l[3], 0x90, 0x14 , "even" );
+	CEQU( 1, l[3], 0x90, 0x14 , "odd" );
+}
+
+void ISUP::PARAH::Tonetid( )
+{
+
+}
+
+void ISUP::PARA::Transit_network_selection__national_use_( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:" );
+	BBIT( 1, g[58], 0x05, 0xc2, "Odd/even Indicator:" );
+		CBIT( 1, g[58], 0, 0x74, "1... .... .... .... odd number of address signals" ); // if odd 4 bits spare are added later
+		CLSE( 0, 0, 0, 0x74, "0... .... .... .... even number of address signals" ); 
+	BBIT( 3, l[3], 0x90, 0xc2, "Type of network identification:" );
+		CEQU( 0, l[3], 0x90, 0x14 , "CCITT/ITU-T-standardized identification" );
+		CEQU( 1, l[3], 0x90, 0x14 , "spare" );
+		CEQU( 2, l[3], 0x90, 0x14 , "national network identification" );
+		CLSE( 0, 0, 0x90, 0x14 , "spare" );
+	BBIT( 4, l[3], 0x90, 0xc2, "Network identification plan:" );
+		CEQU( 0, l[3], 0x90, 0x14 , "Unknown" );
+		CEQU( 3, l[3], 0x90, 0x14 , "public data network identification code (DNIC), ITU-T Recommendation X.121" );
+		CEQU( 6, l[3], 0x90, 0x14 , "public land Mobile Network Identification Code (MNIC), ITU-T Recommendation E.212" );
+		CLSE( 0, 0, 0x90, 0x14 , "spare" );
+	LABL( 0, 0, 0xd8, 0xc2, "Network identification:" );
+	g[46] -=2;
+	DW::Numbers;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::Circuit_assignment_map_25263( )
+{
+	if (g[46] != 0x05)
+	{
+	LABL( 0, 0, 0x90, 0xc2,"Length is not standart!" );
+	DUMP( 0, g[46], 0x90, 0xc2 );
+	}
+	if (g[46] == 0x05)
+	{
+		BBIT( 2, 0, 0x90, 0xc2, "Spare:" );
+		BBIT( 6, l[4], 0x90, 0xc2, "Map type:" );
+			CEQU( 1, l[4], 0x90, 0x14 , "1544 kbit/s digital path map format (64 kbit/s base rate)" );
+			CEQU( 2, l[4], 0x90, 0x14 , "2048 kbit/s digital path map format (64 kbit/s base rate)" );
+			CLSE( 0, 0, 0x90, 0x14 , "spare" );
+	
+		BBIT( 1, l[11], 0x5,0x5);
+		BBIT( 1, l[12], 0x5,0x5);
+		BBIT( 1, l[13], 0x5,0x5);
+		BBIT( 1, l[14], 0x5,0x5);
+		BBIT( 1, l[15], 0x5,0x5);
+		BBIT( 1, l[16], 0x5,0x5);
+		BBIT( 1, l[17], 0x5,0x5);
+		BBIT( 1, l[18], 0x5,0x5);
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #1:" );
+			CEQU( 0, l[18], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[18], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #2:" );
+			CEQU( 0, l[17], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[17], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #3:" );
+			CEQU( 0, l[16], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[16], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #4:" );
+			CEQU( 0, l[15], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[15], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #5:" );
+			CEQU( 0, l[14], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[14], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #6:" );
+			CEQU( 0, l[13], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[13], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #7:" );
+			CEQU( 0, l[12], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[12], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #8:" );
+			CEQU( 0, l[11], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[11], 0x90, 0x14, "is used" );
+	BBIT( 1, l[11], 0x5,0x5);
+		BBIT( 1, l[12], 0x5,0x5);
+		BBIT( 1, l[13], 0x5,0x5);
+		BBIT( 1, l[14], 0x5,0x5);
+		BBIT( 1, l[15], 0x5,0x5);
+		BBIT( 1, l[16], 0x5,0x5);
+		BBIT( 1, l[17], 0x5,0x5);
+		BBIT( 1, l[18], 0x5,0x5);
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #9:" );
+			CEQU( 0, l[18], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[18], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #10:" );
+			CEQU( 0, l[17], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[17], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #11:" );
+			CEQU( 0, l[16], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[16], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #12:" );
+			CEQU( 0, l[15], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[15], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #13:" );
+			CEQU( 0, l[14], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[14], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #14:" );
+			CEQU( 0, l[13], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[13], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #15:" );
+			CEQU( 0, l[12], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[12], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #16:" );
+			CEQU( 0, l[11], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[11], 0x90, 0x14, "is used" );
+	BBIT( 1, l[11], 0x5,0x5);
+		BBIT( 1, l[12], 0x5,0x5);
+		BBIT( 1, l[13], 0x5,0x5);
+		BBIT( 1, l[14], 0x5,0x5);
+		BBIT( 1, l[15], 0x5,0x5);
+		BBIT( 1, l[16], 0x5,0x5);
+		BBIT( 1, l[17], 0x5,0x5);
+		BBIT( 1, l[18], 0x5,0x5);
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #17:" );
+			CEQU( 0, l[18], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[18], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #18:" );
+			CEQU( 0, l[17], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[17], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #19:" );
+			CEQU( 0, l[16], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[16], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #20:" );
+			CEQU( 0, l[15], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[15], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #21:" );
+			CEQU( 0, l[14], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[14], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #22:" );
+			CEQU( 0, l[13], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[13], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #23:" );
+			CEQU( 0, l[12], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[12], 0x90, 0x14, "is used" );
+		LABL( 0, 0, 0x90, 0xc2, "Circuit #24:" );
+			CEQU( 0, l[11], 0x90, 0x14, "is not used" );
+			CEQU( 1, l[11], 0x90, 0x14, "is used" );
+		if (l[4] == 0x02)
+		{
+			BBIT( 1, l[11], 0x5,0x5);
+			BBIT( 1, l[12], 0x5,0x5);
+			BBIT( 1, l[13], 0x5,0x5);
+			BBIT( 1, l[14], 0x5,0x5);
+			BBIT( 1, l[15], 0x5,0x5);
+			BBIT( 1, l[16], 0x5,0x5);
+			BBIT( 1, l[17], 0x5,0x5);
+			BBIT( 1, l[18], 0x5,0x5);
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #25:" );
+				CEQU( 0, l[18], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[18], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #26:" );
+				CEQU( 0, l[17], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[17], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #27:" );
+				CEQU( 0, l[16], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[16], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #28:" );
+				CEQU( 0, l[15], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[15], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #29:" );
+				CEQU( 0, l[14], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[14], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #30:" );
+				CEQU( 0, l[13], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[13], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Circuit #31:" );
+				CEQU( 0, l[12], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[12], 0x90, 0x14, "is used" );
+			LABL( 0, 0, 0x90, 0xc2, "Spare:" );
+				CEQU( 0, l[11], 0x90, 0x14, "is not used" );
+				CEQU( 1, l[11], 0x90, 0x14, "is used" );
+		}
+		if (l[4] != 0x02)
+		{
+			DUMP( 0, g[46], 0x90, 0xc2 );
+		}
+	}
+}
+
+void ISUP::PARA::Circuit_state_indicator__national_use_(  )
+{
+	while ( g[46] >= 1 )
+	{
+		BBIT( 2, l[11], 0x5, 0x5);
+		BBIT( 2, l[12], 0x5, 0x5);
+		BBIT( 2, l[13], 0x5, 0x5);
+		BBIT( 2, l[14], 0x5, 0x5);
+		if (l[13] == 0x00)
+		{
+			DGLB( 0, l[14], 0x90, 0xc2, "Maintenance blocking state:");
+				CEQU( 0, l[14], 0x90, 0x14, "transient");
+				CEQU( 1, l[14], 0x90, 0x14, "spare");
+				CEQU( 2, l[14], 0x90, 0x14, "spare");
+				CEQU( 3, l[14], 0x90, 0x14, "unequipped");
+			DGLB( 0, l[13], 0x90, 0xc2, "Spare:");
+			DGLB( 0, l[12], 0x90, 0xc2, "Spare:");
+			DGLB( 0, l[11], 0x90, 0xc2, "Spare:");
+		}
+		if (l[13] != 0x00)
+		{
+			DGLB( 0, l[14], 0x90, 0xc2, "Maintenance blocking state:");
+				CEQU( 0, l[14], 0x90, 0x14, "no blocking (active)");
+				CEQU( 1, l[14], 0x90, 0x14, "locally blocked");
+				CEQU( 2, l[14], 0x90, 0x14, "remotely blocked");
+				CEQU( 3, l[14], 0x90, 0x14, "locally and remotely blocked");
+			DGLB( 0, l[13], 0x90, 0xc2, "Call processing state:");
+				CEQU( 0, l[13], 0x90, 0x14, "spare");
+				CEQU( 1, l[13], 0x90, 0x14, "circuit incoming busy");
+				CEQU( 2, l[13], 0x90, 0x14, "circuit outgoing busy");
+				CEQU( 3, l[13], 0x90, 0x14, "idle");
+			DGLB( 0, l[12], 0x90, 0xc2, "Hardware blocking state (Note):");
+				CEQU( 0, l[12], 0x90, 0x14, "no blocking (active)");
+				CEQU( 1, l[12], 0x90, 0x14, "locally blocked");
+				CEQU( 2, l[12], 0x90, 0x14, "remotely blocked");
+				CEQU( 3, l[12], 0x90, 0x14, "locally and remotely blocked");
+			//NOTE – If bits F E are not coded 0 0, bits D C must be coded 1 1.
+			DGLB( 0, l[11], 0x90, 0xc2, "Spare:");
+		}
+		g[46] -= 1;
+	}
+	BBYT( 0, 0, 0x90, 0xc2, "not decoded" );
+}
+
+
+void ISUP::PARA::Original_called_number(  )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[58], 0x05, 0xc2, Odd/even Indicator:);
+	CBIT( 0x0, g[58], 0, 0x74, "1... .... .... .... odd number of address signals" ); // if odd 4 bits spare are added later
+	CLSE( 0, 0, 0, 0x74, "0... .... .... .... even number of address signals" ); 
+	BBIT( 7, g[59], 0x05, 0xc2, Nature of address indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, g[59], 0, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, g[59], 0, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, g[59], 0, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, g[59], 0, 0x74, ".000 0100 .... .... international number" );
+		if (g[59] > 5)
+		{
+			if (g[59] < 110)
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... spare" );
+				}
+			if (g[59] < 111)
+			{ 
+				if g[59] > 127
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, g[59], 0, 0x14, "1111 1111 .... .... spare" );
+	BBIT( 1, g[59], 0xf5, 0xc2, Spare:);
+	BBIT( 3, g[59], 0xf5, 0xc2, Numbering plan indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, g[59], 0, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, g[59], 0, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, g[59], 0, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, g[59], 0, 0x74, ".... .... .111 .... spare" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Address pres. restr. indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... 00.. presentation allowed" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... 01.. presentation restricted" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... 10.. address not available (Note 1) (national use)" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... 11.. reserved for restriction by the network" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Screening indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... ..00 reserved" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... ..01 user provided, verified and passed" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... ..10 reserved" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... ..11 network provided" );
+	LABL( 0, 0, 0xd8, 0xc2, "Original called number:" );
+	g[46] -=2;
+	DW::Numbers;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+void ISUP::PARA::User-to-user_indicators(  )
+{
+	BBIT( 1, l[11], 0x5, 0x5);
+	BBIT( 2, l[12], 0x5, 0x5);
+	BBIT( 2, l[13], 0x5, 0x5);
+	BBIT( 2, l[14], 0x5, 0x5);
+	DGLB( 0, l[18], 0x90, 0xc2, "Type:" );
+		CEQU( 0, l[18], 0x90, 0x14, "request");
+		CEQU( 1, l[18], 0x90, 0x14, "response");
+	if ( l[18] == 0x00 )
+	{
+		DGLB( 0, l[14], 0x90, 0xc2, "Service 1:");
+			CEQU( 0, l[14], 0x90, 0x14, "no information");
+			CEQU( 1, l[14], 0x90, 0x14, "spare");
+			CEQU( 2, l[14], 0x90, 0x14, "request, not essential");
+			CEQU( 3, l[14], 0x90, 0x14, "request, essential");
+		DGLB( 0, l[13], 0x90, 0xc2, "Service 2:");
+			CEQU( 0, l[13], 0x90, 0x14, "no information");
+			CEQU( 1, l[13], 0x90, 0x14, "spare");
+			CEQU( 2, l[13], 0x90, 0x14, "request, not essential");
+			CEQU( 3, l[13], 0x90, 0x14, "request, essential");
+		DGLB( 0, l[12], 0x90, 0xc2, "Service 3:");
+			CEQU( 0, l[12], 0x90, 0x14, "no information");
+			CEQU( 1, l[12], 0x90, 0x14, "spare");
+			CEQU( 2, l[12], 0x90, 0x14, "request, not essential");
+			CEQU( 3, l[12], 0x90, 0x14, "request, essential");
+		DGLB( 0, l[11], 0x90, 0xc2, "Spare:");
+	}
+	if ( l[18] == 0x01 )
+	{
+		DGLB( 0, l[14], 0x90, 0xc2, "Service 1:");
+			CEQU( 0, l[14], 0x90, 0x14, "no information");
+			CEQU( 1, l[14], 0x90, 0x14, "not provided");
+			CEQU( 2, l[14], 0x90, 0x14, "provided");
+			CEQU( 3, l[14], 0x90, 0x14, "spare");
+		DGLB( 0, l[13], 0x90, 0xc2, "Service 2:");
+			CEQU( 0, l[13], 0x90, 0x14, "no information");
+			CEQU( 1, l[13], 0x90, 0x14, "not provided");
+			CEQU( 2, l[13], 0x90, 0x14, "provided");
+			CEQU( 3, l[13], 0x90, 0x14, "spare");
+		DGLB( 0, l[12], 0x90, 0xc2, "Service 3:");
+			CEQU( 0, l[12], 0x90, 0x14, "no information");
+			CEQU( 1, l[12], 0x90, 0x14, "not provided");
+			CEQU( 2, l[12], 0x90, 0x14, "provided");
+			CEQU( 3, l[12], 0x90, 0x14, "spare");
+		DGLB( 0, l[11], 0x90, 0xc2, "Network discard indicator:");
+			CEQU( 0, l[11], 0x90, 0x14, "no information");
+			CEQU( 1, l[11], 0x90, 0x14, "user-to-user information discarded by the network");
+		
+	}
+}
+
+
+void ISUP::PARA::Origination_ISC_point_code(  )
+{
+	ISUP::PARA::Signalling_point_code__national_use_;
+}
+
+
+void ISUP::PARA::Call_history_information(  )
+{
+	BBYT( 3, 0, 0x90, 0xc2, "Call identity:" );
+	ISUP::PARA::Signalling_point_code__national_use_;
+}
+
+
+void ISUP::PARA::Network_specific_facility__national_use_(  )
+{
+	DBYT( 0, l[2], 0, 0, Length of network identification:);
+	if ( l[2] != 0)
+	{
+		BBIT( 0, l[1], 0x5, 0x5);
+			CEQU( 0, l[1], 0x90, 0x14, "information continues in the next octet");
+			CEQU( 1, l[1], 0x90, 0x14, "last octet");
+		BBIT( 3, l[4], 0x90, 0xc2, "Type of network identification:");
+			
+			
+		BBIT( 4, l[3], 0x90, 0xc2, "Network identification plan:" );
+			CEQU( 0, l[3], 0x90, 0x14 , "Unknown" );
+			CEQU( 3, l[3], 0x90, 0x14 , "public data network identification code (DNIC), ITU-T Recommendation X.121" );
+			CEQU( 6, l[3], 0x90, 0x14 , "public land Mobile Network Identification Code (MNIC), ITU-T Recommendation E.212" );
+			CLSE( 0, 0, 0x90, 0x14 , "spare" );
+		l[2] -= 1;
+		DUMP( 0, l[2], 0x90, 0xc2 );
+	}
+	
+	g[46] -= l[2];
+	g[46] -= 1;
+	DUMP( 0, g[46], 0x90, 0xc2 );
+	//maybe some work left
+}
+
+
+void ISUP::PARA::User_service_information_prime(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Remote_operations__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	
+ 
+}
+
+
+void ISUP::PARA::Service_activation(  )
+{
+	/* DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+	 */
+	LABL( 0, 0, 0x90, 0xc2,"Service activation" );
+	while ( g[46] >= 1 )
+	{
+		BBYT( 0, l[1], 0x90, 0xc2);
+			CEQU( 0, l[1], 0x90, 0x14, "spare" );
+			CEQU( 1, l[1], 0x90, 0x14, "call transfer" );
+			CEQU( 255, l[1], 0x90, 0x14, "reserved for extension" );
+			if ( l[2] >= 2)
+			{
+				if ( l[2] <= 123 )
+				{
+					LABL( 0, 0, 0x90, 0x14, "reserved for international use" );
+				}
+			}
+			if ( l[2] >= 124)
+			{
+				if ( l[2] <= 254 )
+				{
+					LABL( 0, 0, 0x90, 0x14, "reserved for national use" );
+				}
+			}
+		g[46] -= 1;
+	}
+}
+
+
+void ISUP::PARA::Transmission_medium_used(  )
+{
+	LABL( 0, 0, 0x05, 0xb1, "Transmission medium requirement used: " );
+	//BBIT( 8, 0, 0x90, 0xc2, "Indicator:" );
+	BBYT( 0, g[59], 0x05, 0x05, "Category" );
+		CEQU( 0, g[59], 0x05, 0x74, "0000 0000 speech" );
+		CEQU( 1, g[59], 0x05, 0x74, "0000 0001 spare" );
+		CEQU( 2, g[59], 0x05, 0x74, "0000 0010 reserved for 64 kbit/s unrestricted" );
+		CEQU( 3, g[59], 0x05, 0x74, "0000 0011 3.1 kHz audio" );
+		CEQU( 4, g[59], 0x05, 0x74, "0000 0100 reserved for alternate speech (service 2)/64 kbit/s unrestricted (service 1)" );
+		CEQU( 5, g[59], 0x05, 0x74, "0000 0101 reserved for alternate 64 kbit/s unrestricted (service 1)/speech (service 2)" );
+		CEQU( 6, g[59], 0x05, 0x74, "0000 0110 64 kbit/s preferred" );
+		CEQU( 7, g[59], 0x05, 0x74, "0000 0111 2 × 64 kbit/s unrestricted" );
+		CEQU( 8, g[59], 0x05, 0x74, "0000 1000 384 kbit/s unrestricted" );
+		CEQU( 9, g[59], 0x05, 0x74, "0000 1001 1536 kbit/s unrestricted" );
+		CEQU( 10, g[59], 0x05, 0x74, "0000 1011 1920 kbit/s unrestricted" );
+		if (g[56] >= 11)
+		{
+			if (g[56] <= 15) 
+			{
+				DECR 1;
+				BBIT( 4, 0, 0x05, 0 );
+				LABL( 0, 0, 0, 0x14, "0000 " );
+				BBIT( 4, 0, 0, 0x14);
+				LABL( 5, 0, 0, 0x14, " Spare" );
+			}
+		}
+		if (g[56] >= 16)
+		{
+			if (g[56] <= 18) 
+			{
+				LABL( 0, 0, 0, 0x74, "000x xxxx reserved" );
+			}
+		}
+		CEQU( 19, g[59], 0x05, 0x74, "0001 0011 spare" );
+		if (g[56] >= 20)
+		{
+			if (g[56] <= 36) 
+			{
+				LABL( 0, 0, 0, 0x74, "000x xxxx reserved" );
+			}
+		}
+		CEQU( 37, g[59], 0x05, 0x74, "0010 0101 spare" );
+		if (g[56] >= 38)
+		{
+			if (g[56] <= 42) 
+			{
+				LABL( 0, 0, 0, 0x74, "00xx xxxx reserved" );
+			}
+		}
+		if (g[56] >= 43)
+		{
+			if (g[56] <= 255) 
+			{
+				LABL( 0, 0, 0, 0x74, "xxxx xxxx spare" );
+			}
+		}
+}
+
+
+void ISUP::PARA::Parameter_compatibility_information(  )
+{
+	l[3] = 1;
+	while ( g[46] >= 1 )
+	{
+		DBIT( 8, l[1], 0x05, 0xb7, "upgraded parameter:" );
+			CST#( 0, l[1], 0x05, 0x07 ISUP::Parameters );
+		g[46] -= 1;
+		l[3] +=1;
+		BBIT( 8, l[1], 0x90, 0xc2, "Instructions:" );
+		DECR 1;
+		BBIT( 1, l[1], 0x5, 0x5 );
+		BBIT( 2, l[2], 0x5, 0x5 );
+		BBIT( 1, l[4], 0x5, 0x5 );
+		BBIT( 1, l[5], 0x5, 0x5 );
+		BBIT( 1, l[6], 0x5, 0x5 );
+		BBIT( 1, l[7], 0x5, 0x5 );
+		BBIT( 1, l[8], 0x5, 0x5 );
+		CEQU( 0, l[8], 0, 0x84, ".... ...0 Transit at intermediate exchange indicator: transit interpretation" );
+		CEQU( 1, l[8], 0, 0x84, ".... ...1 Transit at intermediate exchange indicator: end node interpretation" );
+		CEQU( 0, l[7], 0, 0x84, ".... ..0. Release call indicator: do not release call" );
+		CEQU( 1, l[7], 0, 0x84, ".... ..1. Release call indicator: release call" );
+		CEQU( 0, l[6], 0, 0x84, ".... .0.. Send notification indicator: do not send notification" );
+		CEQU( 1, l[6], 0, 0x84, ".... .1.. Send notification indicator: send notification" );
+		CEQU( 0, l[5], 0, 0x84, ".... 0... Discard message indicator: do not discard message (pass on)" );
+		CEQU( 1, l[5], 0, 0x84, ".... 1... Discard message indicator: discard message" );
+		CEQU( 0, l[4], 0, 0x84, "...0 .... Discard parameter indicator: do not discard parameter (pass on)" );
+		CEQU( 1, l[4], 0, 0x84, "...1 .... Discard parameter indicator: discard parameter" );
+		CEQU( 0, l[2], 0, 0x84, ".00. .... Pass on not possible indicator: release call" );
+		CEQU( 1, l[2], 0, 0x84, ".01. .... Pass on not possible indicator: discard message" );
+		CEQU( 2, l[2], 0, 0x84, ".10. .... Pass on not possible indicator: discard parameter" );
+		CEQU( 3, l[2], 0, 0x84, ".11. .... Pass on not possible indicator: res./release call" );
+		CEQU( 0, l[1], 0, 0x84, "0... .... Extension indicator: ext." );
+		CEQU( 1, l[1], 0, 0x84, "1... .... Extension indicator: no ext." );		
+		g[46] -= 1;
+		if (l[1] == 0)
+		{
+		BBIT( 1, l[9], 0x5, 0x5 );
+		BBIT( 5, l[10], 0x5, 0x5 ); //Spare
+		BBIT( 2, l[2], 0x5, 0x5 );
+		CEQU( 0, l[2], 0, 0x84, ".00. .... Broadband/narrowband interworking indicator: pass on" );
+		CEQU( 1, l[2], 0, 0x84, ".01. .... Broadband/narrowband interworking indicator: discard message" );
+		CEQU( 2, l[2], 0, 0x84, ".10. .... Broadband/narrowband interworking indicator: release call" );
+		CEQU( 3, l[2], 0, 0x84, ".11. .... Broadband/narrowband interworking indicator: discard parameter" );
+		CEQU( 0, l[9], 0, 0x84, "0... .... Extension indicator: ext." );
+		CEQU( 1, l[9], 0, 0x84, "1... .... Extension indicator: no ext." );
+		g[46] -= 1;
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	//LABL( 0, 0, 0, 0xb8 );
+}
+
+
+void ISUP::PARA::MLPP_precedence(  )
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "Spare:" );
+	BBIT( 2, l[1], 0x90, 0xc2, "LFB:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Spare:" );
+	BBIT( 4, l[1], 0x90, 0xc2, "Precedence level:" );
+	BBIT( 4, l[1], 0x90, 0xc2, "1st NI digit" );
+	BBIT( 4, l[2], 0x90, 0xc2, "2nd NI digit" );
+	BBIT( 4, l[3], 0x90, 0xc2, "3rd NI digit" );
+	BBIT( 4, l[4], 0x90, 0xc2, "4th NI digit" );
+	LABL( 0, 0, 0, 0xc2, "NI digits:");
+	BBIT( 24, l[4], 0x90, 0xc2, "MLPP service domain:" );
+	g[46] -= 6;
+}
+
+void ISUP::PARA::Closed_user_group_interlock_code( )
+{
+	BBIT( 4, l[1], 0x90, 0xc2, "1st NI digit" );
+	BBIT( 4, l[2], 0x90, 0xc2, "2nd NI digit" );
+	BBIT( 4, l[3], 0x90, 0xc2, "3rd NI digit" );
+	BBIT( 4, l[4], 0x90, 0xc2, "4th NI digit" );
+	LABL( 0, 0, 0, 0xc2, "NI digits:");
+	DGLB( 0, l[1], 0x90, 0x14 );
+	DGLB( 0, l[2], 0x90, 0x4 );
+	DGLB( 0, l[3], 0x90, 0x4 );
+	DGLB( 0, l[4], 0x90, 0x4 );
+	BBIT( 16, l[4], 0x90, 0xc2, "Binary code:" );
+	g[46] -= 4;
+}
+
+void ISUP::PARA::Transmission_medium_requirement_prime(  )
+{
+	LABL( 0, 0, 0x05, 0xb1, "Transmission medium requirement prime: " );
+	//BBIT( 8, 0, 0x90, 0xc2, "Indicator:" );
+	BBYT( 0, g[59], 0x05, 0x05, "Category" );
+		CEQU( 0, g[59], 0x05, 0x74, "0000 0000 speech" );
+		CEQU( 1, g[59], 0x05, 0x74, "0000 0001 spare" );
+		CEQU( 2, g[59], 0x05, 0x74, "0000 0010 reserved for 64 kbit/s unrestricted" );
+		CEQU( 3, g[59], 0x05, 0x74, "0000 0011 3.1 kHz audio" );
+		CEQU( 4, g[59], 0x05, 0x74, "0000 0100 reserved for alternate speech (service 2)/64 kbit/s unrestricted (service 1)" );
+		CEQU( 5, g[59], 0x05, 0x74, "0000 0101 reserved for alternate 64 kbit/s unrestricted (service 1)/speech (service 2)" );
+		CEQU( 6, g[59], 0x05, 0x74, "0000 0110 64 kbit/s preferred" );
+		CEQU( 7, g[59], 0x05, 0x74, "0000 0111 2 × 64 kbit/s unrestricted" );
+		CEQU( 8, g[59], 0x05, 0x74, "0000 1000 384 kbit/s unrestricted" );
+		CEQU( 9, g[59], 0x05, 0x74, "0000 1001 1536 kbit/s unrestricted" );
+		CEQU( 10, g[59], 0x05, 0x74, "0000 1011 1920 kbit/s unrestricted" );
+		if (g[56] >= 11)
+		{
+			if (g[56] <= 15) 
+			{
+				DECR 1;
+				BBIT( 4, 0, 0x05, 0 );
+				LABL( 0, 0, 0, 0x14, "0000 " );
+				BBIT( 4, 0, 0, 0x14);
+				LABL( 5, 0, 0, 0x14, " Spare" );
+			}
+		}
+		if (g[56] >= 16)
+		{
+			if (g[56] <= 18) 
+			{
+				LABL( 0, 0, 0, 0x74, "000x xxxx reserved" );
+			}
+		}
+		CEQU( 19, g[59], 0x05, 0x74, "0001 0011 spare" );
+		if (g[56] >= 20)
+		{
+			if (g[56] <= 36) 
+			{
+				LABL( 0, 0, 0, 0x74, "000x xxxx reserved" );
+			}
+		}
+		CEQU( 37, g[59], 0x05, 0x74, "0010 0101 spare" );
+		if (g[56] >= 38)
+		{
+			if (g[56] <= 42) 
+			{
+				LABL( 0, 0, 0, 0x74, "00xx xxxx reserved" );
+			}
+		}
+		if (g[56] >= 43)
+		{
+			if (g[56] <= 255) 
+			{
+				LABL( 0, 0, 0, 0x74, "xxxx xxxx spare" );
+			}
+		}
+		g[46] -= 1;
+}
+
+
+void ISUP::PARA::Redirection_number_restriction(  )
+{
+	BBIT( 6, l[1], 0x90, 0xc2, "Spare:" );
+	BBIT( 2, l[1], 0x90, 0xc2, "Presentation restricted indicator:" );
+		CEQU( 0, l[1], 0x05, 0x74, "xxxx xx00 presentation allowed" );
+		CEQU( 1, l[1], 0x05, 0x74, "xxxx xx01 presentation restricted" );
+		CEQU( 2, l[1], 0x05, 0x74, "xxxx xx10 spare" );
+		CEQU( 3, l[1], 0x05, 0x74, "xxxx xx11 spare" );
+	g[46] -= 1;
+}
+
+void ISUP::PARA::Reserved__used_in_1992_version_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+void ISUP::PARA::Call_transfer_reference(  )
+{
+	BBIT( 8, l[1], 0x90, 0xc2, "Call transfer identity:" );
+	g[46] -= 1;
+}
+
+void ISUP::PARA::Loop_prevention_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+void ISUP::PARA::Call_transfer_number(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::CCSS_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Forward_GVNS(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Backward_GVNS(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Redirect_capability__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Network_management_controls(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Correlation_id(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::SCF_id(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Call_diversion_treatment_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Called_IN_number(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Call_offering_treatment_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Charged_party_identification__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Conference_treatment_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Display_information(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::UID_action_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::UID_capability_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Redirect_counter__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Application_transport(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Collect_call_request(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::CCNR_possible_indicator(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_capability(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_routing_indicators(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Called_directory_number__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Original_called_IN_number(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Reserved_for_future_extension(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Calling_geodetic_location(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::HTR_information(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Network_routing_number__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Query_on_release_capability__network_option_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_status__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_counter(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_routing_forward_information(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Pivot_routing_backward_information(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Redirect_status__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Redirect_forward_information__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Redirect_backward_information__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Number_portability_forward_information__network_option_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Generic_number(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+void ISUP::PARA::Generic_digits__national_use_(  )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+
+
+void ISUP::PARA::( )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+	LABL( 0, 0, 0x90, 0xc2,"not decoded" );
+ 
+}
+
+
+
+
+
+void ISUP::PARA::Connected_number( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[58], 0x05, 0xc2, Odd/even Indicator:);
+	CBIT( 0x0, g[58], 0, 0x74, "1... .... .... .... odd number of address signals" ); // if odd 4 bits spare are added later
+	CLSE( 0, 0, 0, 0x74, "0... .... .... .... even number of address signals" ); 
+	BBIT( 7, g[59], 0x05, 0xc2, Nature of address indicator:);
+		CEQU( 0, g[59], 0xf4, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, g[59], 0xf4, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, g[59], 0xf4, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, g[59], 0xf4, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, g[59], 0xf4, 0x74, ".000 0100 .... .... international number" );
+		if (g[59] > 5)
+		{
+			if (g[59] < 110)
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... spare" );
+				}
+			if (g[59] < 111)
+			{ 
+				if g[59] > 127
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, g[59], 0, 0x14, "1111 1111 .... .... spare" );
+	BBIT( 1, g[59], 0xf5, 0xc2, Spare:);
+	BBIT( 3, g[59], 0xf5, 0xc2, Numbering plan indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, g[59], 0, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, g[59], 0, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, g[59], 0, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, g[59], 0, 0x74, ".... .... .111 .... spare" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Address pres. restr. indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... 00.. presentation allowed" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... 01.. presentation restricted" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... 10.. address not available (Note 1) (national use)" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... 11.. reserved for restriction by the network" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Screening indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... ..00 reserved" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... ..01 user provided, verified and passed" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... ..10 reserved" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... ..11 network provided" );
+	LABL( 0, 0, 0xd8, 0xc2, "Connected number:" );
+	g[46] -=2;
+	DW::Numbers;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::Reserved__used_in_1984_version_Red_Book_( )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+}
+
+void ISUP::PARA::Reserved__used_in_1988_version_Blue_Book_( )
+{
+	DUMP( 0, g[46], 0x90, 0xc2);
+}
+
+void ISUP::PARA::Called_party_number( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[58], 0x05, 0xc2, "Odd/even Indicator:");
+		CBIT( 0, g[58], 0x05, 0x74, "0... .... .... .... Odd/even Indicator: even number of address signals" ); // if odd 4 bits spare are added later
+		CBIT( 1, g[58], 0x05, 0x74, "1... .... .... .... Odd/even Indicator: odd number of address signals" ); 
+	g[59]=0;
+	BBIT( 7, l[6],  0x05, 0xc2, "Nature of address indicator:" );
+		CEQU( 0, l[6], 0x05, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, l[6], 0x05, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, l[6], 0x05, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, l[6], 0x05, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, l[6], 0x05, 0x74, ".000 0100 .... .... international number" );
+		if (l[6] >= 5)
+
+		{
+			if (l[6] <= 110)
+				{
+					LABL( 5, 0, 0, 0x14, ".??? ???? .... .... spare" );
+				}
+			if (l[6] >= 111)
+			{ 
+				if (l[6] <= 127)
+				{
+					LABL( 5, 0, 0, 0x14, ".??? ??? .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, l[6], 0, 0x14, "1111 1111 .... .... spare" );
+	g[59] = 0;
+	g[46] -= 1;
+	BBIT( 1, g[59],  0x90, 0xc2, "Internal Network # (INN):" );
+
+	CEQU( 0, g[59], 0x05, 0x74, ".... .... 0... .... routing to internal network number allowed" );
+	CEQU( 1, g[59], 0x05, 0x74, ".... .... 1... .... routing to internal network number not allowed" );
+	
+	BBIT( 3, g[59], 0x90, 0xc2, Numbering plan indicator:);
+		CEQU( 0, g[59], 0x05, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, g[59], 0x05, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, g[59], 0x05, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, g[59], 0x05, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, g[59], 0x05, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, g[59], 0x05, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, g[59], 0x05, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, g[59], 0x05, 0x74, ".... .... .111 .... spare" );
+	
+	BBIT( 4, g[59], 0x90, 0xc2, Spare:);
+	LABL( 0, 0, 0x05, 0x74, ".... .... .... xxxx Spare" );
+	g[46] -= 1;
+	
+	LABL( 0, 0, 0x90, 0xc2, "Called Party Number:");
+	if (g[46] >=1)
+	{
+	//ISUP::DWNUMBShrt;
+	DW::Numbers;
+	}
+	
+}
+
+void DW::Numbers( )
+{
+	if (g[46] >= 1)
+	{
+		BBIT( 4, l[1], 0x05, 0);
+		BBIT( 4, l[2], 0x05, 0);
+		CST#( 0, l[2], 0x90, 0x4, ISUP::NUMBERs);
+		if l[2] != 15
+		{
+			CST#( 0, l[1], 0x90, 0x4, ISUP::NUMBERs);
+		}
+		
+		
+		g[46] -= 1;
+	}
+	if (g[46] == 0)
+	{
+		TRTS;
+	}
+	DW::Numbers;
+}
+
+str# ISUP::NUMBERs;
+0 | 0;
+1 | 1;
+2 | 2;
+3 | 3;
+4 | 4;
+5 | 5;
+6 | 6;
+7 | 7;
+8 | 8;
+9 | 9;
+10 | A;
+11 | code12;
+12 | code11;
+13 | D;
+14 | E;
+15 | ST;
+
+
+void ISUP::DWNUMB( )
+{
+	LABL(0, 0, 0x90, 0xc2, "Called Party Number:" );
+
+	g[46] -= 2;
+	while (g[46] > 0 )
+	{
+		g[46] -= 1;
+		BBIT( 4, 0, 0x05, 0);
+		BBIT( 4, l[33], 0x05, 0);
+		CEQU( 0, l[33], 0x90, 0xc4, ".... 0000 digit 0" );
+		CEQU( 1, l[33], 0x90, 0xc4, ".... 0001 digit 1" );
+		CEQU( 2, l[33], 0x90, 0xc4, ".... 0010 digit 2" );
+		CEQU( 3, l[33], 0x90, 0xc4, ".... 0011 digit 3" );
+		CEQU( 4, l[33], 0x90, 0xc4, ".... 0100 digit 4" );
+		CEQU( 5, l[33], 0x90, 0xc4, ".... 0101 digit 5" );
+		CEQU( 6, l[33], 0x90, 0xc4, ".... 0110 digit 6" );
+		CEQU( 7, l[33], 0x90, 0xc4, ".... 0111 digit 7" );
+		CEQU( 8, l[33], 0x90, 0xc4, ".... 1000 digit 8" );
+		CEQU( 9, l[33], 0x90, 0xc4, ".... 1001 digit 9" );
+		CEQU( 10, l[33], 0, 0xc4, ".... 1010 spare" );
+		CEQU( 11, l[33], 0, 0xc4, ".... 1011 code 11" );
+		CEQU( 12, l[33], 0, 0xc4, ".... 1100 code 12" );
+		CEQU( 13, l[33], 0, 0xc4, ".... 1101 spare" );
+		CEQU( 14, l[33], 0, 0xc4, ".... 1110 spare" );
+		CEQU( 15, l[33], 0, 0xc4, ".... 1111 STOP" );		
+		DECR 1;
+		BBIT( 4, l[33], 0x05, 0);
+		if (g[46] == 0x01)
+		{
+			if (l[33] == 0x00)
+			{
+			CEQU( 0, l[33], 0, 0xc4, "0000 .... Filler" );
+			TRTS;
+			}
+		}
+		if (g[46] > 0x01)
+		{
+			CEQU( 0, l[33], 0, 0xc4, "0000 .... digit 0" );
+		}
+		
+		CEQU( 1, l[33], 0, 0xc4, "0001 .... digit 1" );
+		CEQU( 2, l[33], 0, 0xc4, "0010 .... digit 2" );
+		CEQU( 3, l[33], 0, 0xc4, "0011 .... digit 3" );
+		CEQU( 4, l[33], 0, 0xc4, "0100 .... digit 4" );
+		CEQU( 5, l[33], 0, 0xc4, "0101 .... digit 5" );
+		CEQU( 6, l[33], 0, 0xc4, "0110 .... digit 6" );
+		CEQU( 7, l[33], 0, 0xc4, "0111 .... digit 7" );
+		CEQU( 8, l[33], 0, 0xc4, "1000 .... digit 8" );
+		CEQU( 9, l[33], 0, 0xc4, "1001 .... digit 9" );
+		CEQU( 10, l[33], 0, 0xc4, "1010 .... spare" );
+		CEQU( 11, l[33], 0, 0xc4, "1011 .... code 11" );
+		CEQU( 12, l[33], 0, 0xc4, "1100 .... code 12" );
+		CEQU( 13, l[33], 0, 0xc4, "1101 .... spare" );
+		CEQU( 14, l[33], 0, 0xc4, "1110 .... spare" );
+		CEQU( 15, l[33], 0, 0xc4, "1111 .... STOP" );
+		CBIT( 4, 0, 0x90, 0xc2);
+		INCR 1;		
+		}
+}
+
+void ISUP::PARA::Subsequent_Number( )
+{
+	LABL ( 0, 0, 0xd8, 0xb7, "Subsequent Number:" );
+	BBIT ( 1, l[1], 90, c2, "Odd/Even Ind:");
+	BBIT ( 7, 0, 90, c2, "Spare");
+	LABL ( 0, 0, 90, c2, "Number:");
+	g[46] -= 1;
+	DW::Numbers;
+}
+
+void ISUP::PARA::Cause_indicators( )
+{
+	ss7::q850::for::q763;
+}
+
+void ISUP::PARA::Backward_call_indicators( )
+{
+	
+	LABL( 0, 0, 0xd8, 0xb7, "BCI" );
+	BWRD( 1, 0, 0x90, 0xc2, "Indicator:" );
+
+	DECR 2; // coz of viewing
+	
+	BBIT( 8 , 0, 0x90, 0xc2, "Indicator:" );
+	DECR 1;
+	BBIT( 8, l[33], 0x05, 0 );	
+	BBIT(6, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+	CEQU( 0, l[32], 0, 0x84, ".... .... .... ..00 Charge indicator: no indication" );
+	CEQU( 1, l[32], 0, 0x84, ".... .... .... ..01 Charge indicator: no charge" );
+	CEQU( 2, l[32], 0, 0x84, ".... .... .... ..10 Charge indicator: charge" );
+	CEQU( 3, l[32], 0, 0x84, ".... .... .... ..11 Charge indicator: spare" );	
+	DECR 1;
+	BBIT(4, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+	CEQU( 0, l[32], 0, 0x84, ".... .... .... 00.. Called party's status indicator: no indication" );
+	CEQU( 1, l[32], 0, 0x84, ".... .... .... 01.. Called party's status indicator: subscriber free" );
+	CEQU( 2, l[32], 0, 0x84, ".... .... .... 10.. Called party's status indicator: connect when free (national use)" );
+	CEQU( 3, l[32], 0, 0x84, ".... .... .... 11.. Called party's status indicator: spare" );
+	BBIT(2, 0, 0x05, 0);
+	DECR 1;
+	BBIT(2, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+	CEQU( 0, l[32], 0, 0x84, ".... .... ..00 .... Called party's category indicator: no indication" );
+	CEQU( 1, l[32], 0, 0x84, ".... .... ..01 .... Called party's category indicator: ordinary subscriber" );
+	CEQU( 2, l[32], 0, 0x84, ".... .... ..10 .... Called party's category indicator: payphone" );
+	CEQU( 3, l[32], 0, 0x84, ".... .... ..11 .... Called party's category indicator: spare" );
+	DECR 1;	
+	BBIT(2, l[32], 0x05, 0);
+	CEQU( 0, l[32], 0, 0x84, ".... .... 00.. .... End-to-end method indicator: no end-to-end method available (only link-by-link method available)" );
+	CEQU( 1, l[32], 0, 0x84, ".... .... 01.. .... End-to-end method indicator: pass-along method available (national use)" );
+	CEQU( 2, l[32], 0, 0x84, ".... .... 10.. .... End-to-end method indicator: SCCP method available" );
+	CEQU( 3, l[32], 0, 0x84, ".... .... 11.. .... End-to-end method indicator: pass-along and SCCP methods available (national use)" );
+	DBYT( 0, l[33], 0x05, 0 );	
+	CBIT( 0, l[33], 0x04, 0x84, ".... ...1 .... .... Interworking indicator: interworking encountered" );
+	CLSE( 0,0,0,0x84, ".... ...0 .... .... Interworking indicator: no interworking encountered (Signalling System No. 7 all the way)" );
+	CBIT( 1, l[33], 0x04, 0x84, ".... ..1. .... .... End-to-end information indicator (national use): no end-to-end information available" );
+	CLSE( 0,0,0,0x84, ".... ..0. .... .... End-to-end information indicator (national use): no end-to-end information available" );
+	CBIT( 2, l[33], 0x04, 0x84, ".... .1.. .... .... ISDN user part indicator: ISDN user part used all the way" );
+	CLSE( 0,0,0,0x84, ".... .0.. .... .... ISDN user part indicator: ISDN user part not used all the way" );
+	CBIT( 3, l[33], 0x04, 0x84, ".... 1... .... .... Holding indicator (national use): no interworking encountered (Signalling System No. 7 all the way)" );
+	CLSE( 0,0,0,0x84, ".... 0... .... .... Holding indicator (national use): holding not requested" );
+	CBIT( 4, l[33], 0x04, 0x84, "...1 .... .... .... ISDN access indicator: no interworking encountered (Signalling System No. 7 all the way)" );
+	CLSE( 0,0,0,0x84, "...0 .... .... .... ISDN access indicator: interworking encountered" );
+	CBIT( 5, l[33], 0x04, 0x84, "..1. .... .... .... Echo control device indicator: incoming echo control device not included" );
+	CLSE( 0,0,0,0x84, "..0. .... .... .... Echo control device indicator: incoming echo control device included" );
+	DECR 1;
+	BBIT(2, l[32], 0x05, 0);	
+	CEQU( 0, l[32], 0, 0x84, "00.. .... .... .... SCCP method indicator: no indication" );
+	CEQU( 1, l[32], 0, 0x84, "01 .... .... .... .... SCCP method indicator: no indication" );
+	CEQU( 2, l[32], 0, 0x84, "10 .... .... .... .... SCCP method indicator: SCCP method available" );
+	CEQU( 3, l[32], 0, 0x84, "11 .... .... .... .... SCCP method indicator: pass-along and SCCP methods available (national use)" );
+	BBIT(6, l[32], 0x05, 0);
+		BBYT(0, l[32], 0x05, 0);
+		//g[1] = 0; //let it end for now!
+		g[46] -= 2;
+}
+
+void ISUP::PARA::Nature_of_connection_indicators( )
+{
+	LABL( 0, 0, 0xd8, 0xb7, "Nature of connection indicator" );
+	HBIT( 2, l[28], 0xc5, 0xc2, "Satellite Indicator:" );     // formatation unclear 
+	CST#( 0, l[28], 0x05, 0x74, ISUP::NOCI::SatInd);
+	HBIT( 2, l[29], 0xc5, 0xc2, "Continuity Check Indicator:" ); 
+	CST#( 0, l[29], 0x05, 0x74, ISUP::NOCI::CCInd);
+	HBIT( 1, l[30], 0xc5, 0xc2, "Echo Control Device Indicator:" );
+	CST#( 0, l[30], 0x05, 0x74, ISUP::NOCI::ECDInd);
+	BBIT( 3, 0, 0x90, 0xc2, "Spare:" );
+	LABL( 0, 0, 0, 0x74, "xxx. ....  Spare" );
+	LABL( 0, 0, 0, 0xb8 );
+} 
+
+void ISUP::PARA::Forward_call_indicators( )
+{
+	//----------------Forward Call Indicators bits H..A------------------------------------------------------
+	LABL( 0, 0, 0xd8, 0xb7, "Forward Call Indicator Octet 1" );
+	l[31] = pb[0];
+	//if g
+	DGLB( 8, g[46], 0x90, 0xc2, "Indicatorg46:" );	
+	BBIT( 8, l[32], 0x90, 0xc2, "Indicator:" );	
+	CBIT( 1, l[31], 0, 0x84, ".... ...1 National/international call indicator: call to be treated as a international call" );	
+	CLSE( 0,0,0,0x84, ".... ...0 National/international call indicator: call to be treated as a national call" );
+	//l[32] = l[31];
+	//l[32] %= 0x06;
+	DECR 1;
+	BBIT(2, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+	CEQU( 0, l[32], 0, 0x84, ".... .00. End-to-end method indicator: no end-to-end method available (only link-by-link method available)" );
+	CEQU( 1, l[32], 0, 0x84, ".... .01. End-to-end method indicator: pass-along method available (national use)" );
+	CEQU( 2, l[32], 0, 0x84, ".... .10. End-to-end method indicator: SCCP method available" );
+	CEQU( 3, l[32], 0, 0x84, ".... .11. End-to-end method indicator: pass-along and SCCP methods available (national use)" );
+	CBIT( 3, l[31], 0, 0x84, " .... 1... Interworking indicator:  interworking encountered" );
+	BBIT(4, 0,0x05,0);
+	CLSE( 0,0,0,0x84, ".... 0... Interworking indicator: no interworking encountered (No. 7 signalling all the way)" );
+	CBIT( 4, l[31], 0x04, 0x84, "...1 .... End-to-end information ind.: end-to-end information available" );
+	CLSE( 0,0,0,0x84, "...0 .... End-to-end information ind.: no end-to-end information available" );
+	CBIT( 5, l[31], 0x04, 0x84, "..1. .... ISDN user part indicator: ISDN user part used all the way" );
+	CLSE( 0,0,0,0x84, "..0. .... ISDN user part indicator: ISDN user part not used all the way" );	
+	DECR 1;
+	BBIT( 2, l[33], 0x05, 0x04);
+	CEQU( 0, l[33], 0, 0x84, "00.. .... ISDN user part preference indicator: ISDN user part preferred all the way" );
+	CEQU( 1, l[33], 0, 0x84, "01.. .... ISDN user part preference indicator: ISDN user part not required all the way" );
+	CEQU( 2, l[33], 0, 0x84, "10.. .... ISDN user part preference indicator: ISDN user part required all the way" );
+	CEQU( 3, l[33], 0, 0x84, "11.. .... ISDN user part preference indicator: spare" );
+	INCR 1;	
+	LABL( 0, 0, 0, 0xb8 );
+	//--------------FCI END------------------------------------------------------	
+	//----------------Forward Call Indicators bits P..I------------------------------------------------------
+	if g[46] != 4
+	{
+	
+	LABL( 0, 0, 0xd8, 0xb7, "Forward Call Indicator Octect 2" );
+	l[31] = pb[0];
+	BBIT( 8, l[32], 0x90, 0xc2, "Indicator:" );
+	CBIT( 0, l[31], 0, 0x84, ".... ...1 ISDN access indicator: originating access ISDN" );
+	CLSE( 0, 0, 0, 0x84, ".... ...0 ISDN access indicator: originating access non-ISDN" );
+	l[32] = l[31];
+	l[33] %= 0x01;
+	//l[33] = l[30];
+	//DECR 1;
+	BBIT( 2, l[33], 0x05, 0x04);
+	CEQU( 0, l[33], 0, 0x84, ".... .00. SCCP method indicator: no indication" );
+	CEQU( 1, l[33], 0, 0x84, ".... .01. SCCP method indicator: connectionless method available (national use)" );
+	CEQU( 2, l[33], 0, 0x84, ".... .10. SCCP method indicator: connection oriented method available" );
+	CEQU( 3, l[33], 0, 0x84, ".... .11.  SCCP method indicator: connectionless and connection oriented methods available (national use)" );
+	//INCR 1;
+	//LABL( 0, 0, 0x90, 0xc2, "" );
+	LABL( 0,0,0,0x84, ".... x... Spare" );
+	LABL( 0,0 , 0x04, 0x84, "???? .... reserved for national use" ); //Q.763 does not say more, wirshark does, here might be sth left to do
+	LABL( 0, 0, 0, 0xb8 );
+	}
+	//--------------FCI END------------------------------------------------------	
+}
+
+void ISUP::PARA::Calling_partys_category( )
+{
+	//----------------Calling Party Category------------------------------------------------------
+
+	LABL( 0, 0, 0xd8, 0xb7, "Calling Party's Category" );
+	//BBIT( 8, 0, 0x90, 0xc2, "Indicator:" );
+	BBYT( 0, g[59],  0x05, 0x05, "Category" );
+		CEQU( 0, g[59], 0x05, 0x74, "0000 0000 calling party's category unknown at this time (national use)" );
+		CEQU( 1, g[59], 0x05, 0x74, "0000 0001 operator, language French" );
+		CEQU( 2, g[59], 0x05, 0x74, "0000 0010 operator, language English" );
+		CEQU( 3, g[59], 0x05, 0x74, "0000 0011 operator, language German" );
+		CEQU( 4, g[59], 0x05, 0x74, "0000 0100 operator, language Russian" );
+		CEQU( 5, g[59], 0x05, 0x74, "0000 0101 operator, language Spanish" );
+		CEQU( 6, g[59], 0x05, 0x74, "0000 0110 (available to Admin for selection a particular language by mutual agreement)" );
+		CEQU( 7, g[59], 0x05, 0x74, "0000 0111 (available to Admin for selection a particular language by mutual agreement)" );
+		CEQU( 8, g[59], 0x05, 0x74, "0000 1000 (available to Admin for selection a particular language by mutual agreement)" );
+		CEQU( 9, g[59], 0x05, 0x74, "0000 1001 reserved (see ITU-T Recommendation Q.104) (Note) (national use)" );
+		CEQU( 10, g[59], 0x05, 0x74, "0000 1010 ordinary calling subscriber" );
+		CEQU( 11, g[59],0x05, 0x74, "0000 1011 calling subscriber with priority" );
+		CEQU( 12, g[59], 0x05, 0x74, "0000 1101 data call (voice band data)" );
+		CEQU( 13, g[59], 0x05, 0x74, "0000 1101 test call" );
+		CEQU( 14, g[59], 0x05, 0x74, "0000 1110 spare" );
+		CEQU( 15, g[59], 0x05, 0x74, "0000 1111 payphone" );
+		//CEQU( 16, g[59], 0, 0x14, "0001 0000 spare" );
+		if (g[59] >= 16)
+		{
+			if (g[59] <= 224)
+				{
+					LABL( 5, g[59],0x05, 0x74,, "???? ???? spare" );
+				}
+			if (g[59] >= 224)
+			{ 
+				if (g[59] <= 254)
+				{
+					LABL( 5, g[59], 0x05, 0x74,, "???? ???? reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 255, g[59], 0, 0x14, "1111 1111 spare" );
+	//LABL( 0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::Transmission_medium_requirement( )
+{
+	LABL( 0, 0, 0x05, 0xb1, "Transmission medium requirement (TMR): " );
+	//BBIT( 8, 0, 0x90, 0xc2, "Indicator:" );
+	BBYT( 0, g[59], 0x05, 0x05, "Category" );
+		CEQU( 0, g[59], 0x05, 0x74, "0000 0000 speech" );
+		CEQU( 1, g[59], 0x05, 0x74, "0000 0001 spare" );
+		CEQU( 2, g[59], 0x05, 0x74, "0000 0010 reserved for 64 kbit/s unrestricted" );
+		CEQU( 3, g[59], 0x05, 0x74, "0000 0011 3.1 kHz audio" );
+		CEQU( 4, g[59], 0x05, 0x74, "0000 0100 reserved for alternate speech (service 2)/64 kbit/s unrestricted (service 1)" );
+		CEQU( 5, g[59], 0x05, 0x74, "0000 0101 reserved for alternate 64 kbit/s unrestricted (service 1)/speech (service 2)" );
+		CEQU( 6, g[59], 0x05, 0x74, "0000 0110 64 kbit/s preferred" );
+		CEQU( 7, g[59], 0x05, 0x74, "0000 0111 2 × 64 kbit/s unrestricted" );
+		CEQU( 8, g[59], 0x05, 0x74, "0000 1000 384 kbit/s unrestricted" );
+		CEQU( 9, g[59], 0x05, 0x74, "0000 1001 1536 kbit/s unrestricted" );
+		CEQU( 10, g[59], 0x05, 0x74, "0000 1011 1920 kbit/s unrestricted" );
+		if (g[56] >= 11) // "D:11
+		{
+			if (g[56] <= 15) // D: 15
+			{
+				DECR 1;
+				BBIT( 4, 0, 0x05, 0 );
+				LABL( 5, 0, 0, 0x14, "0000 " );
+				BBIT( 4, 0, 0, 0x14);
+				LABL( 5, 0, 0, 0x14, " Spare" );
+			}
+		}
+		CEQU( 16, g[59], 0x05, 0x74, "0001 0000 3x64 kbit/s unrestricted" );
+		CEQU( 17, g[59], 0x05, 0x74, "0001 0001 4x64 kbit/s unrestricted" );
+		CEQU( 18, g[59], 0x05, 0x74, "0001 0010 5x64 kbit/s unrestricted" );
+		CEQU( 19, g[59], 0x05, 0x74, "0001 0011 spare" );
+		CEQU( 20, g[59], 0x05, 0x74, "0001 0100 7x64 kbit/s unrestricted" );
+		CEQU( 21, g[59], 0x05, 0x74, "0001 0101 8x64 kbit/s unrestricted" );
+		CEQU( 22, g[59], 0x05, 0x74, "0001 0110 9x64 kbit/s unrestricted" );
+		CEQU( 23, g[59], 0x05, 0x74, "0001 0111 10x64 kbit/s unrestricted" );
+		CEQU( 24, g[59], 0x05, 0x74, "0001 1000 11x64 kbit/s unrestricted" );
+		CEQU( 25, g[59], 0x05, 0x74, "0001 1001 12x64 kbit/s unrestricted" );
+		CEQU( 26, g[59], 0x05, 0x74, "0001 1010 13x64 kbit/s unrestricted" );
+		CEQU( 27, g[59], 0x05, 0x74, "0001 1011 14x64 kbit/s unrestricted" );
+		CEQU( 28, g[59], 0x05, 0x74, "0001 1100 15x64 kbit/s unrestricted" );
+		CEQU( 29, g[59], 0x05, 0x74, "0001 1101 16x64 kbit/s unrestricted" );
+		CEQU( 30, g[59], 0x05, 0x74, "0001 1110 17x64 kbit/s unrestricted" );
+		CEQU( 31, g[59], 0x05, 0x74, "0001 1111 18x64 kbit/s unrestricted" );
+		CEQU( 32, g[59], 0x05, 0x74, "0010 0000 19x64 kbit/s unrestricted" );
+		CEQU( 33, g[59], 0x05, 0x74, "0010 0001 20x64 kbit/s unrestricted" );
+		CEQU( 34, g[59], 0x05, 0x74, "0010 0010 21x64 kbit/s unrestricted" );
+		CEQU( 35, g[59], 0x05, 0x74, "0010 0011 22x64 kbit/s unrestricted" );
+		CEQU( 36, g[59], 0x05, 0x74, "0010 0100 23x64 kbit/s unrestricted" );
+		CEQU( 37, g[59], 0x05, 0x74, "0010 0101 spare" );
+		CEQU( 38, g[59], 0x05, 0x74, "0010 0110 25x64 kbit/s unrestricted" );
+		CEQU( 39, g[59], 0x05, 0x74, "0010 0111 26x64 kbit/s unrestricted" );
+		CEQU( 40, g[59], 0x05, 0x74, "0010 1000 27x64 kbit/s unrestricted" );
+		CEQU( 41, g[59], 0x05, 0x74, "0010 1001 28x64 kbit/s unrestricted" );
+		CEQU( 42, g[59], 0x05, 0x74, "0010 1010 29x64 kbit/s unrestricted" );
+		CLSE( 0, g[59], 0x05, 0x74, "xxxx xxxx spare" );
+}
+
+void ISUP::PARA::Padding( )
+{
+	BBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[1] = 0;
+}
+
+void ISUP::PARA::Calling_party_number( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[59], 0x05, 0xc2, "Odd/even Indicator:");
+	CBIT( 1, g[59], 0, 0x74, "1... .... .... .... odd number of address signals" ); // if odd 4 bits spare are added later
+	CLSE( 0, 0, 0, 0x74, "0... .... .... .... even number of address signals" ); 
+	BBIT( 7, l[6], 0x05, 0xc2, Nature of address indicator:);
+		CEQU( 0, l[6], 0xf4, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, l[6], 0xf4, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, l[6], 0xf4, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, l[6], 0xf4, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, l[6], 0xf4, 0x74, ".000 0100 .... .... international number" );
+		if (l[6] >= 5)
+		{
+			if (l[6] <= 110)
+				{
+					LABL( 5, l[6], 0, 0x14, ".??? ???. .... .... spare" );
+				}
+			if (l[6] >= 111)
+			{ 
+				if (l[6] <= 127)
+				{
+					LABL( 5, l[6], 0, 0x14, ".??? ???. .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, l[6], 0, 0x14, "1111 1111 .... .... spare" );
+	BBIT( 1, l[6], 0xf5, 0xc2, Number Incomplete indicator:);
+	CBIT( 0x0, l[6], 0, 0x74, ".... 0... .... .... complete" );
+	CLSE( 0, 0, 0, 0x74, ".... .... 1... .... incomplete" );
+	BBIT( 3, l[6], 0xf5, 0xc2, Numbering plan indicator:);
+		CEQU( 0, l[6], 0, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, l[6], 0, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, l[6], 0, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, l[6], 0, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, l[6], 0, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, l[6], 0, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, l[6], 0, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, l[6], 0, 0x74, ".... .... .111 .... spare" );
+	BBIT( 2, l[6], 0xf5, 0xc2, Address pres. restr. indicator:);
+		CEQU( 0, l[6], 0, 0x74, ".... .... .... 00.. presentation allowed" );
+		CEQU( 1, l[6], 0, 0x74, ".... .... .... 01.. presentation restricted" );
+		CEQU( 2, l[6], 0, 0x74, ".... .... .... 10.. address not available (Note 1) (national use)" );
+		CEQU( 3, l[6], 0, 0x74, ".... .... .... 11.. reserved for restriction by the network" );
+	BBIT( 2, l[6], 0xf5, 0xc2, Screening indicator:);
+		CEQU( 0, l[6], 0, 0x74, ".... .... .... ..00 reserved" );
+		CEQU( 1, l[6], 0, 0x74, ".... .... .... ..01 user provided, verified and passed" );
+		CEQU( 2, l[6], 0, 0x74, ".... .... .... ..10 reserved" );
+		CEQU( 3, l[6], 0, 0x74, ".... .... .... ..11 network provided" );
+		
+	g[46] -= 2;
+		LABL( 0, 0, 0x90, 0xc2, "Calling Party Number:");
+	//ISUP::DWNUMBShrt;
+	DW::Numbers;
+	//LABL( 0, 0, 0, 0xb8 );
+	//LABL(0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::Optional_forward_call_indicators( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBYT( 1, g[58], 0x90, 0xc2, "Indicator:" );
+	DECR 1;
+	g[56] =pb[0];
+	g[56] &= 0x03;
+	//BBIT( 8, g[56], 0x90, 0xc2, Connected line identity request indicator:);
+		CEQU( 0, g[56], 0, 0x84, ".... ..00 Connected line identity request indicator: non-CUG call" );
+		CEQU( 1, g[56], 0, 0x84, ".... ..01 Connected line identity request indicator: spare" );
+		CEQU( 2, g[56], 0, 0x84, ".... ..10 Connected line identity request indicator: closed user group call, outgoing access allowed" );
+		CEQU( 3, g[56], 0, 0x84, ".... ..11 Connected line identity request indicator: closed user group call, outgoing access not allowed" );
+	g[56] =pb[0];
+	CBIT( 2, g[56] 0, 0x84, ".... .1.. Simple segmentation indicator: additional information will be sent in a segmentation message" );
+		CLSE( 0, 0, 0, 0x84,	".... .0.. Simple segmentation indicator: no additional information will be sent" );
+	LABL( 0, 0, 0, 0x84, ".xxx x... Spare" );
+	CBIT( 7, g[56] 0, 0x84, "1... .... Connected line identity request indicator: requested" );
+		CLSE( 0, 0, 0, 0x84,	"0... .... Connected line identity request indicator: not requested" );
+	INCR 1;
+	//LABL( 0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::Access_delivery_information( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Access delivery indicator" );
+	BBIT( 7, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 1, 0, 0x90, 0xc2, "Access delivery indicator:" );
+}
+
+void ISUP::PARA::Automatic_congestion_level( )
+{
+	LABL( 0, 0, 0xd8, 0xb7,  "Automatic congestion level" );
+	BBIT( 8, l[6], 0x90, 0xc2, "Automatic congestion level:" );
+		CEQU( 0, l[6], 0, 0x54, "spare" );
+		CEQU( 1, l[6], 0, 0x54, "congestion level 1 exceeded" );
+		CEQU( 2, l[6], 0, 0x54, "congestion level 2 exceeded" );
+		if (l[6] >= 3)
+		{
+			if (l[6] <= 255)
+			{
+				LABL( 0, 0, 0, 0x54, "spare" );
+			}
+		}
+}
+
+void ISUP::PARA::Call_diversion_information( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Call diversion information" );
+	BBIT( 5, 0, 0x05, 0 );
+	BBIT( 3, 0, 0x90, 0xc2, "Notification subscription options:" );
+		CEQU( 0, l[6], 0x90, 0x54, "Unknown" );
+		CEQU( 1, l[6], 0, 0x54, "presentation not allowed" );
+		CEQU( 2, l[6], 0, 0x54, "presentation allowed with redirection number" );
+		CEQU( 3, l[6], 0, 0x54, "presentation allowed without redirection number" );
+		if (l[6] >= 4)
+		{
+			if (l[6] <= 255)
+			{
+				LABL( 0, 0, 0, 0x54, "spare" );
+			}
+		}	
+	DECR 1;
+	BBIT( 1, 0, 0x05, 0 );
+	BBIT( 4, l[6], 0x90, 0xc2, "Redirecting reason:" );
+		CEQU( 0, l[6], 0, 0x54, "Unknown" );
+		CEQU( 1, l[6], 0, 0x54, "User busy" );
+		CEQU( 2, l[6], 0, 0x54, "no reply" );
+		CEQU( 3, l[6], 0, 0x54, "unconditional" );
+		CEQU( 4, l[6], 0, 0x54, "deflection during alerting" );
+		CEQU( 5, l[6], 0, 0x54, "deflection immediate response" );
+		CEQU( 6, l[6], 0, 0x54, "mobile subscriber not reachable" );
+		if (l[6] >= 7)
+		{
+			if (l[6] <= 255)
+			{
+				LABL( 0, 0, 0x90, 0x54, "spare" );
+			}
+		}	
+	BBIT( 1, 0, 0xf5, 0xc2, "Spare:" );
+	
+}
+
+void ISUP::PARA::Call_reference__national_use_( )
+{
+	//Length = 40 bits
+	LABL( 0, 0, 0xd8, 0xb7, "Call reference (national use)" );
+	BBIT( 24, 0, 0x90, 0xc2, "Call identity:" );
+	BBIT( 8, l[2], 0x5, 0x5, "Siganlling Point Code:" );
+	BBIT( 2, 0, 0x5, 0x5, "Spare:" );
+	BBIT( 6, l[3], 0x5, 0x5, "Siganlling Point Code:" );
+	SHFL( 8, l[3]);
+	l[3] += l[2];
+	DGLB( 0, l[3], 0x90, 0xc2, "Signalling Point Code:" );
+}
+
+void ISUP::PARA::Circuit_group_supervision_message_type( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Circuit group supervision message type" );
+	BBIT( 6, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 2, 0, 0x90, 0xc2, "Circuit group supervision message type indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "maintenance oriented" );
+		CEQU( 1, l[6], 0, 0x54, "hardware failure oriented" );
+		CEQU( 2, l[6], 0, 0x54, "reserved for national use (used in 1984 version)" );
+		CEQU( 3, l[6], 0, 0x54, "spare" );
+}
+
+void ISUP::PARA::Continuity_indicators( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Continuity indicators parameter" );
+	BBIT( 7, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 1, l[6], 0x90, 0xc2, "Continuity indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "continuity check failed" );
+		CEQU( 1, l[6], 0, 0x54, "continuity check successful" );
+}
+
+void ISUP::PARA::Echo_control_information( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Echo control information" );
+	BBIT(6, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, ".... ..00 Outgoing echo control device information indicator: no information" );
+		CEQU( 1, l[32], 0, 0x84, ".... ..01 Outgoing echo control device information indicator: outgoing echo control device not included and not available" );
+		CEQU( 2, l[32], 0, 0x84, ".... ..10 Outgoing echo control device information indicator: outgoing echo control device included" );
+		CEQU( 3, l[32], 0, 0x84, ".... ..11 Outgoing echo control device information indicator: outgoing echo control device not included but available" );	
+	DECR 1;
+	BBIT(4, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, ".... 00.. Incoming echo control device information indicator: no information" );
+		CEQU( 1, l[32], 0, 0x84, ".... 01.. Incoming echo control device information indicator: incoming echo control device not included and not available" );
+		CEQU( 2, l[32], 0, 0x84, ".... 10.. Incoming echo control device information indicator: incoming echo control device included" );
+		CEQU( 3, l[32], 0, 0x84, ".... 11.. Incoming echo control device information indicator: incoming echo control device not included but available" );
+	BBIT(2, 0, 0x05, 0);
+	DECR 1;
+	BBIT(2, 0, 0x05, 0);
+	BBIT(2, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, "..00 .... Outgoing echo control device request indicator: no information" );
+		CEQU( 1, l[32], 0, 0x84, "..01 .... Outgoing echo control device request indicator: outgoing echo control device activation request" );
+		CEQU( 2, l[32], 0, 0x84, "..10 .... Outgoing echo control device request indicator: outgoing echo control device activation request" );
+		CEQU( 3, l[32], 0, 0x84, "..11 .... Outgoing echo control device request indicator: spare" );
+	DECR 1;	
+	BBIT(2, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, "00.. .... Incoming echo control device request indicator: no information" );
+		CEQU( 1, l[32], 0, 0x84, "01.. .... Incoming echo control device request indicator: incoming echo control device activation request" );
+		CEQU( 2, l[32], 0, 0x84, "10.. .... Incoming echo control device request indicator: incoming echo control device activation request" );
+		CEQU( 3, l[32], 0, 0x84, "11.. .... Incoming echo control device request indicator: spare" );
+	DBYT( 0, l[33], 0x05, 0 );
+	g[46] -= 1;
+}
+
+void ISUP::PARA::Event_information( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Event indicator" );
+	BBIT( 1, l[6], 0x05, 0xc2, "Event presentation restricted indicator" );
+		CEQU( 0, l[6], 0, 0x54, "no indication" );
+		CEQU( 1, l[6], 0, 0x54, "presentation restricted" );
+	BBIT( 7, l[6], 0x05, 0xc2, );
+		CEQU( 0, l[6], 0, 0x54, "spare" );
+		CEQU( 1, l[6], 0, 0x54, "ALERTING" );
+		CEQU( 2, l[6], 0, 0x54, "PROGRESS" );
+		CEQU( 3, l[6], 0, 0x54, "in-band information or an appropriate pattern is now available" );
+		CEQU( 4, l[6], 0, 0x54, "call forwarded on busy (national use)" );
+		CEQU( 5, l[6], 0, 0x54, "call forwarded on no reply (national use)" );
+		CEQU( 6, l[6], 0, 0x54, "call forwarded unconditional (national use)" );
+		if (l[6] >= 7)
+		{
+			if (l[6] <= 128)
+			{
+				LABL( 0, 0, 0x90, 0x54, "spare" );
+			}
+		}	
+}
+
+void ISUP::PARA::Facility_indicator( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Facility indicator" );
+	BBIT( 8, 0, 0x90, 0xc2, "Facility indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "spare" );
+		CEQU( 1, l[6], 0, 0x54, "spare" );
+		CEQU( 2, l[6], 0, 0x54, "user-to-user service" );
+		if (l[6] >= 3)
+		{
+			if (l[6] <= 255)
+			{
+				LABL( 0, 0, 0x90, 0x54, "spare" );
+			}
+		}	
+}
+
+void ISUP::PARA::Generic_notification_indicator( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Generic notification indicator" );
+	BBIT( 1, l[6], 0x90, 0xc2, "Extension indicator (ext.):" );
+		CEQU( 0, l[6], 0, 0x54, "information continues in the next octet" );
+		CEQU( 1, l[6], 0, 0x54, "Reserved" );
+	BBIT( 1, 0, 0x90, 0xc2, "Notification indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "user suspended" );
+		CEQU( 1, l[6], 0, 0x54, "user resumed" );
+		CEQU( 2, l[6], 0, 0x54, "bearer service change" );
+		CEQU( 3, l[6], 0, 0x54, "discriminator for extension to ASN.1 encoded component" );
+		CEQU( 4, l[6], 0, 0x54, "call completion delay" );
+		if (l[6] >= 5)
+		{
+			if (l[6] <= 65)
+			{
+				LABL( 0, 0, 0x90, 0x54, "reserved" );
+			}
+		}
+		CEQU( 66, l[6], 0, 0x54, "conference established" );
+		CEQU( 67, l[6], 0, 0x54, "conference disconnected" );
+		CEQU( 68, l[6], 0, 0x54, "other party added" );
+		CEQU( 69, l[6], 0, 0x54, "isolated" );
+		CEQU( 70, l[6], 0, 0x54, "reattached" );
+		CEQU( 71, l[6], 0, 0x54, "other party isolated" );
+		CEQU( 72, l[6], 0, 0x54, "other party reattached" );
+		CEQU( 73, l[6], 0, 0x54, "other party split" );
+		CEQU( 74, l[6], 0, 0x54, "other party disconnected" );
+		CEQU( 75, l[6], 0, 0x54, "conference floating" );
+		if (l[6] >= 76)
+		{
+			if (l[6] <= 95)
+			{
+				LABL( 0, 0, 0x90, 0x54, "reserved" );
+			}
+		}
+		CEQU( 96, l[6], 0, 0x54, "call is a waiting call" );
+		if (l[6] >= 97)
+		{
+			if (l[6] <= 103)
+			{
+				LABL( 0, 0, 0x90, 0x54, "reserved" );
+			}
+		}
+		CEQU( 104, l[6], 0, 0x54, "diversion activated (used in DSS1)" );
+		CEQU( 105, l[6], 0, 0x54, "call transfer, alerting" );
+		CEQU( 106, l[6], 0, 0x54, "call transfer, active" );
+		if (l[6] >= 107)
+		{
+			if (l[6] <= 120)
+			{
+				LABL( 0, 0, 0x90, 0x54, "reserved" );
+			}
+		}
+		CEQU( 121, l[6], 0, 0x54, "remote hold" );
+		CEQU( 122, l[6], 0, 0x54, "remote retrieval" );
+		CEQU( 123, l[6], 0, 0x54, "call is diverting" );
+		CEQU( 124, l[6], 0, 0x54, "reserved" );
+		CEQU( 125, l[6], 0, 0x54, "reserved" );
+		CEQU( 126, l[6], 0, 0x54, "reserved" );
+		CEQU( 127, l[6], 0, 0x54, "reserved" );
+		CEQU( 128, l[6], 0, 0x54, "reserved" );
+}
+
+void ISUP::PARA::Information_indicators__national_use_( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Information indicator" );
+	BBIT( 7, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "Extension indicator (ext.):" );
+		CEQU( 0, l[6], 0, 0x54, " calling party address not requested" );
+		CEQU( 1, l[6], 0, 0x54, " calling party address requested" );
+	DECR 1;
+	BBIT( 6, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "Holding indicator:" );
+		CEQU( 0, l[6], 0, 0x54, " holding not requested" );
+		CEQU( 1, l[6], 0, 0x54, " holding requested" );
+	BBIT( 1, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 5, 0, 0x05, 0);
+	BBIT( 1, 0, 0x90, 0xc2, "Spare" );
+	BBIT( 2, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 4, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "Calling party's category request indicator:" );
+		CEQU( 0, l[6], 0, 0x54, " calling party's category not requested" );
+		CEQU( 1, l[6], 0, 0x54, " calling party's category requested" );
+	BBIT( 3, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 1, 0, 0x05, 0);
+	BBIT( 2, 0, 0x90, 0xc2, "Spare" );
+	BBIT( 5, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 1, 0, 0x90, 0xc2, "Malicious call identification request indicator (reserved, used in ISUP'88 Blue Book)" );
+		CEQU( 0, l[6], 0, 0x54, "malicious call identification not requested" );
+		CEQU( 1, l[6], 0, 0x54, "malicious call identification requested" );
+	BBIT( 7, 0, 0x05, 0);
+
+	BBIT( 4, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 4, 0, 0x90, 0xc2, "Reserved:" );
+} 
+
+void ISUP::PARA::MCID_request_indicators( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "MCID request indicators:" );
+	BBIT( 6, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 1, 0, 0x90, 0xc2, "Holding indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "holding not provided" );
+		CEQU( 1, l[6], 0, 0x54, "holding provided" );
+	BBIT( 1, 0, 0x90, 0xc2, "MCID request indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "MCID not included" );
+		CEQU( 1, l[6], 0, 0x54, "MCID included" );
+}
+
+void ISUP::PARA::MCID_response_indicators( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "MCID response indicators:" );
+	BBIT( 6, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 1, 0, 0x90, 0xc2, "Holding indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "holding not provided" );
+		CEQU( 1, l[6], 0, 0x54, "holding provided" );
+	BBIT( 1, 0, 0x90, 0xc2, "MCID response indicator:" );
+		CEQU( 0, l[6], 0, 0x54, "MCID not included" );
+		CEQU( 1, l[6], 0, 0x54, "MCID included" );
+}
+
+void ISUP::PARA::Optional_backward_call_indicators( )
+{
+	//Length = 8
+	LABL( 0, 0, 0xd8, 0xb7, "Optional backward call indicators" );
+	BBIT( 7, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "In-band information indicator:" );
+		CEQU( 0, l[6], 0, 0x54, " no indication" );
+		CEQU( 1, l[6], 0, 0x54, " in-band information or an appropriate pattern is now available" );
+	DECR 1;
+	BBIT( 6, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "Call diversion may occur indicator" );
+		CEQU( 0, l[6], 0, 0x54, " no indication" );
+		CEQU( 1, l[6], 0, 0x54, " call diversion may occur" );
+	BBIT( 1, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 5, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "Simple segmentation indicator" );
+		CEQU( 0, l[6], 0, 0x54, " no additional information will be sent" );
+		CEQU( 1, l[6], 0, 0x54, " additional information will be sent in a segmentation message" );
+	BBIT( 2, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 4, 0, 0x05, 0);
+	BBIT( 1, l[6], 0x90, 0xc2, "MLPP user indicator:" );
+		CEQU( 0, l[6], 0, 0x54, " no indication" );
+		CEQU( 1, l[6], 0, 0x54, " MLPP user" );
+	BBIT( 3, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 4, 0, 0x90, 0xc2, "res. for nat. Use:" );
+	BBIT( 4, 0, 0x05, 0);
+} 
+
+void ISUP::PARA::Redirection_information( )
+{
+	//Length = 16
+	LABL( 0, 0, 0xd8, 0xb7, "Redirection information" );
+	BBIT( 5, 0, 0x05, 0);
+	BBIT( 3, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, ".... .000 Redirecting indicator: no redirection (national use)" );
+		CEQU( 1, l[32], 0, 0x84, ".... .001 Redirecting indicator: call rerouted (national use)" );
+		CEQU( 2, l[32], 0, 0x84, ".... .010 Redirecting indicator: call rerouted, all redirection information presentation restricted (national use)" );
+		CEQU( 3, l[32], 0, 0x84, ".... .011 Redirecting indicator: call diverted" );
+		CEQU( 4, l[32], 0, 0x84, ".... .100 Redirecting indicator: call diverted, all redirection information presentation restricted" );
+		CEQU( 5, l[32], 0, 0x84, ".... .101 Redirecting indicator: call rerouted, redirection number presentation restricted (national use)" );
+		CEQU( 6, l[32], 0, 0x84, ".... .110 Redirecting indicator: call diversion, redirection number presentation restricted (national use)" );
+		CEQU( 7, l[32], 0, 0x84, ".... .111 Redirecting indicator: spare" );		
+	DECR 1;
+	BBIT( 4, 0, 0x05, 0);
+	BBIT( 1, 0, 0x90, 0x84, ".... ?... Spare" );
+	BBIT( 3, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 4, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, "0000 .... Original redirection reason: unknown/not available" );
+		CEQU( 1, l[32], 0, 0x84, "0001 .... Original redirection reason: user busy (national use)" );
+		CEQU( 2, l[32], 0, 0x84, "0010 .... Original redirection reason: no reply (national use)" );
+		CEQU( 3, l[32], 0, 0x84, "0011 .... Original redirection reason: unconditional (national use)" );
+		if (l[32] >= 4)
+		{
+			if (l[32] <= 15)
+			{
+				LABL( 0, 0, , 0x84, "???? .... spare" );
+			}
+		}
+	BBIT( 9, 0, 0x05, 0);		
+	DBIT( 3, l[32], 0, 0x84, Redirection counter:);
+		if (l[32] >= 6)
+		{
+			LABL( 0, 0, 0x90, 0x54, "should be not greater than 5" );
+		}
+	DECR 1;
+	BBIT( 4, 0, 0x05, 0);
+	BBIT( 1, 0, 0x90, 0x84, ".... ?... res. for nat. use" );
+	BBIT( 3, 0, 0x05, 0);
+	DECR 1;
+	BBIT( 4, l[32], 0x05, 0);
+		CEQU( 0, l[32], 0, 0x84, "0000 .... Redirection reason: unknown/not available" );
+		CEQU( 1, l[32], 0, 0x84, "0001 .... Redirection reason: user busy" );
+		CEQU( 2, l[32], 0, 0x84, "0010 .... Redirection reason: no reply" );
+		CEQU( 3, l[32], 0, 0x84, "0011 .... Redirection reason: unconditional" );
+		CEQU( 4, l[32], 0, 0x54, "0100 .... Redirection reason: deflection during alerting" );
+		CEQU( 5, l[32], 0, 0x54, "0101 .... Redirection reason: deflection immediate response" );
+		CEQU( 6, l[32], 0, 0x54, "0110 .... Redirection reason: mobile subscriber not reachable" );
+		if (l[32] >= 7)
+		{
+			if (l[32] <= 15)
+			{
+				LABL( 0, 0, , 0x84, "???? .... spare" );
+			}
+		}
+	BBIT( 4, 0, 0x05, 0);	
+}
+
+void ISUP::PARA::Access_transport( )
+{
+	ss7::q931::ietype;
+}
+
+void ISUP::PARA::User_service_information( )
+{
+l[8] = 1;
+l[9] = 1;
+l[10] = 1;
+l[11] = 1;
+	if (g[46] == 3)
+	{
+		DUMP( 0, g[46], 0x90, 0xc2, Dump:);
+	}
+	if (g[46] != 3)
+	{
+	
+		BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+		DECR 1; 
+		BBIT( 1, l[7], 0x90, 0xc2, "Extension Indicator:" );
+		
+		BBIT( 2, l[6], 0x90, 0xc2, "Coding standard:" );
+			CEQU( 0, l[6], 0, 0x54, "ITU-T standardized coding" ); //Q.8.50
+			CEQU( 1, l[6], 0, 0x54, "ISO/IEC standard" );
+			CEQU( 2, l[6], 0, 0x54, "national standard" );
+			CEQU( 3, l[6], 0, 0x54, "standard specific to identified location" );
+		BBIT( 5, l[6], 0x90, 0xc2, "Inform. transfer capability:" );
+			CEQU( 0, l[6], 0, 0x54, "Speech" );
+			CEQU( 8, l[6], 0, 0x54, "Unrestricted digital information" );
+			CEQU( 9, l[6], 0, 0x54, "Restricted digital information" );
+			CEQU( 16, l[6], 0, 0x54, "3.1 kHz audio" );
+			CEQU( 17, l[6], 0, 0x54, "Unrestricted digital information with tones/announcements" );
+			CEQU( 24, l[6], 0, 0x54, "Video" );
+			CLSE( 0, 0, 0, 0x54, "Reserved" );
+			
+		if (l[7] == 1)
+		{
+			BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+			DECR 1; 
+			BBIT( 1, l[8], 0x90, 0xc2, "Extension Indicator:" );
+			BBIT( 2, l[6], 0x90, 0xc2, "Transfer mode:" );
+				CEQU( 0, l[6], 0, 0x54, "Circuit mode" ); 
+				CEQU( 1, l[6], 0, 0x54, "Packet mode" );
+				CEQU( 2, l[6], 0, 0x54, "Reserved" );
+				CEQU( 3, l[6], 0, 0x54, "Reserved" );
+			BBIT( 5, l[6], 0x90, 0xc2, "Inform. transfer rate:" );
+				CEQU( 0, l[6], 0, 0x54, "This code shall be used for packet-mode calls" );
+				CEQU( 16, l[6], 0, 0x54, "64 kbit/s" );
+				CEQU( 17, l[6], 0, 0x54, "2 × 64 kbit/s" );
+				CEQU( 18, l[6], 0, 0x54, "384 kbit/s" );
+				CEQU( 19, l[6], 0, 0x54, "1536 kbit/s" );
+				CEQU( 20, l[6], 0, 0x54, "1920 kbit/s" );
+				CEQU( 24, l[6], 0, 0x54, "Multirate (64 kbit/s base rate)" );
+				CLSE( 0, 0, 0, 0x54, "Reserved" );
+			if (l[8] == 0)
+			{
+				BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+				DECR 1; 
+				BBIT( 1, l[9], 0x90, 0xc2, "Extension Indicator:" );
+				HBIT( 7, l[6], 0x90, 0xc2, "Rate multiplier:" );
+				if (l[9] == 0 )
+				{
+					BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+					DECR 1; 
+					BBIT( 1, l[10], 0x90, 0xc2, "Extension Indicator:" );
+					BBIT( 2, l[6], 0x90, 0xc2, "Layer 1 ident.:" );
+						CEQU( 1, l[6], 0, 0x54, "Valid" );
+						CLSE( 1, l[6], 0, 0x54, "Not Valid" );
+					BBIT( 5, l[6], 0x90, 0xc2, "User information layer 1 protocol:" );
+					if (l[10] == 0 )
+					{
+						BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+						DECR 1; 
+						BBIT( 1, l[11], 0x90, 0xc2, "Extension Indicator:" );
+						BBIT( 2, l[6], 0x90, 0xc2, "Layer 2 ident.:" );
+							CEQU( 2, l[6], 0, 0x54, "Valid" );
+							CLSE( 0, l[6], 0, 0x54, "Not Valid" );
+						BBIT( 5, l[6], 0x90, 0xc2, "User information layer 2 protocol:" );
+						if (l[11] == 0 )
+						{
+							BBYT( 1, 0, 0x90, 0xc2, "Indicator:" );
+							DECR 1; 
+							BBIT( 1, l[9], 0x90, 0xc2, "Extension Indicator:" );
+							BBIT( 2, l[6], 0x90, 0xc2, "Layer 3 ident.:" );
+								CEQU( 3, l[6], 0, 0x54, "Valid" );
+								CLSE( 0, l[6], 0, 0x54, "Not Valid" );
+							BBIT( 5, l[6], 0x90, 0xc2, "User information layer 3 protocol:" );
+						}
+					}
+				}
+			}
+		}
+	}
+	if (g[46] >= 6)
+	{
+		DUMP( 0, g[46], 0x90, 0xc2, "Length is not valid: ");
+	}
+	
+	//LABL( 0, 0, 0, 0xb8, );
+
+}
+
+void ISUP::PARA::Propagation_delay_counter( )
+{
+	//LABL( 0, 0, 0xd8, 0xb7,Propagation delay counter); //Complicate cause its a field over a 16 bit string
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	if (g[46] == 2)
+	{
+		BWRD( 0, 0, 0x90, 0xc2, "Propagation Delay Value" );
+	}
+	if (g[46] != 2)
+	{
+		DUMP(0, g[46], 0x90, 0xc2, Dump:);
+	}
+	//LABL( 0, 0, 0, 0xb8, );
+
+}
+
+void ISUP::PARA::Location_number( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[58], 0x05, 0xc2, Odd/even Indicator:);
+	CBIT( 0x0, g[58], 0, 0x74, "1... .... .... .... odd number of address signals" ); // if odd 4 bits spare are added later
+	CLSE( 0, 0, 0, 0x74, "0... .... .... .... even number of address signals" ); 
+	BBIT( 7, g[59], 0x05, 0xc2, Nature of address indicator:);
+		CEQU( 0, g[59], 0xf4, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, g[59], 0xf4, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, g[59], 0xf4, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, g[59], 0xf4, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, g[59], 0xf4, 0x74, ".000 0100 .... .... international number" );
+		if (g[59] > 5)
+		{
+			if (g[59] < 110)
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... spare" );
+				}
+			if (g[59] < 111)
+			{ 
+				if g[59] > 127
+				{
+					LABL( 5, g[59], 0, 0x14, ".??? ??? .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, g[59], 0, 0x14, "1111 1111 .... .... spare" );
+	BBIT( 1, g[59], 0xf5, 0xc2, Number Incomplete indicator:);
+	CBIT( 0x0, g[59], 0, 0x74, ".... .... 0... .... complete" );
+	CLSE( 0, 0, 0, 0x74, ".... .... 1... .... incomplete" );
+	
+	BBIT( 3, g[59], 0xf5, 0xc2, Numbering plan indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, g[59], 0, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, g[59], 0, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, g[59], 0, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, g[59], 0, 0x74, ".... .... .111 .... spare" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Address pres. restr. indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... 00.. presentation allowed" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... 01.. presentation restricted" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... 10.. address not available (Note 1) (national use)" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... 11.. reserved for restriction by the network" );
+	BBIT( 2, g[59], 0xf5, 0xc2, Screening indicator:);
+		CEQU( 0, g[59], 0, 0x74, ".... .... .... ..00 reserved" );
+		CEQU( 1, g[59], 0, 0x74, ".... .... .... ..01 user provided, verified and passed" );
+		CEQU( 2, g[59], 0, 0x74, ".... .... .... ..10 reserved" );
+		CEQU( 3, g[59], 0, 0x74, ".... .... .... ..11 network provided" );
+	LABL( 0, 0, 0xd8, 0xc2, "Location number:" );
+	g[46] -=2;
+	DW::Numbers;
+	LABL( 0, 0, 0, 0xb8 );
+	//LABL(0, 0, 0, 0xb8 );
+}
+
+void ISUP::PARA::User-to-user_information( )
+{
+	DGLB( 0, g[46], 0x90,0xc2, "Length:" );
+	ss7::q931::ietype;
+}
+
+void ISUP::PARA::Hop_counter( )
+{
+	DGLB( 0, g[46], 0x90,0xc2, "Length:" );
+	while (g[46] >= 1)
+	{
+		DBIT( 8, 0 0x90, 0xc2, "Hop Counter:" );
+		g[46] -= 1;
+	}
+	
+//	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+
+void ISUP::PARA::Redirection_number( )
+{
+	DGLB( 0, g[46], 0x90, 0xc2, "Length:");
+	BBIT( 1, g[58], 0x05, 0xc2, "Odd/even Indicator:");
+		CBIT( 0, g[58], 0x05, 0x74, "0... .... .... .... Odd/even Indicator: even number of address signals" ); // if odd 4 bits spare are added later
+		CBIT( 1, g[58], 0x05, 0x74, "1... .... .... .... Odd/even Indicator: odd number of address signals" ); 
+	g[59]=0;
+	BBIT( 7, l[6],  0x05, 0xc2, "Nature of address indicator:" );
+		CEQU( 0, l[6], 0x05, 0x74, ".000 0000 .... .... spare" );
+		CEQU( 1, l[6], 0x05, 0x74, ".000 0001 .... .... subscriper number (national use)" );
+		CEQU( 2, l[6], 0x05, 0x74, ".000 0010 .... .... unknown (national use)" );
+		CEQU( 3, l[6], 0x05, 0x74, ".000 0011 .... .... national (significant) number (national use)" );
+		CEQU( 4, l[6], 0x05, 0x74, ".000 0100 .... .... international number" );
+		if (l[6] >= 5)
+
+		{
+			if (l[6] <= 110)
+				{
+					LABL( 5, 0, 0, 0x14, ".??? ???? .... .... spare" );
+				}
+			if (l[6] >= 111)
+			{ 
+				if (l[6] <= 127)
+				{
+					LABL( 5, 0, 0, 0x14, ".??? ??? .... .... reserved for national use" );
+				} 
+			}
+		}
+		CEQU( 128, l[6], 0, 0x14, "1111 1111 .... .... spare" );
+	g[59] = 0;
+	g[46] -= 1;
+	BBIT( 1, g[59],  0x90, 0xc2, "Internal Network # (INN):" );
+
+	CEQU( 0, g[59], 0x05, 0x74, ".... .... 0... .... routing to internal network number allowed" );
+	CEQU( 1, g[59], 0x05, 0x74, ".... .... 1... .... routing to internal network number not allowed" );
+	
+	BBIT( 3, g[59], 0x90, 0xc2, Numbering plan indicator:);
+		CEQU( 0, g[59], 0x05, 0x74, ".... .... .000 .... spare" );
+		CEQU( 1, g[59], 0x05, 0x74, ".... .... .001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.164)" );
+		CEQU( 2, g[59], 0x05, 0x74, ".... .... .010 .... spare" );
+		CEQU( 3, g[59], 0x05, 0x74, ".... .... .011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, g[59], 0x05, 0x74, ".... .... .100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, g[59], 0x05, 0x74, ".... .... .101 .... reserved for national use" );
+		CEQU( 6, g[59], 0x05, 0x74, ".... .... .110 .... reserved for national use" );
+		CEQU( 7, g[59], 0x05, 0x74, ".... .... .111 .... spare" );
+	
+	BBIT( 4, l[1], 0x90, 0xc2, Spare:);
+	LABL( 0, 0, 0x05, 0x74, ".... .... .... xxxx Spare" );
+	g[46] -= 1;
+	LABL( 0, 0, 0x90,0xc2, "Redirection Number:");
+		DW::Numbers;
+}
+
+
+
+str# ISUP::NOCI::ECDInd;
+0x00 | xxx0 ....  outgoing echo control device not included;
+0x01 | xxx1 ....  outgoing echo control device included;
+
+
+str# ISUP::NOCI::CCInd;
+0x00 | xxx. 00..  continuity check not required;
+0x01 | xxx. 01..  continuity check  requiredon this circuit;
+0x02 | xxx. 10..  continuity check perfomred on a previous circuit;
+0x03 | xxx. 11..  spare;
+
+str# ISUP::NOCI::SatInd;
+0x00 | xxx. ..00  no  satellite circuit in the connection;
+0x01 | xxx. ..01  one satellite circuit in the connection;
+0x02 | xxx. ..10  two satellite circuit in the connection;
+0x03 | xxx. ..11  spare; 
+
+void ISUP::UNSUPPARA( )
+{
+	g[43]=0;
+	DUMP( 0, g[46], 0, 0xc2, "Dump:" );
+	LABL( 0, 0, 0, 0xb8 );
+	g[43]=0;
+}
+
+
+void ISUP::PARA::End_of_optional_parameters( )
+{
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0 ,0, 0, 0xb7 );
+	LABL( 0, 0, 0, 0xb2);
+}
+
+//-----------------------END ISUP-------------------------------------------------
+
+//-----------------------ss7::q850-----------------------------------------------------
+
+void ss7::q850::for::q763( )
+{
+	DBYT( 0, g[46], 0x90, 0xc2, "Length:" );
+	l[7] = 1;
+	l[8] = 1;
+	l[9] = 1;
+	BBIT( 1, l[7], 0x90, 0xc2, "Extension Indicator:" );
+	BBIT( 2, l[6], 0x0, 0xc2, "Coding standard:" );
+		CEQU( 0, l[6], 0, 0x54, "ITU-T standardized coding" ); 
+		CEQU( 1, l[6], 0, 0x54, "ISO/IEC standard" );
+		CEQU( 2, l[6], 0, 0x54, "national standard" );
+		CEQU( 3, l[6], 0, 0x54, "standard specific to identified location" );
+	BBIT( 1, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 4, l[6], 0, 0xc2, "Location:" );
+		CEQU( 0, l[6], 0, 0x54, "user (U)" );
+		CEQU( 1, l[6], 0, 0x54, "private network serving the local user (LPN)" );
+		CEQU( 2, l[6], 0, 0x54, "public network serving the local user (LN)" );
+		CEQU( 3, l[6], 0, 0x54, "transit network (TN)" );
+		CEQU( 4, l[6], 0, 0x54, "public network serving the remote user (RLN)" );
+		CEQU( 5, l[6], 0, 0x54, "private network serving the remote user (RPN)" );
+		CEQU( 6, l[6], 0, 0x54, "international network (INTL)" );
+		CEQU( 7, l[6], 0, 0x54, "network beyond interworking point (BI)" );
+		CEQU( 8, l[6], 0, 0x54, "Reserved" );
+		CEQU( 9, l[6], 0, 0x54, "Reserved" );
+		CEQU( 10, l[6], 0, 0x54, "Reserved" );
+		CEQU( 11, l[6], 0, 0x54, "Reserved" );
+		CEQU( 12, l[6], 0, 0x54, "Reserved" );
+		CEQU( 13, l[6], 0, 0x54, "Reserved" );
+		CEQU( 14, l[6], 0, 0x54, "Reserved" );
+		g[46] -= 1;
+	if (g[46] >= 1)
+		{
+			BBIT( 1, l[8], 0x90, 0xc2, "Extension Indicator:" );
+			BBIT( 7, l[6], 0x00, 0xc2, "Cause value:" );
+			CST#( 0, l[6], 0x90, 0x14, ss7::q850::CauseValue );
+			g[46] -= 1;
+			if (g[46] >= 1)
+			{
+				BBIT( 1, l[8], 0x90, 0xc2, "Extension Indicator:" );
+				HBIT( 7, l[6], 0, 0xc2, "Recommendation:" );
+					CEQU( 0, l[6], 0, 0x54, "Q.931" );
+					CEQU( 1, l[6], 0, 0x54, "Reserved" );
+					CEQU( 2, l[6], 0, 0x54, "Reserved" );
+					CEQU( 3, l[6], 0, 0x54, "X.21" );
+					CEQU( 4, l[6], 0, 0x54, "X.25" );
+					CEQU( 5, l[6], 0, 0x54, "public land mobile networks, Q.1031/Q.1051" );
+				g[46] -= 1;
+			}
+		}
+	
+}
+
+
+str# ss7::q850::CauseValue;
+1 | Unallocated (unassigned) number;
+2 | No route to specified transit network;
+3 | No route to destination;
+4 | Send special information tone;
+5 | Misdialled trunk prefix;
+6 | Channel unacceptable;
+7 | Call awarded and being delivered in an established channel;
+8 | Preemption;
+9 | Preemption – circuit reserved for reuse;
+16 | Normal call clearing;
+17 | User busy;
+18 | No user responding;
+19 | No answer from user (user alerted);
+20 | Subscriber absent;
+21 | Call rejected;
+22 | Number changed;
+23 | Redirection to new destination;
+25 | Exchange routing error;
+26 | Non-selected user clearing;
+27 | Destination out of order;
+28 | Invalid number format (address incomplete);
+29 | Facility rejected;
+30 | Response to STATUS ENQUIRY;
+31 | Normal, unspecified;
+34 | No circuit channel available;
+38 | Network out of order;
+39 | Permanent frame mode connection out of service;
+40 | Permanent frame mode connection operational;
+41 | Temporary failure;
+42 | Switching equipment congestion;
+43 | Access information discarded;
+44 | Requested circuit channel not available;
+46 | Precedence call blocked;
+47 | Resource unavailable, unspecified;
+49 | Quality of service not available;
+50 | Requested facility not subscribed;
+53 | Outgoing calls barred within CUG;
+55 | Incoming calls barred within CUG;
+57 | Bearer capability not authorized;
+58 | Bearer capability not presently available;
+62 | Inconsistency in designated outgoing access information and subscriber class;
+63 | Service or option not available, unspecified;
+65 | Bearer capability not implemented;
+66 | Channel type not implemented;
+69 | Requested facility not implemented;
+70 | Only restricted digital information bearer capability is available;
+79 | Service or option not implemented, unspecified;
+81 | Invalid call reference value;
+82 | Identified channel does not exist;
+83 | A suspended call exists, but this call identity does not;
+84 | Call identity in use;
+85 | No call suspended;
+86 | Call having the requested call identity has been cleared;
+87 | User not member of CUG;
+88 | Incompatible destination;
+90 | Non-existent CUG;
+91 | Invalid transit network selection;
+95 | Invalid message, unspecified;
+96 | Mandatory information element is missing;
+97 | Message type non-existent or not implemented;
+98 | Message not compatible with call state or message type non-existent or not implemented;
+99 | Information element parameter non-existent or not implemented ;
+100 | Invalid information element contents;
+101 | Message not compatible with call state;
+102 | Recovery on timer expiry;
+103 | Parameter non-existent or not implemented, passed on;
+110 | Message with unrecognized parameter, discarded;
+111 | Protocol error, unspecified;
+127 | Interworking, unspecified;
+
+
+//--------------------------------------------------------------------------------
+//										SCCP
+//g[54] == SSN; 
+//g[6] == SCCP Message Type; 
+//g[25] = Left Length of M3UA Payload without padding!; 
+//g[23] = never ever use !!!!
+
+void SigTran::SCCP( )
+{
+	g[6]=0;
+	LABL( 0, 0, 0x90, 0xb8 );
+	LABL( 0, 0, 0x90, 0xb8 );
+	LABL( 0, 0, 0, 0xb1, "Signalling connection control part" );
+	HBYT( 0, l[1], 0x90, 0xc2, "Message Type:" );
+	CST#( 0, l[1], 0x90, 0x74, SigTran::SCCP::MT );
+	g[6] = l[1];
+	g[25] -= 1;
+	//g[26] = g[25];
+	//DUMP( 0, g[25],0x90,0xc2, "sss" );
+	TSB#( 0, l[1], 0x90, 0x90, SigTran::SCCP::MT::Calls );
+	//maybe bridge here to decode the users
+	TRTS;
+}
+
+str# SigTran::SCCP::MT::Calls;
+1 | SigTran::SCCP::MT::CR;
+2 | SigTran::SCCP::MT::CC;
+3 | SigTran::SCCP::MT::CREF;
+4 | SigTran::SCCP::MT::RLSD;
+5 | SigTran::SCCP::MT::RLC;
+6 | SigTran::SCCP::MT::DT1;
+7 | SigTran::SCCP::MT::DT2;
+8 | SigTran::SCCP::MT::AK;
+9 | SigTran::SCCP::MT::UDT;
+10 | SigTran::SCCP::MT::UDTS;
+11 | SigTran::SCCP::MT::ED;
+12 | SigTran::SCCP::MT::EA;
+13 | SigTran::SCCP::MT::RSR;
+14 | SigTran::SCCP::MT::RSC;
+15 | SigTran::SCCP::MT::ERR;
+16 | SigTran::SCCP::MT::IT;
+17 | SigTran::SCCP::MT::XUDT;
+18 | SigTran::SCCP::MT::XUDTS;
+19 | SigTran::SCCP::MT::LUDT;
+20 | SigTran::SCCP::MT::LUDTS;
+
+str# SigTran::SCCP::MT;
+1 | Connection request;
+2 | Connection confirm;
+3 | Connection refused;
+4 | Released ;
+5 | Release complete;
+6 | Data form;
+7 | Data form;
+8 | Data acknowledgement;
+9 | Unitdata ;
+10 | Unitdata service;
+11 | Expedited data;
+12 | Expedited data acknowledgement ;
+13 | Reset request;
+14 | Reset confirmation;
+15 | Protocol data unit error;
+16 | Inactivity test;
+17 | Extended unitdata;
+18 | Extended unitdata service ;
+19 | Long unitdata;
+20 | Long unitdata service ;
+
+str# SigTran::SCCP::PARA;
+0 | End of optional parameters;
+1 | Destination local reference;
+2 | Source local reference;
+3 | Called party address;
+4 | Calling party address;
+5 | Protocol class;
+6 | Segmenting or reassembling;
+7 | Receive sequence number;
+8 | Sequencing or segmenting;
+9 | Credit;
+10 | Release cause;
+11 | Return cause;
+12 | Reset cause;
+13 | Error cause;
+14 | Refusal cause;
+15 | Data;
+16 | Segmentation;
+17 | Hop counter;
+18 | Importance;
+19 | Long data;
+
+str# SigTran::SCCP::MTC::Calls;
+0 | SigTran::SCCP::MTC::Endofoptionalparameters;
+1 | SigTran::SCCP::MTC::Destinationlocalreference;
+2 | SigTran::SCCP::MTC::Sourcelocalreference;
+3 | SigTran::SCCP::MTC::Calledpartyaddress;
+4 | SigTran::SCCP::MTC::Callingpartyaddress;
+5 | SigTran::SCCP::MTC::Protocolclass;
+6 | SigTran::SCCP::MTC::Segmentingorreassembling;
+7 | SigTran::SCCP::MTC::Receivesequencenumbe;
+8 | SigTran::SCCP::MTC::Sequencingorsegmenting;
+9 | SigTran::SCCP::MTC::Credit;
+10 | SigTran::SCCP::MTC::Releasecause;
+11 | SigTran::SCCP::MTC::Returncause;
+12 | SigTran::SCCP::MTC::Resetcause;
+13 | SigTran::SCCP::MTC::Errorcause;
+14 | SigTran::SCCP::MTC::Refusalcause;
+15 | SigTran::SCCP::MTC::Data;
+16 | SigTran::SCCP::MTC::Segmentation;
+17 | SigTran::SCCP::MTC::Hopcounter;
+18 | SigTran::SCCP::MTC::Importance;
+19 | SigTran::SCCP::MTC::Longdata;
+
+void SigTran::SCCP::MTC::Data( )
+{
+	l[23] = g[54];
+ 	if (g[54] == 5)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::TCAP;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (g[54] == 6)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::TCAP;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (g[54] == 7)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::TCAP;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (g[54] == 8)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::TCAP;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (g[54] == 1)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		// LABL( 0, 0, 0, 0xb1, "Signalling connection control part Management" );
+		// DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+		SigTran::SCCP::MNGT;
+		// DUMP( 0, g[25], 0x90, 0xc2, "Data:");
+		LABL( 0, 0, 0, 0xb8 );
+	
+	}
+	if ((g[54] ==0 ))
+	{
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb7, "Data" );
+	//Dump unknown Payload Types
+	DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+	DUMP( 0, g[25], 0x90, 0xc2, "Data:");
+	LABL( 0, 0, 0, 0xb8 );
+	//TRTS;
+	}
+	
+	if ((g[54] >=9))
+	{
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb7, "Data" );
+	//Dump unknown Payload Types
+	DGLB( 0, g[54], 0x90, 0xc2, "SSN:");
+	DUMP( 0, g[25], 0x90, 0xc2, "Data:");
+	LABL( 0, 0, 0, 0xb8 );
+	//TRTS;
+	}
+	
+}
+
+//-----------------------------messages----------------------------------------------
+void SigTran::SCCP::MT::CR( )
+{
+	SigTran::SCCP::MTC::Sourcelocalreference;
+	SigTran::SCCP::MTC::Protocolclass;
+	SigTran::SCCP::MT::2POINTER;
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	SigTran::SCCP::RUN;
+}
+
+void SigTran::SCCP::MT::DT1( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Segmentingorreassembling;
+	SigTran::SCCP::MT::1POINTER;
+	if (g[42] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[42] != 0)
+	{
+		DBIT( 8, g[25], 0x90, 0xc2, "Indicator length:" );
+		SigTran::SCCP::MTC::Data;
+	}
+	
+}
+
+void SigTran::SCCP::MT::UDT( )
+{
+	//LABL(0,0, 0x90, 0x74, "0000 1001 Unitdata (UDT)" );
+	SigTran::SCCP::MTC::Protocolclass;
+	SigTran::SCCP::MT::3POINTER;
+	if g[43] >= g[42]
+	{
+		l[1] = g[43];
+		l[1] -= g[42];
+		//DGLB( 0, l[1], 0x90, 0xc2, " Length of 1. Para");
+		l[2] = g[44];
+		l[2] -= g[43];
+		//DGLB( 0, l[2], 0x90, 0xc2, " Length of 2. Para");
+	}
+	if g[43] <= g[42]
+	{
+		l[1] = g[42];
+		l[1] -= g[43];
+		l[1] -= 2;
+		g[40] = l[1];
+		//DGLB( 0, g[40], 0x90, 0xc2, " Length of 1. Para");
+		
+		l[2] = g[44];
+		l[2] -= g[42];
+		l[2] += 1;
+		g[39] = l[2];
+		//DGLB( 0, l[2], 0x90, 0xc2, " Length of 2. Para");
+	}
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	LABL( 0, 0, 0, 0xb8 );
+	SigTran::SCCP::MTC::Callingpartyaddress;
+	LABL( 0, 0, 0, 0xb8 );
+	DBIT( 8, g[25], 0x5, 0x5, " length:" );
+	SigTran::SCCP::MTC::Data;
+}
+
+
+void SigTran::SCCP::MT::UDTS( )
+{
+	SigTran::SCCP::MTC::Returncause;
+	SigTran::SCCP::MT::3POINTER;
+	if g[43] >= g[42]
+	{
+		l[1] = g[43];
+		l[1] -= g[42];
+		//DGLB( 0, l[1], 0x90, 0xc2, " Length of 1. Para");
+		l[2] = g[44];
+		l[2] -= g[43];
+		//DGLB( 0, l[2], 0x90, 0xc2, " Length of 2. Para");
+	}
+	if g[43] <= g[42]
+	{
+		l[1] = g[42];
+		l[1] -= g[43];
+		l[1] -= 2;
+		g[40] = l[1];
+		//DGLB( 0, g[40], 0x90, 0xc2, " Length of 1. Para");
+		
+		l[2] = g[44];
+		l[2] -= g[42];
+		l[2] += 1;
+		g[39] = l[2];
+		//DGLB( 0, l[2], 0x90, 0xc2, " Length of 2. Para");
+	}
+	if ( g[43] >= g[42] )
+	{
+		SigTran::SCCP::MTC::Calledpartyaddress;
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+		SigTran::SCCP::MTC::Callingpartyaddress;
+			LABL( 0, 0, 0, 0xb8 );
+	}
+	if ( g[43] <= g[42] )
+	{
+	
+
+		SigTran::SCCP::MTC::Callingpartyaddress;
+		LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::SCCP::MTC::Calledpartyaddress;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	SigTran::SCCP::MTC::Data;
+}
+
+void SigTran::SCCP::MT::CC( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+	 SigTran::SCCP::MTC::Protocolclass;
+	 SigTran::SCCP::MT::1POINTER;
+	if (g[42] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+		
+	}
+	if (g[42] != 0)
+	{
+	
+	SigTran::SCCP::MTC::Calledpartyaddress;
+		LABL( 0, 0, 0, 0xb8 );
+	SigTran::SCCP::MTC::Callingpartyaddress;
+		LABL( 0, 0, 0, 0xb8 );
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::CREF( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	 SigTran::SCCP::MTC::RefusalCause;
+	 SigTran::SCCP::MT::1POINTER;
+	if (g[42] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[42] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::RLSD( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+	SigTran::SCCP::MTC::ReleaseCause;
+	SigTran::SCCP::MT::1POINTER;
+	if (g[42] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[42] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::RLC( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+}
+
+
+void SigTran::SCCP::MT::DT2( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sequencingorsegmenting;
+	SigTran::SCCP::MT::1POINTER;
+	if (g[42] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[42] != 0)
+	{
+		SigTran::SCCP::MTC::Data;
+	}
+}
+
+void SigTran::SCCP::MT::AK( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Receivesequencenumbe;
+	SigTran::SCCP::MTC::Credit;
+}
+
+
+
+void SigTran::SCCP::MT::ED( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MT::1POINTER;
+	GBYT(0, g[1]);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[1] != 0)
+	{
+		SigTran::SCCP::MTC::Data;
+	}
+}
+
+void SigTran::SCCP::MT::EA( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+}
+
+void SigTran::SCCP::MT::RSR( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+	SigTran::SCCP::MTC::Resetcause;
+}
+
+void SigTran::SCCP::MT::RSC( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+}
+
+void SigTran::SCCP::MT::ERR( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Errorcause;
+}
+
+void SigTran::SCCP::MT::IT( )
+{
+	SigTran::SCCP::MTC::Destinationlocalreference;
+	SigTran::SCCP::MTC::Sourcelocalreference;
+	SigTran::SCCP::MTC::Protocolclass;
+	SigTran::SCCP::MTC::Sequencingorsegmenting;
+	SigTran::SCCP::MTC::Credit;
+}
+
+void SigTran::SCCP::MT::XUDT( )
+{
+	SigTran::SCCP::MTC::Protocolclass;
+	SigTran::SCCP::MTC::Hopcounter;
+	SigTran::SCCP::MT::4POINTER;
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	//Calling party address 3.5 V 3 minimum (Note 2)
+	SigTran::SCCP::MTC::Callingpartyaddress;
+	LABL( 0, 0, 0x90, 0x74, "0000 1001 Unitdata (UDT)" );
+	//Data 3.16 V 2-X (Note 1)
+	SigTran::SCCP::MTC::Data;
+	GBYT(0, g[1]);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[1] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::XUDTS( )
+{
+	SigTran::SCCP::MTC::Returncause;
+	SigTran::SCCP::MTC::Hopcounter;
+	SigTran::SCCP::MT::4POINTER;
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	//Calling party address 3.5 V 3 minimum (Note 2)
+	SigTran::SCCP::MTC::Callingpartyaddress;
+	LABL( 0, 0, 0x90, 0x74, "0000 1001 Unitdata (UDT)" );
+	//Data 3.16 V 2-X (Note 1)
+	SigTran::SCCP::MTC::Data;
+	GBYT(0, g[1]);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[1] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::LUDT( )
+{
+	SigTran::SCCP::MTC::Protocolclass;
+	SigTran::SCCP::MTC::Hopcounter;
+	SigTran::SCCP::MT::42OPOINTER;
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	//Calling party address 3.5 V 3 minimum (Note 2)
+	SigTran::SCCP::MTC::Callingpartyaddress;
+	LABL( 0, 0, 0x90, 0x74, "0000 1001 Unitdata (UDT)" );
+	//Data 3.16 V 2-X (Note 1)
+	SigTran::SCCP::MTC::Data;
+	GBYT(0, g[1]);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[1] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+void SigTran::SCCP::MT::LUDTS( )
+{
+	SigTran::SCCP::MTC::Returncause;
+	SigTran::SCCP::MTC::Hopcounter;
+	SigTran::SCCP::MT::42OPOINTER;
+	SigTran::SCCP::MTC::Calledpartyaddress;
+	//Calling party address 3.5 V 3 minimum (Note 2)
+	SigTran::SCCP::MTC::Callingpartyaddress;
+	LABL( 0, 0, 0x90, 0x74, "0000 1001 Unitdata (UDT)" );
+	//Data 3.16 V 2-X (Note 1)
+	SigTran::SCCP::MTC::Data;
+	GBYT(0, g[1]);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0, 0x14, "No Optional Part" );
+	}
+	if (g[1] != 0)
+	{
+		SigTran::SCCP::RUN;
+	}
+}
+
+
+
+//--------------------------------------------------------------------
+//----------------------------------Helpers----------------------------
+void SigTran::SCCP::RUN( )
+{
+	
+	DBIT( 8, g[3], 0x90, 0xc2, "Indicator:" );
+	
+	if (g[3] == 0)
+	{
+		LABL( 0, 0, 0, 0xb8 );
+		TRTS;
+	}
+	if (g[3] != 0)
+	{
+		DBIT( 8, g[25], 0x90, 0xc2, "Indicator length:" );
+		//DGLB( 0, g[3], 0x90,0xc2, "g3");
+		TSB#( 0, g[3], 0x90, 0xb7, SigTran::SCCP::MTC::Calls );
+		SigTran::SCCP::RUN;
+	}
+		LABL( 0, 0, 0x90, 0xb8 );
+	//SigTran::SCCP::RUN;
+}
+
+void SigTran::SCCP::MT::1POINTER( )
+{
+	DBIT( 8, g[42], 0x90, 0xc2, "Pointer to opt. parameter:" );
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MT::2POINTER( )
+{
+	DBIT( 8, g[42], 0x90, 0xc2, "Pointer to 1. Mandatory var. parameter:" );
+	DBIT( 8, g[43], 0x90, 0xc2, "Pointer to opt. parameter:" );
+	g[25] -= 2;
+}
+
+void SigTran::SCCP::MT::3POINTER( )
+{	
+	DBIT( 8, g[42], 0x90, 0xc2, "Pointer to 1. Mandatory var. parameter:" );
+
+	DBIT( 8, g[43], 0x90, 0xc2, "Pointer to 2. Mandatory var. parameter:" );
+	DBIT( 8, g[44], 0x90, 0xc2, "Pointer to Optional  parameter:" );
+
+
+	g[25] -= 3;
+}
+
+void SigTran::SCCP::MT::4POINTER( )
+{	
+	DBIT( 8, g[42], 0x90, 0xc2, "Pointer to 1. Mandatory var. parameter:" );
+	DBIT( 8, g[43], 0x90, 0xc2, "Pointer to 2. Mandatory var. parameter:" );
+	DBIT( 8, g[44], 0x90, 0xc2, "Pointer to 3. Mandatory var. parameter:" );
+	DBIT( 8, g[45], 0x90, 0xc2, "Pointer to Optional  parameter:" );
+	g[25] -= 4;
+}
+
+void SigTran::SCCP::MT::42OPOINTER( )
+{	
+	DBIT( 16, g[42], 0x90, 0xc2, "Pointer to 1. Mandatory var. parameter:" );
+	DBIT( 16, g[43], 0x90, 0xc2, "Pointer to 2. Mandatory var. parameter:" );
+	DBIT( 16, g[44], 0x90, 0xc2, "Pointer to 3. Mandatory var. parameter:" );
+	DBIT( 16, g[45], 0x90, 0xc2, "Pointer to Optional  parameter:" );
+	g[25] -= 4;
+}
+
+//-------------------Parameters:-------------------------------------------------------
+void SigTran::SCCP::MTC::Sourcelocalreference( )
+{
+	LABL( 0, 0,  0x34, 0xc2, "Source local reference:" );
+	
+	BBYT( 0, l[1], 0x5, 0x5);
+	BBYT( 0, l[2], 0x5, 0x5);
+	BBYT( 0, l[3], 0x5, 0x5);
+	SHFL( 8, l[3], 0x5, 0x5);
+	l[3] += l[2];
+	SHFL( 8, l[3]);
+	l[3] += l[1];
+	HGLB( 0, l[3], 0xa0, 0x14 );
+	g[25] -= 3;
+}
+
+void SigTran::SCCP::MTC::Destinationlocalreference( )
+{
+	LABL( 0, 0,  0x34, 0xc2, "Dest. local reference:" );
+	BBYT( 0, l[1], 0x5, 0x5);
+	BBYT( 0, l[2], 0x5, 0x5);
+	BBYT( 0, l[3], 0x5, 0x5);
+	SHFL( 8, l[3], 0x5, 0x5);
+	l[3] += l[2];
+	SHFL( 8, l[3]);
+	l[3] += l[1];
+	HGLB( 0, l[3], 0xa0, 0x14 );
+	g[25] -= 3;
+}
+
+void SigTran::SCCP::MTC::Calledpartyaddress( )
+{
+	LABL( 0, 0, 0x90, 0xb7, "Called party address" );
+	if ((g[6] != 0))
+	{
+		BBYT( 0 , l[23], 0x90, 0xc2, "Length:" );
+
+		g[27] = l[23];
+
+	}
+	SigTran::SCCP::MTCC::Addressindicator;
+	LABL( 0, 0, 0, 0xb8 );
+	if (g[55] >= 1)
+	{
+		SigTran::SCCP::MTCC::Globaltitleindicator;
+	} 
+	
+
+}
+
+void SigTran::SCCP::MTC::Callingpartyaddress( )
+{
+	LABL( 0, 0, 0x90, 0xb7, "Calling party address" );
+	if ((g[6] != 0))
+	{
+		if (g[6] != 1 )
+		{
+			BBYT( 0 , l[23], 0x90, 0xc2, "Length:" );
+		}
+
+		g[27] = l[23];
+		
+	}
+	g[25] -= 1;
+	SigTran::SCCP::MTCC::Addressindicator;
+	LABL( 0, 0, 0, 0xb8 );
+	if (g[55] >= 1)
+	{
+		SigTran::SCCP::MTCC::Globaltitleindicator;
+	}
+	
+
+}
+
+
+
+void SigTran::SCCP::MTC::Protocolclass( ) 
+{
+	BBIT( 4,0,0x05,0x05,  );
+	BBIT( 4, l[1], 0x05, 0xc2, "Protocol class" );
+		CEQU( 0, l[1], 0x05, 0x64, ".... 0000 class 0 Connection Less Protocol" );
+		CEQU( 1, l[1], 0x05, 0x64, ".... 0001 class 1 Connection Less Protocol" );
+		CEQU( 2, l[1], 0x05, 0x64, ".... 0010 class 2 Connection oriented Protocol" );
+		CEQU( 3, l[1], 0x05, 0x64, ".... 0011 class 3 Connection oriented Protocol" );		
+	if (l[1] >=4)
+	{
+		LABL( 0, 0 , 0x05, 0x74, ".... ???? spare" );
+	}
+	if (l[1] <= 1)
+	{
+		DECR 1;
+		BBIT( 4, l[1], 0x05, 0xc2, "CLP Options" );
+		CEQU( 0, l[1], 0x05, 0x64, "0000 .... no special options" );
+		CEQU( 7, l[1], 0x05, 0x64, "1000 .... return message on errors" );
+		CLSE( 8, 0, 0x05, 0x74, "xxxx .... Spare" );
+		BBIT( 4, 0, 0x05, 0x05,  );
+	}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTCC::Addressindicator( )
+{
+LABL( 0, 0, 0xd8, 0xb7, "Address indicator" );
+	BBIT( 8, 0, 0x90, 0xc2, "Indicator:" );
+	DECR 1;
+	BBIT( 1, l[6], 0x90, 0xc2, "Res. for national use" ); // is scp included?
+		CEQU( 0, l[6], 0x05, 0x14, "should be 0 in international networks" );
+		CEQU( 1, l[6], 0x05, 0x14, "National" );
+	BBIT( 1, l[6], 0x90, 0xc2, "Routing indicator" ); // is scp included?
+		CEQU( 0, l[6], 0x05, 0x74, ".0.. .... Route on GT" );
+		CEQU( 1, l[6], 0x05, 0x74, ".1.. .... Route on SSN" );
+	BBIT( 4, g[55], 0x90, 0xc2, "Global title indicator" ); // is scp included?
+		CEQU( 0, g[55], 0x05, 0x74, "..00 00.. no global title included" );
+		CEQU( 1, g[55], 0x05, 0x74, "..00 01.. global title includes nature of address indicator only" );
+		CEQU( 2, g[55], 0x05, 0x74, "..00 10.. global title includes translation type only" );
+		CEQU( 3, g[55], 0x05, 0x74, "..00 11.. global title includes translation type, numbering plan and encoding scheme" );
+		CEQU( 4, g[55], 0x05, 0x74, "..01 00.. global title includes translation type, numbering plan, encoding scheme and nature of address indicator" );
+		CEQU( 5, g[55], 0x05, 0x74, "..00 00.. no global title included" );
+		if ( g[55] <= 6 )
+		{
+			if ( g[55] <= 7 )
+			{
+				LABL( 0, 0, 0, 0x74, "..xx xx.. spare international" );
+			}
+		}
+		if ( g[55] <= 8 )
+		{
+			if ( g[55] <= 14 )
+			{
+				LABL( 0, 0, 0, 0x74, "..xx xx.. spare national" );
+			}
+		}
+		CEQU( 15, g[55], 0x05, 0x74, "..11 11.. reserved for extension" );
+	BBIT( 1, g[54], 0x90, 0xc2, "Subsystem number indicator:" );
+		CEQU( 0, g[54], 0x05, 0x74, ".... ..0. doesn't contain a subsystem number" );
+		CEQU( 1, g[54], 0x05, 0x74, ".... ..1. contains a subsystem number" );
+
+	BBIT( 1, g[53], 0x90, 0xc2, "Point code indicator:" );
+		CEQU( 0, g[53], 0x05, 0x74, ".... ...0 doesn't contain a signalling point code" );
+		CEQU( 1, g[53], 0x05, 0x74, ".... ...1 contains a signalling point code" );
+	g[27] -= 1;
+	g[25] -= 1;
+	if ( g[53] == 1 )
+	{
+		SigTran::SCCP::MTCC::PC;
+	}
+	
+	if ( g[54] == 1 )
+	{
+		SigTran::SCCP::MTCC::SSN;
+	}
+}
+
+void SigTran::SCCP::MTCC::PC()
+{
+	BBIT( 8, l[3], 0x90, 0xc2, "SPC LSB:" );
+	BBIT( 2, 0, 0x05, 0x05, "SPC Spare:" );
+	BBIT( 6, l[2], 0x90, 0xc2, "SPC MSB:" );
+	SHFL( 8, l[2]);
+	l[2] += l[3];
+	DGLB( 0, l[2], 0x90, 0xc2, "Signalling Point Code:" );
+	g[27] -= 2;
+	g[25] -= 2;
+}
+
+void SigTran::SCCP::MTCC::SSN( )
+{
+	BBIT( 8, l[6], 0x05, 0xc2, "Subsystem number" );
+	DECR 1;
+	DBYT( 0, l[6], 0x90, 0x05, "Subsystem number:" );
+		CEQU( 0, l[6], 0x05, 0x74, "0000 0000 SSN not known/not used" );
+		CEQU( 1, l[6], 0x05, 0x74, "0000 0001 SCCP management" );
+		CEQU( 2, l[6], 0x05, 0x74, "0000 0010 reserved for ITU-T allocation" );
+		CEQU( 3, l[6], 0x05, 0x74, "0000 0011 ISDN user part" );
+		CEQU( 4, l[6], 0x05, 0x74, "0000 0100 operation, maintenance and administration part (OMAP)" );
+		CEQU( 5, l[6], 0x05, 0x74, "0000 0101 mobile application part (MAP) " );
+		CEQU( 6, l[6], 0x05, 0x74, "0000 0110 home location register (HLR)  HLR (MAP) " );
+		CEQU( 7, l[6], 0x05, 0x74, "0000 0111 visitor location register (VLR) VLR (MAP)" );
+		CEQU( 8, l[6], 0x05, 0x74, "0000 1000 mobile switching centre (MSC) MSC (MAP)" );
+		CEQU( 9, l[6], 0x05, 0x74, "0000 1001 equipment identifier centre (EIC) EIR (MAP) " );
+		CEQU( 10, l[6], 0x05, 0x74, "0000 1010 authentication centre (AUC)" );
+		CEQU( 11, l[6], 0x05, 0x74, "0000 1011 ISDN supplementary services" );
+		CEQU( 12, l[6], 0x05, 0x74, "0000 1100 reserved for international use" );
+		CEQU( 13, l[6], 0x05, 0x74, "0000 1101 broadband ISDN edge-to-edge applications" );
+		CEQU( 14, l[6], 0x05, 0x74, "0000 1110 TC test responder" );
+		CEQU( 142, l[6], 0x05, 0x74, "1000 1110 142  RANAP" );	//for use within and between GSM/UMTS networks:
+		CEQU( 146, l[6], 0x05, 0x74, "1001 0010 146  CAP" );
+		CEQU( 249, l[6], 0x05, 0x74, "1111 1001 PCAP" );					//use within GSM/UMTS networks
+		CEQU( 250, l[6], 0x05, 0x74, "1111 1010 BSC (BSSAP-L)" );			 //use within GSM/UMTS networks
+		CEQU( 251, l[6], 0x05, 0x74, "1111 1011 MSC (BSSAP-LE)" );			 //use within GSM/UMTS networks
+		CEQU( 252, l[6], 0x05, 0x74, "1111 1100 SMLC (BSSAP-LE)" );			 //use within GSM/UMTS networks
+		CEQU( 253, l[6], 0x05, 0x74, "1111 1101 BSS O&M (A interface)" );	//use within GSM/UMTS networks
+		CEQU( 254, l[6], 0x05, 0x74, "1111 1110 (A interface) / Ansi:  800 number translation (TCAP)" );			//use within GSM/UMTS networks
+		CEQU( 255, l[6], 0x05, 0x74, "1111 1111 reserved for expansion of national and international SSN" );
+		g[54] = l[6];
+		g[27] -= 1;
+		g[25] -= 1;
+}
+
+str# SigTran::SSCP::MTCC::SSN::TXT;
+0 | SSN not known not used;
+1 | SCCP management;
+2 | reserved for ITU-T allocation;
+3 | ISUP;
+4 | OMAP;
+5 | MAP;
+6 | HLR_MAP;
+7 | VLR (MAP);
+8 | MSC (MAP);
+9 | EIR (MAP);
+10 | (AUC);
+11 | ISDN supplementary services;
+12 | reserved for international use;
+13 | broadband ISDN edge-to-edge applications;
+14 | TC test responder;
+142 | RANAP;
+146 | CAP;
+249 | PCAP;
+250 | BSC (BSSAP-L);
+251 | BSSAP-LE;
+252 | SMLC (BSSAP-LE);
+253 | BSS O&M (A interface);
+254 | TCAP;
+255 | reserved;
+
+
+void SigTran::SCCP::MTCC::Globaltitleindicator( )
+{
+	LABL( 0, 0, 0x90, 0xb7, "Global title indicator" );
+	if (g[55] == 1)
+	{
+		BBIT( 4, 0, 0x05, 0 );
+		SigTran::SCCP::MTCC::NOAI;
+		g[27] -= 1;
+		g[25] -= 1;
+		LABL( 0, 0, 0, 0xb7, "Address information: " );
+		SigTran::SCCP::DWNUMBShrt;
+	}
+	if (g[55] == 4)
+	{
+
+		BBIT( 8, 0, 0x90, 0xb7, "Translation Type:" );
+		DECR 1;
+		SigTran::SCCP::MTCC::TranType;
+		SigTran::SCCP::MTCC:NumberingPlan;
+		SigTran::SCCP::MTCC::Encodingscheme;
+
+		g[27] -= 1;
+		g[25] -= 1;
+		SigTran::SCCP::MTCC::NOAI;
+	
+	
+		LABL( 0, 0, 0xd8, 0xb7, "Address information: " );
+		SigTran::SCCP::DWNUMBShrt;
+		
+	}
+
+	//LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::SCCP::MTCC::Encodingscheme( )
+{
+		BBIT( 4, g[52], 0x90, 0xc2,Encoding scheme:);
+		CEQU( 0, g[52], 0x05, 0x74, ".... 0000 unknown" );
+		CEQU( 1, g[52], 0x05, 0x74, ".... 0001 BCD, odd number of digits" );
+		CEQU( 2, g[52], 0x05, 0x74, ".... 0010 BCD, even number of digits" );
+		CEQU( 3, g[52], 0x05, 0x74, ".... 0011 national specific" );
+		CEQU( 22, g[52], 0x05, 0x74, ".... 1111 reserved" );
+		if (g[52] >= 4)
+		{
+			if (g[52] <= 21)
+			{	
+				LABL( 0, 0, 0x05, 0x74, ".... spare" );
+			}
+		}
+}
+
+void SigTran::SCCP::MTCC:NumberingPlan( )
+{
+	BBIT( 4, l[1], 0x90, 0xc2,  "Numbering plan:");
+		CEQU( 0, l[1], 0x05, 0x74, "0000 .... spare" );
+		CEQU( 1, l[1], 0x05, 0x74, "0001 .... ISDN (Telephony) numbering plan (ITU-T Recommendation E.163 E.164)" );
+		CEQU( 2, l[1], 0x05, 0x74, "0010 .... generic numbering plan" );
+		CEQU( 3, l[1], 0x05, 0x74, "0011 .... Data numbering plan (ITU-T Recommendation X.121) (national use)" );
+		CEQU( 4, l[1], 0x05, 0x74, "0100 .... Telex numbering plan (ITU-T Recommendation F.69) (national use)" );
+		CEQU( 5, l[1], 0x05, 0x74, "0101 .... maritime mobile numbering plan (ITU-T E.210, E.211)" );
+		CEQU( 6, l[1], 0x05, 0x74, "0110 .... land mobile numbering plan (ITU-T E.212)" );
+		CEQU( 7, l[1], 0x05, 0x74, "0111 .... ISDN/mobile numbering plan (ITU-T E.214)" );
+		CEQU( 22, l[1], 0x05, 0x74, "1110 .... private network or network-specific numbering plan" );
+		CEQU( 23, l[1], 0x05, 0x74, "1111 .... reserved" );
+		if (l[1] >= 8)
+		{
+			if (l[1] <= 22)
+			{	
+				LABL( 0, 0, 0x05, 0x74, "....spare" );
+			}
+		}
+}
+
+void SigTran::SCCP::MTCC::NOAI( )
+{
+	BBIT( 1, 0, 0x05, 0x05 );
+	BBIT( 7, l[1],  0x05, 0xc2, "Nature of address indicator:" );
+		CEQU( 0, l[1], 0x05, 0x74, ".000 0000 spare" );
+		CEQU( 1, l[1], 0x05, 0x74, ".000 0001 subscriper number (national use)" );
+		CEQU( 2, l[1], 0x05, 0x74, ".000 0010 unknown (national use)" );
+		CEQU( 3, l[1], 0x05, 0x74, ".000 0011 national (significant) number (national use)" );
+		CEQU( 4, l[1], 0x05, 0x74, ".000 0100 international number" );
+		if (l[1] > 5)
+		{
+			if (l[1] < 110)
+				{
+					LABL( 5, l[1], 0, 0x14, ".??? ???? spare" );
+				}
+			if (l[1] > 111)
+			{ 
+				if (l[1] < 127)
+				{
+					LABL( 5, l[1], 0, 0x14, ".??? ??? reserved for national use" );
+				} 
+			}
+		}
+		g[27] -= 1;
+		g[25] -= 1;
+}
+
+void SigTran::SCCP::MTCC::TranType( )
+{
+	BBIT( 8, l[1],  0x34, 0xc2, "Translation type:" );
+		if (l[1] == 0)
+			{
+				LABL(0 , 0, 0x05, 0x24, "unknown" );
+			}
+		if (l[1] >= 1)
+			{
+			if (l[1] <=63)
+				{
+				LABL(0 , 0, 0x05, 0x24, "international services" );
+				}
+			}
+		if (l[1] >= 64)
+			{
+			if (l[1] <=127)
+				{
+				LABL(0 , 0, 0x05, 0x24, "spare" );
+				}
+			}
+		if (l[1] >= 128)
+			{
+			if (l[1] <=254)
+				{
+				LABL(0 , 0, 0x05, 0x24, "national network specific" );
+				}
+			}
+
+		if (l[1] == 255)
+			{
+				LABL(0 , 0, 0x05, 0x24, "reserved for expansion" );
+			}
+		g[27] -= 1;
+		g[25] -= 1;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+void SigTran::SCCP::DWNUMBShrt( )
+{
+g[41] = 0;
+	g[41] = g[27];
+	while ( g[41] >= 1 )
+	{
+		
+		
+		BBIT( 4, l[28], 0x05, 0x05 );
+		BBIT( 4, l[33], 0x05, 0);
+		CEQU( 0, l[33], 0x90, 0x4, "0" );
+		
+		//BBIT( 4, l[33], 0x06, 0);
+		//CEQU( 0, l[33], 0x90, 0x4, "0" );
+		
+		CEQU( 1, l[33], 0x90, 0x4, "1" );
+		CEQU( 2, l[33], 0x90, 0x4, "2" );
+		CEQU( 3, l[33], 0x90, 0x4, "3" );
+		CEQU( 4, l[33], 0x90, 0x4, "4" );
+		CEQU( 5, l[33], 0x90, 0x4, "5" );
+		CEQU( 6, l[33], 0x90, 0x4, "6" );
+		CEQU( 7, l[33], 0x90, 0x4, "7" );
+		CEQU( 8, l[33], 0x90, 0x4, "8" );
+		CEQU( 9, l[33], 0x90, 0x4, "9" );
+		CEQU( 10, l[33], 0, 0x4, "spare" );
+		CEQU( 11, l[33], 0, 0x4, "<code 11>" );
+		CEQU( 12, l[33], 0, 0x4, "<code 12>" );
+		CEQU( 13, l[33], 0, 0x4, "spare" );
+		CEQU( 14, l[33], 0, 0x4, "spare" );
+		CEQU( 15, l[33], 0, 0x4, "STOP" );
+			//	HGLB(0,l[28],0,0xc2, "l28" );
+			if (g[41] == 1)
+			{
+				CEQU( 0, l[28], 0x90, 0x4, " " );
+			}
+			if (g[41] >= 2 )
+			{
+				CEQU( 0, l[28], 0x90, 0x4, "0" );
+			}
+		CEQU( 1, l[28], 0x90, 0x4, "1" );
+		CEQU( 2, l[28], 0x90, 0x4, "2" );
+		CEQU( 3, l[28], 0x90, 0x4, "3" );
+		CEQU( 4, l[28], 0x90, 0x4, "4" );
+		CEQU( 5, l[28], 0x90, 0x4, "5" );
+		CEQU( 6, l[28], 0x90, 0x4, "6" );
+		CEQU( 7, l[28], 0x90, 0x4, "7" );
+		CEQU( 8, l[28], 0x90, 0x4, "8" );
+		CEQU( 9, l[28], 0x90, 0x4, "9" );
+		CEQU( 10, l[28], 0, 0x4, "spare" );
+		CEQU( 11, l[28], 0, 0x4, "<code 11>" );
+		CEQU( 12, l[28], 0, 0x4, "<code 12>" );
+		CEQU( 13, l[28], 0, 0x4, "spare" );
+		CEQU( 14, l[28], 0, 0x4, "spare" );
+		CEQU( 15, l[28], 0, 0x4, "STOP" );
+		
+		//LABL( 0, 0, 0x90, 0xb8 );
+	 g[41] -=1;
+	g[25] -= 1;
+		g[27] -= 1;
+}
+LABL( 0, 0, 0, 0xb8 );
+}
+
+void SigTran::SCCP::MTC::Credit( )
+{
+	BBIT( 8, 0,  0x34, 0xc2, "Credit:" );
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::ReleaseCause( )
+{
+	HBYT( 0, l[1],  0x34, 0xc2, "Release cause:" );
+		CEQU( 0, l[1], 0, 0x24, "end user originated");
+		CEQU( 1, l[1], 0, 0x24, "end user congestion");
+		CEQU( 2, l[1], 0, 0x24, "end user failure");
+		CEQU( 3, l[1], 0, 0x24, "SCCP user originated");
+		CEQU( 4, l[1], 0, 0x24, "remote procedure error");
+		CEQU( 5, l[1], 0, 0x24, "inconsistent connection data");
+		CEQU( 6, l[1], 0, 0x24, "access failure");
+		CEQU( 7, l[1], 0, 0x24, "access congestion");
+		CEQU( 8, l[1], 0, 0x24, "subsystemfailure");
+		CEQU( 9, l[1], 0, 0x24, "subsystemcongestion");
+		CEQU( 10, l[1], 0, 0x24, "MTP failure");
+		CEQU( 11, l[1], 0, 0x24, "network congestion");
+		CEQU( 12, l[1], 0, 0x24, "expiration of reset timer");
+		CEQU( 13, l[1], 0, 0x24, "expiration of receive inactivity timer");
+		CEQU( 14, l[1], 0, 0x24, "Reserved");
+		CEQU( 15, l[1], 0, 0x24, "unqualified");
+		CEQU( 16, l[1], 0, 0x24, "SCCP failure");
+		CEQU( 255, l[1], 0, 0x24, "Reserved");
+		if (l[1] >= 17)
+		{
+			if (l[1] <= 243)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for International Use");
+			}
+		}
+		if (l[1] >= 243)
+		{
+			if (l[1] <= 254)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for National Networks");
+			}
+		}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Returncause( )
+{
+	BBYT( 0, l[1],  0x34, 0xc2, "Return cause:" );
+		CEQU( 0, l[1], 0, 0x24, "no translation for an address of such nature");
+		CEQU( 1, l[1], 0, 0x24, "no translation for this specific address");
+		CEQU( 2, l[1], 0, 0x24, "subsystemcongestion");
+		CEQU( 3, l[1], 0, 0x24, "subsystemfailure");
+		CEQU( 4, l[1], 0, 0x24, "unequipped user");
+		CEQU( 5, l[1], 0, 0x24, "MTP failure");
+		CEQU( 6, l[1], 0, 0x24, "network congestion");
+		CEQU( 7, l[1], 0, 0x24, "unqualified");
+		CEQU( 8, l[1], 0, 0x24, "error in message transport");
+		CEQU( 9, l[1], 0, 0x24, "error in local processing");
+		CEQU( 10, l[1], 0, 0x24, "destination cannot perform reassembly");
+		CEQU( 11, l[1], 0, 0x24, "SCCP failure");
+		CEQU( 12, l[1], 0, 0x24, "hop counter violation");
+		CEQU( 13, l[1], 0, 0x24, "segmentation not supported");
+		CEQU( 14, l[1], 0, 0x24, "segmentation failure");
+		CEQU( 255, l[1], 0, 0x24, "Reserved");
+		if (l[1] >= 15)
+		{
+			if (l[1] <= 228)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for International Use");
+			}
+		}
+		if (l[1] >= 229)
+		{
+			if (l[1] <= 254)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for National Networks");
+			}
+		}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Resetcause( )
+{
+	BBYT( 0, l[1],  0x34, 0xc2, "Reset cause:" );
+		CEQU( 0, l[1], 0, 0x24, "end user originated");
+		CEQU( 1, l[1], 0, 0x24, "SCCP user originated");
+		CEQU( 2, l[1], 0, 0x24, "message out of order – incorrect P(S)");
+		CEQU( 3, l[1], 0, 0x24, "message out of order – incorrect P(R)");
+		CEQU( 4, l[1], 0, 0x24, "remote procedure error – message out ofwindow");
+		CEQU( 5, l[1], 0, 0x24, "remote procedure error – incorrect P(S) after (re)initialization");
+		CEQU( 6, l[1], 0, 0x24, "remote procedure error – general");
+		CEQU( 7, l[1], 0, 0x24, "remote end user operational");
+		CEQU( 8, l[1], 0, 0x24, "network operational");
+		CEQU( 9, l[1], 0, 0x24, "access operational");
+		CEQU( 10, l[1], 0, 0x24, "network congestion");
+		CEQU( 11, l[1], 0, 0x24, "Reserved");
+		CEQU( 12, l[1], 0, 0x24, "unqualified");
+		if (l[1] >= 15)
+		{
+			if (l[1] <= 228)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for International Use");
+			}
+		}
+		if (l[1] >= 229)
+		{
+			if (l[1] <= 254)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for National Networks");
+			}
+		}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Errorcause( )
+{
+	BBYT( 0, l[1],  0x34, 0xc2, "Reset cause:" );
+		CEQU( 0, l[1], 0, 0x24, "local reference number (LRN) mismatch – unassigned destination LRN");
+		CEQU( 1, l[1], 0, 0x24, "local reference number (LRN) mismatch – inconsistent source LRN");
+		CEQU( 2, l[1], 0, 0x24, "point codemismatch");
+		CEQU( 3, l[1], 0, 0x24, "service class mismatch");
+		CEQU( 4, l[1], 0, 0x24, "unqualified");
+		if (l[1] >= 5)
+		{
+			if (l[1] <= 228)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for International Use");
+			}
+		}
+		if (l[1] >= 229)
+		{
+			if (l[1] <= 254)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for National Networks");
+			}
+		}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::RefusalCause( )
+{
+	BBYT( 0, l[1],  0x34, 0xc2, "Release cause:" );
+		CEQU( 0, l[1], 0, 0x24, "end user originated");
+		CEQU( 1, l[1], 0, 0x24, "end user congestion");
+		CEQU( 2, l[1], 0, 0x24, "end user failure");
+		CEQU( 3, l[1], 0, 0x24, "SCCP user originated");
+		CEQU( 4, l[1], 0, 0x24, "destination address unknown");
+		CEQU( 5, l[1], 0, 0x24, "destination inaccessible");
+		CEQU( 6, l[1], 0, 0x24, "network resource – QoS not available/non-transient");
+		CEQU( 7, l[1], 0, 0x24, "network resource – QoS not available/transient");
+		CEQU( 8, l[1], 0, 0x24, "access failure");
+		CEQU( 9, l[1], 0, 0x24, "access congestion");
+		CEQU( 10, l[1], 0, 0x24, "subsystem failure");
+		CEQU( 11, l[1], 0, 0x24, "subsystem congestion");
+		CEQU( 12, l[1], 0, 0x24, "expiration of the connection establishment timer");
+		CEQU( 13, l[1], 0, 0x24, "incompatible user data");
+		CEQU( 14, l[1], 0, 0x24, "reserved");
+		CEQU( 15, l[1], 0, 0x24, "unqualified");
+		CEQU( 16, l[1], 0, 0x24, "SCCP failure");
+		CEQU( 17, l[1], 0, 0x24, "no translation for an address of such nature");
+		CEQU( 18, l[1], 0, 0x24, "unequipped user");
+		CEQU( 255, l[1], 0, 0x24, "Reserved");
+		if (l[1] >= 19)
+		{
+			if (l[1] <= 243)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for International Use");
+			}
+		}
+		if (l[1] >= 243)
+		{
+			if (l[1] <= 254)
+			{
+				LABL( 0, 0, 0, 0x24, "Reserved for National Networks");
+			}
+		}
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Hopcounter( )
+{
+	DBYT( 8, l[1], 0x90, 0xc2, "Hop counter:" );
+		CEQU( 16, l[1], 0, 0x14, "should be between 1 and 15");
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Importance( )
+{
+	BBIT( 5, l[1], 0x90, 0xc2, "Spare:" );
+	BBIT( 3, l[1], 0x90, 0xc2, "Importance:" );
+	g[25] -= 1;
+}
+
+void SigTran::SCCP::MTC::Receivesequencenumbe()
+{
+	SigTran::SCCP::MTC::Longdata;
+}
+void SigTran::SCCP::MTC::Sequencingorsegmenting()
+{
+	SigTran::SCCP::MTC::Longdata;
+}
+void SigTran::SCCP::MTC::Longdata( )
+{
+	DUMP( 0, g[25], 0x90, 0xc2, "Data:");
+	g[25] = 0;
+	TRTS;
+}
+
+void SigTran::SCCP::MTC::Segmentingorreassembling( )
+{
+	BBIT( 7, l[28], 0x90, 0xc2, "Spare" );
+	BBIT( 1, l[28], 0x05, 0xc2, "more data indication:" );
+		CEQU( 0, l[28], 0x90, 0x14, "no more data" );
+		CEQU( 1, l[28], 0x90, 0x14, "more data" );
+		g[25] -= 1;
+}
+
+//Customising String References for Subsystemnumber
+str# SigTran::SCCP::Crosslinks_Subsystemnumber; //Displays the Name
+0 | SSN not known/not used;
+1 | SCCP management;
+2 | reserved for ITU-T allocation;
+3 | ISUP;
+4 | OMAP;
+5 | MAP;
+6 | HLR_MAP;
+7 | VLR (MAP);
+8 | MSC (MAP);
+9 | EIR (MAP);
+10 | (AUC);
+11 | ISDN supplementary services;
+12 | reserved for international use;
+13 | broadband ISDN edge-to-edge applications;
+14 | TC test responder;
+142 | RANAP;
+146 | CAP;
+249 | PCAP;
+250 | BSC (BSSAP-L);
+251 | BSSAP-LE;
+252 | SMLC (BSSAP-LE);
+253 | BSS O&M (A interface);
+254 | TCAP;
+255 | reserved;
+
+str# SigTran::SCCP::Crosslinks_Calls; //Calls the SubSystem
+3 | ISUP;
+4 | OMAP;
+5 | MAP;
+6 | HLR_MAP;
+142 | RANAP;
+254 | TCAP;
+251 | BSSAP-LE;
+
+
+//----------------------------------END SCCP------------------------------
+
+//----------------SCMG-SCCP Management messages and codes------------------------
+void SigTran::SCCP::MNGT( )
+{
+	LABL( 0, 0, 0, 0xb1, "Signalling connection control part Management" );
+	
+	HBYT( 0, l[1], 0x90, 0xc2, "Message Type:" );
+	CST#( 0, l[1], 0x90, 0x74, SigTran::SCCP::MNGT::MT );
+	//g[6] = l[1];
+	g[25] -= 1;
+	TSB#( 0, l[1], 0x90, 0x90, SigTran::SCCP::MNGT::MT::Calls );
+	//DGLB( 0, g[25], 0x90, 0xc2, "g25");
+	//XLSE( 0, l[1]);
+}
+
+str# SigTran::SCCP::MNGT::MT;
+0x00 | unknown;
+0x01 | SSA subsystem-allowed;
+0x02 | SSP subsystem-prohibited;
+0x03 | SST subsystem-status-test;
+0x04 | SOR subsystem-out-of-service-request;
+0x05 | SOG subsystem-out-of-service-grant;
+0x06 | SSC SCCP or subsystem-congested;
+
+str# SigTran::SCCP::MNGT::MT::Calls;
+0x01 | SigTran::SCCP::MNGT::SS;
+0x02 | SigTran::SCCP::MNGT::SS;
+0x03 | SigTran::SCCP::MNGT::SS;
+0x04 | SigTran::SCCP::MNGT::SS;
+0x05 | SigTran::SCCP::MNGT::SS;
+0x06 | SigTran::SCCP::MNGT::SSC;
+
+void SigTran::SCCP::MNGT::DUMP( )
+{
+	DUMP( 0, 0, 0x90, 0xc2, "Not Decoded:" );
+}
+
+void SigTran::SCCP::MNGT::SS( )
+{
+	BBYT( 0, 0, 0x90,0xc2 "Affected SubSystem Number:");
+	g[25] -= 1;
+	SigTran::SCCP::MTCC::PC;
+	g[25] -= 2;
+	SigTran::SCCP::MNGT::Subsysmultind;
+	g[25] -= 1;
+
+}
+
+void SigTran::SCCP::MNGT::SSC( )
+{
+	BBYT( 0, 0, 0x90,0xc2 "Affected SubSystem Number:");
+	g[25] -= 1;
+	SigTran::SCCP::MTCC::PC;
+	g[25] -= 2;
+	SigTran::SCCP::MNGT::Subsysmultind;
+	g[25] -= 1;
+	SigTran::SCCP::MNGT::SCCPcongestionlevel;
+	g[25] -= 1;
+}
+
+//this parameter looks somehow senseless ^^(it's showing that's unknown)
+void SigTran::SCCP::MNGT::Subsysmultind( ) 
+{
+	BBIT( 6, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 2, l[1], 0x90, 0xc2, "SMI:" );
+		CEQU( 0, l[1], 0, 0x14, "affected subsystem multiplicity unknown");
+		CLSE( 0, l[1], 0, 0x14, "reserved for national use");
+}
+
+void SigTran::SCCP::MNGT::SCCPcongestionlevel( )
+{
+	BBIT( 4, 0, 0x90, 0xc2, "Spare:" );
+	DBIT( 4, l[1], 0x90, 0xc2, "SCCP congestion level:" );
+
+}
+
+//------------------------------END OF SCMG---------------------------------------
+
+//--------------------------------------------------------------------------------
+// 0x08	|	.... 1000 Reserved for MTP Testing User Part; MTP Testing
+
+// 0x0a	|	.... 1010 Satellite ISDN User Part;
+
+//--------------------------------------------------------------------------------
+// 0x06	|	.... 0110 Data User Part (call and circuit-related messages); DUP //ITU-T Q.741 (oder X.61) 
+void DUP06( )
+{
+
+}
+//--------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------
+// 0x07	|	.... 0111 Data User Part (facility registration and cancellation messages); DUP //ITU-T Q.741 (oder X.61)
+void DUP07( )
+{
+
+}
+//--------------------------------------------------------------------------------
+// 0x09	|	.... 1001 Broadband ISDN User Part; BISUP //Q.2762 Q.2763 
+void BISUP( )
+{
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0 , 0, 0xb8, );
+	LABL( 0, 0, 0, 0xb1, "Broadband ISDN User Part" );	
+	HBYT( 0, g[6], 0x90, 0xc2, "Message Type:" ); 
+	CST#( 0, g[6], 0x90, 0x14, BISUP::MTCTYP);
+	g[25] -= 1;
+	DGLB( 0, g[25], 0x90, 0xc2, "Parameter Length: :\PRMLNGTH:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "Length Indicator:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Ext.:" ); 
+	BBIT( 2, 0, 0x90, 0xc2, "Broadband/narrow-band Interworking Ind:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Pass on not Possible Indicator:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Discard Message Indicator:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Send Notification Indicator:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Release call indicator:" ); 
+	BBIT( 1, 0, 0x90, 0xc2, "Transit at intermed exch. Indicator:" );
+	g[25] -= 1;
+	l[1] -= 1;
+	DUMP( 0, l[1], 0x90, 0xc2, "Data:" );
+}
+
+str# BISUP::MTCTYP;
+0x01  | INITIAL ADDRESS;
+0x02  | SUBSEQUENT ADDRESS;
+0x05  | CONSISTENCY CHECK REQUEST;
+0x06  | ADDRESS COMPLETE;
+0x08  | FORWARD TRANSFER;
+0x09  | ANSWER;
+0x0A  | IAM ACKNOWLEDGE;
+0x0B  | IAM REJECT;
+0x0C  | RELEASE;
+0x0D  | SUSPEND;
+0x0E  | RESUME;
+0x0F  | RESET ACKNOWLEDGE;
+0x10  | RELEASE COMPLETE;
+0x11  | CONSISTENCY CHECK REQ ACK;
+0x12  | RESET;
+0x13  | BLOCKING;
+0x14  | UNBLOCKING;
+0x15  | BLOCKING ACKNOWLEDGE;
+0x16  | UNBLOCKING ACKNOWLEDGE;
+0x17  | CONSISTENCY CHECK END;
+0x18  | CONSISTENCY CHECK END ACK;
+0x2C  | CALL PROGRESS;
+0x2D  | USER-TO-USER INFORMATION;
+0x2F  | CONFUSION;
+0x32  | NET RESOURCE MANAGMENT;
+0x34  | USER PART TEST;
+0x35  | USER PART AVAILABLE;
+0x38  | SEGMENTATION;
+
+//--------------------------------------------------------------------------------
+
+
+//Q.931 for SS7, the coded q.931 is not workable because it's entry point is wrong!
+//g[27] = Successfull run
+
+void ss7::q931::ietype( )
+{
+	g[31] = 0;
+	BBIT( 1, g[1], 0x90, 0xc2, "ID:" );
+	l[5] = g[1];
+	BBIT( 7, l[4], 0x5, 0x5, "ID:" );
+	SHFL( 7, l[5]);
+	l[5] += l[4];
+	CST#( 0, l[5], 0x90, 0x14, ss7::q931::IEids );
+	TSB#( 0, l[5], 0x90, 0x14, ss7::q931::IEids::Calls );
+	
+	if (g[31] == 0)
+	{
+		DECR 1;
+		if (g[1] == 1)
+		{
+			BBIT( 1, l[4], 0x5, 0x5, "ID:" );
+			BBIT( 7, 0, 0x90, 0xc2, "Single Octect IE" );
+		}
+		 if (g[1] == 0)
+		 {
+			 BBIT( 1, l[4], 0x5, 0x5, "ID:" );
+			 BBIT( 7, l[1], 0x90,0xc2, "IE ID:" );
+			 HGLB( 0, l[1], 0x90,0xc2, "IE HEx:" );
+
+			 BBYT( 0, l[2], 0x90,0xc2, "Length" );
+			 DUMP( 0, l[2], 0x90,0xc2, "Content" );
+		 }
+	} 
+}
+
+str# ss7::q931::IEids::Calls;
+0 | ss7::q931::SegMes;
+30 | ss7::q931::Progressindicator;
+
+
+void ss7::q931::SegMes( )
+{
+	g[46] -= 1;
+	DUMP( 0, g[46], 0x90, 0xc2, "Data:" );
+	g[31] = 1;
+}
+
+void ss7::q931::Progressindicator( )
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Length:" );
+	if (l[2] <= 2)
+	{
+		BBIT( 1, l[5], 0x5, 0x5, "Extension Indicator:" );
+
+		BBIT( 2, l[6], 0x5, 0xc2, "Coding standard:" );
+			CEQU( 0, l[6], 0, 0x54, "ITU-T standardized coding" );
+			CEQU( 1, l[6], 0, 0x54, "ISO/IEC standard" );
+			CEQU( 2, l[6], 0, 0x54, "national standard" );
+			CEQU( 3, l[6], 0, 0x54, "standard specific to identified location" );
+		BBIT( 1, 0, 0x90, 0xc2, "Spare" );
+		BBIT( 4, l[6], 0x5, 0xc2, "Location:" );
+			CEQU( 0, l[6], 0, 0x54, "User" );
+			CEQU( 1, l[6], 0, 0x54, "Private network serving the local user" );
+			CEQU( 2, l[6], 0, 0x54, "Public network serving the local user" );
+			CEQU( 3, l[6], 0, 0x54, "Transit network" );
+			CEQU( 4, l[6], 0, 0x54, "Public network serving the remote user" );
+			CEQU( 5, l[6], 0, 0x54, "Private network serving the remote user" );
+			CEQU( 6, l[6], 0, 0x54, "Network beyond the interworking point" );
+			
+		
+		if ( l[5] == 1)
+		{
+			BBIT( 1, l[8], 0x5, 0x5, "Extension Indicator:" );
+			BBIT( 7, l[6], 0x5, 0xc2, "Progress description:" );
+				CEQU( 1, l[6], 0, 0x54, "Call is not end-to-end ISDN, further call progress information may be available in-band" );
+				CEQU( 2, l[6], 0, 0x54, "Destination address is non-ISDN" );
+				CEQU( 3, l[6], 0, 0x54, "Origination address is non-ISDN" );
+				CEQU( 4, l[6], 0, 0x54, "Call has returned to the ISDN" );
+				CEQU( 5, l[6], 0, 0x54, "Interworking has occurred and has resulted in a telecommunication service change" );
+				CEQU( 8, l[6], 0, 0x54, "In-band information or an appropriate pattern is now available" );
+				
+		}
+	}
+	if (l[2] >= 3)
+	{
+		DUMP( 0, l[2], 0x90, 0xc2, "Content:" );
+	}
+	g[31] = 1;
+}
+
+str# ss7::q931::IEids;
+0 | Segmented message;
+4 | Bearer capability;
+8 | Cause;
+16 | Call identity;
+20 | Call state;
+24 | Channel identification;
+30 | Progress indicator;
+32 | Network-specific facilities;
+39 | Notification indicator;
+40 | Display;
+41 | Datetime;
+44 | Keypad facility;
+52 | Signal;
+64 | Information rate;
+66 | End-to-end transit delay;
+67 | Transit delay selection and indication;
+68 | Packet layer binary parameters;
+69 | Packet layer window size;
+70 | Packet size;
+71 | Closed user group;
+74 | Reverse charging indication;
+108 | Calling party number;
+109 | Calling party subaddress;
+112 | Called party number;
+113 | Called party subaddress;
+116 | Redirecting number;
+120 | Transit network selection;
+121 | Restart indicator;
+124 | Low layer compatibility;
+125 | High layer compatibility;
+126 | User-user;
+127 | Escape for extension;
+128 | Reserved;
+144 | Shift;
+160 | More data;
+161 | Sending complete;
+176 | Congestion level;
+208 | Repeat indicator;
+
+
+
+
+
+//----------------------------------------------------
+
+void SigTran::TCAP( )
+{
+	LABL( 0, 0, 0, 0xb1, "Terminal Capabilities Application Part" );
+	
+	// BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+	// BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+	// BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+	// DECR 3;
+	
+	
+	BBYT( 0, l[1], 0x90, 0xc2, "Message Type Tag:" );
+		CEQU( 97, l[1], 0, 0x14, "Unidirectional" );
+		CEQU( 98, l[1], 0, 0x14, "Begin" );
+		CEQU( 99, l[1], 0, 0x14, "(reserved)" );
+		CEQU( 100, l[1], 0, 0x14, "End" );
+		CEQU( 101, l[1], 0, 0x14, "Continue" );
+		CEQU( 102, l[1], 0, 0x14, "(reserved)" );
+		CEQU( 103, l[1], 0, 0x14, "Abort" );
+	BBIT( 1, l[4], 0x90, 0xc2, "Extension:" );
+	
+		BBIT( 7, l[5], 0x90, 0xc2, "Length of the Contents:" );
+	g[25] -= 2;
+	// DGLB( 0, l[5], 0x90, 0xc2, "l5");
+	// DGLB( 0, g[25], 0x90, 0xc2, "g25");
+	if g25 != l[5]			//Failsafe
+	{
+		LABL( 0, 0, 0, 0x14, "Length is not like should be!" );
+		DUMP( 0, g[25], 0x90, 0xc2, Data: );
+	}
+	while (g[25] >= 1)
+	{
+	if g[25] != 0
+	{
+	
+	LABL( 0, 0, 0 , 0xb7, "IE:");
+	// DGLB( 0, g[25], 0x90, 0xc2, "g25");
+	BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+	DECR 1;
+	BBIT( 2, l[1], 0x90, 0xc2, "Class:" );
+		CEQU( 0, l[1], 0, 0x14, "Universal" );
+		CEQU( 1, l[1], 0, 0x14, "Application-wide" );
+		CEQU( 2, l[1], 0, 0x14, "Context-specific" );
+		CEQU( 3, l[1], 0, 0x14, "Private use" );
+	BBIT( 1, l[2], 0x90, 0xc2, "Form:" );
+		CEQU( 0, l[2], 0, 0x14, "Primitive" );
+		CEQU( 1, l[2], 0, 0x14, "Constructor" );
+	BBIT( 5, l[3], 0x90, 0xc2, "Tag code:" );
+	
+		BBIT( 1, l[4], 0x90, 0xc2, "Extension:" );
+	
+		DBIT( 7, l[9], 0x90, 0xc2, "Length of the Contents:" );
+		l[1] = l[9];
+		// if (l[1] <= 4)
+		// {
+			DUMP( 0, l[1], 0x90, 0xc2, Data: );
+		// }
+		if (l[1] >= 5)
+		{
+
+			/* while (g[25] >= 1)
+			{
+			BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+					BBIT( 1, l[4], 0x90, 0xc2, "Extension:" );
+	
+		DBIT( 7, l[9], 0x90, 0xc2, "Length of the Contents:" );
+		l[1] = l[9];
+			DUMP( 0, l[1], 0x90, 0xc2, DAta);
+				g[25] -= l[1];
+	l[5] -= l[1];
+	g[25] -= 2;
+			} */
+		}
+	g[25] -= l[1];
+	l[5] -= l[1];
+	g[25] -= 2;
+	LABL 0 0 0 b8;
+	//DGLB( 0, g[25], 0x90, 0xc2, "g25");
+	}
+	}
+	BBYT( 0, l[1], 0x90, 0xc2, "IND:" );
+	DECR 3;
+	
+	DUMP( 0, g[25], 0x90, 0xc2, Data: );
+	
+}

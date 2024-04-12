@@ -1,0 +1,598 @@
+// GOOSE V.2
+// edit 20150615
+// Globals: g20 = general length
+//			g22 = inner pdu length 
+//			g23 = allData pdu length
+//			g25 = allData elemets
+
+str# Ether::Branching_3_Str;
+	0x88b8	| Goose::Main;	
+	
+void Goose::Main()
+{
+	LABL( 0, 0, 0, 0xb1, "GOOSE" );
+	HWRD( 0, l[1], 0x90, 0xc2, "APPID:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Length:" );
+	HWRD( 0, l[3], 0x90, 0xc2, "Reserved1:" );
+	HWRD( 0, l[4], 0x90, 0xc2, "Reserved2:" );
+	l[2] -= 8;
+	g[20] = l[2]; //Length
+	Goose::goosePdu;
+	if(g[20] > 0)
+	{
+		DUMP( 0, l[2],  0x90,  0xc2, "Dumped Pdu Data:" );
+	}
+}
+
+// gseMngtPdu	[APPLICATION 0] IMPLICIT GSEMngtPdu, 	:( NOT DONE NO PACKETS!
+// goosePdu	[APPLICATION 1] IMPLICIT IECGoosePdu,		THAT'S DONE! :)
+
+void Goose::goosePdu()
+{
+	LABL( 0, 0, 0, 0xb7, "goosePDU" );
+	GBYT( 0, l[10] );
+	GBYT( 1, l[11] );
+	DBYT( 0, l[1], 0x90, 0xc2, "TYP:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Length of PDU:" );
+	g[20] -= 2;
+	//PDU is IECGoosePdu
+	if (l[10] == 0x61)
+	{
+		while(g[20] >= 1)
+		{
+			GBYT( 0, l[12] );
+			if (l[12] != 0x80)
+			{
+				DBYT( 0, l[3],  0x90,  0xc2, "Length of PDU+Data:" );
+				g[20] -= 1;
+			}
+			if (l[12] == 0x80)
+			{
+				while(g[20] >= 1)
+				{
+					GBYT( 0, l[13] );
+					//not allDATA
+					if(l[13] != 0xab)
+					{
+						DBYT( 0, l[3], 0x5, 0x5, "TYP:" );
+							//CST#( 0, l[3], 0, 0x14, Goose::goosePdu::Choice );
+							CST#( 0, l[3], 0, 0xb7, Goose::goosePdu::Choice );
+						DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+						g[20] -= 2; g[22] = l[4];
+						TSB#( 0, l[3], 0, 0, Goose::goosePdu::types );
+						if(g[22] != 0x00)
+						{
+							CHR#( 0, g[22], 0x90, 0xc2, "Details:" );
+							g[20] -= g[22]; g[22] = 0;
+						}
+					LABL 0 0 0 b8;
+					}
+					//allDATA
+					if(l[13] == 0xab)
+					{
+						LABL( 0, 0, 0, 0xb7,  "allData: " );
+						DGLB( 0, g[25], 0x07, 0x07, " " );
+						LABL( 0, 0, 0, 0x07,  " items" );
+						HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+							LABL( 0, 0, 0, 0x14, "allData" );
+						DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+						//DWRD( 0, l[5], 0x90, 0xc2, "Length:" );
+						g[20] -= 2; g[23] -= 2;
+						g[22] = 1;
+						g[26] = 0;
+						while(g[20] >= 1)
+						{
+							GBYT( 0, l[3]);
+							CST#( 0, l[3], 0x5, 0x5, Goose::allData::Choice );
+							SKIP;
+							
+							HBYT( 0, l[3], 0x90, 0xc2, "Unknown:" ); 
+							g[20] -= 1; g[22] -= 1;
+							ENDS;
+							if (l[3] == 0xa2)
+							{
+									
+								if(g[26] > 0)
+								{
+									LABL 0 0 0 b8;
+									g[26] -= 1;
+								}
+								LABL( 0, 0, 0, 0xb7, "Structure:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								g[26] += 1;
+								g[20] -= 2;
+							}
+							//CST#( 0, l[3], 0, 0xb7, Goose::allData::Choice );
+							if (l[3] == 0x81)
+							{
+								LABL( 0, 0, 0, 0xb7, "Array:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								g[20] -= 2;g[22] -= 2;
+							}
+							if (l[3] == 0x82)
+							{
+								LABL( 0, 0, 0, 0xb7, "Structure:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								g[20] -= 2;g[22] -= 2;
+							}
+							if (l[3] == 0x83)
+							{
+								LABL( 0, 0, 0, 0xb7, "boolean:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								BBYT( 0, l[5], 0x90, 0xc2, "boolean:" );
+									CEQU( 0, l[5], 0, 0x14, "False" );
+									CEQU( 1, l[5], 0, 0x14, "True" );
+								LABL 0 0 0 b8;
+								g[20] -= 3;g[22] -= 2;
+							}
+							if (l[3] == 0x84)
+							{
+								LABL( 0, 0, 0, 0xb7, "bit-string:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								DBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+								l[4] -= 1;
+								HEX#( 0, l[4], 0x90, 0xc2, "bit-string:" );
+								LABL 0 0 0 b8; 
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x85)
+							{
+								
+								LABL( 0, 0, 0, 0xb7, "integer:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								if (l[4] == 1)
+								{
+									DBYT( 0, 0, 0x90, 0xc2, "integer:" ); g[20] -= 3;g[22] -= 3;
+								}
+								if (l[4] == 2)
+								{
+									DWRD( 0, 0, 0x90, 0xc2, "integer:" );g[20] -= 4;g[22] -= 3;
+								}
+								if (l[4] == 4)
+								{
+									DLNG( 0, 0, 0x90, 0xc2, "integer:" );g[20] -= 6;g[22] -= 3;
+								}
+								LABL 0 0 0 b8;
+							}
+							if (l[3] == 0x86)
+							{
+								LABL( 0, 0, 0, 0xb7, "unsigned:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								HEX#( 0, l[4], 0x90, 0xc2, "unsigned:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x87)
+							{
+								LABL( 0, 0, 0, 0xb7, "floating-point:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								HEX#( 0, l[4], 0x90, 0xc2, "floating-point:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+								
+							}
+							if (l[3] == 0x88)
+							{
+								LABL( 0, 0, 0, 0xb7, "real:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								HEX#( 0, l[4], 0x90, 0xc2, "real:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x89)
+							{
+								LABL( 0, 0, 0, 0xb7, "octet-string:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								HEX#( 0, l[4], 0x90, 0xc2, "octet-string:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x8a)
+							{
+								LABL( 0, 0, 0, 0xb7, "visible-string:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								CHR#( 0, l[4], 0x90, 0xc2, "visible-string:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x8b)
+							{
+								LABL( 0, 0, 0, 0xb7, "binary-time:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								CHR#( 0, l[4], 0x90, 0xc2, "binary-time:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							
+							if (l[3] == 0x8C)
+							{
+								LABL( 0, 0, 0, 0xb7, "bcd:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								HEX#( 0, l[4], 0x90, 0xc2, "bcd:" );
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x8d)
+							{
+								LABL( 0, 0, 0, 0xb7, "booleanArray:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								l[6] = l[4];
+								while (l[6] > 0)
+								{
+									BBYT( 0, l[5], 0x90, 0xc2, "boolean:" );
+										CEQU( 0, l[5], 0, 0x14, "False" );
+										CEQU( 1, l[5], 0, 0x14, "True" );
+									l[4] -= 1;
+								}
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];g[22] -= l[4];
+							}
+							if (l[3] == 0x91)
+							{
+								LABL( 0, 0, 0, 0xb7, "utc-time:" );
+								HBYT( 0, l[3], 0x90, 0xc2, "TYP:" );
+								DBYT( 0, l[4], 0x90, 0xc2, "Length:" );
+								if (l[4] == 4)
+								{
+									TIME( 0, l[4], 0x90, 0xc2, "utc-time:" );
+								}
+								
+								if (l[4] == 8)
+								{
+										TIME( 0, 0, 0x90, 0xc2, "t:" );
+										DLNG( 0, l[1], 0x90, 0xc2, "fraction and quality:" );
+										l[2] = l[1];
+										ANDG( l[2], 0xffffff00);
+										SHFR( 16, l[2]);
+										DGLB( 0, l[2], 0x90	, 0xc2, "fraction:" );
+										l[1] = l[2];
+										l[1] &= 0x000000ff;
+										DGLB( 0, l[1], 0x90	, 0xc2, "quality:" );
+								}
+								LABL 0 0 0 b8;
+								l[4] += 2;
+								g[20] -= l[4];
+								g[22] -= l[4];
+							}
+							l[33] = l[3];
+						}
+					LABL 0 0 0 b8;
+					}
+						
+				}
+			}
+		}
+	}
+	LABL 0 0 0 b8;
+	//PDU isnot IECGoosePdu
+	if (l[10] != 0x61)
+	{
+		DBYT( 0, l[1],  0x90,  0xc2, "TYP:" );
+		DBYT( 0, l[2],  0x90,  0xc2, "Length of Payload:" );
+		g[20] -= 2;
+		while(g[20] >= 1)
+		{
+			DBYT( 0, l[3],  0x90,  0xc2, "TYP:" );
+			DBYT( 0, l[4],  0x90,  0xc2, "Length:" );
+			g[20] -= 2;
+			CHR#( 0, l[4],  0x90,  0xc2, "dt:" );
+			g[20] -= l[4];
+		}
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+}
+
+void Goose::goosePdu::gocbRef()
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "gocbRef:" );
+	g[20] -= g[22];	g[22] = 0;
+}
+
+void Goose::goosePdu::timeAllowedtoLive()
+{
+	if (g[22] == 1)
+	{
+		BBYT( 0, 0, 0x90, 0xc2, "timeAllowedtoLive:" );
+		g[22] -= 1; g[20] -= 1; 
+	}
+	if (g[22] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "timeAllowedtoLive:" );
+		g[22] -= 2; g[20] -= 2; 
+	}
+	if (g[22] == 3)
+	{
+		DBYT( 0, l[1], 0x5, 0x5, "timeAllowedtoLive:" );
+		DWRD( 0, l[2], 0x5, 0x5, "timeAllowedtoLive:" );
+		SHFL(16,l[1]);
+		l[1] += l[2];
+		DGLB( 0, l[1], 0x90, 0xc2, "timeAllowedtoLive:" );
+		g[22] -= 3; g[20] -= 3; 
+	}
+	if (g[22] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "timeAllowedtoLive:" );
+		g[22] -= 4; g[20] -= 4; 
+	}
+	if (g[22] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "timeAllowedtoLive:" );
+		g[22] -= 8; g[20] -= 8; 
+	}
+}
+
+void Goose::goosePdu::datSet()
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "datSet:" );
+	g[20] -= g[22];	g[22] = 0;
+}
+
+void Goose::goosePdu::goID()
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "goID:" );
+	g[20] -= g[22];	g[22] = 0;
+}
+
+void Goose::goosePdu::t()
+{
+	TIME( 0, 0, 0x90, 0xc2, "t:" );
+	DLNG( 0, l[1], 0x90, 0xc2, "fraction and quality:" );
+	l[2] = l[1];
+	l[2] &= 0xffffff00;
+	SHFR( 16, l[2]);
+	//l[2] *= 5;
+	DGLB( 0, l[2], 0x90	, 0xc2, "fraction:" );
+	l[1] = l[2];
+	l[1] &= 0x000000ff;
+	DGLB( 0, l[1], 0x90	, 0xc2, "quality:" );
+	g[20] -= g[22];	g[22] = 0;
+}
+
+void Goose::goosePdu::stNum()
+{
+	if (g[22] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "stNum:" );
+		g[22] -= 1; g[20] -= 1; 
+	}
+	if (g[22] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "stNum:" );
+		g[22] -= 2; g[20] -= 2; 
+	}
+	if (g[22] == 3)
+	{
+		DBYT( 0, l[1], 0x5, 0x5, "stNum:" );
+		DWRD( 0, l[2], 0x5, 0x5, "stNum:" );
+		SHFL(16,l[1]);
+		l[1] += l[2];
+		DGLB( 0, l[1], 0x90, 0xc2, "stNum:" );
+		g[22] -= 3; g[20] -= 3; 
+	}
+	if (g[22] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "stNum:" );
+		g[22] -= 4; g[20] -= 4; 
+	}
+	if (g[22] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "stNum:" );
+		g[22] -= 8; g[20] -= 8; 
+	}
+}
+
+void Goose::goosePdu::sqNum()
+{
+	if (g[22] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "sqNum:" );
+		g[22] -= 1; g[20] -= 1; 
+	}
+	if (g[22] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "sqNum:" );
+		g[22] -= 2; g[20] -= 2; 
+	}
+	if (g[22] == 3)
+	{
+		DBYT( 0, l[1], 0x5, 0x5, "sqNum:" );
+		DWRD( 0, l[2], 0x5, 0x5, "sqNum:" );
+		SHFL(16,l[1]);
+		l[1] += l[2];
+		DGLB( 0, l[1], 0x90, 0xc2, "sqNum:" );
+		g[22] -= 3; g[20] -= 3; 
+	}
+	if (g[22] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "sqNum:" );
+		g[22] -= 4; g[20] -= 4; 
+	}
+	if (g[22] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "sqNum:" );
+		g[22] -= 8; g[20] -= 8; 
+	}
+}
+
+void Goose::goosePdu::test()
+{
+	DBYT( 0, l[50], 0x90, 0xc2, "test:" );
+		CEQU( 0, l[50], 0, 0x14, "false" );
+		CEQU( 0xff, l[50], 0, 0x14, "true" );
+	g[20] -= 1;	g[22] -= 1;
+}
+
+void Goose::goosePdu::confRev()
+{
+	if (g[22] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "confRev:" );
+		g[22] -= 1; g[20] -= 1; 
+	}
+	if (g[22] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "confRev:" );
+		g[22] -= 2; g[20] -= 2; 
+	}
+	if (g[22] == 3)
+	{
+		DBYT( 0, l[1], 0x5, 0x5, "confRev:" );
+		DWRD( 0, l[2], 0x5, 0x5, "confRev:" );
+		SHFL(16,l[1]);
+		l[1] += l[2];
+		DGLB( 0, l[1], 0x90, 0xc2, "confRev:" );
+		g[22] -= 3; g[20] -= 3; 
+	}
+	if (g[22] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "confRev:" );
+		g[22] -= 4; g[20] -= 4; 
+	}
+	if (g[22] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "confRev:" );
+		g[22] -= 8; g[20] -= 8; 
+	}
+}
+
+void Goose::goosePdu::ndsCom()
+{
+	DBYT( 0, l[50], 0x90, 0xc2, "ndsCom:" );
+		CEQU( 0, l[50], 0, 0x14, "false" );
+		CEQU( 0xff, l[50], 0, 0x14, "true" );
+	g[20] -= 1;	g[22] -= 1;
+}
+
+void Goose::goosePdu::numDatSetEntries()
+{
+	if (g[22] == 1)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "numDatSetEntries:" );
+		g[22] -= 1; g[20] -= 1; 
+	}
+	if (g[22] == 2)
+	{
+		DWRD( 0, l[1], 0x90, 0xc2, "numDatSetEntries:" );
+		g[22] -= 2; g[20] -= 2; 
+	}
+	if (g[22] == 3)
+	{
+		DBYT( 0, l[1], 0x5, 0x5, "numDatSetEntries:" );
+		DWRD( 0, l[2], 0x5, 0x5, "numDatSetEntries:" );
+		SHFL(16,l[1]);
+		l[1] += l[2];
+		DGLB( 0, l[1], 0x90, 0xc2, "numDatSetEntries:" );
+		g[22] -= 3; g[20] -= 3; 
+	}
+	if (g[22] == 4)
+	{
+		DLNG( 0, l[1], 0x90, 0xc2, "numDatSetEntries:" );
+		g[22] -= 4; g[20] -= 4; 
+	}
+	if (g[22] == 8)
+	{
+		D64B( 0, l[1], 0x90, 0xc2, "numDatSetEntries:" );
+		g[22] -= 8; g[20] -= 8; 
+	}
+	g[25] = l[1];
+}
+
+void Goose::allData::boolean()
+{
+	HBYT( 0, l[50], 0x90, 0xc2, "boolean:" );
+		CEQU( 0, l[50], 0, 0x14, "false" );
+		CEQU( 0xff, l[50], 0, 0x14, "true" );
+	g[20] -= 1;	g[22] -= 1; g[23] -= 1;
+}
+
+void Goose::allData::bit-string()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Padding:" );
+	g[20] -= 1;	g[22] -= 1; g[23] -= 1;
+	HEX#( 0, g[22], 0x90, 0xc2, "bit-string:" );
+	g[20] -= g[22];	g[23] -= g[22]; g[22] -= g[22];
+}
+
+void Goose::allData::structure()
+{
+	g[20] -= 1;	g[22] -= 1; g[23] -= 1;
+	GBYT( 0, l[2] );GBYT( 1, l[3] );GBYT( 2, l[4] );
+	HEX#( 0, g[22], 0x90, 0xc2, "structure:" );
+	g[20] -= g[22];	g[23] -= g[22]; g[22] -= g[22];
+}
+
+str# Goose::goosePdu::Choice;
+0x80	|	gocbRef;
+0x81	|	timeAllowedtoLive;
+0x82	|	datSet;
+0x83	|	goID;
+0x84	|	t;
+0x85	|	stNum;
+0x86	|	sqNum;
+0x87	|	test;
+0x88	|	confRev;
+0x89	|	ndsCom;
+0x8a	|	numDatSetEntries;
+0x8b	|	allData;			
+0x8c	|	security;				
+
+str# Goose::goosePdu::types;
+0x80	|	Goose::goosePdu::gocbRef;
+0x81	|	Goose::goosePdu::timeAllowedtoLive;
+0x82	|	Goose::goosePdu::datSet;
+0x83	|	Goose::goosePdu::goID;
+0x84	|	Goose::goosePdu::t;
+0x85	|	Goose::goosePdu::stNum;
+0x86	|	Goose::goosePdu::sqNum;
+0x87	|	Goose::goosePdu::test;
+0x88	|	Goose::goosePdu::confRev;
+0x89	|	Goose::goosePdu::ndsCom;
+0x8a	|	Goose::goosePdu::numDatSetEntries;
+
+str# Goose::allData::types;
+0x83	|	Goose::allData::boolean;
+0x84	|	Goose::allData::bit-string;
+//0xa1	|	Goose::allData::array;
+0xa2	|	Goose::allData::structure;
+
+str# Goose::allData::Choice;
+0x81	|	array;
+0x82	|	structure;
+0x83	|	boolean;
+0x84	|	bit-string;	
+0x85	|	integer;
+0x86	|	unsigned;
+0x87	|	floating-point;
+0x88	|	real;
+0x89	|	octet-string;
+0x8a	|	visible-string;
+0x8b	|	binary-time;
+0x8c	|	bcd;
+0x8d	|	booleanArray;
+0x91	|	utc-time;
+0xa1	|	array;
+0xa2	|	structure;

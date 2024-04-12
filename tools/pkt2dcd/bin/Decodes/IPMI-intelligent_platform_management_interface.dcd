@@ -1,0 +1,987 @@
+// Intelligent Platform Management Interface - IPMI
+// Specification 2.0
+// Version 0.1
+// 4/9/2007
+// g[4] used to determine request or response
+
+void IPMI()
+{
+	LABL( 0, 0, 0, 0xb1, "Intelligent Platform Management Interface\IPMI");
+	LABL( 0, 0, 0, 0xb7, "Session");
+	HBYT( 0, l[2], 0x90, 0xc2, "Authentication Type:");
+	CST#( 0, l[2], 0, 0x14, IPMI::AuthType_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Sequence Number:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Id:");
+	if (l[2] != 0)
+	{
+		HEX#( 0x10, 0, 0x90, 0xc2, "AuthCode:");
+	}
+	LABL( 0, 0, 0, 0xb8);
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Length:");
+	g[4] = pb[0];
+	if (g[4] == 0x20)
+	{
+		IPMI::Request();
+	}
+	if (g[4] == 0x81)
+	{
+		IPMI::Response();
+	}
+}
+
+str# IPMI::AuthType_Str;
+	0	| None;
+	1	| MD2;
+	2	| MD5;
+	3	| Reserved;
+	4	| Straight Password Key;
+	5	| OEM Proprietary;
+	6	| RMCP+;
+
+void IPMI::Request()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Response Address:");
+	IPMI::NetFn_Flag();
+	BBIT( 2, l[2], 0x5, 0xc9);
+		CEQU( 3, l[2], 0x0, 0x54, ".... ..11 Response LUN (3)");
+		CEQU( 2, l[2], 0x0, 0x54, ".... ..10 Response LUN (2)");
+		CEQU( 1, l[2], 0x0, 0x54, ".... ..01 Response LUN (1)");
+		CEQU( 0, l[2], 0x0, 0x54, ".... ..00 Response LUN (0)");
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, l[1], 0x90, 0xc2, "Checksum 1:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Req Address:");
+	IPMI::Sequence();
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 3, l[1], 0x0, 0x54, ".... ..11 Request LUN (3)");
+		CEQU( 2, l[1], 0x0, 0x54, ".... ..10 Request LUN (2)");
+		CEQU( 1, l[1], 0x0, 0x54, ".... ..01 Request LUN (1)");
+		CEQU( 0, l[1], 0x0, 0x54, ".... ..00 Request LUN (0)");
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, g[2], 0x90, 0xc2, "Command:");
+	TSB#( 0, g[3], 0, 0, IPMI::NetFn);
+	TLSE 0 0 0 0 IPMI::Undefined;
+	HBYT( 0, l[1], 0x90, 0xc2, "Checksum 2:");
+}
+
+void IPMI::Response()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Request Address:");
+	IPMI::NetFn_Flag();
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 3, l[1], 0x0, 0x54, ".... ..11 Request LUN (3)");
+		CEQU( 2, l[1], 0x0, 0x54, ".... ..10 Request LUN (2)");
+		CEQU( 1, l[1], 0x0, 0x54, ".... ..01 Request LUN (1)");
+		CEQU( 0, l[1], 0x0, 0x54, ".... ..00 Request LUN (0)");
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, l[1], 0x90, 0xc2, "Checksum 1:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Rsp Address:");
+	IPMI::Sequence();
+	BBIT( 2, l[2], 0x5, 0xc9);
+		CEQU( 3, l[2], 0x0, 0x54, ".... ..11 Response LUN (3)");
+		CEQU( 2, l[2], 0x0, 0x54, ".... ..10 Response LUN (2)");
+		CEQU( 1, l[2], 0x0, 0x54, ".... ..01 Response LUN (1)");
+		CEQU( 0, l[2], 0x0, 0x54, ".... ..00 Response LUN (0)");
+	LABL( 0, 0, 0, 0xc8);
+	HBYT( 0, g[2], 0x90, 0xc2, "Command:");
+	TSB#( 0, g[3], 0, 0, IPMI::NetFn);
+	TLSE 0 0 0 0 IPMI::Undefined;
+	HBYT( 0, l[1], 0x90, 0xc2, "Checksum 2:");
+}
+
+void IPMI::Undefined()
+{
+	g[16] -= 1;
+	DUMP 0 10 90 c2 Data:;
+}
+
+str# IPMI::NetFn;
+	0x04	|	IPMI::SensorEventRequest;
+	0x05	|	IPMI::SensorEventResponse;
+	0x06	|	IPMI::ApplicationRequest;
+	0x07	|	IPMI::ApplicationResponse;
+	0x0a	|	IPMI::StorageRequest;
+	0x0b	|	IPMI::StorageResponse;
+	0x2c	|	IPMI::PICMGRequest;
+	0x2d	|	IPMI::PICMGResponse;
+
+void IPMI::NetFn_Flag()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "NetFn/LUN:");
+	DECR 1;
+	BBIT( 6, g[3], 0x5, 0xc9);
+		CEQU( 45, g[3], 0x0, 0x54, "1011 01.. NetFn: PICMG Response (45)");
+		CEQU( 44, g[3], 0x0, 0x54, "1011 00.. NetFn: PICMG Request (44)");
+		CEQU( 11, g[3], 0x0, 0x54, "0010 11.. NetFn: Storage Response (11)");
+		CEQU( 10, g[3], 0x0, 0x54, "0010 10.. NetFn: Storage Request (10)");
+		CEQU( 7, g[3], 0x0, 0x54, "0001 11.. NetFn: Application Response (7)");
+		CEQU( 6, g[3], 0x0, 0x54, "0001 10.. NetFn: Application Request (6)");
+		CEQU( 5, g[3], 0x0, 0x54, "0001 01.. NetFn: Sensor/Event Response (5)");
+		CEQU( 4, g[3], 0x0, 0x54, "0001 00.. NetFn: Application Request (4)");
+		CEQU( 3, g[3], 0x0, 0x54, "0000 11.. NetFn: Application Request (3)");
+		CEQU( 2, g[3], 0x0, 0x54, "0000 10.. NetFn: Application Request (2)");
+		CEQU( 1, g[3], 0x0, 0x54, "0000 01.. NetFn: Application Request (1)");
+		CEQU( 0, g[3], 0x0, 0x54, "0000 00.. NetFn: Application Request (0)");
+}
+
+void IPMI::Sequence()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "Seq/LUN:");
+	DECR 1;
+	BBIT( 6, l[1], 0x5, 0xc9);
+		CEQU( 0x3F, l[1], 0x0, 0x54, "1111 11.. Sequence (63)");
+		CEQU( 0x3E, l[1], 0x0, 0x54, "1111 10.. Sequence (62)");
+		CEQU( 0x3D, l[1], 0x0, 0x54, "1111 01.. Sequence (61)");
+		CEQU( 0x3C, l[1], 0x0, 0x54, "1111 00.. Sequence (60)");
+		CEQU( 0x3B, l[1], 0x0, 0x54, "1110 11.. Sequence (59)");
+		CEQU( 0x3A, l[1], 0x0, 0x54, "1110 10.. Sequence (58)");
+		CEQU( 0x39, l[1], 0x0, 0x54, "1110 01.. Sequence (57)");
+		CEQU( 0x38, l[1], 0x0, 0x54, "1110 00.. Sequence (56)");
+		CEQU( 0x37, l[1], 0x0, 0x54, "1101 11.. Sequence (55)");
+		CEQU( 0x36, l[1], 0x0, 0x54, "1101 10.. Sequence (54)");
+		CEQU( 0x35, l[1], 0x0, 0x54, "1101 01.. Sequence (53)");
+		CEQU( 0x34, l[1], 0x0, 0x54, "1101 00.. Sequence (52)");
+		CEQU( 0x33, l[1], 0x0, 0x54, "1100 11.. Sequence (51)");
+		CEQU( 0x32, l[1], 0x0, 0x54, "1100 10.. Sequence (50)");
+		CEQU( 0x31, l[1], 0x0, 0x54, "1100 01.. Sequence (49)");
+		CEQU( 0x30, l[1], 0x0, 0x54, "1100 00.. Sequence (48)");
+		CEQU( 0x2F, l[1], 0x0, 0x54, "1011 11.. Sequence (47)");
+		CEQU( 0x2E, l[1], 0x0, 0x54, "1011 10.. Sequence (46)");
+		CEQU( 0x2D, l[1], 0x0, 0x54, "1011 01.. Sequence (45)");
+		CEQU( 0x2C, l[1], 0x0, 0x54, "1011 00.. Sequence (44)");
+		CEQU( 0x2B, l[1], 0x0, 0x54, "1010 01.. Sequence (43)");
+		CEQU( 0x2A, l[1], 0x0, 0x54, "1010 01.. Sequence (42)");
+		CEQU( 0x29, l[1], 0x0, 0x54, "1010 01.. Sequence (41)");
+		CEQU( 0x28, l[1], 0x0, 0x54, "1010 00.. Sequence (40)");
+		CEQU( 0x27, l[1], 0x0, 0x54, "1001 11.. Sequence (39)");
+		CEQU( 0x26, l[1], 0x0, 0x54, "1001 10.. Sequence (38)");
+		CEQU( 0x25, l[1], 0x0, 0x54, "1001 01.. Sequence (37)");
+		CEQU( 0x24, l[1], 0x0, 0x54, "1001 00.. Sequence (36)");
+		CEQU( 0x23, l[1], 0x0, 0x54, "1000 11.. Sequence (35)");
+		CEQU( 0x22, l[1], 0x0, 0x54, "1000 10.. Sequence (34)");
+		CEQU( 0x21, l[1], 0x0, 0x54, "1000 01.. Sequence (33)");
+		CEQU( 0x20, l[1], 0x0, 0x54, "1000 00.. Sequence (32)");
+		CEQU( 0x1F, l[1], 0x0, 0x54, "0111 11.. Sequence (31)");
+		CEQU( 0x1E, l[1], 0x0, 0x54, "0111 10.. Sequence (30)");
+		CEQU( 0x1D, l[1], 0x0, 0x54, "0111 01.. Sequence (29)");
+		CEQU( 0x1C, l[1], 0x0, 0x54, "0111 00.. Sequence (28)");
+		CEQU( 0x1B, l[1], 0x0, 0x54, "0110 11.. Sequence (27)");
+		CEQU( 0x1A, l[1], 0x0, 0x54, "0110 10.. Sequence (26)");
+		CEQU( 0x19, l[1], 0x0, 0x54, "0110 01.. Sequence (25)");
+		CEQU( 0x18, l[1], 0x0, 0x54, "0110 00.. Sequence (24)");
+		CEQU( 0x17, l[1], 0x0, 0x54, "0101 11.. Sequence (23)");
+		CEQU( 0x16, l[1], 0x0, 0x54, "0101 10.. Sequence (22)");
+		CEQU( 0x15, l[1], 0x0, 0x54, "0101 01.. Sequence (21)");
+		CEQU( 0x14, l[1], 0x0, 0x54, "0101 00.. Sequence (20)");
+		CEQU( 0x13, l[1], 0x0, 0x54, "0100 11.. Sequence (19)");
+		CEQU( 0x12, l[1], 0x0, 0x54, "0100 10.. Sequence (18)");
+		CEQU( 0x11, l[1], 0x0, 0x54, "0100 01.. Sequence (17)");
+		CEQU( 0x10, l[1], 0x0, 0x54, "0100 00.. Sequence (16)");
+		CEQU( 0xf, l[1], 0x0, 0x54, "0011 11.. Sequence (15)");
+		CEQU( 0xe, l[1], 0x0, 0x54, "0011 10.. Sequence (14)");
+		CEQU( 0xd, l[1], 0x0, 0x54, "0011 01.. Sequence (13)");
+		CEQU( 0xc, l[1], 0x0, 0x54, "0011 00.. Sequence (12)");
+		CEQU( 0xb, l[1], 0x0, 0x54, "0010 11.. Sequence (11)");
+		CEQU( 0xa, l[1], 0x0, 0x54, "0010 10.. Sequence (10)");
+		CEQU( 0x9, l[1], 0x0, 0x54, "0010 01.. Sequence (9)");
+		CEQU( 0x8, l[1], 0x0, 0x54, "0010 00.. Sequence (8)");
+		CEQU( 0x7, l[1], 0x0, 0x54, "0001 11.. Sequence (7)");
+		CEQU( 0x6, l[1], 0x0, 0x54, "0001 10.. Sequence (6)");
+		CEQU( 0x5, l[1], 0x0, 0x54, "0001 01.. Sequence (5)");
+		CEQU( 0x4, l[1], 0x0, 0x54, "0001 00.. Sequence (4)");
+		CEQU( 0x3, l[1], 0x0, 0x54, "0000 11.. Sequence (3)");
+		CEQU( 0x2, l[1], 0x0, 0x54, "0000 10.. Sequence (2)");
+		CEQU( 0x1, l[1], 0x0, 0x54, "0000 01.. Sequence (1)");
+		CEQU( 0x0, l[1], 0x0, 0x54, "0000 00.. Sequence (0)");
+}
+
+void IPMI::SensorEventRequest()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_SensorEvent_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_SensorEvent);
+}
+
+void IPMI::SensorEventResponse()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_SensorEvent_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Completion Code:");
+		CST#( 0, l[2], 0, 0x14, IPMI::CompletionCode_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_SensorEvent);
+}
+
+void IPMI::ApplicationRequest()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_App_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_App);
+}
+
+void IPMI::ApplicationResponse()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_App_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Completion Code:");
+		CST#( 0, l[2], 0, 0x14, IPMI::CompletionCode_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_App);
+}
+
+void IPMI::StorageRequest()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_Storage_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_Storage);
+}
+
+void IPMI::StorageResponse()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_Storage_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Completion Code:");
+		CST#( 0, l[2], 0, 0x14, IPMI::CompletionCode_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_Storage);
+}
+
+void IPMI::PICMGRequest()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_PICMG_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_PICMG);
+}
+
+void IPMI::PICMGResponse()
+{
+	CST#( 0, g[2], 0, 0x14, IPMI::NetFn_PICMG_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Completion Code:");
+		CST#( 0, l[2], 0, 0x14, IPMI::CompletionCode_Str);
+	TSB#( 0, g[2], 0, 0, IPMI::NetFn_PICMG);
+}
+
+// NetFn - App
+str# IPMI::NetFn_App;
+	0x34	|	IPMI::Send_Message;
+	0x38	|	IPMI::Channel_Auth_Capabilities;
+	0x39	|	IPMI::Get_Session_Challenge;
+	0x3A	|	IPMI::Activate_Session;
+	0x3B	|	IPMI::Set_Session_Privilege_Level;
+	0x3c	|	IPMI::Close_Session;
+	0x3d	|	IPMI::Get_Session_Info;
+	0x4c	|	IPMI::Set_User_Payload_Access;
+	0x4d	|	IPMI::Get_User_Payload_Access;
+
+str# IPMI::NetFn_App_Str;
+	0x00	|	reserved;
+	0x01	|	Get Device ID;
+	0x02	|	Broadcast - Get Device ID;
+	0x03	|	Cold Reset;
+	0x04	|	Warm Reset;
+	0x05	|	Get Self Test Results;
+	0x06	|	Manufacturing Test On;
+	0x07	|	Set ACPI Power State;
+	0x08	|	Get ACPI Power State;
+	0x09	|	Get Device GUID;
+	0x0a	|	Get NetFn Support;
+	0x0b	|	Get Command Support;
+	0x0c	|	Get Command Sub-function Support;
+	0x0d	|	Get Configurable Commands;
+	0x0e	|	Get Configurable Command Sub-functions;
+	0x0f	|	unassigned;
+	0x22	|	Reset Watchdog Timer;
+	0x24	|	Set Watchdog Timer;
+	0x25	|	Get Watchdog Timer;
+	0x2E	|	Set BMC Global Enables;
+	0x2F	|	Get BMC Global Enables;
+	0x30	|	Clear Message Flags;
+	0x31	|	Get Message Flags;
+	0x32	|	Enable Message Channel Receive;
+	0x33	|	Get Message;
+	0x34	|	Send Message;
+	0x35	|	Read Event Message Buffer;
+	0x36	|	Get BT Interface Capabilities;
+	0x37	|	Get System GUID;
+	0x38	|	Get Channel Auth Capabilities;
+	0x39	|	Get Session Challenge;
+	0x3a	|	Activate Session;
+	0x3b	|	Set Session Privilege Level;
+	0x3c	|	Close Session;
+	0x3d	|	Get Session Info;
+	0x3e	|	unassigned;
+	0x3f	|	Get AuthCode;
+	0x40	|	Set Channel Access;
+	0x41	|	Get Channel Access;
+	0x42	|	Get Channel Info Command;
+	0x43	|	Set User Access Command;
+	0x44	|	Get User Access Command;
+	0x45	|	Set User Name;
+	0x46	|	Get User Name Command;
+	0x47	|	Set User Password Command;
+	0x48	|	Activate Payload;
+	0x49	|	Deactivate Payload;
+	0x4a	|	Get Payload Activation Status;
+	0x4b	|	Get Payload Instance Info;
+	0x4c	|	Set User Payload Access;
+	0x4d	|	Get User Payload Access;
+	0x4e	|	Get Channel Payload Support;
+	0x4f	|	Get Channel Payload Version;
+	0x50	|	Get Channel OEM Payload Info;
+	0x51	|	unassigned;
+	0x52	|	Master Write-Read;
+	0x53	|	unassigned;
+	0x54	|	Get Channel Cipher Suites;
+	0x55	|	Suspend/Resume Payload Encryption;
+	0x56	|	Set Channel Security Keys;
+	0x57	|	Get System Interface Capabilities;
+	0x58	|	Set System Info Parameters;
+	0x59	|	Get System Info Parameters;
+	0x60	|	Set Command Enables;
+	0x61	|	Get Command Enables;
+	0x62	|	Set Command Sub-function Enables;
+	0x63	|	Get Command Sub-function Enables;
+	0x64	|	Get OEM NetFn IANA Support;
+	
+// 0x34
+void IPMI::Send_Message()
+{
+	if (g[4] == 0x20)
+	{
+		BBIT( 8, g[1], 0x90, 0xc9, "Channel Number:");
+		  l[1] = g[1];
+		  ANDG C0 41;
+		  SHFR 6 41;
+		  CEQU( 3, l[1], 0, 0xd4, "11...... Reserved");
+		  CEQU( 2, l[1], 0, 0xd4, "10...... Send Raw");
+		  CEQU( 1, l[1], 0, 0xd4, "01...... Track Request");
+		  CEQU( 0, l[1], 0, 0xd4, "00...... No tracking");
+		  CBIT 5 1 0 d4 ..1..... Send Message with Encryption;
+		  CLSE 0 0 0 d4 ..0..... Encryption not Required;
+		  CBIT 4 1 0 d4 ...1.... Send message with Authentication;
+		  CLSE 0 0 0 d4 ...0.... Authentication not Required;
+		  l[1] = g[1];
+		  ANDG 7 41;
+		  SHFR 0 41;
+		  CEQU( 7, l[1], 0, 0xd4, ".....111 Channel Number: 7");
+		  CEQU( 6, l[1], 0, 0xd4, ".....110 Channel Number: 6");
+		  CEQU( 5, l[1], 0, 0xd4, ".....101 Channel Number: 5");
+		  CEQU( 4, l[1], 0, 0xd4, ".....100 Channel Number: 4");
+		  CEQU( 3, l[1], 0, 0xd4, ".....011 Channel Number: 3");
+		  CEQU( 2, l[1], 0, 0xd4, ".....010 Channel Number: 2");
+		  CEQU( 1, l[1], 0, 0xd4, ".....001 Channel Number: 1");
+		  CEQU( 0, l[1], 0, 0xd4, ".....000 Channel Number: 0");
+		LABL( 0, 0, 0, 0xc8);
+		g[16] -= 1;
+		HEX# 0 10 90 c2 Message Data:;
+	}
+	if (g[4] == 0x81)
+	{
+		if(g[16] > 1)
+		{
+			g[16] -= 1;
+			HEX# 0 10 90 c2 Message Data:;
+		}
+	}
+}
+
+// 0x38
+void IPMI::Channel_Auth_Capabilities()
+{
+	if (g[4] == 0x20)
+	{
+		BBIT( 4, g[1], 0x90, 0xc9, "Channel Number:");
+			CBIT 7 1 0 d4 1....... Get IPMI v2.0+ extended data;
+			CLSE 0 0 0 d4 0....... Backward compatible with IPMI v1.5;
+			LABL 0 0 0 d4 .xxx.... Reserved;
+		DBIT( 4, g[1], 0x5, 0x0);
+		DGLB 0 1 0 d4 ....---- Channel Number: ;
+		LABL( 0, 0, 0, 0xc8);
+		IPMI::Max_Privilege_Flag();
+	}
+	if (g[4] == 0x81)
+	{
+	DBYT( 0, l[1], 0x90, 0xc2, "Channel Number:");
+	BBIT( 8, g[1], 0x90, 0xc9, "Auth. Type Support:");
+	 CBIT 7 1 0 d4 1....... IPMI v2.0+ extended capabilities available;
+	 CLSE 0 0 0 d4 0....... IPMI v1.5 support only;
+	 CBIT 6 1 0 d4 .x...... Reserved;
+	 CLSE 0 0 0 d4 .x...... Reserved;
+	 CBIT 5 1 0 d4 ..1..... OEM proprietary: Supported;
+	 CLSE 0 0 0 d4 ..0..... OEM proprietary: Authentication Type Not Available;
+	 CBIT 4 1 0 d4 ...1.... Straight Password/Key: Supported;
+	 CLSE 0 0 0 d4 ...0.... Straight Password/Key: Authentication Type Not Available;
+	 CBIT 3 1 0 d4 ....x... Reserved;
+	 CLSE 0 0 0 d4 ....x... Reserved;
+	 CBIT 2 1 0 d4 .....1.. MD5: Supported;
+	 CLSE 0 0 0 d4 .....0.. MD5: Authentication Type Not Available;
+	 CBIT 1 1 0 d4 ......1. MD2: Supported;
+	 CLSE 0 0 0 d4 ......0. MD2: Authentication Type Not Available;
+	 CBIT 0 1 0 d4 .......1 None: Supported;
+	 CLSE 0 0 0 d4 .......0 None: Authentication Type Not Available;
+	BBIT( 5, g[1], 0x5, 0);
+	 CBIT 7 1 0 d4 x....... Reserved;
+	 CLSE 0 0 0 d4 x....... Reserved;
+	 CBIT 6 1 0 d4 .x...... Reserved;
+	 CLSE 0 0 0 d4 .x...... Reserved;
+	 CBIT 5 1 0 d4 ..1..... KG status: KG is set to non-zero value;
+	 CLSE 0 0 0 d4 ..0..... KG status: KG is set to Default;
+	 CBIT 4 1 0 d4 ...1.... Per-message Authentication: Enabled;
+	 CLSE 0 0 0 d4 ...0.... Per-message Authentication: Disabled;
+	 CBIT 3 1 0 d4 ....1... User Level Authentication: Enabled;
+	 CLSE 0 0 0 d4 ....0... User Level Authentication: Disabled;
+	BBIT( 3, g[1], 0x90, 0xc9, "Anonymous Login Status"); 
+	 CBIT 2 1 0 d4 .....1.. Non-Null Usernames: Enabled;
+	 CLSE 0 0 0 d4 .....0.. Non-Null Usernames: Disabled;
+	 CBIT 1 1 0 d4 ......1. Null Usernames: Enabled;
+	 CLSE 0 0 0 d4 ......0. Null Usernames: Disabled;
+	 CBIT 0 1 0 d4 .......1 Anonymous Login: Enabled;
+	 CLSE 0 0 0 d4 .......0 Anonymous Login: Disabled;
+	LABL( 0, 0, 0, 0xc8);
+	LABL( 0, 0, 0, 0xc8);
+	BBIT( 8, g[1], 0x90, 0xc9, "Extended Capabilities:");
+	 LABL 0 0 0 d4 xxxxxx.. Reserved;
+	 CBIT 1 1 0 d4 ......1. Channel Supports IPMI v2.0 Connections: Enabled;
+	 CLSE 0 0 0 d4 ......0. Channel Supports IPMI v2.0 Connections: Disabled;
+	 CBIT 0 1 0 d4 .......1 Channel Supports IPMI v1.5 Connections: Enabled;
+	 CLSE 0 0 0 d4 .......0 Channel Supports IPMI v1.5 Connections: Disabled;
+	LABL( 0, 0, 0, 0xc8);
+	HEX#( 3, 0, 0x90, 0xc2, "OEM ID:");
+	HBYT( 0, l[1], 0x90, 0xc2, "OEM Auxiliary Data:");
+	}	
+}
+
+// 0x39
+void IPMI::Get_Session_Challenge()
+{
+	if (g[4] == 0x20)
+	{
+		IPMI::Authentication_Type_Flag();
+		CHR#( 0x10, 0, 0x90, 0xc2, "User Name:");
+		LABL( 0, 0, 0, 0xc8);
+	}
+	if (g[4] == 0x81)
+	{
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "Temp. Session ID:");
+		HEX#( 0x10, 0, 0x90, 0xc2, "Challenge String:");		
+	}
+}
+
+// 0x3A
+void IPMI::Activate_Session()
+{
+	if (g[4] == 0x20)
+	{
+		IPMI::Authentication_Type_Flag();
+		IPMI::Max_Privilege_Flag();
+		HEX#( 0x10, 0, 0x90, 0xc2, "Multi-session Chan:");
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "Init. Outbound Seq Num:");
+	}
+	if (g[4] == 0x81)
+	{
+		IPMI::Authentication_Type_Flag();
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "Session ID:");
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "Init. Inbound Seq Num:");
+		IPMI::Max_Privilege_Flag();		
+	}
+}
+
+// 0x3B
+void IPMI::Set_Session_Privilege_Level()
+{
+	if (g[4] == 0x20)
+	{
+		IPMI::Max_Privilege_Flag();	
+	}
+	if (g[4] == 0x81)
+	{
+		IPMI::Max_Privilege_Flag();		
+	}
+}
+
+// 0x3C
+void IPMI::Close_Session()
+{
+	if (g[4] == 0x20)
+	{
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "Session ID:");
+	}
+	if (l[1] == 0)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Session Handle:");
+	}
+}
+
+// 0x3d
+void IPMI::Get_Session_Info()
+{
+	if (g[4] == 0x20)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Session Index:");
+		if(l[1] == 0xFE)
+		{
+			HBYT( 0, l[1], 0x90, 0xc2, "Session Handle:");
+		}
+		if(l[1] == 0xFF)
+		{
+			HLNG( 0x40000000, l[1], 0x90, 0xc2, "Session ID:");
+		}
+	}
+	if (g[4] == 0x81)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Session Handle:");	
+	}
+}
+
+// 0x4c
+void IPMI::Set_User_Payload_Access()
+{
+	if (g[4] == 0x20)
+	{
+		IPMI::Channel_Number();
+		BBIT( 8, g[1], 0x90, 0xc9, "Operation:");
+		DECR 1;
+		BBIT( 2, l[1], 0x5, 0x0);
+		  CEQU 3 0 0 d4 xx...... Operation: Reserved;
+	      CEQU 2 0 0 d4 xx...... Operation: Reserved;
+	      CEQU 1 0 0 d4 01...... Operation: Disable;
+	      CEQU 0 0 0 d4 00...... Operation: Enable;
+		DBIT( 6, g[1], 0x5, 0x0);
+		DGLB 0 1 0 d4 ..------ User ID: ;
+		LABL( 0, 0, 0, 0xc8);
+		IPMI::Standard_Payload_1();
+		BBIT( 8, l[1], 0x90, 0xc2, "Standard Payload 2");
+		IPMI::OEM_Payload_1();
+		BBIT( 8, l[1], 0x90, 0xc2, "OEM Payload 2");
+	}
+}
+
+// 0x4d
+void IPMI::Get_User_Payload_Access()
+{
+	if (g[4] == 0x20)
+	{
+		IPMI::Channel_Number();
+		BBIT( 8, l[1], 0x90, 0xc9, "User ID:");
+		DECR 1;
+		BBIT( 3, l[1], 0x5, 0x0);
+		LABL 0 0 0 d4 xxx..... Reserved;
+		DBIT( 5, g[1], 0x5, 0x0);
+		DGLB 0 1 0 d4 ...----- User ID: ;
+		LABL( 0, 0, 0, 0xc8);
+	}
+	if (g[4] == 0x81)
+	{
+		IPMI::Standard_Payload_1();
+		BBIT( 8, l[1], 0x90, 0xc2, "Standard Payload 2");
+		IPMI::OEM_Payload_1();
+		BBIT( 8, l[1], 0x90, 0xc2, "OEM Payload 2");
+	}
+}
+
+void IPMI::Max_Privilege_Flag()
+{
+	BBIT( 8, g[1], 0x90, 0xc9, "Req Max. Privilege Lvl:");
+	  LABL 0 0 0 d4 xxxx.... Reserved;
+	  CEQU 5 1 0 d4 ....0101 OEM Proprietary level;
+	  CEQU 4 1 0 d4 ....0100 Administrator level;
+	  CEQU 3 0 0 d4 ....0011 Operator level;
+	  CEQU 2 0 0 d4 ....0010 User level;
+	  CEQU 1 0 0 d4 ....0001 Callback level;
+	  CEQU 0 0 0 d4 ....xxxx Reserved;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void IPMI::Authentication_Type_Flag()
+{
+	BBIT( 8, g[1], 0x90, 0xc9, "Authentication Type:");
+	  LABL 0 0 0 d4 xxxx.... Reserved;
+	  CEQU 5 1 0 d4 ....0101 Authentication Type: OEM proprietary;
+	  CEQU 4 1 0 d4 ....0100 Authentication Type: Straight Password / Key;
+	  CEQU 3 1 0 d4 ....xxxx Authentication Type: Reserved;
+	  CEQU 2 1 0 d4 ....0010 Authentication Type: MD5;
+	  CEQU 1 1 0 d4 ....0001 Authentication Type: MD2;
+	  CEQU 0 1 0 d4 ....0000 Authentication Type: None;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void IPMI::Channel_Number()
+{
+	BBIT( 8, l[1], 0x90, 0xc9, "Channel Number:");
+	DECR 1;
+	BBIT( 4, l[1], 0x5, 0x0);
+	LABL 0 0 0 d4 xxxx.... Reserved;
+	DBIT( 4, g[1], 0x5, 0x0);
+	DGLB 0 1 0 d4 ....---- Channel Number: ;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void IPMI::Standard_Payload_1()
+{
+	BBIT( 8, g[1], 0x90, 0xc9, "Standard Payload 1");
+      LABL 0 0 0 d4 xxxxxx.. Reserved;
+	  CBIT 1 1 0 d4 ......1. Standard Payload 1 Enabled (SOL);
+	  CLSE 0 0 0 d4 ......0. Standard Payload 1 Disabled;
+	  CBIT 0 1 0 d4 .......x Reserved;
+	  CLSE 0 0 0 d4 .......x Reserved;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void IPMI::OEM_Payload_1()
+{
+	BBIT( 8, g[1], 0x90, 0xc9, "OEM Payload 1");
+	  CBIT 7 1 0 d4 1....... OEM Payload 7 Enabled;
+	  CLSE 0 0 0 d4 0....... OEM Payload 7 Disabled;
+	  CBIT 6 1 0 d4 .1...... OEM Payload 6 Enabled;
+	  CLSE 0 0 0 d4 .0...... OEM Payload 6 Disabled;
+	  CBIT 5 1 0 d4 ..1..... OEM Payload 5 Enabled;
+	  CLSE 0 0 0 d4 ..0..... OEM Payload 5 Disabled;
+	  CBIT 4 1 0 d4 ...1.... OEM Payload 4 Enabled;
+	  CLSE 0 0 0 d4 ...0.... OEM Payload 4 Disabled;
+	  CBIT 3 1 0 d4 ....1... OEM Payload 3 Enabled;
+	  CLSE 0 0 0 d4 ....0... OEM Payload 3 Disabled;
+	  CBIT 2 1 0 d4 .....1.. OEM Payload 2 Enabled;
+	  CLSE 0 0 0 d4 .....0.. OEM Payload 2 Disabled;
+	  CBIT 1 1 0 d4 ......1. OEM Payload 1 Enabled;
+	  CLSE 0 0 0 d4 ......0. OEM Payload 1 Disabled;
+	  CBIT 0 1 0 d4 .......1 OEM Payload 0 Enabled;
+	  CLSE 0 0 0 d4 .......0 OEM Payload 0 Disabled;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// NetFn - Chassis
+str# IPMI::NetFn_Chassis_Str;
+	0x00	|	Get Chassis Capabilities;
+	0x01	|	Get Chassis Status;
+	0x02	|	Chassis Control;
+	0x03	|	Chassis Reset;
+	0x04	|	Chassis Identify;
+	0x05	|	Set Chassis Capabilities;
+	0x06	|	Set Power Restore Policy;
+	0x07	|	Get System Restart Cause;
+	0x08	|	Set System Boot Options;
+	0x09	|	Get System Boot Options;
+	0x0a	|	Set Front Panel Button Enables;
+	0x0b	|	Set Power Cycle Interval;
+	0x0c	|	unassigned;
+	0x0d	|	unassigned;
+	0x0e	|	unassigned;
+	0x0f	|	Get POH Counter;
+
+// NetFn - Sensor/Eevent
+str# IPMI::NetFn_SensorEvent;
+	0x20	|	IPMI::Get_Device_SDR_Info;
+	0x21	|	IPMI::Get_SDR;
+	0x22	|	IPMI::Reserve_SDR_Repository;
+
+str# IPMI::NetFn_SensorEvent_Str;
+	0x00	|	Set Event Receiver;
+	0x01	|	Get Event Receiver;
+	0x02	|	Platform Event - Event Message;
+	0x03	|	unassigned;
+	0x10	|	Get PEF Capabilities;
+	0x11	|	Arm PEF Postpone Timer;
+	0x12	|	Set PEF Configuration Parameters;
+	0x13	|	Get PEF Configuration Parameters;
+	0x14	|	Set Last Processed Event ID;
+	0x15	|	Get Last Processed Event ID;
+	0x16	|	Alert Immediate;
+	0x17	|	PET Acknowledge;
+	0x20	|	Get Device SDR Info;
+	0x21	|	Get Device SDR;
+	0x22	|	Reserve SDR Repository;
+	0x23	|	Get Sensor Reading Factors;
+	0x24	|	Set Sensor Hysteresis;
+	0x25	|	Get Sensor Hysteresis;
+	0x26	|	Set Sensor Threshold;
+	0x27	|	Get Sensor Threshold;
+	0x28	|	Set Sensor Event Enable;
+	0x29	|	Get Sensor Event Enable;
+	0x2a	|	Re-arm Sensor Events;
+	0x2b	|	Get Sensor Event Status;
+	0x2d	|	Get Sensor Reading;
+	0x2e	|	Set Sensor Type;
+	0x2f	|	Get Sensor Type;
+	0x30	|	Set Sensor Reading And Event Status;
+	
+void IPMI::Get_Device_SDR_Info()
+{
+	if (g[4] == 0x20)
+	{
+		BBIT( 8, g[1], 0x90, 0xc9, "Operation:");
+		  LABL 0 0 0 d4 xxxxxxx. Reserved;
+		  CBIT 0 1 0 d4 .......1 Get SDR Count;
+		  CLSE 0 0 0 d4 .......0 Get Sensor Count;
+		LABL( 0, 0, 0, 0xc8);
+	}
+	if (g[4] == 0x81)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "Device Count:");
+		BBIT( 8, g[1], 0x90, 0xc9, "Flag:");
+		  CBIT 7 1 0 d4 1....... Dynamic Sensor Population;
+	      CLSE 0 0 0 d4 0....... Static Sensor Population;
+		  LABL 0 0 0 d4 .xxx.... Reserved;
+		  CBIT 3 1 0 d4 ....1... LUN 3 has sensors;
+		  CLSE 0 0 0 d4 ....0... LUN 3 has no sensors;
+		  CBIT 2 1 0 d4 .....1.. LUN 2 has sensors;
+		  CLSE 0 0 0 d4 .....0.. LUN 2 has no sensors;
+		  CBIT 1 1 0 d4 ......1. LUN 1 has sensors;
+		  CLSE 0 0 0 d4 ......0. LUN 1 has no sensors;
+		  CBIT 0 1 0 d4 .......1 LUN 0 has sensors;
+		  CLSE 0 0 0 d4 .......0 LUN 0 has no sensors;
+		LABL( 0, 0, 0, 0xc8);
+		HLNG( 0x40000000, l[1], 0x90, 0xc2, "SensorPopulation Change Ind:");
+	}
+}
+
+str# IPMI::NetFn_Storage;
+	0x10	|	IPMI::Get_FRU_Inventory_Area_Info;
+	0x11	|	IPMI::Read_FRU_Data;
+	0x22	|	IPMI::Reserve_SDR_Repository;
+	0x23	|	IPMI::Get_SDR;
+	0x42	|	IPMI::Reserve_SEL;
+	0x43	|	IPMI::Get_SEL_Entry;
+
+// NetFn - Storage
+str# IPMI::NetFn_Storage_Str;
+	0x10	|	Get FRU Inventory Area Info;
+	0x11	|	Read FRU Data;
+	0x12	|	Write FRU Data;
+	0x20	|	Get SDR Repository Info;
+	0x21	|	Get SDR Repository Allocation Info;
+	0x22	|	Reserve SDR Repository;
+	0x23	|	Get SDR;
+	0x24	|	Add SDR;
+	0x25	|	Partial Add SDR;
+	0x26	|	Delete SDR;
+	0x27	|	Clear SDR Repository;
+	0x28	|	Get SDR Repository Time;
+	0x29	|	Set SDR Repository Time;
+	0x2a	|	Enter SDR Repository Update Mode;
+	0x2b	|	Exit SDR Repository Update Mode;
+	0x2c	|	Run Initialization Agent;
+	0x40	|	Get SEL Info;
+	0x41	|	Get SEL Allocation Info;	
+	0x42	|	Reserve SEL;
+	0x43	|	Get SEL Entry;
+	0x44	|	Add SEL Entry;
+	0x45	|	Partial Add SEL Entry;
+	0x46	|	Delete SEL Entry;
+	0x47	|	Clear SEL;
+	0x48	|	Get SEL Time;
+	0x49	|	Set SEL Time;
+	0x5a	|	Get Auxiliary Log Status;
+	0x5b	|	Set Auxiliary Log Status;
+	0x5c	|	Get SEL Time UTC Offset;
+	0x5d	|	Set SEL Time UTC Offset;
+
+// 0x10
+void IPMI::Get_FRU_Inventory_Area_Info()
+{
+	if (g[4] == 0x20)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "FRU Device ID:");
+	}
+	if (g[4] == 0x81)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "FRU Inventory Size:");
+		LABL 0 0 0 14 bytes;
+		BBIT( 8, g[1], 0x90, 0xc9, "Device is Accessed");
+		  LABL 0 0 0 d4 xxxxxxx. Reserved;
+		  CBIT 0 1 0 d4 .......1 by Words;
+		  CLSE 0 0 0 d4 .......0 by Bytes;
+		LABL( 0, 0, 0, 0xc8);
+	}
+}
+
+// 0x11
+void IPMI::Read_FRU_Data()
+{
+	if (g[4] == 0x20)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "FRU Device ID:");
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "FRU Inventory Offset:");
+		DBYT( 0, l[1], 0x90, 0xc2, "Count to Read:");
+	}
+	if (g[4] == 0x81)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "Count Returned:");
+		CHR#( 0, l[1], 0x90, 0xc2, "Requested Data:");
+	}
+}
+
+// 0x22
+void IPMI::Reserve_SDR_Repository()
+{
+	if (g[4] == 0x81)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Reservation ID:");
+	}
+}
+
+// 0x23
+void IPMI::Get_SDR()
+{
+	if (g[4] == 0x20)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Reservation ID:");
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Record ID:");
+		DBYT( 0, l[1], 0x90, 0xc2, "Offset into Record:");
+		DBYT( 0, l[1], 0x90, 0xc2, "Bytes to Read:");
+	}
+	if (g[4] == 0x81)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Record ID:");
+		g[16] -= 1;
+		CHR#( 0, g[16], 0x90, 0xc2, "Requested Data:");
+	}
+}
+
+// 0x42
+void IPMI::Reserve_SEL()
+{
+	if (g[4] == 0x81)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Reservation ID:");
+	}
+}
+
+// 0x43
+void IPMI::Get_SEL_Entry()
+{
+	if (g[4] == 0x20)
+	{
+		BWRD( 0x40000000, l[1], 0x90, 0xc2, "Reservation ID:");
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "SEL Record ID:");
+		HBYT( 0, l[1], 0x90, 0xc2, "Record Offset:");
+		HBYT( 0, l[1], 0x90, 0xc2, "Bytes to Read:");
+	}
+}
+
+// NetFn - Transport
+str# IPMI::NetFn_Transport_Str;
+	0x01	|	Set LAN Configuration Parameters;
+	0x02	|	Get LAN Configuration Parameters;
+	0x03	|	Suspend BMC ARPs;
+	0x04	|	Get IP/UDP/RMCP Statistics;
+	0x10	|	Set Serial/Modem Configuration;
+	0x11	|	Get Serial/Modem Configuration;
+	0x12	|	Set Serial/Modem Mux;
+	0x13	|	Get TAP Response Codes;
+	0x14	|	Set PPP UDP Proxy Transmit Data;
+	0x15	|	Get PPP UDP Proxy Transmit Data;
+	0x16	|	Send PPP UDP Proxy Packet;
+	0x17	|	Get PPP UDP Proxy Receive Data;
+	0x18	|	Serial/Modem Connection Active;
+	0x19	|	Callback;
+	0x1A	|	Set User Callback Options;
+	0x1B	|	Get User Callback Options;
+	0x1C	|	Set Serial Routing Mux;
+	0x20	|	SOL Activating;
+	0x21	|	Set SOL Configuration Parameters;
+	0x22	|	Get SOL Configuration Parameters;
+	0x30	|	Forwarded Command;
+	0x31	|	Set Forwarded Commands;
+	0x32	|	Get Forwarded Commands;
+	0x33	|	Enable Forwarded Commands;
+
+// NetFn - Bridge	
+str# IPMI::NetFn_Bridge_Str;
+	0x00	|	Get Bridge State;
+	0x01	|	Set Bridge State;
+	0x02	|	Get ICMB Address;
+	0x03	|	Set ICMB Address;
+	0x04	|	Set Bridge ProxyAddress;
+	0x05	|	Get Bridge Statistics;
+	0x06	|	Get ICMB Capabilities;
+	0x08	|	Clear Bridge Statistics;
+	0x09	|	Get Bridge Proxy Address;
+	0x0A	|	Get ICMB Connector Info;
+	0x0B	|	Get ICMB Connection ID;
+	0x0C	|	Send ICMB Connection ID;
+	0x10	|	PrepareForDiscovery;
+	0x11	|	GetAddresses;
+	0x12	|	SetDiscovered;
+	0x13	|	GetChassisDeviceId;
+	0x14	|	SetChassisDeviceId;
+	0x20	|	BridgeRequest;
+	0x21	|	BridgeMessage;
+	0x30	|	GetEventCount;
+	0x31	|	SetEventDestination;
+	0x32	|	SetEventReceptionState;
+	0x33	|	SendICMBEventMessage;
+	0x34	|	GetEventDestination;
+	0x35	|	GetEventReceptionState;
+	
+// NetFn - PICMG
+str# IPMI::NetFn_PICMG;
+	0x00	|	IPMI::Get_PICMG_Properties;
+	0x01	|	IPMI::Get_Address_Info;
+	0x0d	|	IPMI::Get_Device_Locator_Record_Id;
+
+str# IPMI::NetFn_PICMG_Str;
+	0x00	|	Get PICMG Properties;
+	0x01	|	Get Address Info;
+	0x0d	|	Get Device Locator Record Id;
+
+void IPMI::Get_PICMG_Properties()
+{
+	if (g[4] == 0x20)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "PICMG ID:");
+	}
+	if (g[4] == 0x81)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "PICMG ID:");
+		HBYT( 0, l[1], 0x90, 0xc2, "PICMG Extension Ver:");
+		HBYT( 0, l[1], 0x90, 0xc2, "Max FRU Device ID:");
+		HBYT( 0, l[1], 0x90, 0xc2, "FRU Device ID for IMPC:");
+	}
+}
+
+void IPMI::Get_Address_Info()
+{
+	if (g[4] == 0x20)
+	{
+		g[16] -= 1;
+		DUMP 0 10 90 c2 Data:;
+	}
+	if (g[4] == 0x81)
+	{
+		g[16] -= 1;
+		DUMP 0 10 90 c2 Data:;
+	}
+}
+
+void IPMI::Get_Device_Locator_Record_Id()
+{
+	if (g[4] == 0x20)
+	{
+		g[16] -= 1;
+		DUMP 0 10 90 c2 Data:;
+	}
+	if (g[4] == 0x81)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "PICMG ID:");
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Record ID:");
+	}
+}
+
+str# IPMI::CompletionCode_Str;
+	0x00	|	Command Completed Normally;
+	0xc0	|	Node Busy. Command could not be Processed;
+	0xc1	|	Invalid Command;
+	0xc2	|	Command invalid for given LUN;
+	0xc3	|	Timeout while processing command. Response unavailable;
+	0xc4	|	Out of space;
+	0xc5	|	Reservation Canceled or Invalid Reservation ID;
+	0xc6	|	Request data truncated;
+	0xc7	|	Request data length invalid;
+	0xc8	|	Request data field length limit exceeded;
+	0xc9	|	Parameter Out of Range;
+	0xca	|	Cannot return number of requested data bytes;
+	0xcb	|	Request Sensor, Data, or Record Not Present;
+	0xcc	|	Invalid data field in Request;
+	0xcd	|	Command illegal for specified sensor or record type;
+	0xce	|	Command response could not be provided;
+	0xcf	|	Cannot execute duplicated request;
+	0xd0	|	SDR Repository in update mode;
+	0xd1	|	Device in firmware update mode;
+	0xd2	|	BMC initialization or initialization agent in progress;
+	0xd3	|	Destination unavailable. Cannot deliver request to selected destination;
+	0xd4	|	Cannot execute command due to insufficient privilege level;
+	0xd5	|	Command, or request parameter(s), not supported in present state;
+	0xd6	|	Cannot execute command. Parameter is illegal;
+	0xff	|	Unspecified error;
+	
+	
+	

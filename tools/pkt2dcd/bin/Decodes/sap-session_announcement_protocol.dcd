@@ -1,0 +1,72 @@
+* SAP - Session Announcement Protocol   [rfc2974 / tt3428] 
+
+void SAP;
+	LABL 0 0  0 b1 SAP - Session Announcement Protocol\SAP:;
+	DBIT 3 0 90 c2 Version Number:;
+	DBIT 1 2 90 c2 Address Type:;			*SI: save...this tells you how big the og source is
+	 CEQU 0 2 0 14 IPv4;
+	 CEQU 1 2 0 14 IPv6;
+	DBIT 1 0 90 c2 Reserved:;
+	DBIT 1 1 90 c2 Message Type:;
+	 CEQU 0 1 0 14 Session Announcement;
+	 CEQU 1 1 0 14 Session Deletion;
+	DBIT 1 1 90 c2 Encryption Bit:;
+	 CEQU 0 1 0 14 Payload Not Encrypted;
+	 CEQU 1 1 0 14 Payload Encrypted;
+	DBIT 1 1 90 c2 Compressed Bit:;
+	 CEQU 0 1 0 14 Payload Not Compressed;
+	 CEQU 1 1 0 14 Payload Compressed;
+	DBYT 0 3 90 c2 Auth Length:;			*SI: save...auth data length
+	HWRD 0 1 90 c2 Msg ID Hash:;
+	
+	SNEQ 0 2;
+	SKIP 1;
+	IPLG 0 1 90 c2 Originating Source:;		*32 bit [if address type == 0, 32 bit, if at == 1, 128 bit]
+	SNEQ 1 2;
+	SKIP 1;
+	IPV6 0 1 90 c2 Originating Source:;		*128 bit
+	
+	TSUB -SAP_AuthData;						*SI: this uses g3 for the auth length
+
+	*LABL 0 0 90 c2 Payload Type:;			*SI: so is payload supposed to be SDP?
+	DUMP 0 10 90 c2 Data:;				*SI: UNDER CONSTRUCTION!
+	*TSUB -SAP_PayloadType;
+	
+	*DBYT 0 1 90 c2 Reserved:;		*SI: ??
+	*LABL 0 0 0 14 Must be zero;
+	*Payload:;
+	LABL 0 0 0 b8;
+
+void SAP_AuthData;
+	LABL 0 0 0 b9 Authentication Data;
+	DBIT 3 0 90 c2 Version:;
+	DBIT 1 2 90 c2 Padding:;
+	DBIT 4 1 90 c2 Auth:;
+	 CEQU 0 1  0 14 PGP Format;
+	 CEQU 1 1  0 14 CMS Format;
+	DGLB 0 3 90 c2 GLB 3:;
+	MULG 4 3;
+	SUBG 1 3;
+	TGTE 3 10 0 0 RETURN;
+	SUBG 1 3;
+	INCR 0 3;
+	GBYT 0 1;								*SI: this is the padding amt
+	DECR 0 3;
+	ADDG 1 3;
+	SUBG 1 83;
+ 	DUMP 0 3 90 c2 Auth SubHeader:;
+	DUMP 0 1 90 c2 Padding:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SAP_PayloadType;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SNEQ 0 1;
+	SKIP 1;
+	TRTS;
+
+	CHR# 1 0 90 0;
+	TNXT -SAP_PayloadType;
+
+* SAP - end decode

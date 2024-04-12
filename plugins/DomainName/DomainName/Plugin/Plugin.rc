@@ -1,0 +1,236 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_LOGO                BITMAP                  "wplogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PLUGIN_ABOUT DIALOGEX 0, 0, 169, 180
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "About DNSCaptureOE"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL         102,IDC_STATIC,"Static",SS_BITMAP | SS_REALSIZEIMAGE,7,7,155,49
+    CTEXT           "DNSCaptureOE",IDC_PLUGIN_ABOUT_NAME,7,68,155,8
+    CTEXT           "Version 1.1.0.0",IDC_PLUGIN_VERSION,7,85,155,8
+    CTEXT           "Copyright © 2011-2012 WildPackets, Inc.",IDC_STATIC,7,102,155,8
+    CTEXT           "Monitor DNS Requests and capture only trafic from configured domain names.",IDC_STATIC,7,117,155,24
+    DEFPUSHBUTTON   "Close",IDOK,60,156,50,14
+END
+
+IDD_PLUGIN_OPTIONS DIALOGEX 0, 0, 317, 314
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "DNSCaptureOE Options"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_NAME,16,222,228,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "Add",IDC_ADD_NAME,251,221,50,14
+    CONTROL         "Track IP traffic based on DNS information.",IDC_TRACK_IP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,253,151,10
+    PUSHBUTTON      "OK",IDOK,116,285,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,170,285,50,14
+    LTEXT           "Names are matched exactly, but names are not case sensitive.\r\n\tThe name 'example.com' does not match 'www.example.com'.\r\n\tThe name '*.example.com' does not match 'example.com'.\r\n\tThe name *example.com' is invalid.",IDC_STATIC,7,7,302,41
+    LISTBOX         IDC_NAME_LIST,7,56,302,123,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Delete",IDC_DELETE_NAME,259,186,50,14
+    GROUPBOX        "Add a name",IDC_STATIC,7,208,302,38
+END
+
+IDD_PLUGIN_TAB DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,5,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS_PL,116,27,193,149,WS_BORDER
+    LISTBOX         IDC_CONTEXT_LIST,7,27,100,149,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_OPTIONS_VIEW DIALOGEX 0, 0, 482, 290
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Modify",IDC_MODIFIY_NAMES,183,257,50,14,NOT WS_VISIBLE
+    GROUPBOX        "Monitoring",IDC_ACTIVE_GROUP,256,7,215,271
+    CONTROL         "",IDC_ACTIVE_LIST,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,267,20,193,248
+    GROUPBOX        "Domain Names",IDC_DOMAIN_GROUP,9,7,236,271
+    CONTROL         "",IDC_DOMAIN_LIST,"SysListView32",LVS_REPORT | LVS_SORTASCENDING | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,19,20,214,230
+    LTEXT           "IP monitoring is not enabled",IDC_VIEW_MONITOR_OFF_MSG,285,47,120,17,NOT WS_VISIBLE
+END
+
+IDD_CONTEXT_TAB DIALOGEX 0, 0, 207, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "Refresh",IDC_REFRESH,7,7,50,14
+    LTEXT           "",IDC_CONTEXT_OPTIONS_CT,7,27,193,149,WS_BORDER
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_PLUGIN_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 173
+    END
+
+    IDD_PLUGIN_OPTIONS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 310
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 281
+    END
+
+    IDD_PLUGIN_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 5
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_OPTIONS_VIEW, DIALOG
+    BEGIN
+        RIGHTMARGIN, 481
+    END
+
+    IDD_CONTEXT_TAB, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,1,0,0
+ PRODUCTVERSION 1,1,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+#ifdef X64
+            VALUE "FileDescription", "DNSCaptureOE 64-bit"
+#else
+            VALUE "FileDescription", "DNSCaptureOE 32-bit"
+#endif
+            VALUE "FileVersion", "1.1.0.0"
+            VALUE "InternalName", "DNSCaptureOE"
+            VALUE "LegalCopyright", "Copyright (C) 2011-2012 WildPackets, Inc."
+            VALUE "OriginalFilename", "DNSCaptureOE.dll"
+            VALUE "ProductName", "DNSCaptureOE"
+            VALUE "ProductVersion", "1.1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_PLUGIN_NAME         "DNSCaptureOE"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

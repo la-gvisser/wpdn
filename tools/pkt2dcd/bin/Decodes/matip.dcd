@@ -1,0 +1,405 @@
+// ----------------------------------------------------------------------------------
+//	MATIP - Mapping of Airline Reservation, Ticketing, and Messaging Traffic over IP
+//		RFC 2351 - port 350 [a] port 351 [b]
+//		last updated: 12/28/04 SI - not totally complete
+//
+//	 g[5] = version
+//	 g[6] = control command
+//	 g[7] = length
+//	 g[8] = type
+// ----------------------------------------------------------------------------------
+
+void MATIP;
+	// assign type a or b depending on what port you came on
+	g[8] = 0;
+	if (g[17] == 350)
+	{
+		g[8] = 0;
+	}
+	if (g[18] == 350)
+	{
+		g[8] = 0;
+	}
+	if (g[17] == 351)
+	{
+		g[8] = 1;
+	}
+	if (g[18] == 351)
+	{
+		g[8] = 1;
+	}
+	LABL 0 0 00 b1 MATIP - Mapping of Airline Reservation, Ticketing, and Messaging Traffic over IP\MATIP;
+	BBYT 1 1 00 c9 Header Flags:;
+	LABL 0 0 00 d4 xxxx x... Reserved;
+	g[5] = g[1];
+	g[5] &= 0x7;
+	LABL 0 0 00 d4 .... .xxx Version:;
+	DGLB 0 5 04 14 ;
+	LABL 0 0 00 c8;
+	g[1] = pb[0];
+	g[1] &= 0x80;
+	if (g[1] > 1)
+	{
+		g[6] = pb[0];
+		g[6] &= 0x7f;
+		DGLB 0 6 90 c2 Control Command:;
+		CST# 0 6 00 14 MATIP::CCTypes;
+		CLSE 0 0 00 14 Control Packet;
+	}
+	if (g[1] == 0)
+	{
+		HBYT 0 0 90 c2 Data Packet;
+		g[6] = 0;
+	}
+	DWRD 0 7 90 c2 Length:;
+	g[7] -= 4;
+	
+	if (g[8] == 0)
+	{
+		TST# 0 6 0 0 MATIP::CCTypes::FuncA;
+	}
+	TST# 0 6 0 0 MATIP::CCTypes::FuncB;
+	TRTS;
+
+str# MATIP::CCTypes;
+	0x7c | Session Close;
+	0x7d | Refuse-Accept the Connection;
+	0x7e | Session Open;
+
+str# MATIP::CCTypes::FuncA;
+	0x7c | MATIP::A::SC;
+	0x7d | MATIP::A::OC;
+	0x7e | MATIP::A::SO;
+
+str# MATIP::CCTypes::FuncB;
+	0x7c | MATIP::B::SC;
+	0x7d | MATIP::B::OC;
+	0x7e | MATIP::B::SO;
+
+// ----------------------------------------------------------------------------------	
+// Type A Packets
+// ----------------------------------------------------------------------------------	
+
+// --------------------------------------------------
+// Session Open
+
+void MATIP::A::SO;
+	BBIT 5 0 90 c2 Reserved:;
+	BBIT 3 1 90 c2 Coding:;
+	CST# 0 1 00 14 MATIP::A::SO::CodingType;
+	BBIT 4 3 90 c2 Traffic SubType:;
+	CST# 0 3 00 14 MATIP::A::SO::STYP;
+	TEQU 2 3 00 00 MATIP::A::SO::Host;
+	TEQU 8 3 00 00 MATIP::A::SO::Host;
+	BBIT 4 0 90 c2 Padding:;
+	HBYT 0 0 90 c2 RFU:;
+	DBIT 2 2 90 c2 Multiplexing Type:;
+	CST# 0 2 00 14 MATIP::A::SO::MultiplexingType;
+	s[2] = g[2];
+	DBIT 2 1 90 c2 Header:;
+	CST# 0 1 00 14 MATIP::A::SO::HeaderType;
+	DBIT 4 1 90 c2 Presentation Frmt:;
+	CST# 0 1 00 14 MATIP::A::SO::PresentationType;
+	HBYT 0 0 90 c2 H1:;
+	HBYT 0 0 90 c2 H2:;
+	HWRD 0 0 90 c2 RFU:;
+	
+	HBYT 0 0 90 c2 Reserved:;
+	HWRD 0 0 90 c2 RFU:;
+	DWRD 0 1 90 c2 Num of ASCUs:;
+	if (g[1] > 0)
+	{
+		LABL 0 0 0 c9 ASCU List;
+		while (g[1] > 0)
+		{
+			// mpx == 0, then 4 bytes each
+			if (g[2] == 0)
+			{
+				LABL 0 0 0 c9 ASCU;
+				HBYT 0 0 90 c2 H1:;
+				HBYT 0 0 90 c2 H2:;
+				HBYT 0 0 90 c2 A1:;
+				HBYT 0 0 90 c2 A2:;
+				LABL 0 0 0 c8;
+			}
+			// mpx != 0, then 2 bytes each
+			if (g[2] != 0)
+			{
+				LABL 0 0 0 c9 ASCU;
+				HBYT 0 0 90 c2 A1:;
+				HBYT 0 0 90 c2 A2:;
+				LABL 0 0 0 c8;
+			}
+			g[1] -= 1;
+		}
+		LABL 0 0 0 c8;
+	}
+
+str# MATIP::A::SO::CodingType;
+	0 | Padded Baudot;
+	1 | Reserved;
+	2 | IPARS;
+	3 | Reserved;
+	4 | ASCII;
+	5 | Reserved;
+	6 | EBCDIC;
+	7 | Reserved;
+
+str# MATIP::A::SO::STYP;
+	1 | Type A Conversational;
+	2 | TYPE A IATA Host to Host;
+	8 | SITA Host to Host;
+
+str# MATIP::A::SO::MultiplexingType;
+	0 | Group of ASCU with 4 bytes identification per ASCU;
+	1 | Group of ASCUs with 2 bytes identification per ASCU;
+	2 | single ASCU inside the TCP session;
+
+str# MATIP::A::SO::HeaderType;
+	0 | ASCU header = H1+H2+A1+A2;
+	1 | ASCU Header = A1+A2;
+	2 | No Header;
+	3 | Not used;
+
+str# MATIP::A::SO::PresentationType;
+	1 | P1024B presentation;
+	2 | P1024C presentation;
+	3 | 3270 presentation;
+
+void MATIP::A::SO::Host;
+	BBIT 4 0 90 c2 Padding:;
+	HBYT 0 0 90 c2 RFU:;
+	DBIT 2 2 90 c2 Multiplexing Type:;
+	CST# 0 2 00 14 MATIP::A::SO::Host::MultiplexingType;
+	s[2] = g[2];
+	DBIT 2 1 90 c2 Header:;
+	s[3] = g[1];
+	CST# 0 1 00 14 MATIP::A::SO::Host::HeaderType;
+	BBIT 4 0 90 c2 Padding:;
+	HBYT 0 0 90 c2 H1:;
+	HBYT 0 0 90 c2 H2:;
+	HWRD 0 0 90 c2 RFU:;
+	if (g[1] <= 1)
+	{
+		HBYT 0 0 90 c2 Flow ID:;
+	}
+	TRTS;
+
+str# MATIP::A::SO::Host::MultiplexingType;
+	0 | Irrelevant;
+	1 | Multiple flow inside the TCP connection;
+	2 | Single flow inside the TCP connection;
+
+str# MATIP::A::SO::Host::HeaderType;
+	0 | used in TYPE A SITA Host to Host Header = H1+H2+Flow ID;
+	1 | used in TYPE A SITA Host to Host Header = Flow ID;
+	2 | No Header (default for IATA host to Host);
+	3 | Not used;
+
+
+// --------------------------------------------------
+//	Open Confirm Format
+
+void MATIP::A::OC;
+	if (g[7] == 5)
+	{
+		TNXT -MATIP::A::OC::Refuse;
+	}
+	TNXT -MATIP::A::OC::Accept;
+
+void MATIP::A::OC::Refuse;
+	HBYT 0 1 90 c2 Cause:;
+	CST# 0 1 00 14 MATIP::A::OC::Refuse::Cause;
+	CLSE 0 0 00 14 Application Dependent;
+	TRTS;
+
+str# MATIP::A::OC::Refuse::Cause;
+	0x01 | No Traffic Type matching between Sender & Recipient; 
+	0x02 | Information in SO header incoherent;
+
+void MATIP::A::OC::Accept;
+	BBYT 1 3 90 c9 Flags:;
+	CBIT 7 3 00 d4 1... .... Reserved;
+	CLSE 0 0 00 d4 0... .... Reserved;
+	CBIT 6 3 00 d4 .1.. .... Reserved;
+	CLSE 0 0 00 d4 .0.. .... Reserved;
+	CBIT 5 3 00 d4 ..1. .... R: Error Detected;
+	CLSE 0 0 00 d4 ..0. .... R: No Error;
+	CBIT 4 3 00 d4 ...1 .... Reserved;
+	CLSE 0 0 00 d4 ...0 .... Reserved;
+	CBIT 3 3 00 d4 .... 1... Reserved;
+	CLSE 0 0 00 d4 .... 0... Reserved;
+	CBIT 2 3 00 d4 .... .1.. Reserved;
+	CLSE 0 0 00 d4 .... .0.. Reserved;
+	CBIT 1 3 00 d4 .... ..1. Reserved;
+	CLSE 0 0 00 d4 .... ..0. Reserved;
+	CBIT 0 3 00 d4 .... ...1 Reserved;
+	CLSE 0 0 00 d4 .... ...0 Reserved;
+	LABL 0 0 00 c8;
+	g[3] &= 0x20;
+	if (s[2] == 0)
+	{
+		DWRD 0 1 90 c2 Num of ASCUs:;
+	}
+	if (s[2] != 0)
+	{
+		DBYT 0 1 90 c2 Num of ASCUs:;
+	}
+	if (g[1] > 0)
+	{
+		while (g[1] > 0)
+		{
+			// depends on R flag
+			if (g[3] == 0)
+			{
+				LABL 0 0 0 c9 ASCU;
+				HBYT 0 0 90 c2 H1:;
+				HBYT 0 0 90 c2 H2:;
+				HBYT 0 0 90 c2 A1:;
+				HBYT 0 0 90 c2 A2:;
+				LABL 0 0 0 c8;
+			}
+			if (g[3] != 0)
+			{
+				LABL 0 0 0 c9 ASCU;
+				HBYT 0 0 90 c2 A1:;
+				HBYT 0 0 90 c2 A2:;
+				LABL 0 0 0 c8;
+			}
+			g[1] -= 1;
+		}
+	}
+	TRTS;
+
+// --------------------------------------------------
+//	Session Close
+
+void MATIP::A::SC;
+	HBYT 0 1 90 c2 Close Cause:;
+	CST# 0 1 00 14 MATIP::A::SC::Cause;
+	CLSE 0 0 00 14 Application Dependent;
+	TRTS;
+
+str# MATIP::A::SC::Cause;
+	0 | Normal Close;
+
+// --------------------------------------------------
+//	Data Packet
+
+void MATIP::A::Data;
+	// see section 9.2 of rfc 2351		
+	//ID:; 
+	DUMP 0 7 90 c2 Payload:;
+	TRTS;
+
+
+// ----------------------------------------------------------------------------------
+// Type B Packets
+
+void MATIP::B::SO;
+	BBIT 5 0 90 c2 Reserved:;
+	BBIT 3 1 90 c2 Coding:;
+	CST# 0 1 00 14 MATIP::B::SO::CodingType;
+	BBIT 4 3 90 c2 Traffic SubType:;
+	CST# 0 3 00 14 MATIP::B::SO::STYP;
+	//TEQU 2 3 00 00 MATIP::B::SO::Host;
+	//TEQU 8 3 00 00 MATIP::B::SO::Host;
+	BBIT 4 0 90 c2 Padding:;
+	HBYT 0 0 90 c2 RFU:;
+	DBIT 2 2 90 c2 Multiplexing Type:;
+	CST# 0 2 00 14 MATIP::B::SO::MultiplexingType;
+	DBIT 2 1 90 c2 Header:;
+	s[1] = g[1];
+	CST# 0 1 00 14 MATIP::B::SO::HeaderType;
+	BBIT 4 0 90 c2 Padding:;
+	HBYT 0 0 90 c2 H1:;
+	HBYT 0 0 90 c2 H2:;
+	HWRD 0 0 90 c2 RFU:;
+	if (g[1] == 0)
+	{
+		HBYT 0 0 90 c2 Flow ID:;
+	}
+	if (g[1] == 1)
+	{
+		HBYT 0 0 90 c2 Flow ID:;
+	}
+	TRTS;
+
+str# MATIP::B::SO::CodingType;
+	0 | Padded Baudot;
+	1 | Reserved;
+	2 | IPARS;
+	3 | Reserved;
+	4 | ASCII;
+	5 | Reserved;
+	6 | EBCDIC;
+	7 | Reserved;
+
+str# MATIP::B::SO::STYP;
+	2 | TYPE A IATA Host to Host;
+	8 | SITA Host to Host;
+
+str# MATIP::B::SO::MultiplexingType;
+	0 | Irrelevant;
+	1 | Multiple flow inside the TCP connection;
+	2 | Single flow inside the TCP connection;
+
+str# MATIP::B::SO::HeaderType;
+	0 | Used in TYPE A SITA Host to Host Header = H1+H2+Flow ID;
+	1 | Used in TYPE A SITA Host to Host Header = Flow ID;
+	2 | No Header (default for IATA host to Host);
+	3 | Not used;
+
+// --------------------------------------------------
+//	Open Confirm Format
+
+void MATIP::B::OC;
+	HBYT 0 1 90 c2 Cause:;
+	CST# 0 1 00 14 MATIP::B::OC::Cause;
+	CLSE 0 0 00 14 Application Dependent;
+	TRTS;
+
+str# MATIP::B::OC::Cause;
+	0x00 | Accept;
+	0x01 | Refuse - No Traffic Type matching between Sender & Recipient; 
+	0x02 | Refuse - Information in SO header incoherent;
+	0x41 | Refuse - No Traffic Type matching between Sender & Recipient; 
+	0x42 | Refuse - Information in SO header incoherent;
+	0x43 | Refuse - Type of Protection mechanism are different;
+
+// --------------------------------------------------
+//	Session Close
+
+void MATIP::B::SC;
+	HBYT 0 1 90 c2 Close Cause:;
+	CST# 0 1 00 14 MATIP::B::SC::Cause;
+	CLSE 0 0 00 14 Application Dependent;
+	TRTS;
+
+str# MATIP::B::SC::Cause;
+	0 | Normal Close;
+
+// --------------------------------------------------
+//	Data Packet
+
+void MATIP::B::Data;
+	if (s[1] == 0)
+	{
+		LABL 0 0 00 b9 ID;
+		HBYT 0 0 90 c2 H1:;
+		HBYT 0 0 90 c2 H2:;
+		HBYT 0 0 90 c2 Flow ID:;
+		LABL 0 0 00 b8;
+		g[7] -= 3;
+	}
+	if (s[1] == 1)
+	{
+		LABL 0 0 00 b9 ID;
+		HBYT 0 0 90 c2 Flow ID:;
+		LABL 0 0 00 b8;
+		g[7] -= 1;
+	}
+	DUMP 0 7 90 c2 Payload:;
+	TRTS;
+
+

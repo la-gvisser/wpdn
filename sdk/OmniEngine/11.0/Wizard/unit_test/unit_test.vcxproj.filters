@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Source\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_bytevectref.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_peektime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_globalid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_ipaddress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_peekstring.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\ut_filepath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OmniEngine\Templates\1033\PeekStrings.cpp">
+      <Filter>Wizard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OmniEngine\Templates\1033\IpHeaders.cpp">
+      <Filter>Wizard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\OmniEngine\Templates\1033\PeekTime.cpp">
+      <Filter>Wizard</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{20ba4fb7-a679-4e44-82c0-739c7ec7179f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{42361b34-e55c-41d1-8d77-b070e0c3002d}</UniqueIdentifier>
+      <Extensions>c;cpp;h</Extensions>
+    </Filter>
+    <Filter Include="Wizard">
+      <UniqueIdentifier>{65f12326-7308-4cb5-9c4a-6b4dbb56c526}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

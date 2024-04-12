@@ -1,0 +1,591 @@
+//Ethernet Powerlink Version 1
+
+
+str# Ether::Branching_3_Str;
+0x3e3f	|	EthernetPowerlinkVersion1;
+0x88AB 	|	EthernetPowerlinkVersion2;
+
+str# EProto::Names_Str;
+0x3e3f	|	Ethernet Powerlink Version 1;
+0x88AB 	|	Ethernet Powerlink Version 2;
+
+
+
+//------------------------------------------------------------------
+//Ethernet Powerlink Version 1
+void EthernetPowerlinkVersion1()
+{
+	LABL( 0, 0, 0, 0xb1, "Ethernet Powerlink Version 1 - " );
+	GBYT( 0, l[2]);
+	ANDG( 0x7F, l[2]);
+		CST#( 0, l[2], 0, 0x01, EthernetPowerlinkVersion1::MessageType );
+	BBIT( 1, l[1], 0x90, 0xc2, "R:");
+	BBIT( 7, l[2], 0x90, 0xc2, "MessageType:");
+		CST#( 0, l[2], 0, 0x14, EthernetPowerlinkVersion1::MessageType );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	HBYT( 0, l[3], 0x90, 0xc2, "Destiniation:");
+	HBYT( 0, l[4], 0x90, 0xc2, "Source:");
+	CST#( 0, l[2], 0, 0xb7, EthernetPowerlinkVersion1::MessageType );
+		TSB#( 0, l[2], 0, 0, EthernetPowerlinkVersion1::MessageTypeLDR );
+		XLSE( 0, 0, 0, 0, EthernetPowerlinkVersion1::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void EthernetPowerlinkVersion1::DUMP()
+{
+	HEX#( 0, g[16], 0x90, 0xc2, "Command:" );
+}
+
+void EthernetPowerlinkVersion1::SoC()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 7, l[1], 0, 0xd4, "1....... Multiplexed Slot: yes" );
+		CLSE( 0, l[1], 0, 0xd4, "0....... Multiplexed Slot: no" );
+		CBIT( 6, l[1], 0, 0xd4, ".1...... Prescaled Slot: yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".0...... Prescaled Slot: no" );
+		LABL( 0, 0, 0, 0xb8 );
+	HWRD( 0x40000000, l[2], 0x90, 0xc2, "Next Command:");
+		CEQU( 0, l[2], 0, 0x14, "Next Command Idle" );
+		CEQU( 1, l[2], 0, 0x14, "Next Command Active" );
+	DLNG( 0x40000000, l[3], 0x90, 0xc2, "Next Time:");
+	DLNG( 0x40000000, l[4], 0x90, 0xc2, "Cycle Time:");
+	if (l[2] == 0x01)
+	{
+		HEX#( 32, 0, 0x90, 0xc2, "Next Command:");
+	}
+}
+void EthernetPowerlinkVersion1::EoC()
+{
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Next Command:");
+		CEQU( 0, l[1], 0, 0x14, "Net Command Idle" );
+		CEQU( 1, l[1], 0, 0x14, "Net Command Active" );
+	if (l[1] == 0x01)
+	{
+		HEX#( 32, 0, 0x90, 0xc2, "Next Command:");
+	}
+}
+void EthernetPowerlinkVersion1::PReq()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 5, l[1], 0, 0xd4, "..1..... MS (Multiplexed): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "..0..... MS (Multiplexed): no" );		
+		CBIT( 0, l[1], 0, 0xd4, ".......1 RD (Ready): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".......0 RD (Ready): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0x40000000, l[2], 0x90, 0xc2, "Poll Size Out:");
+	DUMP( 0, l[2], 0x90, 0xc2, "OUT Data:");
+}
+void EthernetPowerlinkVersion1::PRes()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 5, l[1], 0, 0xd4, "..1..... MS (Multiplexed): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "..0..... MS (Multiplexed): no" );
+		CBIT( 4, l[1], 0, 0xd4, "...1.... EX (Exception): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "...0.... EX (Exception): no" );
+		CBIT( 3, l[1], 0, 0xd4, "....1... RS (Request to Send): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "....0... RS (Request to Send): no" );
+		CBIT( 2, l[1], 0, 0xd4, ".....1.. WA (Warning): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".....0.. WA (Warning): no" );
+		CBIT( 1, l[1], 0, 0xd4, "......1. ER (Error): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "......0. ER (Error): no" );
+		CBIT( 0, l[1], 0, 0xd4, ".......1 RD (Ready): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".......0 RD (Ready): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0x40000000, l[2], 0x90, 0xc2, "Poll Size IN:");
+	DUMP( 0, l[2], 0x90, 0xc2, "IN Data:");
+}
+void EthernetPowerlinkVersion1::AInvite()
+{
+	DBYT( 0, l[1], 0x90, 0xc9, "Invite Channel:");
+		CEQU( 1, l[1], 0, 0x14, "Ident" );
+		CEQU( 255, l[1], 0, 0x14, "Generic Channel" );
+		
+}
+void EthernetPowerlinkVersion1::ASend()
+{
+	DBYT( 0, l[1], 0x90, 0xc9, "Send Channel:");
+		CEQU( 1, l[1], 0, 0x14, "Ident" );
+		CEQU( 255, l[1], 0, 0x14, "Generic Channel" );
+		
+}
+
+str# EthernetPowerlinkVersion1::MessageTypeLDR;
+0x01	|	EthernetPowerlinkVersion1::SoC;
+0x02	|	EthernetPowerlinkVersion1::EoC;
+0x03	|	EthernetPowerlinkVersion1::PReq;
+0x04	|	EthernetPowerlinkVersion1::PRes;
+0x05	|	EthernetPowerlinkVersion1::AInvite;
+0x06	|	EthernetPowerlinkVersion1::ASend;
+
+str# EthernetPowerlinkVersion1::MessageType;
+0x01	|	Start of Cycle (SoC);
+0x02	|	End of Cyclic (EoC);
+0x03	|	PollRequest (PReq);
+0x04	|	PollResponse (PRes);
+0x05	|	Asynchronous Invite(AInv);
+0x06	|	Asynchronous Send (ASend);
+
+
+
+
+//-------------------------------------------------------------------------------------
+//EPL V2 
+//#define UDP_PORT_EPL            3819
+//0x88AB 	|	EthernetPowerlinkVersion2;
+
+//experimental
+str# UDP::Ports_Str;
+	3819 | EthernetPowerlinkVersion1;			
+
+void EthernetPowerlinkVersion2()
+{
+	LABL( 0, 0, 0, 0xb1, "Ethernet Powerlink Version 2 - " );
+	GBYT( 0, l[2]);
+	ANDG( 0x7F, l[2]);
+		CST#( 0, l[2], 0, 0x01, EthernetPowerlinkVersion2::MessageType );
+	BBIT( 1, l[1], 0x90, 0xc2, "R:");
+	DBIT( 7, l[1], 0x90, 0xc2, "MessageType:");
+		CST#( 0, l[2], 0, 0x14, EthernetPowerlinkVersion2::MessageType );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Destiniation:");
+		CST#( 0, l[3], 0, 0x14, EthernetPowerlinkVersion2::Adresses );
+	DBYT( 0, l[4], 0x90, 0xc2, "Source:");
+		CST#( 0, l[4], 0, 0x14, EthernetPowerlinkVersion2::Adresses );
+	CST#( 0, l[2], 0, 0xb7, EthernetPowerlinkVersion2::MessageType );
+		TSB#( 0, l[2], 0, 0, EthernetPowerlinkVersion2::MessageTypeLDR );
+		XLSE( 0, 0, 0, 0, EthernetPowerlinkVersion1::DUMP );
+		
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void EthernetPowerlinkVersion2::SoC()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 7, l[1], 0, 0xd4, "1....... MC (Multiplexed Cycle Completed): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "0....... MC (Multiplexed Cycle Completed): no" );
+		CBIT( 6, l[1], 0, 0xd4, ".1...... PS (Prescaled Slot): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".0...... PS (Prescaled Slot): no" );
+	LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+	LABL( 0, 0, 0, 0xb8 );
+	D64B( 0x40000000, l[3], 0x90, 0xc2, "NetTime:");
+	DLNG( 0, l[4], 0x90, 0xc2, "RelativeTime:");
+}
+
+void EthernetPowerlinkVersion2::SoA()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "NMTStatus:");
+		CST#( 0, l[1], 0, 0x14, EthernetPowerlinkVersion2::NMTStatevalues );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 4, l[1], 0, 0xd4, ".....1.. EA (Exception Acknowledge): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".....0.. EA (Exception Acknowledge): no" );
+		CBIT( 1, l[1], 0, 0xd4, "......1. ER (Exception Reset): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "......0. ER (Exception Reset): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+	LABL( 0, 0, 0, 0xb8 );
+	DBYT( 0, l[3], 0x90, 0xc2, "RequestedServiceID:");
+		CST#( 0, l[3], 0, 0x14, EthernetPowerlinkVersion2::SOA::RequestedServiceID );
+	DBYT( 0, l[4], 0x90, 0xc2, "RequestedServiceTarget:");
+	LABL( 0, 0, 0x90, 0xc2, "EPLVersion:");
+	DBIT( 4, l[5], 0x90, 0 );
+	LABL( 0, 0, 0, 0, ".");
+	DBIT( 4, l[5], 0, 0 );
+}
+
+void EthernetPowerlinkVersion2::ASend()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "ServiceID:");
+		CST#( 0, l[1], 0, 0x14, EthernetPowerlinkVersion2::ASend::ServiceID );
+
+		CST#( 0, l[1], 0, 0xb7, EthernetPowerlinkVersion2::ASend::ServiceID );
+		TSB#( 0, l[1], 0, 0xb7, EthernetPowerlinkVersion2::ASend::ServiceIDLDR );
+		XLSE( 0, 0, 0, 0, EthernetPowerlinkVersion1::DUMP );
+	LABL( 0, 0, 0, 0xb8 );	
+}
+
+str# EthernetPowerlinkVersion2::ASend::ServiceID;
+1	|	IdentResponse;
+2	|	StatusResponse;
+3	|	NMTRequest;
+4	|	NMTCommand;
+5	|	SDO;
+
+str# EthernetPowerlinkVersion2::ASend::ServiceIDLDR;
+1	|	EthernetPowerlinkVersion2::ASend::IdentResponse;
+2	|	EthernetPowerlinkVersion2::ASend::StatusResponse;
+3	|	EthernetPowerlinkVersion2::ASend::NMTRequest;
+4	|	EthernetPowerlinkVersion2::ASend::NMTCommand;
+//5	|	EthernetPowerlinkVersion2::ASend::SDO;
+
+void EthernetPowerlinkVersion2::IPAdress::DataOffsetbuggy()
+{
+	DECR 1;
+	DBYT(  0, l[4], 0x90, 0x05, "IPAddressP1:");
+	LABL(  0, 0, 0, 0x02, ".");
+	DECR 2;	
+	DBYT(  0, l[4], 0x90, 0x05, "IPAddressP2:");
+	LABL(  0, 0, 0, 0x02, ".");
+	DECR 2;	
+	DBYT(  0, l[4], 0x90, 0x05, "IPAddressP3:");
+	LABL(  0, 0, 0, 0x02, ".");
+	DECR 2;	
+	DBYT(  0, l[4], 0x90, 0x05, "IPAddressP4:");
+	INCR 3;
+}
+
+void EthernetPowerlinkVersion2::IPAdress()
+{
+	l[1] = g[4];
+	ANDG (0x000000FF, l[1]);
+	DGLB(  0, l[1], 0x90, 0x05, "IPAddressP1:");
+	LABL(  0, 0, 0, 0, ".");
+	l[1] = g[4];
+	ANDG (0x0000FF00, l[1]);
+	SHFR( 8, l[1] );
+	DGLB(  0, l[1], 0x90, 0x05, "IPAddressP2:");
+	LABL(  0, 0, 0, 0, ".");
+	l[1] = g[4];
+	ANDG (0x00FF0000, l[1]);
+	SHFR( 16, l[1] );
+	DGLB(  0, l[1], 0x90, 0x05, "IPAddressP3:");
+	LABL(  0, 0, 0, 0, ".");
+	l[1] = g[4];
+	ANDG (0xFF000000, l[1]);
+	SHFR( 24, l[1] );
+	DGLB(  0, l[1], 0x90, 0x05, "IPAddressP4:");
+}
+
+void EthernetPowerlinkVersion2::ASend::IdentResponse()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		LABL( 0, 0, 0, 0xb8 );
+	HBYT( 0, l[2], 0x90, 0xc2, "NMTStatus:");
+		CST#( 0, l[2], 0, 0x14, EthernetPowerlinkVersion2::NMTStatevalues );	
+	HEX#( 0, 3, 0x90, 0xc2, "EPLVersion:");
+	BLNG( 0x40000000, l[1], 0x90, 0xc9, "FeatureFlags:");
+		CBIT( 0, l[1], 0, 0xd4, "	........ ........ ........ .......1  Isochronous: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ .......0  Isochronous: false" );
+		CBIT( 1, l[1], 0, 0xd4, "	........ ........ ........ ......1.  SDO by UDP/IP: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ ......0.  SDO by UDP/IP: false" );
+		CBIT( 2, l[1], 0, 0xd4, "	........ ........ ........ .....1..  SDO by ASnd: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ .....0..  SDO by ASnd: false" );
+		CBIT( 3, l[1], 0, 0xd4, "	........ ........ ........ ....1...  SDO by PDO: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ ....0...  SDO by PDO: false" );
+		CBIT( 4, l[1], 0, 0xd4, "	........ ........ ........ ...1....  NMT Info Services: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ ...0....  NMT Info Services: false" );
+		CBIT( 5, l[1], 0, 0xd4, "	........ ........ ........ ..1.....  Ext. NMT State Commands: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ ..0.....  Ext. NMT State Commands: false" );
+		CBIT( 6, l[1], 0, 0xd4, "	........ ........ ........ .1......  Dynamic PDO Mapping: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ .0......  Dynamic PDO Mapping: false" );
+		CBIT( 7, l[1], 0, 0xd4, "	........ ........ ........ 1.......  NMT Service by UDP/IP: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ........ 0.......  NMT Service by UDP/IP: false" );
+		CBIT( 8, l[1], 0, 0xd4, "	........ ........ .......1 ........  Configuration Manager: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ .......0 ........  Configuration Manager: false" );
+		CBIT( 9, l[1], 0, 0xd4, "	........ ........ ......1. ........  Multiplexed Access: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ......0. ........  Multiplexed Access: false" );
+		CBIT( 10, l[1], 0, 0xd4, "	........ ........ .....1.. ........  NodeID setup by SW: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ .....0.. ........  NodeID setup by SW: false" );
+		CBIT( 11, l[1], 0, 0xd4, "	........ ........ ....1... ........  MN Basic Ethernet Mode: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ....0... ........  MN Basic Ethernet Mode: false" );
+		CBIT( 12, l[1], 0, 0xd4, "	........ ........ ...1.... ........  Routing Type 1 Support: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ...0.... ........  Routing Type 1 Support: false" );
+		CBIT( 12, l[1], 0, 0xd4, "	........ ........ ..1..... ........  Routing Type 2 Support: true" );
+		CLSE( 0, l[1], 0, 0xd4, "	........ ........ ..0..... ........  Routing Type 2 Support: false" );
+	LABL( 0, 0, 0, 0xb8 );
+	DWRD(  0x40000000, l[4], 0x90, 0xc2, "MTU:");
+	DWRD(  0x40000000, l[4], 0x90, 0xc2, "PollInSize:");
+	DWRD(  0x40000000, l[5], 0x90, 0xc2, "PollOutSize:");
+	DLNG(  0x40000000, l[6], 0x90, 0xc2, "Response Time:");
+	DWRD(  0x40000000, l[7], 0x90, 0xc2, "Unknown:");
+	HLNG(  0x40000000, l[8], 0x90, 0xc9, "Device Type:");
+	DECR 4;
+	DWRD(  0x40000000, l[9], 0x90, 0xc2, "Profile:");	
+		CST#( 0, l[9], 0, 0x14, EthernetPowerlinkVersion2::ASend::IdentResponse::Profile );
+	HWRD(  0x40000000, l[10], 0x90, 0xc2, "Additional Information:");
+	LABL( 0, 0, 0, 0xb8 );
+	DLNG(  0x40000000, l[11], 0x90, 0xc2, "VendorId:");
+	DLNG(  0x40000000, l[12], 0x90, 0xc2, "ProductCode:");
+	DLNG(  0x40000000, l[13], 0x90, 0xc2, "RevisionNumber:");
+	DLNG(  0x40000000, l[14], 0x90, 0xc2, "SerialNumber:");
+	D64B(  0x40000000, l[15], 0x90, 0xc2, "VendorSpecificExtension1:");
+	DLNG(  0x40000000, l[16], 0x90, 0xc2, "VerifyConfigurationDate:");
+	DLNG(  0x40000000, l[17], 0x90, 0xc2, "VerifyConfigurationTime:");
+	DLNG(  0x40000000, l[18], 0x90, 0xc2, "applicationSwDate:");
+	DLNG(  0x40000000, l[19], 0x90, 0xc2, "applicationSwTime:");	
+	IPLG(  0, g[4], 0x05, 0xc2, "IPAddress:");
+	EthernetPowerlinkVersion2::IPAdress;
+	IPLG(  0, g[4], 0x05, 0xc2, "SubnetMask:");
+	EthernetPowerlinkVersion2::IPAdress;
+	IPLG(  0, g[4], 0x05, 0xc2, "DefaultGateway:");
+	EthernetPowerlinkVersion2::IPAdress;
+	CHR#( 32, 0, 0x90, 0xc2, "HostName:");
+	CHR#( 0, g[16], 0x90, 0xc2, "VendorSpecificExtension2:");
+}
+
+str# EthernetPowerlinkVersion2::ASend::IdentResponse::Profile;
+0	|	No Standard Device;
+401	|	Generic I/O module;
+402	|	Drive and motion control;
+403	|	Human Machine Interface;
+404	|	Measuring device;
+405	|	IEC 61131-3 PLC;
+406	|	Encoder;
+
+
+void EthernetPowerlinkVersion2::ASend::StatusResponse()
+{
+	BBYT( 0x40000000, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 4, l[1], 0, 0xd4, "...1.... EN (Exception New): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "...0.... EN (Exception New): no" );
+		CBIT( 3, l[1], 0, 0xd4, "....1... EC (Exception Clear): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "....0... EC (Exception Clear): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0x40000000, l[2], 0x90, 0xc9, "Flags:");
+	l[3] = l[2];
+	ANDG( 0x38, l[3] );
+	DGLB( 0, l[3], 0x90, 0xc2, "PR (Priority):");
+		CST#( 0, l[3], 0, 0x14, EthernetPowerlinkVersion2::ASend::StatusResponse::Priority );
+	l[3] = l[2];
+	ANDG( 0x07, l[3] );
+	DGLB( 0, l[3], 0x90, 0xc2, "RS (RequestToSend):");
+	LABL( 0, 0, 0, 0xb8 );
+	HBYT( 0, l[3], 0x90, 0xc2, "NMTStatus:");
+		CST#( 0, l[3], 0, 0x14, EthernetPowerlinkVersion2::NMTStatevalues );	
+	
+}
+str# EthernetPowerlinkVersion2::ASend::StatusResponse::Priority;
+0	|	lowest;
+1	|	lower;
+2	|	below generic;
+4	|	above generic;
+5	|	higher;
+6	|	below NMTRequest;
+
+void EthernetPowerlinkVersion2::ASend::NMTRequest()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "NMTStatus:");
+		CST#( 0, l[1], 0, 0x14, EthernetPowerlinkVersion2::asndstr );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		LABL( 0, 0, 0, 0xb8 );
+	DBYT( 0, l[3], 0x90, 0xc2, "Requested Service ID:");
+	DBYT( 0, l[4], 0x90, 0xc2, "Requested Service Target:");
+	LABL( 0, 0, 0x90, 0xc2, "EPLVersion:");
+	DBIT( 4, l[5], 0x90, 0 );
+	LABL( 0, 0, 0, 0, ".");
+	DBIT( 4, l[6], 0, 0 );
+}
+
+void EthernetPowerlinkVersion2::ASend::NMTCommand()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "NMTCommandID:");
+		CST#( 0, l[1], 0, 0x14, EthernetPowerlinkVersion2::asndstr );
+	if (l[1] ==0x62)
+	{
+		CHR#( 0, 25, 0x90, 0xc2, "Hostname:");
+	}
+	if (l[1] ==0x63)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "NodeID:");
+	}
+	if (l[1] ==0xB0)
+	{
+		HEX#( 0, 6, 0x90, 0xc2, "Time:");
+	}
+	DUMP( 0, g[16], 0x90, 0xc2, "NMTCommandData:");
+}
+
+void EthernetPowerlinkVersion2::ASend::SDO()
+{
+	HEX#( 32, 0, 0x90, 0xc2, "SDOCommand:");
+}
+
+void EthernetPowerlinkVersion2::PReq()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 5, l[1], 0, 0xd4, "..1..... MS (Multiplexed): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "..0..... MS (Multiplexed): no" );
+		CBIT( 2, l[1], 0, 0xd4, ".....1.. EA (Exception Acknowledge): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".....0.. EA (Exception Acknowledge): no" );
+		CBIT( 0, l[1], 0, 0xd4, ".......1 RD (Ready): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".......0 RD (Ready): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "PDOVersion:" );
+	LABL( 0, 0, 0, 0, ".");
+	DBYT( 0, l[1], 0x00, 0 );
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Size:" );
+	DUMP( 0, l[1], 0x90, 0xc9, "Payload:" );	
+}
+
+void EthernetPowerlinkVersion2::PRes()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "NMTStatus:");
+		CST#( 0, l[1], 0, 0x14, EthernetPowerlinkVersion2::NMTStatevalues );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 5, l[1], 0, 0xd4, "..1..... MS (Multiplexed): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "..0..... MS (Multiplexed): no" );
+		CBIT( 4, l[1], 0, 0xd4, "...1.... EN (Exception New): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "...0.... EN (Exception New): no" );
+		CBIT( 0, l[1], 0, 0xd4, ".......1 RD (Ready): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".......0 RD (Ready): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+	LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0x40000000, l[2], 0x90, 0xc2, "PDOVersion:" );
+	DWRD( 0x40000000, l[3], 0x90, 0xc2, "Size:" );
+	DUMP( 0, l[3], 0x90, 0xc9, "Payload:" );	
+}
+
+void EthernetPowerlinkVersion2::AInv()
+{
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+		CBIT( 4, l[1], 0, 0xd4, ".....1.. EA (Exception Acknowledge): yes" );
+		CLSE( 0, l[1], 0, 0xd4, ".....0.. EA (Exception Acknowledge): no" );
+		CBIT( 1, l[1], 0, 0xd4, "......1. ER (Exception Reset): yes" );
+		CLSE( 0, l[1], 0, 0xd4, "......0. ER (Exception Reset): no" );
+		LABL( 0, 0, 0, 0xb8 );
+	BBYT( 0, l[1], 0x90, 0xc9, "Flags:");
+	LABL( 0, 0, 0, 0xb8 );
+	HBYT( 0, l[2], 0x90, 0xc2, "ServiceID:");
+		CST#( 0, l[2], 0, 0x14, EthernetPowerlinkVersion2::ASend::ServiceID );
+
+		CST#( 0, l[2], 0, 0xb7, EthernetPowerlinkVersion2::ASend::ServiceID );
+		TSB#( 0, l[2], 0, 0xb7, EthernetPowerlinkVersion2::ASend::ServiceIDLDR );
+		XLSE( 0, 0, 0, 0, EthernetPowerlinkVersion1::DUMP );
+	LABL( 0, 0, 0, 0xb8 );	
+}
+
+
+
+str# EthernetPowerlinkVersion2::SOA::RequestedServiceID;
+0	|	NoService;
+1	|	IdentRequest;
+2	|	StatusRequest;
+3	|	NMTRequestInvite;
+255	|	UnspecifiedInvite;
+
+str# EthernetPowerlinkVersion2::NMTStatevalues;
+0x00	|	NMT_GS_OFF;
+0x19	|	NMT_GS_INITIALIZING;
+0x29	|	NMT_GS_RESET_APPLICATION;
+0x39	|	NMT_GS_RESET_COMMUNICATION;
+0x1C	|	NMT_MS_NOT_ACTIVE;
+0x1D	|	NMT_MS_PRE_OPERATIONAL_1;
+0x5D	|	NMT_MS_PRE_OPERATIONAL_2;
+0x6D	|	NMT_MS_READY_TO_OPERATE;
+0xFD	|	NMT_MS_OPERATIONAL;
+0x1E	|	NMT_MS_BASIC_ETHERNET;
+
+str# EthernetPowerlinkVersion2::Adresses;
+0	|	INVALID NODEID (invalid);                       
+240	|	MN NODEID (Managing Node);
+253	|	DIAGNOSTIC_DEVICE_NODEID (Diagnostic Device);
+254	|	EPL TO LEGACY ETHERNET ROUTER NODEID (EPL to legacy Ethernet Router);
+255	|	BROADCAST NODEID (broadcast);
+	
+str# EthernetPowerlinkVersion2::MessageTypeLDR;
+0x01	|	EthernetPowerlinkVersion2::SoC;
+//0x02	|	EthernetPowerlinkVersion2::EoC;
+0x03	|	EthernetPowerlinkVersion2::PReq;
+0x04	|	EthernetPowerlinkVersion2::PRes;
+0x05	|	EthernetPowerlinkVersion2::SoA;
+0x06	|	EthernetPowerlinkVersion2::ASend;
+0x0D	|	EthernetPowerlinkVersion2::AInv;
+
+str# EthernetPowerlinkVersion2::MessageType;
+0x01	|	Start of Cycle (SoC);
+0x02	|	End of Cyclic (EoC);
+0x03	|	PollRequest (PReq);
+0x04	|	PollResponse (PRes);
+0x05	|	Start of Asynchronous (SoA);
+0x06	|	Asynchronous Send (ASend);
+0x0D	|	Asynchronous Invite (AInv);
+
+str# EthernetPowerlinkVersion2::asndstr;
+0x21	|	NMTStartNode;
+0x22	|	NMTStopNode;
+0x23	|	NMTEnterPreOperational2;
+0x24	|	NMTEnableReadyToOperate;
+0x28	|	NMTResetNode;
+0x29	|	NMTResetCommunication;
+0x2A	|	NMTResetConfiguration;
+0x2B	|	NMTSwReset;
+0x41	|	NMTStartNodeEx;
+0x42	|	NMTStopNodeEx;
+0x43	|	NMTEnterPreOperational2Ex;
+0x44	|	NMTEnableReadyToOperateEx;
+0x48	|	NMTResetNodeEx;
+0x49	|	NMTCommunicationEx;
+0x4A	|	NMTResetConfigurationEx;
+0x4B	|	NMTSwResetEx;
+0x62	|	NMTNetHostNameSet;
+0x63	|	NMTFlushArpEntry;
+0x80	|	NMTPublishConfiguredNodes;
+0x90	|	NMTPublishActiveNodes;
+0x91	|	NMTPublishPreOperational1;
+0x92	|	NMTPublishPreOperational2;
+0x93	|	NMTPublishReadyToOperate;
+0x94	|	NMTPublishOperational;
+0x95	|	NMTPublishStopped;
+0xA0	|	NMTPublishEmergencyNew;
+0xB0	|	NMTPublishTime;
+0xFF	|	NMTInvalidService;
+
+/*	possible pspecs extension but it causes failures
+		<PSpec Name="Ethernet POWERLINK 2.0 - Start of Cycle">
+				<PSpecID>4118</PSpecID>
+				<SName>EPLv2-SoC</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x01]]></CondExp>
+			</PSpec>
+			<PSpec Name="Ethernet POWERLINK 2.0 - PollRequest">
+				<PSpecID>4119</PSpecID>
+				<SName>EPLv2-PReq</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x03]]></CondExp>
+			</PSpec>
+			<PSpec Name="Ethernet POWERLINK 2.0 - PollResponse">
+				<PSpecID>4120</PSpecID>
+				<SName>EPLv2-PRes</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x04]]></CondExp>
+			</PSpec>
+			<PSpec Name="Ethernet POWERLINK 2.0 - Start of Asynchronous">
+				<PSpecID>4121</PSpecID>
+				<SName>EPLv2-SoA</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x05]]></CondExp>
+			</PSpec>
+			<PSpec Name="Ethernet POWERLINK 2.0 - Asynchronous Send">
+				<PSpecID>4122</PSpecID>
+				<SName>EPLv2-ASnd</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x06]]></CondExp>
+			</PSpec>
+			<PSpec Name="Ethernet POWERLINK 2.0 - Asynchronous Invite">
+				<PSpecID>4123</PSpecID>
+				<SName>EPLv2-AInv</SName>
+				<LName></LName>
+				<Color>2</Color>
+				<Desc></Desc>				
+				<CondExp><![CDATA[(MLD8[0]& 0x7F) == 0x0D]]></CondExp>
+			</PSpec>
+*/

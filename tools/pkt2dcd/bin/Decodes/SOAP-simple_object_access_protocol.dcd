@@ -1,0 +1,113 @@
+// SOAP - Simple Object Access Protocol
+// 9/21/2007
+
+void SOAP::Test;
+	g[1] = 0;
+	l[1] = pl[1];
+	l[2] = pl[5];
+	if (l[1] == 0x736f6170) //soap
+	{
+		g[1] = 1;
+	}
+	TRTS;
+
+void SOAP;
+	LABL 0 0 0 c7 SOAP - Simple Object Access Protocol;
+	SOAP::LineLoop;
+	LABL 0 0 0 c8 ;
+	TRTS;
+
+void SOAP::TestHeaderOrBody;
+	g[1] = 0;
+	l[1] = pl[5];
+	if (l[1] == 0x426f6479)
+	{
+		LABL 0 0 0 87 SOAP Body;
+		TRTS;
+	}
+	if (l[1] == 0x48656164)
+	{
+		l[2] = pw[9];
+		if l[2] == 0x6572
+		{
+			LABL 0 0 0 87 SOAP Header;
+			TRTS;
+		}
+	}
+	l[1] = pl[9];
+	if (l[1] == 0x426f6479)
+	{
+		LABL 0 0 0 87 SOAP Body;
+		TRTS;
+	}
+	if (l[1] == 0x48656164)
+	{
+		l[2] = pw[13];
+		if (l[2] == 0x6572)
+		{
+			LABL 0 0 0 87 SOAP Header;
+			TRTS;
+		}
+	}
+	TRTS;
+
+void SOAP::TestHeaderOrBodyEnd;
+	g[1] = 0;
+	l[1] = pl[6];
+	if (l[1] == 0x426f6479)
+	{
+		g[1] = 1;
+		TRTS;
+	}
+	if (l[1] == 0x48656164)
+	{
+		l[2] = pw[8];
+		if (l[2] == 0x6572)
+		{
+			g[1] = 1;
+			TRTS;
+		}
+	}
+	l[1] = pl[10];
+	if (l[1] == 0x426f6479)
+	{
+		g[1] = 1;
+		TRTS;
+	}
+	if (l[1] == 0x48656164)
+	{
+		l[2] = pw[14];
+		if (l[2] == 0x6572)
+		{
+			g[1] = 1;
+			TRTS;
+		}
+	}
+	TRTS;
+
+void SOAP::LineLoop;
+	XML::SkipDelimiters;
+	if (g[1] <= 4)
+	{
+		TRTS;
+	}
+	SOAP::TestHeaderOrBody;
+	SOAP::TestHeaderOrBodyEnd;
+	l[10] = g[1];
+	l[1] = pb[0];
+	if (l[1] == 0x3c)	//"<"
+	{
+		l[2] = pl[0];
+		XEQU 3c212d2d 42 0 0 XML::Comment;	//"<!--"
+		XLTE 0 0 0 0 XML::Mark;
+	}
+	if (l[1] != 0x3c)
+	{
+		XML::Text;
+	}
+	if (l[10] == 1)
+	{
+		LABL 0 0 0 88 ;
+	}
+	TNXT -SOAP::LineLoop;
+

@@ -1,0 +1,457 @@
+// -------------------------------------------------------------------------------------
+// PIM - Protocol Independent Multicast
+//
+//	globals i use:
+//		g[0x12] = pim type
+// -------------------------------------------------------------------------------------
+
+void PIM;
+	LABL 0 0 0 b1 	PIM - Protocol Independent Multicast\PIM:;
+	DBIT 4 11 90 c2 Version:;
+	DBIT 4 12 90 c2 Type:;
+	CST# 0 12 00 14 PIM::TypesList;
+	DBYT 0 13 90 c2 Reserved:;
+	HWRD 0 14 90 c2 Checksum:;
+	TST# 0 12 00 00 PIM::TypesFunc;
+
+str# PIM::TypesList;
+	0 | Hello;
+	1 | Register;
+	2 | Register-Stop;
+	3 | Join/Prune;
+	4 | Bootstrap;
+	5 | Assert;
+	6 | Graft (used in PIM-DM only);
+	7 | Graft-Ack (used in PIM-DM only);
+	8 | Candidate-RP-Advertisement;
+	9 | State Refresh;
+
+str# PIM::TypesFunc;
+ 	0 | PIM::Hello;
+	1 | PIM::Register;
+	2 | PIM::Register-Stop;
+	3 | PIM Join Prune;
+	4 | PIM Bootstrap;
+	5 | PIM Assert;
+	6 | PIM::Graft;
+	7 | PIM::Graft-Ack;
+	8 | PIM Candidate-RP-Advertisement;
+	9 | PIM::StateRefresh;
+
+// -------------------------------------------------------------------------------------
+void PIM::Hello;
+	LABL 0 0 0 b7 Hello;
+	while (g[16] > 0)
+	{
+		g[1] = pw[0];
+		CST# 0 1 00 b7 PIM::Hello::OptionsList;
+		CLSE 0 0 00 b7 Unknown Option;
+		DWRD 0 1 90 c2 Option Type:;
+		CST# 0 1 00 14 PIM::Hello::OptionsList;
+		DWRD 0 2 90 c2 Option Length:;
+		l[1] = g[16];
+		TSB# 0 1 00 00 PIM::Hello::OptionsFunc;
+		if (g[2] > 0)
+		{
+			if (l[1] == g[16])
+			{
+				DUMP 0 2 90 c2 Option Data:;
+			}
+		}
+		LABL 0 0 00 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# PIM::Hello::OptionsList;
+	 0 | Reserved;
+	 1 | Hold Time;
+	 2 | LAN Prune Delay;
+	19 | DR Priority (PIM-SM Only);
+	20 | Generation ID;
+	21 | State Refresh Capable;
+	22 | Bidir Capable;
+
+str# PIM::Hello::OptionsFunc;
+	 1 | PIM::Hello::Options::HelloHoldTime;
+	 2 | PIM::Hello::Options::LANPruneDelay;
+	19 | PIM::Hello::Options::DRPriority;
+	20 | PIM::Hello::Options::GenerationID;
+	21 | PIM::Hello::Options::StateRefreshCapable;
+	22 | PIM::Hello::Options::BidirCapable;
+
+void PIM::Hello::Options::HelloHoldTime;					// si: type 1
+	DWRD 0 1 90 c2 Option value:;
+	LABL 0 0  0 14 Hold time in seconds;
+	TRTS;
+
+void PIM::Hello::Options::LANPruneDelay;					// si: type 2
+	DBIT  1 1 90 c2 T Bit:;
+	DBIT 15 0 90 c2 LAN Prune Delay:;
+	LABL  0 0 00 14 milliseconds;
+	DWRD  0 0 90 c2 Override Interval:;
+	LABL  0 0 00 14 milliseconds;
+	TRTS;
+
+void PIM::Hello::Options::DRPriority;						// si: type 19
+	DLNG 0 0 90 c2 Priority:;
+	TRTS;
+
+void PIM::Hello::Options::GenerationID;						// si: type 20
+	HLNG 0 0 90 c2 Generation ID:;
+	TRTS;
+
+void PIM::Hello::Options::StateRefreshCapable;				// si: type 21
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 0 90 c2 Interval:;
+	HWRD 0 0 90 c2 Reserved:;
+	TRTS;
+
+void PIM::Hello::Options::BidirCapable;						// si: type 22 - meant to be nothing
+	TRTS;
+
+	
+// -------------------------------------------------------------------------------------
+void PIM::Register;
+	LABL 0 0 0 b7 Register;
+	HEX# 3 0 90 c2 Reserved:;
+	DBYT 0 1 90 c9 Flags:;
+	CBIT 6 1  0 d4 .1.. .... Null register bit - DR probing the RP;
+	CLSE 0 0  0 d4 .0.. .... Null register bit - DR not probing the RP;
+	CBIT 7 1  0 d4 1... .... Border bit - router is a DR;
+	CLSE 0 0  0 d4 0... .... Border bit - router is not a DR;
+	LABL 0 0 0 b8;
+	IP();
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM::Register-Stop;
+	LABL 0 0 0 b7 Register-Stop;
+	PIM_Group_Address;
+	PIM_BSR_Address;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM Join Prune;
+	LABL 0 0 0 b7 Join Prune;
+	LABL 0 0 0 b7 Unicast Upstream Neighbor;
+	PIM_BSR_Address;
+	DBYT 0 1 90 c2 Reserved:;
+	DBYT 0 2 90 c2 Num of groups:;
+	DWRD 0 1 90 c2 Holdtime:;
+	PIM_Group_Address_Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM Bootstrap;
+	LABL 0 0 0 b7 Bootstrap;
+	DWRD 0 1 90 c2 Fragment tag:;
+	DBYT 0 1 90 c2 Hash mask length:;
+	DBYT 0 1 90 c2 BSR Priority:;
+	PIM_BSR_Address;
+	PIM_Group_Address;
+	DBYT 0 2 90 c2 RP-count-1:;
+	DBYT 0 2 90 c2 Fragment RP-count-1:;
+	DWRD 0 1 90 c2 Reserved:;
+	LABL 0 0 0 b8;
+	PIM_RP_Address;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM_BSR_Address;
+	LABL 0 0 0 b7 BSR Address;
+	DBYT 0 1 90 c2 Address family:;
+	DBYT 0 1 90 c2 Encoding type:;
+	IPLG 0 1 90 c2 Unicast address:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+// in: g2 (num of loops)
+void PIM_Group_Address_Loop;
+	TEQU 0 2 0 0 RETURN;
+	PIM_Group_Address;
+	DWRD 0 3 90 c2 # of joined sources:;
+	DWRD 0 4 90 c2 # of pruned sources:;
+	PIM_Joined_Address_Loop;
+	PIM_Pruned_Address_Loop;
+	SUBG 1 2;
+	TNXT -PIM_Group_Address_Loop;
+
+void PIM_Group_Address;
+	LABL 0 0  0 b7 Group Address;
+	DBYT 0 1 90 c2 Address family:;
+	DBYT 0 1 90 c2 Encoding type:;
+	DBYT 0 1 90 c2 Reserved:;
+	DBYT 0 1 90 c2 Mask length:;
+	IPLG 0 1 90 c2 Group multicast addr:;
+	LABL 0 0 0 b8;
+
+void PIM_Joined_Address_Loop;
+	TEQU 0 3 0 0 RETURN;
+	PIM_Joined_Address;
+	SUBG 1 3;
+	TNXT -PIM_Joined_Address_Loop;
+
+void PIM_Joined_Address;
+	LABL 0 0  0 b7 Joined Source Address;
+	DBYT 0 1 90 c2 Address family:;
+	DBYT 0 1 90 c2 Encoding type:;
+	DBYT 0 1 90 c2 Flags:;
+	DBYT 0 1 90 c2 Mask length:;
+	IPLG 0 1 90 c2 Source address:;
+	LABL 0 0 0 b8;
+
+void PIM_Pruned_Address_Loop;
+	TEQU 0 4 0 0 RETURN;
+	PIM_Pruned_Address;
+	SUBG 1 4;
+	TNXT -PIM_Pruned_Address_Loop;
+
+void PIM_Pruned_Address;
+	LABL 0 0  0 b7 Pruned Source Address;
+	DBYT 0 1 90 c2 Address family:;
+	DBYT 0 1 90 c2 Encoding type:;
+	DBYT 0 1 90 c2 Flags:;
+	DBYT 0 1 90 c2 Mask length:;
+	IPLG 0 1 90 c2 Source address:;
+	LABL 0 0 0 b8;
+
+* in: g2 (num of loops)
+
+void PIM_RP_Address;
+	LABL 0 0 0 b7 Unicast RP Address;
+	DBYT 0 1 90 c2 Address family:;
+	DBYT 0 1 90 c2 Encoding type:;
+	IPLG 0 1 90 c2 Unicast address:;
+	DWRD 0 1 90 c2 RP2-Holdtime:;
+	LABL 0 0  0 14 in seconds;
+	DBYT 0 1 90 c2 RP2-Priority:;
+	DBYT 0 1 90 c2 Reserved:;
+	SUBG 1 2;
+	LABL 0 0 0 b8;
+	TNEQ 0 2 0 0 PIM_RP_Address;
+
+// -------------------------------------------------------------------------------------
+void PIM Assert;
+	LABL 0 0 0 b7 Assert;
+	INCR 3;
+	GBYT 0 2;
+	INCR 1;
+	IPLG 0 1 90 c2 Group:;
+	DGLB 0 2  0  0 /;
+	INCR 2;
+	IPLG 0 1 90 c2 Source:;
+	DBIT 1 1 90 c2 RPT-Bit:;
+	DLNG 0 1 90 c2 Preference:;
+	DLNG 0 1 90 c2 Metric:;
+
+
+	*DUMP 0 10 90 c2 PIM Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM::Graft;
+	LABL 0 0 0 b7 Graft;
+	PIM_BSR_Address;
+	DBYT 0 1 90 c2 Reserved:;
+	DBYT 0 2 90 c2 Num of groups:;
+	DWRD 0 1 90 c2 Holdtime:;
+	PIM_Group_Address_Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+// -------------------------------------------------------------------------------------
+void PIM::Graft-Ack;
+	LABL 0 0 0 b7 Graft-Ack;
+	PIM_BSR_Address;
+	DBYT 0 1 90 c2 Reserved:;
+	DBYT 0 2 90 c2 Num of groups:;
+	DWRD 0 1 90 c2 Holdtime:;
+	PIM_Group_Address_Loop;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM Candidate-RP-Advertisement;
+	LABL 0 0 00 b7 Candidate-RP-Advertisement;
+	DBYT 0 1 90 c2 Prefix count:;
+	DBYT 0 1 90 c2 Priority:;
+	DWRD 0 1 90 c2 Holdtime:;
+	PIM_BSR_Address;
+	PIM_Group_Address;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+void PIM::StateRefresh;
+	LABL 0 0 00 b7 State Refresh;
+	LABL 0 0 00 c7 Multicast Group Address;
+	PIM::EncodedGroupAddress;
+	LABL 0 0 00 c8;
+	LABL 0 0 00 c7 Source Address;
+	PIM::EncodedUnicastAddress;
+	LABL 0 0 00 c8;
+	LABL 0 0 00 c7 Originator Address;
+	PIM::EncodedUnicastAddress;
+	LABL 0 0 00 c8;
+	DBIT 1 1 90 c2 RPT-Bit:;
+	DLNG 0 1 90 c2 Preference:;
+	DLNG 0 1 90 c2 Metric:;
+	DBYT 0 0 90 c2 Mask Length:;
+	DBYT 0 0 90 c2 TTL:;
+	BBYT 0 1 90 c9 Flags:;
+		CBIT 7 1 00 d4 1... .... Prune: Set;
+		CLSE 0 0 00 d4 0... .... Prune: Not Set;
+		CBIT 6 1 00 d4 .1.. .... Prune Now: Set;
+		CLSE 0 0 00 d4 .0.. .... Prune Now: Not Set;
+		CBIT 5 1 00 d4 ..1. .... Assert Override: Set;
+		CLSE 0 0 00 d4 ..0. .... Assert Override: Not Set;
+		LABL 0 0 00 d4 ...x xxxx Reserved;
+		LABL 0 0 00 c8;
+	DBYT 0 0 90 c2 Interval:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void PIM::EncodedGroupAddress;
+	DBYT 0 0 90 c2 Addr Family:;
+	DBYT 0 0 90 c2 Encoding Type:;			// has no value for now
+	BBYT 0 1 90 c9 Flags:;
+		CBIT 7 1 00 d4 1... .... Bidirecational;
+		CLSE 0 0 00 d4 0... .... Not Bidirecational;
+		LABL 0 0 00 d4 .xxx xxx. Reserved;
+		CBIT 0 1 00 d4 .... ...1 Group Range is an Admin Scope Zone;
+		CLSE 0 0 00 d4 .... ...0 Group Range is Not an Admin Scope Zone;
+		LABL 0 0 00 c8;
+	DBYT 0 1 90 c2 Mask Length:;
+	IPLG 0 1 90 c2 Group Multicast Addr:;
+	TRTS;
+
+void PIM::EncodedUnicastAddress;
+	DBYT 0 0 90 c2 Addr Family:;
+	DBYT 0 0 90 c2 Encoding Type:;
+	IPLG 0 0 90 c2 Unicast Address:;
+	TRTS;
+
+	
+void PIMv1()
+{
+	LABL 0 0 0 b1 IGMP - Internet Group Management Protocol\IGMP:;
+	LABL 0 0 0 b1 PIM - Protocol Independent Multicast\PIMv1:;
+		HBYT 4 12 90 c2 Type:\T:;
+			CEQU 14 12 00 14 PIM;
+		DBYT 0 13 90 c2 Code:\C:;
+			CST# 0 13 00 14 PIMv1::Codes;
+		HWRD 0 14 90 c2 Checksum:\Chk-Sum:;
+		BBIT 4 15 90 c2 Version:;
+			CEQU 1 15 00 14 Version 1;
+		DBIT 4 00 05 05 Filler:\F:;
+		DBYT 0 00 05 05 Filler:\F:;
+		HWRD 0 00 05 05 Filler:\F:;
+			LABL 0 0 0 b7 PIM Options:;
+				TSB# 0 13 00 14 PIMv1::Codes::Load;
+			LABL 0 0 0 b8;
+		
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void PIMv1::Codes::Router-Query;
+{
+	BBIT 4 14 90 c2 Mode:\M:;
+		CEQU 0 14 00 14 Dense;
+	BBIT 12 15 90 c2 Reserved:\Res:;
+	DWRD 0 00 90 c2 Holdtime:\HT:;
+		LABL 0 0 0 14 sec;
+}
+
+void PIMv1::Codes::Register;
+{
+	DUMP 0 16 90 c2 Multicast data packet:;
+}
+
+void PIMv1::Codes::Register-Stop;
+{
+	IPLG 0 14 90 c2 Group Address:\GA:;
+	IPLG 0 14 90 c2 Source Address:\SA:;
+}
+
+void PIMv1::Codes::Join/Prune;
+{
+	IPLG 0 14 90 c2 Group Address:\Upstr-Ngbr-Adr:;
+	DWRD 0 15 90 c2 Reserved:\Res:;
+	DWRD 0 00 90 c2 Holdtime:\HT:;
+		LABL 0 0 0 14 sec;
+	DWRD 0 00 90 c2 Holdtime:\HT:;
+	DBYT 0 0 90 c2 Reserved:\Res:;
+	DBYT 0 0 90 c2 Maddr-Length:\MCaddr-Lngth:;
+	DBYT 0 0 90 c2 Addr-Length:\Addr-Lngth:;
+	DBYT 0 9 90 c2 Num groups:\Num-Grp:;
+	
+	IPLG 0 14 90 c2 Multicast Group Adress-1:\MCGRPADDR:;
+	IPLG 0 14 90 c2 Multicast Group Adress-1 Mask:\MCGRPADDRMSK:;
+	DWRD 0 10 90 c2 Number of Join Sources:\#Join:;
+	DWRD 0 11 90 c2 Number of Prune Sources:\#Join:;
+}
+
+void PIMv1::Codes::RP-Reachability;
+{
+	IPLG 0 11 90 c2 Group Address:\GA:;
+	IPLG 0 12 90 c2 Group Address Mask:\GAM:;
+	IPLG 0 14 90 c2 RP Adress:\RP Address:;
+	DWRD 0 15 90 c2 Reserved:\Res:;
+	DWRD 0 00 90 c2 Holdtime:\HT:;
+	LABL 0 0 0 14 sec;
+}
+
+void PIMv1::Codes::Assert;
+{
+	IPLG 0 14 90 c2 Group Address:\GA:;
+	IPLG 0 14 90 c2 Group  Mask:\GM:;
+	IPLG 0 14 90 c2 Source Adress:\SA:;
+	BLNG 0 15 90 c2 Bitmask:\BM:;
+	BLNG 0 15 90 c2 Metric:\Metric:;
+	DWRD 0 15 90 c2 Reserved:\Res:;
+}
+
+void PIMv1::Codes::Graft;
+{
+	PIMv1::Codes::Join/Prune;
+}
+
+void PIMv1::Codes::Graft-Ack;
+{
+	PIMv1::Codes::Join/Prune;
+}
+
+str# PIMv1::Codes;
+0	|	Router-Query;
+1	|	Register;
+2	|	Register-Stop;
+3	|	Join/Prune;
+4	|	RP-Reachability;
+5	|	Assert;
+6	|	Graft;
+7	|	Graft-Ack;
+
+str# PIMv1::Codes::Load;
+0	|	PIMv1::Codes::Router-Query;
+1	|	PIMv1::Codes::Register;
+2	|	PIMv1::Codes::Register-Stop;
+3	|	PIMv1::Codes::Join/Prune;
+4	|	PIMv1::Codes::RP-Reachability;
+5	|	PIMv1::Codes::Assert;
+6	|	PIMv1::Codes::Graft;
+7	|	PIMv1::Codes::Graft-Ack;
+
+
+
+
+
+
+
+

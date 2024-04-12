@@ -1,0 +1,203 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)\r\n"
+    "LANGUAGE 9, 1\r\n"
+    "#pragma code_page(1252)\r\n"
+    "#include ""res\\WizardInstaller.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""afxres.rc""         // Standard components\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\WizardInstaller.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_WIZARDINSTALLER_DIALOG DIALOGEX 0, 0, 345, 185
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Install Capture Engine Plugin Wizard"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Next",IDOK,288,162,50,16
+    PUSHBUTTON      "Cancel",IDCANCEL,232,162,50,16
+    CTEXT           "Version 11.1\nCopyright © 2009-2017\nSavvius, Inc.\nAll rights reserved",IDC_STATIC,20,130,80,35
+    LTEXT           "Install the Savvius Capture Engine Plug-in Wizard for Microsoft Visual Studio 2015 and 2017.",IDC_INSTALL_LBL,124,7,212,18
+    LTEXT           "This Wizard generates Analysis Modules (plug-ins) for Savvius Capture Engines. The documentation for the Analysis Module SDK is available on MyPeek.",IDC_STATUS_LBL,124,36,212,54
+    PUSHBUTTON      "Uninstall",IDC_UNINSTALL,176,162,50,16,NOT WS_VISIBLE
+    CONTROL         "Visual Studio 2015",IDC_VS_2015,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,124,104,212,8
+    LTEXT           "Path to Visual Studio 2015",IDC_VS_2015_LBL,137,116,198,8,NOT WS_VISIBLE
+    CONTROL         "Visual Studio 2017",IDC_VS_2017,"Button",BS_AUTOCHECKBOX | NOT WS_VISIBLE | WS_TABSTOP,124,131,212,8
+    LTEXT           "Path to Visual Studio 2017",IDC_VS_2017_LBL,137,142,198,8,NOT WS_VISIBLE
+	CONTROL         IDS_CANCEL,IDC_STATIC,"Static",SS_BITMAP,7,7,107,105
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 11,1,0,0
+ PRODUCTVERSION 11,1,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904e4"
+        BEGIN
+            VALUE "CompanyName", "Savvius, Inc."
+            VALUE "FileDescription", "Installer for Capture Engine Plugin Wizard v11.1"
+            VALUE "FileVersion", "11.1.0.0"
+            VALUE "InternalName", "WizardInstaller.exe"
+            VALUE "LegalCopyright", "Copyright (c) 2006-2017 Savvius, Inc.  All rights reserved."
+            VALUE "OriginalFilename", "WizardInstaller.exe"
+            VALUE "ProductName", "Capture Engine Plugin Wizard v11.0"
+            VALUE "ProductVersion", "11.1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1252
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_WIZARDINSTALLER_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 338
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 178
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_WP                  BITMAP                  "res\\wpbanner.bmp"
+IDB_SAVVIUS             BITMAP                  "res\\savviuslogo.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_TITLE               "Savvius Capture Engine Plugin Installer"
+    IDS_INSTALL             "Click Install to install the Wizard to the selected locations."
+    IDS_UNINSTALL           "Click Uninstall to remove the Wizard from the selected locations."
+    IDS_CANCEL              "Click Cancel to abort the install."
+    IDS_NO_VS               "Microsoft Visual Studio was not found."
+    IDS_INSTALL_OK          "The Plugin Wizard has been successfully installed."
+    IDS_INSTALL_FAIL        "The Plugin Wizard was not successfully installed.\nSource files were not found."
+    IDS_UNINSTALL_OK        "The Plugin Wizard has been successfully uninstalled."
+    IDS_UNINSTALL_FAIL      "The Plugin Wizard was not successfully uninstalled."
+    IDS_LBL_INSTALL         "Install"
+    IDS_LBL_FINISH          "Finish"
+    IDS_MISSING             "Failed to copy the file: %1\nError code: 0x%2\n\nPress OK to continue.\n\nPress Cancel to abort."
+END
+
+#endif    // English (United States) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE 9, 1
+#pragma code_page(1252)
+#include "res\WizardInstaller.rc2"  // non-Microsoft Visual C++ edited resources
+#include "afxres.rc"         // Standard components
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

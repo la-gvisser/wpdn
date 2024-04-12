@@ -1,0 +1,188 @@
+
+
+
+
+
+
+
+void G.729.1;
+	LABL 0 0 0 b1 RTP - Real-time Transport Protocol\RTP:;
+	DBIT 2 4 90 c2 Version:;
+	if( g[4] == 2 ) {
+		LABL 0 0 0 4 " (RFC 1889)";
+	}
+	DBIT 1 0 90 c2 Pad:;
+	DBIT 1 5 90 c2 Extension:;
+	DBIT 4 3 90 c2 CSRC Count:;
+	DBIT 1 0 90 c2 Marker:;
+	DBIT 7 4 90 c2 Payload Type:;
+	//override Payload Type
+	LABL 0 0 0 14 G.729.1 Payload;
+	g[4] = 103;
+	DWRD  0  0 90 c2 Sequence:;
+	DLNG  0  0 90 c2 Time Stamp:;
+	LABL 0 0 0 c2 Sync Src ID:;
+	RTP::PrintSSRCInHexandDec;
+	TGTE  0 10  0  0 RETURN;
+	TEQU  1  5  0  0 RTP Ext Hdr;
+	TLTE  1  3  0  0 RTP CSRC ID;
+	TGTE  0 10  0  0 NFS::The_End;
+	G729_1;
+	Dump Data;
+
+
+void G729_1()
+{
+    LABL    0   0   0   b1  G.729.1 Payload;
+    MOVE    10  84  0   0   ;
+    MOVE    10  85  0   0   ;
+	MOVE    10  86  0   0   ;
+	MULG	8	4;
+	MULG	32	4;	
+	BBIT( 4, l[23], 0x5, 0xc9, "MBS" );
+		CST#( 0, l[23], 0, 0x14, G.729.1::MBS );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	LABL 0 0 0 b8;
+	BBIT( 4, l[24], 0x5, 0xc9, "FT" );
+		CST#( 0, l[24], 0, 0x14, G.729.1::FT );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	LABL 0 0 0 b8;
+		TSB#( 0, l[24], 0, 0, G.729.1::FL );
+	LABL 0 0 0 b8;
+
+	TNXT    -Dump Data;
+}
+
+str# G.729.1::MBS;
+0	|	8 kbps;
+1	|	12 kbps;
+2   |	14 kbps;
+3   |	16 kbps;
+4   |	18 kbps;
+5   |	20 kbps;
+6   |	22 kbps;
+7   |	24 kbps;
+8   |	26 kbps;
+9	|	28 kbps;
+10	|	30 kbps;
+11	|	32 kbps;
+//12-14 |  (reserved);
+15	|	NO_MBS;
+
+str# G.729.1::FT;   *frametype
+0   |    20 octets;
+1   |    30 octets;
+2   |    35 octets;
+3   |    40 octets;
+4   |    45 octets;
+5   |    50 octets;
+6   |    55 octets;
+7   |    60 octets;
+8   |    65 octets;
+9   |    70 octets;
+10  |    75 octets;
+11  |    80 octets;
+// 12-14 |   (reserved)
+15  |    NO_DATA 0 octects;
+
+str# G.729.1::FL;   *framelength
+0   |    G7291FL::20;
+1   |    G7291FL::30;
+2   |    G7291FL::35;
+3   |    G7291FL::40;
+4   |    G7291FL::45;
+5   |    G7291FL::50;
+6   |    G7291FL::55;
+7   |    G7291FL::60;
+8   |    G7291FL::65;
+9   |    G7291FL::70;
+10  |    G7291FL::75;
+11  |    G7291FL::80;
+// 12-14 |   (reserved)
+15  |    G7291FL::0;
+
+void G7291FL::FrameData()
+{
+	while (g[16] != 0)
+	{
+		HEX#( 0, g[20], 0x90, 0xc2, "Frame Data:" );
+	}
+}
+
+void G7291FL::20()
+{
+	g[20] = 20;
+	G7291FL::FrameData;
+}
+
+void G7291FL::30()
+{
+	g[20] = 30;
+	G7291FL::FrameData;
+}
+
+void G7291FL::35()
+{
+	g[20] = 35;
+	G7291FL::FrameData;
+}
+void G7291FL::40()
+{
+	g[20] = 40;
+	while (g[16] != 0)
+	G7291FL::FrameData;
+}
+void G7291FL::45()
+{
+	g[20] = 45;
+	G7291FL::FrameData;
+}
+void G7291FL::50()
+{
+	g[20] = 50;
+	G7291FL::FrameData;
+}
+void G7291FL::55()
+{
+	g[20] = 55;
+	G7291FL::FrameData;
+}
+void G7291FL::60()
+{
+	g[20] = 60;
+	G7291FL::FrameData;
+}
+void G7291FL::65()
+{
+	g[20] = 65;
+	G7291FL::FrameData;
+}
+void G7291FL::70()
+{
+	g[20] = 70;
+	G7291FL::FrameData;
+}
+
+void G7291FL::75()
+{
+	g[20] = 75;
+	G7291FL::FrameData;
+}
+
+void G7291FL::80()
+{
+	g[20] = 80;
+	G7291FL::FrameData;
+}
+
+void G7291FL::0()
+{
+	g[20] = 0;
+	while (g[16] != 0)
+	{
+		while (g[20] != 0)
+		{
+			LABL( 0, g[20], 0x90, 0xc2, "NO Frame Data" );
+		}
+	}
+}

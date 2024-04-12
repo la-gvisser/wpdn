@@ -1,0 +1,310 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{a72ab16c-f618-48ba-9b1b-5f44b9bb6f86}</UniqueIdentifier>
+      <Extensions>c;cpp;def;idl</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{5f278e36-20eb-4df6-9a33-32d258f6f26e}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Shared">
+      <UniqueIdentifier>{be318ca1-7aec-4d94-88a0-4938d36e408a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin">
+      <UniqueIdentifier>{0130437f-29de-4054-803f-2da12b8089f1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resouces">
+      <UniqueIdentifier>{4f2b7ab1-7028-4397-8317-419b38ed7df4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Options">
+      <UniqueIdentifier>{9e9d6530-5d8f-4a76-a7a6-42f7e42cfa3d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Peek">
+      <UniqueIdentifier>{8fbb7cb2-fda3-4317-a0dc-5a72b0d1a349}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IpAddress.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Options.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PacketList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ParentStatic.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\ArrayEx.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\ByteStream.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\Environment.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\FileUtil.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\MediaSpec.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\MediaSpecUtil.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\Parser.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\Utils.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XLog.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XMLBuilder.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XMLDoc.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XMLParser.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XMLParserFactory.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XMutex.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XObject.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="Shared\XString.cpp">
+      <Filter>Shared</Filter>
+    </ClCompile>
+    <ClCompile Include="CMIFilter.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="CMIFilterAbout.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="CMIFilterContext.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="CMIFilterPlugin.cpp">
+      <Filter>Plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsDlg.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsStatus.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Broadcaster.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="Listener.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="PeekApp.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="PeekContext.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="PeekPlugin.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginDebug.cpp">
+      <Filter>Peek</Filter>
+    </ClCompile>
+    <ClCompile Include="IpFilterDlg.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IpAddress.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Options.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketList.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ParentStatic.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BLMessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LockedPtr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\AGTypes.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\ArrayEx.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\ByteStream.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Comparator.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\CT2UTF8.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Environment.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\FileUtil.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\MediaSpec.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\MediaSpecUtil.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\MediaTypes.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\MemUtil.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\PacketHeaders.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Parser.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\PeekFile.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\PeekPacket.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\TimeConv.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\Utils.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XLog.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XMLBuilder.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XMLDoc.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XMLParser.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XMLParserFactory.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XMutex.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XObject.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XString.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="Shared\XTypes.h">
+      <Filter>Shared</Filter>
+    </ClInclude>
+    <ClInclude Include="CMIFilter.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="CMIFilterAbout.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="CMIFilterContext.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="CMIFilterPlugin.h">
+      <Filter>Plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resouces</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsDlg.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsStatus.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Broadcaster.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="Listener.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketHeaders.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PeekApp.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PeekContext.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="Peekplug.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PeekPlugin.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PeekPSIDs.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginDebug.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="wppoppack.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="wppushpack.h">
+      <Filter>Peek</Filter>
+    </ClInclude>
+    <ClInclude Include="IpFilterDlg.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="WPTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="CMIFilter.rc">
+      <Filter>Resouces</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="wplogo.bmp">
+      <Filter>Resouces</Filter>
+    </None>
+    <None Include="History.txt" />
+  </ItemGroup>
+</Project>

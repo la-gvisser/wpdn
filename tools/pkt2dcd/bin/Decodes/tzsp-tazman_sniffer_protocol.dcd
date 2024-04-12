@@ -1,0 +1,308 @@
+// TZSP - Tazman Sniifer Protocol
+
+//-----------------------------
+// if false set g[9] to 2
+
+void TZSP::Test()
+{
+	// test the version (must be 1)
+	l[1] = pb[0];
+	if ( l[1] != 1 )
+	{
+		g[9] = 2;
+		TRTS;
+	}
+	
+	// test type (must be 0-5)
+	l[1] = pb[1];
+	if( l[1] > 5 )
+	{
+		g[9] = 2;
+		TRTS;
+	}
+	
+	TZSP();
+}
+
+void TZSP()
+{
+	TZSP::Main();
+}
+
+//-----------------------------
+
+void TZSP::Main()
+{
+	LABL( 0,0,0, 0xb1, "TZSP - Tazman Sniffer Protocol\TZSP:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Version:");
+	DBIT( 4, l[3], 0x90, 0xc9, "Flags:");
+	 LABL( 0, 0, 0, 0xd4 "x... Reserved");
+	 LABL( 0, 0, 0, 0xd4 ".x.. Reserved");
+	 CBIT( 1, l[3], 0, 0xd4 "..1. Does Not Contain Packet Data Section");
+	 CLSE( 0, 0, 0, 0xd4 "..0. Contains Packet Data Section");
+	 CBIT( 0, l[3], 0, 0xd4 "...1 No Tagged Fields Section");
+	 CLSE( 0, 0, 0, 0xd4 "...0 Tagged Fields Section Exists");
+	 LABL( 0, 0, 0, 0xc8);
+	DBIT( 4, l[4], 0x90, 0xc2, "Frame Type:");
+	CST#( 0, l[4], 0, 0x14, TZSP::FrameType_List);
+	SKIP 1;
+	 LABL 0 0 0 14 Reserved;
+	DWRD( 4, l[5], 0x90, 0xc2, "Encapsulation:");
+	CST#( 0, l[5], 0, 0x14, TZSP::Encapsulation_List);
+
+	if (l[5] == 0)			// si: unknown encapsulation type
+	{
+	 TRTS;
+	}
+
+	l[1] = l[3];
+	l[1] &= 0x1;
+	if (l[1] == 0)
+	{
+		TZSP::TagLoop();
+	}
+	
+	TST#( 0, l[5], 0, 0, TZSP::Data_Str );
+}
+
+//-----------------------------
+
+#define TZSP_HDR_PAD				0
+#define TZSP_HDR_END				1
+#define WLAN_RADIO_HDR_SIGNAL		10
+#define WLAN_RADIO_HDR_NOISE		11
+#define WLAN_RADIO_HDR_RATE			12
+#define WLAN_RADIO_HDR_TIMESTAMP	13
+#define WLAN_RADIO_HDR_MSG_TYPE		14
+#define WLAN_RADIO_HDR_CF			15
+#define WLAN_RADIO_HDR_UN_DECR		16
+#define WLAN_RADIO_HDR_FCS_ERR		17
+#define WLAN_RADIO_HDR_CHANNEL		18
+
+#define kLayerBegin					0xb7
+#define kLayerEnd					0xb8
+
+void TZSP::TagLoop()
+{
+	LABL(0,0,0,kLayerBegin,"Tags");
+	
+	l[1] = pb[0];
+	l[2] = 0;	// Flag to indicate we had at least one tag.
+	while (l[1] != TZSP_HDR_END)
+	{
+		l[1] = pb[0];
+		g[1] = l[1];
+		g[2] = 0;
+		TZSP::Tag();
+		
+		l[2] = 1;	// We had at least one tag.
+		
+		l[1] = pb[0];
+		if (l[1] == TZSP_HDR_END)
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "End Of Tags:" );
+			g[2] = 0;
+		}
+		if (l[1] == TZSP_HDR_PAD)
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+			g[2] = 0;
+		}
+		if (g[2] == 1)
+		{
+			LABL( 0, 0, 0, 0xd4, "Unknown Tag Types");
+			LABL( 0, 0, 0, kLayerEnd);
+			TRTS;
+		}
+	}
+	
+	if( l[2] == 0 ) 
+	{
+		// Had no tage, need to skip one byte.
+		if (l[1] == TZSP_HDR_END)
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "End Of Tags:" );
+			g[2] = 0;
+		}
+		if (l[1] == TZSP_HDR_PAD)
+		{
+			DBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+			g[2] = 0;
+		}
+		if (g[2] == 1)
+		{
+			LABL( 0, 0, 0, 0xd4, "Unknown Tag Types");
+			LABL( 0, 0, 0, kLayerEnd);
+			TRTS;
+		}		
+	}
+	
+	LABL(0,0,0,kLayerEnd);
+}
+
+//-----------------------------
+
+void TZSP::Tag()
+{
+	// get the tag type field from g[1]
+	// incr over the tag type field
+	
+	l[1] = g[1];
+	INCR(1);
+
+	// get the length of the tag field value
+	
+	l[2] = pb[0]; 
+	INCR(1);
+
+	//CST#( 0, l[1], 0x90, 0xc2, TZSP::Tag_Str );
+	
+	//  si: this is 10
+	if (l[1] == WLAN_RADIO_HDR_SIGNAL)
+	{
+		DBYT( 0, l[3], 0x90, 0xc2, "Signal:" );
+		TRTS;
+	}
+	//  si: this is 11
+	if (l[1] == WLAN_RADIO_HDR_NOISE)
+	{
+		DBYT( 0, l[3], 0x90, 0xc2, "Noise:" );
+		TRTS;
+	}
+	//  si: this is 12
+	if (l[1] == WLAN_RADIO_HDR_RATE)
+	{
+		l[4] = pb[0];
+		INCR(1);
+		LABL( 0, 0, 0x90, 0xc2, "Rate:");
+		CST#( 0, l[4], 0x00, 0x50, TZSP::Tag::Rate);
+		LABL( 0, 0, 0, 0x14, "Mbps");
+		TRTS;
+	}
+	//  si: this is 13
+	if (l[1] == WLAN_RADIO_HDR_TIMESTAMP)
+	{
+		DLNG( 0, l[5], 0x90, 0xc2, "Timestamp:" );
+		LABL( 0, 0, 0, 0x14, "Microseconds");
+		TRTS;
+	}
+	//  si: this is 14
+	if (l[1] == WLAN_RADIO_HDR_MSG_TYPE)
+	{
+		DBYT( 0, l[6], 0x90, 0xc2, "Encapsulation Type:" );
+		 CEQU( 0, l[6], 0, 0x14, "Normal");
+		 CEQU( 1, l[6], 0, 0x14, "RFC1042");
+		 CEQU( 2, l[6], 0, 0x14, "Bridge-tunnel encoded");
+		 CEQU( 4, l[6], 0, 0x14, "802.11 Management France");
+		TRTS;
+	}
+	//  si: this is 15
+	if (l[1] == WLAN_RADIO_HDR_CF)
+	{
+		DBYT( 0, l[7], 0x90, 0xc2, "Contention Free:" );
+		TRTS;
+	}
+	//  si: this is 16
+	if (l[1] == WLAN_RADIO_HDR_UN_DECR)
+	{
+		DBYT( 0, l[8], 0x90, 0xc2, "No WEP decryption:" );
+		TRTS;
+	}
+	//  si: this is 17
+	if (l[1] == WLAN_RADIO_HDR_FCS_ERR)
+	{
+		DBYT( 0, l[9], 0x90, 0xc2, "FCS Errors:" );
+		 CEQU( 0, l[9], 0, 0x14, "No Errors");
+		 CEQU( 1, l[9], 0, 0x14, "Contains Errors - Invalid Packet");
+		TRTS;
+	}
+	//  si: this is 18
+	if (l[1] == WLAN_RADIO_HDR_CHANNEL)
+	{
+		DBYT( 0, l[10], 0x90, 0xc2, "Channel:" );
+		TRTS;
+	}
+	
+	// si: deal with unknown tags here
+	if (l[2] > 0)
+	{
+		DUMP 0 42 90 c2 Unknown Tag Data:;
+	}
+	TRTS;
+	
+	g[2] = 1;
+}
+		
+//-----------------------------
+
+str# TZSP::Tag_Str;
+	TZSP_HDR_PAD				|	"Padding:";
+	TZSP_HDR_END				|	"End Of Tags:";
+	WLAN_RADIO_HDR_SIGNAL		|	"Signal:";
+	WLAN_RADIO_HDR_NOISE		|	"Noise:";
+	WLAN_RADIO_HDR_RATE			|	"Rate:";
+	WLAN_RADIO_HDR_TIMESTAMP	|	"Timestamp:";
+	WLAN_RADIO_HDR_MSG_TYPE		|	"Msg Type";
+	WLAN_RADIO_HDR_CF			|	"Contention Free:";
+	WLAN_RADIO_HDR_UN_DECR		|	"Encrypted But Not Decrypted:";
+	WLAN_RADIO_HDR_FCS_ERR		|	"Contains FCS Errors";
+	WLAN_RADIO_HDR_CHANNEL		|	"Channel";
+
+//-----------------------------
+str# TZSP::Tag::Rate;
+	0	|	NULL;
+	2	|	1;
+	4	|	2;
+	10	|	1;
+	11	|	5.5;
+	12	|	6;
+	18	|	9;
+	20	|	2;
+	22	|	11;
+	24	|	12;
+	36	|	18;
+	48	|	24;
+	55	|	5.5;
+	72	|	36;
+	96	|	48;
+	108	|	54;
+	110	|	11;
+
+//-----------------------------
+str# TZSP::FrameType_List;
+	0 | Information pkt;
+	1 | Pkt which sensor should transmit;
+	3 | Config info to modify behaviour of sensor;
+	4 | Null frame;
+
+//-----------------------------
+str# TZSP::Encapsulation_List;
+	 0 | Unknown;
+	 1 | Ethernet;
+	 2 | Token Ring;
+	 3 | SLIP;
+	 4 | PPP;
+	 5 | FDDI;
+	 7 | Raw UO;
+	18 | 802.11;
+
+//-----------------------------
+
+str# TZSP::Data_Str;
+	1	|	Ether::Branching;
+	2	|	Token::Main;
+	3	|	L2F_SLIP;
+	4	|	PPP;
+	5	|	FDDI;
+	7	|	RAW_UO;
+	18	|	802_11::Main2;	
+
+
+//si: empty functions cuz they aren't implemented yet!
+void L2F_SLIP;
+	TRTS;
+void FDDI;
+	TRTS;
+void RAW_UO;
+	TRTS;
+

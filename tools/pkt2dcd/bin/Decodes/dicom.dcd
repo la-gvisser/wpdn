@@ -1,0 +1,1004 @@
+//DICOM - Digital Imaging and Communications in Medicine
+//coded along http://dicom.nema.org/medical/dicom/current/output/pdf/part08.pdf
+//July 2016
+//
+
+
+str# UDP::Ports_Str;
+104		|	DICOM::CHECK;					//Well known Port for DICOM
+2761	|	DICOM::CHECK;					//Well known Port for DICOM using Integrated Secure Communication Layer (ISCL) over TCP or UDP
+2762	|	DICOM::CHECK;					//Well known Port for DICOM using Transport Layer Security (TLS) over TCP or UDP
+2870	|	DICOM::CHECK;
+11112	|	DICOM::CHECK;					//Well known Port for DICOM open communication over TCP or UDP
+
+str# TCP::Ports_Str;
+104		|	DICOM::CHECK;					//Well known Port for DICOM
+2870	|	DICOM::CHECK;
+2761	|	DICOM::CHECK;					//Well known Port for DICOM using Integrated Secure Communication Layer (ISCL) over TCP or UDP
+2762	|	DICOM::CHECK;					//Well known Port for DICOM using Transport Layer Security (TLS) over TCP or UDP
+4444	|	DICOM::RESERVED::CHECK;
+11112	|	DICOM::CHECK;					//Well known Port for DICOM open communication over TCP or UDP
+
+void DICOM::ISCL::CHECK()
+{
+	//to be added with integration of Keys
+}
+
+void DICOM::TLS::CHECK()
+{
+	//to be added with integration of the Handling of TLS
+}
+
+void DICOM FINDER()
+{
+	DICOM::RESERVED::CHECK;
+}
+
+void DICOM::RESERVED::CHECK()
+{
+	GBYT( 0, l[1] );			//Get hypothetical PDU Type
+	CST#( 0, l[1], 0, 0x5, DICOM::PDU::TYPES );
+	SKIP 80000001;
+	l[10] = 111;							//First Check:: Is this a valid DICOM PDU PACKET
+	GBYT( 1, l[2] );			//Get hypothetical Reserved Field
+	if (l[2] == 0x00)
+	{
+		l[10] = 11111;						//Second Check: DICOM PDU PACKET has a 0x00 at the second place
+		GWRD( 6, l[3] );			//Get hypothetical Protocol Version Field
+		if (l[3] == 0x00)
+		{
+			l[10] = 111111;					//Third Check: DICOM Protocol Version should be 0x00 
+		}
+		GWRD( 8, l[4] );			//Get hypothetical Reserved Field
+		if (l[4] == 0x0000)
+		{
+			l[10] = 1111111;				//Fourth Check: Reserved Field should be 0x0000
+		}
+	}	
+	if (l[10] == 1111111)
+	{
+		DICOM::WH;						//Header Information is present
+		l[1] = 1111111;					//run through was successful
+	}
+	//at this stage the packet could be a splitted packet a check should be added if we marked it once for DICOM
+}
+
+void DICOM::CHECK()
+{
+	GWRD( 0, l[1] );			//Get hypothetical PDU Type
+	//DGLB 0 41 90 c2 l1:;
+	CST#( 0, l[1], 0, 0x5, DICOM::PDU::TYPES );
+	SKIP 80000001;
+	l[1] = 111;
+	GBYT( 1, l[2] );			//Get hypothetical Reserved Field
+	//DGLB 0 42 90 c2 l2:;
+	if (l[2] == 0x00)
+	{	
+		l[1] = 1111;
+		GWRD( 2, l[3] );					//Get hypothetical Length
+		//DGLB 0 43 90 c2 l3:;
+		if (l[1] == 1111)
+		{
+			if (l[3] < g[16])
+			{
+				l[1] = 111111;
+			}
+		}
+	}	
+	//DGLB 0 41 90 c2 l1:;
+	if (l[1] == 111111)
+	{
+		DICOM::WH;						//Header Information is present
+		l[1] = 111111;					//run through was successful
+	}
+	if (l[1] != 111111)
+	{
+		if (g[16] > 4 )		
+		{
+			DICOM::WOH;					//Header Information is absent
+		}
+	}
+	TRTS;
+}
+//------------------------------------------------------------------------------------------------------
+void DICOM::WOH()
+{
+	LABL( 0, 0, 0, 0xb1, "DICOM - Continious Packet - HEADER is missing - Decodes searches for new Start" );
+	BREM( 0, l[30] );
+	while (l[1] != 111111)
+	{
+		GWRD( 0x40000000, l[1] );					//Get hypothetical PDU Type
+		//DGLB 0 41 90 c2 l1:;
+			CST#( 0, l[1], 0, 0x05, DICOM::ASSOCREQPDU::TYPES );
+		SKIP 80000001;
+		l[1] = 111;
+		if (l[1] == 111)
+		{
+			GBYT( 1, l[2] );						//Get hypothetical Reserved Field
+			//DGLB 0 42 90 c2 l2:;
+			if (l[2] == 0x00)
+			{	
+				GLNG( 2, l[3] );					//Get hypothetical Length
+				//DGLB 0 43 90 c2 l3:;
+				if (l[3] < g[16])
+				{
+					INCR( 0, l[3] );				//Increase hypothetical Length
+					GWRD( 0x40000000, l[11] );		//get hypothetical next ASSOCREQTYPE
+					GBYT( 1, l[4] );				//get hypothetical next 00 Combi
+						CST#( 0, l[11], 0, 0x05, DICOM::ASSOCREQPDU::TYPES );
+					SKIP 80000001;
+					l[1] = 11;						//this is this # 2: positive
+					if (l[1] == 11)
+					{
+						if (l[4] == 0)			//if followed sequence is 00
+						{
+							l[1] = 111; 		//this is this # 3: positive							
+						}
+					}
+				}	
+			}
+		}
+		
+		//DGLB 0 41 90 c2 l1:;
+		if (l[1] == 111)
+		{
+			//if (l[2] == 0)
+			//{
+			
+				BREM( 0, l[40] );
+				l[1] = 111111;					//this is this # 4: positive
+			//}
+		}
+		INCR 1;
+		if (l[1] == 111111)
+		{
+			DECR 1;
+			l[30] -= l[40];
+			DECR( 0, l[30] );
+			//DGLB( 0, l[30], 0x90, 0xc2, "l[30]:" );
+			//DGLB( 0, l[40], 0x90, 0xc2, "l[40]:" );
+			HEX#( 0, l[30], 0x90, 0xc2, "Undecoded Packet Content:" );
+			while (g[20] > 0)
+			{
+				GWRD( 0x40000000, l[1] );
+				GWRD( 0x40000002, g[24] );
+				if (g[24] > g[16])
+				{
+					CST#( 0, l[1], 0, 0xb7, DICOM::ASSOCREQPDU::TYPES );
+					CLSE( 0, l[1], 0, 0xb7, "Reserved" );
+						DWRD( 0x40000000, 0, 0x90, 0xc2, "Type:" );
+							CST#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES );
+							CLSE( 0, l[1], 0, 0x14, "Reserved" );
+						TSB#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES::LDR );
+						SKIP 2;
+							DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+							CHR#( 0, l[21], 0x90, 0xc2, "Content:" );
+					LABL( 0, 0, 0, 0xb8 );
+				}
+				/*if (g[24] < g[16])
+				{
+					DGLB( 0, g[24], 0x90, 0xc2, "g24:" );
+					DGLB( 0, g[16], 0x90, 0xc2, "g16:" );
+					DUMP( 0, g[16], 0x90, 0xc2, "Content:" );
+					
+				}*/
+			}
+		}
+	}
+	if (l[1] != 111111)
+	{
+		LABL( 0, 0, 0, 0xb1, "Decoder - Error - DUMP" );
+		TRTS;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void DICOM::WH()
+{
+	//LABL( 0, 0, 0, 0x14, "DICOM" );
+	LABL( 0, 0, 0, 0xb1, "DICOM - Digital Imaging and Communications in Medicine - " );
+	GBYT( 0, l[1] );
+		CST#( 0, l[1], 0, 0x07, DICOM::PDU::TYPES );
+		CLSE( 0, l[1], 0, 0x07, "Reserved" );
+		
+	//---------------------------------------------------
+	DBYT( 0, l[1], 0x90, 0xc2, "PDU Type:" );
+		CST#( 0, l[1], 0, 0x14, DICOM::PDU::TYPES );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Reserved:" );							//should be 0 allways
+	DLNG( 0, l[2], 0x90, 0xc2, "PDU Length:" );
+	g[20] = l[2];
+	
+	if (l[1] != 4)
+	{
+		DWRD( 0, l[4], 0x90, 0xc2, "Protocol Version:" );			//Version 1 is coded with a 0 here
+		DWRD( 0x40000000, l[5], 0x90, 0xc2, "Unknown:" );					//should be 0 allways
+	}
+	if (l[1] == 4)
+	{
+		//DBYT( 0x40000000, l[5], 0x90, 0xc2, "Unknown:" );					//should be 0 allways
+	}
+	//---------------------------------------------------
+	
+	//g[20] -= 4;
+	TSB#( 0, l[1], 0, 0, DICOM::PDU::Ldr );
+	
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//------------------------------------------------------------------------------------------------------
+
+void DICOM::PDU::ASSOC_Request()
+{
+	CHR#( 16, 0, 0x90, 0xc2, "Called AE TITLE:" );
+	CHR#( 16, 0, 0x90, 0xc2, "Calling AE TITLE:" );
+	HEX#( 32, 0, 0x90, 0xc2, "Unknown:" );
+	g[20] -= 64;
+	while (g[20] > 0)
+	{
+		GWRD( 0x40000000, l[1] );
+		CST#( 0, l[1], 0, 0xb7, DICOM::ASSOCREQPDU::TYPES );
+		CLSE( 0, l[1], 0, 0xb7, "Reserved" );
+			DWRD( 0x40000000, 0, 0x90, 0xc2, "Type:" );
+				CST#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES );
+				CLSE( 0, l[1], 0, 0x14, "Reserved" );
+			TSB#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES::LDR );
+			SKIP 2;
+				DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+				DUMP( 0, l[21], 0x90, 0xc2, "Content:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+void DICOM::PDU::ASSOC_Accept()
+{
+	DICOM::PDU::ASSOC_Request;
+}
+
+void DICOM::PDU::ASSOC_Reject()
+{
+	DBYT( 0, l[23], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[22], 0x90, 0xc2, "Result:" );
+		CEQU( 1, l[22], 0, 0x14, "rejected-permanent" );
+		CEQU( 2, l[22], 0, 0x14, "rejected-transient" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[23], 0x90, 0xc2, "Source:" );
+		CEQU( 1, l[23], 0, 0x14, "DICOM UL service-user" );
+		CEQU( 2, l[23], 0, 0x14, "DICOM UL  UL service-provider (ACSE related function)" );
+		CEQU( 3, l[23], 0, 0x14, "DICOM UL service-provider (Presentation related function)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[24], 0x90, 0xc2, "Result/Reason:" );
+		if (l[23] == 1)
+		{
+			CEQU( 1, l[24], 0, 0x14, "no-reason-given" );
+			CEQU( 2, l[24], 0, 0x14, "application-context-name-not-supported" );
+			CEQU( 3, l[24], 0, 0x14, "calling-AE-title-not-recognized" );
+			CEQU( 4, l[24], 0, 0x14, "Reserved" );
+			CEQU( 5, l[24], 0, 0x14, "Reserved" );
+			CEQU( 6, l[24], 0, 0x14, "Reserved" );
+			CEQU( 6, l[24], 0, 0x14, "called-AE-title-not-recognized" );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		}
+		if (l[23] == 2)
+		{
+			CEQU( 1, l[24], 0, 0x14, "no-reason-given" );
+			CEQU( 2, l[24], 0, 0x14, "protocol-version-not-supported" );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		}
+		if (l[23] == 3)
+		{
+			CEQU( 1, l[24], 0, 0x14, "reserved" );
+			CEQU( 1, l[24], 0, 0x14, "temporary-congestion" );
+			CEQU( 2, l[24], 0, 0x14, "local-limit-exceeded" );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		}
+}
+
+void DICOM::PDU::Data()
+{
+	LABL( 0, 0, 0, 0xb7, "PDV:" );
+	
+	DLNG( 0, l[1], 0x90, 0xc2, "Length:" );
+		DBYT( 0, 0, 0x90, 0xc2, "Context:" );
+		BBYT( 0, 0, 0x90, 0xc2, "Flags:" );
+		l[1] -= 2;
+		while ( l[1] != 0)
+		{
+			LABL( 0, 0, 0, 0xb7, "Subelement: " );
+			GWRD( 0x40000000, l[10] );
+			GWRD( 0x40000002, l[11] );
+				SHFL( 16, l[10] );
+			l[10] +=  l[11];
+			
+		CST#( 0, l[10], 0, 0x07, DICOM::LIB::CCCODES );
+		CLSE( 0, 0, 0, 0x07, "Reserved" );
+			HWRD( 0x40000000, l[10], 0x90, 0xc2, "Group Number:" );
+			HWRD( 0x40000000, l[11], 0x90, 0xc2, "Element Number:" );
+			SHFL( 16, l[10] );
+			l[10] += l[11];
+			HGLB( 0, l[10], 0x90, 0xc2, "Codenumber:" );
+			CST#( 0, l[10], 0, 0x14, DICOM::LIB::CCCODES );
+			CLSE( 0, l[10], 0, 0x14, "Unknown" );
+			DBYT( 0x40000000, l[12], 0x90, 0xc2, "Length:" );
+			DUMP( 0, 3, 0x90, 0xc2, "Padding:" );
+			if (l[12] != 0)
+			{
+				HEX#( 0, l[12], 0x90, 0xc2, "Content:" );
+			}			
+			l[12] += 8;
+			l[1] -= l[12];
+			LABL( 0, 0, 0, 0xb8 );
+		}
+		g[20] -= l[1];
+		LABL( 0, 0, 0, 0xb8 );
+		if (g[16] > 4)
+		{
+			DICOM::WH;
+		}
+		LABL( 0, 0, 0, 0xb8 );
+}
+
+void DICOM::PDU::RELEASE_Request()
+{
+	if (g[20] > 0)
+	{
+		DUMP( 0, g[20], 0x90, 0xc2, "Reserved:" );
+	}
+}
+
+void DICOM::PDU::RELEASE_Response()
+{
+	DICOM::PDU::RELEASE_Request;
+}
+
+void DICOM::PDU::ABORT()
+{
+	DBYT( 0, l[22], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[22], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[23], 0x90, 0xc2, "Source:" );
+		CEQU( 1, l[23], 0, 0x14, "DICOM UL service-user (initiated abort)" );
+		CEQU( 2, l[23], 0, 0x14, "reserved" );
+		CEQU( 3, l[23], 0, 0x14, "DICOM UL service-provider r (initiated abort)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[24], 0x90, 0xc2, "Reason/Diag:" );
+	if (l[23] == 2)
+	{
+		CEQU( 0, l[24], 0, 0x14, " reason-not-specified" );			
+		CEQU( 1, l[24], 0, 0x14, "unrecognized-PDU" );
+		CEQU( 2, l[24], 0, 0x14, "unexpected-PDU" );
+		CEQU( 3, l[24], 0, 0x14, "reserved" );
+		CEQU( 4, l[24], 0, 0x14, "unrecognized-PDU parameter" );
+		CEQU( 5, l[24], 0, 0x14, "unexpected-PDU parameter" );
+		CEQU( 6, l[24], 0, 0x14, "invalid-PDU-parameter value" );
+		CEQU( 6, l[24], 0, 0x14, "called-AE-title-not-recognized" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	}
+}
+//------------------------------------------------------------------------------------------------------
+void DICOM::ASSOCREQPDU::TYPES::Application_Context()
+{
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	if (g[16] > l[21])
+	{	
+		l[40] = 0;
+		l[30] = l[21];
+		l[33] = 0;
+		l[34] = 0;
+		while (l[30] != 0)
+		{
+			//DGLB( 0, l[30], 0x90, 0xc2, " durchlauf ");
+			GBYT( 0, l[31]);
+			//HGLB( 0, l[31], 0x90, 0xc2, "l31:" );
+			if (l[31] != 0x2e)
+			{
+				l[31] &= 0x0f;
+				//SHFL( 4, l[32] );
+				if (l[34] == 0)
+				{
+					//erster durchlauf
+					l[32] += l[31];
+					//SHFL( 4, l[32] );
+				}
+				if (l[34] == 1)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 2)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 3)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 4)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 5)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 6)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 7)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 8)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 9)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				l[34] += 1;
+			}
+			if (l[31] == 0x2e)
+			{
+				l[33] += l[32];
+				l[32] = 0;
+				l[34] = 0;
+			}
+			if (l[30] == 1)
+			{
+				l[33] += l[32];
+			}
+			INCR 1;
+			
+			l[30] -= 1;
+			
+		}
+		DECR( 0, l[21]);
+		//HGLB( 0, l[33], 0x90, 0xc2, "UID Counter400x2eend:" );
+		
+		
+		
+		CHR#( 0, l[21], 0x90, 0xc2, "Application-context-name:" );
+		CST#( 0, l[33], 0, 0x14, DICOM::LIB::Unique_Identifiers_Normative );
+		l[21] = g[16];
+	}
+	if (g[16] < l[21])
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Application-context-dump:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Presentation_Context()
+{
+	
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	DBYT( 0, l[22], 0x90, 0xc2, "Presentation-context-ID:" );
+	DBYT( 0, l[23], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[24], 0x90, 0xc2, "Result/Reason:" );
+	DBYT( 0, l[25], 0x90, 0xc2, "Reserved:" );
+	l[21] -= 4;
+	g[40] = l[21];
+	LABL( 0, 0, 0x90, 0xb7, "Presentation Context" );
+	if (g[16] > 0)
+	{
+		while (g[40] > 0)
+		{
+			GWRD( 0x40000000, l[1] );
+			CST#( 0, l[1], 0, 0xb7, DICOM::ASSOCREQPDU::TYPES );
+			CLSE( 0, l[1], 0, 0xb7, "Reserved" );
+				DWRD( 0x40000000, 0, 0x90, 0xc2, "Type:" );
+					CST#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES );
+					CLSE( 0, l[1], 0, 0x14, "Reserved" );
+				GWRD( 0, g[41]);
+				TSB#( 0, l[1], 0, 0, DICOM::ASSOCREQPDU::TYPES::LDR );
+				
+				SKIP 2;
+					DWRD( 0, l[31], 0x90, 0xc2, "Length:" );
+					DUMP( 0, l[31], 0x90, 0xc2, "Content:" );
+			LABL( 0, 0, 0, 0xb8 );
+			g[41] += 4;
+			g[40] -= g[41];
+		}
+	}
+	//CHR#( 0, l[21], 0x90, 0xc2, "Presentation-context-name:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Presentation_Context_Repl()
+{
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	DBYT( 0, l[22], 0x90, 0xc2, "Presentation-context-ID:" );
+	DBYT( 0, l[23], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[24], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[25], 0x90, 0xc2, "Reserved:" );
+	HLNG( 0, l[25], 0x90, 0xc2, "Reserved:" );
+	l[21] -= 8;
+	if (g[16] > l[21])
+	{	
+		l[40] = 0;
+		l[30] = l[21];
+		l[33] = 0;
+		l[34] = 0;
+		while (l[30] != 0)
+		{
+			//DGLB( 0, l[30], 0x90, 0xc2, " durchlauf ");
+			GBYT( 0, l[31]);
+			//HGLB( 0, l[31], 0x90, 0xc2, "l31:" );
+			if (l[31] != 0x2e)
+			{
+				l[31] &= 0x0f;
+				//SHFL( 4, l[32] );
+				if (l[34] == 0)
+				{
+					//erster durchlauf
+					l[32] += l[31];
+					//SHFL( 4, l[32] );
+				}
+				if (l[34] == 1)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 2)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 3)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 4)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 5)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 6)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 7)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 8)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 9)
+				{
+					//nächster durchlauf
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				l[34] += 1;
+			}
+			if (l[31] == 0x2e)
+			{
+				l[33] += l[32];
+				l[32] = 0;
+				l[34] = 0;
+			}
+			if (l[30] == 1)
+			{
+				l[33] += l[32];
+			}
+			INCR 1;
+			
+			l[30] -= 1;
+			
+		}
+		DECR( 0, l[21]);
+		//HGLB( 0, l[33], 0x90, 0xc2, "UID Counter400x2eend:" );
+		
+		CHR#( 0, l[21], 0x90, 0xc2, "Presentation-context-name:" );
+		CST#( 0, l[33], 0, 0x14, DICOM::LIB::Unique_Identifiers_Normative );
+		l[21] = g[16];
+	}
+	if (g[16] < l[21])
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Presentation-context-dump:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Abstract_Syntax()
+{
+	//DBYT( 0, l[20], 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	l[10] = g[16];
+	l[10] -= 4;
+	if (l[10] > l[21])
+	{	
+		
+			
+		CHR#( 0, l[21], 0x90, 0xc2, "Abstract-Syntax-name:" );
+		//CST#( 0, l[33], 0, 0x14, DICOM::LIB::Unique_Identifiers_Normative );
+		l[21] = g[16];
+	}
+	if (l[10] < l[21])
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Abstract-Syntax-dump:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Transfer_Syntax()
+{
+	//DBYT( 0, l[20], 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	//DGLB( 0, g[16], 0x90, 0xc2, "Length:" );
+	l[10] = g[16];
+	l[10] -= 4;
+	if (l[10] > l[21])
+	{	
+		l[40] = 0;
+		l[30] = l[21];
+		l[33] = 0;
+		l[34] = 0;
+		while (l[30] != 0)
+		{
+			//DGLB( 0, l[30], 0x90, 0xc2, " durchlauf ");
+			GBYT( 0, l[31]);
+			//HGLB( 0, l[31], 0x90, 0xc2, "l31:" );
+			if (l[31] != 0x2e)
+			{
+				l[31] &= 0x0f;
+				//SHFL( 4, l[32] );
+				if (l[34] == 0)
+				{
+					//erster durchlauf
+					l[32] += l[31];
+					//SHFL( 4, l[32] );
+				}
+				if (l[34] == 1)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 2)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 3)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 4)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 5)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 6)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 7)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 8)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 9)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				l[34] += 1;
+			}
+			if (l[31] == 0x2e)
+			{
+				l[33] += l[32];
+				l[32] = 0;
+				l[34] = 0;
+			}
+			if (l[30] == 1)
+			{
+				l[33] += l[32];
+			}
+			INCR 1;
+			
+			l[30] -= 1;
+			
+		}
+		DECR( 0, l[21]);
+		
+		CHR#( 0, l[21], 0x90, 0xc2, "Transfer-syntax-name:" );
+		CST#( 0, l[33], 0, 0x14, DICOM::LIB::Unique_Identifiers_Normative );
+		l[21] = g[16];
+	}
+	if (l[10] < l[21])
+	{
+		LABL( 0, 0, 0, 0x14, "Left over Pkt Length is not right - Content get's dumped!" );
+		DUMP( 0, g[16], 0x90, 0xc2, "Transfer-syntax-dump:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::User_Info()
+{
+	//DBYT( 0, 0, 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[21], 0x90, 0xc2, "Length:" );
+	l[21] -= 4;
+	g[40] = l[21];
+		LABL( 0, 0, 0, 0xb7, "User Info" );
+	if (g[16] > 0)
+	{
+		while (g[40] > 0)
+		{
+			GWRD( 0x40000000, l[1] );
+			CST#( 0, l[1], 0, 0xb7, DICOM::ASSOCREQPDU::TYPES );
+			CLSE( 0, l[1], 0, 0xb7, "Reserved" );
+				DWRD( 0x40000000, l[1], 0x90, 0xc2, "Type:" );
+					CST#( 0, l[1], 0, 0x14, DICOM::ASSOCREQPDU::TYPES );
+					CLSE( 0, l[1], 0, 0x14, "Reserved" );
+				GWRD( 0, g[41]);
+				TSB#( 0, l[1], 0, 0, DICOM::ASSOCREQPDU::TYPES::LDR );
+				
+				SKIP 2;
+					DWRD( 0, l[31], 0x90, 0xc2, "Length:" );
+					DUMP( 0, l[31], 0x90, 0xc2, "Content:" );
+			LABL( 0, 0, 0, 0xb8 );
+			g[41] += 4;
+			g[40] -= g[41];
+		}
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Max_Length()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	if (l[1] == 1)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "Max Length:" );
+	}
+	if (l[1] == 2)
+	{
+		DWRD( 0, l[2], 0x90, 0xc2, "Max Length:" );
+	}
+	if (l[1] == 4)
+	{
+		DLNG( 0, l[2], 0x90, 0xc2, "Max Length:" );
+	}
+	if (l[1] > 4)
+	{
+		HEX#( 0, l[31], 0x90, 0xc2, "Max Length:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Implementation_Class_UID()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	//l[1] -= 4;
+	if (g[16] > l[1])
+	{	
+			l[40] = 0;
+		l[30] = l[1];
+		l[33] = 0;
+		l[34] = 0;
+		while (l[30] != 0)
+		{
+			//DGLB( 0, l[30], 0x90, 0xc2, " durchlauf ");
+			GBYT( 0, l[31]);
+			//HGLB( 0, l[31], 0x90, 0xc2, "l31:" );
+			if (l[31] != 0x2e)
+			{
+				l[31] &= 0x0f;
+				//SHFL( 4, l[32] );
+				if (l[34] == 0)
+				{
+					//erster durchlauf
+					l[32] += l[31];
+					//SHFL( 4, l[32] );
+				}
+				if (l[34] == 1)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 2)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 3)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 4)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 5)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 6)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 7)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 8)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				if (l[34] == 9)
+				{
+					MULG( 10 , l[32]);
+					l[32] += l[31];					
+				}
+				l[34] += 1;
+			}
+			if (l[31] == 0x2e)
+			{
+				l[33] += l[32];
+				l[32] = 0;
+				l[34] = 0;
+			}
+			if (l[30] == 1)
+			{
+				l[33] += l[32];
+			}
+			INCR 1;
+			
+			l[30] -= 1;
+			
+		}
+		DECR( 0, l[1]);
+		CHR#( 0, l[1], 0x90, 0xc2, "Implementation Class UID:" );
+		CST#( 0, l[33], 0, 0x14, DICOM::LIB::Well-knownFramesofReference );
+		l[1] = g[16];
+	}
+	if (g[16] < l[1])
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Implementation Class UID:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Asynchronous_Operations_Window_Negotiation()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Maximum-number-operations-invoked:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Maximum-number-operations-performed:" );	
+}
+
+void DICOM::ASSOCREQPDU::TYPES::SCPSCU_Role_Selection()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "UID - Length:" );	
+	CHR#( 0, l[2], 0x90, 0xc2, "SOP-class-uid:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "SCU-role:" );
+		/*CEQU( 0, l[3], 0, 0x14, "non support of the SCU role" );
+		CEQU( 1, l[3], 0, 0x14, "support of the SCU role" );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );*/
+	DBYT( 0, l[4], 0x90, 0xc2, "SCP-role:" );
+	/*	CEQU( 0, l[3], 0, 0x14, "non support of the SCP role" );
+		CEQU( 1, l[3], 0, 0x14, "support of the SCP role" );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );*/
+}
+
+void DICOM::ASSOCREQPDU::TYPES::Implementation_Version()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	if (g[16] > l[1])
+	{	
+		CHR#( 0, l[1], 0x90, 0xc2, "Implementation Version Name:" );
+		l[1] = g[16];
+	}
+	if (g[16] < l[1])
+	{
+		DUMP( 0, g[16], 0x90, 0xc2, "Implementation Version Name DUMP:" );
+	}
+}
+
+void DICOM::ASSOCREQPDU::TYPES::SOP_Class_Extended_Negotiation()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "UID - Length:" );
+	CHR#( 0, l[2], 0x90, 0xc2, "SOP-class-uid:" );	
+	DUMP( 0, g[16], 0x90, 0xc2, "Content:" );
+}
+
+//------------------------------------------------------------------------------------------------------
+
+str# DICOM::PDU::TYPES;
+1	|	ASSOC Request;
+2	|	ASSOC Accept;
+3	|	ASSOC Reject;
+4	|	Data;
+5	|	RELEASE Request;
+6	|	RELEASE Response;
+7	|	ABORT;
+
+str# DICOM::PDU::Ldr;
+1	|	DICOM::PDU::ASSOC_Request;
+2	|	DICOM::PDU::ASSOC_Accept;
+3	|	DICOM::PDU::ASSOC_Reject;
+4	|	DICOM::PDU::Data;
+5	|	DICOM::PDU::RELEASE_Request;
+6	|	DICOM::PDU::RELEASE_Response;
+7	|	DICOM::PDU::ABORT;
+
+str# DICOM::ASSOCREQPDU::TYPES;
+0x10	|	Application Context;
+0x20	|	Presentation Context;
+0x21	|	Presentation Context Reply;
+0x30	|	Abstract Syntax;
+0x40	|	Transfer Syntax;
+0x50	|	User Info;
+0x51	|	Max Length;
+0x52	|	Implementation Class UID;
+0x53	|	Asynchronous Operations Window Negotiation;
+0x54	|	SCP/SCU Role Selection;
+0x55	|	Implementation Version;
+0x56	|	SOP Class Extended Negotiation;
+0x57	|	SOP Class Common Extended Negotiation;
+0x58	|	User Identity;
+0x59	|	User Identity Negotiation Sub-Item Fields;
+
+str# DICOM::ASSOCREQPDU::TYPES::LDR;
+0x10	|	DICOM::ASSOCREQPDU::TYPES::Application_Context;
+0x20	|	DICOM::ASSOCREQPDU::TYPES::Presentation_Context;
+0x21	|	DICOM::ASSOCREQPDU::TYPES::Presentation_Context_Repl;
+0x30	|	DICOM::ASSOCREQPDU::TYPES::Abstract_Syntax;
+0x40	|	DICOM::ASSOCREQPDU::TYPES::Transfer_Syntax;
+0x50	|	DICOM::ASSOCREQPDU::TYPES::User_Info;
+0x51	|	DICOM::ASSOCREQPDU::TYPES::Max_Length;
+0x52	|	DICOM::ASSOCREQPDU::TYPES::Implementation_Class_UID;			
+0x53	|	DICOM::ASSOCREQPDU::TYPES::Asynchronous_Operations_Window_Negotiation;
+0x54	|	DICOM::ASSOCREQPDU::TYPES::SCPSCU_Role_Selection;
+0x55	|	DICOM::ASSOCREQPDU::TYPES::Implementation_Version;
+0x56	|	DICOM::ASSOCREQPDU::TYPES::SOP_Class_Extended_Negotiation;

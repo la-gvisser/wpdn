@@ -1,0 +1,160 @@
+* Gnutella Begin
+
+void Gnutella;
+	Init Line Variables;
+
+	SCMP  0  1  0  0 GNUTELLA CONNECT;
+	SKIP  80000003;
+	Parse Line;
+	Print Line;
+	RETURN;
+
+	SCMP  0  1  0  0 GNUTELLA OK;
+	SKIP  80000003;
+	Parse Line;
+	Print Line;
+	RETURN;
+
+	MOVE  0  a;
+	Gnutella Loop;
+
+void Gnutella Loop;
+	BREM  0  1;
+	TGTE 10  1  0  0 RETURN;
+	INCR 10;
+	GBYT 40000000  2;
+	DECR 10; 
+	Gnutella Function;
+	TGTE  0  10  0  0 RETURN;
+	SEQU  1  3;
+	SKIP  2;
+	LABL  0  0  0 b1 Gnutella;
+	DUMP  1  0 90 c2 Continued Data:;
+	Gnutella Loop;
+
+void Gnutella Function;
+	MOVE  0 3;   * init flag to tell us whether we called a func
+	TEQU  0 2 0 0 Gnutella Ping;
+	TEQU  1 2 0 0 Gnutella Pong;
+	TEQU 40 2 0 0 Gnutella Push;
+	TEQU 80 2 0 0 Gnutella Query;
+	TEQU 81 2 0 0 Gnutella Query Hit;
+
+void Gnutella Common;
+	LABL  0  0  0 b1 Gnutella Command #;
+	ADDG  1  a;
+	DGLB  0  a  1;
+	HEX# 10  0 90 c2 Message ID:;		*16 byte string
+	HBYT  40000000  2 90 c2 Command:;
+	CEQU  0  2  0 24 Ping;
+	CEQU  1  2  0 24 Pong;
+	CEQU 40  2  0 24 Push;
+	CEQU 80  2  0 24 Query;
+	CEQU 81  2  0 24 Query Hit;
+	DBYT  40000000  1 90 c2 TTL:;
+	DBYT  40000000  1 90 c2 Hops:;
+	DLNG  40000000  4 90 c2 Length:;
+	TRTS;
+
+void Gnutella Ping;
+	Gnutella Common;
+	MOVE  1  3;
+	TRTS;
+
+void Gnutella Pong;
+	Gnutella Common;
+	MOVE  1  3;
+	PORT  0  1 90 c2 Port:;
+	IPLG  0  1 90 c2 IP Address:;
+	DLNG  40000000  1 90 c2 # Of Files Shared:; 
+	DLNG  40000000  1 90 c2 # Of KBytes Shared:;
+	TRTS;
+
+void Gnutella Push;
+	Gnutella Common;
+	MOVE  1  3;
+	HEX# 10  0 90 c2 Servent Identifier:; 
+	DLNG  40000000  2  90 c2 File Index:;
+	IPLG  0  2 90 c2 IP Address:;
+	PORT  0  1 90 c2 Port:;
+	TRTS;
+
+void Gnutella Query;
+	Gnutella Common;
+	MOVE  1  3;
+	DWRD  40000000 1 90 c2 Mininum Speed:;
+	SUBG  2  4;
+	CSTR  0  1  90 c2 Search Criteria:;
+	SUBG  1 84;
+	Gnutella Attributes;
+	TRTS;
+
+void Gnutella Query Hit;
+	Gnutella Common;
+	MOVE  1  3;
+	DBYT  40000000 5 90 c2 Hits:;
+	PORT  0  1 90 c2 Port:;
+	IPLG  40000000 2 90 c2 IP Address:;
+	DLNG  40000000 2 90 c2 Speed:;
+	LABL  0  0  0  24 kB/second;
+	MOVE  0  b;
+	SUBG  b  4;
+	SUBG  a  4;  * subtract servent id
+	SUBG  7  4;  * subtract reserved;
+	Gnutella Query Hit Loop;
+	TGTE  0  10  0  0 RETURN;
+	HEX# 10  0 90 c2 Servent Identifier:; 
+	HEX#  7  0 90 c2 Reserved:;  *Unknown Field;
+	TRTS;
+
+void Gnutella Query Hit Loop;
+	TGTE  0  10  0  0 RETURN;
+	TEQU  0  5  0  0 RETURN;
+	ADDG  1  b;
+	LABL  0  0  0 b7 Result Set #;
+	DGLB  0  b  7;
+	DLNG  40000000  2  90 c2 File Index:\Index:;
+	DLNG  40000000  2  90 c2 File Size:\Size:;
+	SUBG  8  4;
+	
+
+	* use CHR# to specify size
+	CSTR  0  11  90 c2 File Name:\Name:;
+	TGTE  0  10  0  0 RETURN;
+
+	SUBG  2 84;
+	Gnutella Attributes;
+	SUBG  1  5;
+	LABL  0  0  0 b8;
+	Gnutella Query Hit Loop;
+
+void Gnutella Attributes;
+	Gnutella Attributes Loop;
+	TRTS;
+
+void Gnutella Attributes Loop;
+	TEQU  0  4   0  0 RETURN;
+	GBYT  0  1;
+	SNEQ  0  1;
+	SKIP  2;
+	INCR  1;
+	TRTS;
+	CSTR  0  2  90 c2 Attribute:;
+	SUBG  2 84;
+	GBYT  0  1;
+	SNEQ  0  1;
+	SKIP  2;
+	INCR  1;
+	TRTS;
+	Gnutella Skip NULL;
+	*Gnutella Attributes Loop;
+
+void Gnutella Skip NULL;
+	TEQU  0  4   0  0 RETURN;
+	GBYT  0  1;
+	TNEQ  0  1   0  0 RETURN;
+	INCR  1;
+	SUBG  1  4;
+	Gnutella Skip NULL;
+
+* Gnutella End

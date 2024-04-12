@@ -1,0 +1,97 @@
+Debug a plug-in on Windows
+--------------------------
+
+Disable the Savvius plug-ins by deleting or changing the extension of:
+  C:\Program Files\Savvius\Capture Engine\plugins.he
+Remove any files from: C:\Program Files\Savvius\Capture Engine\Plugins
+
+Open the project's Property Pages dialog.
+Select the Debugging view from Configuration Properties.
+Select the Debug configuration.
+Debugger to launch:
+- Local Windows Debugger
+- Command: C:\Program Files\Savvius\Capture Engine\omniengine.exe
+- - No double quotes.
+- Command Arguments: -d
+
+Have Visual Studio install the plug-in in a Post-Build Event.
+Build Events:
+- Post-Build Event
+- - copy "$(TargetPath)" "C:\Program Files\Savvius\Capture Engine\Plugins\"
+- - copy ".\$(TargetName).he" "C:\Program Files\Savvius\Capture Engine\Plugins\"
+
+Rebuild the solution in Debug.
+Start Debugging the plug-in.
+
+
+Debug a plug-in on Linux
+------------------------
+
+Disable the Savvius plug-ins by deleting or changing the extension of: /etc/omni/plugins.he
+
+Remove other plug-ins by deleting all the files from: /usr/lib/omni/plugins
+
+Build the plug-in for debug:
+  1. make clean
+  2. make debug
+  3. make install
+
+Verify that the plug-in has been installed into: /usr/lib/omni/plugins
+There should be the .so and .he files. There should also be the zip files.
+
+Change to the omni folder: /etc/omni
+The application file is omnid.
+
+Stop the engine: stop omnid
+
+Start the debugger: sudo LD_LIBRARY_PATH=.:/usr/local/lib gdb --args ./omnid –nofork
+Set a breakpoint in the constructor of the plug-in:
+(gdb) b COmniPlugin::OmniPlugin()
+Function “COmniPlugin::OmniPlugin()” not defined.
+Make breakpoint pending on future shared library load? (y or [n]) y
+
+Breakpoint 1 (COmniPlugin::OmniPlugin()) pending.
+(gdb) r
+Starting program: /usr/sbin/omnid –nofork
+.
+.
+.
+Breakpoint 1, COmniPlugin::OmniPlugin() (this=0x…) at ./Plug-in/OmniPlugin.cpp:91
+91              , m_bInitialized( false )
+(gdb) _
+
+You should be able to continue to debug the plug-in.
+
+
+Appendix A: Linux Folders
+/etc/omni - configuration and he files (engineconfig.xml, plugins.he, ...)
+/usr/lib/omni - shared objects
+/usr/lib/omni/plugins - plugins folder
+/usr/sbin - omnid, the application
+
+Appendix B: Some GDB commands
+r - run (use 'c' to continue)
+c - continue
+s - step in
+n - next (step over)
+
+b <location> - set a breakpoint
+
+p - print : p nPacketSize
+          : p/x nPacketsize
+  x - hex integer
+  d - signed integer
+  u - unsigned integer
+  o - octal integer
+  t - binary integer (t for two)
+  a - address
+  c - character constant
+  f - float
+
+x - eXamine memeory: x/nfu addr
+  n - repeat count
+  f - format
+  u - init size - b:1, h:2, w:4, g:8
+
+# display information about the current source file:
+info source

@@ -1,0 +1,639 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CFileCaptureBuffer Class</title>
+</head>
+<body>
+    <h1>CFileCaptureBuffer Class</h1>
+
+    <!-- Description -->
+    <p class="onlyG">
+        The CFileCaptureBuffer class is used for buffering packets that will be saved periodically to disk.
+        CFileCaptureBuffer multiply inherits from two classes: <a href="CCaptureBuffer.html">CCaptureBuffer</a>
+        and <a href="CRefreshFile.html">CRefreshFile</a>. The buffering capability for CFileCaptureBuffer
+        comes from <a href="CCaptureBuffer.html">CCaptureBuffer</a> and the file saving criteria are established
+        via methods inherited from <a href="CRefreshFile.html">CRefreshFile</a>.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px; margin-bottom:0px">
+        class CFileCaptureBuffer
+    </p>
+    <p class="codeG" style="margin-left:50px; margin-top:0px; margin-bottom:0px">
+        :&nbsp;&nbsp;&nbsp;public CCaptureBuffer
+    </p>
+    <p class="codeG" style="margin-left:50px; margin-top:0px">
+        ,&nbsp;&nbsp;&nbsp;public CRefreshFile
+    </p>
+
+    <!-- CFileCaptureBuffer Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Constructors</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px"><a href="#CFileCaptureBuffer::CFileCaptureBuffer1">CFileCaptureBuffer</a></td>
+            <td>Constructs a CFileCaptureBuffer object (default constructor).</td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px"><a href="#CFileCaptureBuffer::CFileCaptureBuffer2">CFileCaptureBuffer</a></td>
+            <td>Constructs a CFileCaptureBuffer object based on a set of input arguments.</td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Operators</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px"><a href="#CFileCaptureBuffer::operator_assign">operator=</a></td>
+            <td>
+                Assignment operator. Replaces the contents of the calling file capture buffer with those of
+                the other file capture buffer.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">CFileCaptureBuffer Public Member Functions</h2></td>
+        </tr>
+
+        <tr>
+            <td class="codeT" width="115px"><a href="#CFileCaptureBuffer::Copy">Copy</a></td>
+            <td>
+                Replaces the contents of the calling file capture buffer with those of the other
+                file capture buffer.
+            </td>
+        </tr>
+
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::Monitor">Monitor</a>
+            </td>
+            <td>
+                Performs a <a href="#CFileCaptureBuffer::Refresh">Refresh</a> if time has expired.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::Refresh">Refresh</a>
+            </td>
+            <td>
+                Writes all buffer contents to disk, then clears the buffer contents.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::Reset">Reset</a>
+            </td>
+            <td>
+                Clears all contents of the buffer and resets (zeroes) associated data.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::Save">Save</a>
+            </td>
+            <td>
+                Creates a new file name and writes the buffer contents to the new file.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::SaveSelected">SaveSelected</a>
+            </td>
+            <td>
+                Saves a specifed range of packets to disk file.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::SetRefreshSize">SetRefreshSize</a>
+            </td>
+            <td>
+                Sets the packet buffer size limit that triggers a 
+                <a href="#CFileCaptureBuffer::Refresh">Refresh</a>.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="115px">
+                <a href="#CFileCaptureBuffer::WritePacket">WritePacket</a>
+            </td>
+            <td>
+                Adds a packet to the buffer. The packet's header and packet data are
+                written into the buffer.
+            </td>
+        </tr>
+    </table>
+
+
+    <!-- CCaptureBuffer Class Member Link -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Public Member Functions Inherited From CCaptureBuffer</h2></td>
+        </tr>
+    </table>
+    <p class="onlyG">
+        A CFileCaptureBuffer object has available all of the <a href="CCaptureBuffer.html">CCaptureBuffer</a>
+        member functions due to the inheritance hierarchy. Note, however, that the following functions defined
+        in CCaptureBuffer are overridden by CFileCaptureBuffer and the documentation for them should be taken
+        from the present CFileCaptureBuffer document:
+        <a href="#CFileCaptureBuffer::Copy">Copy</a>,
+        <a href="#CFileCaptureBuffer::Reset">Reset</a>,
+        <a href="#CFileCaptureBuffer::Save">Save</a>,
+        <a href="#CFileCaptureBuffer::SaveSelected">SaveSelected</a>, and
+        <a href="#CFileCaptureBuffer::WritePacket">WritePacket</a>.
+    </p>
+    <p class="onlyG">
+        Otherwise all the public member functions for
+        <a href="CCaptureBuffer.html#CCaptureBuffer::PublicMemberList">CCaptureBuffer</a>
+        can be referenced from that document and are available for use by CFileCaptureBuffer
+        objects.
+    </p>
+
+    <!-- CRefreshFile Class Member Link -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:8px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Public Member Functions Inherited From CRefreshFile</h2></td>
+        </tr>
+    </table>
+    <p class="onlyG">
+        A CFileCaptureBuffer object has available all of the <a href="CRefreshFile.html">CRefreshFile</a>
+        member functions due to the inheritance hierarchy. Note, however, that the following functions defined
+        in CRefreshFile are overridden by CFileCaptureBuffer and the documentation for them should be taken
+        from the present CFileCaptureBuffer document:
+        <a href="#CFileCaptureBuffer::Copy">Copy</a>,
+        <a href="#CFileCaptureBuffer::Copy">Reset</a>, and
+        <a href="#CFileCaptureBuffer::SetRefreshSize">SetRefreshSize</a>.
+    </p>
+    <p class="onlyG">
+        Otherwise all the public member functions for
+        <a href="CRefreshFile.html#CRefreshFile::PublicMemberList">CRefreshFile</a>
+        can be referenced from that document and are available for use by CFileCaptureBuffer
+        objects.
+    </p>
+
+
+    <!-- CFileCaptureBuffer Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CFileCaptureBuffer Public Member Functions</h2>
+
+    <!-- CFileCaptureBuffer1 constructor details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::CFileCaptureBuffer1"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::CFileCaptureBuffer</h3>
+    <p class="onlyG">Constructs a CFileCaptureBuffer object (default constructor).</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CFileCaptureBuffer();</td>
+        </tr>
+    </table>
+
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This constructs a CFileCaptureBuffer object. Before meaningful use, methods should be called to
+        set the file path, file base name, and other attributes as well.
+    </p>
+
+    <!-- CFileCaptureBuffer2 constructor details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::CFileCaptureBuffer2"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::CFileCaptureBuffer</h3>
+    <p class="onlyG">Constructs a CFileCaptureBuffer object based on a set of input arguments.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CFileCaptureBuffer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>strFilePath,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>strFileBaseName = _T(""),</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>nRefreshFileType = kRefreshFileTypeNone,</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>bAppendTimestring = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>strFilePath</em></dt>
+        <dd>The file path that the packet file will be saved to.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>strFileBaseName</em></dt>
+        <dd>
+            An optional base name to build a file name from (could be appended to with a formatted
+            timestamp, for example).
+        </dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>nRefreshFileType</em></dt>
+        <dd>
+            An optional parameter specifying <a href="#CFileCaptureBuffer::Refresh">refresh</a> file type.
+            Possible values include:
+            kRefreshFileTypeNone,
+            kRefreshFileTypeOverwriteExisting,
+            kRefreshFileTypeFileNumber,
+            kRefreshFileTypeTimeStampWithNumber, and
+            kRefreshFileTypeTimeStamp.
+        </dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>bAppendTimestring</em></dt>
+        <dd>True causes a formatted time string to be appended to the file name.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This constructs a CFileCaptureBuffer object. The parameters specify file path, a base file name,
+        the type of <a href="#CFileCaptureBuffer::Refresh">refresh</a>, and whether or not to append a
+        formatted time string value to the file base name. As an example if strFilePath
+        = "C:\MyPath", strFileBaseName = "TestFile", nRefreshFileType = kRefreshFileTypeTimeStamp, and
+        bAppendTimestring = true, then the resulting file name might be
+        "C\MyPath\TestFile2010-04-12T15.42.48.752Z.pkt".
+    </p>
+
+    <!-- operator= details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::operator_assign"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::operator=</h3>
+    <p class="onlyG">Replaces the contents of the calling capture buffer with those of the other capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CFileCaptureBuffer& operator =(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CFileCaptureBuffer&</td>
+            <td><em>inOther</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inOther</em></dt>
+        <dd>A reference to the other CFileCaptureBuffer object to copy.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A reference to this object.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method completely replaces the contents of the calling file capture buffer with those of the
+        other file capture buffer. Any current contents in this capture buffer are lost. This method has
+        the same effect as the <a href="#CFileCaptureBuffer::Copy">Copy</a> method.
+    </p>
+
+    <!-- Copy details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::Copy"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::Copy</h3>
+    <p class="onlyG">Replaces the contents of the calling capture buffer with those of the other capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CFileCaptureBuffer& Copy(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>inOther</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inOther</em></dt>
+        <dd>A reference to the other CFileCaptureBuffer object to copy.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the copy operation is successful.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method completely replaces the contents of the calling file capture buffer with those of the
+        other file capture buffer. Any current contents in this capture buffer are lost. This method has
+        the same effect as the <a href="#CFileCaptureBuffer::operator_assign">operator=</a> method.
+    </p>
+
+    <!-- Monitor details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::Monitor"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::Monitor</h3>
+    <p class="onlyG">Performs a <a href="#CFileCaptureBuffer::Refresh">Refresh</a> if time has expired.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">virtual bool Monitor(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>bWriteIfEmpty = true</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>bWriteIfEmpty</em></dt>
+        <dd>
+            True (the default value) indicates that the file write should be performed even if the buffer
+            is empty.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns true unless a file <a href="#CFileCaptureBuffer::Refresh">refresh</a> fails.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method performs a <a href="#CFileCaptureBuffer::Refresh">Refresh</a>, i.e. a write to disk
+        of the buffer contents, if the time expiration value has been exceeded. If the time has not
+        expired, the function simply returns true.
+    </p>
+
+    <!-- Refresh details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::Refresh"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::Refresh</h3>
+    <p class="onlyG">Writes all buffer contents to disk, then clears the buffer contents.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">virtual bool Refresh(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>bWriteIfEmpty = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>bWriteIfEmpty</em></dt>
+        <dd>
+            True indicates that the file write should be performed even if the buffer is empty.
+            The default value is false.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns true unless the file write fails.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method performs a <a href="#CFileCaptureBuffer::Save">Save</a> to disk of the
+        contents of the buffer. Once the buffer contents (i.e. all packets) have been
+        written to the disk file then a <a href="#CFileCaptureBuffer::Reset">Reset</a>
+        of the buffer is performed.
+    </p>
+
+    <!-- Reset details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::Reset"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::Reset</h3>
+    <p class="onlyG">Clears all contents of the buffer and resets (zeroes) associated data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void Reset();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method clears the contents of the buffer and zeroes out all data in the
+        CFileCaptureBuffer object.
+    </p>
+
+    <!-- Save details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::Save"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::Save</h3>
+    <p class="onlyG">Creates a new file name and writes the buffer contents to the new file.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool Save(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>bWriteIfEmpty = false</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>bWriteIfEmpty</em></dt>
+        <dd>
+            True indicates that the file write should be performed even if the buffer is empty.
+            The default value is false.
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the write to disk succeeds. Also returns true if the buffer is empty and the
+        bWriteIfEmpty parameter is false.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method first creates a new file name based on the parameters that have been set
+        controlling file name creation. Then the contents of the buffer are written to the
+        new file. Note that this function in itself does not clear the buffer. The function
+        to call for performing both a save and a clearing of the buffer is
+        <a href="#CFileCaptureBuffer::Refresh">Refresh</a>.
+    </p>
+
+    <!-- SaveSelected details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::SaveSelected"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::SaveSelected</h3>
+    <p class="onlyG">Saves a specifed range of packets to disk file.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool SaveSelected(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inRangeCount</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64*</td>
+            <td><em>inRanges</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRangeCount</em></dt>
+        <dd>The number of range values that are included in the inRanges array.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRanges</em></dt>
+        <dd>An array of range pairs, each pair being the first and last packet number to be selected.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns true unless the buffer is empty or the destination path does not exist.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method saves "selected" packets to disk file. The file to be saved to is created new
+        based on the file naming parameters that have been specified for the CFileCaptureBuffer object.
+        The parameters specify the ranges of consequtive packets to be saved. For example, if three
+        ranges of packet numbers are to be saved and the ranges are to consist of packets 2-4, 50-100,
+        and 200-220, then the inRangeCount value would be 6 (specifying that there are 6 range values),
+        and the inRanges array would be: {2,4,50,100,200,210}.
+    </p>
+
+    <!-- SetRefreshSize details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::SetRefreshSize"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::SetRefreshSize</h3>
+    <p class="onlyG">
+        Sets the packet buffer size limit that triggers a <a href="#CFileCaptureBuffer::Refresh">Refresh</a>.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool SetRefreshSize(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt32</td>
+            <td><em>inRefreshSize</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt32</td>
+            <td><em>inUnits</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRefreshSize</em></dt>
+        <dd>The size to be established for controlling refreshes, based on the inUnits parameter.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inUnits</em></dt>
+        <dd>
+            Unit measure for setting the refresh size. This can be kKilobytes, kMegabytes, or
+            kGigabytes as defined in RefreshFile.h
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns true unless the buffer is empty or the destination path does not exist.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the packet buffer size limit that triggers a
+        <a href="#CFileCaptureBuffer::Refresh">Refresh</a>. The refresh size is based on the inRefreshSize
+        parameter as the number of units, and the inUnits parameter as the type of units. For example,
+        if inRefreshSize is 5 and inUnits is kMegabytes, then the refresh size in bytes will be calculated
+        as (5) * (1 megabyte) = 5 * 1048576 = 5242880 bytes. This method internally calls
+        <a href="CCaptureBuffer.html#CCaptureBuffer::SetCapacity">CCaptureBuffer::SetCapacity</a> to
+        set the actaul buffer size (capacity) according to the specified refresh size.
+    </p>
+
+    <!-- WritePacket details -->
+    <hr style="color:#4d92a8" />
+    <a name="CFileCaptureBuffer::WritePacket"></a>
+    <h3 style="margin-top:12px;">CFileCaptureBuffer::WritePacket</h3>
+    <p class="onlyG">
+        Adds a packet to the buffer. The packet's header and packet data are
+        written into the buffer.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void WritePacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPacket</em></dt>
+        <dd>Reference to a CPacket to write into the buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method writes a CPacket into the file capture buffer. This is a packet copy in that that CPacket's
+        data as well as header are written into the buffer, not just referenced. Meta data is also maintained
+        for the packet. Note that before writing the packet a check on the refresh specifications is made. If
+        specified value for time elapsed or size limit is exceeded then a
+        <a href="#CFileCaptureBuffer::Refresh">Refresh</a> is performed before adding the new packet.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

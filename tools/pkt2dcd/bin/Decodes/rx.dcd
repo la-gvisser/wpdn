@@ -1,0 +1,112 @@
+// -----------------------------------------------------------------------------------------------
+//	RX Protocol
+//
+//	globals used:
+//		g[1-4]	= free for all
+//		g[5]	= type
+//
+//	references:
+//		http://web.mit.edu/kolya/afs/rx/rx-spec
+//
+//  fyi: this decoder is not hooked in anywhere except the alt decoders list
+//	last edited:	si 09.23.2004 [none of the pkt types have been decoded as there is no info]
+//	orig decoder:	si 09.23.2004
+// -----------------------------------------------------------------------------------------------
+
+void RX;
+	LABL 0 0 00 b1 RX Packet;
+	DBIT 1 1 90 c2 Bit Marker:;
+	CEQU 1 1 00 14 Connection ID should be used to identify this connection;
+	CLSE 0 0 00 14 Sender host/port should be used to identify this connection;
+	DBIT 1f 0 90 c2 Connection Epoch:;						// si: risky ... hmmm
+	DBIT 1e 0 90 c2 Connection ID:;
+	DBIT 2 0 90 c2 Channel ID:;
+	DLNG 0 0 90 c2 Call Number:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Serial Number:;
+	DBYT 0 5 90 c2 Type:;
+	CST# 0 5 00 14 RX::TypeList;
+	BBYT 0 0 90 c9 Flags:;
+		CBIT 0 7 00 d4 1... .... Reserved;
+		CLSE 0 0 00 d4 0... .... Reserved;
+		CBIT 0 6 00 d4 .1.. .... Jumbo Packet;
+		CLSE 0 0 00 d4 .0.. .... Not a Jumbo Packet;
+		CBIT 0 5 00 d4 ..1. .... Slow Start OK;
+		CLSE 0 0 00 d4 ..0. .... Slow Start Not OK;
+		CBIT 0 4 00 d4 ...1 .... Reserved;
+		CLSE 0 0 00 d4 ...0 .... Reserved;
+		CBIT 0 3 00 d4 .... 1... More Packets;
+		CLSE 0 0 00 d4 .... 0... No More Packets;
+		CBIT 0 2 00 d4 .... .1.. Last Packet;
+		CLSE 0 0 00 d4 .... .0.. Not the Last Packet;
+		CBIT 0 1 00 d4 .... ..1. Request ACK;
+		CLSE 0 0 00 d4 .... ..0. Not a Request ACK;
+		CBIT 0 0 00 d4 .... ...1 Client Initiated;
+		CLSE 0 0 00 d4 .... ...0 Client Not Initiated;
+		LABL 0 0 00 c8;
+	DBYT 0 0 90 c2 Status:;
+	DBYT 0 1 90 c2 Security:;
+	CST# 0 1 00 14 RX::SecurityList;
+	HWRD 0 0 90 c2 Checksum:;
+	HWRD 0 0 90 c2 Service ID:;
+	DUMP 0 10 90 c2 Payload:;			//si: as of now, only the ack pkt was specified... so oh well
+	TRTS;
+
+str# RX::TypeList;
+	 1	|	Standard data packet;
+	 2	|	Acknowledgement of received data;
+	 3	|	Busy response;
+	 4	|	Abort packet;
+	 5	|	Acknowledgement of all packets;
+	 6	|	Challenge request;
+	 7	|	Challenge response;
+	 8	|	Debug packet;
+	 9	|	Exchange of parameters;
+	10	|	Exchange of parameters;
+	11	|	Exchange of parameters;
+	12	|	Exchange of parameters;
+	13	|	Get AFS version;
+
+str# RX::TypeFunc;
+	1		RX::Type::Data;
+	2		RX::Type::AckRecData;
+	3		RX::Type::Busy;
+	4		RX::Type::Abort;
+	5		RX::Type::AckAllPkts;
+	6		RX::Type::Challenge;
+	7		RX::Type::ChallengeResponse;
+	8		RX::Type::Debug;
+	9		RX::Type::PARAMS;
+	10		RX::Type::PARAMS;
+	11		RX::Type::PARAMS;
+	12		RX::Type::PARAMS;
+	13		RX::Type::AFSVersion;
+
+str# RX::SecurityList;
+	0	|	No security or encryption;
+	1	|	bcrypt security;
+	2	|	krb4 rxkad;
+	3	|	krb4 rxkad with encryption;
+
+// -------------------------------------------------
+void RX::Type::Data;
+// -------------------------------------------------
+void RX::Type::AckRecData;
+// -------------------------------------------------
+void RX::Type::Busy;
+// -------------------------------------------------
+void RX::Type::Abort;
+// -------------------------------------------------
+void RX::Type::AckAllPkts;
+// -------------------------------------------------
+void RX::Type::Challenge;
+// -------------------------------------------------
+void RX::Type::ChallengeResponse;
+// -------------------------------------------------
+void RX::Type::Debug;
+// -------------------------------------------------
+void RX::Type::PARAMS;
+// -------------------------------------------------
+void RX::Type::AFSVersion;
+
+

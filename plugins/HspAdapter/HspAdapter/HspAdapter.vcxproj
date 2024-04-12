@@ -1,0 +1,333 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9DF6BA8F-7B85-4C62-A02B-47A64EF5CBA6}</ProjectGuid>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <Keyword>Win32Proj</Keyword>
+    <SccProjectName>SAK</SccProjectName>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccProvider>SAK</SccProvider>
+    <ProjectName>HspAdapter</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
+    <LinkIncremental>false</LinkIncremental>
+    <IgnoreImportLibrary>true</IgnoreImportLibrary>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <ClCompile>
+      <AdditionalIncludeDirectories>./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)HspAdapter.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)HspAdapter.lib</ImportLibrary>
+      <OutputFile>$(OutDir)HspAdapter.dll</OutputFile>
+      <AdditionalDependencies>.\lib\$(PlatformName)\libheruntime.lib;.\lib\$(PlatformName)\Protospecs.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>makezips.cmd</Command>
+      <Message>Make ZIP resources.</Message>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if exist "C:\wp\branches\omni-11.3.0\src\omni\bin" (
+  if not exist "C:\wp\branches\omni-11.3.0\src\omni\bin\Plugins" mkdir "C:\wp\branches\omni-11.3.0\src\omni\bin\Plugins"
+  copy "$(TargetPath)" "C:\wp\branches\omni-11.3.0\src\omni\bin\Plugins\"
+  copy ".\$(TargetName).he" "C:\wp\branches\omni-11.3.0\src\omni\bin\Plugins\"
+)</Command>
+      <Message>Install the plugin.</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <ClCompile>
+      <AdditionalIncludeDirectories>./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <WarningLevel>Level4</WarningLevel>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <OmitFramePointers>true</OmitFramePointers>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <StringPooling>true</StringPooling>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX64</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <ImportLibrary>$(OutDir)HspAdapter.lib</ImportLibrary>
+      <OutputFile>$(OutDir)HspAdapter.dll</OutputFile>
+      <AdditionalDependencies>.\lib\$(PlatformName)\libheruntime.lib;.\lib\$(PlatformName)\Protospecs.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>makezips.cmd</Command>
+      <Message>Make ZIP resources.</Message>
+    </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>if exist "C:\wp\eng\main\src\omni\bin" (
+  if not exist "C:\wp\eng\main\src\omni\bin\Plugins" mkdir "C:\wp\eng\main\src\omni\bin\Plugins"
+  copy "$(TargetPath)" "C:\wp\eng\main\src\omni\bin\Plugins\"
+  copy ".\$(TargetName).he" "C:\wp\eng\main\src\omni\bin\Plugins\"
+)</Command>
+      <Message>Install the plugin.</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="HspAdapter.he" />
+    <None Include="Makefile" />
+    <None Include="makezips.cmd" />
+    <None Include="module.map" />
+    <None Include="Plugin\CaptureTab\index.html" />
+    <None Include="Plugin\Options\index.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Framework\ByteVectRef.h" />
+    <ClInclude Include="Framework\CaptureBuffer.h" />
+    <ClInclude Include="Framework\CaptureFile.h" />
+    <ClInclude Include="Framework\ContextManager.h" />
+    <ClInclude Include="Framework\Ethernet.h" />
+    <ClInclude Include="Framework\FileCaptureBuffer.h" />
+    <ClInclude Include="Framework\FileEx.h" />
+    <ClInclude Include="Framework\FilePacketArray.h" />
+    <ClInclude Include="Framework\GlobalId.h" />
+    <ClInclude Include="Framework\GPSInfo.h" />
+    <ClInclude Include="Framework\IpHeaders.h" />
+    <ClInclude Include="Framework\Layers.h" />
+    <ClInclude Include="Framework\MediaTypes.h" />
+    <ClInclude Include="Framework\MemUtil.h" />
+    <ClInclude Include="Framework\NotifyService.h" />
+    <ClInclude Include="Framework\Packet.h" />
+    <ClInclude Include="Framework\PacketArray.h" />
+    <ClInclude Include="Framework\PacketHeaders.h" />
+    <ClInclude Include="Framework\PCapCaptureFile.h" />
+    <ClInclude Include="Framework\Peek.h" />
+    <ClInclude Include="Framework\PeekAdapter.h" />
+    <ClInclude Include="Framework\PeekArray.h" />
+    <ClInclude Include="Framework\PeekCaptureFile.h" />
+    <ClInclude Include="Framework\PeekContext.h" />
+    <ClInclude Include="Framework\PeekContextProxy.h" />
+    <ClInclude Include="Framework\PeekDataModeler.h" />
+    <ClInclude Include="Framework\PeekEngineContext.h" />
+    <ClInclude Include="Framework\PeekFile.h" />
+    <ClInclude Include="Framework\PeekHash.h" />
+    <ClInclude Include="Framework\PeekLock.h" />
+    <ClInclude Include="Framework\PeekMessage.h" />
+    <ClInclude Include="Framework\PeekPacket.h" />
+    <ClInclude Include="Framework\PeekPlugin.h" />
+    <ClInclude Include="Framework\PeekProxy.h" />
+    <ClInclude Include="Framework\PeekStream.h" />
+    <ClInclude Include="Framework\PeekStrings.h" />
+    <ClInclude Include="Framework\PeekTable.h" />
+    <ClInclude Include="Framework\PeekTime.h" />
+    <ClInclude Include="Framework\PeekUnits.h" />
+    <ClInclude Include="Framework\PeekXml.h" />
+    <ClInclude Include="Framework\PluginController.h" />
+    <ClInclude Include="Framework\PluginHandlersInterface.h" />
+    <ClInclude Include="Framework\PluginManager.h" />
+    <ClInclude Include="Framework\Protospecs.h" />
+    <ClInclude Include="Framework\PSDefs.h" />
+    <ClInclude Include="Framework\PSIDs.h" />
+    <ClInclude Include="Framework\RefreshFile.h" />
+    <ClInclude Include="Framework\RemoteAdapter.h" />
+    <ClInclude Include="Framework\RemotePlugin.h" />
+    <ClInclude Include="Framework\RemoteStatsPlugin.h" />
+    <ClInclude Include="Framework\Snapshot.h" />
+    <ClInclude Include="Framework\tagfile.h" />
+    <ClInclude Include="Framework\threadhelpers.h" />
+    <ClInclude Include="Framework\Version.h" />
+    <ClInclude Include="Framework\wppoppack.h" />
+    <ClInclude Include="Framework\wppushpack.h" />
+    <ClInclude Include="Framework\WPTypes.h" />
+    <ClInclude Include="Helium\encodehex.h" />
+    <ClInclude Include="Helium\hecom.h" />
+    <ClInclude Include="Helium\hecomweak.h" />
+    <ClInclude Include="Helium\hecore.h" />
+    <ClInclude Include="Helium\heid.h" />
+    <ClInclude Include="Helium\heinttypes.h" />
+    <ClInclude Include="Helium\helib.h" />
+    <ClInclude Include="Helium\hepoppack.h" />
+    <ClInclude Include="Helium\hepushpack.h" />
+    <ClInclude Include="Helium\heresult.h" />
+    <ClInclude Include="Helium\hestdint.h" />
+    <ClInclude Include="Helium\hestr.h" />
+    <ClInclude Include="Helium\heunk.h" />
+    <ClInclude Include="Helium\hevariant.h" />
+    <ClInclude Include="Helium\heweakref.h" />
+    <ClInclude Include="Helium\hlalloc.h" />
+    <ClInclude Include="Helium\hlatomic.h" />
+    <ClInclude Include="Helium\hlbase.h" />
+    <ClInclude Include="Helium\hlclstab.h" />
+    <ClInclude Include="Helium\hlcom.h" />
+    <ClInclude Include="Helium\hldef.h" />
+    <ClInclude Include="Helium\hlexcept.h" />
+    <ClInclude Include="Helium\hlid.h" />
+    <ClInclude Include="Helium\hlptr.h" />
+    <ClInclude Include="Helium\hlruntime.h" />
+    <ClInclude Include="Helium\hlstr.h" />
+    <ClInclude Include="Helium\hlstrconv.h" />
+    <ClInclude Include="Helium\hlsync.h" />
+    <ClInclude Include="Helium\hlvariant.h" />
+    <ClInclude Include="Helium\hlweakref.h" />
+    <ClInclude Include="Helium\idatatable.h" />
+    <ClInclude Include="Helium\imemorystream.h" />
+    <ClInclude Include="Helium\iobjectwithproperties.h" />
+    <ClInclude Include="Helium\iomniengineplugin.h" />
+    <ClInclude Include="Helium\ixmldom.h" />
+    <ClInclude Include="Helium\objectwithsiteimpl.h" />
+    <ClInclude Include="Helium\omnicommands.h" />
+    <ClInclude Include="Helium\omnigraphs.h" />
+    <ClInclude Include="Helium\peekcore.h" />
+    <ClInclude Include="Helium\peekfilters.h" />
+    <ClInclude Include="Helium\peeknames.h" />
+    <ClInclude Include="Helium\peeknotify.h" />
+    <ClInclude Include="Helium\peekstats.h" />
+    <ClInclude Include="Helium\peekutil.h" />
+    <ClInclude Include="Helium\peekvoipcall.h" />
+    <ClInclude Include="Plugin\AdapterOptions.h" />
+    <ClInclude Include="Plugin\Crc32.h" />
+    <ClInclude Include="Plugin\HspAdapterStats.h" />
+    <ClInclude Include="Plugin\OmniAdapter.h" />
+    <ClInclude Include="Plugin\OmniEngineContext.h" />
+    <ClInclude Include="Plugin\OmniPlugin.h" />
+    <ClInclude Include="Plugin\Options.h" />
+    <ClInclude Include="Plugin\PluginMessages.h" />
+    <ClInclude Include="Plugin\public.h" />
+    <ClInclude Include="Plugin\QueueThreadObject.h" />
+    <ClInclude Include="Plugin\resource.h" />
+    <ClInclude Include="Plugin\StdAfx.h" />
+    <ClInclude Include="Plugin\XmlUtil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framework\ByteVectRef.cpp" />
+    <ClCompile Include="Framework\CaptureFile.cpp" />
+    <ClCompile Include="Framework\ContextManager.cpp" />
+    <ClCompile Include="Framework\FileCaptureBuffer.cpp" />
+    <ClCompile Include="Framework\FileEx.cpp" />
+    <ClCompile Include="Framework\GPSInfo.cpp" />
+    <ClCompile Include="Framework\IpHeaders.cpp" />
+    <ClCompile Include="Framework\Layers.cpp" />
+    <ClCompile Include="Framework\NotifyService.cpp" />
+    <ClCompile Include="Framework\Packet.cpp" />
+    <ClCompile Include="Framework\PacketArray.cpp" />
+    <ClCompile Include="Framework\PCapCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekAdapter.cpp" />
+    <ClCompile Include="Framework\PeekCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekContext.cpp" />
+    <ClCompile Include="Framework\PeekContextProxy.cpp" />
+    <ClCompile Include="Framework\PeekDataModeler.cpp" />
+    <ClCompile Include="Framework\PeekMessage.cpp" />
+    <ClCompile Include="Framework\PeekPlugin.cpp" />
+    <ClCompile Include="Framework\PeekProxy.cpp" />
+    <ClCompile Include="Framework\PeekStrings.cpp" />
+    <ClCompile Include="Framework\PeekTime.cpp" />
+    <ClCompile Include="Framework\PeekUnits.cpp" />
+    <ClCompile Include="Framework\PeekXml.cpp" />
+    <ClCompile Include="Framework\PluginManager.cpp" />
+    <ClCompile Include="Framework\PluginModule.cpp" />
+    <ClCompile Include="Framework\RefreshFile.cpp" />
+    <ClCompile Include="Framework\RemoteAdapter.cpp" />
+    <ClCompile Include="Framework\RemotePlugin.cpp" />
+    <ClCompile Include="Framework\RemoteStatsPlugin.cpp" />
+    <ClCompile Include="Framework\Snapshot.cpp" />
+    <ClCompile Include="Framework\Version.cpp" />
+    <ClCompile Include="Plugin\AdapterOptions.cpp" />
+    <ClCompile Include="Plugin\OmniAdapter.cpp" />
+    <ClCompile Include="Plugin\OmniEngineContext.cpp" />
+    <ClCompile Include="Plugin\OmniPlugin.cpp" />
+    <ClCompile Include="Plugin\Options.cpp" />
+    <ClCompile Include="Plugin\PluginMessages.cpp" />
+    <ClCompile Include="Plugin\QueueThreadObject.cpp" />
+    <ClCompile Include="Plugin\StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="Plugin\XmlUtil.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\libheruntime.so">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </Library>
+    <Library Include="lib\x64\libheruntime.lib" />
+    <Library Include="lib\x64\Protospecs.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Plugin\Plugin.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

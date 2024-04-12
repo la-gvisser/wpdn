@@ -1,0 +1,72 @@
+History for CMIFilter Plug-in
+
+2.0.0.0 2-10-09
+na  GV  API 12.
+
+1.0.3.1	1-20-08
+na	CBB	Build for 5.1
+
+
+------- 5-11-06
+N/A	GV	Rebuilt the solution to fix the binding with Perforce.
+
+1.0.2.2 5-09-06
+10138	CB	Handle Runt Packets
+
+1.0.2.1 ?-?-06
+10137	GV	Add try/catch blocks
+N/A		GV	Bump version number to 1.0.2.1
+
+1.0.1.12 01-26-06
+10137	CB	Filter in only UDP and IP fragments
+
+1.0.1.10 11-08-2005
+10136	CB	Handle first packet out of order
+
+1.0.1.9 11-07-2005
+10135	CB	Handle out of order fragments
+
+1.0.1.8 10-28-2005
+10131	CB	Fixed Test 4
+10132	CB	Fixed Test 5
+10133	CB	Fixed Test 6
+10134	CB	Fixed Test 7
+N/A	CB	Bumped version number to 1.0.1.8
+
+1.0.1.7 08-10-2005
+10130	CB	Added IPid aging
+N/A	CB	Bumped version number to 1.0.1.7
+
+1.0.1.6 07-19-2005
+10128	CB	Fixed: now key on IPID + SrcIP + DstIP  (was just IPID)
+10129	CB	Fixed: handle insert packet errors during capture buffer wrap
+N/A		CB	Bumped version  to 1.0.1.6
+
+1.0.1.5 06-24-2005
+10127	CB	Fixed: single packet CMI packets get orphaned
+
+1.0.1.4 06-23-2005
+10119	CB	Rearranged Option UI
+10120	CB	Removed Filter Checkbox from Option UI
+10121	CB	Implemented partial fix to TAB problem
+10122	CB	Fixed TAB order
+10123	CB	Fixed Enter key in dialog problem
+10124	CB	Removed dependency of orphan file on summary stats
+10125	CB	Bumped version to 1.0.1.4
+10126	CB	Fixed missing orphan bug 
+
+1.0.1.3 06-14-2005
+10116	CB	Improved performance
+10117	CB	Fixed missing packet problem
+10118	CB	Implemented Address2 filter
+
+1.0.1.2 06-02-2005
+10111	CB	Fixed CPU utilization problem
+10112	CB	Fixed disable all items in tab during capture
+10113	CB	Fixed reading and writing of preferences
+10114	CB	Fixed saving of orphan file
+10115	CB	Fixed sort orphans by timestamp in file
+
+1.0.1.1 05-10-2005
+NA		CB	first release 
+	    

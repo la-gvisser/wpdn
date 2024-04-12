@@ -1,0 +1,499 @@
+//------------------------------------------------------------------------
+// SSH - Secure Shell
+//		goes over port 22
+//		check here: http://www.vandyke.com/technology/drafts.html
+//
+// globals used:
+//	g[1] = packet length
+//	g[2] = random padding amt
+//	g[3] = payload amt
+//	g[4] = payload identifier
+//	g[5] = ssh version
+//
+//	last updated: si 2005.03.24
+//------------------------------------------------------------------------
+
+void SSH()
+{
+	// check to see if it's a null packet
+	TGTE 0 10 0  0 RETURN;
+	if (g[16] <= 4)
+	{
+		g[1] = pw[0];
+		TEQU 0 1  0  0 RETURN;
+	}
+	
+	// ok, you're good to go!
+	LABL 0 0  0 b1 SSH - Secure Shell\SSH:;
+	GLNG 0 1;
+	SCMP 4 0 0 0 SSH-;					//si: see if this is an initation pkt
+	SKIP 80000001;
+		TNXT -SSH::Init;
+	
+	// check pkt length to see if suspicious
+	if (g[1] >= g[16])
+	{					
+		TNXT -SSH::Data;
+	}
+	
+	TGTE 0 1 0 0 SSH::Data;
+	DLNG 0 1 90 c2 Pkt Length:;
+	
+	// figure out padding & version num
+	SSH::Padding;
+
+	// figure out the payload length
+	if (g[5] == 1)
+	{
+		g[3] = g[1];
+	}
+	if (g[5] == 2)
+	{
+		g[3] = g[1];
+		g[3] -= g[2];					// si: take out the padding amt
+		g[3] -= 1;						// si: for the padding len
+	}
+	
+	SSH::Payload;
+	
+	// padding for version 2
+	if (g[5] == 2)
+	{ 
+		TGTE 0 10 0 0 RETURN;
+		HEX# 0 2 90 c2 Random Padding:; 
+	}
+	
+	// anymore ssh messages?
+	TGTE 0 10 0  0 RETURN;
+	TEQU 2 4  0  0 SSH;						//si: if it was an ignored data msg, there's more data!
+	TNXT -SSH;
+	//SGTE 0 10;							//si: someone should probably figure this out eh? hahaha
+	//SKIP 1;
+	//SSH::MAC;
+	TRTS;
+}
+
+// ------------------------------------------------------------
+//	padding
+
+void SSH::Padding;
+	SSH::Padding::v1;
+	l[1] = g[1];
+	l[1] += g[2];
+	
+	// version 1
+	if (l[1] == g[16])
+	{
+		g[5] = 1;							// remember ssh vers num
+		// test for encryption - padding of 0's means it's not
+		if (g[2] > 1)
+		{
+			l[1] = pw[0];
+		}
+		if (g[2] <= 1)
+		{
+			l[1] = pb[0];
+		}
+		HEX# 0 2 90 c2 Padding:;
+		g[2] = l[1];						// remember encrypted
+		TRTS;
+	}
+
+	// version 2
+	g[5] = 2;								// remember vers num
+	DBYT 0 2 90 c2 Padding Len:;			// remember padding len - padding is attached to end of pkt
+	TRTS;
+
+void SSH::Padding::v1;
+	//how padding works: ( 8 - (pkt length % 8))
+	g[2] = g[1];
+	MODG 8 2;
+	l[1] = 8;
+	l[1] -= g[2];
+	g[2] = l[1];
+	TRTS;
+
+
+// ------------------------------------------------------------
+//	payloads
+
+void SSH::Payload;
+	GBYT  0 4;
+	
+	// version 1
+	if (g[5] == 1)
+	{
+		// pkt is encrypted				---- do the same thing for now... don't have nonencrypted versions
+		if (g[2] != 0)
+		{
+			TST# 0 4 00 00 SSH::Payload::MsgCodeFunc::v1E;
+			// not valid msg code
+			DUMP 0 3 90 c2 Payload:;
+			TRTS;
+		}
+		// pkt is not encrypted
+		TST# 0 4 0 0 SSH::Payload::MsgCodeFunc::v1;
+		// not valid msg code
+		DUMP 0 3 90 c2 Payload:;
+		TRTS;
+	}
+	
+	// version 2
+	TST# 0 4 0 0 SSH::Payload::MsgCodeFunc::v2;
+	TNXT -SSH::Payload::v2::Generic;
+/*
+	if (g[4] > 31) 
+	{					//si: if g[4] is 30-49 then it's a kex packet
+		if (g[4] < 50)
+		{
+			TNXT -SSH::Payload_KEX;
+		} 
+	}
+*/
+
+// ---------------------------------
+
+void SSH::Payload::v1::ValidEncryptedMsgCode;
+	DBYT 0 a 90 c2 Msg Code:;
+	CST# 0 a 00 14 SSH::Payload::MsgCodeList::v1;
+	g[3] -= 1;
+	DUMP 0 3 90 c2 Payload:;
+	TRTS;
+
+// ---------------------------------
+
+str# SSH::Payload::MsgCodeList::v1;
+	 0 | None;
+	 1 | Disconnect;
+	 2 | Public Key;
+	 3 | Session Key;
+	 4 | User;
+
+str# SSH::Payload::MsgCodeList::v2;
+	  1 | Disconnect;
+	  2 | Ignore;
+	  4 | Debug;
+	  5 | Service Request;
+	  6 | Service Accept;
+	 20 | Key Exchange Init;
+	 21 | New Keys;
+	 30 | Diffie-Hellman Key Exchange Init;
+	 31 | Diffie-Hellman Key Exchange Reply;
+	 32 | Diffie-Hellman GEX Init;
+	 33 | Diffie-Hellman GEX Reply;
+	 34 | Diffie-Hellman GEX Request;
+	 50 | User Auth Request;
+	 51 | User Auth Failure;
+	 52 | User Auth Success;
+	 53 | User Auth Banner;
+	 60 | User Auth Ok;
+	 80 | Global Request;
+	 81 | Request Success;
+	 82 | Request Failure;
+	 90 | Channel Open;
+	 91 | Channel Open Confirmation;
+	 92 | Channel Open Failure;
+	 93 | Channel Window Adjust;
+	 94 | Channel Data;
+	 95 | Channel Extended Data;
+	 96 | Channel EOF;
+	 97 | Channel Close;
+	 98 | Channel Request;
+	 99 | Channel Success;
+	100 | Channel Failure;
+
+str# SSH::Payload::MsgCodeFunc::v1E;
+	 0 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 1 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 2 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 3 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 4 | SSH::Payload::v1::ValidEncryptedMsgCode;
+
+str# SSH::Payload::MsgCodeFunc::v1;
+	 0 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 1 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 2 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 3 | SSH::Payload::v1::ValidEncryptedMsgCode;
+	 4 | SSH::Payload::v1::ValidEncryptedMsgCode;
+
+str# SSH::Payload::MsgCodeFunc::v2;
+	 2 | SSH::Payload::v2::02;						//SSH_MSG_IGNORE
+	20 | SSH::Payload::v2::20;						//SSH_MSG_KEXINIT
+	21 | SSH::Payload::v2::21;						//SSH_MSG_NEWKEYS
+	30 | SSH::Payload::v2::30;						//SSH_MSG_KEXDH_INIT
+	31 | SSH::Payload::v2::31;						//SSH_MSG_KEXDH_REPLY
+	90 | SSH::Payload::v2::90;						//SSH_MSG_CHANNEL_OPEN
+
+//------------------------------
+
+void SSH::Init()
+{
+	CHR# 3  0 90 c2 Identifier:;				//si: looking for "ssh"
+	INCR 1;										//si: incr past the dash
+	MOVE 0 a;
+	SSH::Find_Dash;								//si: find length of version num
+	DECR 0 a;
+	CHR# 0  a 90 c2 Version:;
+	INCR 1;										//si: incr past the dash
+	CHR# 0 10 90 c2 Comment:;					//si: just dump the rest of the pkt
+	TRTS;
+}
+
+//------------------------------
+
+void SSH::Find_Dash()
+{
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	TEQU 2D 1 0 0 RETURN;
+	INCR 1;
+	ADDG 1 a;
+	TNXT -SSH::Find_Dash;
+}
+
+//------------------------------
+
+void SSH::Data()
+{
+	DUMP 0 10 90 c2 SSH Data:;
+	TRTS;
+}
+
+//------------------------------
+
+void SSH::MAC()
+{
+	LABL 0 0  0 b9 Message Auth Code;
+	DLNG 0 1 90 c2 MAC Length:;
+	DUMP 0 1 90 c2 MAC Data:;
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------------------------------------
+void SSH::Payload::v2::Generic;
+	CST# 0 4 00 b7 SSH::Payload::MsgCodeList::v2;
+	CLSE 0 0 00 b7 Unknown Message;
+	DBYT 0 4 90 c2 Msg Code:;
+	CST# 0 4 00 14 SSH::Payload::MsgCodeList::v2;
+	g[3] -= 1;
+	DUMP 0 3 90 c2 Payload:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+
+//------------------------------------------------------------
+void SSH::Payload::v2::02()
+{											//si: SSH_MSG_IGNORE
+	LABL 0 0 00 b7 Ignored Data Message;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0 00 14 Ignored Data Message;
+	DLNG 0 a 90 c2 Data Len:;
+	
+	if (g[10] != 0) 
+	{ 
+		CHR# 0 a 90 c2 Ignored Data:; 
+	}
+	
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------------------------------------
+
+void SSH::Payload::v2::20()
+{											//si: SSH_MSG_KEXINIT
+	LABL  0 0  0 b7 Key Exchange;
+	DBYT  0 4 90 c2 Msg Code:;
+	LABL  0 0  0 14 Key Exchange;
+	DUMP 10 0 90 c2 Cookie:;
+	LABL  0 0  0 14 Random Bytes;
+	LABL  0 0  0 b7 Supported Algorithms;					//si: rfc draft-ietf-secsh-transport-14.txt section5.1
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Key Exchange Alg:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Server Host Key Alg:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Encryption Alg C->S:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Encryption Alg S->C:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 MAC Alg C->S:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 MAC Alg S->C:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Compression Alg C->S:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Compression Alg S->C:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Languages C->S:;	}
+	DLNG  0 a  5  5 Length:;
+	if g[10] != 0 {	CHR#  0 a 90 c2 Languages S->C:;	}
+	DBYT  0 a 90 c2 First KEX Pkt Follows:;
+	 CEQU 0 31 0 14 False;
+	 CEQU 1 31 0 14 True;
+	HLNG 4 0 90 c2 Reserved:;	
+	LABL 0 0 0 b8;		//si: for supported algorithms
+	LABL 0 0 0 b8;		//si: for transport layer protocol
+	TRTS;
+}
+
+//------------------------------------------------------------
+void SSH::Payload::v2::21()
+{											//si: SSH_MSG_NEWKEYS
+	LABL 0 0  0 b7 New Keys;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0  0 14 New Keys;
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------------------------------------
+void SSH::Payload::v2::30()
+{												//si: SSH_MSG_KEXDH_INIT
+	LABL 0 0  0 b7 Diffie-Hellman Key Exchange;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0  0 14 Diffie-Hellman Key Exchange;
+	g[3] -= 1;
+	DUMP 0 3 90 c2 Key Data:;
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------------------------------------
+void SSH::Payload::v2::31()
+{										//si: SSH_MSG_KEXDH_REPLY
+	LABL 0 0  0 b7 Diffie-Hellman Key Exchange Reply;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0  0 14 Diffie-Hellman Key Exchange Reply;
+/*
+	DLNG 0 a 90 c2 Length of Server Pub Host Key & Cert;
+	DUMP 0 a 90 c2 Srvr Host Key & Cert:;
+	DLNG 0 a 90 c2 Length of Sig of H;
+	DUMP 0 a 90 c2 Sig of H:;
+*/
+	g[3] -= 1;												//si: this isn't right...finish it!
+	DUMP 0 3 90 c2 Key Data:;
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------------------------------------
+void SSH::Payload::v2::90;								// SSH_MSG_CHANNEL_OPEN
+	LABL 0 0 00 b7 Channel Open;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0 00 14 Channel Open;
+	DLNG 0 a 05 05 Length:;
+	CHR# 0 a 90 c2 Public Key:;
+	DLNG 0 0 90 c2 Sender Channel:;
+	DLNG 0 0 90 c2 Init Window Size:;
+	DLNG 0 0 90 c2 Max Pkt Size:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+//------------------------------------------------------------	
+/*
+void SSH::Payload::v2::94;								//SSH_MSG_CHANNEL_DATA
+	LABL 0 0 00 b7 Channel Data;
+	DBYT 0 4 90 c2 Msg Code:;
+	LABL 0 0 00 14 Channel Data;
+	DLNG 0 0 90 c2 Recipient Channel:;
+	// iffy part... ergh
+	DLNG 0 a 05 05 Status Length:;
+	CHR# 0 a 90 c2 Status:;
+	DLNG 0 a 90 c2 Status Code:;
+	CST# 0 a 00 14 SSH::Payload::v2::94::StatusCode;
+	DLNG 0 a 05 05 Description Length:;
+	CHR# 0 a 90 c2 Description:;
+	CHR# 2 0 90 c2 Language Tag:;		// usually 2 bytes?
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# SSH::Payload::v2::94::StatusCode;
+	0 | Success;
+	1 | Access Denied;
+	2 | Storage Exceeded;
+	3 | Request Not Supported;
+	4 | Key Not Found;
+	5 | Key Not Supported
+	6 | General Failure;
+*/
+
+
+//------------------------------------------------------------
+void SSH::Payload_KEX() 
+{										//si: fyi, this is dangerous... don't muck with the globals here
+	LABL 0 0  0 b7 Transport Layer Protocol;
+	DBYT 0 4 90 c2 Msg Code:;
+	 LABL 0 0  0 14 KEX Packet;
+	g[3] -= 1;
+	DUMP 0 3 90 c2 KEX Data:;
+															//si: so i thought this would work, but it doesn't
+	//DLNG 0 5 90 c2 Length:;								//si: dunno which length for this one
+	//SSH::Payload_KEX_Type_Check;
+	//DLNG 0 5 90 c2 Length:;
+	//SSH::Payload_KEX_Type_Check;
+	//DLNG 0 5 90 c2 Length:;
+	//SSH::Payload_KEX_Type_Check;
+
+	LABL 0 0  0 b8;
+	TRTS;
+}
+
+//------------------------------
+void SSH::Payload_KEX_Type_Check()
+{
+	GBYT 0 6;
+	if (g[6] == 0) { SSH::Payload_KEX_Helper; }
+	if (g[6] != 0) { DUMP 0 5 90 c2 Data:; }
+	TRTS;
+}
+
+//------------------------------
+void SSH::Payload_KEX_Helper()
+{
+	DLNG 0 a  5  5 Str Length:;
+	CHR# 0 a 90 c2 KEX Type:;
+	g[5] -= g[a];
+	g[5] -= 4;
+	DUMP 0 5 90 c2 KEX Data:;
+	TRTS;
+}
+
+//------------------------------
+
+
+/*  si: here are the message id's that have been defined thus far
+   Message ID                            Value    Reference
+   -----------                           -----    ---------
+   SSH_MSG_DISCONNECT                       1     [SSH-TRANS]		Transport Layer Protocol
+   SSH_MSG_IGNORE                           2     [SSH-TRANS]		done!
+   SSH_MSG_UNIMPLEMENTED                    3     [SSH-TRANS]
+   SSH_MSG_DEBUG                            4     [SSH-TRANS]
+   SSH_MSG_SERVICE_REQUEST                  5     [SSH-TRANS]
+   SSH_MSG_SERVICE_ACCEPT                   6     [SSH-TRANS]
+   SSH_MSG_KEXINIT                         20     [SSH-TRANS]		done!
+   SSH_MSG_NEWKEYS                         21     [SSH-TRANS]		done!
+   SSH_MSG_KEXDH_INIT                      30     [SSH-TRANS]		done!
+   SSH_MSG_KEXDH_REPLY                     31     [SSH-TRANS]		done!
+   SSH_MSG_USERAUTH_REQUEST                50     [SSH-USERAUTH]	User authentication protocol
+   SSH_MSG_USERAUTH_FAILURE                51     [SSH-USERAUTH]
+   SSH_MSG_USERAUTH_SUCCESS                52     [SSH-USERAUTH]
+   SSH_MSG_USERAUTH_BANNER                 53     [SSH-USERAUTH]
+   SSH_MSG_USERAUTH_PK_OK                  60     [SSH-USERAUTH]
+   SSH_MSG_GLOBAL_REQUEST                  80     [SSH-CONNECT]		Connection protocol
+   SSH_MSG_REQUEST_SUCCESS                 81     [SSH-CONNECT]
+   SSH_MSG_REQUEST_FAILURE                 82     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_OPEN                    90     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_OPEN_CONFIRMATION       91     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_OPEN_FAILURE            92     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_WINDOW_ADJUST           93     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_DATA                    94     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_EXTENDED_DATA           95     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_EOF                     96     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_CLOSE                   97     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_REQUEST                 98     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_SUCCESS                 99     [SSH-CONNECT]
+   SSH_MSG_CHANNEL_FAILURE                100     [SSH-CONNECT]
+*/
+

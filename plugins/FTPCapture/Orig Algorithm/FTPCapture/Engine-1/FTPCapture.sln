@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FTPCapture", "FTPCapture\FTPCapture.vcproj", "{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}"
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 2
+		SccProjectUniqueName0 = FTPCapture\\FTPCapture.vcproj
+		SccLocalPath0 = FTPCapture
+		SccLocalPath1 = .
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Debug|Win32.Build.0 = Debug|Win32
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Debug|x64.ActiveCfg = Debug|x64
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Debug|x64.Build.0 = Debug|x64
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Release|Win32.ActiveCfg = Release|Win32
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Release|Win32.Build.0 = Release|Win32
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Release|x64.ActiveCfg = Release|x64
+		{26ED9B1B-2CE0-4B83-A15C-E0B5CCED91C9}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

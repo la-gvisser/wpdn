@@ -1,0 +1,197 @@
+// TACACS+ Protocol
+// RFC 927, RFC 1492
+// added https://tools.ietf.org/html/draft-grant-tacacs-02 - June 2016
+
+
+void TACACS()
+{
+	LABL( 0, 0, 0, 0xb1, "TACACS+ Protocol" );
+	HBIT( 4, l[1], 0x90, 0xc2, "Major Version:" );
+	 CEQU( 0xC, l[1], 0, 0x14, "TACACS+" );
+	DBIT( 4, l[1], 0x90, 0xc2, "Minor Version:" );
+	 CEQU( 0, l[1], 0, 0x14, "Default" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Type:" );
+	 CST#( 0, l[1], 0, 0x14, TACACS::Type_Str);
+	DBYT( 0, l[11], 0x90, 0xc2, "Sequence Number:" );
+	BBIT( 8, l[2], 0x90, 0xc9, "Flags:" );
+	DECR 1;
+		BBIT( 1, l[3], 0x5, 0xc9);
+			CBIT( 0, l[3], 0, 0x54, ".... ...0 Encrypted" );
+			CLSE( 0, l[3], 0, 0x54, ".... ...1 Unencrpted" );
+		BBIT( 1, 0, 0x5, 0);
+		BBIT( 1, l[4], 0x5, 0xc9);
+			CEQU( 0, l[4], 0, 0x54, ".... .0.. Multiple Connections" );
+			CEQU( 1, l[4], 0, 0x54, ".... .1..  Single Connection" );
+		BBIT( 5, 0, 0x5, 0);	
+	LABL( 0, 0, 0, 0xc8);
+	DLNG( 0, l[5], 0x90, 0xc2, "Session ID:" );
+	DLNG( 0, l[6], 0x90, 0xc2, "Packet Length:" );
+	l[2] &= 0x01;
+	l[3] = l[2];
+	if (l[3] == 0)
+	{
+		LABL( 0, 0, 0x90, 0xc2, "Encrypted Data:" );
+	}
+	if (l[3] == 1)
+	{
+		LABL( 0, 0, 0x90, 0xb7, "Request:" );
+	}
+	if (l[3] == 1)				//is unencrypted
+	{	
+		if (l[1] == 1)			//is Authentication
+		{
+			if (l[11] == 1)		//is START Sequence
+			{				
+				DBYT( 0, l[12], 0x90, 0xc2, "action:" );
+					CST#( 0, l[12], 0, 0x14, TACACS::AUTH::ACTION::TXT );
+					CLSE( 0, l[12], 0, 0x14, "Reserved" );
+				DBYT( 0, l[13], 0x90, 0xc2, "priv_lvl:" );
+					CST#( 0, l[12], 0, 0x14, TACACS::AUTH::priv_lvl::TXT );
+					CLSE( 0, l[12], 0, 0x14, "Reserved" );
+				DBYT( 0, l[14], 0x90, 0xc2, "authen_type:" );
+					CST#( 0, l[12], 0, 0x14, TACACS::AUTH::authen_type::TXT );
+					CLSE( 0, l[12], 0, 0x14, "Reserved" );
+				DBYT( 0, l[15], 0x90, 0xc2, "service:" );
+					CST#( 0, l[12], 0, 0x14, TACACS::AUTH::service::TXT );
+					CLSE( 0, l[12], 0, 0x14, "Reserved" );
+				DBYT( 0, l[16], 0x90, 0xc2, "user len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DBYT( 0, l[17], 0x90, 0xc2, "port len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DBYT( 0, l[18], 0x90, 0xc2, "rem_addr len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DBYT( 0, l[19], 0x90, 0xc2, "data len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				if (l[16] != 0)
+				{
+					CHR#( 0, l[16], 0x90, 0xc2, "Username:" );
+				}
+				if (l[17] != 0)
+				{
+					CHR#( 0, l[17], 0x90, 0xc2, "Port:" );
+				}
+				if (l[18] != 0)
+				{
+					CHR#( 0, l[18], 0x90, 0xc2, "rem_addr:" );
+				}
+				if (l[19] != 0)
+				{
+					CHR#( 0, l[19], 0x90, 0xc2, "Data:" );
+				}
+				
+			}
+			if (l[11] == 2)		//is REPLY Sequence
+			{
+				DBYT( 0, l[12], 0x90, 0xc2, "status:" );
+				DBYT( 0, l[13], 0x90, 0xc2, "flags:" );
+				DWRD( 0, l[14], 0x90, 0xc2, "server_msg len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DWRD( 0, l[15], 0x90, 0xc2, "data len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				if (l[14] != 0)
+				{
+					CHR#( 0, l[14], 0x90, 0xc2, "server_msg:" );
+				}
+				if (l[15] != 0)
+				{
+					CHR#( 0, l[15], 0x90, 0xc2, "Data:" );
+				}
+			}
+			if (l[11] == 3)		//is Continue Sequence
+			{
+				DWRD( 0, l[13], 0x90, 0xc2, "user_msg len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DWRD( 0, l[14], 0x90, 0xc2, "data len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DBYT( 0, l[15], 0x90, 0xc2, "flags:" );
+				if (l[13] != 0)
+				{
+					CHR#( 0, l[13], 0x90, 0xc2, "User_Msg:" );
+				}
+				if (l[14] != 0)
+				{
+					CHR#( 0, l[14], 0x90, 0xc2, "Data:" );
+				}
+			}
+			if (l[11] >= 4)		//is other REPLY Sequence
+			{
+				DBYT( 0, l[12], 0x90, 0xc2, "status:" );
+				DBYT( 0, l[13], 0x90, 0xc2, "flags:" );
+				DWRD( 0, l[14], 0x90, 0xc2, "server_msg len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				DWRD( 0, l[15], 0x90, 0xc2, "data len:" );
+					LABL( 0, 0, 0, 0x14, "Bytes");
+				if (l[14] != 0)
+				{
+					CHR#( 0, l[14], 0x90, 0xc2, "server_msg:" );
+				}
+				if (l[15] != 0)
+				{
+					CHR#( 0, l[15], 0x90, 0xc2, "Data:" );
+				}
+			}
+			//CONTINUE Sequence
+		}
+		
+		if (l[1] == 2)			//is Authorization 
+		{
+			//Heuristik needed to determe Request or Response
+			BREM( 0, l[12] );
+			GBYT( 4, l[22] );	//get potential user Lngth of Request
+			GBYT( 5, l[23] );	//get potential port Lngth of Request
+			GBYT( 6, l[24] );	//get potential rem_addr Lngth of Request
+			l[25] = l[22];
+			l[25] += l[23];
+			l[25] += l[24];
+			GWRD( 2, l[26] );	//get potential server_msg len of RESPONSE
+			GWRD( 4, l[26] );	//get potential data len of RESPONSE
+			//l[5] should be less than left packet Length for a request
+			if (l[25] < l[12])
+			{
+				
+			}
+			
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (l[3] == 0)				//is encrypted
+	{
+		HEX#( 0, l[6], 0x90, 0x02, "Data:" );
+	}
+}
+
+str# TACACS::Type_Str;
+	1 | Authentication;
+	2 | Authorization;
+	3 | Accounting;
+	
+str# TACACS::AUTH::ACTION::TXT;
+0x01	|	TAC_PLUS_AUTHEN_LOGIN;
+0x02	|	TTAC_PLUS_AUTHEN_CHPASS;
+0x03	|	TTAC_PLUS_AUTHEN_SENDPASS (deprecated);
+0x04	|	TTAC_PLUS_AUTHEN_SENDAUTH;
+	
+str# TACACS::AUTH::priv_lvl::TXT;
+0x00	|	TAC_PLUS_PRIV_LVL_MIN;
+0x01	|	TAC_PLUS_PRIV_LVL_USER;
+0x0f	|	TAC_PLUS_PRIV_LVL_MAX;
+0x1f	|	TAC_PLUS_PRIV_LVL_ROOT;
+
+str# TACACS::AUTH::authen_type::TXT;
+0x01	|	TAC_PLUS_AUTHEN_TYPE_ASCII;
+0x02	|	TAC_PLUS_AUTHEN_TYPE_PAP;
+0x03	|	TAC_PLUS_AUTHEN_TYPE_CHAP;
+0x04	|	TAC_PLUS_AUTHEN_TYPE_ARAP;
+0x05	|	TAC_PLUS_AUTHEN_TYPE_MSCHAP; 
+
+str# TACACS::AUTH::service::TXT;
+0x00	|	TAC_PLUS_AUTHEN_SVC_NONE;
+0x01	|	TAC_PLUS_AUTHEN_SVC_LOGIN;
+0x02	|	TAC_PLUS_AUTHEN_SVC_ENABLE;
+0x03	|	TAC_PLUS_AUTHEN_SVC_PPP;
+0x04	|	TAC_PLUS_AUTHEN_SVC_ARAP;
+0x05	|	TAC_PLUS_AUTHEN_SVC_PT;
+0x06	|	TAC_PLUS_AUTHEN_SVC_RCMD;
+0x07	|	TAC_PLUS_AUTHEN_SVC_X25;
+0x08	|	TAC_PLUS_AUTHEN_SVC_NASI;
+0x09	|	TAC_PLUS_AUTHEN_SVC_FWPROXY;

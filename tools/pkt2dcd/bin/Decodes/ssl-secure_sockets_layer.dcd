@@ -1,0 +1,2944 @@
+// --------------------------------------------------------------------------------------
+// SSL - Secure Sockets Layer	[v2, v3, v3.1]
+//
+//	g[2] = total length
+//	g[6] = seems to be important
+//  g[0x3c] = debug control. 0x444247-"DBG",enable; other-disable.
+//  s[2].HighWord: remaining bytes of the perceding pkt
+//       LowWord: remaining bytes of protocol in the preceding pkt
+//
+//	orig author: bradD	updated: si, dw
+//  last update: 2016-9-27
+// --------------------------------------------------------------------------------------
+
+void SSL;
+	//when we get here g[2] holds the port number that got us here
+	//save it so we can decode decrypted data later
+	g[20] = g[2];
+	
+	//update the remaining amount of packet data
+	BREM 0 10 5 5;
+	
+    l[1] = pb[1];
+    l[2] = pb[2];
+        
+	//g[0x3c] = 0x444247;
+    if(l[1] == 3)
+    {
+        if(l[2] == 0)
+        {
+            SSLv3::Start;
+        }
+        if(l[2] > 0)
+        {
+            TLS::Start;
+        }
+        
+        TRTS;
+    }
+    
+	//SSLv2::Start;
+	// version 2 - new detection
+	l[1] = pb[0]; 	//Header begin
+	l[2] = pb[1];	//potenial length
+	//l[4] = pw[5];   //potenial version
+	l[4] = 2;
+	//HGLB 0 44 90 c2 Version:;
+	l[1] &= 0x80;
+	if (l[1] == 0x80)
+	{
+		l[3] = pb[0];
+		l[3] &= 0x7f;
+		SHFL( 8, l[3]);
+		l[3] += l[2];
+		//DGLB 0 43 90 c2 Length:;
+		//LABL 0 0 0 14 bytes;
+		if(l[3] == 0)
+		{
+			if (l[2] >= 9)
+			{
+				if (l[4] == 0x02)
+				{
+					LABL 0 0 0 b1 SSL - Secure Sockets Layer\SSL:;
+					SSLv2;
+					LABL 0 0 0 b8;
+				}
+			}
+		}
+		if(l[3] != 0)
+		{
+			if (l[2] >= 9)
+			{
+				if (l[4] == 0x02)
+				{
+					LABL 0 0 0 b1 SSL - Secure Sockets Layer\SSL:;
+					SSLv2;
+					LABL 0 0 0 b8;
+				}
+			}
+		}
+	}
+	TRTS;
+
+void SSL::NextRecord;
+
+    l[1] = pb[1];
+    l[2] = pb[2];
+    
+    if(l[1] == 3)
+    {
+        if(l[2] == 0)
+        {
+            SSLv3::RecordLayer;
+        }
+        if(l[2] > 0)
+        {
+            TLS::RecordLayer;
+        }
+        
+        TRTS;
+    }
+    
+    SSLv2::RecordLayer;
+    TRTS;
+    
+void SSLv2::Start;
+    LABL 0 0 0 b1 SSL - Secure Sockets Layer\SSL:;
+    
+    SSLv2::RecordLayer;
+    
+    LABL 0 0 0 b8;
+    TRTS;
+  
+void SSLv2::RecordLayer;
+
+    l[1] = pb[3];
+    
+    if(l[1] == 3)
+    {
+        LABL 0 0 0 b7 SSL v2 Record Layer;
+        SSLv2;
+        LABL 0 0 0 b8;
+    }
+    
+	BREM 0 5;
+	if(g[4] == g[5])		//check to see if we are in loop
+	{
+		TRTS;
+	}
+	// Continuation Data
+	SSL_Continuation_Data;
+	TRTS;
+    
+void SSLv3::Start;
+    LABL 0 0 0 b1 SSL - Secure Sockets Layer\SSL:;
+    
+    SSLv3::RecordLayer;
+    
+    LABL 0 0 0 b8;
+    TRTS;
+
+void SSLv3::RecordLayer;
+   
+    LABL 0 0 0 b7 SSLv3 Record Layer;
+    SSLv3;
+    LABL 0 0 0 b8;
+    
+    if(g[16] > 0)
+    {
+        SSL::NextRecord;
+    }
+    TRTS;
+    
+void TLS::Start;
+    LABL 0 0 0 b1 TLS - Transport Layer Security\TLS:;
+    
+    TLS::RecordLayer;
+    
+    LABL 0 0 0 b8;
+    TRTS;
+
+void TLS::RecordLayer;
+
+    l[1] = pb[2];
+    l[2] = 0;
+    if(l[1] == 1)
+    {
+        LABL 0 0 0 b7 TLS v1.0 Record Layer;
+        l[2] = 1;
+    }
+    if(l[1] == 2)
+    {
+       LABL 0 0 0 b7 TLS v1.1 Record Layer;
+       l[2] = 1;
+    }
+    if(l[1] == 3)
+    {
+        LABL 0 0 0 b7 TLS v1.2 Record Layer;
+        l[2] = 1;
+    }
+    
+    if(l[2] == 0)
+    {
+        //unknown version, just give it a generic name
+        LABL 0 0 0 b7 TLS Record Layer;
+    }
+    
+    SSLv3;
+    
+    if(g[16] > 0)
+    {
+        SSL::NextRecord;
+    }
+    TRTS;
+    
+void SSL_Indentation;
+	SSL::NextRecord;
+	TRTS;
+
+void SSL_Continuation_Data;
+	BREM 0 41;
+	SUBG 4 41;
+	if (l[1] == 0)
+	{
+		TRTS;
+	}
+
+	l[1] = s[2];
+	if (l[1] == 0)	//DUMP if no previous info
+	{
+		BREM 0 41;
+		SUBG 4 41;
+		LABL 0 0 0 b7 Unrecognized SSL Layer;
+		LABL 0 0 90 c4 -- SSL Data Can Not Be Recognized --;
+		DGLB 0 41 90 c2 Length:;
+		LABL 0 0 0 24 bytes;
+		DUMP 0 41 90 c2 SSL Data:;
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+
+	l[2] = l[1];
+	l[1] >>= 16;    //high word
+	l[2] &= 0xffff; //low word
+	LABL 0 0 0 b7 Continued SSL Layer;
+	LABL 0 0 90 c4 -- SSL Continuation Data of the Previous Packet --;
+	DGLB 0 41 90 c2 Length:;
+	LABL 0 0 0 24 bytes;
+	BREM 0 4;
+	if (l[2] > 0)
+	{
+		LABL 0 0 0 b7 Continued Protocol;
+		DGLB 0 42 90 c2 Length:;
+		LABL 0 0 0 24 bytes;
+		DUMP 0 42 90 b2 Protocol Data:;
+		l[1] -= l[2];
+		LABL 0 0 0 b8;
+	}
+	if (l[1] > 0)
+	{
+		g[2] = l[1]; //remaining bytes
+		g[2] += 1;   // + Type byte
+		l[1] = pb[0];
+		TSB# 0 41 0 0 SSLv3::Func;
+		SKIP 1 0;
+		DUMP 0 41 90 b2 Remaining Data:;
+		s[2] = 0;
+	}
+	LABL 0 0 0 b8;
+	//Try to parse the packet again
+	SSL::NextRecord;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+//
+// SSLv2
+//
+// --------------------------------------------------------------------------------------
+
+void SSLv2;
+	// Continuation Data
+	INCR 5;
+	GBYT 0 1;
+	DECR 5;
+	//DGLB 0 1 90 c2 g1:;
+	SLTE 1 1;
+	SKIP 80000005;
+	LABL 0 0 90 c4 -- SSL Continuation Data --;
+	BREM 0 31;
+	SUBG 4 31;
+	DUMP 0 31 90 c2 SSL Data:;
+	TRTS;
+	
+	INCR 1;
+	DBYT 0 1 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	DBYT 0 2 90 c2 Message Type:;
+	CST# 0 2 00 14 SSLv2::MessageTypes::List;
+	if (g[2] >= 17)
+	{
+		LABL 0 0 0 14 Encrypted Handshake Message;
+	}
+	TST# 0 2 0 0 SSLv2::MessageTypes::Func;
+	TRTS;
+
+str# SSLv2::MessageTypes::List;
+	0x00 | Hello request; 
+	0x01 | Client hello;
+	0x02 | Client Master Key;
+	0x03 | Client finished;
+	0x04 | Server hello;
+	0x05 | Server verify;
+	0x06 | Server finished;
+	0x07 | Request certificate;
+	0x08 | Client certificate;
+	0x0b | Certificate; 
+	0x0c | Server key exchange;
+	0x0d | Certificate request;
+	0x0e | Server hello done;
+	0x0f | Certificate verify;
+	0x10 | Client key exchange;
+	
+str# SSLv2::MessageTypes::Func;
+	0x00 | SSL::HelloRequest; 
+	0x01 | SSLv2::ClientHello;
+	0x04 | SSLv2::ServerHello;
+	0x0b | SSLv3::Certificate;
+	0x0c | SSL::ServerKeyExchange;
+	0x0d | SSL::CertificateRequest;
+	0x0e | SSL::ServerHelloDone;
+	0x0f | SSL::CertificateVerify;
+	0x10 | SSL::ClientKeyExchange;
+// --------------------------------------------------------------------------------------
+//
+// SSLv3
+//
+// --------------------------------------------------------------------------------------
+
+void SSLv3;
+	DBYT 0 1 90 c2 Content Type:;
+	CST# 0 1 00 14 SSLv3::List;
+	DBYT 0 3 90 c2 Version:;
+	DBYT 0 4 90  0 .;
+	if (g[3] == 3)
+	{
+        CEQU 0 4 0 24 SSL 3.0;
+		CEQU 1 4 0 24 TLS 1.0;
+		CEQU 2 4 0 24 TLS 1.1;
+        CEQU 3 4 0 24 TLS 1.2;
+		CEQU 4 4 0 24 TLS 1.3;
+	}
+	DWRD  0 2 90 c2 Length:;
+	l[10] = g[2];
+	LABL 0 0 0 14 bytes;
+	if (g[2] <= g[16])
+	{
+		s[2] = 0;
+	}
+	if (g[2] > g[16])
+	{
+		l[1] = g[2];
+		g[2] = g[16];
+		LABL 0 0 0 14 (length is larger than remaining size of packet);
+		//put remaining pkt bytes to s[1].HighWord
+		l[1] -= g[16];
+		l[1] <<= 16;
+		s[2] = l[1];
+	}
+	g[2] = l[10];
+	TSB# 0 1 0 0 SSLv3::Func;
+    
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# SSLv3::List;
+	0x00 | Hello request;
+	0x01 | Client hello;
+	0x02 | Server hello;
+	0x0b | Certificate;
+	0x0c | Server key exchange;
+	0x0d | Certificate request;
+	0x0e | Server hello done;
+	0x0f | Certificate verify;
+	0x10 | Client key exchange;
+	0x14 | Change Cipher Spec Protocol;
+	0x15 | Alert Protocol;
+	0x16 | Handshake Protocol;
+	0x17 | Application Data Protocol;
+
+str# SSLv3::Func;
+	0x00 | SSL::HelloRequest;
+	0x01 | SSLv2::ClientHello;
+	0x02 | SSL::ServerHello;
+	0x0b | SSLv3::Certificate;
+	0x0c | SSL::ServerKeyExchange;
+	0x0d | SSL::CertificateRequest;
+	0x0e | SSL::ServerHelloDone;
+	0x0f | SSL::CertificateVerify;
+	0x10 | SSL::ClientKeyExchange;
+	0x14 | SSLv3::ChangeCipherSpec;
+	0x15 | SSLv3::Alert;
+	0x16 | SSLv3::Handshake;
+	0x17 | SSLv3::ApplicationData;
+
+//use this to decode decrypted ssl data on well known ports
+str# SSL::KnownPortFunc;
+	443 | HTTP;
+	636 | LDAP;
+	993 | IMAP;
+	
+// --------------------------------------------------------------------------------------
+
+void SSLv3::ChangeCipherSpec;						// 0x14
+	LABL 0 0 00 b7 Change Cipher Spec Protocol;
+	DUMP 0 2 c0 c2 Change Cipher Spec Message:;
+	LABL 0 0 00 b8;
+	MOVE 1 32;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSLv3::Alert;									// 0x15
+	LABL 0 0 0 b7 Alert Protocol;
+	g[6] = pb[0];
+	if (0 <= g[6])
+	{
+		DUMP 0 2 90 c2 Encrypted Alert:;
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+	if (g[6] >= 3)
+	{
+		DUMP 0 2 90 c2 Encrypted Alert:;
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+	DBYT 0 6 90 c2 Alert Level:;
+	 CEQU 1 6 0 14 Warning;
+	 CEQU 2 6 0 14 Fatal;
+	DBYT 0 6 90 c2 Alert Description:;
+	CST# 0 6 00 14 SSLv3::Alert::AlertMessages;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# SSLv3::Alert::AlertMessages;
+	0x00 | Close Notify;					// BD: SSL 3.0 and TLS error descriptions
+	0x01	|	End of early data;			//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf
+	0x0a | Unexpected Message;				// BD: SSL 3.0 and TLS error descriptions
+	0x14 | Bad Record MAC;					// BD: SSL 3.0 and TLS error descriptions
+	0x15 | Decryption Failed;				// BD: TLS specific error descriptions
+	0x16 | Record Overflow;					// BD: TLS specific error descriptions
+	0x1E | Decompression Failure;			// BD: SSL 3.0 and TLS error descriptions
+	0x28 | Handshake Failure;				// BD: SSL 3.0 and TLS error descriptions
+	0x29 | No Certificate;					// BD: SSL 3.0 only error descriptions
+	0x2a | Bad Certificate;					// BD: SSL 3.0 and TLS error descriptions
+	0x2b | Unsupported Certificate;			// BD: SSL 3.0 and TLS error descriptions
+	0x2c | Certificate Revoked;				// BD: SSL 3.0 and TLS error descriptions
+	0x2d | Certificate Expired;				// BD: SSL 3.0 and TLS error descriptions
+	0x2e | Certificate Unknown;				// BD: SSL 3.0 and TLS error descriptions
+	0x2f | Illegal Parameter;				// BD: SSL 3.0 and TLS error descriptions
+	0x30 | Unknown CA;						// BD: TLS specific error descriptions
+	0x31 | Access Denied;					// BD: TLS specific error descriptions
+	0x32 | Decode Error;					// BD: TLS specific error descriptions
+	0x33 | Decrypt Error;					// BD: TLS specific error descriptions
+	0x3C | Export Restriction;				// BD: TLS specific error descriptions
+	0x46 | Protocol Version;				// BD: TLS specific error descriptions
+	0x47 | Insufficient Security;			// BD: TLS specific error descriptions
+	0x50 | Internal Error;					// BD: TLS specific error descriptions
+	0x5A | User Canceled;					// BD: TLS specific error descriptions
+	0x64 | No Renegotiation;				// BD: TLS specific error descriptions
+	109	|	Missing extension;					//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	110	|	Unsupported extension;				//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	111	|	Certificate unobtainable;			//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	112	|	Unrecognized name;					//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	113	|	Bad certificate status response;	//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	114	|	Bad certificate hash value;			//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	115	|	Unknown psk identity;				//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+	116	|	Certificate required;				//https://tools.ietf.org/pdf/draft-ietf-tls-tls13-18.pdf 
+
+// --------------------------------------------------------------------------------------
+
+void SSLv3::Handshake;								// 0x16
+	l[10] = g[2]; //total length
+	while (l[10] > 1)
+	{
+	l[10] -= 1;
+
+	LABL 0 0 0 b7 Handshake Protocol;
+	if (g[0x32] == 1)
+	{
+		SSLv3::Handshake::Finished;
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+	SSLv3::Handshake::MessageType;  //get Type to g[6];
+	if (g[6] >= 21)
+	{
+        //account for the one byte that was read (handshake type)
+        l[2] = g[2];
+        l[2] -= 1;
+		DUMP 0 42 90 c2 Encrypted Data:;
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+
+	l[2] = pl[0];
+	l[2] >>= 8;
+	l[10] -= 3;
+	l[10] -= l[2];
+
+	//put remaining bytes to s[2].LowWord;
+	BREM 0 41;
+	SUBG 7 41; //4 CRC + 3 length
+	if (l[2] > l[1])
+	{
+		l[2] -= l[1];
+		l[4] = s[2];
+		s[2] |= l[2];
+		//DEC# 3 0 90 c2 Length:;
+		//LABL 0 0 0 14 bytes;
+		//DUMP 0 41 90 b2 Content Ignored::;
+	}
+
+	TSB# 0 6 00 00 SSLv3::Handshake::Jumper;
+	LABL 0 0 00 b8;
+
+	BREM 0 41;
+	if (l[1] == 4)
+	{
+		l[10] = 0;
+	}
+	}
+	TRTS;
+
+void SSLv3::LengthJump;
+	DEC# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	TSB# 0 6 00 00 SSLv3::Handshake::Jumper2;
+	TRTS;
+
+str# SSLv3::Handshake::Jumper;
+	0x01 | SSLv3::LengthJump;
+	0x02 | SSLv3::LengthJump;
+    0x04 | SSLv3::LengthJump;
+	0x0b | SSLv3::LengthJump;
+	0x0d | SSLv3::LengthJump;
+	0x00 | SSL::HelloRequest; 
+	0x0c | SSL::ServerKeyExchange;
+	0x0e | SSL::ServerHelloDone;
+	0x0f | SSL::CertificateVerify;
+	0x10 | SSL::ClientKeyExchange;
+
+str# SSLv3::Handshake::Jumper2;
+	0x01 | SSLv3::ClientHello;
+	0x02 | SSL::ServerHello;
+    0x04 | SSLv3::NewSessionTicket;
+	0x0b | SSLv3::Certificate;
+	0x0d | SSL::CertificateRequest;
+
+void SSLv3::Handshake::MessageType;
+	DBYT 0 6 90 c2 Handshake Type:;
+	CST# 0 6 00 24 SSLv3::Handshake::MessageType::List;
+    CLSE 0 0 00 24 unknown;
+	SKIP 800000001;
+	g[6] = 21;
+	TRTS;	
+	
+str# SSLv3::Handshake::MessageType::List;
+	0x00 | Hello Request;
+	0x01 | Client Hello;
+	0x02 | Server Hello;
+    0x04 | New Session Ticket;
+	0x0b | Certificate;
+	0x0c | Server Key Exchange;
+	0x0d | Certificate Request;
+	0x0e | Server Hello Done;
+	0x0f | Certificate Verify;
+	0x10 | Client Key Exhange;
+	0x14 | Finished;
+
+void SSLv3::Handshake::Finished
+{
+	PRV8 0 41 5 5;	//get the decrypted flag
+	
+	if( l[1] == 1 )
+	{
+		SSLv3::Handshake::Finished::Decrypted;
+		TRTS;
+	}
+	
+	SSLv3::Handshake::Finished::Encrypted;
+	
+	TRTS;
+}
+
+void SSLv3::Handshake::Finished::Encrypted
+{
+	LABL 0 0 0 b7 Finished;
+	DUMP 0 2 90 c2 Encrypted Data:;
+	LABL 0 0 0 b8;
+	
+	TRTS;
+}
+
+void SSLv3::Handshake::Finished::Decrypted
+{
+	//skip the msg type
+	INCR 1;
+	
+	LABL 0 0 0 b7 Finished;
+	DEC# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	
+	l[1] = g[2];	//g[2] should have the record length
+	l[1] -= 4;		//subtract 4 for the msg_type and msg_length;
+	DUMP 0 41 90 c2 Verify Data:;
+	LABL 0 0 0 b8;
+}
+
+// --------------------------------------------------------------------------------------
+
+void SSLv3::ApplicationData;						// 0x17
+	//is this decrypted SSL application data?
+	PRV8 0 41 0 0;
+	
+	//does this record have data?
+	if( g[2] > 0 )
+	{
+		//is this decrypted application data?
+		if( l[1] == 1 )
+		{
+			//get the number of bytes remaining
+			BREM 0 42;
+			
+			//make sure there is enough data for the whole record
+			if( l[2] >= g[2] )
+			{
+				LABL 0 0 0 b7 Decrypted Data;
+				TSB# 0 14 5 5 SSL::KnownPortFunc;
+				LABL 0 0 0 b8;
+				
+				SKIP 1;
+				TRTS;
+			}
+		}
+	}
+	
+	LABL 0 0 0 b7 Application Data;
+	DUMP 0 2 90 c2 Application Data:;
+	LABL 0 0 0 b8;
+
+	// SamChen
+	DECR( 8, 0 );  // Move back: 8-byte TS
+	l[8] = 8;
+	l[7] = 0;
+	GBYT( 0, l[7] );
+
+	if (l[7] >= 0x49)
+	{
+		if (l[7] < 0x57)
+		{
+			//HEX#( 0, 8, 0x90, 0xc2, "Timestamp: ");
+			PRV1( 0, 33, 0x90, 0xc2, "Timestamp: ");
+			l[8] -= 8;
+		}
+	}
+
+	INCR( l[8], 0 );
+
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL::HelloRequest; 
+	LABL 0 0 0 b7 Hello Request;
+	DEC# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSLv3::ClientHello()
+{
+	LABL 0 0 0 b7 Client Hello;
+	DBYT 0 3 90 c2 Version:;
+	DBYT 0 4 90  0 .;
+		CEQU 0 4 0 24 SSL 3.0;
+		CEQU 1 4 0 24 TLS 1.0;
+		CEQU 2 4 0 24 TLS 1.1;
+        CEQU 3 4 0 24 TLS 1.2;
+		CEQU 4 4 0 24 TLS 1.3 (draft);		
+	TIME 0 0 90 c2 Random Time:;
+	HEX# 1c 0 90 c2 Random Bytes:;
+	DBYT  0 6 90 c2 Session ID Length:;
+	LABL 0 0 0 14 bytes;
+	DUMP  0 6 90 c2 Session ID:;
+	DWRD  0 5 90 c2 Cipher Spec Length:;
+	LABL 0 0 0 14 bytes;
+
+	// cipher specs
+	LABL 0 0 0 b7 Cipher Specs;
+	while (g[5] > 0)
+	{
+		HWRD 0 41 90 c2 Cipher Spec:;
+		CST# 0 41 00 74 SSL::CipherSuiteList;
+		g[5] -= 2;
+	}
+	LABL 0 0 0 b8;
+	
+	// compression methods
+	LABL 0 0 0 b7 Compression Methods;
+	DBYT 0 41 90 c2 Num of Methods:;
+	while (l[1] > 0)
+	{
+		DBYT 0 42 90 c2 Compression Method:;
+		CST# 0 42 00 14 SSLv3::ClientHello::CompressionMethods;
+		l[1] -= 1;
+	}
+	LABL 0 0 0 b8;
+	
+	if (g[16] > 0)
+	{
+
+	LABL 0 0 00 c7 Extensions;
+	DWRD 0 48 90 c2 Extensions Length:;
+	while (l[8] >  0)
+	{
+		l[12] = pw[0];
+			CST# 0 4c 0 c7 802.1x_EAP_Extension_Type_Str;
+			CLSE 0 0 0 c7 unknown;
+		HWRD 0 4c 90 c2 Type:;
+			CST# 0 4c 0 14 802.1x_EAP_Extension_Type_Str;
+			CLSE 0 0 0 14 unknown;
+		DWRD 0 51 90 c2 Length:;
+		l[8] -= 4;			//subtract extension header
+        if(l[17] > 0)
+        {
+            if (l[12] == 0x0000)
+            {
+                HWRD 0 4d 90 c2 Name List Length:;
+                while (l[13] > 0)
+                {
+                    HBYT 0 4e 90 c2 Name Type:;
+                        CEQU 0 4e 0 14 Host Name;
+                        CLSE 0 4e 0 14 Unknown Name Type;
+                    HWRD 0 4f 90 c2 Name Length:;
+                    CHR# 0 4f 90 c2 Data:;
+                    l[13] -= 8;
+                    l[13] -= l[15];
+                }
+                l[8] -= l[17];
+            }
+            if (l[12] == 0x0005)
+            {
+					DBYT 0 4e 90 c2 Certificate Type:;
+						CEQU 1 4e 0 14 ocsp;
+						CEQU 2 4e 0 14 ocsp_multi;
+						//CEQU 0 4e 0 14 X.509;
+						//CEQU 1 4e 0 14 OpenPGP;
+						//CEQU 2 4e 0 14 Raw Public Key;
+						//CEQU fe 4e 0 14 Reserved for Private Use;
+						//CEQU ff 4e 0 14 Reserved for Private Use;
+						//CLSE 0 4e 0 14 Unassigned;
+					HWRD 0 4f 90 c2 Responder ID List Length:;
+					HWRD 0 4e 90 c2 Request Extensions Length:;
+					if (l[16] != 0x00)
+					{
+						CHR# 0 4f 90 c2 Responder ID List:;
+					}
+					if (l[15] != 0x00)
+					{					
+						CHR# 0 50 90 c2 Request Extensions:;
+					}
+				 l[8] -= l[17];
+			}
+			if (l[12] == 0x000a)
+            {
+                HWRD 0 4e 90 c2 Curves Length:;
+                while (l[14] > 0)
+                {
+                    HWRD 0 4f 90 c2 Curve:;
+                        CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionCurves;
+                        CLSE 0 0 0 14 unknown;
+                    l[14] -= 2;
+                }
+                l[8] -= 17;
+            }
+            if (l[12] == 0x000b)
+            {
+                HBYT 0 4e 90 c2 EC Points Formats Length:;
+                while (l[14] > 0)
+                {
+                    HBYT 0 4f 90 c2 Elliptic Curves Points format:;
+                        CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionECPointFormats;
+                        CLSE 0 0 0 14 unknown;
+                    l[14] -= 1;
+                }
+                l[8] -= l[17];
+            }
+			if (l[12] == 0x000d)
+            {
+				DWRD 0 4e 90 c2 Signature Hash Length:;
+				while (l[14] > 0)
+                {
+					HWRD( 0, l[22], 0x05, 0xc9 "Signature Hash Algorithm - " );
+					DECR 2;
+					GBYT( 0 ,l[20] );
+					GBYT( 1 ,l[21] );
+					CST#( 0, l[20], 0, 0x09, SSLv3::ClientHello::HashAlgorithm );
+					LABL( 0, 0, 0, 0x9, " - ");
+					CST#( 0, l[21], 0, 0x09, SSLv3::ClientHello::SignatureAlgorithm );
+					LABL( 0, 0, 0, 0x9, ":");
+					HGLB( 0, l[22], 0x20, 0 );
+					HBYT 0 4f 90 c2 Hash:;
+						CST# 0 4f 0 14 SSLv3::ClientHello::HashAlgorithm;
+					HBYT 0 4f 90 c2 Signature:;
+						CST# 0 4f 0 14 SSLv3::ClientHello::SignatureAlgorithm;
+					LABL 0 0 0 c8;
+					l[14] -= 2;
+				}
+				l[8] -= l[17];
+			}
+			if (l[12] == 0x0010)
+            {
+				HWRD 0 4e 90 c2 APLN Length:;
+				while (l[14] > 0)
+                {
+                    DBYT 0 4f 90 c2 APLN Length:;
+                    CHR# 0 4f 90 c2 APLN Next Protocol:;
+					//Save in Superglobal for later decryption
+					//h2 := HTTP/2 over TLS with APLN
+					//h2c := Cleartext HTTP/2 with direct negoation
+					//h2-14, h2c-14 := draft verison 14
+					//HTTP/1.1	0x68 0x74 0x74 0x70 0x2f 0x31 0x2e 0x31 ("http/1.1")	[RFC7230]
+					//SPDY/1	0x73 0x70 0x64 0x79 0x2f 0x31 ("spdy/1")	[http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft1]
+					//SPDY/2	0x73 0x70 0x64 0x79 0x2f 0x32 ("spdy/2")	[http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft2]
+					//SPDY/3	0x73 0x70 0x64 0x79 0x2f 0x33 ("spdy/3")	[http://dev.chromium.org/spdy/spdy-protocol/spdy-protocol-draft3]
+					//Traversal Using Relays around NAT (TURN)	0x73 0x74 0x75 0x6E 0x2E 0x74 0x75 0x72 0x6E ("stun.turn")	[RFC7443]
+					//NAT discovery using Session Traversal Utilities for NAT (STUN)	0x73 0x74 0x75 0x6E 0x2E 0x6e 0x61 0x74 0x2d 0x64 0x69 0x73 0x63 0x6f 0x76 0x65 0x72 0x79 ("stun.nat-discovery")	[RFC7443]
+					//HTTP/2 over TLS	0x68 0x32 ("h2")	[RFC7540]
+					//HTTP/2 over TCP	0x68 0x32 0x63 ("h2c")	[1][RFC7540]
+					//WebRTC Media and Data	0x77 0x65 0x62 0x72 0x74 0x63 ("webrtc")	[RFC-ietf-rtcweb-alpn-04]
+					//Confidential WebRTC Media and Data	0x63 0x2d 0x77 0x65 0x62 0x72 0x74 0x63 ("c-webrtc")	[RFC-ietf-rtcweb-alpn-04]
+					//FTP	0x66 0x74 0x70 ("ftp")	[RFC959][RFC4217]
+                    l[14] -= 1;     l[14] -= l[15];               
+                }
+				l[8] -= l[17];
+			}
+            if (l[12] != 0x0000)
+            {
+				if (l[12] != 0x0005)
+				{
+					if(l[12] != 0x000a)
+					{
+						if(l[12] != 0x000b)
+						{	
+							if (l[12] != 0x000d)
+							{
+								if (l[12] != 0x0010)
+								{
+									DUMP 0 51 90 c2 Data:;
+									l[8] -= l[17];
+								}
+							}
+						}
+					}
+				}
+            }
+        }
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+str# SSLv3::ClientHello::HashAlgorithm;
+0x00 | none;
+0x01 | md5;
+0x02 | sha1;
+0x03 | sha224;
+0x04 | sha256;
+0x05 | sha384;
+0x06 | sha512;
+str# SSLv3::ClientHello::SignatureAlgorithm;
+0x00 | anonymous;
+0x01 | rsa;
+0x02 | dsa;
+0x03 | ecdsa;
+
+str# SSLv3::ClientHello::ExtensionECPointFormats;
+0	|	uncompressed;
+1	|	ansiX962_compressed_prime;
+2	|	ansiX962_compressed_char2;
+
+str# SSLv3::ClientHello::ExtensionCurves;
+0x01 | sect163k1;
+0x02 | sect163r1;
+0x03 | sect163r2;
+0x04 | sect193r1;
+0x05 | sect193r2;
+0x06 | sect233k1;
+0x07 | sect233r1;
+0x08 | sect239k1;
+0x09 | sect283k1;
+0x0A | sect283r1;
+0x0B | sect409k1;
+0x0C | sect409r1;
+0x0D | sect571k1;
+0x0E | sect571r1;
+0x0F | secp160k1;
+0x10 | secp160r1;
+0x11 | secp160r2;
+0x12 | secp192k1;
+0x13 | secp192r1;
+0x14 | secp224k1;
+0x15 | secp224r1;
+0x16 | secp256k1;
+0x17 | secp256r1;
+0x18 | secp384r1;
+0x19 | secp521r1;
+26 | brainpoolP256r1;	//[RFC7027]
+27 | brainpoolP384r1;	//[RFC7027]
+28 | brainpoolP512r1;	//[RFC7027]
+29 | ecdh_x25519 (TEMPORARY - registered 2016-02-29, expires 2017-03-01);	//[draft-ietf-tls-tls][draft-ietf-tls-rfc4492bis]
+30 | ecdh_x448 (TEMPORARY - registered 2016-02-29, expires 2017-03-01);		//[draft-ietf-tls-tls][draft-ietf-tls-rfc4492bis]
+//31-255	Unassigned		
+256 | ffdhe2048;	//[RFC7919]
+257 | ffdhe3072;	//[RFC7919]
+258 | ffdhe4096;	//[RFC7919]
+259 | ffdhe6144;	//[RFC7919]
+260 | ffdhe8192;	//[RFC7919]
+//261-507	Unassigned;
+508 | Reserved for Private Use;	//[RFC7919]
+509 | Reserved for Private Use;	//[RFC7919]
+510 | Reserved for Private Use;	//[RFC7919]
+511 | Reserved for Private Use;	//[RFC7919]
+//512-65023	Unassigned;	//
+//65024-65279	Reserved for Private Use;	//[RFC4492]
+65280 | Unassigned;	//
+0xFF01 | arbitrary_explicit_prime_curves;
+0xFF02 | arbitrary_explicit_char2_curves;
+
+str# SSLv3::ClientHello::CompressionMethods;
+	0 | Null;
+	1 | SSL_RSA_WITH_NULL_MD5;
+
+str# 802.1x_EAP_Extension_Type_Str;
+0x0000	|	Server name;
+0x0001	|	Max fragment length;
+0x0002	|	Client certificate url;
+0x0003	|	Trusted ca keys;
+0x0004	|	Truncated hmac;
+0x0005	|	Status request;
+0x0006	|	User mapping;
+0x0007	|	Client authz;
+0x0008	|	Server authz;
+0x0009	|	Cert type;
+0x000a	|	Elliptic curves;
+0x000b	|	EC point formats;
+0x000c	|	SRP;
+0x000d	|	Signature Algorithms;
+0x000e	|	Use srtp;
+0x000f	|	Heartbeat;
+0x0010  |	Application Layer Protocol Negotiation;		//[RFC7301]
+0x0011  |	Status Request v2;							//[RFC6961]
+0x0012  |	Signed Certificate timestamp;				//[RFC6962]
+0x0013  |	Client Certificate Type;					//[RFC7250]
+0x0014  |	Server Certificate Type;					//[RFC7250]
+0x0015  |	Padding;									//[RFC7685]
+0x0016  |	Encrypt then mac;							//[RFC7366]
+0x0018  |	Token Binding (registered 2016-02-04, expires 2017-02-04);  //[draft-ietf-tokbind-negotiation]
+0x0017  |	Extended Master Secret;  //[RFC7627]
+0x0019  |	Cached Info;  //[RFC7924]
+0x001A  |	Channel id old;			// RFC 5746
+0x001B	|	Channel id;				//
+0x0023	|	SessionTicket TLS;
+0x0028	|	Key share;
+0x0029	|	Pre shared key;
+0x0029	|	Early data;
+0x0029	|	Supported versions;
+0x0029	|	Cookie;
+0x0029	|	PSK key exchange modes;
+0x0029	|	Ticket early data info;
+0x3374	|	Next Protocol Negotiation;
+0xff01	|	Renegotiation Info;
+0xff02	|	Obsolete_RESERVED (TLS13 Draft);
+// --------------------------------------------------------------------------------------
+
+void SSLv2::ClientHello;
+	DWRD 0 3 90 c2 Version:;
+	//DBYT 0 4 90  0 .;
+	DWRD 0 5 90 c2 Cipher Spec Length:;
+	LABL 0 0 0 14 bytes;
+	DWRD 0 6 90 c2 Session ID Length:;
+	LABL 0 0 0 14 bytes;
+	DWRD 0 7 90 c2 Challenge Length:;
+	LABL 0 0 0 14 bytes;
+	if (g[5] > 0)
+	{
+		SSLv2::ClientHello::CipherSpecs;
+	}
+	if (g[6] > 0)
+	{
+		DUMP 0 6 90 c2 Session ID:;
+	}
+	if (g[7] > 0)
+	{
+		DUMP 0 7 90 c2 Challenge:;
+	}
+	TRTS;
+
+void SSLv2::ClientHello::CipherSpecs;
+	LABL 0 0 0 b7 Cipher Specs;
+	while (g[5] > 0)
+	{
+		GLNG  0 8;					// si: wtf?? ugh bd
+		DIVG 10 8;
+		DIVG 10 8;
+		HEX#  3 0 90 c2 Cipher Spec:;
+		CST#  0 8 00 14 SSL::CipherSuiteList;
+		g[5] -= 3;
+	}	
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# SSL::CipherSuiteList;
+	0x1			| SSL_RSA_WITH_NULL_MD5;
+	0x2			| SSL_RSA_WITH_NULL_SHA;
+	0x3			| SSL_RSA_EXPORT_WITH_RC4_40_MD5;
+	0x4			| SSL_RSA_WITH_RC4_128_MD5;
+	0x5			| SSL_RSA_WITH_RC4_128_SHA;
+	0x6			| SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5;
+	0x7			| SSL_RSA_WITH_IDEA_CBC_SHA;
+	0x8			| SSL_RSA_EXPORT_WITH_DES40_CBC_SHA;
+	0x9			| SSL_RSA_WITH_DES_CBC_SHA;
+	0xa			| SSL_RSA_WITH_3DES_EDE_CBC_SHA;
+	0xb			| SSL_DH_DSS_EXPORT_WITH_DES40_CBC_SHA;
+	0xc			| SSL_DH_DSS_WITH_DES_CBC_SHA;
+	0xd			| SSL_DH_DSS_WITH_3DES_EDE_CBC_SHA;
+	0xe			| SSL_DH_RSA_EXPORT_WITH_DES40_CBC_SHA;
+	0xf			| SSL_DH_RSA_WITH_DES_CBC_SHA;
+	0x10		| SSL_DH_RSA_WITH_3DES_EDE_CBC_SHA;
+	0x11		| SSL_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA;
+	0x12		| SSL_DHE_DSS_WITH_DES_CBC_SHA;
+	0x13		| SSL_DHE_DSS_WITH_3DES_EDE_CBC_SHA;
+	0x14		| SSL_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA;
+	0x15		| SSL_DHE_RSA_WITH_DES_CBC_SHA;
+	0x16		| SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA;
+	0x17		| SSL_DH_anon_EXPORT_WITH_RC4_40_MD5;
+	0x18		| SSL_DH_anon_WITH_RC4_128_MD5;
+	0x19		| SSL_DH_anon_EXPORT_WITH_DES40_CBC_SHA;
+	0x1a		| SSL_DH_anon_WITH_DES_CBC_SHA;
+	0x1b		| SSL_DH_anon_WITH_3DES_EDE_CBC_SHA;
+	0x1c		| SSL_FORTEZZA_DMS_WITH_NULL_SHA;
+	0x1d		| SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA;
+	0x1e		| SSL_FORTEZZA_KEA_WITH_RC4_128_SHA;
+	0x2f		| TLS_RSA_WITH_AES_128_CBC_SHA;
+	0x30		| TLS_DH_DSS_WITH_AES_128_CBC_SHA;
+	0x31		| TLS_DH_RSA_WITH_AES_128_CBC_SHA;
+	0x32		| TLS_DHE_DSS_WITH_AES_128_CBC_SHA;
+	0x33		| TLS_DHE_RSA_WITH_AES_128_CBC_SHA;
+	0x34		| TLS_DH_anon_WITH_AES_128_CBC_SHA;
+	0x35		| TLS_RSA_WITH_AES_256_CBC_SHA;
+	0x36		| TLS_DH_DSS_WITH_AES_256_CBC_SHA;
+	0x37		| TLS_DH_RSA_WITH_AES_256_CBC_SHA;
+	0x38		| TLS_DHE_DSS_WITH_AES_256_CBC_SHA;
+	0x39		| TLS_DHE_RSA_WITH_AES_256_CBC_SHA;
+	0x3A		| TLS_DH_anon_WITH_AES_256_CBC_SHA;
+	0x41		| TLS_RSA_WITH_CAMELLIA_128_CBC_SHA;
+	0x42		| TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA;
+	0x43		| TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA;
+	0x44		| TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA;
+	0x45		| TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA;
+	0x46		| TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA;
+	0x47		| TLS_ECDH_ECDSA_WITH_NULL_SHA;
+	0x48		| TLS_ECDH_ECDSA_WITH_RC4_128_SHA;
+	0x49		| TLS_ECDH_ECDSA_WITH_DES_CBC_SHA;
+	0x4A		| TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA;
+	0x4B		| TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA;
+	0x4C		| TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA;
+	0x60		| TLS_RSA_EXPORT1024_WITH_RC4_56_MD5;
+	0x61		| TLS_RSA_EXPORT1024_WITH_RC2_CBC_56_MD5;
+	0x62		| TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA;
+	0x62		| TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA;				// undocumented?
+	0x63		| TLS_DHE_DSS_EXPORT1024_WITH_DES_CBC_SHA;
+	0x64		| TLS_RSA_EXPORT1024_WITH_RC4_56_SHA;
+	0x65		| TLS_DHE_DSS_EXPORT1024_WITH_RC4_56_SHA;
+	0x66		| TLS_DHE_DSS_WITH_RC4_128_SHA;
+	0x84		| TLS_RSA_WITH_CAMELLIA_256_CBC_SHA;
+	0x85		| TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA;
+	0x86		| TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA;
+	0x87		| TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA;
+	0x88		| TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA;
+	0x89		| TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA;
+	0x00008A	|	TLS_PSK_WITH_RC4_128_SHA;
+	0x00008B	|	TLS_PSK_WITH_3DES_EDE_CBC_SHA;
+	0x00008C	|	TLS_PSK_WITH_AES_128_CBC_SHA;
+	0x00008D	|	TLS_PSK_WITH_AES_256_CBC_SHA;
+	0x00008E	|	TLS_DHE_PSK_WITH_RC4_128_SHA;
+	0x00008F	|	TLS_DHE_PSK_WITH_3DES_EDE_CBC_SHA;
+	0x000090	|	TLS_DHE_PSK_WITH_AES_128_CBC_SHA;
+	0x000091	|	TLS_DHE_PSK_WITH_AES_256_CBC_SHA;
+	0x000092	|	TLS_RSA_PSK_WITH_RC4_128_SHA;
+	0x000093	|	TLS_RSA_PSK_WITH_3DES_EDE_CBC_SHA;
+	0x000094	|	TLS_RSA_PSK_WITH_AES_128_CBC_SHA;
+	0x000095	|	TLS_RSA_PSK_WITH_AES_256_CBC_SHA;
+	0x000096	|	TLS_RSA_WITH_SEED_CBC_SHA;
+	0x000097	|	TLS_DH_DSS_WITH_SEED_CBC_SHA;
+	0x000098	|	TLS_DH_RSA_WITH_SEED_CBC_SHA;
+	0x000099	|	TLS_DHE_DSS_WITH_SEED_CBC_SHA;
+	0x00009A	|	TLS_DHE_RSA_WITH_SEED_CBC_SHA;
+	0x00009B	|	TLS_DH_anon_WITH_SEED_CBC_SHA;
+	0x00009C	|	TLS_RSA_WITH_AES_128_GCM_SHA256;
+	0x00009D	|	TLS_RSA_WITH_AES_256_GCM_SHA384;
+	0x00009E	|	TLS_DHE_RSA_WITH_AES_128_GCM_SHA256;
+	0x00009F	|	TLS_DHE_RSA_WITH_AES_256_GCM_SHA384;
+	0x0000A0	|	TLS_DH_RSA_WITH_AES_128_GCM_SHA256;
+	0x0000A1	|	TLS_DH_RSA_WITH_AES_256_GCM_SHA384;
+	0x0000A2	|	TLS_DHE_DSS_WITH_AES_128_GCM_SHA256;
+	0x0000A3	|	TLS_DHE_DSS_WITH_AES_256_GCM_SHA384;
+	0x0000A4	|	TLS_DH_DSS_WITH_AES_128_GCM_SHA256;
+	0x0000A5	|	TLS_DH_DSS_WITH_AES_256_GCM_SHA384;
+	0x0000A6	|	TLS_DH_anon_WITH_AES_128_GCM_SHA256;
+	0x0000A7	|	TLS_DH_anon_WITH_AES_256_GCM_SHA384;
+	0x0000A8	|	TLS_PSK_WITH_AES_128_GCM_SHA256;
+	0x0000A9	|	TLS_PSK_WITH_AES_256_GCM_SHA384;
+	0x0000AA	|	TLS_DHE_PSK_WITH_AES_128_GCM_SHA256;
+	0x0000AB	|	TLS_DHE_PSK_WITH_AES_256_GCM_SHA384;
+	0x0000AC	|	TLS_RSA_PSK_WITH_AES_128_GCM_SHA256;
+	0x0000AD	|	TLS_RSA_PSK_WITH_AES_256_GCM_SHA384;
+	0x0000AE	|	TLS_PSK_WITH_AES_128_CBC_SHA256;
+	0x0000AF	|	TLS_PSK_WITH_AES_256_CBC_SHA384;
+	0x0000B0	|	TLS_PSK_WITH_NULL_SHA256;
+	0x0000B1	|	TLS_PSK_WITH_NULL_SHA384;
+	0x0000B2	|	TLS_DHE_PSK_WITH_AES_128_CBC_SHA256;
+	0x0000B3	|	TLS_DHE_PSK_WITH_AES_256_CBC_SHA384;
+	0x0000B4	|	TLS_DHE_PSK_WITH_NULL_SHA256;
+	0x0000B5	|	TLS_DHE_PSK_WITH_NULL_SHA384;
+	0x0000B6	|	TLS_RSA_PSK_WITH_AES_128_CBC_SHA256;
+	0x0000B7	|	TLS_RSA_PSK_WITH_AES_256_CBC_SHA384;
+	0x0000B8	|	TLS_RSA_PSK_WITH_NULL_SHA256;
+	0x0000B9	|	TLS_RSA_PSK_WITH_NULL_SHA384;
+	0x0000BA	|	TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000BB	|	TLS_DH_DSS_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000BC	|	TLS_DH_RSA_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000BD	|	TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000BE	|	TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000BF	|	TLS_DH_anon_WITH_CAMELLIA_128_CBC_SHA256;
+	0x0000C0	|	TLS_RSA_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000C1	|	TLS_DH_DSS_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000C2	|	TLS_DH_RSA_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000C3	|	TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000C4	|	TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000C5	|	TLS_DH_anon_WITH_CAMELLIA_256_CBC_SHA256;
+	0x0000FF	|	TLS_EMPTY_RENEGOTIATION_INFO_SCSV;
+	0x00c001	|	TLS_ECDH_ECDSA_WITH_NULL_SHA;
+	0x00c002	|	TLS_ECDH_ECDSA_WITH_RC4_128_SHA;
+	0x00c003	|	TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA;
+	0x00c004	|	TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA;
+	0x00c005	|	TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA;
+	0x00c006	|	TLS_ECDHE_ECDSA_WITH_NULL_SHA;
+	0x00c007	|	TLS_ECDHE_ECDSA_WITH_RC4_128_SHA;
+	0x00c008	|	TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA;
+	0x00c009	|	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA;
+	0x00c00a	|	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA;
+	0x00c00b	|	TLS_ECDH_RSA_WITH_NULL_SHA;
+	0x00c00c	|	TLS_ECDH_RSA_WITH_RC4_128_SHA;
+	0x00c00d	|	TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA;
+	0x00c00e	|	TLS_ECDH_RSA_WITH_AES_128_CBC_SHA;
+	0x00c00f	|	TLS_ECDH_RSA_WITH_AES_256_CBC_SHA;
+	0x00c010	|	TLS_ECDHE_RSA_WITH_NULL_SHA;
+	0x00c011	|	TLS_ECDHE_RSA_WITH_RC4_128_SHA;
+	0x00c012	|	TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA;
+	0x00c013	|	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA;
+	0x00c014	|	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA;
+	0x00c015	|	TLS_ECDH_anon_WITH_NULL_SHA;
+	0x00c016	|	TLS_ECDH_anon_WITH_RC4_128_SHA;
+	0x00c017	|	TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA;
+	0x00c018	|	TLS_ECDH_anon_WITH_AES_128_CBC_SHA;
+	0x00c019	|	TLS_ECDH_anon_WITH_AES_256_CBC_SHA;
+	0x00C01A	|	TLS_SRP_SHA_WITH_3DES_EDE_CBC_SHA;
+	0x00C01B	|	TLS_SRP_SHA_RSA_WITH_3DES_EDE_CBC_SHA;
+	0x00C01C	|	TLS_SRP_SHA_DSS_WITH_3DES_EDE_CBC_SHA;
+	0x00C01D	|	TLS_SRP_SHA_WITH_AES_128_CBC_SHA;
+	0x00C01E	|	TLS_SRP_SHA_RSA_WITH_AES_128_CBC_SHA;
+	0x00C01F	|	TLS_SRP_SHA_DSS_WITH_AES_128_CBC_SHA;
+	0x00C020	|	TLS_SRP_SHA_WITH_AES_256_CBC_SHA;
+	0x00C021	|	TLS_SRP_SHA_RSA_WITH_AES_256_CBC_SHA;
+	0x00C022	|	TLS_SRP_SHA_DSS_WITH_AES_256_CBC_SHA;
+	0x00C023	|	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256;
+	0x00C024	|	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384;
+	0x00C025	|	TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA256;
+	0x00C026	|	TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA384;
+	0x00C027	|	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256;
+	0x00C028	|	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384;
+	0x00C029	|	TLS_ECDH_RSA_WITH_AES_128_CBC_SHA256;
+	0x00C02A	|	TLS_ECDH_RSA_WITH_AES_256_CBC_SHA384;
+	0x00C02B	|	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256;
+	0x00C02C	|	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384;
+	0x00C02D	|	TLS_ECDH_ECDSA_WITH_AES_128_GCM_SHA256;
+	0x00C02E	|	TLS_ECDH_ECDSA_WITH_AES_256_GCM_SHA384;
+	0x00C02F	|	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256;
+	0x00C030	|	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384;
+	0x00C031	|	TLS_ECDH_RSA_WITH_AES_128_GCM_SHA256;
+	0x00C032	|	TLS_ECDH_RSA_WITH_AES_256_GCM_SHA384;
+	0x00C033	|	TLS_ECDHE_PSK_WITH_RC4_128_SHA;
+	0x00C034	|	TLS_ECDHE_PSK_WITH_3DES_EDE_CBC_SHA;
+	0x00C035	|	TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA;
+	0x00C036	|	TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA;
+	0x00C037	|	TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256;
+	0x00C038	|	TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA384;
+	0x00C039	|	TLS_ECDHE_PSK_WITH_NULL_SHA;
+	0x00C03A	|	TLS_ECDHE_PSK_WITH_NULL_SHA256;
+	0x00C03B	|	TLS_ECDHE_PSK_WITH_NULL_SHA384;
+	0x00CCA8	|	TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256;	// [RFC7905]
+	0x00CCA9	|	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256;	// [RFC7905]
+	0x00CCAA	|	TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256;		// [RFC7905]
+	0x00CCAB	|	TLS_PSK_WITH_CHACHA20_POLY1305_SHA256;			// [RFC7905]
+	0x00CCAC	|	TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256;	// [RFC7905]
+	0x00CCAD	|	TLS_DHE_PSK_WITH_CHACHA20_POLY1305_SHA256;		// [RFC7905]
+	0x00CCAE	|	TLS_RSA_PSK_WITH_CHACHA20_POLY1305_SHA256;		// 
+	0x010080	|	SSL2_RC4_128_WITH_MD5;
+	0x020080	|	SSL2_RC4_128_EXPORT40_WITH_MD5;
+	0x030080	|	SSL2_RC2_CBC_128_CBC_WITH_MD5;
+	0x040080	|	SSL2_RC2_CBC_128_CBC_EXPORT40_WITH_MD5;
+	0x050080	|	SSL2_IDEA_128_CBC_WITH_MD5;
+	0x060040	|	SSL2_DES_64_CBC_WITH_MD5;
+	0x0700c0	|	SSL2_DES_192_EDE3_CBC_WITH_MD5;
+	0x080080	|	SSL2_RC4_64_WITH_MD5;
+	0x00fefe	|	SSL_RSA_FIPS_WITH_DES_CBC_SHA;					//	netscape
+	0x00feff	|	SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA;
+	0x00ffe0	|	SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA;
+	0x00ffe1	|	SSL_RSA_FIPS_WITH_DES_CBC_SHA;
+	0x800001	|	PCT_SSL_CERT_TYPE / PCT1_CERT_X509;
+	0x800003	|	PCT_SSL_CERT_TYPE / PCT1_CERT_X509_CHAIN;
+	0x810001	|	PCT_SSL_HASH_TYPE / PCT1_HASH_MD5;
+	0x810003	|	PCT_SSL_HASH_TYPE / PCT1_HASH_SHA;
+	0x820001	|	PCT_SSL_EXCH_TYPE / PCT1_EXCH_RSA_PKCS1;
+	0x830004	|	PCT_SSL_CIPHER_TYPE_1ST_HALF / PCT1_CIPHER_RC4;
+	0x842840	|	PCT_SSL_CIPHER_TYPE_2ND_HALF / PCT1_ENC_BITS_40 / PCT1_MAC_BITS_128;
+	0x848040	|	PCT_SSL_CIPHER_TYPE_2ND_HALF / PCT1_ENC_BITS_128 / PCT1_MAC_BITS_128;
+	0x8f8001	|	PCT_SSL_COMPAT / PCT_VERSION_1;
+// --------------------------------------------------------------------------------------
+void SSLv2::ServerHello;
+	
+	LABL 00 0 00 b7 Server Hello;
+	
+	
+	DBYT 0 0 90 c2 Session ID Hit:;
+	DBYT 0 0 90 c2 Certificate Type:;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 41 90 c2 Certificate Length:;
+	DWRD 0 42 90 c2 Cipher Spec Length:;
+	DWRD 0 43 90 c2 Connection ID Length:;
+	if (l[1] != 0)
+	{
+		SSLv2_Certificate_TBSCertificate;
+	}
+	
+	if (l[2] != 0)
+	{
+		LABL 0 0 0 b7 Cipher Specs;
+		while (l[2] > 0)
+		{
+			HBYT 0 44 90 c2 Cipher Spec:;
+			HBYT 80000000 45 90 02 ;
+			HBYT 80000000 46 90 02 ;
+			SHFL( 16, l[4]);		
+			SHFL( 8, l[5]);
+			l[4] += l[5];
+			l[4] += l[6];
+			CST# 0 44 00 14 SSL::CipherSuiteList;
+			l[2] -= 3;
+		}
+	}
+	LABL 0 0 0 b8;
+	if (l[3] != 0)
+	{
+		DUMP 0 43 90 c2 Connection ID:;
+	}
+	LABL 0 0 0 b8;
+	if (g[16] > 4)
+	{
+	HEX# 1 0 90 c2 Tag:;
+	DBYT 0 41 90 c2 Length:;
+	DUMP 0 41 90 c2 Encrypted Data;
+	}
+	
+	
+	TRTS;
+
+void SSLv2_Certificate_TBSCertificate;
+	LABL 0 0 0 b7 Certificate;
+	SSL_BER_TL;
+	l[10] = g[4];
+	BREM 0 4b;
+	SSL_Certificate_Version;
+	SSL_Certificate_SerialNumber;
+	SSL_Certificate_Signature;
+	SSL_Certificate_Issuer;
+	SSL_Certificate_Validity;
+	SSL_Certificate_Subject;
+	SSL_Certificate_SubjectPublicKeyInfo;
+	BREM 0 4c;
+	l[13] = l[11];
+	l[13] -= l[12];
+	INCR 6;
+	DWRD 0 41 90 c2 Cert. Ext. Length:;
+	DECR 8;
+
+	SSL_BER_TL; //for Tag to Index Tag_Func
+	TSB# 0 3 0 0 SSL_Certificate_TBSCertificate::Tag_Func;
+	BREM 0 4c;
+	SSL_Certificate_AlgorithmIdentifier;
+	HEX# 3 0 90 c2 Tag:;
+	DWRD 0 41 90 c2 Length:;
+	DUMP 0 41 90 c2 Encrypted Data;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+	
+void SSL::ServerHello;  
+	LABL 00 0 00 b7 Server Hello;
+	l[1] = pb[1];
+	if (l[1] == 4)
+	{
+		DBYT 00 3 90 c2 Version:;
+		DBYT 00 4 90 00 .;
+			CEQU 0 4 0 24 SSL 3.0;
+			CEQU 1 4 0 24 TLS 1.0;
+			CEQU 2 4 0 24 TLS 1.1;
+			CEQU 3 4 0 24 TLS 1.2;
+			CEQU 4 4 0 24 TLS 1.3 (draft);
+		TIME 00 0 90 c2 Random Time:;
+		HEX# 1c 0 90 c2 Random Bytes:;
+	//	DBYT 00 1 90 c2 Session ID Length:;
+		//LABL 0 0 0 14 bytes;
+		//DUMP 00 1 90 c2 Session ID Data:;
+		HWRD 00 8 90 c2 Cipher Suite:;
+			CST# 00 8 00 14 SSL::CipherSuiteList;
+		LABL 0 0 00 c7 Extensions;
+			DWRD 0 48 90 c2 Extensions Length:;
+			while (l[8] != 0)
+			{
+				l[12] = pw[0];
+					CST# 0 4c 0 c7 802.1x_EAP_Extension_Type_Str;
+					CLSE 0 0 0 c7 unknown;
+				HWRD 0 4c 90 c2 Type:;
+					CST# 0 4c 0 14 802.1x_EAP_Extension_Type_Str;
+					CLSE 0 0 0 14 unknown;
+				DWRD 0 51 90 c2 Length:;
+				l[8] -= 4;
+				
+				if(l[17] > 0)
+				{
+					if (l[12] == 0x0000)
+					{
+						HWRD 0 4d 90 c2 Name List Length:;
+						while (l[13] > 0)
+						{
+							HBYT 0 4e 90 c2 Name Type:;
+								CEQU 0 4e 0 14 Host Name;
+								CLSE 0 4e 0 14 Unknown Name Type;
+							HWRD 0 4f 90 c2 Name Length:;
+							CHR# 0 4f 90 c2 Data:;
+							l[13] -= 8;
+							l[13] -= l[15];
+						}
+						l[8] -= l[17];
+					}
+					if (l[12] == 0x000a)
+					{
+						HWRD 0 4e 90 c2 Curves Length:;
+						while (l[14] > 0)
+						{
+							HWRD 0 4f 90 c2 Curve:;
+								CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionCurves;
+								CLSE 0 0 0 14 unknown;
+							l[14] -= 2;                   
+						}
+						l[8] -= l[17];
+					}
+					if (l[12] == 0x000b)
+					{
+						HBYT 0 4e 90 c2 EC Points Formats Length:;
+						while (l[14] > 0)
+						{
+							HBYT 0 4f 90 c2 Elliptic Curves Points format:;
+								CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionECPointFormats;
+								CLSE 0 0 0 14 unknown;
+							l[14] -= 1;                   
+						}
+						l[8] -= l[17];
+					}
+					if (l[12] != 0x0000)
+					{
+						if(l[12] != 0x000a)
+						{
+							if(l[12] != 0x000b)
+							{	
+								DUMP 0 51 90 c2 Data:;
+								l[8] -= l[17];
+							}
+						}
+					}
+				}
+				LABL 0 0 0 b8;
+			}
+			LABL 0 0 0 b8;
+			}
+			LABL 0 0 0 b8;
+			LABL 0 0 0 b8;
+			l[1] = 4;
+			TRTS;
+	}
+	if (l[1] != 4)
+	{
+	DBYT 00 3 90 c2 Version:;
+	DBYT 00 4 90 00 .;
+	TIME 00 0 90 c2 Random Time:;
+	HEX# 1c 0 90 c2 Random Bytes:;
+	DBYT 00 1 90 c2 Session ID Length:;
+	LABL 0 0 0 14 bytes;
+	DUMP 00 1 90 c2 Session ID Data:;
+	DWRD 00 8 90 c2 Cipher Suite:;
+	CST# 00 8 00 14 SSL::CipherSuiteList;
+	DBYT 00 1 90 c2 Compression Method:;
+    
+    l[1] = pb[0];
+    l[2] = pb[1];
+    
+    if(g[16] > 0)
+	{
+        //hack
+        //the way to determine if extensions are present in the ServerHello
+        //is to check if the message length is greater than what has been read so far.
+        //That is hard to do in the decoder so instead check to see if the next two bytes
+        //look like they belong to the start of another message.
+        if(l[1] == 22)
+        {  
+            //matches handshake type value
+            if(l[2] == 3)
+            {
+                //matches the major version for SSLv3 and greater.
+                //it is probably a handshake message and not an extension
+                TRTS;
+            }
+        }
+        
+	LABL 0 0 00 c7 Extensions;
+	DWRD 0 48 90 c2 Extensions Length:;
+	while (l[8] != 0)
+	{
+		l[12] = pw[0];
+			CST# 0 4c 0 c7 802.1x_EAP_Extension_Type_Str;
+			CLSE 0 0 0 c7 unknown;
+		HWRD 0 4c 90 c2 Type:;
+			CST# 0 4c 0 14 802.1x_EAP_Extension_Type_Str;
+			CLSE 0 0 0 14 unknown;
+		DWRD 0 51 90 c2 Length:;
+		l[8] -= 4;
+        
+        if(l[17] > 0)
+        {
+            if (l[12] == 0x0000)
+            {
+                HWRD 0 4d 90 c2 Name List Length:;
+                while (l[13] > 0)
+                {
+                    HBYT 0 4e 90 c2 Name Type:;
+                        CEQU 0 4e 0 14 Host Name;
+                        CLSE 0 4e 0 14 Unknown Name Type;
+                    HWRD 0 4f 90 c2 Name Length:;
+                    CHR# 0 4f 90 c2 Data:;
+                    l[13] -= 8;
+                    l[13] -= l[15];
+                }
+                l[8] -= l[17];
+            }
+            if (l[12] == 0x000a)
+            {
+                HWRD 0 4e 90 c2 Curves Length:;
+                while (l[14] > 0)
+                {
+                    HWRD 0 4f 90 c2 Curve:;
+                        CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionCurves;
+                        CLSE 0 0 0 14 unknown;
+                    l[14] -= 2;                   
+                }
+                l[8] -= l[17];
+            }
+            if (l[12] == 0x000b)
+            {
+                HBYT 0 4e 90 c2 EC Points Formats Length:;
+                while (l[14] > 0)
+                {
+                    HBYT 0 4f 90 c2 Elliptic Curves Points format:;
+                        CST# 0 4f 0 14 SSLv3::ClientHello::ExtensionECPointFormats;
+                        CLSE 0 0 0 14 unknown;
+                    l[14] -= 1;                   
+                }
+                l[8] -= l[17];
+            }
+			if (l[12] != 0x0000)
+            {
+                if(l[12] != 0x000a)
+                {
+                    if(l[12] != 0x000b)
+                    {	
+                        DUMP 0 51 90 c2 Data:;
+                        l[8] -= l[17];
+                    }
+                }
+            }
+        }
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b8;
+	TRTS;     	
+	}
+// --------------------------------------------------------------------------------------
+
+void SSLv3::NewSessionTicket;                       // 0x04
+    LABL 0 0 00 b7 New Session Ticket;
+    DLNG 0 41 90 c2 Lifetime Hint:;
+    LABL 0 0 0 14 seconds;
+    GWRD 0 41 0 0;
+    INCR 2;
+    DUMP 0 41 90 c2 Ticket:;
+    LABL 0 0 00 b8;
+    TRTS;
+    
+// --------------------------------------------------------------------------------------
+
+void SSLv3::Certificate;
+	LABL 0 0 0 b7 Certificates;
+	DBIT 18 41 5 5;
+	DECR 3 0;
+	DEC# 3 0 90 c2 List Length:;
+	LABL 0 0 0 14 bytes;
+	while (l[1] > 0)
+	{
+		DBIT 18 42 5 5;
+		l[2] += 3;
+		DECR 3 0;
+		l[1] -= l[2];
+		BREM 0 43 ;
+		if (l[2] > l[3])
+		{
+			LABL 0 0 0 b7 Certificate;
+			DEC# 3 0 90 c2 Length:;
+			LABL 0 0 0 14 bytes;
+			LABL 0 0 0 14 (length is larger than remaining size of packet);
+			l[3] -= 7;
+			DUMP 0 43 90 b2 Content Ignored:;
+			LABL 0 0 0 b8;
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		SSL_Certificate_Decode;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+// From RFC2459 (a.k.a X509)
+void SSL_Certificate_Decode;
+	LABL 0 0 0 b7 Certificate;
+	DEC# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	SSL_BER_TL; //for Sequence
+	// TBSCertificate
+	SSL_Certificate_TBSCertificate;
+	// SignatureAlgorithm
+	LABL 0 0 0 b9 Signature Algorithm;
+	SSL_Certificate_AlgorithmIdentifier;
+	LABL 0 0 0 b8;
+	// Signature
+	LABL 0 0 0 b9 Signature;
+	SSL_BER_TL; //for Bit String
+	DBYT 0 0 90 c2 Padding Bits:;
+	g[4] -= 1;
+	DUMP 0 4 90 c2 Signature Parms:;
+	LABL 0 0 0 b8;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_TBSCertificate;
+	LABL 0 0 0 b9 TBSCertificate;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	SSL_Certificate_Version;
+	SSL_Certificate_SerialNumber;
+	SSL_Certificate_Signature;
+	SSL_Certificate_Issuer;
+	SSL_Certificate_Validity;
+	SSL_Certificate_Subject;
+	SSL_Certificate_SubjectPublicKeyInfo;
+	BREM 0 4c;
+	l[13] = l[11];
+	l[13] -= l[12];
+	while (l[10] > l[13])
+	{
+		SSL_BER_TL; //for Tag to Index Tag_Func
+		TSB# 0 3 0 0 SSL_Certificate_TBSCertificate::Tag_Func;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+	
+str# SSL_Certificate_TBSCertificate::Tag_Func;
+  1 | SSL_Certificate_IssuerUniqueID;
+  2 | SSL_Certificate_SubjectUniqueID;
+  3 | SSL_Certificate_Extensions;
+		
+// --------------------------------------------------------------------------------------
+	
+void SSL_Certificate_Version;
+	SSL_BER_TL; //for Tag [0]
+	SSL_BER_TL; //for INTEGER
+	DEC# 0 4 90 c2 Version:;
+	DECR 0 4;
+	SSL_BER_INTEGER;
+	CST# 0 1 0 24 SSL_Certificate_TBSCertificate::Version_Str;
+	TRTS;
+	
+str# SSL_Certificate_TBSCertificate::Version_Str;
+	0 | Version 1;
+	1 | Version 2;
+	2 | Version 3;
+	3 | Unknown Version;
+	
+void SSL_Certificate_SerialNumber;
+	SSL_BER_TL; //for INTEGER
+	HEX# 0 4 90 c2 Serial Number:;
+	TRTS;
+	
+void SSL_Certificate_Signature;
+	LABL 0 0 0 b9 Signature;
+	SSL_Certificate_AlgorithmIdentifier;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SSL_Certificate_AlgorithmIdentifier;
+	SSL_BER_TL; //for Sequence
+	SSL_BER_TL; //for Object ID
+	LABL 0 0 0 c2 Algorithm ID:;
+	g[5] = 0; //used to select algorithm description
+	SSL_BER_OID_PRINT;
+	CST# 0 5 0 24 SSL_Certificate_Algorithm_Identifier::OID_Str;
+	LABL 0 0 0 c2 Description:;
+	g[5] &= 0xffffff;
+	CST# 0 5 0 54 SSL_Certificate_Algorithm_Identifier::Description_Str;
+	//Optional Parameters
+	if (g[5] == 0x380403) //dsaSHA-1
+	{
+		LABL 0 0 0 b9 Dss-Parms;
+		SSL_BER_TL; //for Sequence
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 p:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 q:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 g:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		LABL 0 0 0 b8;
+	}
+	if (g[5] == 0x3e0201) //dhPublicKey
+	{
+		LABL 0 0 0 b9 Dss-DomainParameters;
+		SSL_BER_TL; //for Sequence
+		l[10] = g[4];
+		BREM 0 4b;
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 p:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 q:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		SSL_BER_TL; //for INTEGER
+		DEC# 0 4 90 c2 g:;
+		DECR 0 4;
+		SSL_BER_INTEGER;
+		//Optional j
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		if l[10] > l[3]
+		{
+			SSL_BER_TYPE_DETECT;
+			if g[3] == 2 //INTEGER
+			{
+				SSL_BER_TL; //for INTEGER
+				DEC# 0 4 90 c2 j:;
+				DECR 0 4;
+				SSL_BER_INTEGER;
+			}
+		}
+		//Optional validationParms
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		if l[10] > l[3]
+		{
+			LABL 0 0 0 b9 Validation Parms:;
+			SSL_BER_TL; //for Sequence
+			SSL_BER_TL; //for Bit String
+			DBYT 0 0 90 c2 Padding Bits:;
+			DECR 1 0;
+			LABL 0 0 0 c2 Seed:;
+			SSL_BER_BITSTRING_32BITS;
+			SSL_BER_TL; //for INTEGER
+			DEC# 0 4 90 c2 pgen Counter:;
+			DECR 0 4;
+			SSL_BER_INTEGER;
+		}
+		LABL 0 0 0 b8;
+	}
+	SSL_BER_TL; //for NULL Type
+	TRTS;
+
+//use last 3 sub fields (lowest byte of each field) to index
+str# SSL_Certificate_Algorithm_Identifier::OID_Str;
+	0x010101 | rsaPublicKey;
+	0x010102 | rsaMD2;
+	0x010104 | rsaMD5;
+	0x010105 | rsaSHA-1;
+	0x380403 | dsaSHA-1;
+	0x3e0201 | dhPublicKey;
+	0x380401 | dssPublicKey;
+	
+str# SSL_Certificate_Algorithm_Identifier::Description_Str;
+	0x010101 | rsaEncryption { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) 1 1};
+	0x010102 | md2WithRSAEncryption { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-1(1) 2 };
+	0x010104 | md5WithRSAEncryption { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-1(1) 4 };
+	0x010105 | sha-1WithRSAEncryption { iso(1) member-body(2) us(840) rsadsi(113549) pkcs(1) pkcs-1(1) 5 };
+	0x380403 | id-dsa-with-sha1 { iso(1) member-body(2) us(840) x9-57 (10040) x9cm(4) 3 };
+	0x3e0201 | dhpublicnumber { iso(1) member-body(2) us(840) ansi-x942(10046) number-type(2) 1 };
+	0x380401 | id-dsa { iso(1) member-body(2) us(840) x9-57(10040) x9cm(4) 1 };
+	
+void SSL_Certificate_Issuer;
+	LABL 0 0 0 b9 Issuer;
+	SSL_Certificate_Name;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_Name;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	l[1] = 1;
+	while l[10] > l[13]
+	{
+		DGLB 0 41 02 b9 Attribute ;
+		SSL_BER_TL; //for Set
+		SSL_BER_TL; //for Sequence
+		SSL_BER_TL; //for Object ID
+		LABL 0 0 0 c2 ID:;
+		g[5] = 0;
+		SSL_BER_OID_PRINT;
+		g[5] &= 0xffffff;
+		CST# 0 5 0 24 SSL_Certificate_Issuer::OID_Str;
+		SSL_BER_TL;  //for XString
+		CST# 0 5 0 c2 SSL_Certificate_Issuer::Name_Str;
+		SKIP 1 0;
+		  LABL 0 0 0 c2 Data:;
+		CHR# 0 4 90 0 ;
+		LABL 0 0 0 b8;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		l[1] += 1;
+	}
+	TRTS;
+	
+str# SSL_Certificate_Issuer::OID_Str;
+	0x550403 | id-at-CommonName;
+	0x550404 | id-at-Surname;
+	0x550406 | id-at-CountryName;
+	0x550407 | id-at-LocalityName;
+	0x550408 | id-at-StateorProvinceName;
+	0x55040a | id-at-OrganizationName;
+	0x55040b | id-at-OrganizationalUnitName;
+	0x55040c | id-at-Title;
+	0x550429 | id-at-Name;
+	0x55042a | id-at-GivenName;
+	0x55042b | id-at-Initials;
+	0x55042c | id-at-GenerationQualifier;
+	0x55042e | id-at-DnQualifier;
+	0x010901 | PKCS-9-Signatures-emailAddress;
+	
+str# SSL_Certificate_Issuer::Name_Str;
+	0x550403 | Common Name:;
+	0x550404 | Surname:;
+	0x550406 | Country Name:;
+	0x550407 | Locality Name:;
+	0x550408 | State/Province Name:;
+	0x55040a | Organization Name:;
+	0x55040b | Org Unit Name:;
+	0x55040c | Title:;
+	0x550429 | Name:;
+	0x55042a | Given Name:;
+	0x55042b | Initials:;
+	0x55042c | Generation Qualifier:;
+	0x55042e | Dn Qualifier:;
+	0x010901 | Email Address:;
+	
+void SSL_Certificate_Validity;
+	LABL 0 0 0 b9 Validity;
+	SSL_BER_TL; //for Sequence
+	SSL_BER_TL; //for Time
+	//LABL 0 0 0 c2 Not Before:;
+	CHR# 0 4 90 c2 Not Before:;
+	DECR 0 4;
+	SSL_BER_TIME_PRINT2;
+	SSL_BER_TL; //for Time
+	//LABL 0 0 0 c2 Not After:;
+	CHR# 0 4 90 c2 Not After:;
+	DECR 0 4;
+	SSL_BER_TIME_PRINT2;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_Subject;
+	LABL 0 0 0 b9 Subject;
+	SSL_Certificate_Name;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_SubjectPublicKeyInfo;
+	LABL 0 0 0 b9 Subject Public KeyInfo;
+	SSL_BER_TL; //for Sequence
+	LABL 0 0 0 b9 Algorithm;
+	SSL_Certificate_AlgorithmIdentifier;
+	LABL 0 0 0 b8;
+	SSL_BER_TL; //for Bitstring
+	DUMP 0 4 90 c2 Subject Public Key:;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_IssuerUniqueID;
+	LABL 0 0 0 b9 Issuer Unique ID [1];
+	SSL_BER_TL; //for Sequence
+	LABL 0 0 0 b8; 
+	TRTS;
+	
+void SSL_Certificate_SubjectUniqueID;
+	LABL 0 0 0 b9 Subject Unique ID [2];
+	SSL_BER_TL; //for Sequence
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate_Extensions;
+	LABL 0 0 0 b9 Certificate Extensions;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[1] = 1;
+	l[13] = 0;
+	while (l[10] > l[13])
+	{
+		DGLB 0 41 2 b9 Item ;
+		SSL_BER_TL; //for Sequence
+		SSL_BER_TL; //for Object ID
+		while (g[4] == 0)
+		{
+			SSL_BER_TL; //for Sequence
+			SSL_BER_TL; //for Object ID
+		}
+		g[5] = 0;
+		LABL 0 0 0 c2 Extension ID:;
+		SSL_BER_OID_PRINT;
+		g[5] &= 0xffffff;
+		CST# 0 5 0 24 SSL_Certificate_Extensions::OID_Str;
+		SKIP 1 0;
+		  CST# 0 5 0 24 SSL_Certificate::Netscap::OID_Str;
+		TSB# 0 5 0 0 SSL_Certificate_Extensions::OID_Func;
+		SKIP 1 0;
+		  TSB# 0 5 0 0 SSL_Certificate::Netscap::OID_Func;
+		SKIP 1 0;
+		  SSL_Certificate::Unknown;
+		LABL 0 0 0 b8;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		l[1] += 1;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# SSL_Certificate_Extensions::OID_Str;
+	0x551d09 | id-ce-SubjectDirectoryAttributes;
+	0x551d0e | id-ce-SubjectKeyIdentifier;
+	0x551d0f | id-ce-KeyUsage;
+	0x551d10 | id-ce-PrivateKeyUsagePeriod;
+	0x551d11 | id-ce-SubjectAltName;
+	0x551d12 | id-ce-IssuerAltName;
+	0x551d13 | id-ce-BasicConstraints;
+	0x551d14 | id-ce-CRLNumber;
+	0x551d15 | id-ce-ReasonCode;
+	0x551d17 | id-ce-InstructionCode;
+	0x551d18 | id-ce-InvalidityDate;
+	0x551d1b | id-ce-DeltaCRLIndicator;
+	0x551d1c | id-ce-IssuingDistributionPoint;
+	0x551d1d | id-ce-CertificateIssuer;
+	0x551d1e | id-ce-NameConstraints;
+	0x551d1f | id-ce-CRLDistributionPoints;
+	0x551d20 | id-ce-CertificatePolicies;
+	0x551d21 | id-ce-PolicyMappings;
+	0x551d24 | id-ce-PolicyConstraints;
+	0x551d23 | id-ce-AuthorityKeyIdentifier;
+	0x551d25 | id-ce-ExtKeyUsage;
+	0x070101 | id-pe-AuthorityInfoAccess;
+	
+str# SSL_Certificate_Extensions::OID_Func;
+	0x551d09 | SSL_Certificate::SubjectDirectoryAttributes;
+	0x551d0e | SSL_Certificate::SubjectKeyIdentifier;
+	0x551d0f | SSL_Certificate::KeyUsage;
+	0x551d10 | SSL_Certificate::PrivateKeyUsagePeriod;
+	0x551d11 | SSL_Certificate::SubjectAltName;
+	0x551d12 | SSL_Certificate::IssuerAltName;
+	0x551d13 | SSL_Certificate::BasicConstraints;
+	0x551d14 | SSL_Certificate::CRLNumber;
+	0x551d15 | SSL_Certificate::ReasonCode;
+	0x551d17 | SSL_Certificate::InstructionCode;
+	0x551d18 | SSL_Certificate::InvalidityDate;
+	0x551d1b | SSL_Certificate::DeltaCRLIndicator;
+	0x551d1c | SSL_Certificate::IssuingDistributionPoint;
+	0x551d1d | SSL_Certificate::CertificateIssuer;
+	0x551d1e | SSL_Certificate::NameConstraints;
+	0x551d1f | SSL_Certificate::CRLDistributionPoints;
+	0x551d20 | SSL_Certificate::CertificatePolicies;
+	0x551d21 | SSL_Certificate::PolicyMappings;
+	0x551d24 | SSL_Certificate::PolicyConstraints;
+	0x551d23 | SSL_Certificate::AuthorityKeyIdentifier;
+	0x551d25 | SSL_Certificate::ExtKeyUsage;
+	0x070101 | SSL_Certificate::AuthorityInfoAccess;
+	
+str# SSL_Certificate::Netscap::OID_Str;
+	0x480142 | netscape { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) };
+	0x014201 | netscape-cert-extension { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) };
+	0x420101 | netscape-cert-type { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 1 };
+	0x420102 | netscape-base-url { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 2 };
+	0x420103 | netscape-revocation-url { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 3 };
+	0x420104 | netscape-ca-revocation-url { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 4 };
+	0x420107 | netscape-cert-renewal-url { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 7 };
+	0x420108 | netscape-ca-policy-url { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 8 };
+	0x42010c | netscape-ssl-server-name { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 12 };
+	0x42010d | netscape-comment { iso/itu-t(2) member-body(16) us(840) company(1) Netscape(113730) extension(1) 13 };
+	
+str# SSL_Certificate::Netscap::OID_Func;
+	0x480142 | SSL_Certificate_Extensions::Netscap_Func;
+	0x014201 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420101 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420102 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420103 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420104 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420107 | SSL_Certificate_Extensions::Netscap_Func;
+	0x420108 | SSL_Certificate_Extensions::Netscap_Func;
+	0x42010c | SSL_Certificate_Extensions::Netscap_Func;
+	0x42010d | SSL_Certificate_Extensions::Netscap_Func;
+	
+void SSL_Certificate::SubjectDirectoryAttributes;
+	TRTS;
+	
+void SSL_Certificate::SubjectKeyIdentifier;
+	SSL_BER_TL; //for Oct string
+	SSL_BER_TL; //for Bit string
+	HEX# 0 4 90 c2 SubjectKeyIdentifier:;
+	TRTS;
+	
+void SSL_Certificate::KeyUsage;
+	SSL_BER_TL; //for Boolean
+	DBYT 0 41 90 c2 Critical:;
+	CEQU 0 41 0 24 False;
+	CNEQ 0 41 0 24 True;
+	SSL_BER_TL; //for Oct string
+	SSL_BER_TL; //for Bit string
+	DBYT 0 0 90 c2 Padding Bits:;
+	DECR 1 0;
+	LABL 0 0 0 b9 Key Usage:;
+	SSL_BER_BITSTRING_32BITS;
+	DGLB 0 1 90 0 ;
+	BST# 0 1 0 d4 SSL_Certificate_Extensions::KeyUsage::Flag_Str;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+str# SSL_Certificate_Extensions::KeyUsage::Flag_Str;
+	8 | 1 .... .... Decipher Only (False);
+		0 .... .... Decipher Only (False);
+	7 | . 1... .... Encipher Only (False);
+		. 0... .... Encipher Only (False);
+	6 | . .1.. .... CRL Signature (True);
+		. .0.. .... CRL Signature (False);
+	5 | . ..1. .... Key Certification Signature (True);
+		. ..0. .... Key Certification Signature (False);
+	4 | . ...1 .... Key Agreement (True);
+		. ...0 .... Key Agreement (False);
+	3 | . .... 1... Data Encipherment (True);
+		. .... 0... Data Encipherment (False);
+	2 | . .... .1.. Key Encipherment (True);
+		. .... .0.. Key Encipherment (False);
+	1 | . .... ..1. Non Repudiation (True);
+		. .... ..0. Non Repudiation (False);
+	0 | . .... ...1 Digital Signature (True);
+		. .... ...0 Digital Signature (False);
+
+void SSL_Certificate::PrivateKeyUsagePeriod;
+	TRTS;
+	
+void SSL_Certificate::SubjectAltName;
+	DECR 4;
+	DBYT 0 43 90 c2 Number of Names:;
+	INCR 3;
+	SSL_BER_TL; //for Oct
+	//LABL 0 0 0 b9 CRL Distribution Points;
+	SSL_BER_TL; //for Sequence
+	while(l[3] != 0)
+	{
+		DBYT 0 0 90 c2 Type:;
+		DBYT 0 41 90 c2 Length:;
+		CHR# 0 41 90 c2 DNS Name:;
+		l[3] -= 1;
+	}
+	TRTS;
+	
+void SSL_Certificate::IssuerAltName;
+	TRTS;
+	
+void SSL_Certificate::BasicConstraints;
+	TRTS;
+	
+void SSL_Certificate::CRLNumber;
+	TRTS;
+	
+void SSL_Certificate::ReasonCode;
+	TRTS;
+	
+void SSL_Certificate::InstructionCode;
+	TRTS;	
+
+void SSL_Certificate::InvalidityDate;
+	TRTS;
+
+void SSL_Certificate::DeltaCRLIndicator;
+	TRTS;
+	
+void SSL_Certificate::IssuingDistributionPoint;
+	TRTS;
+
+void SSL_Certificate::CertificateIssuer;
+	TRTS;
+	
+void SSL_Certificate::NameConstraints;
+	TRTS;
+	
+void SSL_Certificate::CRLDistributionPoints;
+	SSL_BER_TL; //for Oct
+	LABL 0 0 0 b9 CRL Distribution Points;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	l[1] = 1;
+	while (l[10] > l[13])
+	{
+		DGLB 0 41 2 b9 Distribution Point ;
+		SSL_Certificate::DistributionPoint;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		l[1] += 1;
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_Certificate::DistributionPoint;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	while (l[10] > l[13])
+	{
+		SSL_BER_TL; //for Tag
+		l[15] = g[3];
+		if (l[15] == 0)
+		{
+			LABL 0 0 0 b9 distribution Point [0];
+			SSL_BER_TL; //for Tag
+			l[16] = g[3];
+			if (l[16] == 0)
+			{
+				LABL 0 0 0 b9 Full Name [0];
+				SSL_BER_TL; //to index choice
+				CST# 0 3 0 b9 SSL_Certificate::GeneralName_Str;
+				TSB# 0 3 0 0 SSL_Certificate::GeneralName_Func;
+				LABL 0 0 0 b8;
+				LABL 0 0 0 b8;
+			}
+			if (l[16] == 1)
+			{
+				LABL 0 0 0 b9 Name Relative To CRL Issuer [1];
+				LABL 0 0 0 b8;
+			}
+			LABL 0 0 0 b8;
+		}
+		if (l[15] == 1)
+		{
+			LABL 0 0 0 b9 Reasons [1];
+			LABL 0 0 0 b8;
+		}
+		if (l[15] == 2)
+		{
+			LABL 0 0 0 b9 cRL Issuer [2];
+			LABL 0 0 0 b8;
+		}
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+	}
+	TRTS;
+
+void SSL_Certificate::CertificatePolicies;
+	SSL_BER_TL; //for Oct
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	l[1]  = 1;
+	while (l[10] > l[13])
+	{
+		DGLB 0 41 2 b9 Certificate Policies Info ;
+		SSL_BER_TL; //for Sequence
+		l[13] += 3;
+		l[13] += g[4];
+		l[20] = g[4];
+		l[23] = 0;
+		l[2]  = 1;
+		while (l[20] > l[23])
+		{
+			DGLB 0 42 2 b9 Policy Qualifier Info ;
+			SSL_BER_TL; //for Object ID
+			l[23] += 2;
+			l[23] += g[4];
+
+			g[5] = 0;
+			LABL 0 0 0 c2 Policy Identifier:;
+			SSL_BER_OID_PRINT;
+			g[5] &= 0xffffff;
+			SSL_BER_TL; //for Sequence
+			l[23] += 3;
+			l[23] += g[4];
+			l[30] = g[4];
+			l[33] = 0;
+			l[3]  = 1;
+			while (l[30] > l[33])
+			{
+				DGLB 0 43 2 b9 Item ;
+				SSL_BER_TL; //for Sequence
+				l[33] += 2;
+				l[33] += g[4];
+				SSL_BER_TL; //for Object ID
+				g[5] = 0;
+				LABL 0 0 0 c2 Policy Qualifier Id:;
+				SSL_BER_OID_PRINT;
+				g[5] &= 0xffffff;
+				CST# 0 5 0 24 SSL_Certificate::PolicyQualifierId::OID_Str;
+				if (g[5] == 0x070201)
+				{
+					SSL_BER_TL; //for String
+					CHR# 0 4 90 b2 CP Surity:;
+				}
+				if (g[5] == 0x070202)
+				{
+					LABL 0 0 0 b9 User Notice;
+					SSL_BER_TYPE_DETECT;
+					if (g[3] == 16)
+					{
+						LABL 0 0 0 b9 Notice Reference;
+						SSL_BER_TL; //for Sequence
+						SSL_BER_TL; //for Sequence
+						SSL_BER_TL; //for String
+						CHR# 0 4 90 b2 Organization:;
+						SSL_BER_TYPE_DETECT;
+						if (g[3] == 16)
+						{
+							SSL_BER_TL; //for Sequence
+							l[7] = g[4];
+							while (l[7] > 0)
+							{
+								SSL_BER_TL; //for Interger
+								l[7] -= 2;
+								DEC# 0 4 90 c2 Notice Numbers:;
+								DECR 0 4;
+								l[7] -= g[4];
+								SSL_BER_INTEGER;
+							}
+						}
+						LABL 0 0 0 b8;
+					}
+					SSL_BER_TYPE_DETECT;
+					if g[3] == 26
+					{
+						SSL_BER_TL; //for String
+						CHR# 0 4 90 b2 Explicit Text:;
+					}
+					LABL 0 0 0 b8;
+				}
+				LABL 0 0 0 b8;
+				l[3] += 1;
+			}
+			LABL 0 0 0 b8;
+			l[2] += 1;
+		}
+		LABL 0 0 0 b8;
+		l[1] += 1;
+	}
+	TRTS;
+	
+str# SSL_Certificate::PolicyQualifierId::OID_Str;
+	0x050507 | id-pkix { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) };
+	0x050702 | id-qt { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) qt(2) };
+	0x070201 | id-qt-cps { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) qt(2) cps(1) };
+	0x070202 | id-qt-unotice { iso(1) identified-organization(3) dod(6) internet(1) security(5) mechanisms(5) pkix(7) qt(2) unotice(2) };
+	
+void SSL_Certificate::PolicyMappings;
+	TRTS;
+
+void SSL_Certificate::PolicyConstraints;
+	TRTS;
+	
+void SSL_Certificate::AuthorityKeyIdentifier;
+	SSL_BER_TL; //for Oct
+	LABL 0 0 0 b9 Authority Key Identifier;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	while (l[10] > l[13])
+	{
+		SSL_BER_TL; //for Tag
+		l[15] = g[3];
+		if (l[15] == 0)
+		{
+			HEX# 0 4 90 c2 Key Identifier [0]:;
+		}
+		if (l[15] == 1)
+		{
+			LABL 0 0 0 b9 Authority Cert Issuer [1];
+			SSL_BER_TL; //to index choice
+			CST# 0 3 0 b9 SSL_Certificate::GeneralName_Str;
+			TSB# 0 3 0 0 SSL_Certificate::GeneralName_Func;
+			LABL 0 0 0 b8;
+			LABL 0 0 0 b8;
+		}
+		if (l[15] == 2)
+		{
+			HEX# 0 4 20 c2 Authority Cert Serial Number [2]:;
+		}
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# SSL_Certificate::GeneralName_Str;
+	0 | Other Name;
+	1 | RFb822 Name;
+	2 | DNS Name;
+	3 | X400 Address;
+	4 | Directory Name;
+	5 | Edi Party Name;
+	6 | Uniform Resource Identifier;
+	7 | IP Address;
+	8 | Registered ID;
+	
+str# SSL_Certificate::GeneralName_Func;
+	0 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	1 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	2 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	3 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	4 | SSL_Certificate_Name;
+	5 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	6 | SSL_Certificate::UniformResourceIdentifier;
+	7 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	8 | SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	
+void SSL_Certificate::AuthorityKeyIdentifier::Temp;
+	LABL 0 0 0 c0 AuthorityKeyIdentifier_Temp;
+	TRTS;
+
+void SSL_Certificate::UniformResourceIdentifier;
+	CHR# 0 4 20 c2 UniformResourceIdentifier:;
+	TRTS;
+	
+void SSL_Certificate::ExtKeyUsage;
+	SSL_BER_TL; //for Oct string
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[1] = 1;
+	l[13] = 0;
+	while (l[10] > l[13])
+	{
+		DGLB 0 41 2 b9 Item ;
+		SSL_BER_TL; //for Object ID
+		g[5] = 0;
+		LABL 0 0 0 c2 ID:;
+		SSL_BER_OID_PRINT;
+		g[5] &= 0xff;
+		CST# 0 5 0 24 SSL_Certificate::ExtKeyUsage::OID_Str;
+		LABL 0 0 0 c2 Description:;
+		CST# 0 5 0 54 SSL_Certificate::ExtKeyUsage::Description_Str1;
+		CST# 0 5 0 e4 SSL_Certificate::ExtKeyUsage::Description_Str2;
+		LABL 0 0 0 b8;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		l[1] += 1;
+	}
+	TRTS;
+
+str# SSL_Certificate::ExtKeyUsage::OID_Str;
+	1 | id-kp-serverAuth;
+	2 | id-kp-clientAuth;
+	3 | id-kp-codeSigning;
+	4 | id-kp-emailProtection;
+	5 | id-kp-ipsecEndSystem;
+	6 | id-kp-ipsecTunnel;
+	7 | id-kp-ipsecUser;
+	8 | id-kp-timeStamping;
+
+str# SSL_Certificate::ExtKeyUsage::Description_Str1;
+	1 | TLS Web server authentication Key usage bits that may be consistent:;
+	2 | TLS Web client authenticationKey usage bits that may be consistent:;
+	3 | Signing of downloadable executable code Key usage bits that may be consistent:;
+	4 | E-mail protection Key usage bits that may be consistent:;
+	5 | ipsec End System;
+	6 | ipsec Tunnel;
+	7 | ipsec User;
+	8 | Binding the hash of an object to a time from an agreed-upon time source.;
+
+str# SSL_Certificate::ExtKeyUsage::Description_Str2;
+  1 | digitalSignature, keyEncipherment or keyAgreement;
+  2 | digitalSignature and/or keyAgreement;
+  3 | digitalSignature;
+  4 | digitalSignature, nonRepudiation, and/or (keyEncipherment or keyAgreement);
+  8 | Key usage bits that may be consistent: digitalSignature, nonRepudiation;
+
+void SSL_Certificate::AuthorityInfoAccess;
+	SSL_BER_TL; //for Oct
+	LABL 0 0 0 b9 Authority Info Access;
+	SSL_BER_TL; //for Sequence
+	l[10] = g[4];
+	BREM 0 4b;
+	l[13] = 0;
+	l[1] = 1;
+	while (l[10] > l[13])
+	{
+		DGLB 0 41 02 b9 Access Description ;
+		SSL_BER_TL; //for Sequence
+		SSL_BER_TL; //for Object ID
+		g[5] = 0;
+		LABL 0 0 0 c2 Access Method ID:;
+		SSL_BER_OID_PRINT;
+		g[5] &= 0xff;
+		LABL 0 0 0 b9 Access Location;
+		SSL_BER_TL; //to index choice
+		CST# 0 3 0 b9 SSL_Certificate::GeneralName_Str;
+		TSB# 0 3 0 0 SSL_Certificate::GeneralName_Func;
+		LABL 0 0 0 b8;
+		LABL 0 0 0 b8;
+		BREM 0 4c;
+		l[13] = l[11];
+		l[13] -= l[12];
+		l[1] += 1;
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SSL_Certificate_Extensions::Netscap_Func;
+  if g[5] == 0x420101 // netscape-cert-type
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Bit string
+    DBYT 0 0 90 c2 Padding Bits:;
+    DECR 1 0;
+    LABL 0 0 0 b9 Cert Type:;
+    SSL_BER_BITSTRING_32BITS;
+    DGLB 0 1 90 0 ;
+    BST# 0 1 0 d4 SSL_Certificate_Extensions::Netscap::Cert_Str;
+    LABL 0 0 0 b8;
+  }
+  if g[5] == 0x420102 // netscape-base-url
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 URL:;
+  }
+  if g[5] == 0x420103 // netscape-revocation-url
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 Revocation URL:;
+  }
+  if g[5] == 0x420104 // netscape-ca-revocation-url
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 Ca CA Vocation URL:;
+  }
+  if g[5] == 0x420107 // netscape-cert-renewal-url
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 Ca Cert Renewal URL:;
+  }
+  if g[5] == 0x420108 // netscape-ca-policy-url
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 Ca Policy URL:;
+  }
+  if g[5] == 0x42010c // netscape-ssl-server-name
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    CHR# 0 4 90 c2 SSL Server Name:;
+  }
+  if g[5] == 0x42010d // netscape-comment
+  {
+    SSL_BER_TL; //for Oct string
+    SSL_BER_TL; //for Char string
+    HEX# 0 4 90 c2 Commnets:;
+  }
+  TRTS;
+
+str# SSL_Certificate_Extensions::Netscap::Cert_Str;
+	7 | 1... .... Object Signing CA (True);
+		0... .... Object Signing CA (False);
+	6 | .1.. .... S/MIME CA (True);
+		.0.. .... S/MIME CA (False);
+	5 | ..1. .... SSL CA (True);
+		..0. .... SSL CA (False);
+	4 | ...1 .... Reserved;
+		...0 .... Reserved;
+	3 | .... 1... Object Signing (True);
+		.... 0... Object Signing (False);
+	2 | .... .1.. S/MIME (Ture);
+		.... .0.. S/MIME (False);
+	1 | .... ..1. SSL server (True);
+		.... ..0. SSL server (False);
+	0 | .... ...1 SSL client (True);
+		.... ...0 SSL client (False);
+
+void SSL_Certificate::Unknown;
+	if g[5] == 0x01060f
+	{
+		SSL_BER_TL; //for Oct string
+		SSL_BER_TL; //for Char string
+		CHR# 0 4 90 c2 Char string:;
+	}
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL_Certificate_Signature_Value;
+	LABL 0 0 0 b7 Signature;
+	LABL 0 0 0 c2 Signature;
+	ASN1_Value2;
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL::ServerKeyExchange;
+	SEQU 1 4;
+	SKIP 2;
+		SSL_server_key_exhange_V3;
+		TRTS;
+	SSL_server_key_exhange_TLS10;
+	TRTS;
+
+void SSL_server_key_exhange_V3;
+	// BD: have not tested on actual pkt
+	LABL 0 0 0 b7 Server Key Exchange;
+	DECR 1;
+	GLNG 0 8;
+	ANDG FFFFFF 8;
+	INCR 1;
+	HEX# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	DGLB 0 8 4 14 (;
+	LABL 0 0 0 4 ")";
+	BREM 0 31;
+	SUBG 4 31;
+	SGTE 31 88;
+	SKIP 1;
+		MOVE 31 88;
+	DUMP 0 8 90 c2 Server Key Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void SSL_server_key_exhange_TLS10;
+	DECR 1;
+	GLNG 0 8;
+	ANDG FFFFFF 8;
+	INCR 1;
+	HEX# 3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	DGLB 0 8 4 14 (;
+	LABL 0 0 0 4 ")";
+	LABL 0 0 0 b7 Server Key Exchange;
+	BREM 0 31;
+	SUBG 4 31;
+	SGTE 31 88;
+	SKIP 1;
+		MOVE 31 88;
+	DUMP 0 8 90 c2 Server Key Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL::CertificateRequest;
+	LABL 0 0 0 b7 Certificate Request;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+	// SSL 3 draft
+	// Certificate Type { RSA_sign(1), DSS_sign(2), RSA_fixed_DH(3),
+    //     DSS_fixed_DH(4), RSA_ephemeral_DH(5), DSS_ephemeral_DH(6),
+    //     FORTEZZA_MISSI(20) }
+    // DistinguishedName( length = 1 -- (2^16 - 1))
+
+// --------------------------------------------------------------------------------------
+
+void SSL::ServerHelloDone;
+	LABL 0 0 0 b7 Server Hello Done;
+	DEC#  3 0 90 c2 Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL::CertificateVerify;
+	LABL 0 0 0 b7 Certificate Verify;
+	DBYT 0 41 90 c2 Handshake Type:;
+	CST# 0 41 00 14 SSLv2::MessageTypes::List;
+	DEC# 3 0 90 c2 Length:;
+	g[2] -= 5;
+	DUMP 0 2 b0 c2 Certificate Verify Data:;
+	LABL 0 0 0 b8;
+    TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL::ClientKeyExchange;
+	DECR 1;
+	GLNG 0 8;
+	ANDG FFFFFF 8;
+	INCR 1;
+	DEC# 3 0 90 c2 Length:;	
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 0 b7 Client Key Exchange;
+	BREM 0 31;
+	SUBG 4 31;
+	SGTE 31 88;
+	SKIP 1;
+		MOVE 31 88;
+	DUMP 0 8 90 c2 Client Key Data:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL_finished;
+	TRTS;
+
+// --------------------------------------------------------------------------------------
+
+void SSL_ASN_Increment;
+	INCR 1;				// BD: accounts for type byte
+	GBYT 0 21;
+	SBIT 7 21;
+	SKIP 1;
+		MOVE 0 21;
+	ANDG 7F 21;
+	ADDG 1 21;			// BD: accounts for length byte
+	INCR 0 21;			// BD: accounts for length bytes
+	TRTS;
+	
+// --------------------------------------------------------------------------------------
+//
+// Part of X.690, for ASN.1 BER,CER and DER
+//
+// --------------------------------------------------------------------------------------
+
+//g[1] = value for simple type
+//g[3] = type
+//g[4] = length
+
+void SSL_BER_TL;
+	SSL_BER_TYPE;
+	SSL_BER_LENGTH;
+	TRTS;
+
+void SSL_BER_TYPE;
+	if (g[0x3c] == 0x444247)
+	{
+		LABL 0 0 0 c4 "<Type::=";
+	}
+	l[5] = 0;
+	l[1] = pb[0];
+	l[1] &= 0x1f;
+	DBYT 0 42 5 5;
+	l[5] += 1;
+	if (l[1] < 0x1f)   //One Oct only
+	{
+		g[3] = l[1];
+	}
+	if (l[1] == 0x1f)  //More Octs
+	{
+		g[3] = 0;
+		l[1] = 0x80;  //Fake for loop
+		while (l[1] == 0x80)
+		{
+			DBYT 0 41 5 5;
+			l[1] &= 0x7f;
+			g[3] <<= 7;
+			g[3] |= l[1];
+			l[5] += 1;
+			l[1] = pb[0];
+			l[1] &= 0x80;
+		 }
+	}
+	if (g[0x3c] == 0x444247)
+	{
+		DGLB 0 3 0 0 ;
+		if (l[2] < 0x40)
+		{
+			LABL 0 0 0 4 "(";
+			CST# 0 3 0 4 SSL_BER_TYPE::UniversalClassTagAssignments_Str;
+			LABL 0 0 0 4 ")";
+		}
+		LABL 0 0 0 4 ",";
+		BST# 0 42 0 4 SSL_BER_TYPE::PorC_Str;
+		LABL 0 0 0 4 ",";
+		l[2] >>= 6;
+		CST# 0 42 4 4 SSL_BER_TYPE::ClassOfTag_Str;
+		LABL 0 0 0 4 ">";
+		DGLB 0 45 4 04 " <";
+		LABL 0 0 0 4 " bytes>";
+	}
+	TRTS;
+
+void SSL_BER_TYPE_DETECT;
+	l[5] = 0;
+	l[1] = pb[0];
+	l[2] = pb[0];
+	l[1] &= 0x1f;
+	INCR 1 0;        //1st Oct
+	l[5] += 1;
+	if l[1] < 0x1f   //One Oct only
+	{
+		g[3] = l[1];
+	}
+	if l[1] == 0x1f  //More Octs
+	{
+		g[3] = 0;
+		l[1] = 0x80;  //Fake for loop
+		while l[1] == 0x80
+		{
+			l[1] = pb[0];
+			l[1] &= 0x7f;
+			g[3] <<= 7;
+			g[3] |= l[1];
+			INCR 1 0;   //Next Oct
+			l[5] += 1;
+			l[1] = pb[0];
+			l[1] &= 0x80;
+		}
+	}
+	DECR 0 45;
+	TRTS;
+
+void SSL_BER_TYPE_PREFIX_DETECT;
+	g[3] = pb[0];
+	g[3] &= 0xe0;
+	TRTS;
+
+str# SSL_BER_TYPE::ClassOfTag_Str;
+	0 | Universal;
+	1 | Application;
+	2 | Context-specific;
+	3 | Private;
+
+str# SSL_BER_TYPE::PorC_Str;		//BST#
+	5 | Constructed;
+		Primitive;
+
+str# SSL_BER_TYPE::UniversalClassTagAssignments_Str;
+	0  | "Reserved for use by the encoding rules";
+	1  | "Boolean type";
+	2  | "Integer type";
+	3  | "Bitstring type";
+	4  | "Octetstring type";
+	5  | "Null type";
+	6  | "Object identifier type";
+	7  | "Object descriptor type";
+	8  | "External type and Instance-of type";
+	9  | "Real type";
+	10 | "Enumerated type";
+	11 | "Embedded-pdv type";
+	12 | "UTF8String type";
+	13 | "Relative object identifier type";
+	14 | "Reserved for future editions of this Recommendation or International Standard";
+	15 | "Reserved for future editions of this Recommendation or International Standard";
+	16 | "Sequence and Sequence-of types";
+	17 | "Set and Set-of types";
+	18 | "Character string types";
+	19 | "Character string types";
+	20 | "Character string types";
+	21 | "Character string types";
+	22 | "Character string types";
+	23 | "Time types";
+	24 | "Time types";
+	25 | "Character string types";
+	26 | "Character string types";
+	27 | "Character string types";
+	28 | "Character string types";
+	29 | "Character string types";
+	30 | "Character string types";
+	31 | "Reserved for addenda to this Recommendation or International Standard";
+
+void SSL_BER_LENGTH;
+	if (g[0x3c] == 0x444247)
+	{
+		LABL 0 0 0 c4 "  <Length::=";
+	}
+	l[5] = 0;
+	l[1] = pb[0];
+	l[1] &= 0x80;
+	DBYT 0 42 5 5;
+	l[5] += 1;
+	if (l[1] != 0x80  //One Oct only)
+	{
+		g[4] = l[2];
+	}
+	if (l[1] == 0x80)  //More Octs
+	{
+		g[4] = 0;
+		l[2] &= 0x7f; //Get Octs number
+		while (l[2] > 0)
+		{
+			DBYT 0 43 5 5;
+			g[4] <<= 8;
+			g[4] |= l[3];
+			l[5] += 1;
+			l[2] -= 1;
+		 }
+	}
+	if (g[0x3c] == 0x444247)
+	{
+		DGLB 0 4 0 0 ;
+		LABL 0 0 0 4 ">";
+		DGLB 0 45 4 04 " <";
+		LABL 0 0 0 4 " bytes>";
+	}
+	TRTS;
+
+void SSL_BER_INTEGER;
+	g[1] = 0;
+	if (g[4] <= 4)
+	{
+		while (g[4] > 0)
+		{
+			g[1] <<= 8;
+			l[1] = pb[0];
+			g[1] |= l[1];
+			INCR 1 0;   //Next Oct
+			g[4] -= 1;
+		}
+	}
+	TRTS;
+
+str# SSL_BER_PRINT::Number_Str;
+	0x0 | 0;
+	0x1 | 1;
+	0x2 | 2;
+	0x3 | 3;
+	0x4 | 4;
+	0x5 | 5;
+	0x6 | 6;
+	0x7 | 7;
+	0x8 | 8;
+	0x9 | 9;
+	0xa | A;
+	0xb | B;
+	0xc | C;
+	0xd | D;
+	0xe | E;
+	0xf | F;
+
+void SSL_BER_OID_PRINT;
+	LABL 0 0 0 50 "{";
+	SSL_BER_OID_GET_SUB;
+	SSL_BER_OID_SUB_1_2_PRINT;
+	while (g[4] > 0)
+	{
+		SSL_BER_OID_GET_SUB;
+		SSL_BER_OID_SUB_LATER_PRINT;
+	}
+	LABL 0 0 0 0 "}";
+	TRTS;
+
+void SSL_BER_OID_GET_SUB;
+	DBYT 0 41 5 5;
+	l[2] = l[1];
+	l[1] &= 0x80;
+	g[4] -= 1;
+	if (l[1] != 0x80  //One Oct only)
+	{
+		g[1] = l[2];
+	}
+	if (l[1] == 0x80  //More Octs)
+	{
+		l[2] &= 0x7f;
+		g[1] = l[2];
+		while (l[1] == 0x80)
+		{
+			DBYT 0 41 5 5;
+			l[2] = l[1];
+			l[1] &= 0x7f;
+			g[1] <<= 7;
+			g[1] |= l[1];
+			g[4] -= 1;
+			l[1] = l[2];
+			l[1] &= 0x80;
+		}
+	}
+	//Abstract lowest byte into G5
+	l[1] = g[1];
+	l[1] &= 0xff;
+	g[5] <<= 8;
+	g[5] |= l[1];
+	TRTS;
+
+void SSL_BER_OID_SUB_1_2_PRINT;
+	l[1] = g[1];
+	l[1] /= 40;
+	l[2] = l[1];
+	l[2] *= 40;
+	g[1] -= l[2];
+	DGLB 0 41 0 0 ;
+	DGLB 0 1 0 0 ".";
+	TRTS;
+
+void SSL_BER_OID_SUB_LATER_PRINT;
+	DGLB 0 1 0 0 ".";
+	TRTS;
+
+void SSL_BER_TIME_PRINT1;
+	if (g[4] == 13)
+	{
+		CHR# 2 0 90 0; //YY
+	}
+	if (g[4] == 15)
+	{
+		CHR# 4 0 90 0; //YYYY
+	}
+	CHR# 2 0 0 0 -; //MM
+	CHR# 2 0 0 0 -; //DD
+	CHR# 2 0 0 0 " "; //HH
+	CHR# 2 0 0 0 :; //MM
+	CHR# 2 0 0 0 :; //SS
+	CHR# 1 0 0 0 ;  //Z
+	if (g[4] == 13)
+	{
+		LABL 0 0 0 24 Generalized Time (YY-MM-DD HH:MM:SS);
+	}
+	if (g[4] == 15)
+	{
+		LABL 0 0 0 24 UTC Time (YYYY-MM-DD HH:MM:SS);
+	}
+	TRTS;
+
+void SSL_BER_TIME_PRINT2;
+	if (g[4] == 13)
+	{
+		CHR# 2 0 24 4; //YY
+	}
+	if (g[4] == 15)
+	{
+		CHR# 4 0 24 4; //YYYY
+	}
+	CHR# 2 0 4 4 -; //MM
+	CHR# 2 0 4 4 -; //DD
+	CHR# 2 0 4 4 " "; //HH
+	CHR# 2 0 4 4 :; //MM
+	CHR# 2 0 4 4 :; //SS
+	CHR# 1 0 5 5 ;  //Z
+	if (g[4] == 13)
+	{
+		LABL 0 0 0 14 Generalized Time (YYMMDD000000Z);
+	}
+	if (g[4] == 15)
+	{
+		LABL 0 0 0 14 UTC Time (YYYYMMDD000000Z);
+	}
+	TRTS;
+
+void SSL_BER_BITSTRING_32BITS;
+	g[1] = 0;     //init retval
+	l[2] = pb[0]; //get padding bits
+	l[1] = g[4];
+	l[1] -= 1;    //remove padding Oct
+	l[1] <<= 3;   //maximal bits
+	l[1] -= l[2]; //total valid bits
+	if (l[1] > 32)
+	{
+		TRTS;
+	}
+	INCR 1 0;   //skip padding Oct
+	if (l[1] <= 8)
+	{
+		HBYT 0 1 5 5;
+	}
+	if (l[1] > 8)
+	{
+		if (l[1] <= 16)
+		{
+			HWRD 0 1 5 5;
+		}
+		if (l[1] > 16)
+		{
+			HLNG 20 1 5 5;
+		}
+	}
+	if (l[2] != 0)
+	{
+		g[1] >>= l[2];
+	}
+	TRTS;

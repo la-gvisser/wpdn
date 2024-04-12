@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>Sending Plugin Messages Between Console and Engine</title>
+</head>
+<body>
+    <h1>Sending Plugin Messages Between Console and Engine</h1><br>
+
+    <h6 class="breakAfterS" style="margin-top:1px">Introduction</h6>
+
+    <h3 class="breakNone">The Plugin Message Sending Process</h3>
+    <p class="breakAfterL">
+        Plugin messaging is used when it is necessary for a plugin to communicate
+        information across the network between its console (Omnipeek) instance
+        and its engine (Engine) instance. A “plugin message” is the package
+        of data that is exchanged between the plugin instances across the network. This
+        package of data may include any type of data that needs to be communicated. The
+        data is marshaled into a stream and sent by the underlying plugin framework.
+        The message functions presented in this topic are in support of this process.
+    </p>
+    <h3 class="breakNone">Message Options</h3>
+    <p class="breakAfterL">
+        “Message options” refers to the data definition as it is expressed in the
+        <b>CMessageOptions</b> class. Message options allow for a single expression of
+        the data that is shared by the plugin's console instance code and the engine instance
+        plugin code. This process simplifies defining and using the data, as well as
+        easily positioning it so the framework can perform the marshaling. Message
+        Options are analogous to Preferences (Options) in the way data is handled from
+        a single shared definition.
+    </p>
+    <h3 class="breakNone">The Omni Message</h3>
+    <p class="breakAfterL">
+        The <b>CMessageOptions</b> class (just described above) that the developer uses to
+        define plugin message data actually inherits from the <b>COmniMessage</b> class.
+        COmniMessage exposes methods for marshaling and unmarshaling the data on
+        behalf of the sending and receiving functions. Note that COmniMessage in
+        turn inherits from COmniDataModeler (discussed in a separate topic), which
+        provides the data modeling functionality. In addition to this provision for
+        the packaging of modeled data, COmniMessage adds the ability to package u
+        nstructured, i.e. binary, data. Depending on the needs of a plugin, the
+        developer can choose modeled data, binary data, or both together, in an
+        Omni Message.
+    </p>
+    <h3 class="breakNone">The Message Options Functionality is Optional</h3>
+    <p class="breakAfterL">
+        The message packaging functionality as offered via CMessageOptions is an
+        optional means of creating plugin messages. The plugin message sending
+        and receiving functions use data streams as their arguments and developers
+        are free to do their own packaging into streams. CMessageOptions and its
+        parent classes, which read from and write to streams, are tools which can
+        be very helpful to ease this process.
+    </p>
+    <h3 class="breakNone">Plugin Message Sending and Receiving Methods </h3>
+    <p class="breakAfterS">
+        Plugin messages are initiated with <b>DoSendPluginMessage</b> and they are processed
+        by <b>OnProcessPluginMessage</b>. Both methods as mentioned use streams in their
+        arguments to encapsulate the data. The stream argument is in the form of a
+        reference to the <a href="COmniStream.html">COmniSteam</a> class.
+    </p>
+    <p class="breakAfterS">
+        <b>
+            <i>
+                It is important to note that a plugin message exchange must be initiated
+                from the console (i.e. OmniPeek) plugin instance:  DoSendPluginMessage cannot
+                be invoked from the engine side.
+            </i>
+        </b>
+        When a message is sent via DoSendPluginMessage in a console side plugin instance, its 
+        correlate plugin class on the engine side will receive the message in the 
+        OnProcessPluginMessage method. OnProcessPluginMessage on the engine side receives the 
+        message in a COmniStream “in” argument, decodes it, and then packages a reply into a 
+        COmniStream “out” argument. The final part of the message exchange is when the console
+        side plugin instance that had originally initiated the message receives the reply via 
+        an OnProcessPluginMessage call on the console side.
+    </p>
+    <p style="margin-bottom:5px">
+        Following are the three message sending and receiving methods, shown in order of
+        occurrence. Each method definition is followed by a brief description of the
+        method, then the arguments as bullet items:
+    </p>
+
+    <div style="margin-left:10px">
+        <p class="breakNone"><b>1.&nbsp;&nbsp;&nbsp;&nbsp;Console Side</b></p>
+        <p class="breakNone" style="margin-left:21px;"><b>DoSendPluginMessage</b> - Initiates a message exchange.</p>
+        <p class="codeI0" style="margin:1px 0px 0px 21px;">
+            bool &nbsp;&nbsp;DoSendPluginMessage( COmniStream& inMessage,
+            DWORD inTimeout, DWORD& outTransId );
+        </p>
+        <ul style="margin-left:0px;margin-top:3px;margin-bottom:5px">
+            <li>COmniStream& inMessage – a stream containing the marshaled data being sent.</li>
+            <li>DWORD inTimeout – timeout for the send in seconds (default is 60).</li>
+            <li>
+                DWORD& outTransId – a system generated transaction id that can be cached in order
+                to pair up a received reply message to the original sent message.
+            </li>
+        </ul>
+        <p class="breakNone"><b>2.&nbsp;&nbsp;&nbsp;&nbsp;Engine Side</b></p>
+        <p class="breakNone" style="margin-left:21px;">
+            <b>OnProcessPluginMessage</b> - Receives a console message
+            in the inMessage argument and sends a reply in the outResponse argument.
+        </p>
+        <p class="codeI0" style="margin:1px 0px 0px 21px;">
+            int &nbsp;&nbsp;OnProcessPluginMessage( COmniStream&
+            inMessage, COmniStream& outResponse );
+        </p>
+        <ul style="margin-left:0px;margin-top:3px;margin-bottom:5px">
+            <li>COmniStream& inMessage – a stream containing the marshaled data that has been received.</li>
+            <li>COmniStream& outResponse – a stream into which the reply message is packaged.</li>
+        </ul>
+        <p class="breakNone"><b>3.&nbsp;&nbsp;&nbsp;&nbsp;Console Side</b></p>
+        <p class="breakNone" style="margin-left:21px;">
+            <b>OnProcessPluginMessage</b> - Receives a reply message
+            back from the engine side.
+        </p>
+        <p class="codeI0" style="margin:1px 0px 0px 21px;">
+            int &nbsp;&nbsp;OnProcessPluginMessage( COmniStream&
+            inMessage, HRESULT inMsgResult, DWORD inTransId );
+        </p>
+        <ul style="margin-left:0px;margin-top:3px;margin-bottom:5px">
+            <li>COmniStream& inMessage – a stream containing the marshaled data that has been received.</li>
+            <li>HRESULT inMsgResult – The result code received on the engine side.</li>
+            <li>
+                DWORD inTransId – the transaction id which connects the received reply to the original
+                message that was sent via DoSendPluginMessage.
+            </li>
+        </ul>
+    </div>
+
+    <h3 class="breakBeforeL">Where in the Framework the Sending and Receiving Methods are Called</h3>
+
+    <div style="margin-left:15px">
+        <p class="breakNone" style="margin-top:5px"><b>1.&nbsp;&nbsp;&nbsp;&nbsp;DoSendPluginMessage</b> (console side)</p>
+        <p class="breakNone" style="margin-left:21px;">
+            The sending function DoSendPluginMessage may be called from either the single (root) class
+            <b>C&lt;<i>plugin name</i>&gt;Plugin</b> or the console side class
+            <b>C&lt;<i>plugin name</i>&gt;ConsoleContext</b>. The developer may implement this call
+            from within any method that is a member of either of the two classes just noted.
+        </p>
+        <p class="breakNone" style="margin-top:5px">
+            <b>2.&nbsp;&nbsp;&nbsp;&nbsp;OnProcessPluginMessage</b>
+            (engne side)
+        </p>
+        <p class="breakNone" style="margin-left:21px;">
+            On the engine side the OnProcessPluginMessage method will be invoked by the system whenever
+            the message sent from the console side has been received. The function will be located
+            either in the single (root)
+            <b>C&lt;<i>plugin name</i>&gt;Plugin</b> class or in the
+            <b>C&lt;<i>plugin name</i>&gt;EngineContext</b> class. The OnProcessPluginMessage function
+            will have an incoming COmniStream argument that contains the message. Then, the outgoing
+            COmniStream argument needs to be formatted with the reply message.
+        </p>
+        <p class="breakNone" style="margin-top:5px">
+            <b>3.&nbsp;&nbsp;&nbsp;&nbsp;OnProcessPluginMessage</b>
+            (console side)
+        </p>
+        <p class="breakNone" style="margin-left:21px;">
+            Back on the console side again, the OnProcessPluginMessage method will be invoked
+            when the engine side reply message is received. This will be in either the single
+            (root) class <b>C&lt;<i>plugin name</i>&gt;Plugin</b> or the console side class
+            <b>C&lt;<i>plugin name</i>&gt;ConsoleContext</b>. The message will be delivered
+            in the incoming COmniStream argument.
+        </p>
+    </div>
+    <br>
+    <h6 class="breakAfterS" style="margin-top:1px">CMessageOptions Description and Implementation</h6>
+
+    <p class="breakAfterS">
+        As noted, the CMessageOptions set of classes exist as an optional means of packaging data
+        for plugin message sending.  The reason that expressing data in this way is of great benefit
+        is that one data definition and one expression of the structured data is shared by a sending
+        class and its correlate receiving class. The data for both sides of any given send/receive
+        interaction is defined only once.
+    </p>
+    <p class="breakAfterS">
+        CMessageOptions itself is essentially a virtual class and is not implemented for the plugin
+        development. The derived classes CPluginMessageOptions and CContextMessageOptions are the
+        ones that are actually used for defining message data and modeling it.
+    </p>
+    <p class="breakAfterS">
+        CMessageOptions and its derived classes are not framework classes (although they derive from
+        framework classes) and thus exist on behalf of the developer. They certainly may be altered
+        as necessary to support the needs of the plugin design. It might be, for example, that a
+        plugin needs to send multiple messages from one context to another. This in turn may
+        require more CMessageOptions-derived classes and/or additional methods within the classes.
+        Also, a complex means of determining which data definition goes with which message,
+        presumably based on an identifier, may be required. So, while the delivered structure
+        provides a very good start point, the developer is free to modify the class in any way that
+        befits the plugin design.
+    </p>
+
+    <h3 class="breakBeforeL">The Instantiation of CPluginMessageOptions and CContextMessageOptions</h3>
+    <p class="breakAfterS">
+        The instantiation of the CPluginMessageOptions and CContextMessageOptions is already provided
+        by the provided wizard code as member variables. No further instantiation of these classes
+        is necessary in plugin development unless some complex design requires it. Following shows
+        how the message options are instantiated as the member variable m_MsgOpts by the code created
+        delivered from the plugin wizard:
+    </p>
+    <p class="breakNone">
+        In the <b>C&lt;<i>plugin name</i>&gt;Plugin</b> class class the member variable is defined as:
+    </p>
+    <p class="codeI0" style="margin:1px 0px 8px 5px;">CPluginMessageOptions &nbsp;&nbsp;m_MsgOpts;</p>
+    <p class="breakNone">
+        In the <b>C&lt;<i>plugin name</i>&gt;ConsoleContext</b> and the
+        <b>C&lt;<i>plugin name</i>&gt;EngineContext</b> classes class the member variable is defined as:
+    </p>
+    <p class="codeI0" style="margin:1px 0px 8px 5px;">CContextMessageOptions &nbsp;&nbsp;m_MsgOpts;</p>
+    <p class="breakNone">
+        Usage of the m_MsgOpts variable within the single plugin class (shared by console and engine)
+        or within the console and engine context classes creates the very straightforward means of
+        implementing plugin message sending.
+    </p>
+    <br>
+    <h6 class="breakAfterS">COmniMessage Description and Implementation</h6>
+    <p class="breakNone">
+        The COmniMessage class is a framework class that provides to CMessageOptions the
+        functionality for packaging data for message sending. COmniMessage derives from
+        COmniDataModeler in order to facilitate data modeling. To this, the COmniMessage class
+        adds additional support for unstructured (binary) data. Either structured or unstructured
+        data, or both together, may be packaged via COmniMessage.
+    </p>
+    <h3 class="breakBeforeL">COmniMessage Implementation for Structured and Unstructured Data</h3>
+    <p class="breakAfterS">
+        On the console side, in preparation for a data send, COmniMessage creates the initial
+        “package” of data. The packaged data is released (stored) into a stream which is passed
+        as an argument to DoSendPluginMessage. On the receiving side COmniMessage parses the
+        data back into the structured and/or unstructured members from which it was sent.
+    </p>
+    <p class="breakAfterS">
+        The structuring of data is the modeling process as described under the COmniDataModeler
+        topic. This rich methodology allows for even very complex data descriptions, including
+        many data types, nesting, and repeating of data elements.
+    </p>
+    <p class="breakNone">
+        The support for unstructured data simply involves passing into the COmniMessage methods
+        a UInt8* data pointer and a length. Any further elaboration of the data must be performed
+        by the person implementing the class. This might be, for example, packing and unpacking
+        a <a href="CPacket.html">CPacket</a>, or anything else of interest.
+    </p>
+    <br>
+
+    <h6 class="breakAfterS">
+        Detail of the Overall Process for Implementing Message Sending in a
+        Plugin
+    </h6>
+
+    <div style="margin-left:8px">
+        <p class="breakNone" style="margin-top:5px">
+            <b>
+                1.&nbsp;&nbsp;
+                Identify whether this is a plugin-to-plugin or a context-to-context conversation
+            </b>
+        </p>
+        <ol type="a" style="margin-top:1px;margin-bottom:8px">
+            <li style="margin-top:6px">
+                A <b>plugin-to-plugin</b> exchange occurs when a message is sent from the single
+                <b>C&lt;<i>plugin name</i>&gt;Plugin</b> class on the console side. If sent by this class it
+                will also be received by the engine side in the same <b>C&lt;<i>plugin name</i>&gt;Plugin</b>
+                class. One use of plugin-to-plugin messaging is when a plugin is first initializing
+                and wants to perform a validation. An example might be the console plugin requesting
+                a verification that the engine side instance is listening, and if so to send back
+                its version number.
+            </li>
+            <li style="margin-top:6px;margin-bottom:0px">
+                A <b>context-to-context</b> exchange occurs between the <b>
+                    C&lt;<i>plugin name</i>&gt;ConsoleContext
+                </b>class on
+                the console side and its correlate <b>C&lt;<i>plugin name</i>&gt;</b>
+            </li>EngineContext</b> class on
+            the engine side. Note that each context represents a capture session. If there are multiple
+            simultaneous captures at play, the system will make sure that the context instance
+            that receives a message on the engine side is the same as the instance on the console
+            side that sent the message.
+            </li>
+        </ol>
+        <p class="breakNone" style="margin-top:0px">
+            <b>
+                2.&nbsp;&nbsp;
+                Identify what data needs to be sent and consider how it should be formatted
+            </b>
+        </p>
+        <p class="breakAfterS" style="margin-left:18px;">
+            Data types should be designed such as CStrings for text, integer types, and so on.
+            The decision to use data modeling can be made if this would expedite the expression
+            of data. If the data is more easily expressed simply as “binary”, then this would be
+            the decision. And of course the two can be combined.
+        </p>
+        <p class="breakAfterS" =" style="margin-left:18px;">
+            As an example, it might be realized that a request for data will be sent from the console to
+            the engine in response to a user action in a dialog. This would require a request code in
+            the send message and a response with code and data both packaged into the message. The
+            formatting choice might be an integer expressed in a very simple “model” for the send, and
+            a set of data members containing the data modeled as the response. Or alternatively,
+            perhaps the response would have an unstructured pointer to the data. This could even be
+            related in the developed code to a <a href="CPacket.html">CPacket</a> or some other useful
+            piece of data.
+        </p>
+        <p class="breakNone" style="margin-top:7px">
+            <b>
+                3.&nbsp;&nbsp;
+                If any data will be modeled, create and model the data in CMessageOptions
+            </b>
+        </p>
+        <p class="breakAfterS" style="margin-left:18px;">
+            The CMessageOptions class has a section for public data items. This is where the data that
+            will be sent and received by console and engine side classes will be created as public member
+            data.
+        </p>
+    </div>
+
+</body>
+</html>

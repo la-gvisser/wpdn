@@ -1,0 +1,811 @@
+// sFlow Version 2, 4, 5
+//
+// UDP port: 6343
+// Date: 17/10/2013
+
+str# UDP::Ports_Str;
+	6343  | sFlow;
+
+void sFlow()
+{
+	LABL 0 0 00 b1 sFlow;
+	DLNG 0 6 90 c2 Version:;
+	INCR 4;
+	IPLG 0 0 90 c2 Agent Address:;
+	if (g[6] == 5)
+	{
+		DLNG 0 0 90 c2 Sub-Agent Id:;
+	}
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Uptime:;
+	DLNG 0 7 90 c2 Num of Samples:;
+	/* An array of sample records */
+	while (g[7] > 0)
+	{
+		l[1] = pl[0];
+		
+		if (g[6] == 4)
+		{
+			TSB# 0 41 0 0 sFlow_v4::Sample_Type;
+		}
+		if (g[6] == 2)
+		{
+			TSB# 0 41 0 0 sFlow_v2::Sample_Type;
+		}
+		if (g[6] == 5)
+		{
+			TSB# 0 41 0 0 sFlow_v5::Sample_Type;
+		}		
+		g[7] -= 1;		
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void sFlow::v4( )
+{
+	LABL 0 0 00 b7 Flow Sample;
+	DLNG 0 0 90 c2 Format Sample Data:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Source Id:;
+	DLNG 0 0 90 c2 Sampling Rate:;
+	DLNG 0 0 90 c2 Sample Pool:;
+	DLNG 0 0 90 c2 Drops:;
+	DLNG 0 3 90 c2 Input Interface:;
+	  CST# 0 3 00 14 sFlow::Flow_Record_Data_Str;
+	DLNG 0 1 90 c2 Output Interface:;
+	  CST# 0 1 0 14 sFlow::Output_Str;
+	  BREM 0 46 0 0;
+	// l[5] -= l[6];	// 
+	DLNG 0 1 90 c9 Sample Type:;
+	while (g[1] > 0)
+	{
+		LABL 0 0 00 c9 Flow Record:;
+		DLNG 0 41 90 c2 Flow Data:;
+		  CST# 0 41 00 14 sFlow::Flow_Record_Data_Str;
+		DLNG 0 4 90 c2 Length:;
+		  TSB# 0 41 00 00 sFlow::Flow_Record_Data_Type;
+		
+		LABL 0 0 00 c8;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+}
+
+str# sFlow_v2::Sample_Type;
+	1	| sFlow_v2::Flow_Sample;
+	2	| sFlow_v2::Counter_Sample;
+
+str# sFlow_v5::Sample_Type;
+	1	| sFlow_v5::Flow_Sample;
+	2	| sFlow_v5::Counter_Sample;
+
+str# sFlow_v4::Sample_Type;
+	1	| sFlow_v4;
+	2	| sFlow_v4::Counter_Sample;
+	
+void sFlow_v5::Flow_Sample()
+{
+	LABL 0 0 00 b7 Flow Sample: ;
+	GLNG( 8, l[2]);
+	DGLB( 0, l[2], 0x07, 0x07 );
+	DLNG 0 0 90 c2 Format Sample Data:;
+	if (g[6] == 5)			// Sample Length only present in Version 5
+	{
+		DLNG 0 33 90 c2 Sample Length:;
+	}
+ 	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Source Id:;
+	DLNG 0 0 90 c2 Sampling Rate:;
+	DLNG 0 0 90 c2 Sample Pool:;
+	DLNG 0 0 90 c2 Drops:;
+	DLNG 0 3 90 c2 Input Interface:;
+	  CST# 0 3 00 14 sFlow::Flow_Record_Data_Str;
+	DLNG 0 1 90 c2 Output Interface:;
+	  CST# 0 1 0 14 sFlow::Output_Str;
+	DLNG 0 1 90 c2 Flow Records:;
+	g[51] -= 32;	
+	while (g[1] > 0)
+	{
+		
+		LABL 0 0 00 c7 Flow Record:;
+		DLNG 0 41 90 c2 Flow Data:;
+		  CST# 0 41 00 14 sFlow::Flow_Record_Data_Str;
+		DLNG 0 35 90 c2 Length:; g[35] += 8;
+		BREM 0 34 5 5;
+		  TSB# 0 41 00 00 sFlow::Flow_Record_Data_Type;
+		LABL 0 0 00 c8;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 b8;
+}
+
+void sFlow_v2::Flow_Sample()
+{
+	LABL 0 0 00 b7 Flow Sample;
+	DLNG 0 0 90 c2 Format Sample Data:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Source Id:;
+	DLNG 0 0 90 c2 Sampling Rate:;
+	DLNG 0 0 90 c2 Sample Pool:;
+	DLNG 0 0 90 c2 Drops:;
+	DLNG 0 3 90 c2 Input Interface:;
+	  CST# 0 3 00 14 sFlow::Flow_Record_Data_Str;
+	DLNG 0 1 90 c2 Output Interface:;
+	  CST# 0 1 0 14 sFlow::Output_Str;
+	DLNG 0 1 90 c9 Flow Records:;
+	while (g[1] > 0)
+	{
+		LABL 0 0 00 c9 Flow Record:;
+		DLNG 0 41 90 c2 Flow Data:;
+		  CST# 0 41 00 14 sFlow::Flow_Record_Data_Str;
+		DLNG 0 4 90 c2 Length:;
+		  TSB# 0 41 00 00 sFlow::Flow_Record_Data_Type;
+		LABL 0 0 00 c8;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+	sFlow_v2::Counter_Sample;
+}
+
+str# sFlow::Output_Str;
+	0	|	ifIndex Unknown;
+	2	|	ifindex;
+
+str# sFlow::Flow_Record_Data_Str;
+		1	|	Raw Packet Header;
+		2	|	IPv4;
+		3	|	IPv6;
+	 1001	|	Extended Switch Data;
+	 1002	|	Extended Router Data;
+	 1003	|	Extended Gateway Data;
+	 1004	|	Extended User Data;
+	 1005	|	Extended Url Data;
+	 1006	|	Extended MPLS Data;
+	 1007	|	Extended NAT Data;
+	 1008	|	Extended MPLS Tunnel;
+	 1009	|	Extended MPLS VC;
+	 1010	|	Extended MPLS FEC;
+	 1011	|	Extended MPLS LVP FEC;
+	 1012	|	Extended VLAN tunnel;
+
+str# sFlow::Flow_Record_Data_Type;
+		1	|	sFlow_v5::Header;
+		2	|	sFlow::IPv4;
+		3	|	sFlow::IPv6;
+	 1001	|	sFlow::Switch;
+	 1002	|	sFlow::Router;
+	 1003	|	sFlow::Gateway;
+	 1004	|	sFlow::User;
+	 1005	|	sFlow::URL;
+	 1006	|	sFlow::MPLS;
+	 1007	|	sFlow::NAT;
+	 1008	|	sFlow::MPLS_Tunnel;
+	 1009	|	sFlow::MPLS_VC;
+	 1010	|	sFlow::MPLS_FEC;
+	 1011	|	sFlow::MPLS_LVP_FEC;
+	 1012	|	sFlow::VLAN_Tunnel;
+
+void sFlow_v5::Header()
+{
+	//new
+	DLNG( 0, l[11], 0x90, 0xc2, "Header protocol:" );
+	DLNG( 0, l[12], 0x90, 0xc2, "Frame length:" );
+	DLNG( 0, l[13], 0x90, 0xc2, "Payload removed:" );
+	//g[53] -= l[13];
+	l[12] -= l[13];
+	//INCR( 0, l[13]);
+	g[12] = l[12]; // store Frame length
+	l[4] = g[12];
+	DLNG( 0, l[14], 0x90, 0xc2, "MAC Packet Length:" );
+	//overwrite with MACPKTLNGT
+	g[12] = l[14];
+	// DUMP( 0, l[12], 0x90, 0xc2, "Frame length:" );
+	// DECR( l[12], 0);
+	// DECR( l[13], 0);
+	//eof new
+	/* l[2] = g[4];	// Store Header Length
+	BREM 0 45 0 0;
+	if (g[6] == 5)
+	{	
+		DLNG 0 00 90 c2 Stripped:;
+		DLNG 0 0 90 c2 Unknown:;
+		DLNG 0 0 90 c2 Unknown:;
+		DLNG 0 0 90 c2 MAC Packet Length:;
+	}
+	if (g[6] == 2)
+	{
+		// Hack, but here it is, maybe:
+		// Length is rounded up to nearest 4 bytes (rest are padding?)
+		// Then we add 4.  So packet length of 60 -> 64; packet length of 101 -> 108.
+		DLNG 0 42 90 c2 MAC Packet Length:;
+		l[4] = l[2];
+		l[4] /= 4;
+		l[4] *= 4;
+		if( l[2] != l[4] )
+		{
+			l[2] /= 4;
+			l[2] += 1;
+			l[2] *= 4;
+		}
+		l[2] += 4;
+	}	 */
+	ETHR 0 0 90 c2 Dest. MAC:;
+	ETHR 0 0 90 c2 Source MAC:;
+	HWRD 0 43 90 c2 Protocol Type:;
+	CST# 0 43 00 14 sFlow::Header_Protocol_Str;
+	if(l[3] == 0x86dd)	//IPv6
+	{
+		TSB# 0 43 00 00 sFlow::Header_Protocol;
+	}
+	
+	if(l[3] == 0x800)	//IP
+	{
+		TSB# 0 43 00 00 sFlow::Header_Protocol;
+	}
+	if(l[3] == 0x8100)	//VLAN
+	{
+		HWRD 0 0 90 c2 VLAN:;
+		HWRD 0 43 90 c2 Protocol Type:;
+		CST# 0 43 00 14 sFlow::Header_Protocol_Str;
+		TSB# 0 43 00 00 sFlow::Header_Protocol;
+	}
+	if(l[3] != 0x86dd) 
+	{
+		if(l[3] != 0x0800) 
+		{
+			if(l[3] != 0x8100) 
+			{
+				DUMP( 0, g[12], 0x90, 0xc2, "Unknown Header " );
+			}
+		}
+	}
+	// BREM 0 46 0 0;
+	// l[5] -= l[6];	// Calcualte bytes used and subtract from Header length
+	// l[2] -= l[5];
+	// DUMP 0 42 90 c2 Header Bytes:;
+	LABL    0   0  0 b8;
+}
+
+str# sFlow::Header_Protocol_Str;
+	0x0800	|	IPv4;
+	0x8100	|	VLAN;
+	0x86dd  |	IPv6;
+	
+str# sFlow::Header_Protocol;
+	0x0800	|	sFlow::Header_IP;
+	0x86dd  |	sFlow::Header_IPv6;
+
+void sFlow::Header_IPv6()
+{
+	l[59] = g[1];
+	l[58] = g[7];
+	l[57] = g[6];
+	LABL  0  0  0 c7 IP Version 6 Header - Internet Protocol Datagram\IPv6:;
+	DBIT  4  2 90 c2 Version:;
+	DBIT  8  1 90 c2 Traffic Class:;
+	CBIT  3  1  0 14 Non-congestion-controlled Traffic;
+	CST# ffffffff 1 0 14 IPv6 Priorities;
+	HEX#  3  0 90 c2 Flow Label:;
+	DWRD  0 10 90 c2 Payload Length:;
+	ADDG  24 10;  * because g10 is TRAK'd
+	CEQU  0 10  0 14 (See Jumbo Payload Length);
+	HBYT  0  3 90 c2 Next Header:;  * g[3] is used by IP Common to determine protocol type
+	MOVE  3 84;       * copy g[3] to g[4] to preserve [3]
+	CEQU  0  4  0 14 Hop-by-Hop Options;
+	//TEQU  0  4  0  0 IPv6 Addrs;
+	CST#  0  4  0 14 IP Protocols;
+	DBYT  0  0 90 c2 Hop Limit:;
+	IPV6  0  0 90 c2 Source Address:;
+	IPV6  0  0 90 c2 Destination Address:;
+	TSB# 0 3 0 0 sFlow::TCP_UDP;
+	sFlow::DataDump;
+	g[1] = l[59];
+	g[7] = l[58];
+	g[6] = l[57];
+}	
+
+void sFlow::Header_IP()
+{
+	BREM 0 5;			* store remaining bytes for CKSM
+	LABL 0 0 0 C7 IP Header - Internet Protocol Datagram\IP:;
+	DBIT 4 0 90 c2 Version:\;
+	DBIT 4 2 90 c2 Header Length:\;
+	g[2] *= 4;
+	DGLB 0 2 4 14 "(";
+	g[2] /= 4;
+	LABL 0 0 0 4 " bytes)";
+	BBIT 8 3 90 c9 Differentiated Services:;
+	g[4] = g[3];
+	g[3] /= 4;		
+	
+	CST# 0 3 0 d4 IP::DSF;
+	g[3] = g[4];
+	g[3] &= 0x3;
+	CST# 0 3 0 d4 IP::ECN;		// RFC 3168
+
+	LABL 0 0 0 c8;
+	
+	g[17] = g[16];
+	DWRD( 0, g[18], 0x90, 0xc2, "Total Length:\");		*SI: TT6179 - testing to make sure that length in field is long enough
+	
+	if (g[18] <= g[16])
+	{
+		g[16] = g[18];
+		MDIA 0 b;
+		if (g[11] == 4)
+		{
+			g[16] -= 2;			//si: MediaType is wan
+		}
+		if (g[11] != 4)
+		{
+			g[16] -= 4;			//si: MediaType is not wan
+		}
+	}
+
+	PRV2 0 1 5;		   *get the flags with the invisible style;
+	SBIT 1 1;   *test for CRC Error;
+	SKIP 80000005;
+	PRV4 0 1 5; *get packet length into g1
+	g[1] -= g[16];	*subtract the total length (g10) from the packet length (g1)
+	SLTE 11 1;  *is the result <= 17
+	SKIP 1;
+	PRV4 0 10 5;       *put packet size in g10 and
+
+	*SI & CBB ... there used to be wacked out code here... that checked for pkt slicing...
+	* we took it out on rev22
+
+	DWRD  0  0 90 c2 Identifier:\;
+
+	BBIT  3  3 90 c9 Fragmentation Flags:;
+	BST#  0  3  0 d4 IP::FragmentationBitsStr;
+	LABL  0  0  0 c8;
+
+	DBIT  d  d 90 c2 Fragment Offset:\;
+	g[13] *= 8; 
+	DGLB  0  d  4 14 "(\";
+	g[13] /= 8; 
+	LABL  0  0  0 4 " bytes)\";
+	DBYT  0  1e 90 c2 Time To Live:\;		//si: save for RGMP test in IP Common
+	DBYT  0  3 90 c2 Protocol:\;
+	MOVE  3 b2;							*si: save this for rtp taste...holds the protocol type g32[hex]
+	CST#  0  3  0 14 IP Protocols;
+	CLTE 85  3  0 14 RESERVED; *133+ is reserved
+	HWRD  0  0 90 c2 Header Checksum:\;
+	CKSM  2  5 24 14 Checksum invalid. Should be: \;
+	
+	IPLG(  0,  g[28], 0x90, 0xc2, "Source IP Address:\S:");
+	g[31] = pw[0];								//si: lame... do this for RGMP test in IP COMMON
+	g[32] = pw[2];
+	IPLG(  0,  g[29], 0x90, 0xc2, "Dest. IP Address:\D:");
+	TSB# 0 3 0 0 sFlow::TCP_UDP;
+	sFlow::DataDump;
+	//LABL    0   0  0 b8;
+}
+
+void sFlow::DataDump()
+{
+	BREM 0 36 5 5;
+	g[52] -= g[54];
+	g[53] -= g[52];
+	DUMP 0 35 90 c2 Data:;
+}
+
+str# sFlow::TCP_UDP;
+	0x06	|	sFlow::TCP;
+	0x11	|	sFlow::UDP;
+	0x01	|	sFlow::ICMP;
+	
+void sFlow::Dump2()
+{
+	LABL(    0,  0,    0, 0xc7, "Dump" );
+	
+}
+void sFlow::TCP()
+{
+	LABL(    0,  0,    0, 0xc7, "TCP - Transport Control Protocol\TCP:");
+	PORT(    0,  0, 0x90, 0xc2, "Source Port:\S:");
+	PORT(    0,  0, 0x90, 0xc2, "Destination Port:\D:");
+	LABL    0   0  0 c8;
+}
+
+void sFlow::UDP()
+{
+	LABL    0   0  0 c7 "UDP - User Datagram Protocol\UDP:";
+	PORT    0   0 90 c2 "Source Port:\Src:";
+	PORT    0   0 90 c2 "Destination Port:\Dst:";
+	LABL    0   0  0 c8;
+}
+
+void sFlow::ICMP()
+{
+	LABL 0  0  0 c7 ICMP - Internet Control Messages Protocol\ICMP:;
+	DBYT 0  41 90 c2 ICMP Type:;
+	ADDG 1  41 ;
+	CST# 0  41  0 14 ICMP Types;
+	CLSE 0  0  0 14 Unknown;
+	DBYT 1  2 90 c2 ICMP Code:;
+	ICMPChecksum();
+	LABL    0   0  0 b8;
+}
+
+void sFlow::IPv4()
+{
+	DLNG 0 00 90 c2 Length:;
+	DLNG 0 00 90 c2 Protocol:;
+	IPLG 0 00 90 c2 Source IP Address:;
+    IPLG 0 00 90 c2 Dest. IP Address;
+    DLNG 0 00 90 c2 Source Port Number;
+	DLNG 0 00 90 c2 Dest. Port Number;
+	HLNG 0 00 90 c2 TCP Flags;
+	BREM 0 35 5 5;
+	g[52] -= g[53];
+	g[51] -= g[52];
+	DUMP 0 33 90 c2 Data:;
+}
+
+void sFlow::IPv6()
+{
+	DLNG 0 00 90 c2 Length:;
+	DLNG 0 00 90 c2 Protocol:;
+	IPV6 0 00 90 c2 Source IP Address:;
+    IPV6 0 00 90 c2 Dest. IP Address:;
+    DLNG 0 00 90 c2 Source Port Number:;
+	DLNG 0 00 90 c2 Dest. Port Number:;
+	HLNG 0 00 90 c2 TCP Flags:;
+	DLNG 0 00 90 c2 IP Priority:;
+	BREM 0 35 5 5;
+	g[52] -= g[53];
+	g[51] -= g[52];
+	DUMP 0 33 90 c2 Data:;
+}
+	
+void sFlow::Switch()
+{
+	DLNG 0 0 90 c2 Source VLAN:;
+	DLNG 0 0 90 c2 Source Proiority:;
+	DLNG 0 0 90 c2 Dest. VLAN:;
+	DLNG 0 0 90 c2 Dest. Priority:;
+}
+
+void sFlow::Router()
+{
+	INCR 4;
+	IPLG 0 0 90 c2 Next Hop:;
+	DLNG 0 0 90 c2 Source Mask:;
+	DLNG 0 0 90 c2 Dest. Mask:;
+}
+
+void sFlow::Gateway()
+{
+	DLNG 0 0 90 c2 AS:;
+	DLNG 0 0 90 c2 Source AS:;
+	DLNG 0 0 90 c2 Source Peer AS:;
+	DLNG 0 0 90 c2 Communities:;
+	DLNG 0 0 90 c2 Local Pref:;
+}
+
+void sFlow::User()
+{
+	DLNG 0 0 90 c2 Source Charset:;
+	DLNG 0 41 90 c2 Source User Length:;
+	CHR# 0 41 90 c2 Source User:;
+	DLNG 0 0 90 c2 Dest. Charset:;
+	DLNG 0 41 90 c2 Dest. User Length:;
+	CHR# 0 41 90 c2 Dest. User:;
+}
+
+void sFlow::URL()
+{
+	DLNG 0 41 90 c2 Direction:;
+	  CEQU 1 41 00 14 Source;
+	  CEQU 2 41 00 14 Destination;
+	DLNG 0 41 90 c2 URL Length:;
+	CHR# 0 41 90 c2 URL:;
+	DLNG 0 41 90 c2 Host Length:;
+	CHR# 0 41 90 c2 Host:;
+}
+
+void sFlow::MPLS()
+{
+
+}
+
+void sFlow::NAT()
+{
+
+}
+
+void sFlow::MPLS_Tunnel()
+{
+
+}
+
+void sFlow::MPLS_VC()
+{
+
+}
+
+void sFlow::MPLS_FEC()
+{
+
+}
+
+void sFlow::MPLS_LVP_FEC()
+{
+
+}
+
+void sFlow::VLAN_Tunnel()
+{
+
+}
+
+void sFlow_v2::Counter_Sample()
+{
+	INCR 4;
+	LABL 0 0 00 b7 Counter Sample;
+	l[8] = pl[0];
+	if (l[8] > 10)
+	{
+		sFlow_v2::Counters_Sample();
+		LABL 0 0 00 b8;
+		TRTS;
+	}
+	DLNG 0 47 90 c9 Extended Information Type:;
+	CST# 0 47 00 14 sFlow_v2::Counter_Types_Str;
+	TSB# 0 47 0 0 sFlow_v2::Counter_Types;
+	LABL 0 0 00 c8;
+	l[1] = pl[0];
+	if (l[1] == 2)
+	{
+		DLNG 0 47 90 c9 Extended Information Type:;
+		CST# 0 47 00 14 sFlow_v2::Counter_Types_Str;
+		TSB# 0 47 0 0 sFlow_v2::Counter_Types;
+		LABL 0 0 00 c8;
+	}
+	LABL 0 0 00 b8;
+}
+
+void sFlow_v5::Counter_Sample()
+{
+	LABL 0 0 00 b7 Counter Sample;
+	DLNG 0 0 90 c2 Format Sample Data:;
+	DLNG 0 0 90 c2 Sample Length:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Source Id:;
+	DLNG 0 1 90 c9 Counter Records:;
+	while (g[1] > 0)
+	{
+		LABL 0 0 00 c9 Counter Record:;
+		DLNG 0 41 90 c2 Counter Data:;
+		  CST# 0 41 00 14 sFlow::Counter_Data_Types_Str;
+		DLNG 0 4 90 c2 Length:;
+		  TSB# 0 41 00 00 sFlow::Counter_Data_Type;
+		LABL 0 0 00 c8;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+}
+
+str# sFlow::Counter_Data_Types_Str;
+	1	|	Generic Interface;
+	2	|	Ethernet Interface;
+	3	|	Token Ring;
+	4	|	100 BaseVG Interface;
+	5	|	VLAN;
+	1001	|	Processor Information;
+
+str# sFlow::Counter_Data_Type;
+	1	|	sFlow::Generic_Interface;
+	2	|	sFlow::Ethernet_Interface;
+	3	|	sFlow::TokenRing;
+	4	|	sFlow::VG;
+	5	|	sFlow::VLAN;
+	1001	|	sFlow::Processor;
+
+
+void sFlow_v2::Counters_Sample()
+{
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Source Id:;
+	DLNG 0 0 90 c2 Sampling Rate:;
+	DLNG 0 41 90 c2 Counters Type:;
+	if (l[1] == 1)
+	{
+		sFlow::Generic_Interface_v2();
+	}
+}
+
+void sFlow::Generic_Interface()
+{
+	LABL 0 0 00 c9 Generic Interface;
+	DLNG 0 0 90 c2 ifIndex:;
+	DLNG 0 0 90 c2 ifType:;
+	D64B 0 0 90 c2 ifSpeed:;
+	DLNG 0 41 90 c2 ifDiection:;
+	  CST# 0 41 0 14 sFlow::Direction_Str;
+	INCR 2;	// skip 2 bits since cbit does not work with BLNG
+	BWRD 0 41 90 c9 Status:;
+	  CBIT 1 41 00 d4 ........ ......1. ifOperStatus: Up;
+	  CLSE 0 00 00 d4 ........ ......0. ifOperStatus: Down;
+	  CBIT 0 41 00 d4 ........ .......1 ifAdminStatus: Up;
+	  CLSE 0 00 00 d4 ........ .......0 ifAdminStatus: Down;
+	LABL 0 0 00 c8;
+	D64B 0 0 90 c2 ifInOctets:;
+	DLNG 0 0 90 c2 ifInUcastPkts:;
+	DLNG 0 0 90 c2 ifInMulticastPkts:;
+	DLNG 0 0 90 c2 ifInBroadcastPkts:;
+	DLNG 0 0 90 c2 ifInDiscards:;
+	DLNG 0 0 90 c2 ifInErrors:;
+	DLNG 0 0 90 c2 ifInUnknownProtos:;
+	D64B 0 0 90 c2 ifOutOctets:;
+	DLNG 0 0 90 c2 ifOutUcastPkts:;
+	DLNG 0 0 90 c2 ifOutMulticastPkts:;
+	DLNG 0 0 90 c2 ifOutBroadcastPkts:;
+	DLNG 0 0 90 c2 ifOutDiscards:;
+	DLNG 0 0 90 c2 ifOutErrors:;
+	DLNG 0 0 90 c2 ifPromiscuousMode:;
+	LABL 0 0 00 c8;
+}
+
+void sFlow::Generic_Interface_v2()
+{
+	LABL 0 0 00 c9 Generic Interface;
+	DLNG 0 0 90 c2 ifIndex:;
+	DLNG 0 0 90 c2 ifType:;
+	D64B 0 0 90 c2 ifSpeed:;
+	DLNG 0 41 90 c2 ifDiection:;
+	  CST# 0 41 0 14 sFlow::Direction_Str;
+	INCR 2;	// skip 2 bits since cbit does not work with BLNG
+	BWRD 0 41 90 c9 Status:;
+	  CBIT 1 41 00 d4 ........ ......1. ifOperStatus: Up;
+	  CLSE 0 00 00 d4 ........ ......0. ifOperStatus: Down;
+	  CBIT 0 41 00 d4 ........ .......1 ifAdminStatus: Up;
+	  CLSE 0 00 00 d4 ........ .......0 ifAdminStatus: Down;
+	LABL 0 0 00 c8;
+	D64B 0 0 90 c2 ifInOctets:;
+	DLNG 0 0 90 c2 ifInUcastPkts:;
+	DLNG 0 0 90 c2 ifInMulticastPkts:;
+	DLNG 0 0 90 c2 ifInBroadcastPkts:;
+	DLNG 0 0 90 c2 ifInDiscards:;
+	DLNG 0 0 90 c2 ifInErrors:;
+	DLNG 0 0 90 c2 ifInUnknownProtos:;
+	D64B 0 0 90 c2 ifOutOctets:;
+	DLNG 0 0 90 c2 ifOutUcastPkts:;
+	DLNG 0 0 90 c2 ifOutMulticastPkts:;
+	DLNG 0 0 90 c2 ifOutBroadcastPkts:;
+	DLNG 0 0 90 c2 ifOutDiscards:;
+	DLNG 0 0 90 c2 ifOutErrors:;
+	DLNG 0 0 90 c2 ifPromiscuousMode:;
+	LABL 0 0 00 c8;
+}
+
+str# sFlow::Direction_Str;
+	0	|	Unknown;
+	1	|	Full Duplex;
+	2	|	Half Duplex;
+	3	|	In;
+	4	|	Out;
+	
+void sFlow::Ethernet_Interface()
+{
+	DLNG 0 0 90 c2 .3StatsAlignmentErrors:;
+	DLNG 0 0 90 c2 .3StatsFCSErrors:;
+	DLNG 0 0 90 c2 .3StatsSingleCollisionFrames:;
+	DLNG 0 0 90 c2 .3StatsMultipleCollisionFrames:;
+	DLNG 0 0 90 c2 .3StatsSQETestErrors:;
+	DLNG 0 0 90 c2 .3StatsDeferredTransmissions:;
+	DLNG 0 0 90 c2 .3StatsLateCollisions:;
+	DLNG 0 0 90 c2 .3StatsExcessiveCollisions:;
+	DLNG 0 0 90 c2 .3StatsInternalMacTransmitErrors:;
+	DLNG 0 0 90 c2 .3StatsCarrierSenseErrors:;
+	DLNG 0 0 90 c2 .3StatsFrameTooLongs:;
+	DLNG 0 0 90 c2 .3StatsInternalMacReceiveErrors:;
+	DLNG 0 0 90 c2 .3StatsSymbolErrors:;
+}
+
+void sFlow::TokenRing()
+{
+	DLNG 0 0 90 c2 .5StatsLineErrors:;
+	DLNG 0 0 90 c2 .5StatsBurstErrors:;
+	DLNG 0 0 90 c2 .5StatsACErrors:;
+	DLNG 0 0 90 c2 .5StatsAbortTransErrors:;
+	DLNG 0 0 90 c2 .5StatsInternalErrors:;
+	DLNG 0 0 90 c2 .5StatsLostFrameErrors:;
+	DLNG 0 0 90 c2 .5StatsReceiveCongestions:;
+	DLNG 0 0 90 c2 .5StatsFrameCopiedErrors:;
+	DLNG 0 0 90 c2 .5StatsTokenErrors:;
+	DLNG 0 0 90 c2 .5StatsSoftErrors:;
+	DLNG 0 0 90 c2 .5StatsHardErrors:;
+	DLNG 0 0 90 c2 .5StatsSignalLoss:;
+	DLNG 0 0 90 c2 .5StatsTransmitBeacons:;
+	DLNG 0 0 90 c2 .5StatsRecoverys:;
+	DLNG 0 0 90 c2 .5StatsLobeWires:;
+	DLNG 0 0 90 c2 .5StatsRemoves:;
+	DLNG 0 0 90 c2 .5StatsSingles:;
+	DLNG 0 0 90 c2 .5StatsFreqErrors:;	
+}
+
+void sFlow::VG()
+{
+	DLNG 0 0 90 c2 .12InHighPriorityFrames:;
+	HLNG 0 0 90 c2 .12InHighPriorityOctets:;
+	DLNG 0 0 90 c2 .12InNormPriorityFrames:;
+	HLNG 0 0 90 c2 .12InNormPriorityOctets:;
+	DLNG 0 0 90 c2 .12InIPMErrors:;
+	DLNG 0 0 90 c2 .12InOversizeFrameErrors:;
+	DLNG 0 0 90 c2 .12InDataErrors:;
+	DLNG 0 0 90 c2 .12InNullAddressedFrames:;
+	DLNG 0 0 90 c2 .12OutHighPriorityFrames:;
+	HLNG 0 0 90 c2 .12OutHighPriorityOctets:;
+	DLNG 0 0 90 c2 .12TransitionIntoTrainings:;
+	HLNG 0 0 90 c2 .12HCInHighPriorityOctets:;
+	HLNG 0 0 90 c2 .12HCInNormPriorityOctets:;
+	HLNG 0 0 90 c2 .12HCOutHighPriorityOctets:;
+}
+
+void sFlow::VLAN()
+{
+	DLNG 0 0 90 c2 VLAN Id:;
+	HLNG 0 0 90 c2 Octets:;
+	DLNG 0 0 90 c2 UCastPkts:;
+	DLNG 0 0 90 c2 MulticastPkts:;
+	DLNG 0 0 90 c2 BroadcastPkts:;
+	DLNG 0 0 90 c2 Discards:;
+}
+
+void sFlow::Processor()
+{
+	DLNG 0 0 90 c2 Percentage 5s_cpu:;
+	GLNG 0 0 90 c2 Percentage 1m_cpu:;
+	DLNG 0 0 90 c2 Percentage 5m_cpu:;
+	HLNG 0 0 90 c2 Total Memory:;
+	HLNG 0 0 90 c2 Free Memory:;
+}
+
+str# sFlow::Header_Protocol_Str;
+	1	|	ETHERNET-ISO88023;
+	2	|	ISO88024-TOKENBUS;
+	3	|	ISO88025-TOKENRING;
+	4	|	FDDI;
+	5	|	FRAME-RELAY;
+	6	|	X25;
+	7	|	PPP;
+	8	|	SMDS;
+	9	|	AAL5;
+	10	|	AAL5-IP;
+	11	|	IPv4;
+	12	|	IPv6;
+	13	|	MPLS;
+	14	|	POS;
+
+str# sFlow_v2::Counter_Types;
+	01	|	sFlow::Switch;
+	02	|	sFlow::Router;
+	03	|	sFlow::Gateway;
+	04	|	sFlow::User;
+	05	|	sFlow::URL;
+	06	|	sFlow::MPLS;
+	07	|	sFlow::NAT;
+	08	|	sFlow::MPLS_Tunnel;
+	09	|	sFlow::MPLS_VC;
+	10	|	sFlow::MPLS_FEC;
+	11	|	sFlow::MPLS_LVP_FEC;
+	12	|	sFlow::VLAN_Tunnel;
+	
+str# sFlow_v2::Counter_Types_Str;
+	01	|	Switch;
+	02	|	Router;
+	03	|	Gateway;
+	04	|	User;
+	05	|	URL;
+	06	|	MPLS;
+	07	|	NAT;
+	08	|	MPLS_Tunnel;
+	09	|	MPLS_VC;
+	10	|	MPLS_FEC;
+	11	|	MPLS_LVP_FEC;
+	12	|	VLAN_Tunnel;

@@ -1,0 +1,304 @@
+// ------------------------------------------------------
+// MEGACO!
+// ------------------------------------------------------
+
+
+// ------------------------------------------------------
+// ------------------------------------------------------
+//  Megaco Text
+// ------------------------------------------------------
+// ------------------------------------------------------
+
+void MegacoText()
+{
+	// si: initial check for tpkt prior to megaco
+	l[1] = g[16];
+	l[2] = pw[0];
+	if (l[2] != 0x4d45)
+	{
+		if (l[2] != 0x212f)
+		{
+			TPKT::Test;
+			if (l[1] == g[16]
+			{
+				l[2] = pb[0];
+				if (l[2] == 0x03)
+				{
+					l[3] = pw[2];
+					if (l[3] > l[1])
+					{
+						TPKT;
+						if (l[1] > 0)
+						{
+							LABL 0 00 00 b1 Megaco Text;
+							DUMP 0 10 90 c2 Megaco Data:;
+							LABL 0 00 00 14 Data continued on next packet;
+							TRTS;
+						}
+					}
+					// si: case for if reserved != 0
+					if (l[3] == l[1])
+					{
+						TPKT;
+					}
+				}
+				if (g[16] < 5)
+				{
+					LABL 0 00 00 b1 Extra Bytes\Extra:;
+					DUMP 0 10 90 c2 Extra Bytes:\;
+					TRTS;
+				}
+			}
+		}
+	}
+
+	MARK 1 2 0 0 MegacoText::Str;
+	LABL 0 0 0 b1 Megaco Text;
+	
+	MegacoText::Clear_White_Space;			//si: just in case there is white space before the identifier
+	MegacoText::Header;						//si: header info [identifier and version num]
+	MegacoText::Clear_White_Space;			//si: clear the white space dude!
+	MegacoText::Mid;						//si: name-address of message orignator
+	MegacoText::Clear_White_Space;			//si: clear the white space again dude!
+	MegacoText::MessageBody;				//si: let's start on the main part here
+}
+
+str# MegacoText::Str;
+	MegacoText;
+
+// ------------------------------------------------------
+//  message header
+
+void MegacoText::Header()
+{
+	GSTR( 0x2000002f, l[1]);						//si: find the identifier
+	CHR#( 0, l[1], 0x90, 0xc2, "Identifier:\ID:");
+	INCR( 1 );										//si: incr past the slash
+	
+	GSTR( 0x20000020, l[1]);						//si: find the Version Num
+	CHR#( 0, l[1], 0x90, 0xc2, "Version:\V:");
+	INCR( 1 );										//si: incr past the slash
+	TRTS;
+}
+
+// ------------------------------------------------------
+//  message id
+
+void MegacoText::Mid()
+{
+	LABL( 0, 0, 0, 0xb7, "Message ID\MID:");
+	g[1] = pb[0];
+	if (g[1] == 0x5b)				//si: 0x5b == "[" ... basically, i couldn't tell how the choice was working, so i'm using the bracket as an identifier
+	{
+		MegacoText::Mid::IPv4;
+	}
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+void MegacoText::Mid::IPv4()
+{
+	GSTR( 0x2000005d, l[1]);						//si: find the IP address
+	l[1] -= 1;
+	INCR 1;											//si: get rid of the "["
+	CHR#( 0, l[1], 0x90, 0xc2, "IP Address:\IP:");
+	INCR 1;											//si: go past the "]"
+	
+	l[1] = pb[0];
+	if (l[1] == 0x3a)								//si: 0x3a == ":"
+	{
+		
+		l[1] = 100;									//si: just in case, set the locals to high nums
+		l[2] = 100;
+		INCR 1;										//si: go past the colon
+		//si: find the port
+		GSTR( 0x2000000d, l[1]);					//si: dot
+		GSTR( 0x20000020, l[2]);					//si: space
+		
+		if (l[1] <= l[2])
+		{
+			g[1] = l[1];
+		}
+		if (l[1] > l[2])
+		{
+			g[1] = l[2];
+		}
+		CHR#( 0, g[1], 0x90, 0xc2, "Port:");
+	}
+	INCR 1;											//si: go past the space
+	TRTS;
+}
+
+
+// ------------------------------------------------------
+//  message body
+
+void MegacoText::MessageBody()
+{
+	//si: figure out which type of transaction we are and branch off... if we're not any of these, then dump
+	l[1] = pb[0];
+	if (l[1] == 0x54)								//si: 0x3a == "T" -- transaction
+	{
+		TNXT -MegacoText::MessageBody::Request;
+	}
+	if (l[1] == 0x50)								//si: 0x3a == "P" -- pending
+	{
+		TNXT -MegacoText::MessageBody::Pending;
+	}
+	if (l[1] == 0x52)								//si: 0x3a == "R" -- reply or response ack
+	{
+		l[2] = pb[2];
+		if (l[2] == 0x70)							//si: 0x70 == "p" -- for reply
+		{
+			TNXT -MegacoText::MessageBody::Reply;
+		}
+		if (l[2] == 0x73)							//si: 0x73 == "s" -- for response
+		{
+			TNXT -MegacoText::MessageBody::ResponseAck;
+		}
+	}
+
+	//si: default, if We don't hit anything... use this as default
+	TNXT -MegacoText::MessageBody::Unknown_Command;
+}
+
+void MegacoText::MessageBody::Request()
+{
+	LABL( 0, 0, 0, 183, "Request");
+	MegacoText::MessageBody::TransactionID;
+	MegacoText::Clear_White_Space;
+	MegacoText::MessageBody::Actions;
+	LABL( 0, 0, 0, 184);
+}
+
+void MegacoText::MessageBody::Pending()
+{
+	LABL( 0, 0, 0, 183, "Pending");
+	MegacoText::MessageBody::TransactionID;
+	MegacoText::Clear_White_Space;
+	MegacoText::MessageBody::Actions;			//si: there should be none... but there's prolly empty curly braces shown
+	LABL( 0, 0, 0, 184);
+}
+
+void MegacoText::MessageBody::Reply()
+{
+	LABL( 0, 0, 0, 183, "Reply");
+	MegacoText::MessageBody::TransactionID;
+	MegacoText::Clear_White_Space;
+	MegacoText::MessageBody::Actions;
+	LABL( 0, 0, 0, 184);
+}
+
+void MegacoText::MessageBody::ResponseAck()
+{
+	LABL( 0, 0, 0, 183, "Response Acknowledgement");
+	MegacoText::MessageBody::TransactionID;
+	MegacoText::Clear_White_Space;
+	MegacoText::MessageBody::Actions;
+	LABL( 0, 0, 0, 184);
+}
+
+void MegacoText::MessageBody::Unknown_Command()
+{
+	LABL( 0, 0, 0, 183, "Unknown Command");
+	LABL( 0, 0, 0, 13);							//si: go to the next line
+	Display All Lines No Init;
+	LABL( 0, 0, 0, 184);
+}
+
+
+void MegacoText::MessageBody::TransactionID()
+{
+	//si: go to the equals sign
+	GSTR( 0x2000003d, l[1]);
+	l[1] += 1;
+	INCR( 0, l[1]);
+
+	//si: just in case, set the locals to high nums
+	l[1] = 100;	
+	l[2] = 100;
+	l[3] = 100;
+
+	//si: find the trans_id
+	GSTR( 0x2000007b, l[1]);					//si: left curly brace - "{"
+	GSTR( 0, l[2]);								//si: just default... hopefully it'll catch all the random stuff
+
+	if (l[1] <= l[2])
+	{
+		g[1] = l[1];
+	}
+	if (l[1] > l[2])
+	{
+		g[1] = l[2];
+	}
+	
+	CHR#( 0, g[1], 0x90, 0xc2, "Transaction ID:\TID:");
+	INCR 1;										//si: incr past the space or dot
+}
+
+void MegacoText::MessageBody::Actions()
+{
+	LABL( 0, 0, 0, 183, "Actions");
+	LABL( 0, 0, 0, 13);							//si: go to the next line
+	Display All Lines No Init;
+	LABL( 0, 0, 0, 184);
+	TRTS;
+}
+
+
+// ------------------------------------------------------
+//  Helper functions
+
+void MegacoText::Clear_White_Space()
+{
+	l[1] = 0;								//si: l[1] == T/F toggle
+	l[2] = 0;								//si: l[2] == counter -- beware of infinite loop, only allow 10 spaces to be cleared
+	while (l[1] == 0)
+	{
+		TGTE 0 10 0 0 RETURN;
+		l[2] += 1;
+		if (l[2] > 10)
+		{
+			TNXT -RETURN;					//si: argh! break!
+		}
+		l[3] = pb[0];
+		if (l[3] == 0x0a)					//dot
+		{
+			INCR 1;
+		}
+		if (l[3] == 0x20)					//space
+		{
+			INCR 1;
+		}
+		if (l[3] == 0x0d)					//dot
+		{
+			INCR 1;
+		}
+		if (l[3] == 0x09)					//tab
+		{
+			INCR 1;
+		}
+		if (l[3] != 0x0a) {
+			if (l[3] != 0x0d) {
+				if (l[3] != 0x20) {
+					if (l[3] != 0x09) {
+						l[1] = 1;
+		}	}	}	}
+	}
+}
+
+
+
+// ------------------------------------------------------
+// ------------------------------------------------------
+//  Megaco Binary
+// ------------------------------------------------------
+// ------------------------------------------------------
+
+void MegacoBinary;
+	LABL 0 0 0 b1 Megaco Binary;
+	DUMP 0 10 90 c2 Megaco Payload:;
+	TRTS;
+ 
+
+ 

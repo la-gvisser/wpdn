@@ -1,0 +1,729 @@
+//WCCP - Web Cache Communication Protocol 
+//supports only WCCP V.2 and WCCP V.2.1
+//TT33101: added support for Web Cache Communication Protocol V2, Revision 1, draft-mclaggan-wccp-v2rev1-00
+
+//g[51] Length of WCCP FRAME
+//g[50] Length of TLV
+
+
+str# UDP::Ports_Str;
+2048	|	WCCP;
+
+void WCCP()
+{
+	LABL( 0, 0, 0, 0xb1, "WCCP - Web Cache Communication Protocol" );
+	GWRD( 2, l[2] );
+	DLNG( 0, l[1], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[1], 0, 0x14, WCCP::Type );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	HWRD( 0, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0x0100, l[2], 0, 0x14, "Version 1.0" );		//no packets found
+		CEQU( 0x0200, l[2], 0, 0x14, "Version 2.0" );
+		CEQU( 0x0201, l[2], 0, 0x14, "Version 2.1" );
+		//CLSE( 0, 0, 0, 0x14, "not supported" );
+	DWRD( 0, g[51], 0x90, 0xc2, "Length:" );				//outer length
+	TSB#( 0, l[2], 0, 0, WCCP::Versionsloader );
+	XLSE 0 0 0 0 WCCP::DUMP::51;	
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# WCCP::Versionsloader;
+0x0100	|	WCCP::Version1;
+0x0200	|	WCCP::Version20;
+0x0201	|	WCCP::Version21;
+
+void WCCP::Version1()
+{
+	//t.b.c.
+}
+
+void WCCP::Version20()
+{
+	while (g[51] != 0)
+	{
+		BREM( 0, l[30] );
+		GWRD( 0, l[4] );
+			CST#( 0, l[4], 0, 0xc7, WCCP::MCs::0200::Str );
+			CLSE( 0, 0, 0, 0xc7, "reserved" );
+		HWRD( 0, l[4], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[4], 0, 0x14, WCCP::MCs::0200::Str );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DWRD( 0, g[50], 0x90, 0xc2, "Length:" );
+		TSB#( 0, l[4], 0, 0x14, WCCP::MCs::0200::Ldr );
+		XLSE( 0, l[4], 0, 0x14, WCCP::DUMP::50 );
+		BREM( 0, l[31] );
+		l[30] -= l[31];
+		l[30] -= 4;
+		if (l[30] != g[50])
+		{
+			g[50] -= l[30];
+			HEX#( 0, g[50], 0x90, 0xc2, "Values:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+		g[51] -= g[50];
+	}
+}
+
+void WCCP::Version21()
+{
+	while (g[51] != 0)
+	{
+		GWRD( 0, l[4] );
+			CST#( 0, l[4], 0, 0xc7, WCCP::MCs::0201::Str );
+			CLSE( 0, 0, 0, 0xc7, "Unknown" );
+		HWRD( 0, l[4], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[4], 0, 0x14, WCCP::MCs::0201::Str );
+			CLSE( 0, 0, 0, 0x14, "Unknown" );
+		DWRD( 0, g[50], 0x90, 0xc2, "Length:" );
+		TSB#( 0, l[4], 0, 0x14, WCCP::MCs::0201::Ldr );
+		SKIP 1;
+		HEX#( 0, g[50], 0x90, 0xc2, "Undecoded Data:" );
+		LABL( 0, 0, 0, 0xb8 );
+		g[51] -= g[50];
+	}
+}
+
+void WCCP::DUMP::50()
+{
+	if (g[50] != 0)
+	{
+		DUMP( 0, g[50], 0x90, 0xc2, "Values:" );
+		g[50] -= g[50];		
+	}
+}
+
+void WCCP::DUMP::51()
+{
+	if (g[51] != 0)
+	{
+		DUMP( 0, g[51], 0x90, 0xc2, "Values:" );
+		g[51] -= g[51];
+	}
+}
+
+str# WCCP::Type;
+7	|	WCCP_HERE_I_AM;
+8	|	WCCP_I_SEE_YOU;
+9	|	WCCP_ASSIGN_BUCKET;
+10	|	WCCP2_HERE_I_AM;
+11	|	WCCP2_I_SEE_YOU;
+12	|	WCCP2_REDIRECT_ASSIGN;
+13	|	WCCP2_REMOVAL_QUERY;
+
+str# WCCP::MCs::0200::Str;
+0	|	Security Info;
+1	|	Service Info;
+2	|	Router Identity Info;
+3	|	Web-Cache Identify Info;
+4	|	Router View Info;
+5	|	Web-Cache View Info;
+6	|	Assignment Info;
+7	|	Router Query Info;
+8	|	Capabilities Info;
+9	|	Alternate Assignment;
+10	|	Assignment Map;
+11	|	Command Extension;
+
+str# WCCP::MCs::0200::Ldr;
+0	|	WCCP::MCs::Security Info;
+1	|	WCCP::MCs::Service Info;
+2	|	WCCP::MCs::Router Identity Info;
+3	|	WCCP::MCs::Web-Cache Identify Info;
+4	|	WCCP::MCs::Router View Info;
+5	|	WCCP::MCs::Web-Cache View Info;
+6	|	WCCP::MCs::Assignment Info;
+7	|	WCCP::MCs::Router Query Info;
+8	|	WCCP::MCs::Capabilities Info;
+9	|	WCCP::MCs::Alternate Assignment;
+10	|	WCCP::MCs::Assignment Map;
+11	|	WCCP::MCs::Command Extension;
+
+str# WCCP::MCs::0201::Str;
+0	|	Security Info;
+1	|	Service Info;
+8	|	Capabilities Info;
+15	|	Command Extension;
+17	|	Address Table;
+3	|	Web-Cache Identify Info;
+5	|	Web-Cache View Info;
+2	|	Router Identity Info;
+4	|	Router View Info;
+14	|	Assignment Map;
+16	|	Alternate Assignment Map;
+6	|	Assignment Info;
+13	|	Alternate Assignment;
+7	|	Router Query Info;
+
+str# WCCP::MCs::0201::Ldr;
+0	|	WCCP::MCs::0201::Security Info;
+1	|	WCCP::MCs::0201::Service Info;
+8	|	WCCP::MCs::Capabilities Info;
+//15	|	WCCP::MCs::0201::Command Extension;
+17	|	WCCP::MCs::0201::Address Table;
+//3	|	WCCP::MCs::0201::Web-Cache Identify Info;
+//5	|	WCCP::MCs::0201::Web-Cache View Info;
+2	|	WCCP::MCs::Router Identity Info;
+4	|	WCCP::MCs::0201::Router View Info;
+//14	|	WCCP::MCs::0201::Assignment Map;
+//16	|	WCCP::MCs::0201::Alternate Assignment Map;
+//6	|	WCCP::MCs::0201::Assignment Info;
+//13	|	WCCP::MCs::0201::Alternate Assignment;
+//7	|	WCCP::MCs::0201::Router Query Info;
+
+void WCCP::MCs::0201::Security Info()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Type:" );
+		CEQU( 0, l[1], 0, 0x14, "WCCP2_NO_SECURITY" );
+		CEQU( 1, l[1], 0, 0x14, "WCCP2_MD5_SECURITY " );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	g[50] -= 4;
+	if (g[50] != 0)
+	{
+		HEX#( 0, g[50], 0x90, 0xc2, "Security Implementation:" );
+	}
+}
+
+void WCCP::MCs::0201::Service Info()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Service Type:" );
+		CEQU( 0, l[1], 0, 0x14, "WCCP2_SERVICE_STANDARD" );
+		CEQU( 1, l[1], 0, 0x14, "WCCP2_SERVICE_DYNAMIC" );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Service ID:" );
+		CEQU( 0, l[1], 0, 0x14, "HTTP" );		
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Priority:" );
+		CEQU( 0, l[1], 0, 0x14, "Well known Service" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Protocol:" );
+		CST#( 0, l[4], 0, 0x14, IP Protocols );
+	BLNG( 0, l[5], 0x90, 0xc9, "Service Flags:" );
+		BST#( 0, l[5], 0x00, 0xd4, "WCCP::ServiceFlags" );
+		LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0, l[6], 0x90, 0xc2, "Port 1:" );
+	DWRD( 0, l[7], 0x90, 0xc2, "Port 2:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "Port 3:" );
+	DWRD( 0, l[9], 0x90, 0xc2, "Port 4:" );
+	DWRD( 0, l[10], 0x90, 0xc2, "Port 5:" );
+	DWRD( 0, l[11], 0x90, 0xc2, "Port 6:" );
+	DWRD( 0, l[12], 0x90, 0xc2, "Port 7:" );
+	DWRD( 0, l[13], 0x90, 0xc2, "Port 8:" );
+	g[50] -= 24;
+}
+
+void WCCP::MCs::0201::Router View Info()
+{	
+	l[50] = g[50];
+	DLNG( 0, l[2], 0x90, 0xc2, "Member Change Number:" );
+	IPLG( 0, l[3], 0x90, 0xc2, "Assignment Key Address:" );
+	
+	DLNG( 0, l[5], 0x90, 0xc2, "Assignment Key Change Number:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+	l[50] -= 16;
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+		l[4] -= 1; l[50] -= 4;
+	}
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Web-Caches:" );
+	l[50] -= 4;
+	HEX#( 0, l[50], 0x90, 0xc2, "Web-Cache" );
+	/* Some bugs in here.
+	while (l[4] != 0)
+	{	
+		LABL( 0, 0, 0x90, 0xb7, "Webcache:" );
+			DWRD( 0, l[5], 0x90, 0xc2, "Reserved:" );
+			BWRD( 0, l[5], 0x90, 0xc9, "Flags:" );
+				CBIT( 0, l[5], 0, 0xd4, "......... .......1 U Bit: set" );
+				CLSE( 0, l[5], 0, 0xd4, "......... .......0 U Bit: set" );
+				l[6] = l[5];
+				l[5] &= 0x06;
+				SHFR( 1, l[5] );
+				CEQU( 0, l[5], 0, 0xd4, "Hash Assignment" );
+				CEQU( 1, l[5], 0, 0xd4, "Mask Assignment" );
+				CEQU( 2, l[5], 0, 0xd4, "No Assignment" );
+				CEQU( 3, l[5], 0, 0xd4, "Extended Assignment" );
+				LABL( 0, 0, 0, 0xb8 );
+			if (l[5] == 0)
+			{
+				LABL( 0, 0, 0x90, 0xc9, "Hash Information:" );
+					HLNG( 0, l[7], 0x90, 0xc2, "Bucket Block 0:" );
+					HLNG( 0, l[8], 0x90, 0xc2, "Bucket Block 1:" );
+					HLNG( 0, l[9], 0x90, 0xc2, "Bucket Block 2:" );
+					HLNG( 0, l[10], 0x90, 0xc2, "Bucket Block 3:" );
+					HLNG( 0, l[11], 0x90, 0xc2, "Bucket Block 4:" );
+					HLNG( 0, l[12], 0x90, 0xc2, "Bucket Block 5:" );
+					HLNG( 0, l[13], 0x90, 0xc2, "Bucket Block 6:" );
+					HLNG( 0, l[14], 0x90, 0xc2, "Bucket Block 7:" );
+				LABL( 0, 0, 0, 0xb8 );
+				HWRD( 0, l[15], 0x90, 0xc2, "Assignment Weight:" );
+				HWRD( 0, l[16], 0x90, 0xc2, "Status:" );
+			}
+			if (l[5] == 1)
+			{
+				DLNG( 0, l[6], 0x90, 0xc2, "Number of Mask/Value Set Elements:" );
+				while (l[6] != 0)
+				{
+					LABL( 0, 0, 0, 0xc9, "Mask Element:" );
+						IPLG( 0, 0, 0x90, 0xc2, "Source Address Element:" );
+						IPLG( 0, 0, 0x90, 0xc2, "Destination Address Element:" );
+						DWRD( 0, 0, 0x90, 0xc2, "Source Port:" );
+						DWRD( 0, 0, 0x90, 0xc2, "Destination Port:" );
+						
+					LABL( 0, 0, 0, 0xb8 );
+					LABL( 0, 0, 0, 0xc9, "Value Elements:" );					
+						DLNG( 0, l[8], 0x90, 0xc2, "Number of Value Elements:" );
+							while (l[8] != 0)
+							{
+								IPLG( 0, 0, 0x90, 0xc2, "Source Address Element:" );
+								IPLG( 0, 0, 0x90, 0xc2, "Destination Address Element:" );
+								DWRD( 0, 0, 0x90, 0xc2, "Source Port:" );
+								DWRD( 0, 0, 0x90, 0xc2, "Destination Port:" );
+								IPLG( 0, 0, 0x90, 0xc2, "Web-Cache Address Element:" );
+								l[8] -= 1;
+							}
+							l[6] -= 1;
+					LABL( 0, 0, 0, 0xb8 );
+				}				
+				HWRD( 0, l[15], 0x90, 0xc2, "Assignment Weight:" );
+				HWRD( 0, l[16], 0x90, 0xc2, "Status:" );
+			}
+			if (l[5] == 2)
+			{
+				// Alternate Mask/Value Set List
+				DLNG( 0, l[6], 0x90, 0xc2, "Number of Mask/Value Set Elements:" );
+				while (l[6] != 0)
+				{
+					LABL( 0, 0, 0, 0xb2 "Mask Element:" );
+						IPLG( 0, 0, 0x90, 0xc2, "Source Address Element:" );
+						IPLG( 0, 0, 0x90, 0xc2, "Destination Address Element:" );
+						DWRD( 0, 0, 0x90, 0xc2, "Source Port:" );
+						DWRD( 0, 0, 0x90, 0xc2, "Destination Port:" );
+						
+					LABL( 0, 0, 0, 0xb8 );
+					LABL( 0, 0, 0, 0xb2, "Value Elements:" );					
+						DLNG( 0, l[8], 0x90, 0xc2, "Number of Value Elements:" );
+							while (l[8] != 0)
+							{
+								IPLG( 0, 0, 0x90, 0xc2, "Source Address Element:" );
+								IPLG( 0, 0, 0x90, 0xc2, "Destination Address Element:" );
+								DWRD( 0, 0, 0x90, 0xc2, "Source Port:" );
+								DWRD( 0, 0, 0x90, 0xc2, "Destination Port:" );
+								IPLG( 0, 0, 0x90, 0xc2, "Web-Cache Address Element:" );
+								l[8] -= 1;
+							}
+							l[6] -= 1;
+					LABL( 0, 0, 0, 0xb8 );
+				}				
+				HWRD( 0, l[15], 0x90, 0xc2, "Assignment Weight:" );
+				HWRD( 0, l[16], 0x90, 0xc2, "Status:" );
+			}
+			if (l[5] == 3)
+			{
+				HWRD( 0, l[15], 0x90, 0xc2, "Assignment Weight:" );
+				HWRD( 0, l[16], 0x90, 0xc2, "Status:" );
+			}
+			if (l[5] >= 4 )
+			{
+				LABL 0 0 0 c2 No Data.;
+			}
+		LABL( 0, 0, 0, 0xb8 );
+		l[4] -= 1;		
+	}
+*/
+}
+
+void WCCP::MCs::0201::Address Table()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Address Family Identifier:" );
+		CEQU( 0x02, l[1], 0, 0x14, "IP Version 6" );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Address Length:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "Number of Addresses:" );
+	if ( l[2] == 0 )
+	{
+		while (l[3] != 0)
+		{
+			IPV6( 0, 0, 0x90, 0xc2, "Address:" );
+			l[3] -= 1;
+		}
+	}
+	while (l[3] != 0)
+	{
+		if (l[1] == 0x02)
+		{
+			if (l[2] == 16)
+			{
+				IPV6( 0, 0, 0x90, 0xc2, "Address:" );
+			}
+		}		
+		if (l[2] != 16)
+		{
+			l[2] -= 4;
+			HEX#( 0, l[2], 0x90, 0xc2, "Address:" );
+		}
+		l[3] -= 1;
+	}
+}
+//-----------------------------------------------------------------------------------------
+void WCCP::MCs::Security Info()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Type:" );
+		CEQU( 0, l[1], 0, 0x14, "WCCP2_NO_SECURITY" );
+		CEQU( 1, l[1], 0, 0x14, "WCCP2_MD5_SECURITY " );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	g[50] -= 4;
+}
+
+void WCCP::MCs::Service Info()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Service Type:" );
+		CEQU( 0, l[1], 0, 0x14, "WCCP2_SERVICE_STANDARD" );
+		CEQU( 1, l[1], 0, 0x14, "WCCP2_SERVICE_DYNAMIC" );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Service ID:" );
+		CEQU( 0, l[1], 0, 0x14, "HTTP" );		
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Priority:" );
+		CEQU( 0, l[1], 0, 0x14, "Well known Service" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Protocol:" );
+		CST#( 0, l[4], 0, 0x14, IP Protocols );
+	BLNG( 0, l[5], 0x90, 0xc9, "Service Flags:" );
+		BST#( 0, l[5], 0x00, 0xd4, "WCCP::ServiceFlags" );
+		LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0, l[6], 0x90, 0xc2, "Port 0:" );
+	DWRD( 0, l[7], 0x90, 0xc2, "Port 1:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "Port 2:" );
+	DWRD( 0, l[9], 0x90, 0xc2, "Port 3:" );
+	DWRD( 0, l[10], 0x90, 0xc2, "Port 4:" );
+	DWRD( 0, l[11], 0x90, 0xc2, "Port 5:" );
+	DWRD( 0, l[12], 0x90, 0xc2, "Port 6:" );
+	DWRD( 0, l[13], 0x90, 0xc2, "Port 7:" );
+	g[50] -= 24;
+}
+
+str# WCCP::ServiceFlags;
+0	|	........ ........ ........ .......1 Source IP Hash: yes;
+		........ ........ ........ .......0 Source IP Hash: no;
+1	|	........ ........ ........ ......1. Destination IP Hash: yes;
+		........ ........ ........ ......0. Destination IP Hash: no;
+2	|	........ ........ ........ .....1.. Source Port Hash: yes;
+		........ ........ ........ .....0.. Source Port Hash: no;
+3	|	........ ........ ........ ....1... Destination Port Hash: yes;
+		........ ........ ........ ....0... Destination Port Hash: no;
+4	|	........ ........ ........ ...1.... Ports Defined: yes;
+		........ ........ ........ ...0.... Ports Defined: no;
+5	|	........ ........ ........ ..1..... Ports Source: yes;
+		........ ........ ........ ..0..... Ports Source: no;
+6	|	........ ........ ........ .1...... Source IP Alternative Hash: yes;
+		........ ........ ........ .0...... Source IP Alternative Hash: no;
+7	|	........ ........ ........ 1....... Destination IP Alternative Hash: yes;
+		........ ........ ........ 0....... Destination IP Alternative Hash: no;
+8	|	........ ........ .......1 ........ Source Port Alternative Hash: yes;
+		........ ........ .......0 ........ Source Port Alternative Hash: no;
+8	|	........ ........ ......1. ........ Destination Port Alternative Hash: yes;
+		........ ........ ......0. ........ Destination Port Alternative Hash: no;
+
+void WCCP::MCs::Router Identity Info()
+{
+	IPLG( 0, l[1], 0x90, 0xc2, "Router ID Element:" );
+	HLNG( 0, l[2], 0x90, 0xc2, "Receive ID:" );
+	
+	IPLG( 0, l[3], 0x90, 0xc2, "Sent To Address:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Number Received From:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Sent To Address:" );
+		l[4] -= 1;
+	}
+}
+
+void WCCP::MCs::Web-Cache Identify Info()
+{
+	HEX#( 0, g[50], 0x90, 0xc2, "Values:" );
+	g[50] -= g[50];
+}
+
+void WCCP::MCs::Router View Info()
+{
+	DLNG( 0, l[2], 0x90, 0xc2, "Member Change Number:" );
+	IPLG( 0, l[3], 0x90, 0xc2, "Assignment Key Address:" );
+	
+	DLNG( 0, l[5], 0x90, 0xc2, "Assignment Key Change Number:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+		l[4] -= 1;
+	}
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Web-Caches:" );
+	while (l[4] != 0)
+	{	
+		LABL( 0, 0, 0x90, 0xb7, "Webcache:" );
+			IPLG( 0, 0, 0x90, 0xc2, "Web-Cache ID Element:" );
+			DWRD( 0, l[5], 0x90, 0xc2, "Hash Revision:" );
+			BBIT( 1, l[5], 0x90, 0xc2, "U:" );
+				CEQU( 1, l[5], 0, 0x14, "the web cache does not have an assignment in the Redirection Hash Table" );
+				CLSE( 0, 0, 0, 0x14, "the web cache does have an assignment in the Redirection Hash Table" );	
+			HBIT( 15, l[6], 0x90, 0xc2, "Reserved:" );
+			LABL( 0, 0, 0x90, 0xc9, "Hash Information:" );
+				HLNG( 0, l[7], 0x90, 0xc2, "Bucket Block 0:" );
+				HLNG( 0, l[8], 0x90, 0xc2, "Bucket Block 1:" );
+				HLNG( 0, l[9], 0x90, 0xc2, "Bucket Block 2:" );
+				HLNG( 0, l[10], 0x90, 0xc2, "Bucket Block 3:" );
+				HLNG( 0, l[11], 0x90, 0xc2, "Bucket Block 4:" );
+				HLNG( 0, l[12], 0x90, 0xc2, "Bucket Block 5:" );
+				HLNG( 0, l[13], 0x90, 0xc2, "Bucket Block 6:" );
+				HLNG( 0, l[14], 0x90, 0xc2, "Bucket Block 7:" );
+			LABL( 0, 0, 0, 0xb8 );
+				HWRD( 0, l[15], 0x90, 0xc2, "Assignment Weight:" );
+				HWRD( 0, l[16], 0x90, 0xc2, "Status:" );
+		LABL( 0, 0, 0, 0xb8 );
+		l[4] -= 1;		
+	}
+}
+
+void WCCP::MCs::Web-Cache View Info()
+{
+	DLNG( 0, l[2], 0x90, 0xc2, "Change Number:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+		DLNG( 0, 0, 0x90, 0xc2, "Recieved ID:" );
+		l[4] -= 1;
+	}
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Web-Caches:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Web-Cache ID Element:" );
+		l[4] -= 1;
+	}
+}
+
+void WCCP::MCs::Assignment Info()
+{
+	DLNG( 0, l[2], 0x90, 0xc2, "Change Number:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+		DLNG( 0, 0, 0x90, 0xc2, "Recieved ID:" );
+		l[4] -= 1;
+	}
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Web-Caches:" );
+	while (l[4] != 0)
+	{	
+		IPLG( 0, 0, 0x90, 0xc2, "Web-Cache ID Element:" );
+		l[4] -= 1;
+	}
+	g[50] -= 12;
+	while (g[50] != 0)
+	{	
+		DBIT( 0, 0, 0x90, 0xc2, "Index:" );
+		DBIT( 0, l[5], 0x90, 0xc2, "A Flag:" );
+			CEQU( 1, l[5], 0, 0x14, "alternative hashing should be used for this web-cache" );
+			CLSE( 0, 0, 0, 0x14, "regular hashing should be used for this web-cache" );
+		g[50] -= 1;
+	}
+}
+
+void WCCP::MCs::Capabilities Info()
+{
+	while (g[50] != 0)
+	{	
+		BREM( 0, l[32] );
+		GWRD( 0, l[4] );
+			CST#( 0, l[4], 0, 0xc7, WCCP::MCs::Capabilities Info::TLVstr );
+			CLSE( 0, 0, 0, 0xc7, "reserved" );
+		HWRD( 0, l[4], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[4], 0, 0x14, WCCP::MCs::Capabilities Info::TLVstr );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DWRD( 0, g[52], 0x90, 0xc2, "Length:" );
+		TSB#( 0, l[4], 0, 0x14, WCCP::MCs::Capabilities Info::TLV );
+		SKIP 1;
+		HEX#( 0, g[52], 0x90, 0xc2, "Data:" );
+		BREM( 0, l[33] );
+		LABL( 0, 0, 0, 0xb8 );
+		l[32] -= l[33];
+		g[50] -= l[32];
+	}
+}
+
+str# WCCP::MCs::Capabilities Info::TLVstr;
+0x01	|	WCCP2_FORWARDING_METHOD;
+0x02	|	WCCP2_ASSIGNMENT_METHOD;
+0x03	|	WCCP2_PACKET_RETURN_METHOD;
+0x04	|	WCCP2_TRANSMIT_T;
+0x05	|	WCCP2_TIMER_SCALE;
+str# WCCP::MCs::Capabilities Info::TLV;
+0x01	|	WCCP::MCs::Capabilities Info::WCCP2_FORWARDING_METHOD;
+0x02	|	WCCP::MCs::Capabilities Info::WCCP2_ASSIGNMENT_METHOD;
+0x03	|	WCCP::MCs::Capabilities Info::WCCP2_PACKET_RETURN_METHOD;
+0x04	|	WCCP::MCs::Capabilities Info::WCCP2_TRANSMIT_T;
+0x05	|	WCCP::MCs::Capabilities Info::WCCP2_TIMER_SCALE;
+
+void WCCP::MCs::Capabilities Info::WCCP2_FORWARDING_METHOD()
+{
+	BLNG( 0, l[1], 0x90, 0xc9, "forwarding methods:" );
+		BST#( 0, l[1], 0x00, 0xd4, "WCCP::MCs::Capabilities Info::WCCP2_FORWARDING_METHOD::BST" );
+		LABL( 0, 0, 0, 0xb8 );
+}
+
+str# WCCP::MCs::Capabilities Info::WCCP2_FORWARDING_METHOD::BST;
+0	|	........ ........ ........ .......1 WCCP2_FORWARDING_METHOD_GRE: yes;
+		........ ........ ........ .......0 WCCP2_FORWARDING_METHOD_GRE: no;
+1	|	........ ........ ........ ......1. WCCP2_FORWARDING_METHOD_L2: yes;
+		........ ........ ........ ......0. WCCP2_FORWARDING_METHOD_L2: no;
+
+void WCCP::MCs::Capabilities Info::WCCP2_ASSIGNMENT_METHOD()
+{
+	BLNG( 0, l[1], 0x90, 0xc9, "assignment methods:" );
+		BST#( 0, l[1], 0x00, 0xd4, "WCCP::MCs::Capabilities Info::WCCP2_ASSIGNMENT_METHOD::BST" );
+		LABL( 0, 0, 0, 0xb8 );
+}
+
+str# WCCP::MCs::Capabilities Info::WCCP2_ASSIGNMENT_METHOD::BST;
+0	|	........ ........ ........ .......1 WCCP2_ASSIGNMENT_METHOD_HASH: yes;
+		........ ........ ........ .......0 WCCP2_ASSIGNMENT_METHOD_HASH: no;
+1	|	........ ........ ........ ......1. WCCP2_ASSIGNEMNT_METHOD_MASK: yes;
+		........ ........ ........ ......0. WCCP2_ASSIGNEMNT_METHOD_MASK: no;
+
+void WCCP::MCs::Capabilities Info::WCCP2_PACKET_RETURN_METHOD()
+{
+	BLNG( 0, l[1], 0x90, 0xc9, "packet return methods:" );
+		BST#( 0, l[1], 0x00, 0xd4, "WCCP::MCs::Capabilities Info::WCCP2_PACKET_RETURN_METHOD::BST" );
+		LABL( 0, 0, 0, 0xb8 );
+}
+
+str# WCCP::MCs::Capabilities Info::WCCP2_PACKET_RETURN_METHOD::BST;
+0	|	........ ........ ........ .......1 WCCP2_PACKET_RETURN_METHOD_GRE: yes;
+		........ ........ ........ .......0 WCCP2_PACKET_RETURN_METHOD_GRE: no;
+1	|	........ ........ ........ ......1. WCCP2_PACKET_RETURN_METHOD_L2: yes;
+		........ ........ ........ ......0. WCCP2_PACKET_RETURN_METHOD_L2: no;
+
+void WCCP::MCs::Capabilities Info::WCCP2_TRANSMIT_T()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "TRANSMIT_T:" );
+	g[52] -= 2;
+	if (g[52] != 0)
+	{
+		DWRD( 0, l[2], 0x90, 0xc2, "TRANSMIT_T: Upper Limit:" );
+		g[52] -= 2;
+	}
+	if (g[52] != 0)
+	{
+		DWRD( 0, l[3], 0x90, 0xc2, "TRANSMIT_T: Lower Limit" );
+		g[52] -= 2;
+	}
+}
+void WCCP::MCs::Capabilities Info::WCCP2_TIMER_SCALE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "0:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "TIMEOUT_SCALE:" );
+	g[52] -= 2;
+	if (g[52] != 0)
+	{
+		DBYT( 0, l[3], 0x90, 0xc2, "0:" );
+		DBYT( 0, l[4], 0x90, 0xc2, "RA_TIMER_SCALE:" );
+		g[52] -= 2;
+	}
+	if (g[52] != 0)
+	{
+		DBYT( 0, l[5], 0x90, 0xc2, "TO_SCL Upper:" );
+		g[52] -= 1;
+	}
+	if (g[52] != 0)
+	{
+		DBYT( 0, l[6], 0x90, 0xc2, "TO_SCL Lower:" );
+		g[52] -= 1;
+	}
+	if (g[52] != 0)
+	{
+		DBYT( 0, l[7], 0x90, 0xc2, "RA_SCL Upper:" );
+		g[52] -= 1;
+	}
+	if (g[52] != 0)
+	{
+		DBYT( 0, l[8], 0x90, 0xc2, "RA_SCL Lower:" );
+		g[52] -= 1;
+	}
+}
+
+void WCCP::MCs::Alternate Assignment()	
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Assignment Type:" );
+	HWRD( 0, l[2], 0x90, 0xc2, "Assignment Length:" );
+	if (l[1] == 0x00)
+	{
+		DLNG( 0, l[2], 0x90, 0xc2, "Change Number:" );
+		DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+		while (l[4] != 0)
+		{	
+			IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Recieved ID:" );
+			l[4] -= 1;
+		}
+		DLNG( 0, l[4], 0x90, 0xc2, "Number of Web-Caches:" );
+		while (l[4] != 0)
+		{	
+			IPLG( 0, 0, 0x90, 0xc2, "Web-Cache ID Element:" );
+			l[4] -= 1;
+		}
+		g[50] -= 12;
+		while (g[50] != 0)
+		{	
+			DBIT( 0, 0, 0x90, 0xc2, "Index:" );
+			DBIT( 0, l[5], 0x90, 0xc2, "A Flag:" );
+				CEQU( 1, l[5], 0, 0x14, "alternative hashing should be used for this web-cache" );
+				CLSE( 0, 0, 0, 0x14, "regular hashing should be used for this web-cache" );
+			g[50] -= 1;
+		}
+	}
+	if (l[1] == 0x01)
+	{
+		DLNG( 0, l[2], 0x90, 0xc2, "Change Number:" );
+		DLNG( 0, l[4], 0x90, 0xc2, "Number of Routers:" );
+		while (l[4] != 0)
+		{	
+			IPLG( 0, 0, 0x90, 0xc2, "Router:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Recieved ID:" );
+			l[4] -= 1;
+		}
+		WCCP::MCs::Assignment Map;
+		g[50] -= 12;
+	}
+}
+
+void WCCP::MCs::Assignment Map()
+{
+	DLNG( 0, l[4], 0x90, 0xc2, "Number of Mask/Value Set Elements:" );
+	while (l[4] != 0)
+	{	
+		//Mask Element
+		BLNG( 0, 0, 0x90, 0xc2, "Source Address Mask:" );
+		BLNG( 0, 0, 0x90, 0xc2, "Destination Address Mask:" );
+		BWRD( 0, 0, 0x90, 0xc2, "Source Port Mask:" );
+		BWRD( 0, 0, 0x90, 0xc2, "Destination Port Mask:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Number of Value Elements:" );
+		while (l[5] != 0)
+		{
+			//Value Element
+			DLNG( 0, 0, 0x90, 0xc2, "Source Address Value:" );
+			DLNG( 0, 0, 0x90, 0xc2, "Destination Address Value:" );
+			DWRD( 0, 0, 0x90, 0xc2, "Source Port Value:" );
+			DWRD( 0, 0, 0x90, 0xc2, "Destination Port Value:" );
+			IPLG( 0, 0, 0x90, 0xc2, "Web Cache IP Address:" );
+			DLNG( 0, l[5], 0x90, 0xc2, "Number of Value Elements:" );
+			l[5] -= 1;
+		}
+		l[4] -= 1;
+	}
+}
+
+void WCCP::MCs::Command Extension()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Command Type:" );	
+	DWRD( 0, l[2], 0x90, 0xc2, "Command Length:" );
+	IPLG( 0, 0, 0x90, 0xc2, "Web Cache IP Address:" );
+	g[50] -= 8;
+}

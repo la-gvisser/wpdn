@@ -1,0 +1,34 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+    }
+  </style>
+  <!-- After this page load, the title of the dialog box is set to  -->
+  <!-- the title of the web page by SendDisplayProperties. -->
+  <title>About Cef Prefs OE - 2</title>
+  <script type="text/javascript">
+    // Send a Display Properties to the browser.
+    // Send the desired width and height in pixels as decimal values.
+    function SendDisplayProperties() {
+      window.cefQuery({
+        request: "SendDisplayProperties:320 120 " + document.title,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+  </script>
+</head>
+<body onload="SendDisplayProperties()">
+  <div align=center>
+    <br>
+    <b>About Cef Prefs OE - 2</b><br><br>
+    Copyright 2024 LiveAction<br>
+    Version 2.1.0.0<br>
+    All Rights Reserved.<br>
+  </div>
+</body>
+</html>

@@ -1,0 +1,302 @@
+* Mobile IP
+
+*notes:
+* globals that i use and what they're used for
+*  g[1] = type
+*  g[2] = length
+*  g[A] = random ...could be anything! so beware! this is my crap on global
+
+* start
+
+void Mobile_IP_Agent;
+	GBYT 0 1;						*si: check to see if it's request or reply
+	SEQU 1 1;						*si: it should only by 1 or 3
+	SKIP 3;
+	 SEQU 3 1;
+	 SKIP 1;
+	  TRTS;
+
+	LABL 0 0  0 b1 Mobile IP;
+	GBYT 0 1;
+	TEQU 1 1 0 0 MIP_Reg_Request;
+	TEQU 3 1 0 0 MIP_Reg_Reply;
+
+	DBYT 0 1 90 c2 Type:;			* Mobility Agent Advertisement Extension
+	DBYT 0 2 90 c2 Length:;
+	HWRD 0 a 90 c2 Sequence Num:;
+	DWRD 0 a 90 c2 Reg Lifetime:;
+	BBYT 0 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... Registration required;
+	 CLSE 0 a 0 d4 0... .... Registration not required;
+	 CBIT 6 a 0 d4 .1.. .... Busy - foreign agent will not accept any additional mobile nodes;
+	 CLSE 0 a 0 d4 .0.. .... Not busy - able to accept additional mobile nodes;
+	 CBIT 5 a 0 d4 ..1. .... Home agent;
+	 CLSE 0 a 0 d4 ..0. .... Not a home agent;
+	 CBIT 4 a 0 d4 ...1 .... Foreign agent;
+	 CLSE 0 a 0 d4 ...0 .... Not a foreign agent;
+	 CBIT 3 a 0 d4 .... 1... Minimal encapsulation;
+	 CLSE 0 a 0 d4 .... 0... Does not use minimal encapsulation;
+	 CBIT 2 a 0 d4 .... .1.. GRE encapsulation;
+	 CLSE 0 a 0 d4 .... .0.. Does not use GRE encapsulation;
+	 CBIT 1 a 0 d4 .... ..1. Supports Van Jacobson header compression;
+	 CLSE 0 a 0 d4 .... ..0. Does not support Van Jacobson header compression;
+	 CBIT 0 a 0 d4 .... ...1 Agent offers reverse tunneling service;
+	 CLSE 0 a 0 d4 .... ...0 Agent does not offer reverse tunneling service;
+	 LABL 0 0 0 c8;
+	HBYT 0 a 90 c2 Reserved:;
+
+
+void MIP_Reg_Request;			* TYPE 1
+	DBYT 0 1 90 c2 Type:;
+	 LABL 0 0 0 14 Registration Request;
+	BBYT 0 a 90 c9 Flags:;
+	 CBIT 7 a 0 d4 1... .... Simultaneous bindings;
+	 CLSE 0 a 0 d4 0... .... No simultaneous bindings;
+	 CBIT 6 a 0 d4 .1.. .... Broadcast datagrams;
+	 CLSE 0 a 0 d4 .0.. .... No broadcast datagrams;
+	 CBIT 5 a 0 d4 ..1. .... Decapsulation by mobile node;
+	 CLSE 0 a 0 d4 ..0. .... No decapsulation by mobile node;
+	 CBIT 4 a 0 d4 ...1 .... Minimal encapsulation;
+	 CLSE 0 a 0 d4 ...0 .... Minimal encapsulation not used;
+	 CBIT 3 a 0 d4 .... 1... GRE encapsulation;
+	 CLSE 0 a 0 d4 .... 0... Does not use GRE encapsulation;
+	 CBIT 2 a 0 d4 .... .1.. Supports Van Jacobson header compression;
+	 CLSE 0 a 0 d4 .... .0.. Does not support Van Jacobson header compression;
+	 CBIT 1 a 0 d4 .... ..1. Accept a reverse tunnel from the care-of address;
+	 CLSE 0 a 0 d4 .... ..0. Don't accept a reverse tunnel from the care-of address;
+	 CBIT 0 a 0 d4 .... ...1 Reserved;
+	 CLSE 0 a 0 d4 .... ...0 Reserved;
+	 LABL 0 0 0 c8;
+	DWRD 0 a 90 c2 Lifetime:;
+	 CEQU ffff a 0 14 (infinite registration time);
+	 CLSE 0 0 0 14 (seconds remaining before reg is expired);
+	IPLG 0 a 90 c2 Home Address:;
+	IPLG 0 a 90 c2 Home Agent:;
+	IPLG 0 a 90 c2 Care-of Address:;
+	D64B 0 a 90 c2 Identification:;	
+	
+	*LABL 0 0 0 b7 Extensions;
+	MIP_Extensions;
+	*LABL 0 0 0 b8;
+	TRTS;
+
+void MIP_Reg_Reply;				* TYPE 3
+	DBYT 0 1 90 c2 Type:;
+	 LABL 0 0  0 14 Registration Reply;
+	MIP_Reg_Reply_Code;
+	DWRD 0 a 90 c2 Lifetime:;
+	 CEQU ffff a 0 14 (infinite registration time);
+	 CLSE 0 0 0 14 (seconds remaining before reg is expired);
+	IPLG 0 a 90 c2 Home Address:;
+	IPLG 0 a 90 c2 Home Agent:;
+	D64B 0 a 90 c2 Identification:;
+	*LABL 0 0 0 b7 Extensions;
+	MIP_Extensions;
+	*LABL 0 0 0 b8;
+	TRTS;
+
+void MIP_Reg_Reply_Code;
+	DBYT 0 a 90 c2 Code:;
+	SNEQ 0 a;
+	 SKIP 2;
+	 LABL 0 0 0 14 registration accepted;
+	 TRTS;
+	SNEQ 1 a;
+	 SKIP 2;
+	 LABL 0 0 0 14 registration accepted, but simultaneous mobility bindings unsupported;
+	 TRTS;
+	SGTE 3f 1;		*dec:64-88 hex:40-58
+	 SKIP 5;
+	 SLTE 59 1;
+	  SKIP 3;
+	  SUBG 3f a;
+	  CST# 0 a 0 14 MIP_Reg_Reply_Code_Str1;
+	  TRTS;
+	SGTE 7f 1;		*dec:128-136 hex:80-88
+	 SKIP 5;
+	 SLTE 89 1;
+	  SKIP 3;
+	  SUBG 7f a;
+	  CST# 0 a 0 14 MIP_Reg_Reply_Code_Str2;
+	  TRTS;
+	TRTS;
+
+str# MIP_Reg_Reply_Code_Str1;			* Registration denied by the foreign agent:
+	reason unspecified;					*64
+	administratively prohibited;
+	insufficient resources;
+	mobile node failed authentication;
+	home agent failed authentication;
+	requested Lifetime too long;
+	poorly formed Request;				*70
+	poorly formed Reply;
+	requested encapsulation unavailable;
+	requested Van Jacobson compression unavailable;
+	requested reverse tunnel unavailable;
+	reverse tunnel is mandatory and 'T' bit not set;		*75
+	mobile node too distant;
+	;
+	;
+	delivery style not supported;
+	home network unreachable (ICMP error received);		*80
+	home agent host unreachable (ICMP error received);
+	home agent port unreachable (ICMP error received);
+	;
+	;
+	;
+	;
+	;
+	home agent unreachable (other ICMP error received);
+
+str# MIP_Reg_Reply_Code_Str2;			* Registration denied by the home agent:
+	reason unspecified;					*128
+	administratively prohibited;
+	insufficient resources;				*130
+	mobile node failed authentication;
+	foreign agent failed authentication;
+	registration Identification mismatch;
+	poorly formed Request;
+	too many simultaneous mobility bindings;		*135
+	unknown home agent address;
+	requested reverse tunnel unavailable;
+	reverse tunnel is mandatory and 'T' bit not set;
+	requested encapsulation unavailable;
+
+
+
+* MOBILE IP EXTENSIONS!
+
+void MIP_Extensions;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 b7 Extensions;
+	MIP_Extensions2;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void MIP_Extensions2;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 a;
+	TEQU 18 a 0 0 MIP_Type_24;
+	TEQU 20 a 0 0 MIP_Type_32;
+	TEQU 21 a 0 0 MIP_Type_33;
+	TEQU 22 a 0 0 MIP_Type_34;
+	TEQU 24 a 0 0 MIP_Type_36;
+	TEQU 26 a 0 0 MIP_Type_38;
+	TEQU 81 a 0 0 MIP_Type_129;
+	TEQU 82 a 0 0 MIP_Type_130;
+	TEQU 83 a 0 0 MIP_Type_131;
+	TEQU 84 a 0 0 MIP_Type_132;
+	LABL  0 0 0 14 UNKNOWN EXTENSION TYPE; 
+	TRTS;
+
+void MIP_Type_24;
+	LABL 0 0  0 c9 Mobile IP Agent Advertisement Challenge Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Mobile IP Agent Advertisement Challenge;
+	DBYT 0 2 90 c2 Length:;
+	 CGTE 3 a  0 14 suspicious length - should be > 4;
+	DUMP 0 a 90 c2 Challenge:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_32;
+	LABL 0 0 0 c9 Mobile-Home Authentication Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Mobile-Home Authentication;
+	DBYT 0 2 90 c2 Length:;
+	HLNG 0 a 90 c2 Security Param Index:;
+	SUBG 4 2;	
+	DUMP 0 2 90 c2 Authenticator:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_33;
+	LABL 0 0  0 c9 Mobile-Foreign Authentication Extension;
+	DBYT 0 a 90 c2 Type:;
+	LABL 0 0  0 14 Mobile-Foreign Authentication;
+	DBYT 0 a 90 c2 Length:;
+	HLNG 0 a 90 c2 Security Param Index:;
+	SUBG 4 2;										*si: not sure if this one is right...
+	DUMP 0 2 90 c2 Authenticator:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_34;
+	LABL 0 0  0 c9 Foreign-Home Authentication Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Foreign-Home Authentication Extension;
+	DBYT 0 2 90 c2 Length:;
+	HLNG 0 a 90 c2 Security Param Index:;
+	SUBG 4 2;										*si: not sure if this one is right...
+	DUMP 0 2 90 c2 Authenticator:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_36;			*rfc3012
+	LABL 0 0  0 c9 Generalized Mobile IP Authentication Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Generalized Mobile IP Authentication;
+	DBYT 0 a 90 c2 SubType:;
+	 CEQU 1 1 0 14 MN-AAA Authentication subtype;
+	DWRD 0 2 90 c2 Length:;
+	 CGTE 14 a  0 14 suspicious length - should be > 20;	
+	D64B 0 a 90 c2 Security Param Index:;
+	SUBG 4 2;
+	DUMP 0 2 90 c2 Authenticator:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_38;			*rfc3115
+	LABL 0 0  0 c9 Critical Vendor/Organization Specific Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Critical Vendor/Organization Specific;
+	HBYT 0 a 90 c2 Reserved:;
+	DWRD 0 2 90 c2 Length:;
+	HLNG 0 a 90 c2 Vendor/Org ID:;
+	DWRD 0 a 90 c2 Vendor-NVSE-Type:;
+	SUBG 8 2;
+	DUMP 0 2 90 c2 Vendor-NVSE-Value:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_129;			*rfc2356
+	LABL 0 0  0 c9 Traversal Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Traversal;
+	DBYT 0 2 90 c2 Length:;
+	HWRD 0 a 90 c2 Reserved:;
+	IPLG 0 a 90 c2 MN->HA Traversal Address:;
+	IPLG 0 a 90 c2 HA->MN Traversal Address:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_130;			*rfc3024
+	LABL 0 0 0 c9 Encapsulating Delivery Style Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Encapsulating Delivery Style;
+	DBYT 0 2 90 c2 Length:;			*si: should be zero
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_131;			*rfc2794
+	LABL 0 0 0 c9 Mobile Node NAI Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 Mobile Node NAI;
+	DBYT 0 2 90 c2 Length:;
+	CHR# 0 2 90 c2 MN-NAI:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+
+void MIP_Type_132;			*rfc3344
+	LABL 0 0 0 c9 MN-FA Challenge Extension;
+	DBYT 0 1 90 c2 Type:;
+	LABL 0 0  0 14 MN-FA Challenge;
+	DBYT 0 2 90 c2 Length:;
+	DUMP 0 a 90 c2 Challenge:;
+	LABL 0 0  0 c8;
+	TNXT -MIP_Extensions2;
+	
+void MIP_Type_134;	*rfc3115
+	
+
+* end

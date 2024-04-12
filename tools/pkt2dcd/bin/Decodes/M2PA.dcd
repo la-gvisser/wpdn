@@ -1,0 +1,136 @@
+//--------------------M2PA------------------------------------------------------
+//RFC 4165
+//common message header
+
+void SigTran::M2PA()
+{
+	LABL( 0, 0, 0, 0xb1, "MTP 2 Peer to Peer Adaption Layer\MTP-2 PA:" );
+	DBYT( 0, l[1], 0x05, 0xc2, "Version:\VE:" );
+		CEQU( 0, l[1], 0, 0x54, "Not supported");
+		CEQU( 1, l[1], 0, 0x54, "Release 1.0 of M2PA protocol");
+	DBYT( 0, 0, 0x90, 0xc2, "Spare:\RE:" );
+	DBYT( 0, g[19], 0x05, 0xc2, "Message Class: \MC:" );
+		CEQU( 11, g[19], 0, 0x54, "M2PA Messages");
+	BBYT( 0, g[20], 0x05, 0xc2, "Message Type:  \MT:" );
+		CEQU( 0, g[20], 0, 0x54, "Invalid");
+		CEQU( 1, g[20], 0, 0x54, "User Data");
+		CEQU( 2, g[20], 0, 0x54, "Link Status");
+		//CLSE( 0, 0, 0, 0x54, "Invalid");
+	DLNG( 0, g[23], 0x90, 0xc2, "Message Length:\ML:" );
+	//doing 
+	SigTran::M2PA::Interpreter;
+	//TST#( 0, g[19], 0, 0, SigTran::M3UA::MC::Calls );
+	//LABL( 0, 0, 0x90, 0xb9 );	
+}
+
+void SigTran::M2PA::Header()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Unused:\UU:" );
+	DBIT( 24, l[1], 0x90, 0xc2, "Backward Sequence Number (BSN):\BSN:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Unused:\UU:" );
+	DBIT( 24, l[1], 0x90, 0xc2, "Forward  Sequence Number (FSN):\FSN:" );
+}
+
+void SigTran::M2PA::Interpreter()
+{
+	SigTran::M2PA::Header;
+	if (g[20] == 1)
+	{
+		SigTran::Priority;
+		SigTran::M2PA::MSGDATA;
+	}
+	if (g[20] == 2)
+	{
+		SigTran::M2PA::LinkStatus;
+	}
+}
+
+void SigTran::Priority()
+{
+	DBIT( 2, 0, 0x90, 0xc2, "Prio:");
+	DBIT( 6, 0, 0x90, 0xc2, "Spare:");
+}
+
+void SigTran::M2PA::MSGDATA()
+{
+	if (g[23] >= 4)
+	{
+		TNXT -SigTran::MTP3;
+	}
+}
+
+void SigTran::M2PA::LinkStatus()
+{
+	DLNG( 0, l[6], 0x05, 0xc2, "State:\St:" );
+		CEQU( 0, l[6], 0, 0x54, "Reserved" );
+		CEQU( 1, l[6], 0, 0x54, "Alignment" );
+		CEQU( 2, l[6], 0, 0x54, "Proving Normal" );
+		CEQU( 3, l[6], 0, 0x54, "Proving Emergency" );
+		CEQU( 4, l[6], 0, 0x54, "Ready" );
+		CEQU( 5, l[6], 0, 0x54, "Processor Outage" );
+		CEQU( 6, l[6], 0, 0x54, "Processor Recovered" );
+		CEQU( 7, l[6], 0, 0x54, "Busy" );
+		CEQU( 8, l[6], 0, 0x54, "Busy Ended" );
+		CEQU( 9, l[6], 0, 0x54, "Out of Service (OOS)" );
+}
+
+void SigTran::MTP3()
+{	
+	LABL( 0, 0, 0, 0xb1, "MTP 3 Message Transfer Part Level 3" );
+	BBIT( 2, l[21], 0x90, 0xc2, "Network Indicator:\NI:" );
+		CST#( 0, l[21], 0x90, 0x14, SigTRan::M3UA::SIO::NetIndVal );
+	BBIT( 2, 0, 0x90, 0xc2, "Spare:" );
+	BBIT( 4, g[59], 0x90, 0xc2, "Service Indicator:\SI:" );
+		CST#( 0, g[59], 0x90, 0x14, SigTran::M3UA::SIO::SerIndVal );
+	BBIT( 8, , 0x90, 0xc2, "Message Priority:\MP:" );
+	DLNG( 0x40000000, l[9], 0x5 );  // swap
+	l[10] = l[9];
+	ANDG( 0x00003FFF, l[10] );
+	DGLB( 0, l[10], 0x90, 0xc2, "DPC:\DPC:" ); 	
+	l[10] = l[9];
+	ANDG( 0xFFFC000, l[10] );
+	SHFR( 14, l[10] );
+	DGLB( 0, l[10], 0x90, 0xc2, "OPC:\OPC:" ); 
+	l[10] = l[9];
+	SHFR( 28, l[10] );
+	DGLB( 0, l[10], 0x90, 0xc2, "Signalling Link Layer:\SLL:" ); 
+	LABL( 0, 0, 0, 0xb8 );
+	SigTran::M3UA::ResetLoops;
+	TST#( 0, g[59], 0x90, 0, SigTran::M3UA::SIO::SerIndVal::Calls );
+	LABL( 0, 0, 0x90, 0xb7 );
+}
+
+
+str# SigTran::MTP3::SIO::SerIndVal;														
+0x00	|	.... 0000 Signaling Network Management Messages;
+0x01	|	.... 0001 Signaling Network Testing and Maintenance Messages;
+0x02	|	.... 0010 Signaling Network Testing and Maintenance Special Messages (ANSI) or Spare (ITU-T);
+0x03	|	.... 0011 SCCP;
+0x04	|	.... 0100 Telephone User Part;
+0x05	|	.... 0101 ISDN User Part;
+0x06	|	.... 0110 Data User Part (call and circuit-related messages);
+0x07	|	.... 0111 Data User Part (facility registration and cancellation messages);
+0x08	|	.... 1000 Reserved for MTP Testing User Part;
+0x09	|	.... 1001 Broadband ISDN User Part;
+0xa0	|	.... 1010 Satellite ISDN User Part;
+//1011 – 1111 Spare[*]  to programm above!
+
+str# SigTRan::MTP3::SIO::NetIndVal;
+0x00 | 00.. .... International;
+0x01 | 01.. .... International Spare;
+0x02 | 10.. .... National;
+0x03 | 11.. .... National Spare;
+
+str# SigTran::MTP3::SIO::SerIndVal::Calls;			
+0x00	|	SigTran::SignalingNetworkManagementMessages;
+0x01	|	.... 0001 Signaling Network Testing and Maintenance Messages;
+0x02	|	.... 0010 Signaling Network Testing and Maintenance Special Messages ANSI or Spare ITU-T;
+0x03	|	SigTran::SCCP;
+0x04	|	.... 0100 Telephone User Part;
+0x05	|	ISUP;
+0x06	|	.... 0110 Data User Part call and circuit-related messages;
+0x07	|	.... 0111 Data User Part (facility registration and cancellation messages);
+0x08	|	.... 1000 Reserved for MTP Testing User Part;
+0x09	|	.... 1001 Broadband ISDN User Part;
+0xa0	|	.... 1010 Satellite ISDN User Part;
+//1011 – 1111 Spare[*]  to programm above!

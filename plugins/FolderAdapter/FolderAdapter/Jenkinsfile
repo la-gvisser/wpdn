@@ -1,0 +1,42 @@
+pipeline {
+	agent any
+    post {
+      failure {
+        updateGitlabCommitStatus name: 'build', state: 'failed'
+      }
+      success {
+        updateGitlabCommitStatus name: 'build', state: 'success'
+      }
+    }
+    options {
+      gitLabConnection('http://192.168.162.30:8080/project/FolderAdapter')
+    }
+    triggers {
+        gitlab(triggerOnPush: true, branchFilterType: 'All')
+    }
+	stages {
+		stage ('source') {
+			step {
+				echo 'source stage'
+				ls -asl
+				mkdir gitlab
+				cd gitlab
+				ls -asl
+				echo 'git cloning FolderAdapter'
+				git clone 'git@gitlab.iog.internal/plugins/FolderAdapter.git'
+				cd FolderAdapter
+				ls -asl
+			}
+		}
+		stage ('build') {
+			step {
+				echo 'FolderAdapter build stage'
+				ls -aslecho "FolderAdapter"
+				sudo docker images -q
+				sudo docker build --tag folderadapterserver:auto --file ./Jenkins/Dockerfile .
+				sudo docker run --rm folderadapterserver:auto
+				sudo docker rmi folderadapterserver:auto --force
+			}
+		}
+	}
+}

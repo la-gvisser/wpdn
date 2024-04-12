@@ -1,0 +1,27 @@
+* TPKT
+
+void TPKT;
+	LABL 0 0 0 b1 TPKT;
+	DBYT 1 1 90 c2 Version:;
+	DBYT 1 1 90 c2 Reserved:;
+	DWRD 1 1 90 c2 Packet Length:;
+	g[2] = 0x54504b54;		//TPKT
+	TRTS;
+
+
+//si: this was taken from what gti created for h245
+// this is used in: IETF_main.dcd, iso_transport_service.dcd.
+void TPKT::Test;
+    GWRD    0   5;
+    SNEQ    300 5;
+    SKIP;
+		INCR 2;					//validate length
+		GWRD 0  5;
+		DECR 2;
+		SGTE 4	5;				//additional check (1stcis.pkt 144)
+		SKIP;
+			 TNXT -TPKT;
+		ENDS;
+	ENDS;
+    
+

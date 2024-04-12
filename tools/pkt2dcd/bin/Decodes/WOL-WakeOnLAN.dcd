@@ -1,0 +1,65 @@
+//
+// WOL - Wake on LAN
+// pspecs Port 9, Ethertype 0x0842
+//
+//
+//
+str# UDP::Ports_Str;
+9	|	WOL::Heuristik;
+
+str# Ether::Branching_3_Str;
+0x0842	|	WOL::Heuristik;
+
+void WOL::Heuristik()
+{
+	//check on length
+	if (g[16] < 102)
+	{
+		TRTS;
+	}
+	//check on payload
+	GLNG( 0, l[1]);
+	GLNG( 4, l[2]);
+	if (l[1] == 0)
+	{
+		if (l[2] == 0)
+		{
+			TRTS;
+		}
+		TRTS;
+	}
+	// asume it's WOL	
+	WOL::MAIN;
+}
+
+void WOL::MAIN()
+{
+	LABL( 0, 0, 0, 0xb1, "WOL - Wake on LAN");
+	l[16] = 14;
+	if (g[16] >= 102)
+	{
+		ETHR( 0, 0, 0x90, 0xc2, "Sync Stream:");
+		ETHR( 0, 0, 0x90, 0xc9, "MAC:");
+		while (l[16] >= 0)
+		{
+			ETHR( 0, 0, 0x90, 0xc2, "MAC:");
+			l[16] -= 1;
+		}
+		LABL( 0, 0, 0, 0xb8);
+		if (g[16] != 0)
+		{
+			if (g[16] == 4)
+			{
+				IPLG( 0, 0, 0x90, 0xc2, "Password:");
+			}
+			if (g[16] != 4)
+			{
+				if (g[16] != 0)
+				{
+					ETHR( 0, g[16], 0x90, 0xc2, "Password:");
+				}
+			}
+		}
+	}
+	LABL( 0, 0, 0, 0xb8);
+}

@@ -1,0 +1,631 @@
+// ----------------------------------------------------------------------
+//  LMP - Link Management Protocol
+//	
+//	globals i use:
+//		g[5] = length
+//		g[6] = msg type
+//		g[7] = object c-type
+//		g[8] = object class
+//		g[9] = object length
+//
+//	draft-ietf-ccamp-lmp-10.txt
+//	udp port 701 
+// ----------------------------------------------------------------------
+
+
+void LMP;
+	LABL 0 0 00 b1 LMP - Link Management Protocol\LMP:;
+	DBIT 4 0 90 c2 Version:;
+	BBIT 4 0 90 c2 Reserved:;
+	BBYT 0 0 90 c2 Reserved:;
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx xx.. Reserved;
+		CBIT 1 1 00 d4 .... ..1. Restart Set;
+		CLSE 0 0 00 d4 .... ..0. Restart Not Set;
+		CBIT 0 1 00 d4 .... ...1 Control Channel Down Set;
+		CLSE 0 0 00 d4 .... ...0 Control Channel Down Not Set;
+		LABL 0 0 00 c8;
+	DBYT 0 6 90 c2 Message Type:;
+	CST# 0 6 00 14 LMP::MessageType;
+	DWRD 0 5 90 c2 LMP Length:;
+	HWRD 0 0 90 c2 Reserved:;
+	while (g[16] > 0)
+	{
+		LMP::Object;
+	}
+	TRTS;
+
+str# LMP::MessageType;
+	1  | Config;
+	2  | Config Ack;
+	3  | Config Nack;
+	4  | Hello;
+	5  | Begin Verify;
+	6  | Begin Verify Ack;
+	7  | Begin Verify Nack;
+	8  | End Verify;
+	9  | End Verify Ack;
+	10 | Test;
+	11 | Test Status Success;
+	12 | Test Status Failure;
+	13 | Test Status Ack;
+	14 | Link Summary;
+	15 | Link Summary Ack;
+	16 | Link Summary Nack;
+	17 | Channel Status;
+	18 | Channel Status Ack;
+	19 | Channel Status Request;
+	20 | Channel Status Response;
+
+// ----------------------------------------------------------------------
+//	Object
+// ----------------------------------------------------------------------
+
+void LMP::Object;
+	l[7] = pb[0];							//c-type
+	l[7] &= 0x7f;
+	l[8] = pb[1];							//class  -  object type
+
+	MULG 64 47;
+	//l[7] x= 100;							// put the c-type in the 100th's place
+	l[8] += l[7];							// add in the object type
+
+	CST# 0 48 00 b7 LMP::Object::List;
+	CLSE 0 0 00 b7 LMP Object;
+	DBIT 0 1 90 c2 N Flag:;
+	CEQU 1 1 00 14 Negotiable;
+	CEQU 0 1 00 14 Non-Negotiable;
+	DBIT 7 7 90 c2 C-Type:;
+	DBYT 0 8 90 c2 Class:;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+
+	// object contents!
+	l[16] = g[16];
+	TSB# 0 48 0 00 LMP::Object::Func;
+	if (l[16] == g[16])
+	{
+		DUMP 0 9 90 c2 Value:;
+		g[9] = 0;
+	}
+	if (g[9] > 0)
+	{
+		DUMP 0 9 90 c2 Data:;
+		g[9] = 0;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# LMP::Object::List;
+	 101 | Local CCID;
+	 102 | Remote CCID;
+	 201 | Local Node ID;
+	 202 | Remote Node ID;
+	 301 | IPv4 Local Link ID;
+	 302 | IPv4 Remote Link ID;
+	 303 | IPv6 Local Link ID;
+	 304 | IPv6 Remote Link ID;
+	 305 | Unnumbered Local Link ID;
+	 306 | Unnumbered Remote Link ID;
+	 401 | IPv4 Local Interface ID;
+	 402 | IPv4 Remote Interface ID;
+	 403 | IPv6 Local Interface ID;
+	 404 | IPv6 Remote Interface ID;
+	 405 | Unnumbered Local Interface ID;
+	 406 | Unnumbered Remote Interface ID;
+	 501 | Message ID;
+	 502 | Message ID Ack;
+	 601 | Hello Config;
+	 701 | Hello;
+	 801 | Begin Verify;
+	 901 | Begin Verify Ack;
+	1001 | Verify ID;
+	1101 | IPv4 TE Link;
+	1102 | IPv6 TE Link;
+	1103 | Unnumbered TE Link;
+	1201 | IPv4 Data Link;
+	1202 | IPv6 Data Link;
+	1203 | Unnumbered Data Link;
+	1301 | IPv4 Interface ID;
+	1302 | IPv6 Interface ID;
+	1303 | Unnumbered Interface ID;
+	1401 | IPv4 Interface ID;
+	1402 | IPv6 Interface ID;
+	1403 | Unnumbered Interface ID;
+
+str# LMP::Object::Func;
+	 101 | LMP::Object::01::LOCAL_CCID;
+	 102 | LMP::Object::01::REMOTE_CCID;	
+	 201 | LMP::Object::02::LOCAL_NODE_ID;
+	 202 | LMP::Object::02::REMOTE_NODE_ID;
+	 301 | LMP::Object::03::IPv4_LOCAL_LINK_ID;
+	 302 | LMP::Object::03::IPv4_REMOTE_LINK_ID;
+	 303 | LMP::Object::03::IPv6_LOCAL_INTERFACE_ID;
+	 304 | LMP::Object::03::IPv6_REMOTE_INTERFACE_ID;
+	 305 | LMP::Object::03::Unnumbered_LOCAL_LINK_ID;
+	 306 | LMP::Object::03::Unnumbered_REMOTE_LINK_ID;
+	 401 | LMP::Object::04::IPv4_LOCAL_INTERFACE_ID;
+	 402 | LMP::Object::04::IPv4_REMOTE_INTERFACE_ID;
+	 403 | LMP::Object::04::IPv6_LOCAL_INTERFACE_ID;
+	 404 | LMP::Object::04::IPv6_REMOTE_INTERFACE_ID;
+	 405 | LMP::Object::04::Unnumbered_LOCAL_INTERFACE_ID;
+	 406 | LMP::Object::04::Unnumbered_REMOTE_INTERFACE_ID;
+	 501 | LMP::Object::05::MessageID;
+	 502 | LMP::Object::05::MessageIDAck;
+	 601 | LMP::Object::06::HelloConfig;
+	 701 | LMP::Object::07::Hello;
+	 801 | LMP::Object::08::BEGIN_VERIFY;
+	 901 | LMP::Object::09::BEGIN_VERIFY_ACK;
+	1001 | LMP::Object::10::VERIFY_ID;
+	1101 | LMP::Object::11::IPv4_TE_LINK;
+	1102 | LMP::Object::11::IPv6_TE_LINK;
+	1103 | LMP::Object::11::Unnumbered TE_LINK;
+	1201 | LMP::Object::12::IPv4_DATA_LINK;		
+	1202 | LMP::Object::12::IPv6_DATA_LINK;		
+	1203 | LMP::Object::12::Unnumbered_DATA_LINK;
+	1301 | LMP::Object::13::IPv4_INTERFACE_ID;
+	1302 | LMP::Object::13::IPv6_INTERFACE_ID;
+	1303 | LMP::Object::13::Unnumbered_INTERFACE_ID;
+	1401 | LMP::Object::14::IPv4_INTERFACE_ID;
+	1402 | LMP::Object::14::IPv6_INTERFACE_ID;
+	1403 | LMP::Object::14::Unnumbered_INTERFACE_ID;
+
+// ----------------------------------------------------------------------
+//	Object Content
+// ----------------------------------------------------------------------
+
+void LMP::Object::01::LOCAL_CCID;							// c-type 01
+	DLNG 0 0 90 c2 Control Ch. ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::01::REMOTE_CCID;							// c-type 02
+	DLNG 0 0 90 c2 Control Ch. ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::02::LOCAL_NODE_ID;						// c-type 01
+	IPLG 0 0 90 c2 Node ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::02::REMOTE_NODE_ID;						// c-type 02
+	IPLG 0 0 90 c2 Node ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::03::IPv4_LOCAL_LINK_ID;					// c-type 01
+	IPLG 0 0 90 c2 Local Link ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::03::IPv4_REMOTE_LINK_ID;					// c-type 02
+	IPLG 0 0 90 c2 Remote Link ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::03::IPv6_LOCAL_INTERFACE_ID;				// c-type 03
+	ETHR 0 0 90 c2 Local Link ID:;
+	g[9] -= 16;
+	TRTS;
+
+void LMP::Object::03::IPv6_REMOTE_INTERFACE_ID;				// c-type 04
+	ETHR 0 0 90 c2 Remote Link ID:;
+	g[9] -= 16;
+	TRTS;
+
+void LMP::Object::03::Unnumbered_LOCAL_LINK_ID;				// c-type 05
+	IPLG 0 0 90 c2 Local Link ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::03::Unnumbered_REMOTE_LINK_ID;			// c-type 06
+	IPLG 0 0 90 c2 Remote Link ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::04::IPv4_LOCAL_INTERFACE_ID;				// c-type 01
+	IPLG 0 0 90 c2 Local Interface ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::04::IPv4_REMOTE_INTERFACE_ID;				// c-type 02
+	IPLG 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::04::IPv6_LOCAL_INTERFACE_ID;				// c-type 03
+	ETHR 0 0 90 c2 Local Interface ID:;
+	g[9] -= 16;
+	TRTS;
+
+void LMP::Object::04::IPv6_REMOTE_INTERFACE_ID;				// c-type 04
+	ETHR 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 16;
+	TRTS;
+
+void LMP::Object::04::Unnumbered_LOCAL_INTERFACE_ID;		// c-type 05
+	IPLG 0 0 90 c2 Local Interface ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::04::Unnumbered_REMOTE_INTERFACE_ID;		// c-type 06
+	IPLG 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::05::MessageID;							// c-type 01
+	DLNG 0 0 90 c2 Message ID:;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::05::MessageIDAck;							// c-type 02
+	DLNG 0 0 90 c2 Message ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::06::HelloConfig;							// c-type 01
+	DWRD 0 0 90 c2 Hello Interval:;
+	LABL 0 0 00 14 milliseconds;
+ 	DWRD 0 0 90 c2 Hello Dead Interval:;
+ 	LABL 0 0 00 14 milliseconds;
+ 	g[9] -= 4;
+ 	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::07::Hello;								// c-type 01
+	DLNG 0 0 90 c2 Tx Seq Num:;
+	DLNG 0 0 90 c2 Rcv Seq Num:;
+	g[9] -= 8;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::08::BEGIN_VERIFY;										// c-type 01
+	BWRD 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxxxxxx xxxxxx.. Reserved;
+		CBIT 1 1 00 d4 ........ ......1. Data Link Type = Ports;
+		CLSE 0 0 00 d4 ........ ......0. Data Link Type = Component Links;
+		CBIT 0 1 00 d4 ........ .......1 Verify All Unallocated Links;
+		CLSE 0 0 00 d4 ........ .......0 Verify New Ports Only;
+		LABL 0 0 00 c8;
+	DWRD 0 0 90 c2 Verify Interval:;
+	LABL 0 0 00 14 milliseconds;
+	DLNG 0 0 90 c2 Num of Data Links:;
+	DBYT 0 1 90 c2 Encryption Type:;
+	CST# 0 1 00 14 LMP::Object::08::BEGIN_VERIFY::EncType;
+	HBYT 0 0 90 c2 Reserved:;
+	BWRD 0 1 90 c9 Verify Transport Mech:;
+		CBIT f 1 00 d4 1....... ........ Capable of transmitting Test messages in the payload;
+		CLSE 0 0 00 d4 0....... ........ Not Capable of transmitting Test messages in the payload;
+		LABL 0 0 00 d4 .xxxxxxx xxxxxxxx Reserved;
+		LABL 0 0 00 c8;
+	DLNG 0 0 90 c2 Transmission Rate:;
+	DLNG 0 0 90 c2 Wave Length:;
+	g[9] -= 20;
+	TRTS;
+
+str# LMP::Object::08::BEGIN_VERIFY::EncType;					//rfc3471
+     1 | Packet;
+     2 | Ethernet;
+     3 | ANSI - ETSI PDH;
+     4 | Reserved;
+     5 | SDH ITU-T G.707 - SONET ANSI T1.105;
+     6 | Reserved;
+     7 | Digital Wrapper;
+     8 | Lambda (photonic);
+     9 | Fiber;
+    10 | Reserved;
+    11 | FiberChannel;
+
+// -----------------------------------------------------------
+
+void LMP::Object::09::BEGIN_VERIFY_ACK;							// c-type 01
+	DWRD 0 0 90 c2 Verify Dead Interval:;
+	DWRD 0 0 90 c2 Verify Transport Response:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::10::VERIFY_ID;								// c-type 01
+	DLNG 0 0 90 c2 Verify ID:;
+	g[9] -= 4;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::11::IPv4_TE_LINK;								// c-type 01
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx xx.. Reserved;
+		CBIT 1 1 00 d4 .... ..1. Link Verification Supported;
+		CLSE 0 0 00 d4 .... ..0. Link Verification Not Supported;
+		CBIT 0 1 00 d4 .... ...1 Fault Management Supported;
+		CLSE 0 0 00 d4 .... ...0 Fault Management Not Supported;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	IPLG 0 0 90 c2 Local Link ID:;
+	IPLG 0 0 90 c2 Remote Link ID:;
+	g[9] -= 12;
+	TRTS;
+
+void LMP::Object::11::IPv6_TE_LINK;								// c-type 02
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx xx.. Reserved;
+		CBIT 1 1 00 d4 .... ..1. Link Verification Supported;
+		CLSE 0 0 00 d4 .... ..0. Link Verification Not Supported;
+		CBIT 0 1 00 d4 .... ...1 Fault Management Supported;
+		CLSE 0 0 00 d4 .... ...0 Fault Management Not Supported;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	ETHR 0 0 90 c2 Local Link ID:;
+	ETHR 0 0 90 c2 Remote Link ID:;
+	g[9] -= 36;
+	TRTS;
+
+void LMP::Object::11::Unnumbered TE_LINK;						// c-type 03
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx xx.. Reserved;
+		CBIT 1 1 00 d4 .... ..1. Link Verification Supported;
+		CLSE 0 0 00 d4 .... ..0. Link Verification Not Supported;
+		CBIT 0 1 00 d4 .... ...1 Fault Management Supported;
+		CLSE 0 0 00 d4 .... ...0 Fault Management Not Supported;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	IPLG 0 0 90 c2 Local Link ID:;
+	IPLG 0 0 90 c2 Remote Link ID:;
+	g[9] -= 12;
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::12::IPv4_DATA_LINK;							// c-type 01
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx x... Reserved;
+		CBIT 0 1 00 d4 .... .1.. Failed Link: not suitable for traffic;
+		CLSE 0 0 00 d4 .... .0.. No Failed Links;
+		CBIT 0 1 00 d4 .... ..1. Link is Currently Allocated for User Traffic;
+		CLSE 0 0 00 d4 .... ..0. Link is Not Allocated for User Traffic;
+		CBIT 0 1 00 d4 .... ...1 Interface Type: Port;
+		CLSE 0 0 00 d4 .... ...0 Interface Type: Component Link;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	IPLG 0 0 90 c2 Local Interface ID:;
+	IPLG 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 12;
+	LMP::Object::12::Subobject;
+	TRTS;
+
+void LMP::Object::12::IPv6_DATA_LINK;							// c-type 02
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx x... Reserved;
+		CBIT 0 1 00 d4 .... .1.. Failed Link: not suitable for traffic;
+		CLSE 0 0 00 d4 .... .0.. No Failed Links;
+		CBIT 0 1 00 d4 .... ..1. Link is Currently Allocated for User Traffic;
+		CLSE 0 0 00 d4 .... ..0. Link is Not Allocated for User Traffic;
+		CBIT 0 1 00 d4 .... ...1 Interface Type: Port;
+		CLSE 0 0 00 d4 .... ...0 Interface Type: Component Link;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	ETHR 0 0 90 c2 Local Interface ID:;
+	ETHR 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 12;
+	LMP::Object::12::Subobject;
+	TRTS;
+
+void LMP::Object::12::Unnumbered_DATA_LINK;						// c-type 03
+	BBYT 0 1 90 c9 Flags:;
+		LABL 0 0 00 d4 xxxx x... Reserved;
+		CBIT 0 1 00 d4 .... .1.. Failed Link: not suitable for traffic;
+		CLSE 0 0 00 d4 .... .0.. No Failed Links;
+		CBIT 0 1 00 d4 .... ..1. Link is Currently Allocated for User Traffic;
+		CLSE 0 0 00 d4 .... ..0. Link is Not Allocated for User Traffic;
+		CBIT 0 1 00 d4 .... ...1 Interface Type: Port;
+		CLSE 0 0 00 d4 .... ...0 Interface Type: Component Link;
+		LABL 0 0 00 c8;
+	HEX# 3 0 90 c2 Reserved:;
+	IPLG 0 0 90 c2 Local Interface ID:;
+	IPLG 0 0 90 c2 Remote Interface ID:;
+	g[9] -= 12;
+	LMP::Object::12::Subobject;
+	TRTS;
+
+void LMP::Object::12::Subobject;
+	while (g[9] > 0)
+	{
+		g[1] = pb[0];			// get the type
+		TST# 0 1 00 00 LMP::Object::12::SubojectFunc;
+		LABL 0 0 00 b7 Unknown Subobject;
+		DBYT 0 0 90 c2 Type:;
+		DBYT 0 1 90 c2 Length:;
+		g[9] -= g[1];
+		g[1] -= 2;
+		DUMP 0 1 90 c2 Value:;
+		LABL 0 0 00 b8;
+	}
+	TRTS;
+
+str# LMP::Object::12::SubojectFunc;
+	1 | LMP::Object::12::Suboject::01;
+	2 | LMP::Object::12::Suboject::02;
+
+void LMP::Object::12::Suboject::01;
+	LABL 0 0 00 b7 Interface Switching Type;
+ 	DBYT 0 0 90 c2 Type:;
+ 	LABL 0 0 00 14 Interface Switching Type;
+	DBYT 0 1 90 c2 Length:;
+	g[9] -= g[1];
+	DBYT 0 1 90 c2 Switching Type:;
+	CST# 0 1 00 14 LMP::Object::12::Suboject::SwitchingTypeList;
+	DBYT 0 1 90 c2 Encryption Type:;
+	CST# 0 1 00 14 LMP::Object::08::BEGIN_VERIFY::EncType;
+	DLNG 0 0 90 c2 Min Reservable Bandwidth:;
+	DLNG 0 0 90 c2 Max Reservable Bandwidth:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void LMP::Object::12::Suboject::02;
+	LABL 0 0 00 b7 Wavelength;
+ 	DBYT 0 0 90 c2 Type:;
+ 	LABL 0 0 00 14 Wavelength;
+	DBYT 0 1 90 c2 Length:;
+	g[9] -= g[1];
+	HWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Wavelength:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# LMP::Object::12::Suboject::SwitchingTypeList;
+     1   | Packet-Switch Capable-1 (PSC-1);
+     2   | Packet-Switch Capable-2 (PSC-2);
+     3   | Packet-Switch Capable-3 (PSC-3);
+     4   | Packet-Switch Capable-4 (PSC-4);
+     51  | Layer-2 Switch Capable (L2SC);
+     100 | Time-Division-Multiplex Capable (TDM);
+     150 | Lambda-Switch Capable (LSC);
+     200 | Fiber-Switch Capable (FSC);
+
+
+// -----------------------------------------------------------
+
+void LMP::Object::13::IPv4_INTERFACE_ID;						// c-type 01
+	while (g[9] > 0)
+	{
+		IPLG 0 0 90 c2 Interface ID:;
+		DBIT 1 1 90 c2 Active Bit:;
+		CEQU 1 1 00 14 Channel is allocated to user traffic and data link should be monitored;
+		DBIT 1 1 90 c2 Direction Bit:;
+		CEQU 1 1 00 14 Data channel is in the transmit direction;
+		CEQU 0 1 00 14 Data channel is in the receive direction;
+		INCR 1;
+		DECR 1;
+		g[1] = pl[0];
+		g[1] &= 0x3fffff;
+		DLNG 0 0 5 5 Channel Status:;
+		DGLB 0 1 90 c2 Channel Status:;
+		CEQU 1 1 00 14 Signal Okay;
+		CEQU 2 1 00 14 Signal Degrade;
+		CEQU 3 1 00 14 Signal Fail;
+		g[9] -= 8;
+	}
+	TRTS;
+
+void LMP::Object::13::IPv6_INTERFACE_ID;						// c-type 02
+	while (g[9] > 0)
+	{
+		ETHR 0 0 90 c2 Interface ID:;
+		DBIT 1 1 90 c2 Active Bit:;
+		CEQU 1 1 00 14 Channel is allocated to user traffic and data link should be monitored;
+		DBIT 1 1 90 c2 Direction Bit:;
+		CEQU 1 1 00 14 Data channel is in the transmit direction;
+		CEQU 0 1 00 14 Data channel is in the receive direction;
+		INCR 1;
+		DECR 1;
+		g[1] = pl[0];
+		g[1] &= 0x3fffff;
+		DLNG 0 0 5 5 Channel Status:;
+		DGLB 0 1 90 c2 Channel Status:;
+		CEQU 1 1 00 14 Signal Okay;
+		CEQU 2 1 00 14 Signal Degrade;
+		CEQU 3 1 00 14 Signal Fail;
+		g[9] -= 20;
+	}
+	TRTS;
+
+void LMP::Object::13::Unnumbered_INTERFACE_ID;					// c-type 03
+	while (g[9] > 0)
+	{
+		IPLG 0 0 90 c2 Interface ID:;
+		DBIT 1 1 90 c2 Active Bit:;
+		CEQU 1 1 00 14 Channel is allocated to user traffic and data link should be monitored;
+		DBIT 1 1 90 c2 Direction Bit:;
+		CEQU 1 1 00 14 Data channel is in the transmit direction;
+		CEQU 0 1 00 14 Data channel is in the receive direction;
+		INCR 1;
+		DECR 1;
+		g[1] = pl[0];
+		g[1] &= 0x3fffff;
+		DLNG 0 0 5 5 Channel Status:;
+		DGLB 0 1 90 c2 Channel Status:;
+		CEQU 1 1 00 14 Signal Okay;
+		CEQU 2 1 00 14 Signal Degrade;
+		CEQU 3 1 00 14 Signal Fail;
+		g[9] -= 8;
+	}
+	TRTS;
+
+// -----------------------------------------------------------
+
+void LMP::Object::14::IPv4_INTERFACE_ID;						// c-type 01
+	while (g[9] > 0)
+	{
+		IPLG 0 0 0 90 c2 Interface ID:;
+		g[9] -= 4;
+	}
+	TRTS;
+
+void LMP::Object::14::IPv6_INTERFACE_ID;						// c-type 02
+	while (g[9] > 0)
+	{
+		ETHR 0 0 0 90 c2 Interface ID:;
+		g[9] -= 16;
+	}
+	TRTS;
+	
+void LMP::Object::14::Unnumbered_INTERFACE_ID;					// c-type 03
+	while (g[9] > 0)
+	{
+		IPLG 0 0 0 90 c2 Interface ID:;
+		g[9] -= 4;
+	}
+	TRTS;
+
+
+
+// -----------------------------------------------------------
+
+void LMP::Object::20::BEGIN_VERIFY_ERROR;						// c-type 01
+	BLNG 0 1 90 c9 Error Code:;
+	CBIT 4 1 00 d4 ........ ........ ........ ...1.... ERROR: Unknown Object C-Type;
+	CLSE 0 0 00 d4 ........ ........ ........ ...0.... Object C-Type OK;
+	CBIT 3 1 00 d4 ........ ........ ........ ....1... ERROR: Link ID Configuration Error;
+	CLSE 0 0 00 d4 ........ ........ ........ ....0... Link ID Config OK;
+	CBIT 2 1 00 d4 ........ ........ ........ .....1.. ERROR: Unsupported Verification Transport Medium;
+	CLSE 0 0 00 d4 ........ ........ ........ .....0.. Verification Transport Medium OK;
+	CBIT 1 1 00 d4 ........ ........ ........ ......1. ERROR: Unwilling to Verify;
+	CLSE 0 0 00 d4 ........ ........ ........ ......0. Verification OK;
+	CBIT 0 1 00 d4 ........ ........ ........ .......1 ERROR: Link Verification Procedure Not Supported;
+	CLSE 0 0 00 d4 ........ ........ ........ .......0 Link Verification Procedure OK;
+	LABL 0 0 00 c8;
+	g[9] -= 4;
+	TRTS;
+
+void LMP::Object::20::LINK_SUMMARY_ERROR;						// c-type 02
+	BLNG 0 1 90 c9 Error Code:;
+	CBIT 5 1 00 d4 ........ ........ ........ ..1..... ERROR: Unknown DATA_LINK object C-Type;
+	CLSE 0 0 00 d4 ........ ........ ........ ..0..... DATA_LINK object C-Type OK;
+	CBIT 4 1 00 d4 ........ ........ ........ ...1.... ERROR: Unknown TE_LINK object C-Type;
+	CLSE 0 0 00 d4 ........ ........ ........ ...0.... TE_LINK object C-Type OK;
+	CBIT 3 1 00 d4 ........ ........ ........ ....1... ERROR: Invalid DATA_LINK Object;
+	CLSE 0 0 00 d4 ........ ........ ........ ....0... DATA_LINK Object OK;
+	CBIT 2 1 00 d4 ........ ........ ........ .....1.. ERROR: Invalid TE_LINK Object;
+	CLSE 0 0 00 d4 ........ ........ ........ .....0.. TE_LINK Object OK;
+	CBIT 1 1 00 d4 ........ ........ ........ ......1. ERROR: Renegotiate LINK_SUMMARY Parameters;
+	CLSE 0 0 00 d4 ........ ........ ........ ......0. LINK_SUMMARY Parameters OK;
+	CBIT 0 1 00 d4 ........ ........ ........ .......1 ERROR: Unacceptable Non-Negotiable LINK_SUMMARY Parameters;
+	CLSE 0 0 00 d4 ........ ........ ........ .......0 Non-Negotiable LINK_SUMMARY Parameters OK;
+	LABL 0 0 00 c8;
+	g[9] -= 4;
+	TRTS;
+

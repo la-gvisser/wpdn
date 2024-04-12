@@ -1,0 +1,18 @@
+// DAAP - Digital Audio Access Protocol
+// port 3689
+// uses http parser
+
+void DAAP;
+	TEQU 0  10  0  0 RETURN;
+	LABL 0   0  0 b1 DAAP - Digital Audio Access Protocol\DAAP:;
+	Init Line Variables;
+	HTTP Parse Header;
+	SEQU 1   2;			* Did we find a header
+	SKIP 3;
+	LABL 0 0 90 c4 Continuation of existing DAAP stream;
+	Display All Lines No Init;
+	TRTS;
+	Display Fields And Lines No Init;
+	TRTS;
+
+

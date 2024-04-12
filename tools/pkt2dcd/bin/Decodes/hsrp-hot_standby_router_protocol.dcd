@@ -1,0 +1,156 @@
+* HSRP - Hot Standby Router Protocol;
+//mb: HSRPv2 info gleaned from http://www.smartnetworks.jp/2006/02/hsrp_8_hsrp_version_2.html
+
+void HSRP;
+	LABL 0 0 0 b1 HSRP - Hot Standby Router Protocol\HSRP:;
+	l[1] = pw[0];
+	
+	//this is a hack
+	//the ideal way to do it would be to 
+	//look at the destination IP and port number
+	//if the destination IP is 224.0.0.102 and the port is 1985 then this is HSRPv2
+	if( l[1] > 0x0102 )
+	{
+		HSRP_v2;
+		TRTS;
+	}
+	
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 e 90 c2 Op Code:;
+	CEQU 0 e 0 14 (Hello);
+	CEQU 1 e 0 14 (Coup);
+	CEQU 2 e 0 14 (Resign);
+	DBYT 0 e 90 c2 State:;
+	CEQU 0 e 0 14 (Initial);
+	CEQU 1 e 0 14 (Learn);
+	CEQU 2 e 0 14 (Listen);
+	CEQU 4 e 0 14 (Speak);
+	CEQU 8 e 0 14 (Standby);
+	CEQU 10 e 0 14 (Active);
+	DBYT 0 0 90 c2 Hellotime:;
+	DBYT 0 0 90 c2 Holdtime:;
+	DBYT 0 0 90 c2 Priority:;
+	DBYT 0 0 90 c2 Group:;
+	DBYT 0 0 90 c2 Reserved:;
+	CHR# 8 0 90 c2 Authentication Data:;
+	IPLG 0 0 90 c2 Virtual IP Address:;
+
+void HSRP_v2()
+{
+	if( g[16] == 0 )
+	{
+		TRTS;
+	}
+	
+	GBYT 0 41 0 0;
+	INCR 1;
+	TSB# 0 41 0 0 HSRPv2::Types;
+	HSRP_v2;
+}
+
+void HSRPv2::GroupState()
+{
+	LABL 0 0 0 c9 Group State;
+	DBYT 0 42 90 c2 Length:;	//save the length in l[2]
+	DBYT 0 0 90 c2 Version:;
+	DBYT 0 41 90 c2 Op Code:;
+	CEQU 0 41 0 14 Hello;
+	CEQU 1 41 0 14 Coup;
+	CEQU 2 41 0 14 Resign;
+	
+	DBYT 0 41 90 c2 State:;
+	CEQU 0 41 0 14 Disabled;
+	CEQU 1 41 0 14 Init;
+	CEQU 2 41 0 14 Learn;
+	CEQU 3 41 0 14 Listen;
+	CEQU 4 41 0 14 Speak;
+	CEQU 5 41 0 14 Standby;
+	CEQU 6 41 0 14 Active;
+	
+	DBYT 0 43 90 c2 IP Version:;
+	CEQU 4 43 0 14 IPv4;
+	CEQU 6 43 0 14 IPv6;
+	DWRD 0 0 90 c2 Group:;
+	ETHR 0 0 90 c2 Identifier;
+	DLNG 0 0 90 c2 Priority:;
+	DLNG 0 0 90 c2 Hello Time:;
+	DLNG 0 0 90 c2 Hold Time:;
+	
+	if( l[3] == 4 )
+	{
+		IPLG 0 0 90 c2 Virtual IP Address 1:;
+		IPLG 0 0 90 c2 Virtual IP Address 2:;
+		IPLG 0 0 90 c2 Virtual IP Address 3:;
+		IPLG 0 0 90 c2 Virtual IP Address 4:;
+	}
+	
+	if( l[3] == 6 )
+	{
+		IPV6 0 0 90 c2 Virtual IP Address:;
+	}
+	
+	l[2] -= 40;	//40 is the length of HSRPv2 Group State message
+	
+	if( l[2] > 0 )
+	{
+		DUMP 0 42 90 c2 Extra Data:;
+	}
+	
+	LABL 0 0 0 c8;
+}
+
+void HSRPv2::InterfaceState()
+{
+	LABL 0 0 0 c9 Interface State;
+	DBYT 0 42 90 c2 Length:;
+	DWRD 0 0 90 c2 Active Groups:;
+	DWRD 0 0 90 c2 Passive Groups:;
+	
+	l[2] -= 4;	// the Interface State message is 4 bytes
+	
+	if( l[2] > 0 )
+	{
+		DUMP 0 42 90 c2 Extra Data:;
+	}
+	
+	LABL 0 0 0 c8;
+}
+
+void HSRPv2::TextAuthState()
+{
+	LABL 0 0 0 c9 Text Authentication State;
+	DBYT 0 42 90 c2 Length:;
+	CHR# 0 42 90 c2 Authentication Data:;
+	LABL 0 0 0 c8;
+}
+
+void HSRPv2::MD5AuthState()
+{
+	LABL 0 0 0 c9 MD5 Authentication State;
+	DBYT 0 42 90 c2 Length:;
+	DBYT 0 41 90 c2 Algorithm:;
+	CEQU 0 41 0 14 MD5;
+	
+	//the next byte is padding, skip it
+	INCR 1;
+	
+	HWRD 0 0 90 c2 Flags:;
+	IPLG 0 0 90 c2 IP Address:;
+	HLNG 0 0 90 c2 Key ID:;
+	HEX# 10 0 90 c2 Authentication Data:;
+	
+	l[2] -= 28;	// The MD5AuthState message is 28 bytes
+	
+	if( l[2] > 0 )
+	{
+		DUMP 0 42 90 c2 Extra Data:;
+	}
+	
+	LABL 0 0 0 c8;
+}
+
+str# HSRPv2::Types;
+	1 | HSRPv2::GroupState;
+	2 | HSRPv2::InterfaceState;
+	3 | HSRPv2::TextAuthState;
+	4 | HSRPv2::MD5AuthState;

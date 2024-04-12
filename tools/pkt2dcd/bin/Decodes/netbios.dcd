@@ -1,0 +1,491 @@
+* NetBios Name Version 
+
+void NB Skip NBios Name;
+	GBYT 0 8;
+	ADDG 1 8;
+	INCR 0 8;
+	ADDG 8 89;
+	GBYT 0 8;
+	TNEQ 0 8 0 0 NB Skip NBios Name;
+	INCR 1;
+	ADDG 1 9;
+	TRTS;
+
+
+	void NB Name;
+	MOVE  0 9;
+	NB Skip NBios Name;
+	GWRD  0 8;
+	DECR  0 9;
+	SNEQ 20 8;							* test for 0x20
+	SKIP  1;
+	NB Display Name;
+	SNEQ 21 8;							* test for 0x21
+	SKIP  1;
+	NB Display Name;
+	SNEQ  a 8;		        		* test for 0xA
+	SKIP  1;
+	NB Display Name;
+	TRTS;
+
+
+void NB Display Name;
+	NBNM 0 12 90 2;
+	NB Special Name;
+	SUBG 6 91;
+	SUBG 1 11;
+	INCR 1;
+	TRTS;
+
+
+void NB Display DNS Domain Name;						
+	GBYT 0 6;						*Get the string length byte
+	TNEQ 0 6 0 0 NB Display DNS Next Label;	*If non-zero, display sequence of DNS labels
+	*PSTR 0 6 90 24 [Root];			*Else this is just the root label
+	LABL 0 0 0 14 [ Root ];			*Else this is just the root label
+	NB Name;
+	TRTS;							*And return
+
+void NB Display DNS Next Label;
+	GBYT  0 6;						*Get the string length byte
+	TEQU 0 6 0 0 RETURN;
+	ANDG c0 6;						*Test top two bits
+	TEQU c0 6 0 0 NB Display Compr Domain Name;*If both one, this is a compressed label offset
+	TNEQ  0 6 0 0 NB DNS Domain Name Bad;		*If 0x40 or 0x80, this is an illegal value
+	*PSTR  0 6 90 2;						*Display the label
+	NB Name;
+	SNEQ  0 6;						*Test if length byte was non-zero
+	SKIP  1;						*If byte was non-zero, skip next instruction
+	TRTS;							*If byte was zero, we're finished, so return
+	LABL  0 0 0 2 .;				*Display a '.' after the label
+	TNXT -NB Display DNS Next Label;	*Go back and repeat
+
+void NB DNS Domain Name Bad;
+	LABL 0 0 0 34 [DNS Domain Name Bad];
+	TRTS;
+
+void NB Display Compr Domain Name;
+* First thing we do when decoding a compressed name is remember where we need to come back to
+	MOVE  f 8e;							*RE = Total DNS message size
+	SUBG 10 8e;							*RE -= remaining bytes (i.e. RE=offset from start)
+	TNXT -NB Follow CDN Pointer;
+
+void NB Follow CDN Pointer;
+	GWRD 0 6;							*Get two-byte pointer offset
+	ANDG 3fff 6;						*Mask pointer offset down to 14 bits
+	SUBG 6 8e;							*RE -= desired offset (given by pointer)
+	DECR 0 e;							*Backtrack by RE bytes
+	MOVE 6 8e;							*We are now at new offset
+	TNXT -NB Display Compr Next Label;
+
+void NB Display Compr Next Label;
+	GBYT 0 6;							*Get the string length byte
+	ANDG c0 6;							*Test top two bits
+	TEQU c0 6 0 0 NB Follow CDN Pointer;		*If both one, this is a compressed label offset
+	TNEQ 0 6 0 0 NB Compr Domain Name Bad;		*If 0x40 or 0x80, this is an illegal value
+	*PSTR 0 6 94 4;							*Display the label
+	NB Name;
+	DECR 1;								*Because NB Name does an incr 1 that we do not want here
+	ADDG 1 e;							*Add 1 (for length byte) to current offset
+	ADDG 6 8e;							*Add string length to current offset
+	TEQU 0 6 0 0 NB Compr Domain Name Exit;	*If length byte was zero we're finished now
+	LABL 0 0 0 2 .;							*Display a '.' after the label
+	TNXT -NB Display Compr Next Label;	*Go back and repeat
+
+void NB Compr Domain Name Bad;
+	LABL 0 0 0 34 [DNS Domain Name Bad];
+	TNXT -NB Compr Domain Name Exit;
+
+void NB Compr Domain Name Exit;
+	LABL 0 0 4 24 [Compressed Name];		*Indicate that this was a name with compression
+	SUBG 2 11;							*Decrement byte count by 2 (compressio pointer)
+	MOVE f 86;							*Set R6 to total byte count
+	SUBG 11 86;							*R6 -= remaining bytes (i.e. R6=desired offset)
+	SUBG e 86;							*R6 -= current offset
+	INCR 0 6;							*Forward track by R6 bytes
+	TRTS;
+
+
+void NetBIOS Name Svc()
+{
+	LABL 0 0 0 b1 "NetBIOS Name Service - Network Basic Input/Output System\NetBIOS:";
+	MOVE f 1f;
+	MOVE 10 8d;						//Copy real packet length into register D
+	MOVE 10 91;						//Copy real packet length into register 11
+	DNS::Common();
+}
+
+void NetBIOS Dgram Svc;
+	TEQU 0 10 0 0 IP Null;
+	LABL 0 0 0 b1 NetBIOS Datagram Service - Network Basic Input/Output System\NetBIOS:;
+	NB Type;
+	HBYT 0 4 90 c2 Flags:\;
+	CBIT 1 4 0 14 First Fragment\;
+	CLSE 0 0 0 14 Not First Fragment\;
+	CBIT 0 4 0 14 More Fragments Follow\;
+	CLSE 0 0 0 14 No More Fragments\;
+	DIVG 4 4;
+	ANDG 3 4;
+	DGLB 0 4 90 c2 Node Type:\;
+	CST# ffffffff 4 0 14 NB Node Type;
+	HWRD 0 4 90 c2 Datagram ID:\;
+	IPLG 0 0 90 c2 Source IP Address:\;
+	PORT 0 0 90 c2 Source Port Number:\;
+	DWRD 0 5 90 c2 Datagram Length:\;
+	*this could be checked against g16 [dec] for a discrepancy and reported if true
+	DWRD 0 0 90 c2 Packet Offset:\;
+	TEQU 0 10 0 0 NB Pos Sess Resp;
+	TEQU 10 2 0 0 NB Dgram Src Dst;
+	TEQU 11 2 0 0 NB Dgram Src Dst;
+	TEQU 12 2 0 0 NB Dgram Src Dst;
+	TEQU 13 2 0 0 NB Dgram Err;
+	TEQU 14 2 0 0 NB Dgram Dest;
+	TEQU 15 2 0 0 NB Dgram Dest;
+	TEQU 16 2 0 0 NB Dgram Dest;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	DUMP 0 10 90 c2 Names/User Data:;
+
+void NB_SMB_Check;		*si: check if continuation data is smb
+	MOVE 0 1;
+	INCR 5;
+	GBYT 0 1;
+	SEQU 53 1;
+	SKIP 2;
+	 DECR 5;
+	 TRTS;	
+	INCR 1;
+	GBYT 0 1;
+	SEQU 4d 1;
+	SKIP 2;
+	 DECR 6;
+	 TRTS;
+	INCR 1;
+	GBYT 0 1;
+	SEQU 42 1;
+	SKIP 2;
+	 DECR 7;
+	 TRTS;
+	DECR 7;
+	TNXT -NB_SMB;
+
+void NB_SMB;				*si: cifs header.... go to smb after
+	LABL 0 0 0 b1 Netbios Session Service\NB Sess Svc:;
+	HBYT 0 1 90 c2 Packet Type:;
+	CST# 0 1 00 14 NB_SMB::PktType;
+	BBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 00 d4 xxxx xxx. Reserved;
+	 CBIT 0 1 00 d4 .... ...1 Length Extension;
+	 CLSE 0 0 00 d4 .... ...0 No Length Extension;
+	 LABL 0 0 00 c8;
+	DWRD 0 1 90 c2 Length:;
+	TNXT -SMB File Share;
+
+str# NB_SMB::PktType;
+	0x00 | Session Message;
+	0x81 | Session Request;
+	0x82 | Positive Session Response;
+	0x83 | Negative Session Response;
+	0x84 | Retarget Session Response;
+	0x85 | Session Keep Alive;
+
+void NetBIOS Sess Svc;
+	TEQU 0 10 0 0 IP Null;
+	NB_SMB_Check;
+	TGTE 0 10 0 0 RETURN;
+	LABL 0 0 0 b1 NetBIOS Session Service - Network Basic Input/Output System\NetBIOS:;
+	NB Type;
+	BREM 0 1;		* get remaining bytes
+	if (g[16] >= 3)
+	{
+		if (g[60] == 23) // Check if we come from 802_11 TT:22902 
+		{ 
+			DWRD( 0, l[45], 0x90, 0xc2, "NExtPDU:") ;
+			
+			802_11::A-MSDU;
+		}
+		if (g[60] != 23) // Check if we come from 802_11 TT:22902 
+		{ 
+			
+			if (g[4] ==g[1])
+			{
+			NetBIOS Sess Svc 2;
+			}
+		}
+	}
+
+void NetBIOS Sess Svc 2;
+	HBYT 0 4 90 c2 Flags:;
+	CBIT 0 4 0 14 Length Extension On;
+	CLSE 0 0 0 14 Length Extension Off;
+	DECR 2;
+	GLNG 0 4;
+	INCR 4;
+	ANDG 1ffff 4;
+	DGLB 0 4 90 c2 Length:;
+	TEQU 0 2 0 0 NB Sess Msg;
+	TST# 80 2 0 0 NB Br Msg Type $80;
+
+void NB Type;
+	TEQU 0 10 0 0 IP Null;
+	* BD: store port number before contiue
+	MOVE 2 b1;
+	GBYT 0 2;
+	
+	* BD: deals with things above and equal to 86
+	SLTE 86 2;
+	SKIP 80000002;
+		NB Continuation;
+		TRTS;
+	
+	* BD: deals with the case of 00
+	SEQU 0 2;
+	SKIP 80000008;
+		* BD: case where all zeros
+		GLNG 0 30;
+		SEQU 0 30;
+		SKIP f;
+			INCR 1;
+			GBYT 0 30;
+			DECR 1;
+			ANDG FE 30;
+			* BD: is flags field all zeros?
+			SEQU 0 30;
+			SKIP 8000000b;
+				* BD: checks to make sure port number is 139
+				SEQU 8B 31;
+				SKIP 80000007;
+					INCR 2;
+					GWRD 0 30;
+					DECR 2;
+					BREM 0 31;
+					SUBG 8 31;
+					* BD: if length left greater than length given, dump data
+					SLTE 31 b0;
+					SKIP f;
+						NB Continuation;
+						TRTS;
+				
+	* BD; deals with stuff less than 16 and less than 10
+	SGTE 16 2;
+	SKIP 8000000b;
+		SLTE 10 2;
+		SKIP 80000007;
+			INCR 9;
+			GBYT 0 30;
+			DECR 9;
+			* BD: checks to see if port number is 138
+			SEQU 8A 30;
+			SKIP 4;
+			SEQU 30 b1;
+			SKIP 2;
+		NB Continuation;
+		TRTS;
+		
+	* BD: deals with stuff between 16 and 80
+	SGTE 80 2;
+	SKIP 80000004;
+		SLTE 16 2;
+		SKIP 80000002;
+			NB Continuation;
+			TRTS;
+	
+	* BD: makes sure the stuff bewtween 80 and 85 is valid
+	* BD: Session Service Packets
+	SLTE 80 2;
+	SKIP 8000000c;
+		SGTE 85 2;
+		SKIP 80000008;
+			INCR 1;
+			GBYT 0 30;
+			DECR 1;
+			ANDG FE 30;
+			SEQU 0 30;
+			SKIP 80000002;
+			* BD: checks to see if port number is 139
+			SEQU 8B 31;
+			SKIP 2;
+				NB Continuation;
+				TRTS;	
+
+	DBYT 0 2 90 c2 Packet Type:\Type:;
+	SGTE 80 2;
+	SKIP 2;
+	CST# 80 2 0 14 NB Msg Type $80;
+	TRTS;
+	CEQU 0 2 0 14 Session Message;
+	CST# f 2 0 14 NB Msg Type $10;
+	TRTS;
+
+void NB Sess Msg;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	GLNG 0 3;
+	TEQU ff534d42 3 0 0 SMB File Share;
+	DUMP 0 10 90 c2 User Data:;
+
+void NB Sess Req;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	NBNM 0 12 90 c2 Called Name:;
+	NB Special Name;
+	Finish NB Name;
+	NBNM 0 12 90 c2 Calling Name:;
+	NB Special Name;
+	Finish NB Name;
+
+void Finish NB Name;
+	GBYT 0 5;
+	SEQU 0 5;
+	SKIP 3;
+
+	LABL -.;
+	PSTR;
+	TNXT -Finish NB Name;
+
+	INCR 1;
+	TRTS;
+
+void NB Pos Sess Resp;
+
+void NB Neg Sess Resp;
+	HBYT 0 3 90 c2 Error Code:;
+	CEQU 8f 3 0 14 Unspecified Error;
+	CST# 7f 3 0 14 NB Err Codes $80;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	DUMP 0 10 90 c2 Remaining Negative Response Data:;
+
+void NB Retarg Sess Resp;
+	IPLG 0 0 90 c2 Retarget Address:;
+	DWRD 0 0 90 c2 Port Number:;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	DUMP 0 10 90 c2 Remaining Retarget Data:;
+
+void NB Sess Keep Alive;
+
+void NB Dgram Src Dst;
+	LABL 0 0 0 c2 Source Name:\SName:;
+	GBYT 0 5;
+	SNEQ 0 5;
+	SKIP 2;
+	LABL - (null);
+	TNXT -NB Dgram Src Fin;
+	NBNM 0 12 90 2;
+	NB Special Name;
+	MOVE 10 86;
+	TNXT -NB Dgram Src Name;
+
+void NB Dgram Src Name;
+	GBYT 0 5;
+	TEQU 0 5 0 0 NB Dgram Src Fin;
+	LABL -.;
+	PSTR;
+	TNXT -NB Dgram Src Name;
+
+void NB Dgram Src Fin;
+	PSTR;    * begin evil code
+	*SUBG 10 86;
+	*SBIT 0 6;
+	*SKIP 80000002;
+	*INCR 1;
+	LABL 0 0 0 c2 Destination Name:\DName:;
+	GBYT 0 5;
+	SNEQ 0 5;
+	SKIP 2;
+	LABL - (null);
+	TNXT -NB Dgram Dst Fin;
+	NBNM 0 12 90 2;
+	NB Special Name;
+	MOVE 10 86;
+	TNXT -NB Dgram Dst Name;
+
+void NB Dgram Dst Name;
+	GBYT 0 5;
+	TEQU 0 5 0 0 NB Dgram Dst Fin;
+	LABL -.;
+	PSTR;
+	TNXT -NB Dgram Dst Name;
+
+void NB Dgram Dst Fin;
+	PSTR;
+	SUBG 10 86;
+	GLNG 0 4;
+	TEQU ff534d42 4 0 0 SMB File Share;
+	DUMP 0 10 90 c2 User Data:;
+
+void NB Dgram Err;
+	HBYT 0 5 90 c2 Error Code:;
+	CST# 81 5 0 14 NB Dgram Err Codes;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	DUMP 0 10 90 c2 User Data:;
+
+void NB Dgram Dest;
+	PSTR 0 5 90 c2 Destination Name:\DName:;
+	SBIT 0 5;
+	SKIP 2;
+	INCR 1;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 5dc 10 0 0 IP Null;
+	DUMP 0 10 90 c2 User Data:;
+
+void NB Continuation;
+	*DGLB 0 2 4 b4 Invalid Packet Type: ;
+	LABL 0 0 0 84 (Probably a continuation of a previous transaction);
+	BREM 0 31;
+	SUBG 4 31;
+	SGTE 31 90;
+	SKIP 1;
+		MOVE 31 90;
+	
+	DUMP 0 10 90 c2 NetBIOS Data:;
+	
+	/* if (g[60] == 23)
+	{
+		HWRD 0 10 90 c2 Reserved:;
+
+		802_11::A-MSDU;
+		//	g[10] = g[13];
+	} */
+
+str# NB Node Type;
+	B-Node;
+	P-Node;
+	M-Node;
+	NBDD;
+
+str# NB Br Msg Type $80;
+	NB Sess Req;
+	NB Pos Sess Resp;
+	NB Neg Sess Resp;
+	NB Retarg Sess Resp;
+	NB Sess Keep Alive;
+
+str# NB Msg Type $80;
+	Session Request;
+	Positive Session Response;
+	Negative Session Response;
+	Retarget Session Response;
+	Session Keep Alive;
+
+str# NB Msg Type $10;
+	Direct Unique Datagram;
+	Direct Group Datagram;
+	Broadcast Datagram;
+	Datagram Error;
+	Datagram Query Request;
+	Datagram Positive Query Response;
+	Datagram Negative Query Response;
+
+str# NB Err Codes $80;
+	Not Listening On Called Name;
+	Not Listening For Calling Name;
+	Called Name Not Present;
+	Called Name Present, But Insufficient Resources;
+
+str# NB Dgram Err Codes;
+	Destination Name Not Present;
+	Invalid Source Name Format;
+	Invalid Destination Name Format;

@@ -1,0 +1,557 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>Working With Packet Buffers and Packet Arrays</title>
+</head>
+<body>
+    <h1>Working With Packet Buffers and Packet Arrays</h1><br>
+
+    <h6 class="breakAfterS" style="margin-top:1px">Introduction</h6>
+
+    <h3 class="breakNone">Packets and Packet Buffers in the OmniEngine</h3>
+    <p class="breakAfterS">
+        Packet buffers as well as packet arrays are available for
+        packet storage within the OmniEngine framework code.  The packet buffer available
+        from the framework code is internally the same mechanism as used by the
+        OmniEngine.
+    </p>
+    <p class="breakAfterL">
+        Within the OmniEngine, packet buffers serve as a central
+        repository for packets as they flow from the network.  A given capture has a
+        buffer which is very closely associated with the capture itself in terms of
+        its function and also in terms of its semantics.  The packet buffering methodology
+        has been leveraged and extended for use with plugins.  Additionally, the framework
+        code has direct access to the engine’s capture buffer.
+    </p>
+
+    <h3 class="breakNone">Overview of an OmniEngine Packet Buffer </h3>
+    <p class="breakAfterL">
+        A packet buffer contains an organization of memory that
+        efficiently caches packets as they flow from the network.  This memory space is
+        optimized for accumulating and retrieving data in a consecutive (or sequential)
+        manner.  A packet’s data, in fact, exists within the context of the packet buffer
+        itself, and the packet data really “belongs” to the buffer, not to the packet as
+        any independent entity.  Thus the buffer plays a critical role in the capture
+        process, and is nearly synonymous with the capture.  Buffer methods include buffer
+        size, packet count, a number of packet-related methods (available via packet index),
+        and a number of “capture-type” specifics such as start and stop time, media info,
+        and so on.
+    </p>
+
+    <h3 class="breakNone">Overview of an OmniEngine Packet</h3>
+    <p class="breakAfterS">
+        A “packet” is a class of data and methods that encapsulate
+        and make available in a meaningful way the data that has traversed the network as
+        a network packet.  This particular document will discuss packets as they relate to
+        packet buffers and arrays; an in-depth discussion of packets will be found in
+        another document.
+    </p>
+    <p class="breakNone">
+        The important internal elements of a packet that should be
+        noted are that there is a header which is a PeekPacket structure and there is a
+        pointer to the packet data.  There are additionally a number of methods for
+        retrieving such things as the packet’s number within the buffer, its media type,
+        its protospec, its timestamp, and so on.  As mentioned above, the data pointer
+        within the OmniPeek / OmniEngine packet points directly to a portion of data within
+        the buffer which thus is owned by the buffer.  If the buffer were to go out of
+        scope the packet data would become invalid (this is a critical thing to note).
+    </p>
+    <br>
+
+    <h6 class="breakAfterS" style="margin-top:4px">
+        Overview of Packet Buffers and the Packet Array Within the Wizard
+    </h6>
+    <p class="breakAfterL">
+        The packet and buffer classes offered by the wizard are
+        essentially wrappers around interfaces that expose the packet and buffer engine
+        classes.  To these internal interface methods a number of useful new methods have
+        been added as well.  In fact, the packet and buffer classes as offered by the plugin
+        wizard present powerful capabilities that are unique in the ease of their implementation.
+    </p>
+
+    <h3 class="breakNone">OmniEngine Classes CPacketBuffer and CDynamicPacketBuffer</h3>
+    <p class="breakAfterL">
+        CPacketBuffer and CDynamicPacketBuffer are the direct wrappers to
+        the OmniEngine’s packet buffer interfaces.  The buffer for a given capture is directly
+        accessible via the member variables <b>m_PacketBuffer</b> and <b>m_DynamicPacketBuffer</b>
+        in the engine context class C&lt;<i>plugin name</i>&gt;EngineContext.  Between the
+        CPacketBuffer and CDynamicPacketBuffer classes, the necessary functions for engine packet
+        buffer access are exposed.
+    </p>
+
+    <h3 class="breakNone">Plugin classes CCaptureBuffer, CFileCaptureBuffer, and CPacketArray</h3>
+    <p class="breakAfterL">
+        As noted, the CPacketBuffer and CDynamicPacketBuffer class member
+        variables are used when it is needed to directly access a capture’s packet buffer.  However,
+        when creating a new repository for caching packets in the plugin, there are three other
+        classes (unique to the plugin) that should be used.  These are the <a href="CCaptureBuffer.html">
+            CCaptureBuffer
+        </a> class,
+        its derivative class <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a>, and the
+        <a href="CPacketArray.html">CPacketArray</a> class.  Between these three
+        classes, robust capabilities are available to the developer for caching packets by the
+        plugin during a capture.
+    </p>
+
+    <h3 class="breakNone">CCaptureBuffer</h3>
+    <p class="breakAfterL">
+        The <a href="CCaptureBuffer.html">CCaptureBuffer</a> class internally encapsulates three
+        OmniEngine interfaces that together expose powerful packet buffer capabilities.  This class,
+        along with the <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> class, are the ones that
+        should be used when it is desired to efficiently cache packets during a capture.  While a
+        complete index of the available methods can be found in the
+        <a href="CCaptureBuffer.html">CCaptureBuffer</a> link, this document will highlight
+        important concepts and methods.  Important methods include getting and setting the buffer
+        size, getting the packet count, reading packets into and out of the buffer, and file
+        persistence functionality.
+    </p>
+
+    <h3 class="breakNone">CFileCaptureBuffer</h3>
+    <p class="breakAfterL">
+        The <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> class extends
+        <a href="CCaptureBuffer.html">CCaptureBuffer</a> to further the capability for persisting a
+        capture buffer to file.  The <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> class
+        actually has dual inheritance from <a href="CCaptureBuffer.html">CCaptureBuffer</a> plus a
+        class with time and size controlling methods called
+        <a href="CRefreshFile.html">CRefreshFile</a> (see following section).  The functionality
+        that results from extending both these classes allows automating file persistence based
+        on file size and / or time elapsed criteria.  Functionality is also offered for dynamically
+        creating meaningful file names that have a start timestamp as part of the name.
+    </p>
+
+    <a name="PacketBuffers::RefreshConcept">
+        <h3 class="breakNone">The Concept of a Refresh</h3>
+    </a>
+    <p class="breakAfterS">
+        To refresh a file such as a
+        capture (.pkt) file simply means to close the capture file that is currently being used for
+        persistence to disk and to create and open a new file to continue the process.  The new file
+        will also have a new name.  A typical file name will have a base name plus a formatted time
+        string, although other naming algorithms are available.
+    </p>
+
+    <h3 class="breakNone">CRefreshFile</h3>
+    <p class="breakAfterS">
+        The <a href="CRefreshFile.html">CRefreshFile</a> class offers the methods concerned with
+        refreshing a file (see above topic).  This class does not function
+        in a standalone context (it has some virtual functions), but is used in the inheritance
+        hierarchy for such classes as <a href="CFileCaptureBuffer.html">CFileCaptureBuffer</a> to
+        give it robust packet file naming and managing capability.
+    </p>
+    <p class="breakAfterL">
+        <a href="CRefreshFile.html">CRefreshFile</a> presents (for CFileCaptureBuffer use)
+        the following triggers for the refresh action:  (1) establishing a file size maximum ,
+        (2) a time elapsed limit, or (3) both together (i.e. whichever trigger occurs first).
+    </p>
+
+    <h3 class="breakNone">CPacketArray</h3>
+    <p class="breakNone">
+        The <a href="CPacketArray.html">CPacketArray</a> class inherits from CAtlArray to
+        provide a more flexible, but perhaps less efficient during real time processing,
+        repository for <a href="CPacket.html">CPackets</a> .  With this, packets may be easily
+        added or inserted, accessed, or deleted.  There is also a method for building a packet
+        array from a capture buffer or file capture buffer.
+    </p>
+    <br>
+
+    <a name="PacketBuffers::AttachedDetached">
+        <h6 class="breakAfterS" style="margin-top:1px">
+            Attached and Detached Packets and the Implications for Copying
+        </h6>
+    </a>
+
+    <p class="breakAfterL">
+        There is an inherent issue regarding <a href="CPacket.html">CPackets</a> that are cached during
+        a capture session.  This is that their data, as discussed above, belongs to a packet buffer
+        and not to the packet itself.  This situation is not safe for anything more than temporary
+        work with a packet because it is not known if or when the OmniEngine might reorganize its data
+        store or even delete it.  If this were to happen, the CPacket’s internal data pointer would
+        become invalid, and this event would not be known!  It was thus necessary to add support to
+        the plugin’s <a href="CPacket.html">CPacket</a> class for safely circumventing this situation.
+        In order to understand and utilize the added functionality, the concepts of attached and
+        detached packets need to be understood.
+    </p>
+
+    <h3 class="breakNone">Attached Packets</h3>
+    <p class="breakAfterL">
+        The OmniEngine has no explicit concept of attached packets because there
+        is only one status of a packet, and this is what we refer to as “attached”.  The “attached”
+        reference to a packet simply means that its data is owned by a buffer.  Thus all packets
+        received from the OmniEngine during a capture are attached, since that is the only status of
+        an engine packet.  In the same way, all packets read out from a CPacketBuffer object via the
+        GetPacket() method are attached to the buffer from which they were read.  This applies as well
+        to the CCaptureBuffer and CFileCaptureBuffer classes.  In the same way, any packet read out
+        from CCaptureBuffer and CFileCaptureBuffer type objects via the GetPacket() method are attached
+        packets.
+    </p>
+
+    <h3 class="breakNone">Detached Packets</h3>
+    <p class="breakAfterL">
+        The concept of a detached packet has been added on behalf of needed
+        functionality for the plugin.  Detaching a packet involves allocating new memory storage for
+        the data portion of the packet and copying the data over into that new storage.  Thus the detached
+        packet’s data is completely decoupled from the parent buffer and is safe from any changes to the
+        buffer.  Internally a detached packet’s data uses a shared pointer, allowing the packet to be
+        further copied efficiently.
+    </p>
+
+    <h3 class="breakNone">Detaching and Copying Packets</h3>
+    <p class="breakAfterS">
+        When a <a href="CPacket.html">CPacket</a> is copied, then by default only its data pointers are
+        actually copied, not the data itself.  This means that a copy of an attached CPacket has its data
+        owned by a buffer, just as did the source CPacket.  However, the CPacket class contains a method
+        called “Detach()” that will allocate new memory to hold the data in a shared data pointer.  If
+        the now-detached packet is copied then the shared data pointer’s reference count will be
+        incremented via a method that is similar to AddRef.
+    </p>
+    <p class="breakAfterL">
+        The important thing to note is that detached packets are safe to use for as
+        long as is necessary by in the plugin since any dependency on a packet buffer has been removed.
+    </p>
+
+    <h6 class="breakAfterS" style="margin-top:14px">CCaptureBuffer Important Methods</h6>
+
+    <h3 class="breakNone">Get and Set Capacity:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105px"><a href="CCaptureBuffer.html#CCaptureBuffer::GetCapacity">UInt32</a></td>
+            <td class="codeT" width="500px"><a href="CCaptureBuffer.html#CCaptureBuffer::GetCapacity">GetCapacity();</a></td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::SetCapacity">void</a></td>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::SetCapacity">SetCapacity( UInt32 inCapacity );</a></td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        The buffer capacity is the maximum number of bytes that the buffer can contain.
+        Capture buffers have a fixed capacity, so this needs to be managed.  Calling SetCapacity will
+        reallocate the buffer space.
+    </p>
+    <br>
+
+    <h3 class="breakNone">Operator= and Copy:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105px"><a href="CCaptureBuffer.html#CCaptureBuffer::operator_assign">CCaptureBuffer&</a></td>
+            <td class="codeT" width="500px"><a href="CCaptureBuffer.html#CCaptureBuffer::operator_assign">operator=( CCaptureBuffer& inCaptureBuffer );</a></td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::Copy">bool</a></td>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::Copy">Copy( CCaptureBuffer& inCaptureBuffer );</a></td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        These two functions are the same, since operator= calls Copy.  The Copy
+        function completely copies one capture buffer to another.
+    </p>
+    <br>
+
+    <h3 class="breakNone">GetPacket and ReadPacket:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105px"><a href="CCaptureBuffer.html#CCaptureBuffer::GetPacket">CPacket</a></td>
+            <td class="codeT" width="500px"><a href="CCaptureBuffer.html#CCaptureBuffer::GetPacket">GetPacket( UInt32 inIndex );</a></td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::ReadPacket">bool</a></td>
+            <td class="codeT"><a href="CCaptureBuffer.html#CCaptureBuffer::ReadPacket">ReadPacket( UInt32 inIndex, CPacket& outPacket );</a></td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        These two functions read packets out of the buffer.  GetPacket returns
+        an attached CPacket, and ReadPacket returns a detached CPacket.
+    </p>
+    <br>
+
+    <h3 class="breakNone">WritePacket:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105px"><a href="CCaptureBuffer.html#CCaptureBuffer::WritePacket">void</a></td>
+            <td class="codeT" width="500px"><a href="CCaptureBuffer.html#CCaptureBuffer::WritePacket">WritePacket( CPacket& inPacket );</a></td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        WritePacket writes a CPacket into the buffer space.  Needless to say the data space within the
+        buffer has its own allocation of memory distinct from that of the input packet.
+    </p>
+    <br>
+
+    <h6 class="breakAfterS" style="margin-top:4px">CFileCaptureBuffer Important Methods</h6>
+    <p class="breakAfterL">
+        Firstly, since CFileCaptureBuffer inherits from CCaptureBuffer, the CCaptureBuffer public
+        methods also apply to CFileCaptureBuffer.  CFileCaptureBuffer adds a number of new methods to this in support of
+        file persistence.  Note that since CFileCaptureBuffer also inherits from CRefreshFile, one must view the public
+        methods in CRefreshFile to see all the capabilities of CFileCaptureBuffer.
+    </p>
+
+    <h3 class="breakNone">SetRefreshFilePath, SetRefreshFilePath, and GetTimeStringFileName:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105px"><a href="CRefreshFile.html#CRefreshFile::SetRefreshFilePath">bool</a></td>
+            <td class="codeT" width="500px">
+                <a href="CRefreshFile.html#CRefreshFile::SetRefreshFilePath">
+                    SetRefreshFilePath( const CString& inFilePath, bool inAppendTimestring = false );
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="105px"><a href="CRefreshFile.html#CRefreshFile::SetRefreshFileBaseName">void</a></td>
+            <td class="codeT" width="500px">
+                <a href="CRefreshFile.html#CRefreshFile::SetRefreshFileBaseName">
+                    SetRefreshFileBaseName( const CString& strFileBaseName );
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="105px">
+                <a href="CRefreshFile.html#CRefreshFile::GetTimeStringFileName">
+                    static CString
+                </a>
+            </td>
+            <td class="codeT" width="500px">
+                <a href="CRefreshFile.html#CRefreshFile::GetTimeStringFileName">
+                    GetTimeStringFileName( bool inRandomizeMilliseconds );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        <b>SetRefreshFilePath</b> specifies the path that the refresh file will be created in.
+        <b>SetRefreshFileBaseName</b> accepts a string that will be used as the base on which to build a complete file
+        name.  The static method <b>GetTimeStringFileName</b> creates an unique file name based on the current time.
+        The format of the generated name is essentially a familiar convention in packet file naming.  The milliseconds
+        in the name are randomized just to make sure that two files generated at once do not have the same name.
+    </p>
+    <p class="breakBeforeS">Here is an example file path and name with “Outfile” as the base name:</p>
+    <p class="breakNone" style="font:12px Courier New">
+        C:\MyProject\Capture Files\LoadTest2010-03-08T21.03.20.900Z.pkt
+    </p>
+    <br>
+
+    <h3 class="breakNone">SetRefreshSize:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CFileCaptureBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px">
+                <a href="CFileCaptureBuffers.html#xxx::yyy">
+                    SetRefreshSize( const UInt32 inRefreshSize,
+                    const UInt32 inUnits );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        Sets the size that will trigger a file refresh if the size is exceeded.  The second parameter
+        specifies the unit measure that the size refers to.  This can be any one of the following three: kKilobytes,
+        kMegabytes, or kGigabytes.
+    </p>
+    <br>
+
+    <h3 class="breakNone">SetRefreshTimeInterval:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CFileCaptureBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px">
+                <a href="CFileCaptureBuffers.html#xxx::yyy">
+                    SetRefreshTimeInterval( UInt32 inTimeInterval,
+                    UInt32 inTimeUnits );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        Sets the time interval that will trigger a file refresh if the size is exceeded.
+        The second parameter specifies the unit measure that the time interval refers to.  This can be any one
+        of the following: kTimeUnitMilliseconds,kTimeUnitSeconds, kTimeUnitMinutes,	kTimeUnitHours, kTimeUnitDays.
+    </p>
+    <br>
+
+    <h3 class="breakNone">Activate and Deactivate:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CFileCaptureBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px"><a href="CFileCaptureBuffers.html#xxx::yyy">Activate();</a></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="105x"><a href="CFileCaptureBuffers.html#xxx::yyy">void </a></td>
+            <td class="codeT" width="500px"><a href="CFileCaptureBuffers.html#xxx::yyy">Deactivate();</a></td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        Activate sets the packet receiving apparatus in motion, and deactivate turns it
+        off.   The file capture buffer will not accept packets until Activate has been called, and will stop accepting
+        packets after Deactivate is invoked.  Activate should not be called until the file naming and triggering
+        methods have already been called.  Deactivate will also trigger a flush to disk of any packets not yet written.
+    </p>
+    <br>
+
+    <h3 class="breakNone">WritePacket:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CFileCaptureBuffers.html#xxx::yyy">void</a></td>
+            <td class="codeT" width="500px">
+                <a href="CFileCaptureBuffers.html#xxx::yyy">
+                    WritePacket( CPacket& inPacket );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        Same as CCaptureBuffer WritePacket method except that it implements file refresh checking.
+    </p>
+    <br>
+
+    <h3 class="breakNone">Refresh, RefreshIfTimeExpired, and CheckRefresh:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CPacketBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px">
+                <a href="CPacketBuffers.html#xxx::yyy">
+                    Refresh( bool bWriteIfEmpty = false );
+                </a>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="105x"><a href="CPacketBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px"><a href="CPacketBuffers.html#xxx::yyy">RefreshIfTimeExpired( bool inWriteIfEmpty = true );</a></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="105x"><a href="CPacketBuffers.html#xxx::yyy">bool </a></td>
+            <td class="codeT" width="500px">
+                <a href="CPacketBuffers.html#xxx::yyy">
+                    CheckRefresh( const CPacket& inPacket );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        <b>Refresh</b> is the method that explicitly causes the flushing to disk and closing the current
+        capture file so that a new file will be created.  <b>RefreshIfTimeExpired</b> does as its name implies: it triggers a
+        refresh if the specified time interval has elapsed.  <b>CheckRefresh</b> covers the whole thing as it tests for file size
+        maximum and then time expired.  If necessary it then calls Refresh.
+    </p>
+    <p class="breakBeforeS" style="font-style:italic">
+        Note, however, that none of the above three functions typically needs
+        to be explicitly called by the user code called because the CFileCaptureBuffer implementation of WritePacket
+        calls CheckRefresh before the current packet is written to disk.  Then, at end of the process, Deactivate causes a
+        final flush to disk by calling Refresh.
+    </p>
+    <br>
+
+    <h6 class="breakAfterS" style="margin-top:4px">CPacketArray Methods</h6>
+    <p class="breakAfterL">
+        CPacketArray derives from CAtlArray, so the default functions such as “GetAt” apply.  The methods
+        that have been added in order to extend the functionality are clearly implicit in the function names.  AddPacket
+        adds packets to the end of the array, InsertPacket adds a packet at a position (index), ReplacePacket replaces the
+        packet at a position, RemovePacket removes the packet at a position , and GetPacket returns a CPacket from the
+        specified position.
+    </p>
+
+    <h3 class="breakNone">LoadFromCaptureBuffer:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CPacketBuffers.html#xxx::yyy">bool</a></td>
+            <td class="codeT" width="500px">
+                <a href="CPacketBuffers.html#xxx::yyy">
+                    LoadFromCaptureBuffer( CCaptureBuffer& inPacketBuffer, bool bDetach = false );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        This function builds a new packet array composed of the entire contents of a capture buffer.
+        Note that the first argument can refer either to a CCaptureBuffer object or to a CFileCaptureBuffer object.  The
+        function will remove any existing contents of the packet array before loading the packets.
+    </p>
+    <br>
+
+    <h3 class="breakNone">Copy:</h3>
+    <table cellspacing="0" cellpadding="0">
+        <tr>
+            <td class="codeT" width="105x"><a href="CPacketBuffers.html#xxx::yyy">CPacketArray&</a></td>
+            <td class="codeT" width="500px">
+                <a href="CPacketBuffers.html#xxx::yyy">
+                    Copy( const CPacketArray& inOther, bool bDetach = false );
+                </a>
+            </td>
+        </tr>
+    </table>
+    <p class="breakBeforeS">
+        The Copy function copies an entire packet array from an input array.  Any existing packets in
+        the destination (calling) array are removed prior to copying.
+    </p>
+    <br>
+
+    <h3 class="breakAfterS">The Detach Parameter</h3>
+    <p class="breakAfterS">
+        A number of the packet array functions have a parameter called “bDetach”.  bDetach is always a default
+        parameter with the default value of “false”.  If a given function is invoked with a bDetach argument of “true”,
+        then the CPacket being passed into or out of the function will be guaranteed to be detached.  What this really means
+        is that if the CPacket is attached then the detach method will be invoked.  However, if the packet is already
+        detached then there will be no need for this, so the Detach method will not be called.
+    </p>
+    <p class="breakAfterL">
+        The other clear implication is that if the bDetach argument is not called (or it is called
+        explicitly with a value of false), then the CPacket will keep its current state, either attached or detached.
+        Since “attached” and “detached” are packet specific, it is possible that a packet array will have all attached
+        packets, all detached packets, or mixed attached and detached.
+    </p>
+
+    <h6 class="breakAfterS" style="margin-top:15px">Example Code</h6>
+
+    <h3 class="breakNone">Sample Code in Engine Context File Generated by the Wizard</h3>
+    <p class="breakNone">
+        If “Include sample code” was selected on the initial wizard screen then some very informative
+        code samples pertaining to capture buffers, file capture buffers, and packet arrays is included.  However, to activate
+        this code you must include a macro that has been commented out.  Toward the top of the engine context header file
+        C&lt;<i>plugin name</i>&gt;EngineContext.h) the following line needs to be uncommented before compiling:
+    </p>
+    <p class="breakAfterL" style="font:12px Courier New;color:green">
+        //#define EXAMPLE_FILECAPTUREBUFFER
+    </p>
+
+    <ol class="breakAfterL">
+        <li class="breakAfterS">
+            The example code demonstrates how a sample capture file can be specified along with refresh
+            triggering criteria.  Whenever the OnProcessPacket method receives a CPacket this packet is written into a file
+            capture buffer.
+        </li>
+        <li>
+            The <b>ExampleBufferOperations</b> function shows a number of ways that a packet can be put into and taken out of
+            capture buffers, file capture buffers, and packet arrays.  There are ASSERTs to demonstrate that, for example,
+            a copy has resulted in an identical packet or that the attached or detached state is as expected.
+        </li>
+    </ol>
+
+    <h3 class="breakNone">Example Code To Demonstrate How “Attach” and “Detach” Are Involved</h3>
+
+    <p class="codeG">CFileCaptureBuffer MyFileBuffer;</p>
+    <p style="font:14px Courier New; margin-left:20px">...</p>
+    <p class="codeG">// Load packets into MyFileBuffer – see example code in the wizard</p>
+    <p style="font:14px Courier New; margin-left:20px">...</p>
+    <p class="codeG">CPacketArray MyPacketArray1;</p>
+    <br>
+    <p class="codeG" style="margin-bottom:2px">bool bResult = MyPacketArray1.LoadFromCaptureBuffer( MyFileBuffer, true );</p>
+    <p class="breakAfterL" style="margin-left:5px">
+        This results in a packet array with all detached packets.  Each packet in the array now owns
+        its data.  However, this is via a shared data pointer, so any further “detaching” of the data will only increment
+        the data pointer’s reference count.
+    </p>
+
+    <p class="codeG">
+        CPacket	MyPacket1 = MyPacketArray1.GetPacket( 3 )&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp;&nbsp; // Attached result
+        <br>
+        CPacket	MyPacket2 = MyPacketArray1.GetPacket( 3, true );&nbsp;&nbsp;&nbsp;&nbsp;// Detached result
+        <br>
+        CPacket	MyPacket3 = MyPacketArray2.GetPacket( 3 );&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        &nbsp; // Detached result
+        <br>
+        CPacket	MyPacket4 = MyPacketArray2.GetPacket( 3, true );&nbsp;&nbsp;&nbsp;&nbsp;// Detached result
+        <br>
+    </p>
+</body>
+</html>

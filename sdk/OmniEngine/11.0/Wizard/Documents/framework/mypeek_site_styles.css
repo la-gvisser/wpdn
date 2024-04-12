@@ -1,0 +1,260 @@
+#main { position:relative; width:980px; margin:auto; }
+
+/* element */
+body {height:100%; padding:0px; margin:0px 0px 0px 0px; font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#424242;}
+td {font-size:12px;}
+div.callOut {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; background-color:#f7f7f7; background-image:url(/images/CallOut_background.png); background-position:top; background-repeat:repeat-x; text-decoration:none; padding:19px 14px 15px 14px; margin:15px 0px 15px 0px;}
+div.callOutMiniStore {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; background-color:#ebf3f5;  border: 1px #cae4ea solid; text-decoration:none; margin:5px 5px 5px 5px;}
+.boldLink {font:12px "Trebuchet MS", Helvetica, Arial, sans-serif; color:#4d92a8; font-style:italic; font-weight:bold; }
+
+/* links */
+a:link {color:#4d92a8; text-decoration:none; font-family:Arial, Helvetica, sans-serif;}
+a:Visited {color:#4d92a8; text-decoration:none; font-family:Arial, Helvetica, sans-serif;}
+a:Hover {color:#4c4339; text-decoration:underline;}
+a.leftNavLink { font:13px Arial, Helvetica, sans-serif; font-weight:bold; color:#4d92a8; text-decoration:none; }
+
+/* headers */
+h1 {font:18px Arial, Helvetica, sans-serif; font-weight:bold; color:#5c5c5c; line-height: 1em; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+h1.printable{font:25px Arial, Helvetica, sans-serif; font-weight:bold; color:#000000; padding-left:0px;}
+h2 {font:14px "Trebuchet MS", Helvetica, Arial, sans-serif; font-weight:bold; color:#004961; text-decoration:none; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+h3 {font:12px Arial, Helvetica, sans-serif; font-weight:bold; color:#004961; text-decoration:none; padding:-8px 0px 0px 0px; margin:0px 0px 0px 0px;}
+h4 {font:12px Arial, Helvetica, sans-serif; font-weight:bold; color:#004961; text-decoration:none; padding:-8px 0px 0px 0px; margin:0px 0px 0px 0px;}
+h5 {font:13px "Trebuchet MS", Helvetica, Arial, sans-serif; font-weight:bold; color:#7E253B; text-decoration:none; padding:-8px 0px 0px 0px; margin:0px 0px 0px 0px;}
+h6 {font:15px "Trebuchet MS", Helvetica, Arial, sans-serif; font-weight:bold; color:#7E253B; text-decoration:none; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+
+/* navigation menus */
+.pull-down-item {padding:5px 10px 5px 10px; color:#5c5c5c; font:12px Arial, Helvetica, sans-serif;}
+.leftNav {font:13px Arial, Helvetica, sans-serif; font-weight:normal; color:#848484; text-align:left; padding:7px 10px 7px 5px; cursor:pointer;}
+.leftNavOn {font:13px Arial, Helvetica, sans-serif; font-weight:bold; color:#4d92a8;  text-align:left; padding:7px 8px 7px 5px; cursor:pointer;}
+.leftNavWSubsOn {font:13px Arial, Helvetica, sans-serif; font-weight:bold; color:#4d92a8;  text-align:left; padding:7px 8px 7px 5px; cursor:pointer; background-image:url(/images/sub_nav/left_nav_sub_box_top_shadow.png); background-repeat:no-repeat; background-position:right top;}
+.leftNavSub {font:12px Arial, Helvetica, sans-serif; color:#848484; line-height:12px; margin:11px 0px 0px 9px; text-align:left; cursor:pointer;}
+.leftNavSubOn {font:12px Arial, Helvetica, sans-serif; color:#4d92a8; line-height:12px; margin:11px 0px 0px 9px; text-decoration:underline; cursor:pointer;}
+.leftNavSubWTertOn {font:12px Arial, Helvetica, sans-serif; line-height:12px; margin:11px 0px 0px 9px; cursor:pointer;}
+.leftNavTert {font:12px Arial, Helvetica, sans-serif; color:#848484; line-height:12px; margin:11px 0px 0px 9px; text-align:left; cursor:pointer;}
+.leftNavTertOn {font:12px Arial, Helvetica, sans-serif; color:#4d92a8; line-height:12px; margin:11px 0px 0px 9px; text-decoration:underline; cursor:pointer;}
+.leftNavSubBottom {background-image:url(/images/sub_nav/left_nav_sub_box_bottom_shadow.png); background-repeat:no-repeat; background-position:right bottom;}
+
+/* home page slide show definitions */
+div.slideshow {font-family: Arial, Helvetica, sans-serif, Verdana; font-size: 11px; color: #666666; line-height: 15px; position: relative;  width: 190px;  height: 100px; z-index:0;}  
+.slideshow div {position: absolute;  top: 0px; left: 0px;  width: 190px;  height: 100px;  background-color: #ffffff;}
+
+/* forms */
+form {margin:0px;}
+.formText {font:12px Gill Sans, Arial, Helvetica, sans-serif;}
+.rFormLabel {padding:0px 10px 7px 0px;}
+.rFormField {padding:0px 0px 7px 0px;}
+
+/* landing page styles */
+div.navigation { float:left; background-image:url('/images/nav/landing_page_nav_bg.png'); background-repeat:repeat-x; height:32px; color:#5c5c5c; }
+div.navigationOn { float:left; background-color:#4D91A7; height:32px; color:#FFFFFF; }
+div.navItem { font:14px "Trebuchet MS", Helvetica, Arial, sans-serif; font-weight:bold; color:inherit; text-decoration:none; padding-top:7px; text-align:center; background-color:transparent; }
+a.navigation { font:14px "Trebuchet MS", Helvetica, Arial, sans-serif; font-weight:bold; color:inherit; text-decoration:none; }
+div.boxHeader { border-top:1px solid #DFDFDF; border-left:1px solid #DFDFDF; border-right:1px solid #DFDFDF; background-color:#f7f7f7; background-image:url(/images/chart_header_graident_fade.png); background-position:top; background-repeat:repeat-x; margin-bottom:0px; padding:15px 10px 15px 10px; }
+div.boxContents { border-bottom:1px solid #DFDFDF; border-left:1px solid #DFDFDF; border-right:1px solid #DFDFDF; padding:10px; }
+
+/* red alert text */
+.alert { font-family: Verdana, Arial, Helvetica, sans-serif; font-size: 9px; color: #CC0000; text-decoration: none ; line-height: 12px;}
+.warning { font-family: Verdana, Arial, Helvetica, sans-serif; font-weight: bold; font-size: 10px; color: #CC0000; text-decoration: none; line-height: 12px;}
+.formerror { font-family: Verdana, Arial, Helvetica, sans-serif; font-weight: normal; font-size: 11px; color: #ff0000; text-decoration: none; line-height: 30px;}
+
+/* paragraphs */
+p {font:12px Arial, Helvetica, sans-serif; color:#424242; text-decoration:none;}
+p.firstP {font:12px Arial, Helvetica, sans-serif; color:#424242; text-decoration:none; margin-top:4px;}
+p.lastP {font:12px Arial, Helvetica, sans-serif; color:#424242; text-decoration:none; margin-bottom:20px;}
+p.onlyP {font:12px Arial, Helvetica, sans-serif; color:#424242; text-decoration:none; margin:4px 0px 20px 0px;}
+p.codeP {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin-left:20px;}
+
+/* general code modifiers */
+.onlyG {font:12px Arial, Helvetica, sans-serif; color:#424242; text-decoration:none; margin:1px 0px 10px 0px;}
+.codeG {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:1px 0px 3px 25px;}
+.codeBreak {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:11px 0px 0px 25px;}
+.codeI0 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 25px;}
+.codeI1 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 45px;}
+.codeI2 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 65px;}
+.codeI3 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 85px;}
+.codeI4 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 105px;}
+.codeI5 {font:12px "Courier New", Courier, monospace; color:#424242; text-decoration:none; margin:0px 0px 0px 125px;}
+
+
+/* control the before and after breaks for headings, paragraphs, lists, etc. */
+.breakNone{margin-top: 1px; margin-bottom: 1px;}
+.breakBeforeL{margin-top: 13px; margin-bottom: 1px;}
+.breakBeforeS{margin-top: 6px; margin-bottom: 1px;}
+.breakAfterL{margin-top: 1px; margin-bottom: 13px;}
+.breakAfterS{margin-top: 1px; margin-bottom: 6px;}
+.breakBothL{margin-top: 13px; margin-bottom:13px;}
+.breakBothS{margin-top: 6px; margin-bottom: 6px;}
+
+/* special fonts */
+.footer {font:10px Trebuchet MS, Arial, Helvetica, sans-serif; color:#9E9183;}
+.superScript {font:8px Arial, Helvetica, sans-serif;}
+.blueText {font:12px Arial, Helvetica, sans-serif; color:#517292; text-decoration:none;}
+.versionText {font:9px Arial, Helvetica, sans-serif; color:#000000; text-decoration:none;}
+
+/*  tables */
+td.codeT {font:12px Arial, Helvetica, sans-serif; color:#004961; text-decoration:none; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+
+/* mypeek styles */
+
+td.mypeekbreadCrumb {font:12px Arial, Helvetica, sans-serif; color:#517292; text-decoration:none; background-color:#DEE9DD; height:19px; padding:6px 0px 10px 17px; border-top:1px solid #517292;}
+
+.productListing {width:200px; border:1px solid #000000; margin-top:15px; margin-right:13px; background-color:#4d92a8; float:left; }
+.downloadSideBox { background-color:#ffffff; background-image:url(/images/mypeek/download_side_header.png); background-repeat: repeat-x; padding:5px 10px; border:1px solid #BDB4AA; margin-bottom:15px; }
+
+
+/* Search Results styles */
+.searchheading {font:15px Arial, Helvetica, sans-serif; font-weight:bold; color:#25358e; text-decoration:none; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+.summary {font:13px Arial, Helvetica, sans-serif; font-weight:bold; text-decoration:none; padding:0px 0px 0px 0px; margin:0px 0px 0px 0px;}
+.highlight {text-decoration:underline;}
+.result_title {font-size:12px;}
+.searchPages {text-align:right; color:#424242; background-color:#FCF8EF; border:1px solid #424242; padding:7px; margin:10px 0px 15px 0px;}
+
+/* jQuery/interface styels */
+.groupWrapper
+{
+	width: 31%;
+	float: left;
+	margin-right: 2%;
+	margin-left:0px;
+	padding:0px;
+	min-height: 400px;
+}
+.serializer
+{
+	clear: both;
+}
+.groupItem
+{
+	list-style:none;
+	margin-bottom: 20px;
+	border:1px solid #b6b6b6;
+	background-color:#ffffff;
+	text-align:center;
+}
+.groupItem .itemHeader
+{
+	text-align:left;
+	background-image:url(/images/mypeek/download_header_widget.png);
+	background-repeat: no-repeat;
+	color: #000;
+	padding:5px 10px; 
+	cursor: move;
+	position: relative;
+}
+
+.groupItem .itemHeader h2
+{
+	margin-bottom:5px; 
+	font:13px "Trebuchet MS", Helvetica, Arial, sans-serif; 
+	font-weight:bold; 
+	color:#004961; 	
+}
+
+.groupItem .itemHeader a
+{
+	position: absolute;
+	
+	right: 10px;
+	top: 0px;
+	font-weight: normal;
+	font-size: 11px;
+	text-decoration: none;
+}
+
+.groupItem .itemContent
+{
+	width:268px;
+	text-align:left;
+	padding:5px 0px 10px 0px; 
+	margin-bottom:20px;
+	text-align:left;
+}
+.itemContent div
+{
+margin:4px 0px 5px 0px;
+}
+
+.itemSpacer { padding:0px 10px 0px 10px; }
+
+.sortHelper
+{
+	border: 3px dashed #666;
+	width: auto !important;
+}
+.groupWrapper p
+{
+	height: 1px;
+	overflow: hidden;
+	margin: 0;
+	padding: 0;
+}
+
+
+
+/* LEGACY STYLE - REPLACE AS TIME ALLOWS */
+div.callOut {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; background-color:#fefbf6;  border: 1px #c0b7ad solid; text-decoration:none; padding:19px 14px 15px 14px; margin:15px 0px 15px 0px;}
+div.callOutWhite {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F;  background-image:url(/images/solutions/background_gradient.gif); background-position:right top; background-repeat:no-repeat; background-color:#FFFFFF; border: 1px solid #B4BDD1; text-decoration:none;  margin:0px 0px 0px 0px; width: 600px; -moz-box-sizing:border-box; box-sizing:border-box;}
+div.callOutPlainWhite {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; background-position:right top; background-repeat:no-repeat; background-color:#FFFFFF; border-left: 1px solid #B4BDD1; border-right: 1px solid #B4BDD1; text-decoration:none; padding:0px 14px 1px 14px; margin:0px 0px 0px 0px; width: 600px; -moz-box-sizing:border-box; box-sizing:border-box;}
+div.bodyTitleWhite { font: 16px Arial, Helvetica, sans-serif; font-weight:bold; color: #FFFFFF; line-height:37px; text-align:right; border: 1px solid #B4BDD1; vertical-align: middle; background-color:#FFFFFF; background-repeat:repeat-x; height: 37px;}
+
+div.callOutProducts {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; background-color:#CAD6E3; text-decoration:none; padding:5px 14px 5px 14px; margin:0px 0px 0px 0px;}
+div.homeModule {font:12px Arial, Helvetica, sans-serif; color:#4F4F4F; line-height:14px; text-decoration:none; margin-top:7px;}
+
+
+/* for flash videos */
+#cs_flashBody
+{
+	background-color: #ffffff;
+	font: .8em/1.3em verdana,arial,helvetica,sans-serif;
+	text-align: center;
+}
+
+#cs_noexpressUpdate
+{
+	margin: 0 auto;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size: x-small;
+	color: #003300;
+	text-align: left;
+	background-image: url(Rouge_5_FINAL_nofp_bg.gif);
+	background-repeat: no-repeat;
+	width: 210px; 
+	height: 200px;	
+	padding: 40px;
+}
+
+/* Link Defs */
+
+.aiName { font:15px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; font-weight:bold; }
+.aiLink { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; text-decoration:underline; }
+	.aiLink:Hover { color:#F76918; text-decoration:none; }
+.navLink { font:18px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; text-decoration:underline; font-weight:bold; }
+  .navLink:Hover { text-decoration:none; color:#FFFFFF;}
+.navLinkOn { font:18px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; text-decoration:none; font-weight:bold; }
+	.navLinkOn:Hover { color:#FFFFFF;}
+.lnOrangeLink { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#D85E18; text-decoration:underline; }
+	.lnOrangeLink:Hover { color:#444444; text-decoration:none; }
+.lnSubNavOff { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#424242; text-decoration:none; font-weight:normal; }
+	.lnSubNavOff:Hover { text-decoration:underline;}
+.lnSubNavOn { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#b15f01; text-decoration:underline; font-weight:normal; }
+	.lnSubNavOn:Hover { text-decoration:underline;}
+.breadLink { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#4C6F8E; text-decoration:underline; }
+	.breadLink:Hover { color:#D85E18; text-decoration:none; }
+.footer { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#bdb4aa; }
+
+.downloadLink { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#4d92a8; text-decoration:underline; font-weight:normal; }
+	.downloadLink:Hover { text-decoration:underline; color:#4c4339;}
+.rightNavLink { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#D85E18; text-decoration:underline; }
+	rightNavLink:Hover { color:#4C6F8E; text-decoration:none; }
+.usOrangeLink { font:14px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#D85E18; text-decoration:underline; }
+	.usOrangeLink:Hover { color:#444444; text-decoration:none; }
+.commentLink { font:10px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#D85E18; text-decoration:underline; }
+	.commentLink:Hover { color:#444444; text-decoration:none; }
+
+
+/* DIV Defs */
+div.lnNav { padding:4px 4px 4px 25px; font:13px Arial,Verdana,Helvetica,Geneva,sans-serif; color:inherit; }
+div.lnSubNavItem { padding:0px 5px 2px 33px;}
+div.warning { font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FF0000; font-weight:bold; }
+div.footerCopyright { clear:both; float:left; text-align:left; font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; margin:0px 0px 25px 5px; }
+div.footerNavigation { float:right; text-align:right; font:12px Arial,Verdana,Helvetica,Geneva,sans-serif; color:#FFFFFF; margin:0px 20px 25px 5px; }

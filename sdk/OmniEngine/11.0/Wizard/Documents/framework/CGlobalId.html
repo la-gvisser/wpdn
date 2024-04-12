@@ -1,0 +1,429 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CGlobalId Class</title>
+</head>
+<body>
+    <h1>CGlobalId Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP" style="margin-top:20px;">
+        The CGlobalId class holds a Global Unique Identifier (GUID) and
+        facilitates interaction with the underlying data type.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CGlobalId
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::CGlobalId">CGlobalId</a>
+            </td>
+            <td>
+                Constructs a CGlobalId object.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="margin-top:20px; padding-bottom:5px;">
+                <h2>Operators</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                operator ==
+            </td>
+            <td>
+                Return true if the other GUID has the same value.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                operator !=
+            </td>
+            <td>
+                Return true if the other GUID has a different value.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::operator_GUID">operator GUID</a>
+            </td>
+            <td>
+                Returns the object as an GUID.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::operator_HeID">operator HeID</a>
+            </td>
+            <td>
+                Returns the object as an HeID.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2" style="padding-bottom:5px;">
+                <h2>Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::Create">Create</a>
+            </td>
+            <td>
+                Sets the object to a new GUID.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::Format">Format</a>
+            </td>
+            <td>
+                Returns a CPeekString representation of the GUID.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::Invalidate">Invalidate</a>
+            </td>
+            <td>
+                Sets the object to be invalid.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsNotSelfCreated">IsNotSelfCreated</a>
+            </td>
+            <td>
+                Returns true if this object did not generate the GUID.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsNotNull">IsNotNull</a>
+            </td>
+            <td>
+                Returns true if the GUID is not all zero.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsNotValid">IsNotValid</a>
+            </td>
+            <td>
+                Returns true if the GUID is not all one.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsNull">IsNull</a>
+            </td>
+            <td>
+                Returns true if the GUID is all zero.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsSelfCreated">IsSelfCreated</a>
+            </td>
+            <td>
+                Return true if this object created the GUID.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::IsValid">IsValid</a>
+            </td>
+            <td>
+                Returns true if the GUID is all one.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="100px">
+                <a href="#CGlobalId::SetNull">Reset</a>
+            </td>
+            <td>
+                Sets the GUID to all zero.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CGlobalId Public Member Functions</h2>
+    <!-- method details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::CGlobalId"></a>CGlobalId::CGlobalId</h3>
+    <p class="onlyP">
+        Constructs a CGlobalId object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CGlobalId(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>bool</td>
+            <td><em>inCreate</em> = false</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">CGlobalId(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const GUID&</td>
+            <td><em>inGId</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+        <tr>
+            <td colspan="3">CGlobalId(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const HeID&</td>
+            <td><em>inId</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inCreate</em></dt>
+        <dd>If true a new GUID is generated. Otherwise the GUID is set invalid (all ones)</dd>
+    </dl>
+    <dl style="margin-left:25px;">
+        <dt><em>inId</em></dt>
+        <dd>The initial value of the object as either a GUID or an HeID.</dd>
+    </dl>
+
+    <!-- operator_GUID details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::operator_GUID"></a>CGlobalId::operator GUID</h3>
+    <p class="onlyP">
+        Return the object as a GUID.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">GUID operator GUID() const;(</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        The object's GUID.
+    </p>
+
+    <!-- operator_HeID details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::operator_HeID"></a>CGlobalId::operator HeID</h3>
+    <p class="onlyP">
+        Return the object as an HeID.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">HeID operator HeID() const;(</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        The object's GUID as an HeID.
+    </p>
+
+    <!-- IsNotSelfCreated details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::IsNotSelfCreated"></a>CGlobalId::IsNotSelfCreated</h3>
+    <p class="onlyP">
+        Did the object not create the GUID?
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsNotSelfCreated() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the GUID was not generated by this object.
+    </p>
+
+    <!-- IsNotNull details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::IsNotNull"></a>CGlobalId::IsNotNull</h3>
+    <p class="onlyP">
+        Is the object's value not NULL?
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsNotNull() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the GUID is not equal to GUID_NULL (all zeros).
+    </p>
+
+    <!-- IsNull details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::IsNull"></a>CGlobalId::IsNull</h3>
+    <p class="onlyP">
+        Is the object's value NULL?
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsNull() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the GUID is equal to GUID_NULL (all zeros).
+    </p>
+
+    <!-- IsValid details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::IsSelfCreated"></a>CGlobalId::IsSelfCreated</h3>
+    <p class="onlyP">
+        Did this object create the GUID?
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td>bool IsSelfCreated() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if this object created the GUID.
+    </p>
+
+    <!-- IsValid details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::IsValid"></a>CGlobalId::IsValid</h3>
+    <p class="onlyP">
+        Is the object invalid or uninitialzed.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">bool IsValid() const;</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        True if the GUID is not all ones, the unitialized state.
+    </p>
+
+    <!-- Create details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::Create"></a>CGlobalId::Create</h3>
+    <p class="onlyP">
+        Sets the GUID to a new globally unique value.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Create();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The new GUID is the result of the Windows SDK function CoCreateGuid().
+    </p>
+
+    <!-- Reset details-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CGlobalId::Reset"></a>CGlobalId::Reset</h3>
+    <p class="onlyP">
+        Sets the GUID to a GUID_NULL (all zeros).
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Reset();</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The object's GUID is set to GUID_NULL.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

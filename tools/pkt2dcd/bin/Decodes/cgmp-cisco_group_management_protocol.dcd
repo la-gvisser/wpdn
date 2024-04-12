@@ -1,0 +1,21 @@
+// Cisco Group Management Protocol (CGMP)
+
+//notes:
+//	protocol type: 0x2001
+
+void CGMP;
+{
+	LABL(0, 0,		0,		0xb1, "CGMP - Cisco Group Management Protocol\CGMP:");
+	DBIT(4, g[1],	0x90,	0xc2, "Version:");
+	DBIT(4, g[0xa], 0x90,	0xc2, "Type:");
+	CEQU(0, g[0xa], 0x00,	0x14, "Join");
+	CEQU(1, g[0xa], 0x00,	0x14, "Leave");
+	HWRD(0, g[1],	0x90,	0xc2, "Reserved:");
+	DBYT(0, g[2],	0x90,	0xc2, "Count:");
+	if (g[2] > 0)
+	{
+		ETHR(0, g[1],	0x90,	0xc2, "Group Dest Address:");
+		ETHR(0, g[1],	0x90,	0xc2, "Unicast Src Address:");
+		g[2] -= 1;
+	}
+}

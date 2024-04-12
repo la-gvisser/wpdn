@@ -1,0 +1,180 @@
+//------------------------------------------------------------------
+//					GRE ARUBA(IEE802.11) & ARUBA PAPI
+//
+//                           Version: 1.39
+//
+
+str# UDP::Ports_Str;
+8211	| ARUBA::PAPI;
+	
+void ARUBA::MNGT()
+{
+	LABL( 0, 0, 0, 0x14, "IEEE 802.11 Aruba Managment");
+	ARUBA::802_11::Main2;
+}
+
+void ARUBA::802_11::Main2()
+{
+*   802.11 MAC Header
+	LABL 0 0 0 b1 802.11 IEEE 802.11 Aruba Managment;
+	GBIT 4 e;		//rp: store subtype in global e
+*	Store combined Type and Subtype in g6
+	GBIT 6 6;
+	ANDG 3 6;
+	MULG 10 6;
+	GBIT 4 2;
+	ADDG 2 86;
+*	Display Version
+	DBIT 20000002 0 90 c2 Version:;
+*	Display Type and put in g10
+	BBIT 20000002 a 90 c2 Type:;
+	CST# ffffffff a 0 14 802_11::Type;
+*	Display Subtype and put in g11
+	BBIT 20000004 0 90 c2 Subtype:;
+*	Interpret the Subtype
+	CST# ffffffff 6 0 14 802_11::Subtype;
+*	Store Frame Control flags in g7
+*	Display Frame Control flags
+	BBYT 0 7 90 b9 Frame Control Flags:;
+	 CBIT 7 7 0 d4 1... .... Frames Must Be Strictly Ordered;
+	 CLSE 0 0 0 d4 0... .... Non-strict order;
+	 CBIT 6 7 0 d4 .1.. .... Protected Frame;
+	 CLSE 0 0 0 d4 .0.. .... Non-Protected Frame;
+	 CBIT 5 7 0 d4 ..1. .... More Data;
+	 CLSE 0 0 0 d4 ..0. .... No More Data;
+	 CBIT 4 7 0 d4 ...1 .... Power Management - power save mode;
+	 CLSE 0 0 0 d4 ...0 .... Power Management - active mode;
+	 CBIT 3 7 0 d4 .... 1... This is a Re-Transmission;
+	 CLSE 0 0 0 d4 .... 0... This is not a Re-Transmission;
+	 CBIT 2 7 0 d4 .... .1.. More Fragments to Follow;
+	 CLSE 0 0 0 d4 .... .0.. Last or Unfragmented Frame;
+	 CBIT 1 7 0 d4 .... ..1. Exit from the Distribution System;
+	 CLSE 0 0 0 d4 .... ..0. Not an Exit from the Distribution System;
+	 CBIT 0 7 0 d4 .... ...1 To the Distribution System;
+	 CLSE 0 0 0 d4 .... ...0 Not to the Distribution System;
+	LABL 0 0 0 b8;
+*   Note: don't adjust g16 since the packet length
+*     doesn't include the private header bytes
+*	g6 = Combined Type and Subtype
+*	g7 = Frame Control flags
+	DWRD 40000000 0 90 c2 Duration:;
+	LABL 0 0 0 14 Microseconds;
+	ETHR 0 0 90 c2 Destination:;
+	ETHR 0 0 90 c2 Source:;
+	ETHR 0 0 90 c2 BSSID:;
+	802_11::Sequence Control;
+	ARUBA::MNGT2;
+}
+
+void ARUBA::MNGT2( )
+{
+	LABL( 0, 0, 0, 0xb1, "IEEE 802.11 Wireless LAN Managment Frame");
+	DWRD( 0, l[1], 0x90, 0xc2, "Aruba Type:");
+		CST#( 0, l[1], 0, 0x14, ARUBA::MNGT2::TYPE );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+		if(l[1] == 0x05)
+		{
+			D64B( 0, l[2], 0x90, 0xc2, "Aruba Heartbeat Sequence:");
+		}
+		if(l[1] == 0x03)
+		{
+			DWRD( 0, l[2], 0x90, 0xc2, "Aruba MTU:");
+		}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# ARUBA::MNGT2::TYPE;
+ 0x0001	|	Hello;
+ 0x0002	|	Probe;
+ 0x0003	|	MTU;
+ 0x0004	|	Ageout;
+ 0x0005	|	Heartbeat;
+ 0x0006	|	Deauth;
+ 0x0007	|	Disassoc;
+ 0x0008	|	Probe response;
+ 0x0009	|	Tunnel update;
+ 0x000A	|	Laser beam active;
+ 0x000B	|	Client IP;
+ 0x000C	|	Laser beam active v2;
+ 0x000D	|	AP statistics;
+
+ void ARUBA::PAPI( )
+{
+	LABL( 0, 0, 0, 0xb1, "Aruba PAPI - Aruba AP Control Protocol");
+	HWRD( 0, l[1], 0x90, 0xc2, "ID:");
+	DWRD( 0, l[2], 0x90, 0xc2, "Version:");
+	IPLG( 0, l[3], 0x90, 0xc2, "IP Destination:");
+	IPLG( 0, l[4], 0x90, 0xc2, "IP Destination:");
+	DWRD( 0, l[5], 0x90, 0xc2, "Unknown:");
+	DWRD( 0, l[6], 0x90, 0xc2, "Unknown:");
+	DWRD( 0, l[7], 0x90, 0xc2, "Port Source:");
+	DWRD( 0, l[8], 0x90, 0xc2, "Port Destination:");
+	DWRD( 0, l[9], 0x90, 0xc2, "Unknown:");
+	DWRD( 0, l[10], 0x90, 0xc2, "Unknown:");
+	DWRD( 0, l[11], 0x90, 0xc2, "Sequence:");
+	DWRD( 0, l[12], 0x90, 0xc2, "Unknown:");
+	HEX#( 0, 16, 0x90, 0xc2, "Checksum:");
+	LABL( 0, 0, 0, 0xb7, "Aruba PAPI - Aruba DEBUG  DATA:");
+	while( g[16] > 0 )
+	{
+		GBYT( 0, l[13]);
+		CST#( 0, l[13], 0x90, 0xb7, ARUBA::PAPI::DEBUG::Types );
+		DBYT( 0, l[13], 0x90, 0xc2, "Debug Type:");
+		if (l[13] == 0x00)
+		{
+			//CHR#( 0,1, 0x90, 0xc2, "Debug :");
+			DWRD( 0, l[18], 0x90, 0xc2, "Debug text length:");
+			CHR#( 0,l[18], 0x90, 0xc2, "Debug text:");
+		}
+		if (l[13] == 0x01)
+		{
+			BLNG( 0, l[16], 0x90, 0xc2, "Debug 32Bits:");
+			BWRD( 0, l[17], 0x90, 0xc2, "Debug 16Bits:");
+		}
+		if (l[13] == 0x02)
+		{
+			BBYT( 0, l[19], 0x90, 0xc2, "Debug 8Bits:");
+		}
+		if (l[13] == 0x03)
+		{
+			BWRD( 0, l[15], 0x90, 0xc2, "Debug 16Bits:");
+		}
+		if (l[13] == 0x04)
+		{
+			BLNG( 0, l[14], 0x90, 0xc2, "Debug 32Bits:");
+		}
+		if (l[13] == 0x05)
+		{
+			IPLG( 0, l[20], 0x90, 0xc2, "Debug IPv4:");
+		}
+		if (l[13] == 0x07)
+		{
+			BWRD( 0, l[15], 0x90, 0xc2, "Debug 16Bits:");
+		}
+		if (l[13] == 0x08)
+		{
+			//CHR#( 0,1, 0x90, 0xc2, "Debug hf_papi_debug_text:");
+			DWRD( 0, l[20], 0x90, 0xc2, "Debug Bytes length:");
+			HEX#( 0,l[20], 0x90, 0xc2, "Debug Bytes:");
+		}
+		if (l[13] == 0x09)
+		{
+			D64B( 0, l[21], 0x90, 0xc2, "Debug 64Bits:");
+		}		
+	LABL( 0, 0, 0, 0xb8 );
+	}
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+
+}
+
+str# ARUBA::PAPI::DEBUG::Types;
+0x00	|	text;
+0x01	|	48bits;
+0x02	|	8bits;
+0x03	|	16bits;
+0x04	|	32bits;
+0x05	|	ipv4;
+0x07	|	16bits;
+0x08	|	bytes;
+0x09	|	64bits;

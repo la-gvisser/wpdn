@@ -1,0 +1,100 @@
+//FCoE [ FC Encapsulation ]
+//
+//
+//
+
+str# EProto::Names_Str;
+0x8906	| 	Fibre Channel over Ethernet;						
+
+str# Ether::Branching_3_Str;
+0x8906	|	FCoE;												
+
+void FCoE()
+{
+	LABL( 0, 0, 0, 0xb1, "Fibre Channel over Ethernet" );
+	GBYT( 1, l[10] );
+	GWRD( 0 ,l[11] );
+	l[12] = l[11];
+	HWRD( 0, l[12], 0x90, 0xc2, "Header:" );
+	if(l[10] != 0)
+	{
+		l[12] &= 0x3FF0;
+		SHFR( 2, l[12] );
+		l[12] -= 4;
+		DGLB( 0, l[12], 0x90, 0xc2, "Length(calc):" );
+		l[3] = l[11];
+		l[3] &= 0xf;
+		if (l[3] < 8)
+		{
+			l[4] = l[3];
+			ORRG( 0x30, l[4]);
+		}
+		if (l[3] > 8)
+		{
+			l[4] = l[3];
+			ORRG( 0x20, l[4]);
+		}
+		HGLB( 0, l[4], 0x90, 0xc2, "SOF(calc):" );
+		g[0xb] = l[12];
+	}
+	if(l[10] == 0)
+	{
+		//FCIP::SOF;
+		HBIT( 0x4, l[1], 0x90, 0xc2, "Version:" );
+		HBIT( 0x4, l[1], 0x90, 0xc2, "(res.):" );
+		DUMP( 0, 0xc, 0x90, 0xc2, "Reserved:" );
+		HBYT( 0, g[1], 0x90, 0xc2, "SOF:" );
+		
+	FCIP::FC_Content;
+	}
+	if(l[10] != 0)
+	{
+		FCIP::FC_Content;
+	}
+	if (g[16] > 4)
+	{
+		if (g[16] <= 8)
+		{
+			HLNG 0 1 90 c2 CRC:;
+		}
+		if (g[16] > 8)
+		{
+			if (g[0xc] == 0xffff)
+			{
+				FC::Switch_Fabric;
+			}
+			if (g[0xc] == 0xfffc)
+			{
+				FC::Common_Transport;
+			}
+			l[2] = g[16];
+			l[2] -= 8;
+			if (l[2] > 0)
+			{
+				if (l[2] > 4)
+				{
+					l[2] -= 4;
+					if(l[10] != 0)
+					{
+						l[2]+= 7;
+					}
+					DUMP 0 42 90 c2 FC Information:;
+				}
+				if(l[10] == 0)
+				{
+					HLNG 0 1 90 c2 FCP_DL:;
+				}
+				HLNG 0 1 90 c2 CRC:;
+			}
+		}
+	}
+	if(l[10] != 0)
+	{
+		HBYT( 0, g[1], 0x90, 0xc2, "EOF:" );
+	}
+	if(l[10] == 0)
+	{
+		FCIP::EOF;
+	}
+	TRTS;
+}

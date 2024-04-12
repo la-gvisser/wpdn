@@ -1,0 +1,898 @@
+// LLDP Decoder
+
+//------------------------------------------------
+// first extend Ether::Branching_3_Str
+
+str# Ether::Branching_3_Str;
+	0x88CC  | LLDP::Main;
+
+
+//------------------------------------------------
+// g[16] = number of bytes left in packet
+// l[1] = test to see if packet pointer moved
+
+void LLDP::Main()
+{
+	LABL( 0, 0, 0, 0xb1, "Link Layer Discovery Protocol" );
+
+	while (g[16] > 0)
+	{
+		GBIT( 7, l[2] );
+		//GBIT( );
+		// remember num of packets left before calling function
+		l[1] = g[16];
+		TSB#( 0, l[2], 0, 0, LLDP::TLV_Funcs );
+
+		// was the type "end"?
+		if (l[2] == 0) 
+		{ 
+			TRTS; 
+		}
+
+		// test number of packets used during function
+		if (l[2] == g[16])
+		{
+			LABL( 0, 0, 0, 0xb7, "Unknown TLV" );
+			LLDP::TLV_Header();
+			DUMP( 0, l[2], 0x90, 0xc2, "TLV Data:" );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+	}
+}
+
+
+//------------------------------------------------
+// list of high level functions
+
+str# LLDP::TLV_Funcs;
+	0	| LLDP::TLV_End;	
+	1	| LLDP::ChassisID;
+	2	| LLDP::PortID;
+	3	| LLDP::TimeToLive;
+	4	| LLDP::PortDesc;	
+	5	| LLDP::SystemName;
+	6	| LLDP::SystemDesc;
+	7	| LLDP::Capabilities;
+	8	| LLDP::ManagementAddress;
+	127	| LLDP::MediaCapabilities;
+
+
+//------------------------------------------------
+
+void LLDP::TLV_Header()
+{
+	DBIT( 7, g[1], 0x90, 0xc2, "Type:" );
+	DBIT( 9, g[2], 0x90, 0xc2, "Length:" );
+	g[3] = g[16];
+}
+
+//------------------------------------------------
+
+void LLDP::TLV_End()
+{
+	LABL( 0, 0, 0, 0xb7, "End" );
+	LLDP::TLV_Header();
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//------------------------------------------------
+
+void LLDP::ChassisID()
+{
+	LABL( 0, 0, 0, 0xb7, "Chassis ID" );
+	LLDP::TLV_Header();
+	DBYT( 0, l[1], 0x90, 0xc2, "Chassis Subtype:" );
+	
+	if ( l[1] == 5)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "Network Address Family:" );
+		IPLG( 0, 0, 0x90, 0xc2, "IPv4 Address:" );		
+	}
+	if ( l[1] == 4)
+	{
+		TRNG( 0, 0, 0x90, 0xc2, "MAC Address:" );
+	}
+	if ( l[1] == 7)
+	{
+		g[2] -= 1;
+		CHR#( 0, g[2], 0x90, 0xc2, "Chassis ID:" );
+	}
+	if (l[1] != 5)
+	{
+		if (l[1] != 4)
+		{
+			if (l[1] != 7)
+			{
+				g[2] -= 1;
+				HEX#( 0, g[2], 0x90, 0xc2, "Unknown:" );
+			}
+		}
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+//-------------------------------------------------
+// l[2] = port subtype
+
+void LLDP::PortID()
+{
+	LABL( 0, 0, 0, 0xb7, "Port ID" );
+
+	LLDP::TLV_Header();
+	DBYT( 0, l[2], 0x90, 0xc2, "Port ID Subtype:" );
+	CST#( 0, l[2], 0, 0x14, LLDP::PortSubtypes );
+	
+	// Remaining length of TLV.
+	l[3] = g[2];
+	l[3]--;
+
+	if (l[2] == 3)
+	{
+		ETHR( 0, 0, 0x90, 0xc2, "Port ID:" );
+		l[3] -= 6;
+	}
+	
+	if( l[2] == 4 )
+	{
+		if( g[2] == 6 )
+		{
+			IPLG( 0, 0, 0x90, 0xc2, "Port ID:");
+			l[3] -= 4;
+		}
+
+		if( g[2] == 18 )
+		{
+			IPV6( 0, 0, 0x90, 0xc3, "Port ID:" );
+			l[3] -= 16;
+		}
+	}
+
+	if( l[3] > 0 )
+	{
+		CHR#( 0, l[3], 0x90, 0xc2, "Port ID:" );
+	}
+
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//-------------------------------------------------
+
+void LLDP::PortDesc()
+{
+	LABL( 0, 0, 0, 0xb7, "Port Description" );
+	LLDP::TLV_Header();
+	CHR#( 0, g[2], 0x90, 0xc2, "Description:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//-------------------------------------------------
+
+void LLDP::TimeToLive()
+{
+	LABL( 0, 0, 0, 0xb7, "Time To Live" );
+	LLDP::TLV_Header();
+	DWRD( 0, 0, 0x90, 0xc2, "Seconds:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//------------------------------------------------
+
+void LLDP::SystemName()
+{
+	LABL( 0, 0, 0, 0xb7, "System Name" );
+	LLDP::TLV_Header();
+	CHR#( 0, g[2], 0x90, 0xc2, "System Name:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//------------------------------------------------
+
+void LLDP::SystemDesc()
+{
+	LABL( 0, 0, 0, 0xb7, "System Description" );
+	LLDP::TLV_Header();
+	CHR#( 0, g[2], 0x90, 0xc2, "Description:" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//------------------------------------------------
+
+void LLDP::Capabilities()
+{
+	LABL( 0, 0, 0, 0xb7, "Capabilities" );
+	LLDP::TLV_Header();
+	BBIT( 16, l[1], 0x90, 0xc2, "Capabilities:" );
+	DGLB( 0, l[1], 0x24 );
+	BBIT( 16, l[1], 0x90, 0xc2, "Enabled Capabilities:" );
+	DGLB( 0, l[1], 0x24 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+//------------------------------------------------
+
+void LLDP::ManagementAddress()
+{
+	LABL( 0, 0, 0, 0xb7, "Management Address" );
+	LLDP::TLV_Header();
+	DBYT( 0, l[1], 0x90, 0xc2, "Address String Length:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Address SubType:" );
+	if (l[2] == 1) 
+	{ 
+		IPLG( 0, 0, 0x90, 0xc2 "Address:" ); 
+	}
+	if( l[2] == 2 )
+	{
+		IPV6( 0, 0, 0x90, 0xc2 "Address:" ); 
+	}
+	if( l[[2] > 2 )
+	{
+		ETHR( 0, 0, 0x90, 0xc2 "Address:" ); 
+	}
+	DBYT( 0, 0, 0x90, 0xc2, "Interface Subtype:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Interface Number:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "OID String Length:" );
+	if (l[1] != 0)
+	{
+	g[2] = l[1];
+	LABL 0 0 90 c2 OID:;
+	ASN1_OID;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+
+//------------------------------------------------
+//should be Organizationally Specific TLV
+void LLDP::MediaCapabilities()
+{
+	//LABL( 0, 0, 0, 0xb7, "Organizationally Specific - " );
+	GBIT( 7, l[1] );
+	if (l[1] == 127)
+	{
+		INCR( 2 );
+		GBIT( 24, l[4] );  // Organization Unique Code
+		INCR( 3 );
+		l[2] = pb[0];
+		l[6] = 0;
+		if (l[4] == 0x12bb)
+		{
+			CST#( 0, l[2], 0, 0xb7, LLDP::TLV_MediaSubtype_Strs );
+			l[6] = 1;
+		}
+		if (l[4] == 0x80c2)
+		{
+			CST#( 0, l[2], 0, 0xb7, LLDP::TLV_IEEE_8021_Strs );
+			l[6] = 1;
+		}
+		if (l[4] == 0x120f)
+		{
+			CST#( 0, l[2], 0, 0xb7, LLDP::TLV_IEEE_8023_Strs );
+			l[6] = 1;
+		}
+		if (l[4] == 0x0ECF)
+		{
+			CST#( 0, l[2], 0, 0xb7, LLDP::TLV_Profinet_Strs );
+			l[6] = 1;
+		}
+		DECR( 5 );
+		
+		if (l[6] == 0)
+		{
+			LABL( 0, 0, 0, 0xb7, "Unknown Type" );
+		}
+	}
+	if (l[1] != 127)
+	{
+		LABL( 0, 0, 0, 0xb7, "TIA - Unknown Type" );
+	}
+
+	LLDP::TLV_Header();
+	HBIT( 24, l[1], 0x90, 0xc2, "Org. Unique Code:" );
+	CST#( 0, l[1], 0, 0x24,  LLDP::TLV_OrgCode_Str );
+	
+	if (l[1] == 0x12bb)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "Media Subtype:" );
+		CST#( 0, l[2], 0, 0x24, LLDP::TLV_MediaSubtype_Strs );
+		TSB#( 0, l[2], 0, 0, LLDP::TLV_MediaSubtype_Funcs );
+	}
+	
+	if (l[1] == 0x80c2)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "IEEE 802.1 Subtype:" );
+		CST#( 0, l[2], 0, 0x24, LLDP::TLV_IEEE_8021_Strs );
+		TSB#( 0, l[2], 0, 0, LLDP::TLV_IEEE_8021_Funcs );
+	}
+	
+	if (l[1] == 0x120f)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "IEEE 802.3 Subtype:" );
+		CST#( 0, l[2], 0, 0x24, LLDP::TLV_IEEE_8023_Strs );
+		TSB#( 0, l[2], 0, 0, LLDP::TLV_IEEE_8023_Funcs );
+	}
+	if (l[1] == 0x0ECF)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "Profinet Subtype:" );
+			CST#( 0, l[2], 0, 0x24, LLDP::TLV_Profinet_Strs );
+			TSB#( 0, l[2], 0, 0, LLDP::TLV_Profinet_Funcs );
+			//g[2] -= 2;
+	}
+	// Calc how many bytes used.
+	l[1] = g[3];
+	l[1] -= g[16];
+		
+	// Calc how many bytes left.
+	l[2] = g[2];
+	l[2] -= l[1];
+	
+	if( l[2] > 0 )
+	{
+		HEX#( 0, l[2], 0x90, 0xc2, "Unknown Subtype:" );
+	}
+
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# LLDP::TLV_Profinet_Strs;
+	00	|	Reserved;
+	01	|	Profinet - Measured delay values;
+	02	|	Profinet - Port Status;
+	03	|	Profinet - Alias;
+	04	|	Profinet - MRP Port Status;
+	05	|	Profinet - Interface MAC address;
+	06	|	Profinet - PTCP Status;
+
+str# LLDP::TLV_Profinet_Funcs;
+	00	|	Reserved;
+	01	|	LLDP::TLV_Profinet_Measured_delay_values;
+	02	|	LLDP::TLV_Profinet_Port_Status;
+	03	|	LLDP::TLV_Profinet_Alias;
+	04	|	LLDP::TLV_Profinet_MRP_Port_Status;
+	05	|	LLDP::TLV_Profinet_Interface_MAC_address;
+	06	|	LLDP::TLV_Profinet_PTCP_Status;
+
+str# LLDP::TLV_OrgCode_Str;
+	0x0006	|	Xerox;
+	0x000C	|	Cisco (future use);
+	0x005E	|	IANA;
+	0x0081	|	Nortel SONMP;
+	0x00F8	|	Cisco (IOS 9.0 and above?);
+	0x0142	|	Cisco;
+	0x0143	|	Cisco;
+	0x01E8	|	Force10;
+	0x01EC	|	Ericsson Group;
+	0x025A	|	Catena Networks;
+	0x037F 	|	Atheros Communications;
+	0x0AD9 	|	Sony Ericsson Mobile Communications AB;
+	0x0B86 	|	Aruba Networks;
+	0x0E07 	|	Sony Ericsson Mobile Communications AB;	
+	0x80c2  |	IEEE 802.1;
+	0x0ECF  |	Profibus Nutzerorganisation e.V.;
+	0x0FAC  |	Wi-Fi: RSN;
+	0x0FDE 	|	Sony Ericsson Mobile Communications AB;
+	0x1090 	|	Cimetrics, Inc.;
+	0x120F 	|	IEEE 802.3;
+	0x12bb  |	TIA;
+	0x12EE	|	Sony Ericsson Mobile Communications AB;
+	0x15E0	|	Ericsson Mobile Platforms;
+	0x1620	|	Sony Ericsson Mobile Communications AB;
+	0x16B8	|	Sony Ericsson Mobile Communications AB;
+	0x1813	|	Sony Ericsson Mobile Communications AB;
+	0x1958	|	Bluetooth SIG;
+	0x1963	|	Sony Ericsson Mobile Communications AB;
+	0x1B21	|	Data Center Bridging Capabilities Exchange Protocol;
+	0x1B67	|	Cisco/Ubiquisys;
+	0x1B3F	|	IEEE 802.1 Qbg;
+	0x1F32	|	Nintendo;
+	0x20F6	|	Turbocell;
+	0x4096	|	Cisco Wireless (Aironet);
+	0x5043	|	Marvell Semiconductor;
+	0x50F2	|	Wi-Fi: WPA / WME;
+	0x8037	|	Ericsson Group;
+	0x904C	|	Wi-Fi: 802.11 Pre-N;
+	0xA03E	|	ATM Forum;
+	0xE02B	|	Extreme EDP/ESRP;
+	0xE02F	|	DOCSIS spanning tree BPDU;
+	0xE052	|	Foundry;
+	
+str# LLDP::TLV_MediaSubtype_Funcs;
+	1  | LLDP::MediaSubtype::Capabilities;
+	2  | LLDP::MediaSubtype::NetworkPolicy;
+	3  | LLDP::MediaSubtype::LocationIdentification;
+	4  | LLDP::MediaSubtype::ExtendedPower;
+	5  | LLDP::MediaSubtype::InventoryHardware;
+	7  | LLDP::MediaSubtype::InventorySoftware;
+	9  | LLDP::MediaSubtype::InventoryManufacturer;
+	10 | LLDP::MediaSubtype::InventoryModelName;
+	11 | LLDP::MediaSubtype::AssetID;
+
+str# LLDP::TLV_MediaSubtype_Strs;
+	1	|	TIA - Capabilities;
+	2	|	TIA - Network Policy;
+	3	|	TIA - Location Identification;
+	4	|	TIA - Extended Power-via-MDI;
+	5	|	TIA - Inventory - Hardware;
+	6	|	TIA - Inventory - Firmware Revision;
+	7	|	TIA - Inventory - Software;
+	8	|	TIA - Inventory - Serial Number;
+	9	|	TIA - Inventory - Manufacturer;
+	10	|	TIA - Inventory - Model Name;
+	11	|	TIA - Inventory - Asset ID;
+
+str# LLDP::TLV_IEEE_8021_Funcs;
+	1	|	LLDP::IEEESubtype::PortVlanId;
+	2	|	LLDP::IEEESubtype::PortAndProtocolVlanId;
+	3	|	LLDP::IEEESubtype::VlanName;
+	4	|	LLDP::IEEESubtype::ProtocolIdentity;
+
+str# LLDP::TLV_IEEE_8021_Strs;
+	1	|	IEEE 802.1 - Port VLAN ID;
+	2	|	IEEE 802.1 - Port and Protocol VLAN ID;
+	3	|	IEEE 802.1 - VLAN Name;
+	4	|	IEEE 802.1 - Protocol Identity;
+	5	|	IEEE 802.1 - VID Usage Digest;
+	6	|	IEEE 802.1 - Management VID;
+	7	|	IEEE 802.1 - Link Aggregation;
+	8	|	IEEE 802.1 - Congestion Notification;
+	9	|	IEEE 802.1 - ETS Configuration TLV;
+	10	|	IEEE 802.1 - ETS Recommendation TLV;
+	11	|	IEEE 802.1 - Priority-based Flow Control Configuration TLV;
+	12	|	IEEE 802.1 - Application Priority TLV;
+	13	|	IEEE 802.1 - EVB TLV;
+	14	|	IEEE 802.1 - CDCP TLV;
+	15	|	IEEE 802.1 - Port extension TLV;
+
+str# LLDP::TLV_IEEE_8023_Funcs;
+	1	|	LLDP::IEEESubtype::ConfigStatus;
+	2	|	LLDP::IEEESubtype::PowerViaMDI;
+	3	|	LLDP::IEEESubtype::LinkAggregation;
+	4	|	LLDP::IEEESubtype::MaximumFrameSize;
+	
+str# LLDP::TLV_IEEE_8023_Strs;
+	1  | IEEE 802.3 - MAC/PHY Configuration/Status;
+	2  | IEEE 802.3 - Power via MDI;
+	3  | IEEE 802.3 - Link Aggregation;
+	4  | IEEE 802.3 - Maximum Frame Size;
+	
+void LLDP::MediaSubtype::Capabilities()
+{
+	HWRD( 0, l[3], 0x90, 0xc9, "Capabilities:" );
+	CBIT( 0, l[3], 0, 0xd4, ".... .... .... ...1 = LLDP-MED Capabilities" );
+	CBIT( 1, l[3], 0, 0xd4, ".... .... .... ..1. = Network Policy" );
+	CBIT( 2, l[3], 0, 0xd4, ".... .... .... .1.. = Location Identification" );
+	CBIT( 5, l[3], 0, 0xd4, ".... .... ..1. .... = Inventory" );
+	LABL( 0, 0, 0, 0xb8 );
+	DBYT( 0, l[4], 0x90, 0xc2, "Class Type:" );
+	CST#( 0, l[4], 0, 0x24, LLDP::ClassType );
+}
+
+str# LLDP::ClassType;
+	4 | Network Connectivity;
+
+//------------------------------------------------
+
+void LLDP::MediaSubtype::InventoryHardware()
+{
+	// calc how many bytes used
+	l[1] = g[3];
+	l[1] -= g[16];
+	
+	// calc how many bytes left
+	l[2] = g[2];
+	l[2] -= l[1];
+	
+	CHR#( 0, l[2], 0x90, 0xc2, "Hardware Rev:" );
+}
+
+//------------------------------------------------
+
+void LLDP::MediaSubtype::InventorySoftware()
+{
+	// calc how many bytes used
+	l[1] = g[3];
+	l[1] -= g[16];
+	
+	// calc how many bytes left
+	l[2] = g[2];
+	l[2] -= l[1];
+	
+	CHR#( 0, l[2], 0x90, 0xc2, "Software Rev:" );
+}
+
+//------------------------------------------------
+
+void LLDP::MediaSubtype::InventoryManufacturer()
+{
+	// calc how many bytes used
+	l[1] = g[3];
+	l[1] -= g[16];
+	
+	// calc how many bytes left
+	l[2] = g[2];
+	l[2] -= l[1];
+	
+	CHR#( 0, l[2], 0x90, 0xc2, "Manufacturer:" );
+}
+
+//------------------------------------------------
+
+void LLDP::MediaSubtype::InventoryModelName()
+{
+	// calc how many bytes used
+	l[1] = g[3];
+	l[1] -= g[16];
+	
+	// calc how many bytes left
+	l[2] = g[2];
+	l[2] -= l[1];
+	
+	CHR#( 0, l[2], 0x90, 0xc2, "Model Name:" );
+}
+
+//------------------------------------------------
+
+void LLDP::MediaSubtype::ExtendedPower()
+{
+	DBIT( 2, l[1], 0x90, 0xc2, "Power Type:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::ExtendedPowerType );
+	DBIT( 2, l[1], 0x90, 0xc2, "Power Source:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::ExtendedPowerSource );
+	DBIT( 4, l[1], 0x90, 0xc2, "Power Priority:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::ExtendedPowerPriority );
+	DWRD( 0, 0, 0x90, 0xc2, "Power Value:" );
+}
+
+//------------------------------------------------
+
+str# LLDP::ExtendedPowerType;
+	1 | PD Device;
+
+str# LLDP::ExtendedPowerSource;
+	0 | Unknown;
+
+str# LLDP::ExtendedPowerPriority;
+	1 | Critical;
+
+//------------------------------------------------
+	
+void LLDP::MediaSubtype::NetworkPolicy()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Application Type:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::MediaSubtype::ApplicationType );
+	
+	//HWRD( 0, l[3], 0x90, 0xc2, "Capabilities:" );
+	DBIT( 1, l[1], 0x05 );
+	CBIT( 0, l[1], 0, 0xd4, "1... .... .... .... = Policy: Unknown" );
+	CLSE( 0,    0, 0, 0xd4, "0... .... .... .... = Policy: Defined" );
+	DBIT( 1, l[1], 0x05 );
+	CBIT( 0, l[1], 0, 0xd4, ".1.. .... .... .... = Tagged: Yes" );
+	CLSE( 0,    0, 0, 0xd4, ".0.. .... .... .... = Tagged: No" );
+	
+	// skip unknown bit
+	DBIT( 1, l[1], 0x05 );
+
+	DBIT( 12, l[1], 0x90, 0xc2, "VLAN ID:" );
+	DBIT( 3, l[1], 0x90, 0xc2, "L2 Priority:" );
+	DBIT( 6, l[1], 0x90, 0xc2, "DSCP Value:" );
+	
+}
+
+str# LLDP::MediaSubtype::ApplicationType
+	1	| Voice;
+	
+	
+//------------------------------------------------
+	
+void LLDP::MediaSubtype::LocationIdentification()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Format:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::MediaSubtype::ApplicationType );
+	DBYT( 0, l[1], 0x90, 0xc2, "LCI Length:" );
+	l[2] = l[1];
+	l[2] -= 2;
+	INCR( 0, l[2] );
+}
+
+str# LLDP::MediaSubtype::Format;
+	2	| Civic Address LCI;
+
+//------------------------------------------------
+void LLDP::MediaSubtype::AssetID()
+{
+	g[2] -= 4;
+	CHR#( 0, g[2], 0x90, 0xc2, "Asset ID:" );
+}
+//------------------------------------------------
+void LLDP::IEEESubtype::PortVlanId()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Port VLAN ID:" );
+}
+
+void LLDP::IEEESubtype::PortAndProtocolVlanId()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Flags:" );
+	CBIT( 0, l[1], 0, 0xd4, ".... ...1 = Port and Protocol VLAN: Supported" );
+	CLSE( 0,    0, 0, 0xd4, ".... ...0 = Port and Protocol VLAN: Not Supported" );
+	CBIT( 1, l[1], 0, 0xd4, ".... ..1. = Port and Protocol VLAN: Enabled" );
+	CLSE( 0,    0, 0, 0xd4, ".... ..0. = Port and Protocol VLAN: Not Enabled" );
+
+	DWRD( 0, l[1], 0x90, 0xc2, "Port and Protocol VLAN ID:" );
+}
+
+void LLDP::IEEESubtype::VlanName()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "VLAN Identifier:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "VLAN Name Length:" );
+	CHR#( 0, l[1], 0x90, 0xc2, "VLAN Name:" );
+}
+
+void LLDP::IEEESubtype::ProtocolIdentity()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Protocol Identity Length:" );
+	CHR#( 0, l[1], 0x90, 0xc2, "Protocol Identity:" );
+}
+
+//------------------------------------------------
+
+void LLDP::IEEESubtype::ConfigStatus()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Auto-Negotiation Support Status:" );
+	CBIT( 0, l[1], 0, 0xd4, ".... ...1 = Auto-Negotiation: Supported" );
+	CLSE( 0,    0, 0, 0xd4, ".... ...0 = Auto-Negotiation: NOT Supported" );
+	CBIT( 1, l[1], 0, 0xd4, ".... ..1. = Auto-Negotiation: Enabled" );
+	CLSE( 0,    0, 0, 0xd4, ".... ..0. = Auto-Negotiation: NOT Enabled" );
+	LABL( 0, 0, 0, 0xb8 );
+	HWRD( 0,  l[1], 0x90, 0xc9, "PMD Auto-Negotiation Advertised Capability:" );
+	CBIT(  0, l[1], 0, 0xd4, ".... .... .... ...1 = 1000BASE-T (full duplex mode): Capable" );
+	CLSE(  0,    0, 0, 0xd4, ".... .... .... ...0 = 1000BASE-T (full duplex mode): NOT Capable" );
+	CBIT(  1, l[1], 0, 0xd4, ".... .... .... ..1. = 1000BASE-T (half duplex mode): Capable" );
+	CLSE(  1,    0, 0, 0xd4, ".... .... .... ..0. = 1000BASE-T (half duplex mode): NOT Capable" );
+	CBIT(  2, l[1], 0, 0xd4, ".... .... .... .1.. = 1000BASE-X (-LX, -SX, -CX full duplex mode): Capable" );
+	CLSE(  2,    0, 0, 0xd4, ".... .... .... .0.. = 1000BASE-X (-LX, -SX, -CX full duplex mode): NOT Capable" );
+	CBIT(  3, l[1], 0, 0xd4, ".... .... .... 1... = 1000BASE-X (-LX, -SX, -CX half duplex mode): Capable" );
+	CLSE(  3,    0, 0, 0xd4, ".... .... .... 0... = 1000BASE-X (-LX, -SX, -CX half duplex mode): NOT Capable" );
+	CBIT(  4, l[1], 0, 0xd4, ".... .... ...1 .... = Asymmetric and Symmetric PAUSE (for full duplex links): Capable" );
+	CLSE(  4,    0, 0, 0xd4, ".... .... ...0 .... = Asymmetric and Symmetric PAUSE (for full duplex links): NOT Capable" );
+	CBIT(  5, l[1], 0, 0xd4, ".... .... ..1. .... = Symmetric PAUSE (for full duplex links): Capable" );
+	CLSE(  5,    0, 0, 0xd4, ".... .... ..0. .... = Symmetric PAUSE (for full duplex links): NOT Capable" );
+	CBIT(  6, l[1], 0, 0xd4, ".... .... .1.. .... = Asymmetric PAUSE (for full duplex links): Capable" );
+	CLSE(  6,    0, 0, 0xd4, ".... .... .0.. .... = Asymmetric PAUSE (for full duplex links): NOT Capable" );
+	CBIT(  7, l[1], 0, 0xd4, ".... .... 1... .... = PAUSE (for full duplex links): Capable" );
+	CLSE(  7,    0, 0, 0xd4, ".... .... 0... .... = PAUSE (for full duplex links): NOT Capable" );
+	CBIT(  8, l[1], 0, 0xd4, ".... ...1 .... .... = 100BASE-T2 (full duplex mode): Capable" );
+	CLSE(  8,    0, 0, 0xd4, ".... ...0 .... .... = 100BASE-T2 (full duplex mode): NOT Capable" );
+	CBIT(  9, l[1], 0, 0xd4, ".... ..1. .... .... = 100BASE-T2 (half duplex mode): Capable" );
+	CLSE(  9,    0, 0, 0xd4, ".... ..0. .... .... = 100BASE-T2 (half duplex mode): NOT Capable" );
+	CBIT( 10, l[1], 0, 0xd4, ".... .1.. .... .... = 100BASE-TX (full duplex mode): Capable" );
+	CLSE( 10,    0, 0, 0xd4, ".... .0.. .... .... = 100BASE-TX (full duplex mode): NOT Capable" );
+	CBIT( 11, l[1], 0, 0xd4, ".... 1... .... .... = 100BASE-TX (half duplex mode): Capable" );
+	CLSE( 11,    0, 0, 0xd4, ".... 0... .... .... = 100BASE-TX (half duplex mode): NOT Capable" );
+	CBIT( 12, l[1], 0, 0xd4, "...1 .... .... .... = 100BASE-T4: Capable" );
+	CLSE( 12,    0, 0, 0xd4, "...0 .... .... .... = 100BASE-T4: NOT Capable" );
+	CBIT( 13, l[1], 0, 0xd4, "..1. .... .... .... = 10BASE-T (full duplex mode): Capable" );
+	CLSE( 13,    0, 0, 0xd4, "..0. .... .... .... = 10BASE-T (full duplex mode): NOT Capable" );
+	CBIT( 14, l[1], 0, 0xd4, ".1.. .... .... .... = 10BASE-T (half duplex mode): Capable" );
+	CLSE( 14,    0, 0, 0xd4, ".0.. .... .... .... = 10BASE-T (half duplex mode): NOT Capable" );
+	CBIT( 15, l[1], 0, 0xd4, "1... .... .... .... = Other or unknown: Capable" );
+	CLSE( 15,    0, 0, 0xd4, "0... .... .... .... = Other or unknown: NOT Capable" );
+	LABL( 0, 0, 0, 0xb8 );
+	
+	HWRD( 0, l[1], 0x90, 0xc2, "Operational MAU Type:" );
+	CST#( 0, l[1], 0, 0x24, LLDP::MAU_Type );
+}
+
+
+void LLDP::IEEESubtype::PowerViaMDI()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "MDI Power Support:" );
+	CBIT( 0, l[1], 0, 0xd4, ".... ...1 = Port Class: PSE" );
+	CLSE( 0,    0, 0, 0xd4, ".... ...0 = Port Class: PD" );
+	CBIT( 1, l[1], 0, 0xd4, ".... ..1. = PSE MDI Power: Supported" );
+	CLSE( 0,    0, 0, 0xd4, ".... ..0. = PSE MDI Power: Not Supported" );
+	CBIT( 2, l[1], 0, 0xd4, ".... .1.. = PSE MDI Power Enabled: Yes" );
+	CLSE( 0,    0, 0, 0xd4, ".... .0.. = PSE MDI Power Enabled: No" );
+	CBIT( 3, l[1], 0, 0xd4, ".... 1... = PSE Pairs Control Ability: Yes" );
+	CLSE( 0,    0, 0, 0xd4, ".... 0... = PSE Pairs Control Ability: No" );
+	LABL( 0, 0, 0, 0xb8 );
+	DBYT( 0, 0, 0x90, 0xc2, "PSE Power Pair:" );
+	DBYT( 0, l[2], 0x5, 0xc2, "Power Class:" );
+	l[2] -= 1;
+	DGLB( 0, l[2] , 0x90, 0, );
+	LABL( 0, 0, 0, 0x14, "(" );
+	l[2] += 1;
+	DGLB( 0, l[2] , 0x04, 0, );
+	LABL( 0, 0, 0, 0x04, ")" );
+	BBYT( 0, l[3], 0x90, 0xc2, "Power Flags:" );
+	
+	DWRD( 0, l[1], 0x90, 0xc2, "PD Requested Power Value:" );
+	l[2] = l[1];
+	l[3] = l[1];
+	l[1] /= 10;
+	l[2] &= 0x000f;
+	MODG( 10, l[3] );
+	LABL( 0, 0, 0, 0x14, "( " );
+	DGLB( 0, l[1], 0x04, 0 );
+	
+	if (l[3] != 0)
+	{
+		LABL( 0, 0, 0, 0x04, "." );
+		DGLB( 0, l[3], 0x04, 0 );
+		LABL( 0, 0, 0, 0x04, " Watt )" );
+	}
+	if (l[3] == 0)
+	{
+		LABL( 0, 0, 0, 0x04, ".0" );
+		LABL( 0, 0, 0, 0x04, " Watt )" );
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "PSE Allocated Power Value:" );
+	l[2] = l[1];
+	l[3] = l[1];
+	l[1] /= 10;
+	l[2] &= 0x000f;
+	MODG( 10, l[3] );
+	LABL( 0, 0, 0, 0x14, "( " );
+	DGLB( 0, l[1], 0x04, 0 );
+	
+	if (l[3] != 0)
+	{
+		LABL( 0, 0, 0, 0x04, "." );
+		DGLB( 0, l[3], 0x04, 0 );
+		LABL( 0, 0, 0, 0x04, " Watt )" );
+	}
+	if (l[3] == 0)
+	{
+		LABL( 0, 0, 0, 0x04, ".0" );
+		LABL( 0, 0, 0, 0x04, " Watt )" );
+	}
+}
+
+void LLDP::IEEESubtype::LinkAggregation()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Aggregation Status:" );
+	CBIT( 0, l[1], 0, 0xd4, ".... ...1 = Aggregation Capability: Yes" );
+	CLSE( 0,    0, 0, 0xd4, ".... ...0 = Aggregation Capability: No" );
+	CBIT( 0, l[1], 0, 0xd4, ".... ..1. = Aggregation Status: Enabled" );
+	CLSE( 0,    0, 0, 0xd4, ".... ..0. = Aggregation Status: Disabled" );
+	DLNG( 0, 0, 0x90, 0xc2, "Aggregated Port ID:" );
+}
+
+void LLDP::IEEESubtype::MaximumFrameSize()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "Maximum Frame Size:" );
+}
+
+str# LLDP::MAU_Type;
+0x0	|	Other - other or unknown;
+0x1	|	AUI - AUI;
+0x2	|	10base5 - 10BASE-5;
+0x3	|	Foirl - FOIRL;
+0x4	|	10base2 - 10BASE-2;
+0x5	|	10baseT - 10BASE-T duplex mode unknown;
+0x6	|	10baseFP - 10BASE-FP;
+0x7	|	10baseFB - 10BASE-FB;
+0x8	|	10baseFL - 10BASE-FL duplex mode unknown;
+0x9	|	10broad36 - 10BROAD36;
+0xa	|	10baseTHD - 10BASE-T  half duplex mode;
+0xb	|	10baseTFD - 10BASE-T  full duplex mode;
+0xc	|	10baseFLHD - 10BASE-FL half duplex mode;
+0xd	|	10baseFLFD - 10BASE-FL full duplex mode;
+0xe	|	100baseT4 - 100BASE-T4;
+0xf	|	100baseTXHD - 100BASE-TX half duplex mode;
+0x10	|	100BaseTXFD - 2 pair category 5 UTP, full duplex mode;
+0x11	|	100baseFXHD - 100BASE-FX half duplex mode;
+0x12	|	100baseFXFD - 100BASE-FX full duplex mode;
+0x13	|	100baseT2HD - 100BASE-T2 half duplex mode;
+0x14	|	100baseT2FD - 100BASE-T2 full duplex mode;
+0x15	|	1000baseXHD - 1000BASE-X half duplex mode;
+0x16	|	1000baseXFD - 1000BASE-X full duplex mode;
+0x17	|	1000baseLXHD - 1000BASE-LX half duplex mode;
+0x18	|	1000baseLXFD - 1000BASE-LX full duplex mode;
+0x19	|	1000baseSXHD - 1000BASE-SX half duplex mode;
+0x1a	|	1000baseSXFD - 1000BASE-SX full duplex mode;
+0x1b	|	1000baseCXHD - 1000BASE-CX half duplex mode;
+0x1c	|	1000baseCXFD - 1000BASE-CX full duplex mode;
+0x1d	|	1000baseTHD - 1000BASE-T half duplex mode;
+0x1e	|	1000baseTFD - 1000BASE-T full duplex mode;
+0x1f	|	10GbaseX - 10GBASE-X;
+0x20	|	10GbaseLX4 - 10GBASE-LX4;
+0x21	|	10GbaseR - 10GBASE-R;
+0x22	|	10GbaseER - 10GBASE-ER;
+0x23	|	10GbaseLR - 10GBASE-LR;
+0x24	|	10GbaseSR - 10GBASE-SR;
+0x25	|	10GbaseW - 10GBASE-W;
+0x26	|	10GbaseEW - 10GBASE-EW;
+0x27	|	10GbaseLW - 10GBASE-LW;
+0x28	|	10GbaseSW - 10GBASE-SW;
+0x29	|	10GbaseCX4 - 10GBASE-CX4;
+0x2a	|	2BaseTL - 2BASE-TL;
+0x2b	|	10PassTS - 10PASS-TS;
+0x2c	|	100BaseBX10D - 100BASE-BX10D;
+0x2d	|	100BaseBX10U - 100BASE-BX10U;
+0x2e	|	100BaseLX10 - 100BASE-LX10;
+0x2f	|	1000BaseBX10D - 1000BASE-BX10D;
+0x30	|	1000BaseBX10U - 1000BASE-BX10U;
+0x31	|	1000BaseLX10 - 1000BASE-LX10;
+0x32	|	1000BasePX10D - 1000BASE-PX10D;
+0x33	|	1000BasePX10U - 1000BASE-PX10U;
+0x34	|	1000BasePX20D - 1000BASE-PX20D;
+0x35	|	1000BasePX20U - 1000BASE-PX20U;
+0x36	|	10GbaseT - 10GBASE-T;
+0x37	|	10GbaseLRM - 10GBASE-LRM;
+0x38	|	1000baseKX - 1000BASE-KX;
+0x39	|	10GbaseKX4 - 10GBASE-KX4;
+0x3a	|	10GbaseKR - 10GBASE-KR;
+0x3b	|	10G1GbasePRXD1 - 10/1GBASE-PRX-D1;
+0x3c	|	10G1GbasePRXD2 - 10/1GBASE-PRX-D2;
+0x3d	|	10G1GbasePRXD3 - 10/1GBASE-PRX-D3;
+0x3e	|	10G1GbasePRXU1 - 10/1GBASE-PRX-U1;
+0x3f	|	10G1GbasePRXU2 - 10/1GBASE-PRX-U2;
+0x40	|	10G1GbasePRXU3 - 10/1GBASE-PRX-U3;
+0x41	|	10GbasePRD1 - 10GBASE-PR-D1;
+0x42	|	10GbasePRD2 - 10GBASE-PR-D2;
+0x43	|	10GbasePRD3 - 10GBASE-PR-D3;
+0x44	|	10GbasePRU1 - 10GBASE-PR-U1;
+0x45	|	10GbasePRU3 - 10GBASE-PR-U3;
+0x46	|	40GbaseKR4 - 40GBASE-KR4;
+0x47	|	40GbaseCR4 - 40GBASE-CR4;
+0x48	|	40GbaseSR4 - 40GBASE-SR4;
+0x49	|	40GbaseFR - 40GBASE-FR;
+0x50	|	40GbaseLR4 - 40GBASE-LR4;
+0x51	|	100GbaseCR10 - 100GBASE-CR10;
+0x52	|	100GbaseSR10 - 100GBASE-SR10;
+0x53	|	100GbaseLR4 - 100GBASE-LR4;
+0x54	|	100GbaseER4 - 100GBASE-ER4;
+
+
+str# LLDP::PortSubtypes
+	0 | Reserved;
+	1 | Interface Alias;
+	2 | Port component;
+	3 | MAC address;
+	4 | Network address;
+	5 | Interface name;
+	6 | Agent circuit Id;
+	7 | Locally assigned;
+
+	
+void LLDP::TLV_Profinet_Measured_delay_values()
+{
+	//g[2] -= 4;
+	//CHR#( 0 , g[2], 0x90, 0xc2, "Measured Delay Values:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Port RX Delay Local:" );
+	LABL( 0, 0, 0, 0x14, "ns" );
+	DLNG( 0, 0, 0x90, 0xc2, "Port RX Delay Remote:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Port TX Delay Local:" );
+	LABL( 0, 0, 0, 0x14, "ns" );
+	DLNG( 0, 0, 0x90, 0xc2, "Port TX Delay Remote:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Port Cable Delay Local:" );
+}
+void LLDP::TLV_Profinet_Port_Status()
+{
+	HWRD( 0, 0, 0x90, 0xc2, "RTClass2 Port Status:" );
+	BBIT( 2, 0, 0x90, 0xc2, "RTClass3_PS.Reserved:" );
+	BBIT( 1, 0, 0x90, 0xc2, "RTClass3_PS.PreambleLength:" );
+	BBIT( 1, 0, 0x90, 0xc2, "RTClass3_PS.Fragmentation:" );
+	BBIT( 9, 0, 0x90, 0xc2, "RTClass3_PS.Reserved:" );
+	BBIT( 3, 0, 0x90, 0xc2, "RTClass3_PS.Status:" );
+}
+void LLDP::TLV_Profinet_Alias()
+{
+	g[2] -= 4;
+	CHR#( 0 , g[2], 0x90, 0xc2, "Alias:" );
+}
+void LLDP::TLV_Profinet_MRP_Port_Status()
+{
+	g[2] -= 4;
+	CHR#( 0 , g[2], 0x90, 0xc2, "MRP Port Status:" );
+}
+void LLDP::TLV_Profinet_Interface_MAC_address()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "CMMacAdd:" );
+}
+void LLDP::TLV_Profinet_PTCP_Status()
+{
+	g[2] -= 4;
+	CHR#( 0 , g[2], 0x90, 0xc2, "PTCP Status:" );
+}

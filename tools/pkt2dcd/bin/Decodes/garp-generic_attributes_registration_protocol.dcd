@@ -1,0 +1,50 @@
+* GARP - Generic Attributes Registration Protocol;
+
+*notes:
+* this is hooked in through [void 802.1] where if the protocol identifier == 1 then it's garp.
+
+void GARP;
+	LABL 0 0  0 b1 GARP - Generic Attributes Registration Protocol\GARP:;
+	DBYT 0 1 90 c2 Type:;
+	 CEQU 1 1 0 14 Group Membership;
+	 CEQU 2 1 0 14 Service Requirement;
+	MOVE 0 3;
+	TEQU 1 1 0 0 GARP::Group_Membership;
+	TEQU 2 1 0 0 GARP::Service_Requirement;
+	
+void GARP::Group_Membership;
+	TGTE 0 10 0 0 RETURN;
+	ADDG 1 3;
+	GARP::Group_Membership_Helper;
+	SNEQ 5 1;
+	SKIP 1;
+	TRTS;
+	TNXT -GARP::Group_Membership;
+	
+void GARP::Group_Membership_Helper;
+	LABL 0 0  0 b9 Attribute:;
+	DGLB 0 3  0 2;
+	DBYT 0 2 90 c2 Length:;
+	HBYT 0 1 90 c2 Event:;
+	 CST# 0 1 0 14 GARP::Group_Membership_String;
+	SUBG 2 2;
+	HEX# 0 2 90 c2 Value:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# GARP::Group_Membership_String;
+	0 | Leave All;
+	1 | Join Empty;
+	2 | Join In;
+	3 | Leave Empty;
+	4 | Leave In;
+	5 | Empty;
+
+void GARP::Service_Requirement;
+	TGTE 0 10 0 0 RETURN;
+	ADDG 1 3;
+	GARP::Group_Membership_Helper;
+	SNEQ 5 1;
+	SKIP 1;
+	TRTS;
+	TNXT -GARP::Group_Membership;

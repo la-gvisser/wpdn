@@ -1,0 +1,1116 @@
+//---------------------------------------------------------------
+//	SCTP - Stream Control Transmission Protocol
+//	last update 2014-08-22 http://www.iana.org/assignments/sctp-parameters/sctp-parameters.xhtml
+////	globals used:
+//		g[0x1] = Source Port
+//		g[0x2] = Dest. Port
+//		g[0xa] = Chunk Length
+//		g[0xb] = Padding Length
+//		g[0x3] = Chunk Type
+//---------------------------------------------------------------
+
+str# SCTP::Ports::Str;
+	20  |  ftp-data - FTP;
+	21  |  ftp - FTP;
+	22  |  ssh - SSH;
+	80  |  http - HTTP;
+	179  |  bgp - BGP;
+	443  |  https - HTTPS;
+	1021  |  exp1 - RFC3692-style Experiment 1;
+	1022  |  exp2 - RFC3692-style Experiment 2;
+	1167  |  cisco-ipsla - Cisco IP SLAs Control Protocol;
+	1720  |  h323hostcall - H.323 Call Control;
+	2049  |  nfs - Network File System;
+	2225  |  rcip-itu - Resource Connection Initiation Protocol;
+	2904  |  m2ua - M2UA;
+	2905  |  m3ua - M3UA;
+	2944  |  megaco-h248 - Megaco-H.248 text;
+	2945  |  h248-binary - Megaco/H.248 binary;
+	3097  |  itu-bicc-stc - ITU-T Q.1902.1/Q.2150.3;
+	3565  |  m2pa - M2PA;
+	3863  |  asap-sctp - asap sctp;
+	3864  |  asap-sctp-tls - asap-sctp/tls;
+	3868  |  diameter - DIAMETER;
+	4333  |  ahsp - ArrowHead Service Protocol (AHSP);
+	4502  |  a25-fap-fgw - A25 (FAP-FGW);
+	4739  |  ipfix - IP Flow Info Export;
+	4740  |  ipfixs - ipfix protocol over DTLS;
+	5060  |  sip - SIP;
+	5061  |  sips - SIP-TLS;
+	5090  |  car - Candidate AR;
+	5091  |  cxtp - Context Transfer Protocol;
+	5215  |  noteza - NOTEZA Data Safety Service;
+	5445  |  smbdirect - Server Message Block over Remote Direct Memory Access;
+	5672  |  amqp - AMQP;
+	5675  |  v5ua - V5UA application port;
+	5868  |  diameters - Diameter over DTLS/SCTP;
+	5910  |  cm - Context Management;
+	5911  |  cpdlc - Controller Pilot Data Link Communication;
+	5912  |  fis - Flight Information Services;
+	5913  |  ads-c - Automatic Dependent Surveillance;
+	6704  |  frc-hp - ForCES HP (High Priority) channel;
+	6705  |  frc-mp - ForCES MP (Medium Priority) channel;
+	6706  |  frc-lp - ForCES LP (Low priority) channel;
+	6970  |  conductor-mpx - conductor for multiplex;
+	7626  |  simco - SImple Middlebox COnfiguration (SIMCO);
+	8471  |  pim-port - PIM over Reliable Transport;
+	9082  |  lcs-ap - LCS Application Protocol;
+	9084  |  aurora - IBM AURORA Performance Visualizer;
+	9900  |  iua - IUA;
+	9901  |  enrp-sctp - enrp server channel;
+	9902  |  enrp-sctp-tls - enrp/tls server channel;
+	11997  |  wmereceiving - WorldMailExpress;
+	11998  |  wmedistribution - WorldMailExpress;
+	11999  |  wmereporting - WorldMailExpress;
+	14001  |  sua - SUA;
+	20049  |  nfsrdma - Network File System (NFS) over RDMA;
+	25471  |  rna - RNSAP User Adaptation for Iurh;
+	//29118  |  sgsap - SGsAP in 3GPP;
+	29168  |  sbcap - SBcAP in 3GPP;
+	29169  |  iuhsctpassoc - HNBAP and RUA Common Association;
+	36412  |  s1-control - S1-Control Plane (3GPP);
+	36422  |  x2-control - X2-Control Plane (3GPP);
+	36443  |  m2ap - M2 Application Part;
+	36444  |  m3ap - M3 Application Part;
+
+str# SCTP::Ports;
+//9  |  discard;
+	20	| FTP-Data;
+	21	| FTP;
+	22	| SSH;
+	80	| HTTP;
+	179	| BGP;	
+	443	| SSL;
+//1021  |  exp1;
+//1022  |  exp2;
+//1167  |  cisco-ipsla;
+//2049  |  nfs;
+//2225  |  rcip-itu;
+//2904  |  m2ua;
+//2905  |  m3ua;
+	2944 | MegacoText;
+	2945 | MegacoBinary;
+//3097  |  itu-bicc-stc;
+//3565  |  m2pa;
+//3863  |  asap-sctp;
+//3864  |  asap-sctp-tls;
+3868  |  diameter::Match;
+//4333  |  ahsp;
+//4502  |  a25-fap-fgw;
+//4739  |  ipfix;
+//4740  |  ipfixs;
+5060  |  SIP::NMatch2;
+5061  |  SIP-TLS;
+//5090  |  car;
+//5091  |  cxtp;
+//5445  |  smbdirect;
+//5672  |  amqp;
+//5675  |  v5ua;
+//5868  |  diameters;
+//5910  |  cm;
+//5911  |  cpdlc;
+//5912  |  fis;
+//5913  |  ads-c;
+//6704  |  frc-hp;
+//6705  |  frc-mp;
+//6706  |  frc-lp;
+//7626  |  simco;
+//8471  |  pim-port;
+//9082  |  lcs-ap;
+//9084  |  aurora;
+//9900  |  iua;
+//9901  |  enrp-sctp;
+//9902  |  enrp-sctp-tls;
+//11997  |  wmereceiving;
+//11998  |  wmedistribution;
+//11999  |  wmereporting;
+//14001  |  sua;
+//20049  |  nfsrdma;
+//25471  |  rna;
+//29118  |  sgsap;
+//29168  |  sbcap;
+//29169  |  iuhsctpassoc;
+//36412  |  s1-control;
+//36422  |  x2-control;
+//36443  |  m2ap;
+//36444  |  m3ap;
+
+//---------------------------------------------------------------
+//  Header Functions
+//---------------------------------------------------------------
+
+void SCTP()
+{
+	LABL( 0, 0,    0, 0xb1, "SCTP - Stream Control Transmission Protocol\SCTP:" );
+	DWRD( 0, g[1], 0x90, 0xc2, "Source Port Num:" );
+		CST#( 0, g[1], 0, 0x14, SCTP::Ports::Str );
+	DWRD( 0, g[2], 0x90, 0xc2, "Dest Port Num:" );
+		CST#( 0, g[2], 0, 0x14, SCTP::Ports::Str );
+	HLNG( 0, 0, 0x90, 0xc2, "Verification Tag:" );
+	HLNG( 0, 0, 0x90, 0xc2, "Checksum:" );
+	SCTP::Chunk();
+}
+
+void SCTP::Chunk()
+{
+	if (g[16]>=1)
+	{
+		LABL( 0, 0, 0, 0xb7, "Chunk" );
+		HBYT( 0, g[3], 0x90, 0xc2, "Type:" );
+		CST#( 0, g[3], 0, 0x14, "SCTP::Chunk_Types::Names" );
+		TST#( 0, g[3], 0, 0, "SCTP::Chunk_Types::Funcs" );
+		HBYT( 0, 0, 0x90, 0xc2, "Flags:" );
+		DWRD( 0, g[0xa], 0x90, 0xc2, "Length:" );
+		g[0xa] -= 4;
+		DUMP( 0, g[0xa], 0x90, 0xc2, "Value:" );
+		LABL( 0, 0, 0, 0xb8);
+	}
+	if (g[16]== 0)
+	{
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+	}
+}
+
+//---------------------------------------------------------------
+
+str# SCTP::Chunk_Types::Names;
+	0  | Payload Data (DATA);
+	1  | Initiation (INIT);
+	2  | Initiation Acknowledgement (INIT ACK);
+	3  | Selective Acknowledgement (SACK);
+	4  | Heartbeat Request (HEARTBEAT);
+	5  | Heartbeat Acknowledgement (HEARTBEAT ACK);
+	6  | Abort (ABORT);
+	7  | Shutdown (SHUTDOWN);
+	8  | Shutdown Acknowledgement (SHUTDOWN ACK);
+	9  | Operation Error (ERROR);
+	10 | State Cookie (COOKIE ECHO);
+	11 | Cookie Acknowledgement (COOKIE ACK);
+	12 | Reserved for Explicit Congestion Notification Echo (ECNE);
+	13 | Reserved for Congestion Window Reduced (CWR);
+	14 | Shutdown Complete (SHUTDOWN COMPLETE);
+	15 | Authentication Chunk (AUTH);							//[RFC4895]
+	//16-62  | Unassigned ;
+	63 | Reserved for IETF-defined Chunk Extensions;
+	//64-126  | Unassigned ;
+	127 | Reserved for IETF-defined Chunk Extensions;
+	128 | Address Configuration Acknowledgment (ASCONF-ACK);	//[RFC5061]
+	129 | Unassigned;
+	130 | Re-configuration Chunk (RE-CONFIG);					//[RFC6525]
+	131 | Unassigned;
+	132 | Padding Chunk (PAD);									//[RFC4820]
+	//133-190  | Unassigned;
+	191 | Reserved for IETF-defined Chunk Extensions;
+	192 | Forward Cumulative TSN;								//[RFC3758]
+	193 | Address Configuration Change Chunk (ASCONF);			//[RFC5061]
+	//194-254  | Unassigned;
+	255 | Reserved for IETF-defined Chunk Extensions;			//[RFC4960]
+
+
+str# SCTP::Chunk_Types::Funcs;
+	0  | SCTP::Chunk_Type::00;
+	1  | SCTP::Chunk_Type::01; 
+	2  | SCTP::Chunk_Type::02;
+	3  | SCTP::Chunk_Type::03;
+	4  | SCTP::Chunk_Type::04;
+	5  | SCTP::Chunk_Type::05;
+	6  | SCTP::Chunk_Type::06;
+	7  | SCTP::Chunk_Type::07;
+	8  | SCTP::Chunk_Type::08;
+	9  | SCTP::Chunk_Type::09;
+	10 | SCTP::Chunk_Type::10;
+	11 | SCTP::Chunk_Type::11;
+	12 | SCTP::Chunk_Type::12;
+	//13 | SCTP::Chunk_Type::13;
+	14 | SCTP::Chunk_Type::14;
+	15 | SCTP::Chunk_Type::15;
+	128 | SCTP::Chunk_Type::128;	// | Address Configuration Acknowledgment (ASCONF-ACK) ;//[RFC5061]
+	130 | SCTP::Chunk_Type::130;	//Re-configuration Chunk (RE-CONFIG) ;//[RFC6525]
+	//132 | SCTP::Chunk_Type::132;	// Padding Chunk (PAD) ;//[RFC4820]
+	192 | SCTP::Chunk_Type::192;
+	193 | SCTP::Chunk_Type::193;	//Address Configuration Change Chunk (ASCONF) ;//[RFC5061]
+
+
+//---------------------------------------------------------------
+//  Chunk Types Start Here
+//---------------------------------------------------------------
+ 
+void SCTP::Chunk_Type::00()
+{
+	HBYT 0 41 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 CBIT 2 41 0 d4 .... 1... Immediate Chunk;
+	 CLSE 0 0 0 d4 .... 0... Immediate Bit Not Set;
+	 CBIT 2 41 0 d4 .... .1.. Unordered DATA Chunk;
+	 CLSE 0 0 0 d4 .... .0.. Unordered Bit Not Set;
+	 CBIT 1 41 0 d4 .... ..1. First Fragment of a User Message;
+	 CLSE 0 0 0 d4 .... ..0. Not Beginning Fragment;
+	 CBIT 0 41 0 d4 .... ...1 Last Fragment of a User Message;
+	 CLSE 0 0 0 d4 .... ...0 Not Last Fragment;
+	 LABL 0 0 0 c8;
+	DWRD 0 a 90 c2 Length:;
+	DLNG 0 41 90 c2 TSN:;
+	DWRD 0 41 90 c2 Stream Identifier:;
+	DWRD 0 41 90 c2 Stream Seq Num:;
+	DLNG 0 41 90 c2 Payload Protocol ID:;
+	g[0xa] -= 16;
+	CST# 0 41 0 14 SCTP::Payload_Prot_ID;
+	
+	g[0xb] = g[0xa];
+	MODG 4 b;
+	if (g[0xb] == 0)
+	{
+		
+		LABL 0 0 90 14 No Padding;
+	}
+	if (g[0xb] != 0)
+	{
+		l[5] = 4;
+		l[5] -= g[0xb];
+		g[0xb] = l[5];
+	}
+	LABL 0 0 0 b8;
+	TSB# 0 41 90 0 SCTP::Payload_Prot_ID::Func;
+	//DUMP 0 a 90 c2 Payload:;
+	if (g[0xa] <= g[16] )
+	{
+		if (g[0xa] != 0 )
+		{
+			
+			LABL( 0, 0, 0, 0xb8);
+			LABL( 0, 0, 0, 0xb8);
+			LABL( 0, 0,    0, 0xb1, "SCTP - Stream Control Transmission Protocol\SCTP:" );
+
+			SCTP::Chunk; 
+		}
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::01()
+{
+	HBYT 0 41 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	DLNG 0 41 90 c2 Initiate Tag:;
+	DLNG 0 41 90 c2 Adv Rec Window Cred:;
+	DWRD 0 41 90 c2 Num Outbound Streams:;
+	DWRD 0 41 90 c2 Num Inbound Streams:;
+	DLNG 0 41 90 c2 Initial TSN:;
+	g[0xa] -= 20;
+	SCTP::Chunk_Type::HF::Parameters;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::02()
+{
+	HBYT 0 41 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	DLNG 0 41 90 c2 Initiate Tag:;
+	DLNG 0 41 90 c2 Adv Rec Window Cred:;
+	DWRD 0 41 90 c2 Num Outbound Streams:;
+	DWRD 0 41 90 c2 Num Inbound Streams:;
+	DLNG 0 41 90 c2 Initial TSN:;
+	g[0xa] -= 20;
+	SCTP::Chunk_Type::HF::Parameters;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::03()
+{
+	HBYT 0 41 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	DLNG 0 41 90 c2 Cumulative TSN Ack:;
+	DLNG 0 41 90 c2 Adv Rec Window Cred:;
+	DWRD 0 41 90 c2 Num Gap Ack Blocks:;
+	DWRD 0 41 90 c2 Num Duplicate TSNs:;
+	g[0xa] -= 16;
+	LABL 0 0 0 b8;
+	
+	l[1] = pb[0];
+	if (l[1] == 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "Chunk" );
+		DBYT( 0, g[9], 0x90, 0xc2, "Type:" );
+		LABL( 0, 0, 0, 0x14, "Payload Data (DATA)" );
+		SCTP::Chunk_Type::00;
+	}
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::04()
+{
+	HBYT 0 41 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	while (g[0xa] > 0)
+	{
+		LABL 0 0 0 b7 HB Info TLV;
+		DWRD 0 41 90 c2 HB Info Type:;
+		 CEQU 1 41 0 14 Heartbeat Info;
+		DWRD 0 22 90 c2 HB Info Length:;
+		SUBG 22 8a;
+		g[2] -= 4;
+		DUMP 0 22 90 c2 HB Info:;
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::05()
+{
+	HBYT 0 41 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	while (g[0xa] > 0)
+	{
+		LABL 0 0 0 b7 HB Info TLV;
+		DWRD 0 1 90 c2 HB Info Type:;
+		 CEQU 1 1 0 14 Heartbeat Info;
+		DWRD 0 2 90 c2 HB Info Length:;
+		SUBG 2 8a;
+		g[2] -= 4;
+		DUMP 0 2 90 c2 HB Info:;
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::06()
+{
+	HBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 LABL 0 0 0 d4 .... x... Reserved;
+	 LABL 0 0 0 d4 .... .x.. Reserved;
+	 LABL 0 0 0 d4 .... ..x. Reserved;
+	 CBIT 0 1 0 d4 .... ...1 Did Not Have a TCB;
+	 CLSE 0 0 0 d4 .... ...0 Destroyed a TCB;
+	 LABL 0 0 0 c8;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;			
+	if (g[0xa] > 0)
+	{
+		SCTP::Chunk_Type::HF::Error_Causes;
+	}
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::07()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;			
+	DLNG 0 1 90 c2 Cumulative TSN Ack:;
+	g[0xa] -= 4;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::08()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;			
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::09()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;			
+	if (g[0xa] > 0)
+	{
+		SCTP::Chunk_Type::HF::Error_Causes;
+	}
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::10()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;			
+	DUMP 0 a 90 c2 Cookie:;
+	LABL 0 0 0  b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::11()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::12()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::14()
+{
+	HBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 LABL 0 0 0 d4 .... x... Reserved;
+	 LABL 0 0 0 d4 .... .x.. Reserved;
+	 LABL 0 0 0 d4 .... ..x. Reserved;
+	 CBIT 0 1 0 d4 .... ...1 Did Not Have a TCB;
+	 CLSE 0 0 0 d4 .... ...0 Destroyed a TCB;
+	 LABL 0 0 0 c8;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::15()
+{
+	HBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 LABL 0 0 0 d4 .... x... Reserved;
+	 LABL 0 0 0 d4 .... .x.. Reserved;
+	 LABL 0 0 0 d4 .... ..x. Reserved;
+	 LABL 0 0 0 d4 .... ...x Reserved;
+	 LABL 0 0 0 c8;
+	DWRD 0 a 90 c2 Length:;
+	DWRD 0 41 90 c2 Shared Key Identifier:;
+	DWRD 0 42 90 c2 HMAC Identifier:;
+		CST# 0 42 0 14 SCTP::Chunk_Type::15::HMACID;
+		CLSE 0 0 0 14 Reserved;
+	g[0xa] -= 8;
+	DUMP 0 a 90 c2 HMAC:;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+str# SCTP::Chunk_Type::15::HMACID;
+0	|	Reserved;
+1	|	SHA-1;
+2	|	Reserved;
+3	|	SHA-256;
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::128()
+{
+	HBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 LABL 0 0 0 d4 .... x... Reserved;
+	 LABL 0 0 0 d4 .... .x.. Reserved;
+	 LABL 0 0 0 d4 .... ..x. Reserved;
+	 LABL 0 0 0 d4 .... ...x Reserved;
+	 LABL 0 0 0 c8;
+	 DWRD 0 a 90 c2 Length:;
+	 DLNG 0 0 90 c2 Sequence Number:;
+	 g[0xa] -= 8;
+	 if (g[0xa] > 0)
+	 {
+		SCTP::Chunk_Type::HF::Parameters;
+	}
+	TRTS;
+
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::130()
+{
+	HBYT 0 1 90 c9 Flags:;
+	 LABL 0 0 0 d4 x... .... Reserved;
+	 LABL 0 0 0 d4 .x.. .... Reserved;
+	 LABL 0 0 0 d4 ..x. .... Reserved;
+	 LABL 0 0 0 d4 ...x .... Reserved;
+	 LABL 0 0 0 d4 .... x... Reserved;
+	 LABL 0 0 0 d4 .... .x.. Reserved;
+	 LABL 0 0 0 d4 .... ..x. Reserved;
+	 LABL 0 0 0 d4 .... ...x Reserved;
+	 LABL 0 0 0 c8;
+	 DWRD 0 a 90 c2 Length:;
+	 g[0xa] -= 4;
+	 if (g[0xa] > 0)
+	 {
+		SCTP::Chunk_Type::HF::Parameters;
+	}
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::192()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	DLNG 0 0 90 c2 New Cumulative TSN:;
+	g[0xa] -= 4;
+	while (g[0xa] > 0)
+	{
+		DWRD 0 0 90 c2 Stream Num:;
+		DWRD 0 0 90 c2 Stream Seq Num:;
+		g[0xa] -= 4;
+	}
+	TRTS;
+}
+
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::193()
+{
+	HBYT 0 1 90 c2 Flags:;
+	DWRD 0 a 90 c2 Length:;
+	g[0xa] -= 4;
+	DLNG 0 0 90 c2 Sequence Number:;
+	DLNG 0 0 90 c2 Address Parameter:;
+	g[0xa] -= 8;
+	SCTP::Chunk_Type::HF::Parameters;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+//---------------------------------------------------------------
+//  Helper Functions
+//---------------------------------------------------------------
+
+void SCTP::Chunk_Type::HF::Parameters()
+{
+	while (g[0xa] > 0)
+	{
+		TGTE 0 10 0 0 RETURN;
+		g[0xb] = 0;
+		LABL 0 0 0 b7 Init Parameter;
+		DWRD 0 1 90 c2 Type:;
+		g[0x2] = pw[0];		//si: this is the length
+		SUBG 2 8a;
+		CST# 0 1 0 14 SCTP::Chunk_Type::HF::Param::Names;
+		TSB# 0 1 0 0 SCTP::Chunk_Type::HF::Param::Funcs;
+		if (g[0xb] > 0)
+		{
+			DWRD 0 b 90 c2 Length:;
+			g[0xb] -= 4;
+			DUMP 0 b 90 c2 Unknown Parameter:;
+		}
+		LABL 0 0 0 b8;
+	}
+}
+
+str# SCTP::Chunk_Type::HF::Param::Names;
+	 5 | IPv4 Address;
+	 6 | IPv6 Address;
+	 7 | State Cookie;
+	 8 | Unrecognized Parameters;
+	 9 | Cookie Preservative;
+	11 | Host Name Address;
+	12 | Supported Address Types;
+	13 | Outgoing SSN Reset Request Parameter;								//[RFC6525]
+	14 | Incoming SSN Reset Request Parameter;								//[RFC6525]
+	15 | SSN/TSN Reset Request Parameter;									//[RFC6525]
+	16 | Re-configuration Response Parameter;								//[RFC6525]
+	17 | Add Outgoing Streams Request Parameter;							//[RFC6525]
+	18 | Add Incoming Streams Request Parameter;							//[RFC6525]
+	//19-32767  | Unassigned ;
+	32768 | Reserved for ECN Capable (0x8000);
+	32770 | Random (RANDOM);												//[RFC4805]
+	32771 | Chunk List (CHUNKS);										//[RFC4895]
+	32772 | Requested HMAC Algorithm Parameter (HMAC-ALGO);				//[RFC4895]
+	32773 | Padding;
+	32776 | Supported Extensions;										//[RFC5061]
+	//32777-49151  | Unassigned;
+	49152 | Forward-TSN-Supported;
+	49152 | Forward TSN supported;										//[RFC3758]
+	49153 | Add IP Address;												//[RFC5061]
+	49154 | Delete IP Address;											//[RFC5061]
+	49155 | Error Cause Indication;										//[RFC5061]
+	49156 | Set Primary Address;										//[RFC5061]
+	49157 | Success Indication;											//[RFC5061]
+	49158 | Adaptation Layer Indication;								//[RFC5061]
+
+	
+str# SCTP::Chunk_Type::HF::Param::Funcs;
+	 5 | SCTP::Chunk_Type::HF::Param::05;
+	 6 | SCTP::Chunk_Type::HF::Param::06;
+	 7 | SCTP::Chunk_Type::HF::Param::07;
+	 8 | SCTP::Chunk_Type::HF::Param::08;
+	 9 | SCTP::Chunk_Type::HF::Param::09;
+	11 | SCTP::Chunk_Type::HF::Param::11;
+	12 | SCTP::Chunk_Type::HF::Param::12;
+	//13 | SCTP::Chunk_Type::HF::Param::13;
+	//14 | SCTP::Chunk_Type::HF::Param::14;
+	//15 | SCTP::Chunk_Type::HF::Param::15;
+	//16 | SCTP::Chunk_Type::HF::Param::16;
+	//17 | SCTP::Chunk_Type::HF::Param::17;
+	//18 | SCTP::Chunk_Type::HF::Param::18;
+	//32768 | SCTP::Chunk_Type::HF::Param::32768;
+	32770 | SCTP::Chunk_Type::HF::Param::32770;		//(0x8002);
+	32771 | SCTP::Chunk_Type::HF::Param::32771;		//(0x8003);
+	32772 | SCTP::Chunk_Type::HF::Param::32772;		//(0x8004);[RFC4895]
+	//32773 | SCTP::Chunk_Type::HF::Param::32773;
+	32776 | SCTP::Chunk_Type::HF::Param::32771;
+	//32777-49151  | Unassigned;
+	 49152 | SCTP::Chunk_Type::HF::Param::49152;
+	49153 | SCTP::Chunk_Type::HF::Param::49153;
+	49154 | SCTP::Chunk_Type::HF::Param::49154;
+	49155 | SCTP::Chunk_Type::HF::Param::49155;
+	49156 | SCTP::Chunk_Type::HF::Param::49156;
+	49157 | SCTP::Chunk_Type::HF::Param::49157;
+	49158 | SCTP::Chunk_Type::HF::Param::49158;
+
+
+void SCTP::Chunk_Type::HF::Param::05()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	IPLG 0 1 90 c2 IPv4 Address:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::06()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	IPV6 0 1 90 c2 IPv6 Address:;
+	g[0xb] -= 16;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::07()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 Value:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::08()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 Unknown Params:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::09()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DLNG 0 1 90 c2 Suggested Cookie Life-span Incr:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::11()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	CHR# 0 b 90 c2 Host Name:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::12()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	while (g[0xb] > 0)
+	{
+		DWRD 0 1 90 c2 Supported Type:;
+		 CEQU  5 1 0 14 IPv4 Addresses;
+		 CEQU  6 1 0 14 IPv6 Addresses;
+		 CEQU 11 1 0 14 Host Name;
+		g[0xb] -= 2;
+	}
+	TRTS;
+}
+
+//SCTP::Chunk_Type::HF::Param::192						//RFC 3758 //TT11216
+void SCTP::Chunk_Type::HF::Param::192()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DBYT 0 b 90 c2 Type:;
+	DBYT 0 b 90 c2 Flags:;
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 New Cumulative TSN:;
+	while(g[0xb] > 0)
+	{
+		DWRD 0 b 90 c2 Stream-N:;
+		DWRD 0 b 90 c2 Stream Sequence-N:;
+		g[0x0b]-= 4;
+	}
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::32770()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	HEX# 0 b 90 c2 Random Number:;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::32771()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	l[1] = 1;
+	while(g[0xb] > 0)
+	{
+		DBYT 0 42 90 c2 Chunk Type;
+		DGLB 0 41 90 02;
+		LABL 0 0 0 02 :;
+		l[1] += 1;
+		g[0x0b] -= 1;
+	}
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::32772()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	l[1] = 1;
+	while(g[0xb] > 0)
+	{
+		DBYT 0 42 90 c2  HMAC Identifier;
+		DGLB 0 41 90 02;
+		LABL 0 0 0 02 :;
+			CST# 0 42 0 14 SCTP::Chunk_Type::15::HMACID;
+			CLSE 0 0 0 14 Reserved;
+		l[1] += 1;
+		g[0x0b]-= 2;
+	}
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49152()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49154()
+{
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 ASCONF-Request Correlation ID:;
+	g[0xb] -= 8;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49155()
+{
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 ASCONF-Request Correlation ID:;
+	g[0xb] -= 8;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49156()
+{
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 ASCONF-Request Correlation ID:;
+	g[0xb] -= 8;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49157()
+{
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 ASCONF-Response Correlation ID:;
+	g[0xb] -= 8;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Param::49158()
+{
+	DWRD 0 b 90 c2 Length:;
+	DLNG 0 0 90 c2 Adaptation Code point:;
+	g[0xb] -= 8;
+	TRTS;
+}
+//---------------------------------------------------------------
+//----------------------Error_Causes-----------------------------
+
+void SCTP::Chunk_Type::HF::Error_Causes()
+{
+	while (g[0xa] > 0)
+	{
+		TGTE 0 10 0 0 RETURN;
+		g[0xb] = 0;
+		LABL 0 0 0 b7 Error Parameter;
+		DWRD 0 1 90 c2 Cause Code:;
+		g[0x2] = pw[0];		
+		SUBG 2 8a;
+		CST# 0 1 0 14 SCTP::Chunk_Type::HF::Error_Causes::Names;
+		TSB# 0 1 0 0 SCTP::Chunk_Type::HF::Error_Causes::Funcs;
+		if (g[0xb] > 0)
+		{
+			DWRD 0 b 90 c2 Length:;
+			g[0xb] -= 4;
+			DUMP 0 b 90 c2 Unknown Parameter:;
+		}
+		LABL 0 0 0 b8;
+	}
+}
+
+str# SCTP::Chunk_Type::HF::Error_Causes::Names;
+	 1 | Invalid Stream Identifier;
+	 2 | Missing Mandatory Parameter;
+	 3 | Stale Cookie Error;
+	 4 | Out of Resource;
+	 5 | Unresolvable Address;
+	 6 | Unrecognized Chunk Type;
+	 7 | Invalid Mandatory Parameter;
+	 8 | Unrecognized Parameters;
+	 9 | No User Data;
+	10 | Cookie Received While Shutting Down;
+	11 | Restart of an Association with New Addresses;                        //[RFC4960]
+	12 | User Initiated Abort;                        //[RFC4460]
+	13 | Protocol Violation;             							           //[RFC4460]
+	//14-159  | Unassigned ;
+	160 | Request to Delete Last Remaining IP Address;                        //[RFC5061]
+	161 | Operation Refused Due to Resource Shortage;    	                    //[RFC5061]
+	162 | Request to Delete Source IP Address;              			          //[RFC5061]
+	163 | Association Aborted due to illegal ASCONF-ACK;                        //[RFC5061]
+	164 | Request refused - no authorization;                		        //[RFC5061]
+	//165-260  | Unassigned ; 
+	261 | Unsupported HMAC Identifier;                        //[RFC4895]
+
+str# SCTP::Chunk_Type::HF::Error_Causes::Funcs;
+	 1 | SCTP::Chunk_Type::HF::Error_Causes::01;
+	 2 | SCTP::Chunk_Type::HF::Error_Causes::02;
+	 3 | SCTP::Chunk_Type::HF::Error_Causes::03;
+	 4 | SCTP::Chunk_Type::HF::Error_Causes::04;
+	 5 | SCTP::Chunk_Type::HF::Error_Causes::05;
+	 6 | SCTP::Chunk_Type::HF::Error_Causes::06;
+	 7 | SCTP::Chunk_Type::HF::Error_Causes::07;
+	 8 | SCTP::Chunk_Type::HF::Error_Causes::08;
+	 9 | SCTP::Chunk_Type::HF::Error_Causes::09;
+	10 | SCTP::Chunk_Type::HF::Error_Causes::10;
+	11 | SCTP::Chunk_Type::HF::Error_Causes::11;
+	12 | SCTP::Chunk_Type::HF::Error_Causes::12;
+	13 | SCTP::Chunk_Type::HF::Error_Causes::13;
+	160 | SCTP::Chunk_Type::HF::Error_Causes::160;
+	161 | SCTP::Chunk_Type::HF::Error_Causes::161;
+	162 | SCTP::Chunk_Type::HF::Error_Causes::162;
+	163 | SCTP::Chunk_Type::HF::Error_Causes::163;
+	164 | SCTP::Chunk_Type::HF::Error_Causes::164;
+	261 | SCTP::Chunk_Type::HF::Error_Causes::261;
+	
+void SCTP::Chunk_Type::HF::Error_Causes::01()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DWRD 0 1 90 c2 Stream Identifier:;
+	HWRD 0 1 90 c2 Reserved:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::02()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DLNG 0 2 90 c2 Num Missing Params:;
+	g[0xb] -= 2;
+	while (g[2] > 0)
+	{
+		TGTE 0 10 0 0 RETURN;
+		DWRD 0 1 90 c2 Missing Param Type:;
+		g[2] -= 2;
+		g[0xb] -= 2;
+	}
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::03()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DLNG 0 1 90 c2 Meas of Staleness:;
+	LABL 0 0 0 14 microseconds;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::04()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::05()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 Address:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::06()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 Unrecognized Chunk:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::07()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::08()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 Unrecognized Params:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::09()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	DUMP 0 b 90 c2 TSN Value:;
+	g[0xb] = 0;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::10()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::11()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::12()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::13()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::160()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::161()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::162()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::163()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::164()
+{
+	DWRD 0 b 90 c2 Length:;
+	g[0xb] -= 4;
+	TRTS;
+}
+
+void SCTP::Chunk_Type::HF::Error_Causes::261()
+{
+	DWRD 0 b 90 c2 Length:;
+	DWRD 0 41 90 c2 HMAC Identifier:;
+		CST# 0 42 0 14 SCTP::Chunk_Type::15::HMACID;
+		CLSE 0 0 0 14 Reserved;
+	g[0xb] -= 6;
+	TRTS;
+}

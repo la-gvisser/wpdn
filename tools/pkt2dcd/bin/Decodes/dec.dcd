@@ -1,0 +1,1893 @@
+* Decoder version: 5.0.1.0
+
+void DECnet MOP Dump/Load;
+	LABL 0 0 0 b1 DECnet MOP Dump/Load;
+	TNXT -MOP;
+void DECnet MOP Remote Console;
+	LABL 0 0 0 b1 DECnet MOP Remote Console\DECNet MOP:;
+	TNXT -MOP;
+
+void DECnet Phase IV;
+	LABL 0 0 0 b1 DECnet Phase IV;
+	DWRD 40000000 10 a0 c2 Length:;
+	ADDG 2 10;
+	TNXT -After Dlink;
+
+void After Dlink;
+*   get the flag byte without advancing 
+	GBYT 0 1;
+*   if LSB set, control pkt 
+	TBIT 7 1 0 0 Padding;
+*   if LSB set, control pkt 
+	TBIT 0 1 0 0 Control Packet;
+*   if next LSB set, data pkt 
+	TBIT 1 1 0 0 Data Packet;
+	LABL 0 0 0 b1 Unknown DECnet Phase IV Type;
+	DUMP 0 10 a0 c2 DECnet Data Area:;
+
+void Data Packet;
+	LABL 0 0 0 b1 Packet Route Header - ;
+	TBIT 2 1 0 0 Long Data Packet;
+	LABL 0 0 0 31 Short Format;
+	BBYT 0 2 90 c2 Flags:;
+	CBIT 4 2 0 f4 Returning Packet ;
+	CBIT 3 2 0 f4 Return Requested;
+	CLSE 0 0 0 f4 No Return Requested;
+	LABL 0 0 0 f4 SFDP; 
+	DWRD 40000000 0 90 c2 Destination Address:;
+	DWRD 40000000 0 90 c2 Source Address:;
+*   get the next byte without advancing 
+	GBYT 0 2 0 82;
+	TLTE 40 2 0 0 Bad Format;
+	DBYT 0 0 90 c2 Visit Count:;
+	DUMP 0 10 a0 c2 DECnet Data Area:;
+
+void Long Data Packet;
+	LABL 0 0 0 31 Long Format;
+	BBYT 0 2 90 c2 Flags:;
+	CBIT 6 2 0 f4 Discarded ;
+	CBIT 5 2 0 f4 Intra-Ethernet Packet ;
+	CBIT 4 2 0 f4 Returning Packet ;
+	CBIT 3 2 0 f4 Return Requested;
+	CLSE 0 0 0 f4 No Return Requested;
+	LABL 0 0 0 f4 LFDP;
+	DBYT 0 0 90 c2 Dest. Area:;
+	DBYT 0 0 90 c2 Dest. Subarea:;
+	ETHR 0 0 90 c2 Dest. ID:;
+	DBYT 0 0 90 c2 Source Area:;
+	DBYT 0 0 90 c2 Source Subarea:;
+	ETHR 0 0 90 c2 Source ID:;
+	DBYT 0 0 90 c2 Next Level 2 Router:;
+	DBYT 0 0 90 c2 Visit Count:;
+	DBYT 0 0 90 c2 Service Class:;
+	DBYT 0 0 90 c2 Protocol Type:;
+	TNXT -DECnet NSP;
+void Bad Format;
+	DUMP 0 0 a0 c2 Remaining Data in Badly Formatted Packet:;
+void Control Packet;
+	LABL 0 0 0 b1 Routing Layer Control Packet;
+	BBIT 4 0 a0 c2 Reserved:;
+	DBIT 3 2 a0 c2 Control Type:;
+*   yields index into str# 
+	ADDG 1 2;
+*   display indexed string in Types 
+	CST# 0 2 0 14 Control Packet Types;
+	BBIT 1 0 a0 c2 Control Packet Indicator:;
+*   decr count by flag byte 
+*   xfer to indexed string of in Types 
+	TST# 0 2 0 0 Control Packet Types;
+	CLSE 0 0 0 14 Unknown;
+	DUMP 0 10 a0 c2 Data Area:;
+void Initialization;
+	LABL 0 0 0 b1 Initialization Message;
+	DWRD 40000000 0 a0 c2 Source Node:;
+	BBIT 4 0 a0 c2 Unused (must be zero):;
+	BBIT 1 2 a0 c2 Blocking:;
+	CEQU 0 2 0 14 Not Requested;
+	CLSE 0 0 0 14 Requested;
+	BBIT 1 2 a0 c2 Verification Message:;
+	CEQU 0 2 0 14 Not Required;
+	CLSE 0 0 0 14 Required;
+	DBIT 2 2 a0 c2 Node Type:;
+*   yields index into str# 
+	ADDG 1 2;
+*   display indexed string in Types 
+	CST# 0 2 0 14 DECnet Node Types;
+	DWRD 40000000 0 a0 c2 Block Size:;
+	DBYT 0 0 a0 c2 Version Number:;
+	DBYT 0 0 a0 c2 ECO Number:;
+	DBYT 0 0 a0 c2 User ECO Number:;
+	DWRD 40000000 0 a0 c2 Hello Timer:;
+	HBYT 0 1 a0 c2 Reserved Image Count:;
+	DUMP 0 1 a0 c2 Reserved Image Field:;
+void Verification;
+	LABL 0 0 0 b1 Verification Message;
+	DWRD 40000000 0 a0 c2 Source Node:;
+	HBYT 0 1 a0 c2 Function Value Image Count:;
+	DUMP 0 1 a0 c2 Function Value Image Field:;
+void Hello and Test;
+	LABL 0 0 0 b1 Hello and Test Message;
+	DWRD 40000000 0 a0 c2 Source Node:;
+	HBYT 0 1 a0 c2 Test Data Image Count:;
+	DUMP 0 1 a0 c2 Test Data Image Field:;
+void Level 1 Routing;
+	LABL 0 0 0 b1 Level 1 Routing Message;
+	DWRD 40000000 0 a0 c2 Source Node:;
+	HBYT 0 0 a0 c2 Reserved:;
+*   decr count by these two fields byte 
+	TNXT -L1 Segment Loop;
+void L1 Segment Loop;
+	LABL 0 0 0 b1 Segment Information;
+	DWRD 40000000 1 a0 c2 Count of IDs in Segment:;
+	DWRD 40000000 5 a0 c2 Starting ID:;
+*   decr count 
+	TNXT -L1 Seg Loop Continue;
+void L1 Seg Loop Continue;
+	DGLB 0 5 1 b1 Routing Info ID #;
+	CGTE 9 5 1 1  ;
+	CGTE 63 5 1 1  ;
+	CGTE 3e7 5 1 1  ;
+	CGTE 270f 5 1 1  ;
+	ADDG 1 5;
+	GBYT 0 e;
+	INCR 1;
+	GBYT 0 c;
+	INCR 1;
+	MOVE c 8d;
+	DIVG 4 c 0 2;
+	ANDG 1f c 0 2;
+	DGLB 0 c 0 12 Hops:;
+	CGTE 9 c 0 2  ;
+	ANDG 3 d;
+	MULG 100 d;
+	ADDG d 8e;
+	DGLB 0 e 0 12 Cost:;
+*   decr remaining ID count 
+	SUBG 1 1;
+	TLTE 1 1 0 0 L1 Seg Loop Continue;
+	TGTE 2 10 0 0 DNA Checksum;
+	TNXT -L1 Segment Loop;
+
+void Level 2 Routing;
+	LABL 0 0 0 b1 Level 2 Routing Message;
+	DWRD 40000000 0 a0 c2 Source Node:;
+	HBYT 0 0 a0 c2 Reserved:;
+	TNXT -L2 Segment Loop;
+
+void L2 Segment Loop;
+	LABL 0 0 0 b1 Segment Information;
+	DWRD 40000000 1 a0 c2 Count of Areas in Segment:;
+	DWRD 40000000 5 a0 c2 Starting Area:;
+	TNXT -L2 Seg Loop Continue;
+
+void L2 Seg Loop Continue;
+	DGLB 0 5 1 b1 Routing Info Area #;
+	CGTE 9 5 1 1  ;
+	CGTE 63 5 1 1  ;
+	CGTE 3e7 5 1 1  ;
+	CGTE 270f 5 1 1  ;
+	ADDG 1 5;
+	GBYT 0 e;
+	INCR 1;
+	GBYT 0 c;
+	INCR 1;
+	MOVE c 8d;
+	DIVG 4 c 0 2;
+	ANDG 1f c 0 2;
+	DGLB 0 c 0 12 Hops:;
+	CGTE 9 c 0 2  ;
+	ANDG 3 d;
+	MULG 100 d;
+	ADDG d 8e;
+	DGLB 0 e 0 12 Cost:;
+	SUBG 1 1;
+	TLTE 1 1 0 0 L2 Seg Loop Continue;
+	TGTE 2 10 0 0 DNA Checksum;
+	TNXT -L2 Segment Loop;
+void Ethernet Router Hello;
+	LABL 0 0 0 b1 Ethernet Router Hello Message;
+	DBYT 0 0 a0 c2 Version Number:;
+	DBYT 0 0 a0 c2 ECO Number:;
+	DBYT 0 0 a0 c2 User ECO Number:;
+	ETHR 0 0 a0 c2 Transmitter System ID:;
+	HBYT 0 1 a0 c2 Info:;
+	CBIT 6 1 0 f4 Blocking Requested;
+	CBIT 5 1 0 f4 No Multicast;
+	CLSE 0 1 0 f4 Multicast OK;
+	CBIT 4 1 0 f4 Verification Failed;
+	CBIT 3 1 0 f4 Reject;
+	CBIT 2 1 0 f4 Verification Required;
+	CBIT 1 1 0 f4 Level 1 Router;
+	CBIT 0 1 0 f4 Level 2 Router;
+	DWRD 40000000 0 a0 c2 Block Size:;
+	DBYT 0 0 a0 c2 Priority:;
+	HBYT 0 0 a0 c2 Area (reserved):;
+	DWRD 40000000 0 a0 c2 Hello Timer:;
+	HBYT 0 0 a0 c2 MPD (reserved):;
+	HBYT 0 1 a0 c2 Ethernets Image Count:;
+*  *** TNXT to mcr enet router hello ***
+	DUMP 0 1 a0 c2 Ethernets Image Field:;
+void Ethernet Endnode Hello;
+	LABL 0 0 0 b1 Ethernet Endnode Hello Message;
+	DBYT 0 0 a0 c2 Version Number:;
+	DBYT 0 0 a0 c2 ECO Number:;
+	DBYT 0 0 a0 c2 User ECO Number:;
+	ETHR 0 0 a0 c2 Transmitter System ID:;
+	HBYT 0 1 a0 c2 Info:;
+	CBIT 6 1 0 f4 Blocking Requested;
+	CBIT 5 1 0 f4 No Multicast;
+	CLSE 0 1 0 f4 Multicast OK;
+	CBIT 4 1 0 f4 Verification Failed;
+	CBIT 3 1 0 f4 Reject;
+	CBIT 2 1 0 f4 Verification Required;
+	LABL 1 1 0 f4 Endnode;
+	DWRD 40000000 0 a0 c2 Block Size:;
+	HBYT 0 0 a0 c2 Area (reserved):;
+	HEX# 8 0 a0 c2 Verification Seed:;
+	ETHR 0 0 a0 c2 Neighbor System ID:;
+	DWRD 40000000 0 a0 c2 Hello Timer:;
+	HBYT 0 0 a0 c2 MPD (reserved):;
+	HBYT 0 1 a0 c2 Test Data Image Count:;
+	DUMP 0 1 a0 c2 Test Data Image Field:;
+void DNA Checksum;
+	HWRD 40000000 0 a0 c2 Checksum:;
+
+void Padding;
+*   flag bit w/ count incl cnt byte 
+	HBYT 0 1 a0 c2 Padding Flag and Count:;
+*   yields count of pad bytes: no bit nor count byte 
+	ADDG ffffff7f 1;
+	DUMP 0 1 a0 c2 Padding:;
+*   this line & next decr packet count by pad bytes 
+	MULG ffffffff 1;
+*   try it again 
+	TNXT -After Dlink;
+
+void DECnet Diagnostic Protocol;
+	LABL 0 0 0 b1 DECnet Diagnostic Protocol;
+	DUMP 0 10 a0 c2 DECnet Data Area:;
+void DECnet LAT;
+	LABL 0 0 0 b1 DECnet LAT - Local Area Transport\DECnet LAT:;
+	DBIT 6 2 a0 c2 Message Type:;
+	CST# ffffffff 2 0 14 Message Types;
+	CLSE 0 2 0 14 Unknown;
+	BBIT 2 3 a0 c2 Flags:;
+	CBIT 1 3 0 f4 To Host;
+	CLSE 1 3 0 f4 From Host;
+	CBIT 0 3 0 f4 Response Requested;
+	CLSE 0 3 0 f4 No Response Requested;
+	TST# ffffffff 2 0 0 LAT Message Types;
+	DUMP 0 0 a0 c2 Unknown Data:;
+void LAT_Solicit_Cmd;
+	LABL 0 0 0 b1 Solicit Command;
+	LAT_Solicit_Hdr;
+	DWRD 40000000 0 d0 c2 Request Identifier:;
+	DWRD 40000000 0 d0 c2 Entry Identifier:;
+	DBYT 0 2 d0 c2 Command Type:;
+	CST# 0 2 0 14 LAT Solicit Cmd Types;
+	DBYT 0 2 d0 c2 Command Modifier:;
+	CBIT 0 2 0 f4 Send Status Periodically;
+	CLSE 0 0 0 f4 Don't Send Status Periodically;
+	CBIT 1 2 0 f4 Send Status When Queue Depth Changes;
+	CLSE 0 0 0 f4 Don't Send Status When Queue Depth Changes;
+	PSTR 0 0 d0 c2 Destination Object Node Name:;
+	DBYT 0 7 d0 c2 Node Group Length:;
+	LABL 0 0 0 c2 Source Node Subject Groups:           ;
+	MOVE 0 1;
+	MOVE 0 3;
+	LAT Group Enable;
+	PSTR 0 0 d0 c2 Source Subject Node Name:;
+	PSTR 0 0 d0 c2 Source Subject Port Name:;
+	PSTR 0 0 d0 c2 Source Subject Description:;
+	PSTR 0 0 d0 c2 Destination Object Service Name:;
+	PSTR 0 0 d0 c2 Destination Object Port Name:;
+	TNXT -LAT_Solicit Params;
+void LAT_Solicit_Status;
+	LABL 0 0 0 b1 Solicit Status;
+	LAT_Solicit_Hdr;
+	DWRD 40000000 0 d0 c2 Status Retransmit Timer:;
+	DBYT 0 3 d0 c2 Entries Counter:;
+	GBYT 0 4;
+	PSTR 0 0 d0 c2 Subject Node Name:;
+	SBIT 0 4;
+	SKIP 80000001;
+	HBYT 0 0 d0 c2 Padding Byte:;
+	LAT_Solicit_Entries;
+	DWRD 40000000 0 d0 c2 Entries Counter:;
+	TNXT -LAT_Solicit Params;
+void LAT_Solicit_Entries;
+	SNEQ 0 3;
+	SKIP 1;
+	TRTS;
+	SUBG 1 3;
+	DBYT 0 4 b0 c2 Entry Length:;
+	HBYT 0 1 b0 e2 Entry Status:;
+	CBIT 0 1 0 f4 No Additional Information Provided;
+	CBIT 1 1 0 f4 Request Is Already Queued;
+	CBIT 2 1 0 f4 Entry Is Accepted For Processing;
+	CBIT 3 1 0 f4 Periodic Status Returns Are Not Supported;
+	CBIT 4 1 0 f4 Queue Depth Status Is Not Supported;
+	CBIT 7 1 0 f4 Operation Was NOT Successfully Completed;
+	CLSE 0 0 0 f4 Operation Successfully Completed;
+	DBYT 0 1 b0 e2 Entry Error:;
+	CST# ffffffff 1 0 14 LAT Utility Reason;
+	HBYT 0 0 b0 e2 Reserved:;
+	DWRD 40000000 0 b0 e2 Request Identifier:;
+	DWRD 40000000 0 b0 e2 Entry Identifier:;
+	DWRD 40000000 0 b0 e2 Elapsed Queue Time:;
+	DWRD 40000000 0 b0 e2 Minimum Queue Position:;
+	DWRD 40000000 0 b0 e2 Maximum Queue Position:;
+	PSTR 0 0 b0 e2 Object Service Name:;
+	PSTR 0 0 b0 e2 Object Port Name:;
+	PSTR 0 0 b0 e2 Subject Description:;
+	SBIT 0 4;
+	SKIP 80000001;
+	HBYT 0 0 b0 e2 Padding Byte:;
+	TNXT -LAT_Solicit_Entries;
+void LAT_Solicit_Msg;
+	LABL 0 0 0 b1 Solicit Message;
+	LAT_Solicit_Hdr;
+	DWRD 40000000 0 d0 c2 Solicit Identifier:;
+	DWRD 40000000 0 d0 c2 Response Timer:;
+	PSTR 0 0 d0 c2 Destination Node Name:;
+	DBYT 0 7 d0 c2 Node Group Length:;
+	LABL 0 0 0 c2 Source Node Groups Enabled:           ;
+	MOVE 0 1;
+	MOVE 0 3;
+	LAT Group Enable;
+	PSTR 0 0 d0 c2 Source Node Name:;
+	PSTR 0 0 d0 c2 Destination Service Name:;
+	TNXT -LAT_Solicit Params;
+void LAT_Solicit_Response;
+	LABL 0 0 0 b1 Solicit Response;
+	LAT_Solicit_Hdr;
+	DWRD 40000000 0 d0 c2 Solicit Identifier:;
+	HWRD 40000000 1 d0 c2 Response Status:;
+	CBIT 1 1 0 14 Requested Service Is Not Offered;
+	DWRD 40000000 1 d0 c2 Source Node Status:;
+	CST# ffffffff 1 0 f4 LAT Svc Rsp Stt;
+	DWRD 40000000 0 d0 c2 Source Node Address:;
+	DWRD 40000000 0 d0 c2 Node Multicast Timer:;
+	PSTR 0 0 d0 c2 Destination Node Name:;
+	DBYT 0 7 d0 c2 Node Group Length:;
+	LABL 0 0 0 c2 Source Node Groups:           ;
+	MOVE 0 1;
+	MOVE 0 3;
+	LAT Group Enable;
+	PSTR 0 0 d0 c2 Source Node Name:;
+	PSTR 0 0 d0 c2 Source Node Description:;
+	DBYT 0 5 d0 c2 Service Count:;
+	LAT Service Entry;
+	TNXT -LAT_Solicit Params;
+void LAT Service Entry;
+	SNEQ 0 5;
+	SKIP 1;
+	TRTS;
+	SUBG 1 5;
+	DBYT 0 4 b0 c2 Service Entry Length:;
+	PSTR 0 0 b0 e2 Service Class:;
+	DBYT 0 0 b0 e2 Service Status:;
+	DBYT 0 0 b0 e2 Service Rating:;
+	DBYT 0 7 b0 c2 Service Group Length:;
+	LABL 0 0 0 c2 Service Groups:               ;
+	MOVE 0 1;
+	MOVE 0 3;
+	LAT Group Enable;
+	PSTR 0 0 b0 e2 Service Name:;
+	PSTR 0 0 b0 e2 Service Description:;
+	TNXT -LAT Service Entry;
+void LAT_Solicit_Hdr;
+	DBYT 0 1 d0 c2 Protocol Format:;
+	CST# ffffffff 1 0 14 LAT Proto Fmt Types;
+	DBYT 0 0 d0 c2 Highest Supported Protocol Version:;
+	DBYT 0 0 d0 c2 Lowest Supported Protocol Version:;
+	DBYT 0 0 d0 c2 Current Protocol Version:;
+	DBYT 0 0 d0 c2 Current Protocol ECO:;
+	DWRD 40000000 0 d0 c2 Receive Frame Size:;
+	TRTS;
+void LAT Group Enable;
+	SNEQ 0 7;
+	SKIP 1;
+	TRTS;
+	GBYT 0 2;
+	INCR 1;
+	SUBG 1 7;
+	SBIT 0 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 1 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 2 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 3 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 4 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 5 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 6 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	SBIT 7 2;
+	SKIP 80000003;
+	CNEQ 0 3 0 0 ,;
+	DGLB 0 1;
+	ADDG 1 3;
+	ADDG 1 1;
+	TNXT -LAT Group Enable;
+void LAT_Solicit Params;
+	DBYT 0 7 a0 c2 Parameter Code:;
+	TEQU 0 7 0 0 AFP The End;
+	DBYT 0 1 a0 c2 Parameter Length:;
+	SEQU 0 1;
+	SKIP 1;
+	DUMP 0 1 a0 c2 Parameter Data:;
+	TNXT -LAT_Solicit Params;
+void LAT_Run;
+*   message type = 0, 1, or 2 
+	LABL 0 0 0 b1 Run;
+*   number of slots 
+	DBYT 0 3 a0 c2 Number of Slots:;
+*   destination link id 
+	DWRD 40000000 0 a0 c2 Destination ID:;
+*   source link id 
+	DWRD 40000000 0 a0 c2 Source ID:;
+*   sequence number 
+	DBYT 0 0 a0 c2 Sequence Number:;
+*   Ack number 
+	DBYT 0 0 a0 c2 Acknowledgment Number:;
+*   Slot Data 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+	MOVE 0 4;
+	TLTE 1 3 0 0 LAT Slot Data;
+void LAT Slot Data;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at the end of this *** 
+	LABL 0 0 0 b1 "Local Area Transport Data (Slot ";
+	DGLB 0 4 1 31;
+	LABL 0 0 0 31 ")";
+*   destination sublink = 1 byte 
+	DBYT 0 0 a0 c2 Destination Sublink ID:;
+*   Source sublink = 1 byte 
+	DBYT 0 0 a0 c2 Source Sublink ID:;
+*   data length = 1 byte 
+	DBYT 0 5 a0 c2 Data Length:;
+	MOVE 5 90 0 40;
+*   slot type / credits 
+	DBIT 4 6 a0 c2 Slot Type:;
+*   next slot 
+	CST# ffffffff 6 0 14 Slot Types;
+	TST# ffffffff 6 0 0 LAT Slot Types;
+void LAT_Data;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at this stage *** 
+*   credits 
+	DBIT 4 0 a0 c2 Credits:;
+*   data 
+	DUMP 0 5 a0 c2 Slot Data:;
+	TNXT -LAT_Next Slot;
+
+void LAT_Next Slot;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   if length was odd, increment packet pointer 
+	INCR 0 10;
+*   next slot -- current slot ++, number of slots --, if 0 <= number of slots then next slot 
+	ADDG 1 4;
+	ADDG ffffffff 3;
+	TLTE 1 3 0 0 LAT Slot Data;
+
+void LAT_Unknown Data;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at this stage *** 
+	DBIT 4 0 a0 c2 Unknown:;
+*   data 
+	DUMP 0 5 a0 c2 Unknown Data:;
+	TNXT -LAT_Next Slot;
+void LAT_Start;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at this stage *** 
+	DBIT 4 0 a0 c2 Credits:;
+*   service class = 1 byte 
+	DBYT 0 0 a0 c2 Service Class:;
+*   Minimum Attention slot size = 1 byte 
+	DBYT 0 0 a0 c2 Min. Attn. Slot Size:;
+*   Minimum data slot size = 1 byte 
+	DBYT 0 0 a0 c2 Min. Data Slot Size:;
+*   Data Length -= (4 bytes + 1 byte string length) 
+	ADDG fffffffb 5;
+*   Data Length -= next string length 
+	GBYT 0 7;
+*   Destination service name = Pstr 
+	MULG ffffffff 7;
+*   Data Length -= next string length 
+	ADDG 7 85;
+*   Source description = Pstr 
+	LABL 0 0 0 c2 Dest. Service Name:;
+*   Parameter n: 
+	Non-null Pascal String;
+	GBYT 0 7;
+	MULG ffffffff 7;
+	ADDG ffffffff 7;
+	ADDG 7 85;
+	LABL 0 0 0 c2 Source Description:;
+	Non-null Pascal String;
+	MOVE 0 2;
+	TNXT -LAT_Start Parm;
+void LAT_Start Parm;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   Parameter n: 
+	ADDG 1 2;
+	DGLB 0 2 1 b1 Parameter ;
+	DBYT 0 7 a0 c2 Parameter Code:;
+	CST# 0 7 0 14 Start Param Types;
+*   Parameter Length 
+	DBYT 0 1 a0 c2 Parameter Length:;
+*   Data length -= 2 
+	ADDG fffffffe 5;
+	TST# 0 7 0 10 LAT Start Types;
+void LAT_Flags;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	DBYT 0 7 a0 c2 Flag:;
+	CBIT 1 3 0 f4 Logins not allowed;
+	CLSE 1 3 0 f4 Logins allowed;
+	CBIT 0 3 0 f4 Line is remote;
+	CLSE 0 3 0 f4 Line is local;
+*   skip over next byte 
+	INCR 1;
+*   slot length -= 2 
+	ADDG fffffffe 5;
+*   if slot length == 0 then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Start Parm;
+void LAT_Dest Node;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   length of parameter was length of string, so backup to length of string 
+	LABL 0 0 0 14 Node Name Length;
+	DECR 1;
+*   Data Length -= next string length 
+	GBYT 0 7;
+	MULG ffffffff 7;
+	ADDG ffffffff 7;
+	ADDG 7 85;
+*   destination node port name 
+	PSTR 0 0 a0 c2 Destination Node Name:;
+	CEQU ffffffff 7 0 14 No String Present;
+*   if slot length == 0 then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Start Parm;
+void LAT_Source Node;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   length of parameter was length of string, so backup to length of string 
+	LABL 0 0 0 14 Node Name Length;
+	DECR 1;
+*   Data Length -= next string length 
+	GBYT 0 7;
+	MULG ffffffff 7;
+	ADDG ffffffff 7;
+	ADDG 7 85;
+*   destination node port name 
+	PSTR 0 0 a0 c2 Source Node Name:;
+	CEQU ffffffff 7 0 14 No String Present;
+*   if slot length == 0 then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Start Parm;
+void LAT_Service Group;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   length of parameter was length of service groups, so backup to length of string 
+	LABL 0 0 0 14 Node Group Length;
+	DECR 1;
+*   Data Length -= service group length 
+	GBYT 0 7;
+	MULG ffffffff 7;
+	ADDG ffffffff 7;
+	ADDG 7 85;
+*   destination Source Service Group 
+	LABL 0 0 a0 c6 Service Group Codes:;
+	GBYT 0 7;
+	INCR 1;
+	LAT_Node Groups;
+*   if slot length == 0 then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Start Parm;
+void LAT_Unknown Start;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+	DUMP 0 1 a0 c2 Unknown Parameter Data:;
+*   slot length -= parameter length 
+	MULG ffffffff 1;
+	ADDG 1 85;
+*   if slot length == 0 then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Start Parm;
+void LAT_Aux Data;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at this stage *** 
+*   credits 
+	DBIT 4 0 a0 c2 Credits:;
+*   control flags 
+	BBIT 8 1 a0 c2 Control Flags:;
+	CBIT 0 1 0 f4 Use Input Flow Control;
+	CBIT 1 1 0 f4 Disable Recognition Of Input Flow Control;
+	CBIT 2 1 0 f4 Use Output Flow Control;
+	CBIT 3 1 0 f4 Disable Recognition Of Output Flow Control;
+	CBIT 4 1 0 f4 Detect Break;
+	CBIT 5 1 0 f4 Set Port Characteristics;
+	CBIT 6 1 0 f4 Report Port Characteristics;
+*   output stop char 
+	HBYT 0 0 a0 c2 Stop Output Char:;
+*   output start char 
+	HBYT 0 0 a0 c2 Start Output Char:;
+*   input stop char 
+	HBYT 0 0 a0 c2 Stop Input Char:;
+*   input start char 
+	HBYT 0 0 a0 c2 Start Input Char:;
+*   data length -= 6 bytes 
+	ADDG fffffffa 5;
+*   Parameter n: 
+	MOVE 0 2;
+	TNXT -LAT_Aux Parm;
+void LAT_Aux Parm;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   Parameter n: 
+	ADDG 1 2;
+	DGLB 0 2 1 b1 Parameter ;
+	DBYT 0 7 a0 c2 Parameter Code:;
+	CST# 0 7 0 14 Aux Param Types;
+*   Parameter Length 
+	DBYT 0 1 a0 c2 Parameter Length:;
+*   Data length -= 2 
+	ADDG fffffffe 5;
+	TST# 0 7 0 10 LAT Aux Types;
+void LAT_Line Char;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	BBIT 4 7 a0 c2 Parity:;
+	MOVE 7 88;
+	DIVG 2 7;
+	ANDG 3 7;
+	ADDG 1 7;
+	CST# 0 7 0 14 Parity;
+	ANDG 1 8;
+	CEQU 0 8 0 4 , Disabled;
+	DBIT 4 0 a0 c2 Bits Per Character:;
+*   slot length -- 
+	ADDG ffffffff 5;
+*   if 1 >= Slot Length then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Aux Parm;
+void LAT_Input Speed;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	DWRD 40000000 0 a0 c2 Input Speed:;
+*   slot length -= 2 
+	ADDG fffffffe 5;
+*   if 1 >= slot length then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Aux Parm;
+void LAT_Output Speed;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	DWRD 40000000 0 a0 c2 Output Speed:;
+*   slot length -= 2 
+	ADDG fffffffe 5;
+*   if 1 >= slot length then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Aux Parm;
+void LAT_Bell;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	DBYT 0 7 a0 c2 Bell:;
+	CEQU 0 7 0 14 Disable bell on discard;
+	CEQU 1 7 0 14 Enable bell on discard;
+*   slot length -- 
+	ADDG ffffffff 5;
+*   if 1 >= slot length then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 
+	TNXT -LAT_Aux Parm;
+void LAT_Transparency;
+*   global_1 -- parameter length 
+*   global_2 -- parameter number 
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   flag 
+	DBYT 0 0 a0 c2 Transparency Mode:;
+*   slot length -- 
+	ADDG ffffffff 5;
+*   1 >= slot length then next slot 
+	TGTE 1 5 0 0 LAT_Next Slot;
+*   else next parameter 	TNXT -LAT_Aux Parm;
+void LAT_Stop;
+*   global_3 -- number of slots 
+*   global_4 -- current slot 
+*   global_5 -- data length 
+*   global_6 -- slot type etc. 
+*   *** NOTE **** the pointer is not byte aligned at this stage *** 
+	DBIT 4 7 a0 c2 Reason:;
+	CST# ffffffff 7 0 14 LAT Utility Reason;
+	TNXT -LAT_Next Slot;
+void LAT_Connect;
+	LABL 0 0 0 b1 Start/Connect;
+	DBYT 0 0 a0 c2 Number of Slots:;
+	DWRD 40000000 0 a0 c2 Destination Link ID:;
+	DWRD 40000000 0 a0 c2 Source Link ID:;
+	DBYT 0 0 a0 c2 Sequence Number:;
+	DBYT 0 0 a0 c2 Ack. Number:;
+	DWRD 40000000 0 a0 c2 Max. Receive Size:;
+	DBYT 0 0 a0 c2 Version Number:;
+	DBYT 0 0 a0 c2 ECO Level:;
+	DBYT 0 0 a0 c2 Max. Sessions:;
+	DBYT 0 0 a0 c2 Extra Buffers Queued:;
+	GBYT 0 7 a0;
+	MULG a 7 a0;
+	INCR 1;
+	DGLB 0 7 a0 c2 Server Circuit Timer:;
+	LABL 0 0 0 10 msec;
+	DBYT 0 0 a0 c2 Keep Alive Timer:;
+	LABL 0 0 0 10 seconds;
+	DWRD 40000000 0 a0 c2 Facility Number:;
+	DBYT 0 0 a0 c2 Product Type:;
+	DBYT 0 0 a0 c2 Product Version:;
+	LABL 0 0 0 c2 Node Name:;
+	Non-null Pascal String;
+	LABL 0 0 0 c2 Master Node Name:;
+	Non-null Pascal String;
+	LABL 0 0 0 c2 Location:;
+	Non-null Pascal String;
+void LAT_Disconnect;
+	LABL 0 0 0 b1 Stop/Disconnect;
+	DBYT 0 0 a0 c2 Number of Slots:;
+	DWRD 40000000 0 a0 c2 Destination Link ID:;
+	DWRD 40000000 0 a0 c2 Source Link ID:;
+	DBYT 0 0 a0 c2 Sequence Number:;
+	DBYT 0 0 a0 c2 Ack. Number:;
+	DBYT 0 7 a0 c2 Disconnect Reason:;
+	CST# ffffffff 7 0 14 Disconnect Reason;
+	LABL 0 0 0 c2 Disconnect Reason:;
+	Non-null Pascal String;
+void LAT_Service;
+	LABL 0 0 0 b1 Service Announcement;
+	GBYT 0 7 a0;
+	MULG a 7 a0;
+	INCR 1;
+	DGLB 0 7 a0 c2 Server Circuit Timer:;
+	LABL 0 0 0 10 msec;
+	DBYT 0 0 b0 c2 Highest Supported Protocol:;
+	DBYT 0 0 b0 c2 Lowest Supported Protocol:;
+	DBYT 0 0 b0 c2 Current Supported Protocol:;
+	DBYT 0 0 a0 c2 Current Protocol ECO:;
+	DBYT 0 0 a0 c2 Message ID:;
+	BBIT 8 7 a0 c9 Changed:;
+	 CBIT 0 7 0 f4 .... ...x Node Groups;
+	 CBIT 1 7 0 f4 .... ..x. Node Descriptor;
+	 CBIT 2 7 0 f4 .... .x.. Service Names;
+	 CBIT 3 7 0 f4 .... x... Service Rating;
+	 CBIT 4 7 0 f4 ...x .... Service Descriptors;
+	 CBIT 5 7 0 f4 ..x. .... Service Classes;
+	 CBIT 6 7 0 f4 .x.. .... Reserved;
+	 CBIT 7 7 0 f4 x... .... Other Parameters;
+	 LABL 0 0 0 c8;	
+	DWRD 40000000 0 a0 c2 Receive Frame Size:;
+	DBYT 0 0 a0 c2 Multicast Timer:;
+	LABL 0 0 a0 10 seconds;
+	DBYT 0 7 a0 c2 Node Status:;
+	CBIT 0 7 0 14 Does Not Accept New Sessions;
+*   service group codes 
+	LABL 0 0 a0 c6 Service Node Groups:;
+	DBYT 0 7 a0 c2 Node Group Length:;
+	LAT_Node Groups;
+	LABL 0 0 0 c2 Node Name:;
+	Non-null Pascal String;
+	LABL 0 0 0 c2 Node Description:;
+	Non-null Pascal String;
+*   service descriptors 
+	DBYT 0 7 a0 c2 Number of Services:;
+	TNXT 0 0 0 40 LAT_Services;
+void LAT_Node Groups;
+	MOVE 0 8;
+	TNXT -LAT_Groups;
+void LAT_Groups;
+	ADDG ffffffff 7;
+	BBIT 8 9 a0 c2 Enabled Groups:;
+	TLTE 1 7 0 0 LAT_Groups;
+	TRTS;
+void LAT_Services;
+*   global7 = number of services 
+	ADDG ffffffff 7;
+	DBYT 0 0 a0 c2 Rating:;
+	LABL 0 0 0 c2 Service Name:;
+	Non-null Pascal String;
+	LABL 0 0 0 c2 Service Description:;
+	Non-null Pascal String;
+	TLTE 1 7 0 0 LAT_Services;
+	DBYT 0 8 a0 c2 Number of Classes:;
+	TNXT 0 0 0 40 LAT_Service Classes;
+void LAT_Service Classes;
+*   global 7 = number of services 
+*   global 8 = number of service classes 
+	ADDG ffffffff 8;
+	DBYT 0 9 a0 c2 Service:;
+	CST# 0 9 0 14 Service Classes;
+	TLTE 1 8 0 0 LAT_Service Classes;
+void Non-null Pascal String;
+	GBYT 0 c;
+	TEQU 0 c 0 0 Null Pascal String;
+	PSTR 0 0 a0;
+	TRTS;
+void Null Pascal String;
+	DBYT 0 0 a0;
+	LABL 0 0 0 14 No String Present;
+	TRTS;
+void DECnet NSP;
+	LABL 0 0 0 b1 NSP - Network Services Protocol\NSP:;
+*   get the flag byte without advancing 
+	GBYT 0 1;
+	DIVG 4 1;
+*   extract just the type bits 
+	ANDG 3 1;
+*   xfer to indexed string of in Types 
+	TST# ffffffff 1 -NSP Msg Types;
+	DBIT 4 1 a0 c2 Message Subtype:;
+	DBIT 4 2 a0 c2 Message Type:;
+	LABL 0 0 0 14 Reserved;
+void NSP Data Msg;
+	DBIT 4 1 a0 c2 Message Subtype:;
+*   display indexed string in Types 
+	CST# ffffffff 1 0 14 NSP Data Msg Subtype Names;
+	DBIT 4 2 a0 c2 Message Type:;
+	LABL 0 0 0 14 Data Message;
+	NSP Msg Struct;
+	NSP Data Seg Num;
+	TEQU 1 1 0 0 NSP Data Link Service;
+	DUMP 0 10 a0 c2 NSP Data:;
+
+void NSP Msg Struct;
+	DWRD 40000000 0 a0 c2 Logical Link Dst. Addr.:;
+	DWRD 40000000 0 a0 c2 Logical Link Src. Addr.:;
+*   get lo byte next field without advancing 
+	GBYT 0 3;
+	INCR 1;
+*   get hi byte next field without advancing 
+	GBYT 0 4;
+*   is first optional field there? 
+	SBIT 7 4;
+*   skip if not 
+	SKIP 8000001b;
+*   just the number part 
+	ANDG f 4;
+*   shift it up 
+	MULG 100 4;
+*   just the number part 
+	ADDG 4 83;
+*   get hi byte next field again 
+	GBYT 0 4;
+	DIVG 10 4;
+*   just the qual part 
+	ANDG 7 4;
+	DGLB 0 4 a0 c2 Ack Qualifier:;
+*   display indexed string 
+	CST# ffffffff 4 0 14 NSP Ack Qualifier Types;
+	CLSE 0 0 0 14 Reserved;
+	DGLB 0 3 a0 c2 Ack Message Number:;
+	INCR 1;
+*   get lo byte next field without advancing 
+	GBYT 0 3;
+	INCR 1;
+*   get hi byte next field without advancing 
+	GBYT 0 4;
+*   is 2nd optional field there? 
+	SBIT 7 4;
+*   skip if not 
+	SKIP 8000000c;
+*   just the number part 
+	ANDG f 4;
+*   shift it up 
+	MULG 100 4;
+*   just the number part 
+	ADDG 4 83;
+*   get hi byte next field again 
+	GBYT 0 4;
+	DIVG 10 4;
+*   just the qual part 
+	ANDG 7 4;
+	DGLB 0 4 a0 c2 Ack Qualifier:;
+*   display indexed string 
+	CST# 1 4 0 14 NSP Other Ack Qual Types;
+	CLSE 0 0 0 14 Reserved;
+	DGLB 0 3 a0 c2 Message Ack'd:;
+	INCR 2;
+	DECR 1;
+	TRTS;
+void NSP Data Seg Num;
+*   get lo byte next field without advancing 
+	GBYT 0 3;
+	INCR 1;
+*   get hi byte next field without advancing 
+	GBYT 0 4;
+	MULG 100 4 0 14;
+*   bytes now swapped 
+	ADDG 4 83 0 14;
+*   2nd copy 
+	MOVE 3 84;
+*   just the number part 
+	ANDG fff 3;
+	DGLB 0 3 a0 c2 Data Segment Number:;
+	CBIT c 4 0 14 Delayed ACK Allowed;
+	CLSE 0 0 0 14 Do Not Delay ACK;
+	INCR 1;
+	TRTS;
+void NSP Ack Msg;
+	DBIT 4 1 a0 c2 Message Subtype:;
+*   display indexed string in Types 
+	CST# ffffffff 1 0 14 NSP Ack Msg Subtype Names;
+	CLSE 0 1 0 14 Reserved;
+	DBIT 4 2 a0 c2 Message Type:;
+	LABL 0 0 0 14 Acknowledgment Message;
+*   is it Connect Acknowledge? 
+	SEQU 2 1;
+*   skip if so  
+	SKIP 2;
+	NSP Msg Struct;
+	TNXT -AFP The End;
+	DWRD 40000000 0 a0 c2 Logical Link Dst. Addr.:;
+void NSP Ctl Msg;
+	DBIT 4 1 a0 c2 Message Subtype:;
+*   display indexed string in Types 
+	CST# ffffffff 1 0 14 NSP Ctl Msg Subtype Names;
+	DBIT 4 2 a0 c2 Message Type:;
+	LABL 0 0 0 14 Control Message;
+*   branch on indexed string in Types 
+	TST# ffffffff 1 -NSP Ctl Branching;
+	TLSE 0 0 0 14 NSP Ctl Rsvd;
+void NSP Data Link Service;
+	DBIT 6 3 a0 c2 Flow Control Interp.:;
+*   display indexed string in Types 
+	CST# ffffffff 3 0 14 NSP FCVAL INT;
+	DBIT 2 4 a0 c2 Flow Control Modify:;
+*   is FCVAL INT = 0? 
+	SNEQ 0 3;
+*   skip if not 
+	SKIP 1;
+*   display indexed string in Types 
+	CST# ffffffff 4 0 14 NSP FCVAL MOD;
+	DBYT 80000000 0 a0 c2 Flow Control Value:;
+	TGTE 0 10 0 0 AFP The End;
+	DUMP 0 10 a0 c2 NSP Data:;
+void NSP No Op;
+	DUMP 0 10 a0 c2 Test Data:;
+void NSP Conn Init/Conf;
+	DWRD 40000000 0 a0 c2 Logical Link Dst. Addr.:;
+	DWRD 40000000 0 a0 c2 Logical Link Src. Addr.:;
+	GBYT 0 3;
+	DIVG 4 3;
+*   extract just the option bits 
+	ANDG 3 3;
+	DGLB 0 3 a0 c2 Flow Control Options:;
+*   display indexed string in Types 
+	CST# ffffffff 3 0 14 NSP FC OPT;
+	INCR 1; 
+	HBYT 0 3 a0 c2 NSP Information:;
+*   extract just the option bits 
+	ANDG 3 3;
+	CST# ffffffff 3 0 14 NSP NSP INFO;
+	DWRD 40000000 0 a0 c2 Max Data Segment Size:;
+	TNEQ 0 10 0 0 DECnet SCP Connect;
+void NSP Disc Init/Conf;
+	DWRD 40000000 0 a0 c2 Logical Link Dst. Addr.:;
+	DWRD 40000000 0 a0 c2 Logical Link Src. Addr.:;
+	TEQU 3 1 0 0 DECnet SCP Disconnect;
+	DWRD 40000000 3 a0 c2 Disconnect Reason:;
+	CEQU 1 3 0 14 No Resources;
+	CEQU 2a 3 0 14 Disconnect Complete;
+	CEQU 29 3 0 14 No Link Terminate;
+	TGTE 0 10 0 0 AFP The End;
+	DUMP 0 10 a0 c2 NSP Data:;
+void NSP Ctl Rsvd;
+	DUMP 0 10 a0 c2 Unknown NSP Data:;
+void DECnet SCP Disconnect;
+	LABL 0 0 0 b1 SCP Reject and Disconnect - Session Control Protocol;
+	DWRD 40000000 3 a0 c2 Disconnect Reason:;
+*   is it less than equal 9? 
+	SGTE 9 3;
+*   skip if so 
+	SKIP 3;
+*   display indexed string in Types 
+	CST# 1f 3 0 14 SCP Discon Reasons 2;
+*   is it greater than equal 10? 
+	SLTE a 3;
+*   always skips 
+	SKIP 1;
+*   display indexed string in Types 
+	CST# ffffffff 3 0 14 SCP Disconnect Reasons;
+	TGTE 0 10 0 0 AFP The End;
+	DUMP 0 10 a0 c2 SCP Disconnect User Data:;
+void DECnet SCP Connect;
+	LABL 0 0 0 b1 SCP Connect - Session Control Protocol\SCP COnnect:;
+*   branch if connect confirm 
+	TEQU 2 1 0 0 SCP Conn Confirm;
+	LABL 0 0 0 c3 Destination End User Name;
+	SCP End User Name;
+	LABL 0 0 0 c3 Source End User Name;
+	SCP End User Name;
+	HBYT 0 3 a0 c2 SCP Information:;
+	CBIT 0 3 0 f4 RQSTRID, PASSWD & ACCOUNT Included;
+	CLSE 0 0 0 f4 RQSTRID, PASSWD & ACCOUNT Not Included;
+	CBIT 1 3 0 f4 USRDATA Included;
+	CLSE 0 0 0 f4 USRDATA Not Included;
+*   version bits 
+	MOVE 3 84;
+*   version bits 
+	ANDG 60 4;
+	CEQU 0 4 0 f4 SCP Version 1.0;
+*   all those fields included? 
+	SBIT 0 3;
+*   skip if not 
+	SKIP 80000008;
+	DBYT 0 4 a0 c2 Requestor ID Length:;
+	DUMP 0 4 a0 40   ;
+	DBYT 0 4 a0 c2 Password Length:;
+	DUMP 0 4 a0 40   ;
+	DBYT 0 4 a0 c2 Account ID Length:;
+	DUMP 0 4 a0 40   ;
+*   connect data included? 
+	SBIT 1 3;
+*   skip if not 
+	SKIP 80000004;
+	DBYT 0 4 a0 c2 Connect Data Length:;
+	DUMP 0 4 a0 40   ;
+*   placeholder only - no-op 
+	SBIT 0 3;
+void SCP Conn Confirm;
+	DBYT 0 4 a0 c2 User Data Length:;
+	DUMP 0 4 a0 40   ;
+void SCP End User Name;
+	DBYT 0 3 a0 d2 Format:;
+*   display indexed string in Types 
+	CST# ffffffff 3 0 14 SCP Format Types;
+	CLSE 0 1 0 14 Reserved;
+	DBYT 0 0 a0 d2 Object Type:;
+*   is it Format 0? 
+	SNEQ 0 3;
+*   skip if not 
+	SKIP 3;
+	LABL 0 0 0 d2 Name Is Not Present;
+	TRTS;
+*   is it Format 1? 
+	SNEQ 1 3;
+*   skip if not 
+	SKIP 5;
+	DBYT 0 4 a0 d2 Name Descriptor Length:;
+	DUMP 0 4 a0 50   ;
+	TRTS;
+	DWRD 40000000 0 a0 d2 Group Code:;
+	DWRD 40000000 0 a0 d2 User Code:;
+	DBYT 0 4 a0 d2 Name Descriptor Length:;
+	DUMP 0 4 a0 50   ;
+	TRTS;
+void MOP;
+	DWRD 40000000 10 a0 c2 Length:;
+	DBYT 0 1 a0 c2 MOP Code:;
+*   yields index into str# 
+	ADDG 1 1;
+*   display indexed string of in MOP Types 
+	CST# 0 1 0 14 MOP Types;
+*   branch to named indexed string 
+	TST# 0 1 0 40 MOP Types;
+*   if MOP Type not in table 
+	CLSE 0 0 0 14 Unknown;
+	DUMP 0 10 a0 c2 MOP Data:;
+void Memory Load with Xfer Addr;
+	DBYT 0 0 a0 c2 Load Number:;
+*   Load Address and Image omitted 
+	TEQU 6 10 0 0 Transfer Address;
+	HLNG 40000000 0 a0 c2 Load Address:;
+*   Image omitted 
+	TEQU a 10 0 0 Transfer Address;
+*   yields number of bytes in Image 
+	DUMP 0 10 a0 c2 Memory Load Image:;
+	HLNG 40000000 0 a0 c2 Transfer Address:;
+void Transfer Address;
+	HLNG 0 0 a0 c2 Transfer Address:;
+void Dump Complete;
+*   NO OTHER STATEMENTS REQUIRED 
+void Memory Load;
+	DBYT 0 0 a0 c2 Load Number:;
+	HLNG 0 0 a0 c2 Load Address:;
+*   Image omitted 
+	TGTE 6 10 0 0 MOP Done;
+*   yields number of bytes in Image 
+	DUMP 0 10 a0 c2 Memory Load Image:;
+void Assistance Volunteer;
+*   NO OTHER STATEMENTS REQUIRED 
+void Request Memory Dump;
+	HLNG 0 0 a0 c2 Memory Address:;
+	DWRD 40000000 0 a0 c2 Count:;
+void Request ID;
+	HBYT 0 0 a0 c2 Reserved:;
+	HWRD 40000000 0 a0 c2 Receipt:;
+void Boot;
+	HLNG 0 0 a0 c2 Verification:;
+*   nothing else included 
+	TGTE 5 10 0 0 MOP Done;
+*   the rest of verification 
+	HLNG 80000000 0 0 2;
+	DBYT 0 1 a0 c2 Processor:;
+	CEQU 0 1 0 14 System Processor;
+	CEQU 1 1 0 14 Communication Processor;
+	HBYT 0 1 a0 c2 Control:;
+	LABL 0 0 0 f4 Boot-server - ;
+	CBIT 0 1 0 4 Requesting System;
+	CLSE 0 0 0 4 System Default;
+	LABL 0 0 0 f4 Boot-device - ;
+	CBIT 0 1 0 4 Specified Device;
+	CLSE 0 0 0 4 System Default;
+	DBYT 0 1 a0 c2 Device ID Length:;
+	DUMP 0 1 a0 c2 Device ID:;
+	DBYT 0 2 a0 c2 Software ID Info Length:;
+	DBYT 0 3 a0 c2 Software ID Form:;
+	CEQU 0 3 0 14 No Software ID;
+	TTST -MOP Done;
+	CEQU ff 3 0 14 Standard Operating System;
+	CEQU fe 3 0 14 Maintenance System;
+*   get the program’s software ID 
+	TBIT 7 3 0 0 MOP Done;
+	TNXT -Boot Soft ID;
+void Boot Soft ID;
+	DUMP 0 2 a0 c2 Software ID String:;
+void System ID;
+	HBYT 0 0 a0 c2 Reserved:;
+	HWRD 40000000 0 a0 c2 Receipt:;
+*   decr packet count by prev bytes 
+	TNXT -Other Info;
+void itypeGE100;
+	TLTE c8 1 0 0 itypeGE200;
+	TEQU 64 1 0 0 Communication Device;
+	LABL 0 0 0 14 Communication Device Related;
+	DBYT 0 2 a0 c2 Info Length:;
+	DUMP 0 2 a0 c2 Comm. Device Related:;
+	TNXT -End Other Info;
+void Communication Device;
+	LABL 0 0 0 14 Communication Device;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 1 a0 c2 Device Type:;
+*   yields index into str# 
+	ADDG 1 1;
+*   display indexed string of in Comm. Device Types 
+	CST# 0 1 0 14 Comm. Device Types;
+	TNXT -End Other Info;
+void itypeGE200;
+	TLTE 12c 1 0 0 itypeGE300;
+	TEQU c8 1 0 0 Soft ID;
+	LABL 0 0 0 14 Software ID Related;
+	DBYT 0 2 a0 c2 Info Length:;
+	DUMP 0 2 a0 c2 Software ID Related:;
+	TNXT -End Other Info;
+void Soft ID;
+	LABL 0 0 0 14 Software ID;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 3 a0 c2 Software ID Form:;
+	CEQU 0 3 0 14 No Software ID;
+	TTST -End Other Info;
+	CEQU ff 3 0 14 Standard Operating System;
+	CEQU fe 3 0 14 Maintenance System;
+*   get the program’s software ID 
+	TLTE 2 2 0 0 Soft Soft ID;
+	TNXT -End Other Info;
+void itypeGE300;
+	TLTE 190 1 0 0 itypeGE400;
+	TEQU 12c 1 0 0 System Processor;
+	LABL 0 0 0 14 System Processor Related;
+	DBYT 0 2 a0 c2 Info Length:;
+*   this line & next 2 decr packet count by value cnt 
+	MOVE 2 8f;
+*   add global_15 to _16 to decr pkt cnt by value cnt 
+	DUMP 0 2 a0 c2 System Processor Related:;
+	TNXT -End Other Info;
+void System Processor;
+	LABL 0 0 0 14 System Processor;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 1 a0 c2 System Processor:;
+	CEQU 1 1 0 14 PDP-11 (UNIBUS);
+	CEQU 2 1 0 14 Communication Server;
+	CEQU 3 1 0 14 Professional;
+	TNXT -End Other Info;
+void itypeGE400;
+	TLTE 1f4 1 0 0 Unknown Info Type;
+	TEQU 190 1 0 0 Data Link;
+	TEQU 191 1 0 0 DLink Buffer;
+	LABL 0 0 0 14 Data Link Related;
+	DBYT 0 2 a0 c2 Info Length:;
+*   this line & next 2 decr packet count by value cnt 
+	MOVE 2 8f;
+*   add global_15 to _16 to decr pkt cnt by value cnt 
+	DUMP 0 2 a0 c2 Data Link Related:;
+	TNXT -End Other Info;
+void Data Link;
+	LABL 0 0 0 14 Data Link;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 1 a0 c2 Data Link Protocol:;
+	CEQU 1 1 0 14 Ethernet;
+	CEQU 2 1 0 14 DDCMP;
+	CEQU 3 1 0 14 LAPB;
+	TNXT -End Other Info;
+void Request Program;
+	DBYT 0 1 a0 c2 Device Type:;
+*   yields index into str# 
+	ADDG 1 1;
+*   display indexed string of in Comm. Device Types 
+	CST# 0 1 0 14 Comm. Device Types;
+	DBYT 0 0 a0 c2 Protocol Format Version:;
+*   all of the following omitted 
+	TGTE 3 10 0 0 MOP Done;
+	DBYT 0 0 a0 c2 Program Type:;
+	DBYT 0 1 a0 c2 Software ID Form:;
+	CEQU 0 1 0 14 No Software ID;
+	TTST -Processor;
+	CEQU ff 1 0 14 Standard Operating System;
+	CEQU fe 1 0 14 Maintenance System;
+	TBIT 7 1 0 0 Processor;
+*   get the program’s software ID 
+	TNXT -Pgm Soft ID;
+void DLink Buffer;
+	LABL 0 0 0 14 Data Link Buffer Size;
+	DBYT 0 2 a0 c2 Info Length:;
+	DWRD 40000000 0 a0 c2 Data Link Buffer Size:;
+	TNXT -End Other Info;
+void Pgm Soft ID;
+	DUMP 0 1 a0 c2 Software ID String:;
+*   add global_1 to _16 to decr pkt cnt by image byte cnt 
+	TNXT -Processor;
+void Soft Soft ID;
+	SUBG 1 2;
+	DUMP 0 2 a0 c2 Software ID String:;
+	ADDG 1 2;
+	TNXT -End Other Info;
+void Processor;
+	DBYT 0 1 a0 c2 Processor:;
+	CEQU 0 1 0 14 System Processor;
+	CEQU 1 1 0 14 Communication Processor;
+*   decr packet count by prev bytes 
+	TNXT -Other Info;
+void Other Info;
+*   no entries left 
+	TGTE 2 10 0 0 MOP Done;
+	DWRD 40000000 1 a0 b2 Info Type:;
+	TLTE 64 1 0 0 itypeGE100;
+*   display indexed string of in MOP Info Types 
+	CST# 0 1 0 14 MOP Info Types;
+*   branch to named indexed string 
+	TST# 0 1 0 40 MOP Info Types;
+	TLSE -Unknown Info Type;
+void Request Counters;
+	HWRD 40000000 0 a0 c2 Receipt:;
+void Request Memory Load;
+	DBYT 0 0 a0 c2 Load Number:;
+	DBYT 0 1 a0 c2 Error:;
+	CEQU 0 1 0 14 No Error;
+	CEQU 1 1 0 14 Not Properly Loaded;
+void Counters;
+	HWRD 40000000 0 a0 c2 Receipt:;
+	DWRD 40000000 0 a0 c2 Seconds since zeroed:;
+	DLNG 0 0 a0 c2 Bytes received:;
+	DLNG 0 0 a0 c2 Bytes sent:;
+	DLNG 0 0 a0 c2 Frames received:;
+	DLNG 0 0 a0 c2 Frames sent:;
+	DLNG 0 0 a0 c2 Multicast bytes received:;
+	DLNG 0 0 a0 c2 Multicast frames rec'd:;
+	DLNG 0 0 a0 c2 Frames sent, init. defer:;
+	DLNG 0 0 a0 c2 Frames sent, single coll:;
+	DLNG 0 0 a0 c2 Frames sent, multi coll:;
+	DWRD 40000000 0 a0 c2 Send failure:;
+	DWRD 40000000 1 a0 c2 Send failure reason:;
+	CBIT 8 1 0 f4 Excessive Collisions;
+	CBIT 9 1 0 f4 Carrier Check Failed;
+	CBIT a 1 0 f4 Short Circuit;
+	CBIT b 1 0 f4 Open Circuit;
+	CBIT c 1 0 f4 Frame Too Long;
+	CBIT d 1 0 f4 Remote failure to defer;
+	DWRD 40000000 0 a0 c2 Receive failure:;
+	DWRD 40000000 1 a0 c2 Receive failure reason:;
+	CBIT 8 1 0 f4 Block Check Error;
+	CBIT 9 1 0 f4 Framing Error;
+	CBIT a 1 0 f4 Frame Too Long;
+	DWRD 40000000 0 a0 c2 Unrecognized frame dest.:;
+	DWRD 40000000 0 a0 c2 Data overrun:;
+	DWRD 40000000 0 a0 c2 System buffer unavail:;
+	DWRD 40000000 0 a0 c2 User buffer unavail:;
+void Request Dump Service;
+	DBYT 0 1 a0 c2 Device Type:;
+*   yields index into str# 
+	ADDG 1 1;
+*   display indexed string of in Comm. Device Types 
+	CST# 0 1 0 14 Comm. Device Types;
+	DBYT 0 0 a0 c2 Protocol Format Version:;
+	HLNG 0 0 a0 c2 Memory Size:;
+	DBYT 0 0 a0 c2 Bits:;
+
+	TNXT -Other Info;
+void Reserve Console;
+	HLNG 0 0 a0 c2 Verification:;
+*   the rest of verification 
+	HLNG 80000000 0 0 2;
+
+void Memory Dump Data;
+	HLNG 0 0 a0 c2 Memory Address:;
+*   Image omitted 
+	TGTE 5 10 0 0 MOP Done;
+	DUMP 0 10 a0 c2 Memory Dump Image:;
+
+void Release Console;
+*   NO OTHER STATEMENTS REQUIRED 
+void Console Command and Poll;
+	HBYT 0 1 a0 c2 Control Flags:;
+	CBIT 0 1 0 f4 Second in Sequence  -;
+	CLSE 0 0 0 f4 First in Sequence  -;
+	CBIT 1 1 0 14 Command Break;
+	CLSE 0 0 0 14 No Command Break;
+*   yields number of bytes in Command Data 
+	DUMP 0 10 a0 c2 Command Data:;
+void Console Response & Acknowledge;
+	HBYT 0 1 a0 c2 Control Flags:;
+	CBIT 0 1 0 f4 Second in Sequence  -;
+	CLSE 0 0 0 f4 First in Sequence  -;
+	CBIT 1 1 0 14 Command Data Lost  -;
+	CLSE 0 0 0 14 Command Data Accepted  -;
+	CBIT 2 1 0 14 Response Data Lost;
+	CLSE 0 0 0 14 No Response Data Lost;
+*   yields number of bytes in Response Data 
+	DUMP 0 10 a0 c2 Response Data:;
+void Parameter Load with Xfer Addr;
+	DBYT 0 0 a0 c2 Load Number:;
+	TNXT -Param Info;
+void Param Info;
+	DBYT 0 1 a0 b2 Parameter Type:;
+	CEQU 0 1 0 14 End Mark;
+*   when all params done 
+	TEQU 0 1 0 0 Transfer Address;
+*   display indexed string of in Param Info Types Types 
+	CST# 0 1 0 14 Param Info Types;
+	CLSE 0 1 0 14 Unknown Parameter Info Type;
+	DBYT 0 2 a0 c2 Parameter Length:;
+	TST# 0 1 0 0 Param Info Types;
+	DUMP 0 2 a0 c2 Unknown Info Value:;
+	TNXT -Param Info;
+void Target System Name;
+	DUMP 0 2 a0 c2 Target System Name:;
+	TNXT -Param Info;
+void Target System Address;
+	HEX# 0 2 a0 c2 Target System Address:;
+	TNXT -Param Info;
+void Host System Name;
+	DUMP 0 2 a0 c2 Host System Name:;
+	TNXT -Param Info;
+void Host System Address;
+	HEX# 0 2 a0 c2 Host System Address:;
+	TNXT -Param Info;
+void Host System Time;
+	DBYT 0 0 a0 c2 Century:;
+	DBYT 0 0 a0 c2 Year:;
+	DBYT 0 0 a0 c2 Month:;
+	DBYT 0 0 a0 c2 Day:;
+	DBYT 0 0 a0 c2 Hour:;
+	DBYT 0 0 a0 c2 Minute:;
+	DBYT 0 0 a0 c2 Second:;
+	DBYT 0 0 a0 c2 100th:;
+	DBYT 0 0 a0 c2 TDFH:;
+	DBYT 0 0 a0 c2 TDFM:;
+	TNXT -Param Info;
+void Loop Data Message;
+	HWRD 40000000 0 a0 c2 Receipt:;
+*   yields number of bytes in Image 
+	DUMP 0 10 a0 c2 Loop Data:;
+void Looped Data Message;
+	TNXT -Loop Data Message;
+void Maintenance Version;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 0 a0 c2 Version:;
+	DBYT 0 0 a0 c2 ECO:;
+	DBYT 0 0 a0 c2 User ECO:;
+	TNXT -End Other Info;
+void Functions;
+	DBYT 0 2 a0 c2 Info Length:;
+	DWRD 40000000 1 a0 c2 Functions:;
+	CBIT 8 1 0 f4 Loop ;
+	CBIT 9 1 0 f4 Dump ;
+	CBIT a 1 0 f4 Primary Loader ;
+	CBIT b 1 0 f4 Multi-block Loader ;
+	CBIT c 1 0 f4 Boot ;
+	CBIT d 1 0 f4 Console Carrier ;
+	CBIT e 1 0 f4 Data Link Counters ;
+	CBIT f 1 0 f4 Console Carrier Reservation;
+	TNXT -End Other Info;
+void Console User;
+	DBYT 0 2 a0 c2 Info Length:;
+	ETHR 0 0 a0 c2 Console User:;
+	TNXT -End Other Info;
+void Reservation Timer;
+	DBYT 0 2 a0 c2 Info Length:;
+	DWRD 40000000 0 a0 c2 Reservation Timer:;
+	TNXT -End Other Info;
+void Console Command Size;
+	DBYT 0 2 a0 c2 Info Length:;
+	DWRD 40000000 0 a0 c2 Command Buffer Size:;
+	TNXT -End Other Info;
+void Console Response Size;
+	DBYT 0 2 a0 c2 Info Length:;
+	DWRD 40000000 0 a0 c2 Command Response Size:;
+	TNXT -End Other Info;
+void Hardware Address;
+	DBYT 0 2 a0 c2 Info Length:;
+	ETHR 0 0 a0 c2 Hardware Address:;
+	TNXT -End Other Info;
+void System Time;
+	DBYT 0 2 a0 c2 Info Length:;
+	DBYT 0 0 a0 c2 Century:;
+	DBYT 0 0 a0 c2 Year:;
+	DBYT 0 0 a0 c2 Month:;
+	DBYT 0 0 a0 c2 Day:;
+	DBYT 0 0 a0 c2 Hour:;
+	DBYT 0 0 a0 c2 Minute:;
+	DBYT 0 0 a0 c2 Second:;
+	DBYT 0 0 a0 c2 100th:;
+	DBYT 0 0 a0 c2 TDFH:;
+	DBYT 0 0 a0 c2 TDFM:;
+	TNXT -End Other Info;
+void Unknown Info Type;
+	LABL 0 0 0 14 Unknown Info Type;
+	DBYT 0 2 a0 c2 Info Length:;
+*   this line & next 2 decr packet count by value cnt 
+	MOVE 2 8f;
+*   add global_15 to _16 to decr pkt cnt by value cnt 
+	DUMP 0 2 a0 c2 Unknown Info Value:;
+	TNXT -End Other Info;
+void End Other Info;
+	TNXT -Other Info;
+void MOP Done;
+str# Control Packet Types;
+	Initialization;
+	Verification;
+	Hello and Test;
+	Level 1 Routing;
+	Level 2 Routing;
+	Ethernet Router Hello;
+	Ethernet Endnode Hello;
+	;
+str# DECnet Node Types;
+	Reserved;
+	Level 2 Router;
+	Level 1 Router;
+	Endnode;
+str# Message Types;
+	Run;
+	Start/Connect;
+	Stop/Disconnect;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	Service Announcement;
+	;
+	Solicit Command;
+	Solicit Status;
+	Solicit Message;
+	Solicit Response;
+str# LAT Message Types;
+	LAT_Run;
+	LAT_Connect;
+	LAT_Disconnect;
+	;
+	;
+	;
+	;
+	;
+	;
+	;
+	LAT_Service;
+	;
+	LAT_Solicit_Cmd;
+	LAT_Solicit_Status;
+	LAT_Solicit_Msg;
+	LAT_Solicit_Response;
+str# LAT Solicit Cmd Types;
+	Solicit Non-queued Access To Service;
+	Solicit Queued Access To Service;
+	Cancel Entry In Queue;
+	Send Status Of Entry;
+	Send Status Of Queue;
+	Send Status Of Multiple Entries;
+str# LAT Svc Rsp Stt;
+	Subject Does Not Accept Start Or Command Messages;
+	Subject Can Send A Start Message, Not Command;
+	Subject Can Send A Command Message, Not Start;
+	Subject Can Send A Start Or Command Message;
+str# LAT Proto Fmt Types;
+	Operates in Ethernet Format Only;
+	Operates in 802.3 Format Only;
+	Operates in Ethernet And 802.3 Formats;
+	Reserved;
+str# Slot Types;
+	Data;
+	Unknown;
+	Unknown;
+	Unknown;
+	Unknown;
+	Unknown;
+	Unknown;
+	Unknown;
+	Unknown;
+	Start;
+	Aux Data;
+	Unknown;
+	Reject;
+	Stop;
+str# LAT Slot Types;
+	LAT_Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Unknown Data;
+	LAT_Start;
+	LAT_Aux Data;
+	LAT_Unknown Data;
+	LAT_Stop;
+	LAT_Stop;
+str# Start Param Types;
+	Flags;
+	Unknown;
+	Unknown;
+	Dest. Node Name;
+	Source Node Name;
+	Source Service Group;
+str# LAT Start Types;
+	LAT_Flags;
+	LAT_Unknown Start;
+	LAT_Unknown Start;
+	LAT_Dest Node;
+	LAT_Source Node;
+	LAT_Service Group;
+str# Aux Param Types;
+	Line Characteristics;
+	Input Speed;
+	Output Speed;
+	Bell;
+	Transparency;
+str# LAT Aux Types;
+	LAT_Line Char;
+	LAT_Input Speed;
+	LAT_Output Speed;
+	LAT_Bell;
+	LAT_Transparency;
+str# Parity;
+	Space;
+	Odd;
+	Even;
+	Mark;
+str# LAT Utility Reason;
+	Unknown Reason;
+	User Requested Disconnect;
+	System Shutdown In Progress;
+	Invalid Slot Received;
+	Invalid Service Class;
+	Insufficient Resources To Satisfy Request;
+	Service In Use;
+	No Such Service;
+	Service Is Disabled;
+	Service Is Not Offered By Requested Port;
+	Port Name Is Unknown;
+	Invalid Password;
+	Entry Is Not In Queue;
+	Immediate Access Rejected;
+	Access Denied;
+	Corrupted Solicit Request;
+	Command Type Code Is Illegal Or Not Supported;
+	Start Slot Cannot Be Sent;
+	Queue Entry Deleted By Local Node;
+	Inconsistent Or Illegal Request Parameters;
+str# Disconnect Reason;
+	No Reason Given;
+	Unknown Reason;
+	No Slots Connected On Virtual Circuit;
+	Illegal Message Or Slot Format Received;
+	Virtual Circuit Halt From User;
+	No Progress Is Being Made;
+	Time Limit Expired;
+	LAT Message Retransmit Limit Reached;
+	Insufficient Resources To Satisfy Request;
+	Service Circuit Timer Out Of Desired Range;
+	Number Of Virtual Circuits Exceeded;
+str# Service Classes;
+	Remote Terminal Service;
+str# NSP Msg Types;
+	NSP Data Msg;
+	NSP Ack Msg;
+	NSP Ctl Msg;
+str# NSP Data Msg Subtype Names;
+	Data Segment;
+	Link Service;
+	Begin-of-Msg Data Segment;
+	Interrupt;
+	End-of-Msg Data Segment;
+	Reserved;
+	Begin-of-Msg & End-of-Msg Segment;
+	Reserved;
+str# NSP Ack Qualifier Types;
+	ACK;
+	NACK;
+str# NSP Other Ack Qual Types;
+	Cross Sub-channel ACK;
+	Cross Sub-channel NACK;
+str# NSP Ack Msg Subtype Names;
+	Data Acknowledgment;
+	Other-Data Acknowledgment;
+	Connect Acknowledgment;
+str# NSP Ctl Msg Subtype Names;
+	No Operation;
+	Connect Initiate;
+	Connect Confirm;
+	Disconnect Initiate;
+	Disconnect Confirm;
+	Reserved;
+	Retransmitted Connect Initiate;
+	Reserved;
+str# NSP Ctl Branching;
+	NSP No Op;
+	NSP Conn Init/Conf;
+	NSP Conn Init/Conf;
+	NSP Disc Init/Conf;
+	NSP Disc Init/Conf;
+	NSP Ctl Rsvd;
+	NSP Conn Init/Conf;
+str# NSP FCVAL INT;
+	Data or Message Request;
+	Interrupt Request;
+	Reserved;
+	Reserved;
+str# NSP FCVAL MOD;
+	No Change;
+	Do Not Send Data;
+	Send Data;
+	Reserved;
+str# NSP FC OPT;
+	None;
+	Segment Request Count;
+	Session Control Message Request Count;
+	Reserved;
+str# NSP NSP INFO;
+	Version 3.2;
+	Version 3.1;
+	Version 4.0;
+	Reserved;
+str# SCP Disconnect Reasons;
+	No Error;
+	;
+	;
+	The node is shutting down;
+	The destination end user does not exist;
+	A connect request contained an invalid destination end user name;
+	The destination end user does not have sufficient resources to handle a new logical link;
+	Unspecified error;
+	A third party has aborted the logical link;
+	An end user has aborted the logical link;
+str# SCP Discon Reasons 2;
+	The node does not have sufficient resources to handle a new logical link;
+	The destination end user does not have sufficient resources to handle a new logical link;
+	A connect request contained an unacceptable RQSTRID or PASSWORD field- SCP rejects request;
+	;
+	A connect request contained unacceptable account information;
+	;
+	The end user has aborted, timed out or cancelled a connect request;
+	;
+	;
+	;
+	;
+	The image field of a connect data message was too long;
+str# SCP Format Types;
+	Format;
+	Format 1;
+	Format 2;
+str# MOP Types;
+	Memory Load with Xfer Addr;
+	Dump Complete;
+	Memory Load;
+	Assistance Volunteer;
+	Request Memory Dump;
+	Request ID;
+	Boot;
+	System ID;
+	Request Program;
+	Request Counters;
+	Request Memory Load;
+	Counters;
+	Request Dump Service;
+	Reserve Console;
+	Memory Dump Data;
+	Release Console;
+	;
+	Console Command and Poll;
+	;
+	Console Response & Acknowledge;
+	Parameter Load with Xfer Addr;
+	;
+	;
+	;
+	Loop Data Message;
+	;
+	Looped Data Message;
+str# Comm. Device Types;
+	DP11-DA;
+	DEUNA;
+	DU11-DA;
+	CNA;
+	DL11;
+	QNA;
+	DQ11-DA;
+	Computer Interconnect;
+	DA11;
+	PCL11-B;
+	DUP11-DA;
+	;
+	DMC11;
+	;
+	DN11;
+	;
+	DLV11;
+	;
+	DMP11;
+	;
+	DTE20;
+	;
+	DV11;
+	;
+	DZ11;
+	;
+	;
+	;
+	KMC11/DUP11;
+	;
+	KMC11/DZ11;
+	;
+	KL8-J;
+	;
+	DMV11;
+	;
+	DPV11;
+	;
+	DMF-32;
+	;
+	DMR11;
+	;
+	KMS11-PX;
+	;
+	KMS11-BD/BE;
+str# MOP Info Types;
+	Maintenance Version;
+	Functions;
+	Console User;
+	Reservation Timer;
+	Console Command Size;
+	Console Response Size;
+	Hardware Address;
+	System Time;
+str# Param Info Types;
+	Target System Name;
+	Target System Address;
+	Host System Name;
+	Host System Address;
+	Host System Time;

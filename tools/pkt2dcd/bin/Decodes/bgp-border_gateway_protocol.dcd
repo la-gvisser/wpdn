@@ -1,0 +1,723 @@
+// BGP - Border Gateway Protocol
+
+// g[2] = length of path attribs
+// g[5] = total length of BGP
+
+void BGP;
+	TNXT -BGP::Loop;
+
+void BGP::Loop;
+	TGTE 0 10  0  0  RETURN;
+	LABL 0  0  0 b1  BGP - Border Gateway Protocol\BGP:;
+
+	if (g[16] < 16)
+	{
+		DUMP 0 10 90 c2 Remaining Data:;
+		LABL 0 0  0  14 data continued on following pkt(s);
+	}
+	
+	GLNG 0 1;						// SI: TT3463...what a pain
+	SNEQ ffffffff 1;
+	SKIP 12;
+		INCR 4;
+		GLNG 0 1;
+		DECR 4;
+		SNEQ ffffffff 1;
+		SKIP d;
+			INCR 8;
+			GLNG 0 1;
+			DECR 8;
+			SNEQ ffffffff 1;
+			SKIP 8;
+				INCR c;
+				GLNG 0 1;
+				DECR c;
+				SNEQ ffffffff 1;
+				SKIP 3;
+					DUMP 10 0 90 c2 Marker:;
+					LABL  0 0  0 14 16 F's;
+					l[1] = 100;
+
+	if (l[1] != 100)
+	{
+		g[1] = 0;
+		BGP::Find_the_Marker;
+		TGTE 0 10 0 0 RETURN;
+		if (g[1] == 1)
+		{
+			TNXT -BGP::Loop;
+		}
+		if (g[1] == 0)
+		{
+			DUMP 0 10 90 c2 Remaining Data:;
+			LABL 0 0  0  14 data continued on following pkt(s);
+			TRTS;
+		}
+		HEX# 10  0 90 c2 Marker:;
+	}
+	DWRD 0 5 90 c2 Length:;
+	DBYT 0 1 90 c2 Type:;
+	SUBG 13 5;
+	CST# 0 1 0 14 BGP::Loop::Name;
+	TSB# 0 1 0 0 BGP::Loop::Func;
+	if (g[5] > 0)
+	{
+		if (g[16] <= 0)
+		{
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		DUMP 0 5 90 c2 Extra Bytes:;
+		g[5] = 0;
+		LABL 0 0 0 b8;
+	}
+	TNXT -BGP::Loop;
+
+str# BGP::Loop::Name;
+	 1	| OPEN  (RFC 1771);
+	 2	| UPDATE  (RFC 1771);
+	 3	| NOTIFICATION  (RFC 1771);
+	 4	| KEEPALIVE  (RFC 1771);
+	 5	| ROUTE-REFRESH  (RFC 2918); 
+	
+str# BGP::Loop::Func;
+	 1	| BGP::Open;
+	 2	| BGP::Update;
+	 3	| BGP::Notification;
+	 4	| BGP::Keepalive;
+	 5	| BGP::Route-Refresh;
+
+
+void BGP::Find_the_Marker;
+	l[23] = g[16];			 	//TT14579, DW: left packet length is better than a self choosen number like 150^^
+	if (g[16] > 16) 			//TT14579, DW: 150 changed to 16 (minimal Length for a Marker)
+	{
+		g[1] = 0;
+		l[5] = 0;
+		while (g[1] != 1)
+		{
+			l[1] = pb[0];
+			l[2] = pb[15];
+			if (l[1] == 0xff)
+			{
+				if (l[2] == 0xff)
+				{
+					l[3] = pb[16];
+					if (l[3] != 0xff)
+					{
+						g[1] = 1;
+						DECR 0 45;
+						DUMP 0 45 90 c2 Continuation Data:;
+						LABL 0 0  0  14 continued data from a prev pkt;
+						TRTS;
+					}
+				}
+			}
+			if (g[16] <= 0)
+			{
+				DECR 0 45;
+				DUMP 0 10 90 c2 Unknown Data:;
+				TRTS;
+			}
+			INCR 1; 
+			l[5] += 1;
+			if (l[5] > l[23])	//TT14579,DW: orginally 150 changed to 250, but the left packetlength would be right, so I changed it to l[23]!
+			{
+				DECR 0 45;
+				DUMP 0 10 90 c2 Continuation Data:;
+				TRTS;
+			}
+				
+		}
+	}
+
+// ---------------------------------------------------------------------
+void BGP::Open;
+	LABL  0  0  0  b7  BGP Open Message;
+	DBYT  0  1 90  c2  Version:;
+	DWRD  0  1 90  c2  Autonomous System #:;
+	DWRD  0  1 90  c2  Hold Time:;
+	LABL  0  0  0  24  Second(s);
+	IPLG  0  1 90  c2  BGP Identifier:;
+	DBYT  0  2 90  c2  Optional Params Len:;	// Save length in g2
+	g[5] -= 10;
+	g[5] -= g[2];								// hope that all the bytes were eaten
+	TEQU  0  2  0   0  RETURN;
+	MOVE  0  3;									// use g3 to count params
+	BGP::Params;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void BGP::Params;
+	TGTE 0 2 0 00  RETURN;				// Test g2 for 0
+	LABL 0 0 0 b7  BGP Paramter;
+	ADDG 1 3;								// add 1 to param counter g3
+	DGLB 0 3 0 0;						// display param count in g3
+
+	DBYT 0 1 90 c2 Parameter Type:;
+	CST# 0 1 00 14 BGP::Params::List;
+	if (g[1] == 1)
+	{
+		BGP::Auth_Data;
+		TRTS;
+	}
+
+	DBYT 0 1 90 c2  Parameter Length:;
+	g[2] -= 2;								// subtract from g2
+	l[2] = 1;
+	if (g[2] >= 2)
+	{
+		l[2] = 0;
+		while (g[1] > 0)
+		{
+			l[5] = pb[0];
+			CST# 0 45 00 b7 BGP::Open::Capabilities::List;
+			CLSE 0 00 00 b7 Capability;
+			DBYT 0 45 90 c2 Capability Code:;
+			CST# 0 45 00 14 BGP::Open::Capabilities::List;
+			DBYT 0 41 90 c2 Capability Length:;
+			if (l[1] > 0)
+			{
+				l[7] = g[16];
+				TSB# 0 45 00 00 BGP::Open::Capabilities::Func;
+				if (l[7] == g[16])
+				{
+					HEX# 0 41 90 c2 Capability Data:;
+				}
+			}
+			LABL 0 0 00 b8;
+			l[1] += 2;
+			g[1] -= l[1];
+			g[2] -= l[1];
+		}
+	}
+	if (l[2] == 1)
+	{
+		HEX# 0 1 90 c2 Parameter Data:;
+	}
+	LABL 0 0 0 b8;
+	TNXT -BGP::Params;
+
+str# BGP::Params::List;
+	1 | Authentication Information;
+	2 | Capability Information;
+
+
+void BGP::Auth_Data;	 
+	LABL  0  0  0  24  BGP Authentication Data;
+	DBYT  0  1 90  c2  Parameter Length;
+	SUBG  2  2;								// subtract from g2
+	HEX#  0  1 90  c2  Parameter Value;
+	SUBG  1 82;								// subtract from g2
+	BGP::Params;
+	TRTS;
+
+str# BGP::Open::Capabilities::List;
+	0x00 | Reserved Capability;
+	0x01 | Multiprotocol Extensions Capability;
+	0x02 | Route Refresh Capability;
+	0x03 | Cooperative Route Filtering Capability;
+	0x40 | Graceful Restart Capability;
+	0x41 | Support for 4-octet AS Number Capability;
+	0x42 | Support for Dynamic Capability;
+	0x80 | Route Refresh Capability;
+	0x82 | Cooperative Route Filtering Capability;
+
+str# BGP::Open::Capabilities::Func;
+	0x01 | BGP::Open::Capabilities::MultiProtocolExtensions;
+	//0x02 | BGP::Open::Capabilities::Route_Refresh;			// no info
+	0x41 | BGP::Open::Capabilities::4OctectASNum;
+
+void BGP::Open::Capabilities::MultiProtocolExtensions;		// 0x01
+	DWRD 0 41 90 c2 Addr Family Id:;
+	CST# 0 41 00 14 BGP::Update_Path_Attributes_Loop::Address_Family;		// si: not sure if this is right
+	HBYT 0 00 90 c2 Reserved:;
+	DBYT 0 42 90 c2 Subseq Addr Fam Id:;
+	CST# 0 42 00 14 BGP::Open::Capabilities::MultiProtocolExtensions::SubseqAddr;
+	TRTS;
+
+str# BGP::Open::Capabilities::MultiProtocolExtensions::SubseqAddr;
+	  0 | Reserved;
+	  1 | Unicast;
+	  2 | Multicast;
+	  3 | Unicast+Multicast;
+	  4 | Labeled Unicast;
+	128 | Labeled VPN Unicast;
+	129 | Labeled VPN Multicast;
+	130 | Labeled VPN Unicast+Multicast;
+
+
+
+void BGP::Open::Capabilities::4OctectASNum;					//0x41
+	DLNG 0 00 90 c2 AS Number:;
+	TRTS;
+
+
+// ---------------------------------------------------------------------
+void BGP::Update;
+	LABL  0  0  0  b7  BGP Update Message;
+	DWRD  0  4 90  c2  Unfeasible Rtes Len:;  // use g4 to track routes
+	SUBG  2  5;
+	
+	SGTE 10 84;			//si: i now want to check the length and make sure it's valid...
+	SKIP 3;
+	 LABL 0 0 0 14 Invalid Length Parameter;
+	 DUMP 0 10 90 c2 Data:;
+	 TRTS;
+	
+	SEQU  0  4;									//si: if g4 == 0, don't do routes loop
+	SKIP  3;
+	 SUBG  4 85;								// subg g4 from g5;
+	 MOVE  0  3;								// init route counter
+	 BGP::Update_Withdrawn_Routes_Loop;
+	DWRD  0  4 90  c2  Path Attribute Len:;
+	SUBG  2  5;
+	if (g[4] > 0)
+	{
+		SUBG  4 85;									// subg g4 from g5;
+		MOVE  0 11;									// init route counter
+ 		LABL 0 0 0 b7 Path Attributes;
+		BGP::Update_Path_Attributes_Loop; 
+		LABL 0 0 0 b8;
+	}
+	MOVE  5 84;
+	MOVE  0  a;									// init route counter
+	if (g[16] > 0)
+	{
+		if (g[4] > 0)
+		{
+			LABL 0 0 0 b7 Network Layer Reachability Information;
+			BGP::Update_Network_Layer_Reachability_Information_Loop;
+			LABL 0 0 0 b8;
+		}
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void BGP::Update_Withdrawn_Routes_Loop;
+	TGTE  0  4  0  0   RETURN;
+	LABL  0  0  0  b7  Withdraw Route;
+	ADDG  1  3;									// add 1 to param counter g3
+	DGLB  0  3  0  21;							// display param count in g3
+	DBYT  0  1 90  c2  Length:;
+	LABL  0  0  0  14  bits;
+	 CEQU 0 1 0 14 All IPs matched;
+	SUBG  1  4;	
+	
+	MOVE 1 82;									//si: length is in bits...so convert to bytes
+	DIVG 8 2;
+	SUBG 2 84;
+	g[2] = g[1];
+
+	SLTE 20 1;
+	SKIP 7;										//si: valid prefix
+	HBIT  0  1 90  c2  Prefix:;
+	 MODG  8  2;								// if modulus is 0 then skip then incr
+	 SEQU  0  2;
+	 SKIP  2;
+	  INCR  1;
+	  SUBG  1  4;	
+	 MOVE 20 1;
+	
+	SGTE 21 1;									//si: invalid prefix...so dump data
+	SKIP 6;										//it's invalid if it is above 32 bits
+	 HEX# 0 2 90 c2 Invalid Prefix:;
+	 MODG 8 1;
+	 SEQU 0 1;
+	 SKIP 2;
+	  INCR 1;
+	  SUBG 1 4;
+
+	LABL 0 0 0 b8;
+ 	BGP::Update_Withdrawn_Routes_Loop;
+
+void BGP::Update_Path_Attributes_Loop;
+	TGTE  0  4  0  0  RETURN;
+	TGTE  0 10  0  0  RETURN;
+	INCR 1;
+	GBYT 0 2;
+	DECR 1;
+	CST# 0 2 0 b7 BGP::Update_Path_Attributes_Loop::Name;
+	CLSE 0 0 0 b7 Unknown;
+
+	//LABL  0  0  0  b7  Path Attribute;
+	//ADDG  1 11;							// add 1 to param counter g3
+	//DGLB  0 11 21;						// display param count in g3
+
+	BBIT  8  1 90  c9  Flags:;
+	SUBG  1  4;
+	CBIT  7  1  0  D4  1... .... Optional;
+	CLSE  0  0  0  D4  0... .... Well-known;
+	CBIT  6  1  0  D4  .1.. .... Transitive;
+	CLSE  0  0  0  D4  .0.. .... Non-transitive;
+	CBIT  5  1  0  D4  ..1. .... Partial;
+	CLSE  0  0  0  D4  ..0. .... Complete;
+	CBIT  4  1  0  D4  ...1 .... Extended;
+	CLSE  0  0  0  D4  ...0 .... 1 byte length;
+	LABL 0 0 0 b8;
+
+	DBYT  0  2 90  c2  Type Code:;
+	SUBG  1  4;
+	CST# 0 2 0 24 BGP::Update_Path_Attributes_Loop::Name;
+	CLSE 0 0 0 24 Unknown;
+
+	SBIT  4  1;							// test for extended length
+	SKIP  2;
+	DBYT  0  6 90  c2  Length:;
+	MOVE  6  87;						// i need to copy length into 7 for as path
+	SUBG  1  4;
+
+	SBIT  4  1;
+	SKIP  80000003;
+	DWRD  0  6 90  c2  Length:;			// extended length
+	MOVE  6  87;						// i need to copy length into 7 for as path
+	SUBG  2  4;
+
+	SNEQ  1  2;
+	SKIP  3;
+	DBYT  0  1 90 c2   Origin Type:;
+	CEQU  0  1  0  24  IGP;
+	CEQU  2  1  0  24  INCOMPLETE;
+
+	SNEQ  2  2;
+	SKIP  3;
+	SEQU  0  6;							// test if length == 0
+	SKIP  1;							// if length == 0, skip it!
+	BGP::AS_Path_Segment;
+	
+    SNEQ  3  2;
+	SKIP  1;
+	IPLG  0  1  90 c2  Next Hop:;
+
+	SNEQ  4  2;
+	SKIP  1;
+	DLNG  0  1  90 c2  Attribute:;
+
+	SNEQ 5 2;
+	SKIP 1;
+	DLNG 0 1 90 c2 Local Pref Attribute:;
+
+	SNEQ 6 2;
+	SKIP 1;
+	DUMP  0  6 90  c2  Data:;			// TBD: Decode the data
+
+	// Aggregator
+	if (g[2] == 7)
+	{
+		DWRD 0 1 90 c2 Aggregator AS:;
+		IPLG 0 1 90 c2 Aggregator origin:;
+	}
+
+	// Communities
+	if (g[2] == 8)
+	{
+		MOVE  6 87;
+		DIVG  4 7;
+		BGP::Community;
+	}
+
+	// Originator ID
+	if (g[2] == 9)
+	{
+		IPLG 0 0 90 c2 Originator ID:;
+	}
+
+	// Cluster List
+	if (g[2] == 10)
+	{
+		l[1] = g[6];
+		MODG 4 41;
+		if (l[1] == 0)
+		{
+			g[7] = g[6];
+			while (g[7] > 0)
+			{
+				IPLG 0 0 90 c2 IP:;
+				g[7] -= 4;
+			}
+		}
+		if (l[1] != 0)
+		{
+			DUMP 0 6 90 c2 Community Data:;
+		}
+	}
+
+	//MRNLRI
+	if (g[2] == 14)
+	{
+		g[7] = g[6];
+		HWRD 0 2 90 c2 Addr Family Id:;
+		CST# 0 2 00 14 BGP::Update_Path_Attributes_Loop::Address_Family;
+		DBYT 0 1 90 c2 Sbsqnt Addr Fam Id:;
+		CST# 0 1 00 14 BGP::Update_Path_Attributes_Loop::Sub_Addr_Family;
+		DBYT 0 1 90 c2 Next Hop Ntwrk Addr Len:;
+		g[7] -= 4;
+		g[7] -= g[1];
+		if (g[2] == 1)
+		{
+			while(g[1] >= 4)
+			{
+				IPLG 0 0 90 c2 Next Hop Ntwrk Addr:;
+				g[1] -= 4;
+			}
+		}
+		if (g[2] == 2)
+		{
+			while(g[1] >= 16)
+			{
+				IPV6 0 0 90 c2 Next Hop Ntwrk Addr:;
+				g[1] -= 16;
+			}
+		}
+		DBYT 0 1 90 c2 Num of SNPAs:;
+		g[7] -= 1;
+		l[1] = 0;
+		while (l[1] < g[1])
+		{
+			DBYT 0 1 90 c2 SNPA Length:;
+			g[7] -= 1;
+			HEX# 0 1 90 c2 SNPA:;
+			g[7] -= g[1];
+			l[1] += 1;
+		}
+		if (g[7] > 0)
+		{
+			if (g[7] <= 20)
+			{
+				LABL 0 0 90 c9 Network Layer Reachability Info;
+				DBYT 0 0 90 c2 MP Reach NLRI Prefix Len:;
+				g[7] -= 1;
+				HEX# 0 7 90 c2 MP Reach NLRI Prefix:;
+				LABL 0 0 00 c8;				
+			}
+			if (g[7] > 20)
+			{
+				DUMP 0 7 90 cc Ntwrk Layer Reachability Info:;
+			}
+		}
+	}
+	
+	//Multiprotocol Unreachable NLRI - MP_UNREACH_NLRI
+	if (g[2] == 15)
+	{
+		g[7] = g[6];
+		HWRD 0 1 90 c2 Addr Family Id:;
+		CST# 0 1 00 14 BGP::Update_Path_Attributes_Loop::Address_Family;
+		DBYT 0 1 90 c2 Subsqnt Addr Family Id:;
+		CST# 0 1 00 14 BGP::Update_Path_Attributes_Loop::Sub_Addr_Family;
+		g[7] -= 3;
+		if (g[7] > 0)
+		{
+			l[1] = g[4];
+			g[4] = g[7];
+			MOVE  0  3;								// init route counter
+			BGP::Update_Withdrawn_Routes_Loop;
+			g[4] = l[1];
+		}
+	}
+
+	// Extended Communities
+	if (g[2] == 16)
+	{
+		l[1] = g[6];
+		MODG 8 41;
+		if (l[1] == 0)
+		{
+			g[7] = g[6];
+			while (g[7] > 0)
+			{
+				INCR 2;
+				DWRD 0 1 90 c2 Route:;
+				LABL 0 0 00 00 :;
+				INCR 2;
+				DWRD 0 1 00 00 ;
+				g[7] -= 8;
+			}
+		}
+		if (l[1] != 0)
+		{
+			DUMP 0 6 90 c2 Community Data:;
+		}
+	}
+
+	// handle unknowns
+	if (g[2] >= 11)
+	{
+		if (g[2] <= 13)
+		{
+			DUMP  0  6 90  c2  Data:;			// TBD: Decode the data
+		}
+	}
+	if (g[2] > 16)
+	{
+		DUMP  0  6 90  c2  Data:;			// TBD: Decode the data
+	}
+	
+	SUBG  6 84;
+
+    LABL 0 0 0 b8;
+  	BGP::Update_Path_Attributes_Loop;
+
+str# BGP::Update_Path_Attributes_Loop::Name;
+	 1	| Origin;
+	 2	| AS Path;
+	 3	| Next Hop;
+	 4	| Multi Exit Disc;
+	 5	| Local Preferences;
+	 6	| Atomic Aggregate;
+	 7	| Aggregator;
+	 8	| Communities;
+	 9	| Originator ID;
+	10	| Cluster List;
+	11	| DPA;									// si: not done
+	12	| Advertiser;							// si: not done
+	13	| RCID Path - Cluster ID;				// si: not done
+	14	| Multiprotocol Reachable NLRI;
+	15	| Multiprotocol Unreachable NLRI;
+	16	| Extended Communities;
+	17	| New AS Path;							// si: not done
+	18	| New Aggregator;						// si: not done
+	19	| SSA, SAFI Specific Attribute;			// si: not done
+	20	| Connector Attribute;					// si: not done
+	255	| Reserved;
+
+str# BGP::Update_Path_Attributes_Loop::Address_Family;
+	 0 | Reserved;
+	 1 | IP;
+	 2 | IPv6;
+	 3 | NSAP;
+	 4 | HDLC;
+	 5 | BBN 1822;
+	 6 | 802;
+	 7 | E.163;
+	 8 | E.164;
+	 9 | F.69 (Telex);
+	10 | X.121 (X.25, Frame Relay);
+	11 | IPX;
+	12 | Appletalk;
+	13 | Decnet IV;
+	14 | Banyan Vines;
+ 65535 | Reserved;
+
+str# BGP::Update_Path_Attributes_Loop::Sub_Addr_Family;
+	1 | NLRI used for Unicast Forwarding;
+	2 | NLRI used for Multicast Forwarding;
+	3 | NLRI used for both Unicast and Multicast Forwarding;
+
+// ---------------------------------------------------------------------
+void BGP::AS_Path_Segment;
+	DBYT 0 1 90 c2  Path Segment Type:;
+	SUBG 1 7;
+	CEQU 1 1 0 24 AS_SET;
+	CEQU 2 1 0 24 AS_SEQUENCE;
+	CEQU 3 1 0 24 AS_CONFED_SEQUENCE;
+	CEQU 4 1 0 24 AS_CONFED_SET;
+	DBYT 0 3 90 c2  Path Segment Length:;
+	SUBG 1 7;
+	BGP::Path_Segment_Loop;
+	TNEQ 0 7 0 0 BGP::AS_Path_Segment;
+
+void BGP::Path_Segment_Loop;
+ 	DWRD 0 1 90 c2 AS Identifier:;
+	SUBG 2 7;
+	SUBG 1 3;
+	TNEQ 0 3 0 0 BGP::Path_Segment_Loop;
+	// TEQU  0  3   0  0  RETURN;  BGP::Path_Segment_Loop;
+
+// ---------------------------------------------------------------------
+void BGP::Community;
+	DWRD 0 0 90 c2 Community As:;
+	DWRD 0 0 90 c2 Community Value:;
+	SUBG 1 7;
+	TNEQ 0 7 0 0 BGP::Community;
+	TRTS;
+ 
+ // ---------------------------------------------------------------------
+void BGP::Update_Network_Layer_Reachability_Information_Loop;
+	TGTE  1  4  0  0   RETURN;
+	LABL  0  0  0  b7  Reachability Info;
+	ADDG  1  a;							// add 1 to param counter g3
+	//DGLB  0  a  21;					// display param count in g3
+	DBYT  0  1  90  c2 Length:;
+	g[5] -= 1;
+	MOVE  1 89;
+	LABL  0  0   0  14 bits;
+	SUBG  1  4;
+	LABL  0  0  90  c2 Prefix:;
+	DGLB  0  1  D5;
+	DIVG  8  1;
+	MODG  8  9;
+	g[5] -= g[1];
+	if( g[9] != 0 )
+	{
+		g[1]++;
+		g[5]--;
+	}
+	SUBG  1 84;
+	Display Bytes;
+	LABL 0 0 0 b8;
+ 	BGP::Update_Network_Layer_Reachability_Information_Loop;
+ 
+ // ---------------------------------------------------------------------
+void BGP::Notification;
+	LABL  0  0  0 b7  BGP Notification;
+	DBYT  0  2 90 c2  Error Code:;
+	CEQU  1  2  0 24  Message Header Error;
+	CEQU  2  2  0 24  OPEN Message Error;
+	CEQU  3  2  0 24  UPDATE Message Error;
+	CEQU  4  2  0 24  Hold Timer Expired;
+	CEQU  5  2  0 24  Finite State Machine Error;
+	CEQU  6  2  0 24  Cease;
+	CEQU  7  2  0 24  Capability Message Error;
+	DBYT  0  3 90 c2  Error subcode:;
+	TSB#  0  2  0  0  BGP::Notification::subcodes;		//test based on error code in g2
+	TRTS;
+
+str# BGP::Notification::subcodes;
+	BGP::Notification::Message_subcodes;
+	BGP::Notification::OPEN_subcodes;
+	BGP::Notification::UPDATE_subcodes;
+
+void BGP::Notification::Message_subcodes;
+	CST# 0 3 0 24 BGP::Notification::Message_subcodes_list;
+
+str# BGP::Notification::Message_subcodes_list;
+	1 | Connection Not Synchronized;
+	2 | Bad Message Length;
+	3 | Bad Message Type;
+	
+void BGP::Notification::OPEN_subcodes;
+	CST# 0 3 0 24 BGP::Notification::OPEN_subcodes_list;
+
+str# BGP::Notification::OPEN_subcodes_list;
+	1 | Unsupported Version Number;
+	2 | Bad Peer AS;
+	3 | Bad BGP Identifier;
+	4 | Unsupported Optional Parameter;
+	5 | Authentication Failure;
+	6 | Unacceptable Hold Time;
+	7 | Unsupported Capability;
+
+void BGP::Notification::UPDATE_subcodes;
+	CST# 0 3 0 24 BGP::Notification::UPDATE_subcodes_list;
+
+str# BGP::Notification::UPDATE_subcodes_list;
+	 1 | Malformed Attribute List;
+	 2 | Unrecognized Well-known Attribute;
+	 3 | Missing Well-known Attribute;
+	 4 | Attribute Flags Error;
+	 5 | Attribute Length Error;
+	 6 | Invalid ORIGIN Attribute;
+	 7 | AS Routing Loop;
+	 8 | Invalid NEXT_HOP Attribute;
+	 9 | Optional Attribute Error;
+	10 | Invalid Network Field;
+	11 | Malformed AS_PATH;
+
+void BGP::Keepalive;
+	//LABL  0  0  0 b7  BGP Keepalive;
+	//si: per tom's request, since no data is expected, we're gonna block this out - tt6090
+
+void BGP::Route-Refresh;
+	//LABL  0  0  0 b7  BGP Route-Refresh;
+	//si: per tom's request, since no data is expected, we're gonna block this out - tt6090

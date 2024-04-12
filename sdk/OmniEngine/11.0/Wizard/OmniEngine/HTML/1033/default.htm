@@ -1,0 +1,543 @@
+<html DIR="ltr">
+  <head>
+    <title>'Savvius Engine Analysis Module Wizard'</title>
+    <meta name="vs_targetSchema" content="http://schemas.microsoft.com/intellisense/ie5">
+    <style type="text/css">      @import url();
+      .style1
+      {
+          width: 600px;
+          height: 1px;
+      }
+      .style2
+      {
+        width: 150px;
+        height: 20px;
+        text-decoration: underline;
+      }
+      .style3
+      {
+        width: 295px;
+        height: 1px;
+      }
+      .style4
+      {
+          width: 400px;
+          height: 1px;
+      }
+      .style5
+      {
+        width: 295px;
+        height: 20px;
+        text-decoration: underline;
+      }
+    </style>
+
+    <script>
+      var strURL = window.external.FindSymbol("PRODUCT_INSTALLATION_DIR");
+      strURL += "VCWizards/";
+      strURL += window.external.GetHostLocale();
+      strURL += "/NewStyles.css";
+      document.styleSheets(0).imports(0).href = strURL;
+    </script>
+
+    <!--  -->
+    <!-- The symbol tag is used to set the default values for the user-defined symbols.-->
+    <!--  -->
+    <symbol name='SAFE_PROJECT_NAME' type="text"></symbol>
+    <symbol name='WIZARD_DIALOG_TITLE' type="text" value='Savvius Peek Analysis Module Wizard'></symbol>
+    <symbol name='HANDLE_ERROR' type='checkbox' value="false"></symbol>
+    <symbol name='SOURCE_FILTER' type="text" value='c;cpp;def;idl'></symbol>
+    <symbol name='HEADER_FILTER' type="text" value='h'></symbol>
+    <symbol name='RESOURCE_FILTER' type="text" value='rc;bmp'></symbol>
+    <symbol name='APP_TYPE_SUMMARY' type="text" value='Savvius Peek Analysis Module'></symbol>
+  </head>
+  <body bgcolor="buttonface" topmargin="0" leftmargin="0" rightmargin="0" bottommargin="0"
+    onload="InitDocument(document);" onkeydown="OnKey();" onkeypress="OnPress();">
+    <form name="wizardform">
+      <table class="ONE" height="100%" width="100%" border="0" cellpadding="0" cellspacing="0">
+        <colgroup>
+          <col width="100%"/>
+        </colgroup>
+        <!--OPEN OF INTRODUCTORY INFORMATION table//-->
+        <tr valign="top">
+          <td height="65" width="100%" colspan="2">
+            <table class="TWO" border="0" cellpadding="0" cellspacing="0">
+              <colgroup>
+                <col width="12"/>
+                <col/>
+                <col width="12"/>
+              </colgroup>
+              <tr>
+                <td valign="top" height="1" width="12">
+                  &nbsp;
+                </td>
+                <td valign="top" height="1">
+                  &nbsp;
+                </td>
+                <td valign="top" height="1" width="12">
+                  &nbsp;
+                </td>
+                <td class="IMAGE" valign="bottom" width="110" rowspan="2">
+                  <div class="SMALLA" align="center">
+                    <img class="SMALLEST" src="..\..\Images\OmniEngine.ico" width="63" height="63" alt="" border="0"/>
+                  </div>
+                </td>
+                <td valign="top" height="1" width="6" rowspan="2">
+                  &nbsp;
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" height="65" width="12">
+                  &nbsp;
+                </td>
+                <td valign="top" height="1">
+                  <h4 class="HEAD" ID="HEAD">
+                    Welcome to Engine Analysis Module &nbsp;Wizard for Visual Studio
+                  </h4>
+                </td>
+                <td valign="top" height="1" width="12">
+                  &nbsp;
+                </td>
+              </tr>
+              <tr>
+                <td valign="top" class="RULE" colspan="5" height="2">
+                  <table border="0" width="100%" cellpadding="0" cellspacing="0" style="height: 1px">
+                    <tr valign="top">
+                      <td height="1" width="100%" bgcolor="buttonshadow"><img src="../../Images/spacer.gif" height="1" width="1" alt=""/></td>
+                      <td height="1" width="1" bgcolor="window"><img src="../../Images/spacer.gif" height="1" width="1" alt=""/></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!--CLOSE OF INTRODUCTORY INFORMATION table//-->
+        <!--OPEN OF NAVIGATION, CONTENT, AND BUTTON TABLES//-->
+        <tr valign="top">
+          <td valign="top" height="100%">
+            <!--OPEN OF CONTENT AND BUTTON table//-->
+            <table class="ONE" border="0" cellpadding="0" cellspacing="0">
+              <colgroup>
+                <col width="100%"/>
+              </colgroup>
+              <tr valign="top">
+                <td height="100%">
+                  <!--OPEN OF CONTENT//-->
+                  <table class="style1" cellspacing="0" cellPadding="0" border="0">
+                    <colgroup>
+                      <col/>
+                      <col/>
+                      <col width="12"/>
+                      <col width="185"/>
+                      <col width="12"/>
+                    </colgroup>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <p style="height: 1px"></p>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style5">&nbsp;Select options:&nbsp;</td>
+                      <td valign="top" class="style2">&nbsp;Description:&nbsp;</td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_PLUGINMESSAGE" type="checkbox" name="cbPluginMessages"/>
+                          Plugin Messages
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="">
+                          &nbsp;&nbsp;&nbsp;Send and respond to private plugin messages.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp
+                          <input id="NOTIFY_TAB" type="checkbox" name="cbTabs"/>
+                          Engine and Context Tab
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="">
+                          &nbsp;&nbsp;&nbsp;Create tabs in the Engine and Capture windows.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp
+                          <input id="NOTIFY_UIHANDLER" type="checkbox" onclick="OnUIHandler(document);" name="cbUIHandler"/>
+                          HTML Dialogs (no Console Context)
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="HTML Prefs">
+                          &nbsp;&nbsp;&nbsp;Plugin only installs on OmniEngine. (No Summarize Packet.)
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_CEFPREFS" type="radio" name="cbUIPrefs" checked />
+                          Cef Handler
+                        </span>
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_HTMLPREFS" type="radio" name="cbUIPrefs" />
+                          HTML Handler
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="HTML Prefs">
+                          &nbsp;&nbsp;&nbsp;&nbsp;Render webpages with Chrome or Internet Explorer.
+                        </span>
+                      </td>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_CODEEXAMPLES" type="checkbox" name="cbExampleCode"/>
+                          Include Example Code
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="HTML Prefs">
+                          &nbsp;&nbsp;&nbsp;//#define IMPLEMENT_CODEEXAMPLES in StdAfx.h to remove.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                      </td>
+                      <td valign="middle" class="style4">
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <p style="height: 0px"></p>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style5">&nbsp;Remote Processing:&nbsp;</td>
+                      <td valign="top" class="style2">&nbsp;Description:&nbsp;</td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_RESETPROCESSING" type="checkbox" name="cbReset"/>
+                          Reset Capture
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IResetProcessing::ResetProcessing">
+                          &nbsp;&nbsp;&nbsp;Plugin is called when the packet count has rolled-over.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_PACKETPROCESSOREVENTS" type="checkbox" name="cbEvents"/>
+                          Start, Stop and Reset Capture
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IPacketProcessorEvents::OnStartPacketProcessing, IPacketProcessorEvents::OnStopPacketProcessing">
+                          &nbsp;&nbsp;&nbsp;Plugin is called when a capture is started, stopped or reset.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_FILTERPACKET" type="checkbox" name="cbFilterPacket"/>
+                          Filter Packets
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IFilterPacket::FilterPacket">
+                          &nbsp;&nbsp;&nbsp;Plugin is called to filter packets. Allows use in Advanced Filters.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_PROCESSPACKET" type="checkbox" name="cbProcessPacket"/>
+                          Process Packets
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IProcessPacket::ProcessPacket">
+                          &nbsp;&nbsp;&nbsp;Plugin is called to process packets.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_PROCESSTIME" type="checkbox" name="cbProcessTime"/>
+                          Time Notification
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IProcessTime::ProcessTime">
+                          &nbsp;&nbsp;&nbsp;Plugin is called once-per-second during capture. Simulated for files.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp
+                          <input id="NOTIFY_UPDATESUMMARYSTATS" type="checkbox" name="cbSummaryStats"/>
+                          Summary Statistics
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IUpdateSummaryStats::UpdateSummaryStats">
+                          &nbsp;&nbsp;&nbsp;Plugin is called to provide summary statistics.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp;
+                          <input id="NOTIFY_NOTIFICATIONS" type="checkbox" name="cbNotifications"/>
+                          Send and Receive Notifications
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="IUpdateSummaryStats::UpdateSummaryStats">
+                          &nbsp;&nbsp;&nbsp;Plugin receives and can send notifications.
+                        </span>
+                      </td>
+                    </tr>					
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <p style="height: 0px"></p>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style5">&nbsp;Console Processing:&nbsp;</td>
+                      <td valign="top" class="style2">&nbsp;Description:&nbsp;</td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <span class="itemText">
+                          &nbsp;&nbsp;&nbsp
+                          <input id="NOTIFY_SUMMARIZEPACKET" type="checkbox" name="cbSummarizePacket"/>
+                          Summarize Packet
+                        </span>
+                      </td>
+                      <td valign="middle" class="style4">
+                        <span class="itemText" title="ISummarizePacket::SummarizePacket">
+                          &nbsp;&nbsp;&nbsp;Plugin can supply a packet summary.
+                        </span>
+                      </td>
+                    </tr>
+                    <tr valign="top">
+                      <td valign="top" class="style3">
+                        <p style="height: 0px"></p>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--CLOSE OF CONTENT//-->
+                </td>
+              </tr>
+              <tr valign="bottom">
+                <td height="48">
+                  <!--OPEN OF OPTIONAL BUTTON HTML//-->
+                  <!-- CLOSE OF OPTIONAL BUTTON HTML//->
+                
+                  <!--OPEN OF BUTTON HTML//-->
+                  <table height="48" border="0" cellpadding="0" cellspacing="0">
+                    <colgroup>
+                      <col width="12"/>
+                      <col/>
+                      <col width="75"/>
+                      <col width="4"/>
+                      <col width="75"/>
+                      <col width="4"/>
+                      <col width="75"/>
+                      <col width="12"/>
+                    </colgroup>
+                    <tr>
+                      <td valign="top" class="RULE" colspan="8" height="2">
+                        <table border="0" width="100%" height="1" cellpadding="0" cellspacing="0">
+                          <tr valign="top">
+                            <td height="1" width="100%" bgcolor="buttonshadow"><img src="../../Images/spacer.gif" height="1" width="1" alt=""/></td>
+                            <td height="1" width="1" bgcolor="window"><img src="../../Images/spacer.gif" height="1" width="1" alt=""/></td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td valign="top" height="11" colspan="8">
+                        &nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td valign="top" height="11">
+                        &nbsp;
+                      </td>
+                      <td valign="middle" height="23" width="85">
+                        <button class="BUTTONS" id="ButtonA" accesskey="A" onclick="OnSelectCommon(document);" type="button">
+                          Select Commo<u>n</u>
+                        </button>
+                      </td>
+                      <td valign="top" height="23">
+                        &nbsp;
+                      </td>
+                      <td valign="middle" height="23" width="75">
+                        <button class="BUTTONS" id="FinishBtn" accesskey="F" onclick="OnFinish(document);" type="button">
+                          <u>F</u>inish
+                        </button>
+                      </td>
+                      <td valign="middle" height="23" width="4">
+                        &nbsp;
+                      </td>
+                      <td valign="middle" height="23" width="75">
+                        <button class="BUTTONS" id="CancelBtn" accesskey="C" onclick="window.external.Finish(document, 'cancel');" type="button">
+                          <u>C</u>ancel
+                        </button>
+                      </td>
+                      <td valign="middle" height="23" width="4">
+                        &nbsp;
+                      </td>
+                      <td valign="middle" height="23" width="75">
+                        <button class="BUTTONS" id="HelpBtn" accesskey="H" onclick="window.external.OnHelp('vc.appwiz.custom.overview');" type="button">
+                          <u>H</u>elp
+                        </button>
+                      </td>
+                      <td valign="middle" height="23" width="12">
+                        &nbsp;
+                      </td>
+                    </tr>
+                    <tr>
+                      <td valign="top" height="12" colspan="8">
+                        &nbsp;
+                      </td>
+                    </tr>
+                  </table>
+                  <!--CLOSE OF BUTTON HTML//-->
+                </td>
+              </tr>
+            </table>
+            <!--CLOSE OF NAVIGATION, CONTENT, AND BUTTON TABLES//-->
+          </td>
+        </tr>
+      </table>
+    </form>
+
+    <script language="JSCRIPT">
+    // This is an example of a function which initializes the page
+    //
+    function InitDocument(document) {
+      setDirection();
+
+      if (window.external.FindSymbol('DOCUMENT_FIRST_LOAD')) {
+        // This function sets the default symbols based
+        // on the values specified in the symbol tags above
+        //
+        window.external.SetDefaults(document);
+        var strProjName = window.external.FindSymbol("PROJECT_NAME");
+        var strSafeProjName = CreateSafeName(strProjName);
+        window.external.AddSymbol("SAFE_PROJECT_NAME", strSafeProjName);
+        CreateGuids();
+      }
+
+      // Load the document and initialize the controls
+      // with the appropriate symbol values
+      //
+      window.external.Load(document);
+    }
+
+    // If the wizard has more than 1 page, this
+    // function will browse to the page specified
+    //
+    function Next(document, linkto) {
+      window.external.Next(document, linkto);
+    }
+
+    // This is an example of a function which
+    // gets called when the user clicks on 'Finish'
+    //
+    function OnFinish(document) {
+      OnWizFinish(document);
+    }
+
+    function OnSelectCommon(document) {
+      document.wizardform.cbPluginMessages.checked = true;
+      document.wizardform.cbTabs.checked = true;
+      document.wizardform.cbUIHandler.checked = true;
+      document.wizardform.cbExampleCode.checked = false;
+      document.wizardform.cbReset.checked = true;
+      document.wizardform.cbEvents.checked = true;
+      document.wizardform.cbFilterPacket.checked = true;
+      document.wizardform.cbProcessPacket.checked = true;
+      document.wizardform.cbProcessTime.checked = true;
+      document.wizardform.cbSummaryStats.checked = true;
+      document.wizardform.cbNotifications.checked = false;
+      document.wizardform.cbSummarizePacket.checked = false;
+
+      OnUIHandler(document);
+    }
+
+    function OnUIHandler(document) {
+      if (document.wizardform.cbUIHandler.checked) {
+        document.wizardform.cbSummarizePacket.checked = false;
+        document.wizardform.cbSummarizePacket.disabled = true;
+      }
+      else {
+        document.wizardform.cbSummarizePacket.disabled = false;
+      }
+    }
+
+    function CreateGuids() {
+      strGuid = window.external.CreateGuid();
+      strVal = window.external.FormatGuid(strGuid, 0);
+      window.external.AddSymbol("CLSID_REGISTRY_FORMAT", strVal);
+
+      strVal = window.external.FormatGuid(strGuid, 2);
+      window.external.AddSymbol("CLSID_STRUCT_FORMAT", strVal);
+    }
+
+    </script>
+    <script id="INCLUDE_SCRIPT" language="JSCRIPT"></script>
+    <script id="INCLUDE_COMMON" language="JSCRIPT"></script>
+    <!--
+    Common.js is a script file which contains the helper functions
+    used by the wizards.  Include this line if you want to
+    call these functions from your html scripts.
+    //-->
+    <script>
+      var strPath = window.external.FindSymbol("PRODUCT_INSTALLATION_DIR");
+      strPath += "VCWizards/";
+      strPath += window.external.GetHostLocale();
+
+      var strScriptPath = strPath + "/Script.js";
+      var strCommonPath = strPath + "/Common.js";
+      document.scripts("INCLUDE_SCRIPT").src = strScriptPath;
+      document.scripts("INCLUDE_COMMON").src = strCommonPath;
+
+      function ButtonA_onclick() {
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,981 @@
+// Ethernet IP (Industrial Protocol)
+// Connection port 2222 - 0x8AE
+// All encapsulation messages port 44818 - 0xAF12
+// Version: 0.1
+// 5/4/2007
+
+str# UDP::Ports_Str;
+	2222  | Ethernet_IP::Connection;
+	
+str# IP::Ports_Str;
+	44818 | Ethernet_IP;
+
+void Ethernet_IP()
+{
+	LABL( 0, 0, 0, 0xb1, "Ethernet IP - Industrial Protocol\EnIP");
+	LABL( 0, 0, 0, 0xb7, "Ecapsulation Header");
+	HWRD( 0x40000000, g[1], 0x90, 0xc2, "Command:");
+		CST#( 0, g[1], 0, 0x14, Ethernet_IP::Command_Str);
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Length:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Session Handle:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Status:");
+		CST#( 0, l[1], 0, 0x14, Ethernet_IP::Status_Str);
+	HEX#( 8, 0, 0x90, 0xc2, "Sender Context:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Options:");
+	LABL( 0, 0, 0, 0xb8);
+	LABL( 0, 0, 0, 0xb7, "Command Specific Data");
+	TSB#( 0, g[1], 0, 0, Ethernet_IP::Command);
+	LABL( 0, 0, 0, 0xb8);
+	if (g[4] == 0)
+	{
+		CIP();
+	}
+}
+
+void Ethernet_IP::Connection()
+{
+	g[5] = 1;
+	LABL( 0, 0, 0, 0xb1 "Ethernet IP - Industrial Protocol\EnIP");
+	Ethernet_IP::Item_Count();
+}
+
+void Ethernet_IP::Item_Count()
+{
+	DWRD( 0x40000000, g[2], 0x90, 0xc9, "Item Count:");
+	while (g[2] > 0)
+	{
+		EthernetIP::TypeId();
+		g[2] -= 1;
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void EthernetIP::TypeId()
+{
+	HWRD( 0x40000000, l[2], 0x90, 0xc9, "Type Id:");
+		CST#( 0, l[2], 0, 0x14, Ethernet_IP::TypeId_Str);
+	DWRD( 0x40000000, g[3], 0x90, 0xc2, "Length:");
+	TSB#( 0, l[2], 0, 0, Ethernet_IP::Items);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 2-5.1 – NOP header
+// No Data
+
+// 2-5.2 ListIdentity
+void Ethernet_IP::List_Identity()
+{
+	Ethernet_IP::Item_Count();
+}
+
+// Table 2-5.6 – ListInterfaces reply
+void Ethernet_IP::List_Interfaces()
+{
+	Ethernet_IP::Item_Count();
+}
+
+// Table 2-5.7 – RegisterSession request
+void Ethernet_IP::Register_Session()
+{
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Protocol Version:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Option Flags:");
+	LABL( 0, 0, 0, 0x14, "Reserved");
+}
+
+// Table 2-5.9 – UnregisterSession command
+// No Data
+
+// Table 2-5.11 – ListServices reply
+void Ethernet_IP::List_Services()
+{
+	Ethernet_IP::Item_Count();
+}
+
+// Table 2-5.12 – Capability flags
+void Ethernet_IP::Capability_Flags()
+{
+	BWRD( 0x40000000, l[1], 0x90, 0xc9, "Capability Flags:");
+	DECR 2;
+	BBIT( 0x40000007, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, "xxxx xxx. .... .... Reserved");
+	BBIT( 0x40000001, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... ...0 .... .... Supports CIP Class");
+		CEQU( 1, l[1], 0, 0x54, ".... ...1 .... .... UDP-based Connections");
+	BBIT( 0x40000002, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, ".... .... xx.. .... Reserved");
+	BBIT( 0x40000001, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... ..0. .... Clear");
+		CEQU( 1, l[1], 0, 0x54, ".... .... ..1. .... CIP packet encapsulation via TCP");
+	BBIT( 0x40000002, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, ".... .... ...x xxxx Reserved");
+	LABL( 0, 0, 0, 0xc8);	
+}
+
+// Table 2-5.13 – SendRRData request
+void Ethernet_IP::Send_RR_Data()
+{
+	HLNG( 0x40000000, g[4], 0x90, 0xc2, "Interface Handle:");
+		CST#( 0, g[4], 0, 0x14, CIP::Interface_Handle_Str);
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Timeout:");
+	LABL( 0, 0, 0, 0x14, "seconds");
+	Ethernet_IP::Item_Count();
+}
+
+// Table 2-5.15 – SendUnitData command
+void Ethernet_IP::Send_Unit_Data()
+{
+	HLNG( 0x40000000, g[4], 0x90, 0xc2, "Interface Handle:");
+		CST#( 0, g[4], 0, 0x14, CIP::Interface_Handle_Str);
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Timeout:");
+	LABL( 0, 0, 0, 0x14, "seconds");
+	Ethernet_IP::Item_Count();
+}
+
+void Ethernet_IP::Indicate_Status()
+{
+	//ToDo:
+}
+
+void Ethernet_IP::Cancel()
+{
+	//ToDo:
+}
+
+// Table 2-7.5 – Connected address item
+void EthernetIP::Connected_Address()
+{
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Connection ID:");
+}
+
+// Table 2-7.6 – Sequenced address item
+void EthernetIP::Sequenced_Address()
+{
+	 HLNG( 0x40000000, l[1], 0x90, 0xc2, "Connection ID:");
+	 DLNG( 0x40000000, l[1], 0x90, 0xc2, "Sequence Number:");
+}
+
+// Table 2-7.7 – Unconnected data item
+void EthernetIP::Unconnected_Data()
+{
+//	HEX#( 0, g[3], 0x90, 0xc2, "Message:");
+}
+
+// Table 2-7.8 – Connected data item
+void EthernetIP::Connected_Data()
+{
+	if (g[5] == 1)
+	{
+		HEX# 0 3 90 c2 "Data:";
+	}
+	if (g[5] != 1)
+	{
+		HWRD( 0x40000000, l[1], 0x90, 0xc2, "Sequence Count:");
+	}
+}
+
+// Table 2-7.9 – Sockaddr item
+void CIP::Sockaddr_Item()
+{
+	LABL( 0, 0, 0, 0xc9, "Socket Address");
+	DWRD( 0, l[1], 0x90, 0xc2, "Sin Family:");
+		CEQU( 2, l[1], 0, 0x14, "AF_INET");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Sin Port:");
+	DLNG( 0x40000000, l[1], 0x90, 0xc2, "Sin Address:");
+	HEX#( 0x40000008, 0, 0x90, 0xc2, "Sin Zero:");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str# Ethernet_IP::Command_Str;
+	0x0		| NOP;
+	0x4		| List Services;
+	0x63	| List Identity;
+	0x64	| List Interfaces;
+	0x65	| Register Session;
+	0x66	| UnRegister Session;
+	0x6F	| Send RR Data;
+	0x70	| Send Unit Data;
+	0x72	| Indicate Status;
+	0x73	| Cancel;
+
+str# Ethernet_IP::Command;
+	0x0004	| Ethernet_IP::List_Services;
+	0x0063	| Ethernet_IP::List_Identity;
+	0x0064	| Ethernet_IP::List_Interfaces;
+	0x0065	| Ethernet_IP::Register_Session;
+	0x006f	| Ethernet_IP::Send_RR_Data;
+	0x0070	| Ethernet_IP::Send_Unit_Data;
+	0x0072	| Ethernet_IP::Indicate_Status;
+	0x0073	| Ethernet_IP::Cancel;
+	
+str# Ethernet_IP::Status_Str;
+	0x00	| Success;
+	0x01	| Sender Issued an Invalid or Unsupported Encapsulation Cmd;
+	0x02	| Insufficient Memory Resources in the Receiver;
+	0x03	| Poorly formed or Incorrect Data in Encapsulation Message;
+	0x64	| Originator Used an Invalid Session Handle;
+	0x65	| Target Received a Message of Invalid Length;
+	0x69	| Unsupported Encapsulation Protocol Revision;
+
+str# Ethernet_IP::TypeId_Str;
+	0x0000	| Null Address Item;
+	0x000c	| ListIdentity response;
+	0x00a1	| Connected Address Item;
+	0x00b1	| Connected Transport Item;
+	0x00b2	| Unconnected Message Item;
+	0x8000	| Sockaddr Info: Originator-to-Target;
+	0x8001	| Sockaddr Info: Target-to-Originator;
+	0x8002	| Sequenced Address Item;
+
+str# Ethernet_IP::Items;
+	0x00a1	| EthernetIP::Connected_Address;
+	0x00b1	| EthernetIP::Connected_Data;
+	0x00b2	| EthernetIP::Unconnected_Data;
+	0x8000	| CIP::Sockaddr_Item;
+	0x8001	| CIP::Sockaddr_Item;
+	0x8002	| EthernetIP::Sequenced_Address;
+
+// Common Industrial Protocol
+void CIP()
+{
+	LABL( 0, 0, 0, 0xb1 "CIP - Common Industrial Protocol\CIP");
+	BBIT( 8, l[1], 0x90, 0xc9, "Service:");
+	DECR 1;
+	BBIT( 1, g[2], 0x5, 0xc9);
+		CEQU( 0, g[2], 0, 0x54, "0... .... Request");
+		CEQU( 1, g[2], 0, 0x54, "1... .... Response");
+	BBIT( 7, g[5], 0x5, 0xc9);
+		CEQU( 0, g[5], 0, 0x54, ".000 0000 Service: (0)");
+		CEQU( 1, g[5], 0, 0x54, ".000 0001 Service: (1)");
+		CEQU( 2, g[5], 0, 0x54, ".000 0010 Service: (2)");
+		CEQU( 3, g[5], 0, 0x54, ".000 0011 Service: (3)");
+		CEQU( 3, g[5], 0, 0x54, ".000 0100 Service: (4)");
+		CEQU( 3, g[5], 0, 0x54, ".000 0101 Service: (5)");
+		CEQU( 0x4C, g[5], 0, 0x54, ".100 1100 Service: Unknown (0x4c)");
+		CEQU( 0x4D, g[5], 0, 0x54, ".100 1101 Service: Unknown (0x4d)");
+		CEQU( 0x4E, g[5], 0, 0x54, ".100 1110 Service: Forward Close (0x4e)");
+		CEQU( 0x52, g[5], 0, 0x54, ".101 0010 Service: Unconnected Send (0x52)");
+		CEQU( 0x54, g[5], 0, 0x54, ".101 0100 Service: Forward Open (0x54)");
+	LABL( 0, 0, 0, 0xc8);
+	if (g[2] == 0)
+	{
+		CIP::Request();
+	}
+	if (g[2] == 1)
+	{
+		CIP::Response();
+	}
+}
+
+void CIP::Request()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Request Path Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	l[2] *= 2;		//Request Path Size
+	while (l[2] > 0)
+	{
+		l[3] = g[16];
+		CIP::Request_Path();
+		l[4] = g[16];
+		l[3] -= l[4];
+		l[2] -= l[3];
+	}
+	LABL( 0, 0, 0, 0xc9, "Command Specific Data");
+	TSB#( 0, g[5], 0, 0, CIP::Service_Request);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void CIP::Request_Path()
+{
+	HBYT( 0, l[1], 0x90, 0xc9, "Request Path:");
+	  CST#( 0, l[1], 0, 0x14, CIP::Request_Path_Str);
+	TSB#( 0, l[1], 0, 0, CIP::Request_Path_Type);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void CIP::Response()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	CIP::Status();
+	if (g[16] == 0)
+	{
+		TRTS;
+	}
+	LABL( 0, 0, 0, 0xc9, "Command Specific Data");
+	TSB#( 0, g[5], 0, 0, CIP::Service_Response);
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void CIP::Status()
+{
+	LABL( 0, 0, 0, 0xc9, "Status");
+	DBYT( 0, l[1], 0x90, 0xc2, "General Status:");
+		CST#( 0, l[1], 0, 0x14, CIP::Status_Str);
+	DBYT( 0, l[1], 0x90, 0xc2, "Add. Status Size:");
+	LABL( 0, 0, 0, 0x14, "(word)");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str# CIP::Service_Request;
+	0x4C	|	CIP::Unknown_Service_Request;
+	0x4D	|	CIP::Unknown_Service_Request;
+	0x4E	|	CIP::ForwardClose_Request;
+	0x52	|	CIP::Unconnected_Send_Request;
+	0x54	|	CIP::ForwardOpen_Request;
+
+str# CIP::Service_Response;
+	0x4C	|	CIP::Unknown_Service_Response;
+	0x4D	|	CIP::Unknown_Service_Response;
+	0x4E	|	CIP::ForwardClose_Response;
+	0x52	|	CIP::Unconnected_Send_Response;
+	0x54	|	CIP::ForwardOpen_Response;
+
+// Table 3-5.9. Forward Open Request
+void CIP::ForwardOpen_Request()
+{
+	HBYT( 0, g[1], 0x90, 0xc9, "Priority-TimeTick:");
+	CIP::Priority_Time();
+	DBYT( 0, l[1], 0x90, 0xc2, "Timeout_Ticks:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "O->T Network Conn. ID:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "T->O Network Conn. ID:");
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Conn. Serial Number:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Conn. Timeout Multi:");
+	LABL( 0, 0, 0, 0x14, "(multiply by 4)");
+	HEX#( 3, 0, 0x90, 0xc2, "Reserved:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "O->T RPI:");
+	BWRD( 0x40000000, g[1], 0x90, 0xc9, "O->T Net. Conn. Parm:");
+	CIP::NetworkConnParam_Flag();
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "T->O RPI:");
+	BWRD( 0x40000000, g[1], 0x90, 0xc9, "T->O Net. Conn. Parm:");
+	CIP::NetworkConnParam_Flag();
+	HBYT( 0, g[1], 0x90, 0xc9, "Transport Type/Trigger:");
+	CBIT 7 1 0 d4 1....... Direction: Server;
+	CLSE 0 0 0 d4 0....... Direction: Client;
+	l[1] = g[1];
+	ANDG 70 41;
+	SHFR 7 41;
+	CEQU 2 41 0 d4 .010.... Production Trigger: Application Object;
+	CEQU 1 41 0 d4 .001.... Production Trigger: Change-Of-State;
+	CEQU 0 41 0 d4 .000.... Production Trigger: Cyclic;
+	l[1] = g[1];
+	ANDG F 41;
+	SHFR 0 41;
+	DGLB 0 41 0 d4 ....---- Transport Class: ;
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, l[2], 0x90, 0xc2, "Connection Path Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	l[2] *= 2;		//True Path Size
+	while (l[2] > 0)
+	{
+		l[3] = g[16];
+		CIP::Request_Path();
+		l[4] = g[16];
+		l[3] -= l[4];
+		l[2] -= l[3];
+	}
+}
+
+void CIP::Priority_Time()
+{
+	LABL 0 0 0 d4 xxx..... Reserved;
+	CBIT 5 1 0 d4 ...x.... Priority: Reserved;
+	CLSE 0 0 0 d4 ...0.... Priority: Normal;
+	l[1] = g[1];
+	ANDG F 41;
+	SHFR 0 41;
+	CST# 0 41 0 d4 CIP::TickTime_Str;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str# CIP::TickTime_Str;
+	0	| ....0000 1ms;
+	1	| ....0001 2ms;
+	2	| ....0010 4ms;
+	3	| ....0011 8ms;
+	4	| ....0100 16ms;
+	5	| ....0101 32ms;
+	6	| ....0110 64ms;
+	7	| ....0111 128ms;
+	8	| ....1000 256ms;
+	9	| ....1001 512ms;
+	A	| ....1010 1024ms;
+	B	| ....1011 2048ms;
+	C	| ....1100 4096ms;
+	D	| ....1101 8192ms;
+	E	| ....1110 16384ms;
+	F	| ....1111 32768ms;
+
+void CIP::NetworkConnParam_Flag()
+{
+	CBIT f 1 0 d4 1....... ........ Owner: More than One Owner;
+	CLSE 0 0 0 d4 0....... ........ Owner: Exclusive;
+	l[1] = g[1];
+	ANDG 6000 41;
+	SHFR F 41;
+	CEQU 3 41 0 d4 .11..... ........ Connection Type: Reserved;
+	CEQU 2 41 0 d4 .10..... ........ Connection Type: Point to Point;
+	CEQU 1 41 0 d4 .01..... ........ Connection Type: Multicast;
+	CEQU 0 41 0 d4 .00..... ........ Connection Type: NULL;
+	LABL 0 00 0 d4 ...x.... ........ Reserved;
+	l[1] = g[1];
+	ANDG C00 41;
+	SHFR A 41;
+	CEQU 3 41 0 d4 ....11.. ........ Priority: Urgent;
+	CEQU 2 41 0 d4 ....10.. ........ Priority: Scheduled;
+	CEQU 1 41 0 d4 ....01.. ........ Priority: High Priority;
+	CEQU 0 41 0 d4 ....00.. ........ Priority: Low Priority;
+	CBIT 9 1 0 d4 ......1. ........ Connection Size Type: Variable;
+	CLSE 0 0 0 d4 ......0. ........ Connection Size Type: Fixed;
+	l[1] = g[1];
+	ANDG 1FF 41;
+	SHFR 0 41;
+	DGLB 0 41 0 d4 .......- -------- Connection Size: ;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// Table 3-5.10. Forward Open Response
+void CIP::ForwardOpen_Response()
+{
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "O->T Network Conn. ID:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "T->O Network Conn. ID:");
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Conn. Serial Number:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "O->T API:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "T->O API:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Appl. Reply Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	l[2] *= 2;		//True Path Size
+	while (l[2] > 0)
+	{
+		l[3] = g[16];
+		CIP::Request_Path();
+		l[4] = g[16];
+		l[3] -= l[4];
+		l[2] -= l[3];
+	}
+}
+
+// Table 3-5.12. Forward Close Service Request
+void CIP::ForwardClose_Request()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Priority/TimeTick:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Timeout_Ticks:");
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Connection Serial Num:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Orig. Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Conn. Path Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	l[2] *= 2;		//True Path Size
+	while (l[2] > 0)
+	{
+		l[3] = g[16];
+		CIP::Request_Path();
+		l[4] = g[16];
+		l[3] -= l[4];
+		l[2] -= l[3];
+	}
+}
+
+// Table 3-5.13. Successful Forward Close Response
+void CIP::ForwardClose_Response()
+{
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Connection Serial Num:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+	DBYT( 0, l[1], 0x90, 0xc2, "App. Reply Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+}
+
+// Table 3-5.15. Unconnected Send Service Parameters
+void CIP::Unconnected_Send_Request()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Priority/TimeTick:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Timeout_Ticks:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Request Size:");
+	LABL( 0, 0, 0, 0xc9, "Message Request");
+	DBYT( 0, l[1], 0x90, 0xc2, "Service:");
+		CST#( 0, l[1], 0, 0x14, CIP::Service_Code_Str);
+	DBYT( 0, l[2], 0x90, 0xc2, "Request Path Size:");
+	LABL( 0, 0, 0, 0x14, "(words)");
+	l[2] *= 2;		//True Path Size
+	while (l[2] > 0)
+	{
+		l[3] = g[16];
+		CIP::Request_Path();
+		l[4] = g[16];
+		l[3] -= l[4];
+		l[2] -= l[3];
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// Table 3-5.16. Successful Unconnected Send Response
+void CIP::Unconnected_Send_Response()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Reply Service:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	DBYT( 0, l[2], 0x90, 0xc2, "General Status:");
+		CST#( 0, l[2], 0, 0x14, CIP::General_Status_Str);
+	if (l[2] == 1)
+	{
+		l[2] = pw[0];
+		CST#( 0, l[2], 0, 0x14, CIP::Extended_Status_Str);
+		HBYT( 0, l[1], 0x90, 0xc2, "Size of Add. Status:");
+		HEX#( 0, l[1], 0x90, 0xc2, "Additional Status:");
+		// Remaining Path Size - USINT
+	}
+	DBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	// Service Response Data
+}
+
+// Table 3-5.18. Routing Error Values
+str# CIP::General_Status_Str;
+	0x00	|	Successful Transactions;
+	0x02	|	Resource Error;
+	0x04	|	Segment type error;
+	0x05	|	Destination;
+	0x07	|	Message Router Connection;
+	0x08	|	 ;
+	0x09	|	Data Segment;
+	0x0C	|	target application prevents;
+	0x10	|	device prevents;
+	0x11	|	response buffer;
+	0x13	|	not enough data;
+	0x14	|	find service;
+	0x15	|	too much data;
+	
+str# CIP::Extended_Status_Str;
+	0x0100	|	Connection in Use or Duplicate Forward Open;
+	0x0103	|	Transport Class & Trigger Combination Not Supported;
+	0x0106	|	Ownership Conflict;
+	0x0107	|	Connection Not Found at Target Application;
+	0x0108	|	Invalid Connection Type;
+	0x0109	|	Invalid Connection Size;
+	0x0110	|	Device Not Configured;
+	0x0111	|	RPI Not Supported;
+	0x0113	|	Connection Manager Cannot Support Any More Connections;
+	0x0114	|	Vendor Id or the Product Code Did Not Match;
+	0x0115	|	Product Type Did Not Match;
+	0x0116	|	Major or Minor Revision Did Not Match;
+	0x0117	|	Invalid Connection Point;
+	0x0118	|	Invalid Configuration Format;
+	0x0119	|	Connection Request Fails - No Controlling Connection;
+	0x011A	|	Target Application Cannot Support Any More Connections;
+	0x011B	|	RPI is smaller than the Production Inhibit Time;
+	0x0203	|	Connection cannot be closed since the connection has timed out;
+	0x0204	|	Unconnected Send Timed Out Waiting for a Response;
+	0x0205	|	Parameter Error in Unconnected Send Service;
+	0x0206	|	Message Too Large for Unconnected message service;
+	0x0207	|	Unconnected Acknowledge without Reply;
+	0x0301	|	No Buffer Memory Available;
+	0x0302	|	Network Bandwidth Not Available for Data;
+	0x0303	|	No Tag Filters Available;
+	0x0304	|	Not Configured To Send Real-Time Data;
+	0x0311	|	Port specified in Port Segment Not Available;
+	0x0312	|	Link Address specified in Port Segment Not Available;
+	0x0315	|	Invalid Segment Type or Segment Value in Path;
+	0x0316	|	Path and Connection not equal in close;
+	0x0317	|	Segment Not Present or Encoded Value is Invalid.;
+	0x0318	|	Link Address to Self Invalid;
+	0x0319	|	Resources on Secondary Unavailable;
+	0x031A	|	Connection already Established;
+	0x031B	|	Direct Connection already Established;
+	0x031C	|	Miscellaneous;
+	0x031D	|	Redundant Connection Mismatch;
+	0x031E	|	No More Consumer Resources Available;
+	0x031F	|	No Cnnection Resources Exist for Target Path;
+	0x0320	|	Vendor Specific;
+
+// Table 3-5.19. Get Connection Data Service Request
+void CIP::Get_Connection_Data_Request()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Connection Number:");
+}
+
+// Table 3-5.20. Get Connection Data Service Response
+void CIP::Get_Connection_Data_Response()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Connection Number:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Connection State:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Originator Port:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Target Port:");
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Conn. Serial Number:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Orig. Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. O2T CID:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Target O2T CID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Conn. Timeout Multi:");
+	LABL( 0, 0, 0, 0x14, "(multiply by 4)");
+	HEX#( 3, 0, 0x90, 0xc2, "Reserved:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. RPI O2T:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. API O2T:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. T2O CID:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Target T2O CID:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Conn. Timeout Multi:");
+	LABL( 0, 0, 0, 0x14, "(multiply by 4)");
+	HEX#( 3, 0, 0x90, 0xc2, "Reserved:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. RPI T20:");
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. API T2O:");
+}
+
+// Table 3-5.21. Search Connection Data Service Request
+void CIP::Search_Connection_Data_Request()
+{
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Conn. Serial Number:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	HLNG( 0x40000000, l[1], 0x90, 0xc2, "Orig. Serial Num:");
+}
+
+void CIP::Unknown_Service_Request()
+{
+	HEX#( 0, l[2], 0x90, 0xc2, "Data:");
+}
+
+void CIP::Unknown_Service_Response()
+{
+	HEX#( 0, l[2], 0x90, 0xc2, "Data:");
+}
+
+void CIP::Class_Attribute()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "");
+}
+
+void CIP::Configuration_Capability()
+{
+	
+}
+
+void CIP::Configuration_Control()
+{
+
+}
+
+// Table 2-5.4 – CIP Identity item
+void CIP::Identity_Item()
+{
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Encapsulation Protocol Version:");
+	CIP::Sockaddr_Item();
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Device Type:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Product Code:");
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Device Revision:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Status:");
+		CST#( 0, l[1], 0, 0x14, CIP::Status_Str);
+	HLNG( 0, l[1], 0x90, 0xc2, "Serial Number:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:");
+	CHR#( 0, l[1], 0x90, 0xc2, "Product Name:");
+	DBYT( 0, l[1], 0x90, 0xc2, "State:");
+		CST#( 0, l[1], 0, 0x14, CIP::State_Str);
+}
+
+str# CIP::Interface_Handle_Str;
+	0x00	|	CIP;
+
+str# CIP::Service_Code_Str;
+	0x00	| Reserved;
+	0x01	| Get_Attributes_All;
+	0x02	| Set_Attributes_All Request;
+	0x03	| Get_Attribute_List;
+	0x04	| Set_Attribute_List;
+	0x05	| Reset;
+	0x06	| Start;
+	0x07	| Stop;
+	0x08	| Create;
+	0x09	| Delete;
+	0x0A	| Multiple Service Packet;
+	0x0B	| Reserved;
+	0x0C	| Reserved;
+	0x0D	| Apply_Attributes;
+	0x0E	| Get_Attribute_Single;
+	0x0F	| Reserved for Future Use;
+	0x10	| Set_Attribute_Single;
+	0x11	| Find_Next_Object_Instance;
+	0x12	| Reserved;
+	0x13	| Reserved;
+	0x14	| Error Response;
+	0x15	| Restore;
+	0x16	| Save;
+	0x17	| No Operation - NOP;
+	0x18	| Get Member;
+	0x19	| Set Member;
+	0x1A	| Insert Member;
+	0x1B	| Remove Member;
+	0x4d	| Unknown Service;
+
+str# CIP::Request_Path_Type;
+	0x01	| CIP::PortSegment;
+	0x20	| CIP::LCS;
+	0x24	| CIP::LIS;
+	0x34	| CIP::Electronic_Key_Segment;
+	0x91	| CIP::Extended_Symbol_Segment;
+	0xf6	| CIP::Ethernet_Link_Object;
+
+str# CIP::Request_Path_Str;
+	0x01	| Port Segment;
+	0x20	| 8 bit Logical Class Segment;
+	0x24	| 8 bit Logical Instance Segment;
+	0x34	| Electronic Key Segment;
+	0x91	| Extended Symbol Segment;
+	0xf6	| Ethernet Link Object class;
+
+void CIP::PortSegment()
+{
+	//??
+	DBYT( 0, l[1], 0x90, 0xc2, "Link Address:");
+}
+
+void CIP::Electronic_Key_Segment()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Key Format:");
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Vendor Id:");
+		CST#( 0, l[1], 0, 0x14, CIP::Vendor_Str);
+	DWRD( 0x40000000, l[1], 0x90, 0xc2, "Device Type:");
+		CST#( 0, l[1], 0, 0x14, CIP::Device Type_Str);
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Product Code:");
+	BBYT( 0, g[1], 0x90, 0xc9, "Compatiblity Bit:");
+	CBIT 7 1 0 d4 1....... Compatiblity: ?;
+	CLSE 0 0 0 d4 0....... Compatiblity: Bit Cleared;
+	l[1] = g[1];
+	ANDG 7F 41;
+	SHFR 7 41;
+	DGLB 0 41 0 d4 .------- Major Revision: ;
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, l[1], 0x90, 0xc2, "Minor Revision:");
+}
+
+str# CIP::Device Type_Str;
+	0	|	Generic Device;
+
+void CIP::LCS()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Class:");
+	  CST#( 0, l[1], 0, 0x14, CIP::LCS_Str);
+}
+
+str# CIP::LCS_Str;
+	0x01	|	Identity Object;
+	0x02	|	Message Router;
+	0x06	|	Connection Manager;
+
+void CIP::LIS()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Instance:");
+}
+	
+void CIP::Extended_Symbol_Segment()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Size:");
+	CHR#( 0, l[1], 0x90, 0xc2, "Data:");
+	l[1] = pb[0];
+	if (l[1] == 0)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Pad Byte:");
+	}
+}
+
+void CIP::Ethernet_Link_Object()
+{
+	HBYT( 0, l[2], 0x90, 0xc2, "Instance:");
+	 CST#( 0, l[2], 0x90, 0xc2, CIP::Ethernet_Link_Object_Instance_Str);
+	TSB#( 0, l[2], 0x90, 0xc2, CIP::Ethernet_Link_Object_Instance);
+}
+
+str# CIP::Ethernet_Link_Object_Instance;
+	1	| CIP::InterfaceSpeed;
+	2	| CIP::InterfaceFlags;
+	3	| CIP::PhysicalAddress;
+	4	| CIP::InterfaceCounters;
+	5	| CIP::MediaCounters;
+
+str# CIP::Ethernet_Link_Object_Instance_Str;
+	1	| Interface Speed;
+	2	| Interface Flags;
+	3	| Physical Address;
+	4	| Interface Counters;
+	5	| Media Counters;
+
+void CIP::InterfaceSpeed()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Interface Speed:");
+}	
+
+void CIP::InterfaceFlags()
+{
+	HWRD( 0x40000000, l[1], 0x90, 0xc2, "Interface Flags:");
+}
+
+void CIP::PhysicalAddress()
+{
+	ETHR( 0x40000000, l[1], 0x90, 0xc2, "Mac Address:");
+}
+
+void CIP::InterfaceCounters()
+{
+	LABL 0 0 0 c9 Interface Counters;
+	HBYT( 0, l[1], 0x90, 0xc2, "In Octets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "In Ucast Packets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "In NUcast Packets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "In Discards:");
+	HBYT( 0, l[1], 0x90, 0xc2, "In Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "In Unknown Protos:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Out Octets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Out Ucast Packets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Out NUcast Packets:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Out Discards:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Out Errors:");
+	LABL 0 0 0 c8;
+}
+
+void CIP::MediaCounters()
+{
+	LABL 0 0 0 c9 Media Counters;
+	HBYT( 0, l[1], 0x90, 0xc2, "Alignment Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "FCS Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Single Collisions:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Multiple Collisions:");
+	HBYT( 0, l[1], 0x90, 0xc2, "SQE Test Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Deferred Transmissions:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Late Collisions:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Excessive Collisions:");
+	HBYT( 0, l[1], 0x90, 0xc2, "MAC Transmit Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Carrier Sense Errors:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Frame Too Long:");
+	HBYT( 0, l[1], 0x90, 0xc2, "MAC Receive Errors:");
+	LABL 0 0 0 c8;
+}
+
+	
+str# CIP::Status_Str;
+	0x00	| Success;
+	0x01	| Connection Failure;
+	0x02	| Resource Unavailable;
+	0x03	| Invalid Parameter Value;
+	0x04	| Path Segment Error;
+	0x05	| Path Destination Unknown;
+	0x06	| Partial Transfer;
+	0x07	| Connection Lost;
+	0x08	| Service Not Supported;
+	0x09	| Invalid Attribute Value;
+	0x0A	| Attribute List Error;
+	0x0B	| Already In Requested Mode;
+	0x0C	| Object State Conflict;
+	0x0D	| Object Already Exists;
+	0x0E	| Attribute Not Settable;
+	0x0F	| Privilege Violation;
+	0x10	| Device State Conflict;
+	0x11	| Reply Data Too Large;
+	0x12	| Fragmentation of a Primitive Value;
+	0x13	| Not Enough Data;
+	0x14	| Attribute Not Supported;
+	0x15	| Too Much Data;
+	0x16	| Object Does Not Exist;
+	0x17	| Service Fragmentation Sequence Not In Progress;
+	0x18	| No Stored Attribute Data;
+	0x19	| Store Operation Failure;
+	0x1A	| Routing Failure - Request Packet Too Large;
+	0x1B	| Routing Failure - Response Packet Too Large;
+	0x1C	| Missing Attribute List Entry Data;
+	0x1D	| Invalid Attribute Value List;
+	0x1E	| Embedded Service Error;
+	0x1F	| Vendor Specific Error;
+	0x20	| Invalid Parameter;
+	0x21	| Medium Already Written;
+	0x22	| Invalid Reply Received;
+	0x23	| Reserved;
+	0x24	| Reserved;
+	0x25	| Key Failure in Path;
+	0x26	| Path Size Invalid;
+	0x27	| Unexpected Attribute In List;
+	0x28	| Invalid Member ID;
+	0x29	| Member Not Settable;
+	0x2A	| Group 2 Only Server General Failure;
+
+str# CIP::Attribute_ID_Str;
+	1	| Status;
+	2	| Configuration Capability;
+	3	| Configuration Control;
+	4	| Physical Link Object;
+	5	| IP Address;
+	6	| Host Name;
+
+str# CIP::Vendor_Str;
+	1	|	Rockwell Automation;
+	4	|	Parker Hannifin Corp;
+	5	|	Rockwell Automation;
+	10	|	Advanced Micro Controls Inc (AMCI);
+	12	|	Banner Engineering;
+	555	|	ATI Industrial Automation;
+	668	|	Rockwell Automation;
+	798	|	Tyco Electronics;
+	829	|	Rockwell Automation;
+
+str# CIP::Class_Code_Str;
+	0x01	| Identity;
+	0x02	| Message Router;
+	0x03	| DeviceNet;
+	0x04	| Assembly;
+	0x05	| Connection;
+	0x06	| Connection Manager;
+	0x07	| Register;
+	0x08	| Discrete Input Point;
+	0x09	| Discrete Output Point;
+	0x0A	| Analog Input Point;
+	0x0B	| Analog Output Point;
+	0x0E	| Presence Sensing;
+	0x0F	| Parameter;
+	0x10	| Parameter Group;
+	0x12	| Group;
+	0x1D	| Discrete Input Group;
+	0x1E	| Discrete Output Group;
+	0x1F	| Discrete Group;
+	0x20	| Analog Input Group;
+	0x21	| Analog Output Group;
+	0x22	| Analog Group;
+	0x23	| Position Sensor Object;
+	0x24	| Position Controller Supervisor Object;
+	0x25	| Position Controller Object;
+	0x26	| Block Sequencer Object;
+	0x27	| Command Block Object;
+	0x28	| Motor Data Object;
+	0x29	| Control Supervisor Object;
+	0x2A	| AC_DC Drive Object;
+	0x2B	| Acknowledge Handler Object;
+	0x2C	| Overload Object;
+	0x2D	| Softstart Object;
+	0x2E	| Selection Object;
+	0x30	| S-Device Supervisor Object;
+	0x31	| S-Analog Sensor Object;
+	0x32	| S-Analog Actuator Object;
+	0x33	| S-Single Stage Controller Object;
+	0x34	| S-Gas Calibration Object;
+	0x35	| Trip Point Object;
+	0xF0	| ControlNet Object;
+	0xF1	| ControlNet Keeper Object;
+	0xF2	| ControlNet Scheduling Object;
+	0xF3	| Connection Configuration Object;
+	0xF4	| Port Object;
+	0xF5	| TCP/IP Interface Object;
+	0xF6	| Ethernet Link Object;
+	
+str# CIP::State_Str;
+	0	| Nonexistent;
+	1	| Device Self Testing;
+	2	| Standby;
+	3	| Operational;
+	4	| Major Recoverable Fault;
+	5	| Major Unrecoverable Fault;
+	6	| Reserved;
+	255	| Get Attribute All Service;

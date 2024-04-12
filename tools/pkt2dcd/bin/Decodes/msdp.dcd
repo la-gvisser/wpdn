@@ -1,0 +1,114 @@
+// -------------------------------------------------------------------------------------
+// MSDP - Multicast Source Discovery Protocol
+//
+//	globals used:
+//		g[30] =  type
+//		g[31] =  length
+// -------------------------------------------------------------------------------------
+
+str# TCP::Ports_Str;
+639	| MSDP::MAIN;
+ 
+void MSDP::MAIN( )
+{
+	LABL 0 0 0 b1 MSDP - Multicast Source Discovery Protocol\MSDP:;
+		HBYT( 0, l[3], 0x90, 0xc2, "Type:\Typ:" );
+			CST#( 0, l[3], 0x0, 0x14, MSDP::Types );
+			CLSE( 0, 0, 0, 0x14, "Unknown" );
+		g[30] = l[3];
+		DWRD( 0, l[4], 0x90, 0xc2, "Length:\Lngth:" );
+		l[4] -= 3;
+		g[31] = l[4];
+			if (l[4] >= 9192)
+			{
+				LABL( 0, 0, 0x14, 0x14, "Length is not ok");
+				DUMP( 0, l[4], 0x90, 0xc2, "Data Dump:");
+				TRTS;
+			}
+			if (l[4] <= 9191)
+			{
+				LABL( 0, 0, 0x14, 0x14, "Length is ok");
+				
+			}
+	TSB#( 0, l[3], 0x90, 0xc2, MSDP::Types::Calls );
+	TLSE( 0, l[3], 0x90, 0xc2, MSDP::Types::Calls::Fail );
+	if ( g[31] == 0 )
+	{
+		LABL 0 0 0 b8;
+		TRTS;	
+	}
+	if ( g[31] != 0 )
+	{
+		DUMP( 0, g[31], 0x90, 0xc2, "Data Dump:");
+	}
+	LABL 0 0 0 b8;
+}
+
+
+void MSDP::Types::IPv4 Source-Active( )
+{	
+	DBYT( 0, l[3], 0x90, 0xc2, "Entry Count:\Entry C:" );
+	IPLG( 0, l[4], 0x90, 0xc2, "RP Address:\RP Addr:" );	
+	LABL 0 0 0 b7 (S,G) block:;
+	INCR( 8 );
+	LABL( 0, 0, 0, 0x07, " ");
+	IPLG( 0, 0, 0x07, 0x07 );
+	LABL 0 0 0 07 /;
+	DECR( 9 );	
+	DBYT( 0, 0, 0x07, 0x07 );
+	LABL( 0, 0, 0, 0x07, " -> ");
+	IPLG( 0, 0, 0x07, 0x07 );
+	DECR( 8 );
+	HWRD( 0, l[5], 0x90, 0xc2, "Reserved:" );
+	HBYT( 0, l[6], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Sprefix Len:\Sprfix Lngth:" );
+	IPLG( 0, l[8], 0x90, 0xc2, "Group Address:\Grp Addr:" );
+	IPLG( 0, l[9], 0x90, 0xc2, "Source Address:\Src Addr:" );
+	LABL 0 0 0 b8;
+	g[31] -= 17;
+	while (g[31] > 1)
+	{
+		//DGLB( 0, g[31], 0x90, 0xc2, left length: );
+		LABL 0 0 0 b7 (S,G) block:;
+		INCR( 8 );
+		LABL( 0, 0, 0, 0x07, " ");
+		IPLG( 0, 0, 0x07, 0x07 );
+		LABL 0 0 0 07 /;
+		DECR( 9 );	
+		DBYT( 0, 0, 0x07, 0x07 );
+		LABL( 0, 0, 0, 0x07, " -> ");
+		IPLG( 0, 0, 0x07, 0x07 );
+		DECR( 8 );
+		HWRD( 0, l[3], 0x90, 0xc2, "Reserved:" );
+		HBYT( 0, l[4], 0x90, 0xc2, "Reserved:" );
+		DBYT( 0, l[5], 0x90, 0xc2, "Sprefix Len:\Sprfix Lngth:" );
+		IPLG( 0, l[6], 0x90, 0xc2, "Group Address:\Grp Addr:" );
+		IPLG( 0, l[7], 0x90, 0xc2, "Source Address:\Src Addr:" );
+		LABL 0 0 0 b8;
+		g[31] -= 17;
+	}
+}
+
+void MSDP::Types::Calls::Fail()
+{
+	DUMP( 0, g[31], 0x90, 0xc2, "Data Dump:");
+}
+
+str# MSDP::Types;
+1 	|	 IPv4 Source-Active;
+2 	|	 IPv4 Source-Active Request;
+3 	|	 IPv4 Source-Active Response;
+4 	|	 KeepAlive;
+5 	|	 Reserved (Previously Notification);
+6 	|	 MSDP traceroute in progress;
+7 	|	 MSDP traceroute reply;
+
+str# MSDP::Types::Calls;
+1 	|	 MSDP::Types::IPv4 Source-Active;
+2 	|	 MSDP::Types::IPv4 Source-Active Request;
+3 	|	 MSDP::Types::IPv4 Source-Active Response;
+4 	|	 MSDP::Types::KeepAlive;
+5 	|	 MSDP::Types::Reserved (Previously Notification);
+6 	|	 MSDP::Types::MSDP traceroute in progress;
+7 	|	 MSDP::Types::MSDP traceroute reply;
+

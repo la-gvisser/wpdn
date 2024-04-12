@@ -1,0 +1,439 @@
+// -----------------------------------------------------------------------------------------------
+//	ICA Browser
+//		this should be done by checking to see if the signature matches... 
+//		they can go on tcp/ip, udp, ipx, NetBIOS/NetBEUI
+//
+//	globals used:
+//		g[1-4]	= free for all
+//		g[5]	= version number
+//		g[6]	= command type
+//
+//	last edited:	si 09.15.2004 [this is by no means close to done...ugh, there are no hooks to it either]
+//	orig decoder:	si
+// -----------------------------------------------------------------------------------------------
+
+void ICA::Browser;
+	TNXT -ICA::Browser::Header;
+
+void ICA::Browser::Header;
+	LABL		0 0 00 b1 Citrix ICA Browser;
+	DWRD 40000000 0 90 c2 Byte Count:;
+	DBYT		0 5 90 c2 Version:;
+	DBYT		0 6 90 c2 Command:;
+	CST#		0 6 00 14 ICA::Browser::Command_List;
+	HLNG 40000000 0 90 c2 Signature:;				// si: must be 0xe3a8fd02
+	DUMP	   14 0 90 c2 Source Address:;			//ICA::Browser::Header::SA;
+	TST#		0 6 00 00 ICA::Browser::Command_Func;
+
+/*			si: sigh...
+void ICA::Browser::Header::SA
+	if (tcp/udp)
+	{
+		HWRD 40000000 0 90 c2 Address Family:;		// 0x0002
+		DWRD 40000000 0 90 c2 UDP port Number:;
+		IPLG		0 0 90 c2 IP Address:;
+		DUMP		c 0 90 c2 Reserved:;
+	}
+	if (IPX)
+	{
+		HWRD 40000000 0 90 c2 Address Family:;		// 0x0006
+		IPLG		0 0 90 c2 Network Address:;
+		ETHR		0 0 90 c2 Node Address:;
+		DWRD 40000000 0 90 c2 IPX Socket Num:;
+		DUMP		6 0 90 c2 Reserved:;
+	}
+	if (NetBIOS/NetBEUI)
+	{
+		HWRD 40000000 0 90 c2 Address Family:;		// 0x0011
+		HWRD 40000000 1 90 c2 Name Type:;
+		CEQU		0 1 00 14 Unique Name;
+		CEQU		1 1 00 14 Group Name;
+		CHR#	   10 0 90 c2 Name:;
+	}
+*/
+
+str# ICA::Browser::Command_List;
+	0x01 | Election;
+	0x30 | RequestMaster;
+	0x31 | Master;
+	0x32 | RequestEnum;
+	0x33 | Enum;
+	0x34 | RequestData;
+	0x35 | Data;
+	0x36 | RequestPing;
+	0x37 | Ping;
+	0x38 | RequestStats;
+	0x39 | Stats;
+	//0x39 | Error;			//si: version 2
+
+str# ICA::Browser::Command_Func;
+	0x01 | ICA::Browser::Election;
+	0x30 | ICA::Browser::RequestMaster;
+	0x31 | ICA::Browser::Master;
+	0x32 | ICA::Browser::RequestEnum;
+	0x33 | ICA::Browser::Enum;
+	0x34 | ICA::Browser::RequestData;
+	0x35 | ICA::Browser::Data;
+	0x36 | ICA::Browser::RequestPing;
+	0x37 | ICA::Browser::Ping;
+	0x38 | ICA::Browser::RequestStats;
+	0x39 | ICA::Browser::Stats;
+	//0x39 | ICA::Browser::Error;			//si: version 2
+
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Election;
+	LABL 0 0 00 b7 Election;
+	HLNG 0 0 90 c2 Reserved:;
+	if (g[5] == 2)
+	{
+		HWRD 40000000 0 90 c2 Cause of Election:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::RequestMaster;
+	LABL 0 0 00 b7 Request Master;
+	BWRD 40000000 1 90 c9 Request Flags:;
+	CBIT 0 1 00 d4 ........ ......1. Alternate Address for Server Requested;
+	CLSE 0 0 00 d4 ........ ......0. Alternate Address for Server Not Requested;
+	CBIT 0 1 00 d4 ........ .......1 Broadcast Datagram;
+	CLSE 0 0 00 d4 ........ .......0 Not a Broadcast Datagram;
+	LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Master;
+	LABL 0 0 00 b7 Master;
+	DUMP 14 0 90 c2 Master Browser Addr:;				// si: !@#!@#!@#@!#
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::RequestEnum;
+	LABL 0 0 00 b7 Request an Enumeration;
+	// version 1
+	g[1] = 0;
+	BWRD 40000000 1 90 c9 Request Flags:;
+	LABL 0 0 00 d4 xxxxxx.. ........ Reserved;
+	CBIT 9 1 00 d4 ......1. ........ Include Servers with Program Neighborhood Support;
+	CLSE 0 0 00 d4 ......0. ........ Exclude Servers with Program Neighborhood Support;
+	CBIT 8 1 00 d4 .......1 ........ Include Servers with Gemini License;
+	CLSE 0 0 00 d4 .......0 ........ Exclude Servers with Gemini License;
+	CBIT 7 1 00 d4 ........ 1....... Include Enum ONLY Program Neighborhood Servers;
+	CLSE 0 0 00 d4 ........ 0....... Exclude Enum ONLY Program Neighborhood Servers;
+	CBIT 6 1 00 d4 ........ .1...... Include Servers that belong to a Domain;
+	CLSE 0 0 00 d4 ........ .0...... Exclude Servers that belong to a Domain;
+	CBIT 5 1 00 d4 ........ ..1..... Enum ONLY Application Names Included;
+	CLSE 0 0 00 d4 ........ ..0..... Enum ONLY Application Names Not Included;
+	CBIT 4 1 00 d4 ........ ...1.... Include Servers with Load-Balance License;
+	CLSE 0 0 00 d4 ........ ...0.... Exclude Servers without Load-Balance License;
+	CBIT 3 1 00 d4 ........ ....1... Include Servers with Anon Users;
+	CLSE 0 0 00 d4 ........ ....0... Exclude Servers with Anon Users;
+	CBIT 2 1 00 d4 ........ .....1.. Include Application Names;
+	CLSE 0 0 00 d4 ........ .....0.. Exclude Application Names;
+	CBIT 1 1 00 d4 ........ ......1. Include Servers with Free User Licenses and Free Winstation;
+	CLSE 0 0 00 d4 ........ ......0. Exclude Servers with Free User Licenses and Free Winstation;
+	CBIT 0 1 00 d4 ........ .......1 Include Servers with Configured Winstations;
+	CLSE 0 0 00 d4 ........ .......0 Exclude Servers with Configured Winstations;
+	LABL 0 0 00 c8;
+	DWRD 40000000 1 90 c2 Data Type:;
+	CEQU 2 1 00 14 Enumerate Server Names;
+	CEQU 5 1 00 14 Enumerate License Serial Numbers;
+	CEQU 6 1 00 14 Enumerate Application Names;
+	CEQU 7 1 00 14 Enumerate Gateways;
+
+	// version 2
+	g[1] = 0;
+	BWRD 40000000 1 90 c9 Format Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Unicode;
+	CLSE 0 0 00 d4 ........ .......0 Formatted for the Specified Code Page;
+	LABL 0 0 00 c8;
+	HWRD 40000000 0 90 c2 Code Page:;
+	
+	// version 3
+	HBYT 0 3 90 c2 Server Type:;
+	CST# 0 3 00 14 ICA::Browser::RequestEnum::ServerType_List;
+	HBYT 0 2 90 c2 Server Subtype:;
+	if (g[3] == 0)
+	{
+		CEQU 0 2 00 14 All Server Subtypes;
+	}
+	if (g[3] == 1)
+	{
+		CEQU 1 2 00 14 WinFrame;
+		CEQU 3 2 00 14 MetaFrame;
+	}
+	if (g[3] == 2)
+	{
+		CEQU 1 2 00 14 Edison;
+	}
+	if (g[3] == 3)
+	{
+		CEQU 1 2 00 14 Loudwater;
+	}
+	if (g[3] == 4)
+	{
+		CEQU 1 2 00 14 Tara;
+	}
+	// Server Capabilities
+	if (g[3] == 1)
+	{
+		g[1] = 0;
+		BLNG 40000000 1 90 c9 Server Capabilities;
+		LABL 0 0 00 d4 xxxxxxxx xxxxxxxx xxxx.... ........ Reserved;
+		CBIT 0 1 00 d4 ........ ........ ....1... ........ Neighborhood;
+		CLSE 0 0 00 d4 ........ ........ ....0... ........ No Neighborhood;
+		CBIT 0 1 00 d4 ........ ........ .....1.. ........ Disable Application;
+		CLSE 0 0 00 d4 ........ ........ .....0.. ........ No Disable Application;
+		CBIT 0 1 00 d4 ........ ........ ......1. ........ Video Basic;
+		CLSE 0 0 00 d4 ........ ........ ......0. ........ No Video Basic;
+		CBIT 0 1 00 d4 ........ ........ .......1 ........ International Encryption;
+		CLSE 0 0 00 d4 ........ ........ .......0 ........ No International Encryption;
+		CBIT 0 1 00 d4 ........ ........ ........ 1....... Domestic Encryption;
+		CLSE 0 0 00 d4 ........ ........ ........ 0....... No Domestic Encryption;
+		CBIT 0 1 00 d4 ........ ........ ........ .1...... Application Cloning;
+		CLSE 0 0 00 d4 ........ ........ ........ .0...... No Application Cloning;
+		CBIT 0 1 00 d4 ........ ........ ........ ..1..... Load Balancing;
+		CLSE 0 0 00 d4 ........ ........ ........ ..0..... No Load Balancing;
+		CBIT 0 1 00 d4 ........ ........ ........ ...1.... Domain;
+		CLSE 0 0 00 d4 ........ ........ ........ ...0.... No Domain;
+		CBIT 0 1 00 d4 ........ ........ ........ ....1... Anonymous Users;
+		CLSE 0 0 00 d4 ........ ........ ........ ....0... No Anonymous Users;
+		CBIT 0 1 00 d4 ........ ........ ........ .....1.. Audio Basic;
+		CLSE 0 0 00 d4 ........ ........ ........ .....0.. Not Audio Basic;
+		CBIT 0 1 00 d4 ........ ........ ........ ......1. Application Publishing;
+		CLSE 0 0 00 d4 ........ ........ ........ ......0. No Application Publishing;
+		CBIT 0 1 00 d4 ........ ........ ........ .......1 ICA Gateway;
+		CLSE 0 0 00 d4 ........ ........ ........ .......0 Not an ICA Gateway;
+		LABL 0 0 00 c8;
+	}
+	if (g[3] != 1)
+	{
+		BLNG 40000000 1 90 c2 Server Capabilities:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# ICA::Browser::RequestEnum::ServerType_List;
+	0x00 | All Servers;
+	0x01 | Win32;
+	0x02 | Video;
+	0x03 | X;
+	0x04 | Java;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Enum;
+	LABL 0 0 00 b7 Enumeration;
+	// version 1
+	DWRD 40000000 0 90 c2 Pkt Sequence Num:;
+	BWRD 40000000 1 90 c9 Enumeration Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Final Response Packet;
+	CLSE 0 0 00 d4 ........ .......0 Not the Final Response Packet;
+	LABL 0 0 00 c8;
+	DWRD 40000000 0 90 c2 Name Count:;
+	DWRD 40000000 0 90 c2 Offset to 1st Name:;
+	
+	// version 2
+	BWRD 40000000 1 90 c9 Format Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Unicode;
+	CLSE 0 0 00 d4 ........ .......0 Formatted for Specified Code Page;
+	LABL 0 0 00 c8;
+	HWRD 400000000 1 90 c2 Code Page:;
+	
+	// si: there are strings here that need to be handled...!@#!@#!@#!@#!@#!@#!@#!@#
+	
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::RequestData;
+	LABL 0 0 00 b7 Request Data;
+	// version 1
+	DWRD 40000000 4 90 c2 Offset to Name:;				// si: go to the offset and show the name... ergh
+	DWRD 40000000 0 90 c2 Data Type:;					// si: look in the spec, there's a table for this
+	
+	// version 2
+	DWRD 40000000 0 90 c2 Offset of Opt Req Params:;	// si: go to the offset and show the reqeust... ergh
+	
+	// version 3
+	BWRD 40000000 1 90 c9 Format Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Unicode;
+	CLSE 0 0 00 d4 ........ .......0 Formatted for Specified Code Page;
+	LABL 0 0 00 c8;
+	HWRD 40000000 0 90 c2 Code Page:;
+	
+	// version 4	!@#!@#!@#
+	
+	// version 5	!@#!@#!@#
+	
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Data;
+	LABL 0 0 00 b7 Data;
+	
+	// version 1
+	HWRD 40000000 1 90 c2 Data Type:;
+	CST#		0 1 00 14 ICA::Browser::Data::DataType_List;
+	DWRD 40000000 0 90 c2 Data Length:;
+	DWRD 40000000 0 90 c2 Offset to Data:;
+	
+	// version 2
+	BWRD 40000000 1 90 c9 Format Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Unicode;
+	CLSE 0 0 00 d4 ........ .......0 Formatted for Specified Code Page;
+	LABL 0 0 00 c8;
+	HWRD 40000000 0 90 c2 Code Page:;
+
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# ICA::Browser::Data::DataType_List;
+	 2 | Server Address;
+	 3 | Server Data;
+	 6 | Application Data;
+	 7 | Browser Gateway;
+	 8 | Server Load Data;
+	 9 | Server License;
+	10 | Disconnected Session;
+	11 | Alternate Server Address;
+	12 | Disconnected Session;
+	13 | Neighborhood Data;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::RequestPing;
+	LABL 0 0 00 b7 Request Ping;
+	DWRD 40000000 1 90 c2 Data Length:;					// si: !@#!@#!@#!@#!@#
+	DWRD 40000000 2 90 c2 Offset to Data:;
+		
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Ping;
+	LABL 0 0 00 b7 Ping;
+	DWRD 40000000 1 90 c2 Data Length:;					// si: !@#!@#!@#!@#!@#
+	DWRD 40000000 2 90 c2 Offset to Data:;
+	
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::RequestStats;
+	LABL 0 0 00 b7 Request Statistics;
+	BWRD 40000000 1 90 c9 Flags:;
+	LABL 0 0 00 d4 xxxxxxxx xxxxxxx. Reserved;
+	CBIT 0 1 00 d4 ........ .......1 Reset All Statistics;
+	CLSE 0 0 00 d4 ........ .......0 Do Not Reset All Statistics;
+	LABL 0 0 00 c8;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Stats;
+	LABL 0 0 00 b7 Statistics;
+	// si: taken from stats structure in appendix d
+	HLNG 0 0 90 c2 Rec Election:;
+	HLNG 0 0 90 c2 Rec Mstr Declare:;
+	HLNG 0 0 90 c2 Rec Brwsr Update:;
+	HLNG 0 0 90 c2 Rec Ack:;
+	HLNG 0 0 90 c2 Rec Update Now:;
+	HLNG 0 0 90 c2 Rec Delete Now:;
+	HLNG 0 0 90 c2 Rec Gtewy Add:;
+	HLNG 0 0 90 c2 Rec Gtewy Delete:;
+	HLNG 0 0 90 c2 Rec Gtewy Update:;
+	HLNG 0 0 90 c2 Rec Req Master:;
+	HLNG 0 0 90 c2 Rec Req Enum:;
+	HLNG 0 0 90 c2 Rec Req Data:;
+	HLNG 0 0 90 c2 Rec Req Ping:;
+	HLNG 0 0 90 c2 Rec Req Stats:;
+	HLNG 0 0 90 c2 Send Election:;
+	HLNG 0 0 90 c2 Send Master Declare:;
+	HLNG 0 0 90 c2 Send Browser Update:;
+	HLNG 0 0 90 c2 Send Gtewy Add:;
+	HLNG 0 0 90 c2 Send Gtewy Delete:;
+	HLNG 0 0 90 c2 Send Gtewy Update:;
+	HLNG 0 0 90 c2 Send Master:;
+	HLNG 0 0 90 c2 Send Ack:;
+	HLNG 0 0 90 c2 Send Error:;
+	DLNG 0 0 90 c2 Bytes Read:;
+	DLNG 0 0 90 c2 Bytes Written:;
+	DLNG 0 0 90 c2 Bytes Broadcast:;
+	DLNG 0 0 90 c2 Pckts Read:;
+	DLNG 0 0 90 c2 Pckts Written:;
+	DLNG 0 0 90 c2 Pckts Broadcast:;
+	DLNG 0 0 90 c2 Ack Timeouts:;
+	DLNG 0 0 90 c2 Statistics Resets:;
+	HLNG 0 0 90 c2 Receive Ping:;
+
+	// version 2
+	HLNG 0 0 90 c2 Election Unknown:;
+	HLNG 0 0 90 c2 Election Brwsr Start:;
+	HLNG 0 0 90 c2 Election Brwsr Stop:;
+	HLNG 0 0 90 c2 Election Ack Timeout:; 
+	HLNG 0 0 90 c2 Election Client Timeout:;
+	HLNG 0 0 90 c2 Election Mult Masters:;
+
+	// version 3
+	HLNG 0 0 90 c2 Receieve Not BB:;
+	
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------------------------------------------------------------
+void ICA::Browser::Error;
+	HLNG 0 1 90 c2 Error Code:;
+	CST# 0 1 00 14 ICA::Browser::Error::ErrorCodes_List;
+
+str# ICA::Browser::Error::ErrorCodes_List;
+	 0 | No Error;
+	 1 | Invalid ICA Browser command header received;
+	 2 | Invalid ICA Browser command received;
+	 3 | ICA Browser command contains an invalid parameter;
+	 4 | Not enough memory;
+	 5 | I/O Error;
+	 6 | Read Time-out;
+	 7 | Invalid byte count received on ping;
+	 8 | Invalid address received on ping;
+	 9 | Invalid data received on ping;
+	10 | Error creating ICA Browser thread;
+	11 | Error creating ICA Browser timer;
+	12 | Error initializing winsock for ICA Browser;
+	13 | Error adding data to ICA Browser database;
+	14 | Unable to locate name in ICA Browser database;
+	16 | Invalid ICA Browser command received on request;
+	17 | Invalid ICA Browser command sequence received;
+	18 | Unable to locate cluster name in ICA Browser database;
+	19 | Unable to locate master ICA Browser for specified transport;
+	20 | Error accessing ICA Browser registry data;
+	21 | Error opening ICA Browser log file;
+	22 | IPX protocol is not available;
+	23 | TCP/IP protocol is not available;
+	24 | NETBIOS protocol is not available;
+	25 | Server does not have a load balance license;
+	26 | No licenses are available for this published application;
+	27 | No sessions are available for this published application;
+	28 | OS version does not match expected vers;
+	29 | Could not validate OS vers;
+	30 | Unable to locate neighborhood name in ICA Browser DB;
+	31 | The version of REGAPPEX.DLL does not match the expected vers;
+	33 | Application servers are at full load;
+	34 | The requested application is disabled;
+	35 | The server is not configured with an alternate addr;
+	36 | All unmapped IMA error;
+	37 | Time Out;
+	48 | On the client side, the response received is invalid;
+	49 | XML: Unspecified;
+	50 | XML: Version mismatch;
+	51 | XML: Bad request;
+	52 | XML: Parser error;
+

@@ -1,0 +1,15 @@
+* FTP - File Transfer Protocol
+
+void FTP;
+	TEQU 0  10  0   0  RETURN;
+	GBYT 0   1;
+	TEQU 0   1  0   0  RETURN;
+	LABL 0   0  0  b1  FTP Control - File Transfer Protocol\FTP Ctrl:;
+	Display All Lines;
+	TRTS;
+
+void FTP-Data;
+	TEQU 0  10  0   0  RETURN;
+	LABL 0   0  0  b1  FTP Data - File Transfer Protocol\FTP Data:;
+	DUMP 0  10 90  c2  Data Area:;
+	TRTS;

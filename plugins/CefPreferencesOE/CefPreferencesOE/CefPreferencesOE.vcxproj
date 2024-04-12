@@ -1,0 +1,382 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{CEFFFEDD-73CF-463A-BCA4-CD1DF5D9A101}</ProjectGuid>
+    <RootNamespace>CefPreferencesOE</RootNamespace>
+    <SccProjectName>
+    </SccProjectName>
+    <SccAuxPath>
+    </SccAuxPath>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Static</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Template|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
+    <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</IgnoreImportLibrary>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>DO_SUMMARY;_DEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)CefPreferencesOE.dll</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)CefPreferencesOE.pdb</ProgramDatabaseFile>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)CefPreferencesOE.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>if not exist "c:\wp\eng\main\src\omni\bin\Plugins" mkdir "c:\wp\eng\main\src\omni\bin\Plugins"
+copy "$(TargetPath)" "C:\wp\eng\main\src\omni\bin\Plugins\"
+copy ".\$(TargetName).he" "C:\wp\eng\main\src\omni\bin\Plugins\"
+</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>make-zips.cmd</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Make the zip files.</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <OmitFramePointers>true</OmitFramePointers>
+      <AdditionalIncludeDirectories>./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;WIN64;HE_WIN32;_AFX;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4005;4127;4505;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_UNICODE;UNICODE;X64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir); ./; ./Plugin; ./Helium; ./Framework;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Link>
+      <AdditionalDependencies>.\lib\$(Platform)\libheruntime.lib;.\lib\$(Platform)\Protospecs.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)CefPreferencesOE.dll</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)CefPreferencesOE.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+    <PostBuildEvent>
+      <Message>Install the plugin.</Message>
+      <Command>copy "$(TargetPath)" "C:\wp\eng\main\src\omni\bin\plugins\"
+copy ".\$(TargetName).he" "C:\wp\eng\main\src\omni\bin\plugins\"
+</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>make-zips.cmd</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Make the zip files.</Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="Helium\encodehex.h" />
+    <ClInclude Include="Helium\hecom.h" />
+    <ClInclude Include="Helium\hecomweak.h" />
+    <ClInclude Include="Helium\hecore.h" />
+    <ClInclude Include="Helium\heid.h" />
+    <ClInclude Include="Helium\heinttypes.h" />
+    <ClInclude Include="Helium\helib.h" />
+    <ClInclude Include="Helium\hepoppack.h" />
+    <ClInclude Include="Helium\hepushpack.h" />
+    <ClInclude Include="Helium\heresult.h" />
+    <ClInclude Include="Helium\hestdint.h" />
+    <ClInclude Include="Helium\hestr.h" />
+    <ClInclude Include="Helium\heunk.h" />
+    <ClInclude Include="Helium\hevariant.h" />
+    <ClInclude Include="Helium\heweakref.h" />
+    <ClInclude Include="Helium\hlalloc.h" />
+    <ClInclude Include="Helium\hlatomic.h" />
+    <ClInclude Include="Helium\hlbase.h" />
+    <ClInclude Include="Helium\hlclstab.h" />
+    <ClInclude Include="Helium\hlcom.h" />
+    <ClInclude Include="Helium\hldef.h" />
+    <ClInclude Include="Helium\hlexcept.h" />
+    <ClInclude Include="Helium\hlid.h" />
+    <ClInclude Include="Helium\hlptr.h" />
+    <ClInclude Include="Helium\hlruntime.h" />
+    <ClInclude Include="Helium\hlstr.h" />
+    <ClInclude Include="Helium\hlstrconv.h" />
+    <ClInclude Include="Helium\hlsync.h" />
+    <ClInclude Include="Helium\hlvariant.h" />
+    <ClInclude Include="Helium\hlweakref.h" />
+    <ClInclude Include="Helium\imemorystream.h" />
+    <ClInclude Include="Helium\iomniengineplugin.h" />
+    <ClInclude Include="Helium\ixmldom.h" />
+    <ClInclude Include="Helium\objectwithsiteimpl.h" />
+    <ClInclude Include="Helium\omnicommands.h" />
+    <ClInclude Include="Helium\omnigraphs.h" />
+    <ClInclude Include="Helium\peekcore.h" />
+    <ClInclude Include="Helium\peekfilters.h" />
+    <ClInclude Include="Helium\peeknames.h" />
+    <ClInclude Include="Helium\peeknotify.h" />
+    <ClInclude Include="Helium\peekstats.h" />
+    <ClInclude Include="Helium\peekutil.h" />
+    <ClInclude Include="Helium\peekvoipcall.h" />
+    <ClInclude Include="Framework\ByteVectRef.h" />
+    <ClInclude Include="Framework\CaptureBuffer.h" />
+    <ClInclude Include="Framework\CaptureFile.h" />
+    <ClInclude Include="Framework\ContextManager.h" />
+    <ClInclude Include="Framework\Ethernet.h" />
+    <ClInclude Include="Framework\FileCaptureBuffer.h" />
+    <ClInclude Include="Framework\FileEx.h" />
+    <ClInclude Include="Framework\FilePacketArray.h" />
+    <ClInclude Include="Framework\GlobalId.h" />
+    <ClInclude Include="Framework\GPSInfo.h" />
+    <ClInclude Include="Framework\IpHeaders.h" />
+    <ClInclude Include="Framework\Layers.h" />
+    <ClInclude Include="Framework\MediaTypes.h" />
+    <ClInclude Include="Framework\MemUtil.h" />
+    <ClInclude Include="Framework\NotifyService.h" />
+    <ClInclude Include="Framework\Packet.h" />
+    <ClInclude Include="Framework\PacketArray.h" />
+    <ClInclude Include="Framework\PacketHeaders.h" />
+    <ClInclude Include="Framework\PCapCaptureFile.h" />
+    <ClInclude Include="Framework\Peek.h" />
+    <ClInclude Include="Framework\PeekArray.h" />
+    <ClInclude Include="Framework\PeekCaptureFile.h" />
+    <ClInclude Include="Framework\PeekContext.h" />
+    <ClInclude Include="Framework\PeekContextProxy.h" />
+    <ClInclude Include="Framework\PeekDataModeler.h" />
+    <ClInclude Include="Framework\PeekEngineContext.h" />
+    <ClInclude Include="Framework\PeekFile.h" />
+    <ClInclude Include="Framework\PeekHash.h" />
+    <ClInclude Include="Framework\PeekLock.h" />
+    <ClInclude Include="Framework\PeekMessage.h" />
+    <ClInclude Include="Framework\PeekPacket.h" />
+    <ClInclude Include="Framework\PeekPlugin.h" />
+    <ClInclude Include="Framework\PeekProxy.h" />
+    <ClInclude Include="Framework\PeekStream.h" />
+    <ClInclude Include="Framework\PeekStrings.h" />
+    <ClInclude Include="Framework\PeekSummarySnapshot.h" />
+    <ClInclude Include="Framework\PeekSummaryStats.h" />
+    <ClInclude Include="Framework\PeekTime.h" />
+    <ClInclude Include="Framework\PeekUnits.h" />
+    <ClInclude Include="Framework\PeekXml.h" />
+    <ClInclude Include="Framework\PluginController.h" />
+    <ClInclude Include="Framework\PluginManager.h" />
+    <ClInclude Include="Framework\Protospecs.h" />
+    <ClInclude Include="Framework\ProxySummaryStats.h" />
+    <ClInclude Include="Framework\PSDefs.h" />
+    <ClInclude Include="Framework\PSIDs.h" />
+    <ClInclude Include="Framework\RefreshFile.h" />
+    <ClInclude Include="Framework\RemotePlugin.h" />
+    <ClInclude Include="Framework\Snapshot.h" />
+    <ClInclude Include="Framework\Stats.h" />
+    <ClInclude Include="Framework\std-tr1.h" />
+    <ClInclude Include="Framework\tagfile.h" />
+    <ClInclude Include="Framework\Version.h" />
+    <ClInclude Include="Framework\wppoppack.h" />
+    <ClInclude Include="Framework\wppushpack.h" />
+    <ClInclude Include="Framework\WPTypes.h" />
+    <ClInclude Include="Plugin\AdapterStats.h" />
+    <ClInclude Include="Plugin\OmniEngineContext.h" />
+    <ClInclude Include="Plugin\OmniPlugin.h" />
+    <ClInclude Include="Plugin\Options.h" />
+    <ClInclude Include="Plugin\PluginHandlersInterface.h" />
+    <ClInclude Include="Plugin\PluginMessages.h" />
+    <ClInclude Include="Plugin\resource.h" />
+    <ClInclude Include="Plugin\StdAfx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framework\ByteVectRef.cpp" />
+    <ClCompile Include="Framework\CaptureFile.cpp" />
+    <ClCompile Include="Framework\ContextManager.cpp" />
+    <ClCompile Include="Framework\FileCaptureBuffer.cpp" />
+    <ClCompile Include="Framework\FileEx.cpp" />
+    <ClCompile Include="Framework\GPSInfo.cpp" />
+    <ClCompile Include="Framework\IpHeaders.cpp" />
+    <ClCompile Include="Framework\Layers.cpp" />
+    <ClCompile Include="Framework\NotifyService.cpp" />
+    <ClCompile Include="Framework\Packet.cpp" />
+    <ClCompile Include="Framework\PacketArray.cpp" />
+    <ClCompile Include="Framework\PCapCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekCaptureFile.cpp" />
+    <ClCompile Include="Framework\PeekContext.cpp" />
+    <ClCompile Include="Framework\PeekContextProxy.cpp" />
+    <ClCompile Include="Framework\PeekDataModeler.cpp" />
+    <ClCompile Include="Framework\PeekMessage.cpp" />
+    <ClCompile Include="Framework\PeekPlugin.cpp" />
+    <ClCompile Include="Framework\PeekProxy.cpp" />
+    <ClCompile Include="Framework\PeekStrings.cpp" />
+    <ClCompile Include="Framework\PeekSummarySnapshot.cpp" />
+    <ClCompile Include="Framework\PeekSummaryStats.cpp" />
+    <ClCompile Include="Framework\PeekTime.cpp" />
+    <ClCompile Include="Framework\PeekUnits.cpp" />
+    <ClCompile Include="Framework\PeekXml.cpp" />
+    <ClCompile Include="Framework\PluginManager.cpp" />
+    <ClCompile Include="Framework\PluginModule.cpp" />
+    <ClCompile Include="Framework\ProxySummaryStats.cpp" />
+    <ClCompile Include="Framework\RefreshFile.cpp" />
+    <ClCompile Include="Framework\RemotePlugin.cpp" />
+    <ClCompile Include="Framework\Snapshot.cpp" />
+    <ClCompile Include="Framework\Version.cpp" />
+    <ClCompile Include="Plugin\OmniEngineContext.cpp" />
+    <ClCompile Include="Plugin\OmniPlugin.cpp" />
+    <ClCompile Include="Plugin\Options.cpp" />
+    <ClCompile Include="Plugin\PluginMessages.cpp" />
+    <ClCompile Include="Plugin\StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\x64\libheruntime.lib" />
+    <Library Include="lib\x64\Protospecs.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Plugin\Plugin.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\vBuildAll.cmd" />
+    <None Include="CefPrefsOE-1.he" />
+    <None Include="CefPrefsOE-2.he" />
+    <None Include="CefPrefsOE-3.he" />
+    <None Include="CefPrefsOE-4.he" />
+    <None Include="loadso" />
+    <None Include="make-zips.cmd" />
+    <None Include="Makefile" />
+    <None Include="module.map" />
+    <None Include="Plugin\About\About-1\index.html" />
+    <None Include="Plugin\About\About-2\index.html" />
+    <None Include="Plugin\About\About-3\index.html" />
+    <None Include="Plugin\About\About-4\index.html" />
+    <None Include="Plugin\About\About\index.html" />
+    <None Include="Plugin\CaptureTab\CaptureTab-1\index.html" />
+    <None Include="Plugin\CaptureTab\CaptureTab-2\index.html" />
+    <None Include="Plugin\CaptureTab\CaptureTab-3\index.html" />
+    <None Include="Plugin\CaptureTab\CaptureTab-4\index.html" />
+    <None Include="Plugin\CaptureTab\CaptureTab\index.html" />
+    <None Include="Plugin\EngineTab\EngineTab-1\index.html" />
+    <None Include="Plugin\EngineTab\EngineTab-2\index.html" />
+    <None Include="Plugin\EngineTab\EngineTab-3\index.html" />
+    <None Include="Plugin\EngineTab\EngineTab-4\index.html" />
+    <None Include="Plugin\EngineTab\EngineTab\index.html" />
+    <None Include="Plugin\Options\Options-1\index.html" />
+    <None Include="Plugin\Options\Options-2\index.html" />
+    <None Include="Plugin\Options\Options-3\index.html" />
+    <None Include="Plugin\Options\Options-4\index.html" />
+    <None Include="Plugin\Options\Options\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-303030303030\capture\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-303030303030\engine\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-303030303030\options\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-313131313131\capture\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-313131313131\engine\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-313131313131\options\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-323232323232\capture\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-323232323232\engine\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-323232323232\options\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-333333333333\capture\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-333333333333\engine\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-333333333333\options\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-343434343434\capture\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-343434343434\engine\index.html" />
+    <None Include="Plugin\web\C0E0F020-2468-1357-C1C4-343434343434\options\index.html" />
+    <None Include="Plugin\wplogo.bmp" />
+    <None Include="Plugin\html1.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="CefPreferencesOE.he">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="Plugin\jQuery.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Plugin\primer.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Plugin\xmlPrefs.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="Plugin\xmltest.htm">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="Plugin\Plugin.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

@@ -1,0 +1,246 @@
+* PPTP - Point-to-Point Tunneling Protocol
+
+void PPTP;
+	LABL 0 0 0 b1 Point-to-Point Tunneling Protocol\PPTP:;
+	DWRD 0 1 90 c2 Length:;
+	DWRD 0 1 90 c2 Message Type:;
+	 CEQU 1 1 0 14 Control Message;
+	HLNG 0 0 90 c2 Magic Cookie:;
+	TEQU 1 1 90 c2 PPTP Control;
+
+void PPTP Control;
+	DWRD 0 1 90 c2 Control Message Type:;
+	TST# 0 1 90 c2 PPTP Control Message Type;
+
+void PPTP Control Request;
+	LABL 0 0  0 14 Start Control Request;
+	DWRD 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Protocol Version:;
+	DWRD 0 1 90 c2 Reserved:;
+	DLNG 0 1 90 c2 Framing Capabilities:;
+	CST# 0 1 0  14 PPTP Control Framing;
+	DLNG 0 1 90 c2 Bearer Capabilities:;
+	CST# 0 1 0  14 PPTP Control Bearer;
+	DWRD 0 1 90 c2 Maximum Channels:;
+	DWRD 0 1 90 c2 Firmware Revision:;
+	CHR# 40 0 90 c2 Host Name:;
+	CHR# 40 0 90 c2 Vendor String:;
+
+void PPTP Control Reply;
+	LABL 0 0  0 14 Start Control Reply;
+	DWRD 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Protocol Version:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Result;
+	DBYT 0 1 90 c2 Error Code:;
+	DLNG 0 1 90 c2 Framing Capabilities:;
+	CST# 0 1 0  14 PPTP Control Framing;
+	DLNG 0 1 90 c2 Bearer Capabilities:;
+	CST# 0 1 0  14 PPTP Control Bearer;
+	DWRD 0 1 90 c2 Maximum Channels:;
+	DWRD 0 1 90 c2 Firmware Revision:;
+	CHR# 40 0 90 c2 Host Name:;
+	CHR# 40 0 90 c2 Vendor String:;
+
+void PPTP Control Stop Request;
+	LABL 0 0  0 14 Stop Control Request;
+	DWRD 0 1 90 c2 Reserved:;
+	DBYT 0 1 90 c2 Reason:;
+	CST# 0 1  0 14 PPTP Control Stop Reason;
+	DBYT 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Reserved:;
+
+void PPTP Control Stop Reply;
+	LABL 0 0  0 14 Stop Control Reply;
+	DWRD 0 1 90 c2 Reserved:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Stop Error;
+	DBYT 0 1 90 c2 Error Code:;
+	DWRD 0 1 90 c2 Reserved:;
+
+void PPTP Control Echo Request;
+	LABL 0 0  0 14 Echo Request;
+	DWRD 0 1 90 c2 Reserved:;
+	HLNG 0 1 90 c2 Identifier:;
+
+void PPTP Control Echo Reply;
+	LABL 0 0  0 14 Echo Reply;
+	DWRD 0 1 90 c2 Reserved:;
+	HLNG 0 1 90 c2 Identifier:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Echo Error;
+	DBYT 0 1 90 c2 Error Code:;
+	DWRD 0 1 90 c2 Reserved:;
+
+void PPTP Control Outgoing Call Request;
+	LABL 0 0  0 14 Outgoing Call Request;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	DWRD 0 1 90 c2 Call Serial No.:;
+	DLNG 0 1 90 c2 Minimum BPS:;
+	DLNG 0 1 90 c2 Maximum BPS:;
+	DLNG 0 1 90 c2 Bearer Type:;
+	CST# 0 1  0 14 PPTP Control Bearer;
+	DLNG 0 1 90 c2 Framing Type:;
+	CST# 0 1  0 14 PPTP Control Framing;
+	DWRD 0 1 90 c2 Packet Recv. Window Size:;
+	DWRD 0 1 90 c2 Packet Processing Delay:;
+	DWRD 0 1 90 c2 Phone Number Length:;
+	DWRD 0 1 90 c2 Reserved:;
+	CHR# 40 0 90 c2 Phone Number:;
+	CHR# 40 0 90 c2 Subaddress:;
+
+void PPTP Control Outgoing Call Reply;
+	LABL 0 0  0 14 Outgoing Call Reply;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	HWRD 0 1 90 c2 Peer Call Id:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Outgoing Result;
+	DBYT 0 1 90 c2 Error Code:;
+	DWRD 0 1 90 c2 Cause Code:;
+	DLNG 0 1 90 c2 Connect Speed:;
+	DWRD 0 1 90 c2 Packet Recv. Window Size:;
+	DWRD 0 1 90 c2 Packet Processing Delay:;
+	DLNG 0 1 90 c2 Physical Channel Id:;
+
+void PPTP Control Incoming Call Request;
+	LABL 0 0  0 14 Incoming Call Request;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	DWRD 0 1 90 c2 Call Serial No.:;
+	DLNG 0 1 90 c2 Bearer Type:;
+	CST# 0 1 80 42 PPTP Control Bearer;
+	DLNG 0 1 90 c2 Physical Channel Id:;
+	DWRD 0 1 90 c2 Dialed Number Length:;
+	DWRD 0 1 90 c2 Dialing Number Length:;
+	CHR# 40 0 90 c2 Dialed Number:;
+	CHR# 40 0 90 c2 Dialing Number:;
+	CHR# 40 0 90 c2 Subaddress:;
+
+void PPTP Control Incoming Call Reply;
+	LABL 0 0  0 14 Incoming Call Reply;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	HWRD 0 1 90 c2 Peer Call Id:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Incoming Result;
+	DBYT 0 1 90 c2 Error Code:;
+	DWRD 0 1 90 c2 Packet Recv. Window Size:;
+	DWRD 0 1 90 c2 Packet Transmit Delay:;
+	DWRD 0 1 90 c2 Reserved:;
+
+void PPTP Control Incoming Call Connected;
+	LABL 0 0  0 14 Incoming Call Connected;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Peer Call Id:;
+	DWRD 0 1 90 c2 Reserved:;
+	DLNG 0 1 90 c2 Connect Speed:;
+	DWRD 0 1 90 c2 Packet Recv. Window Size:;
+	DWRD 0 1 90 c2 Packet Transmit Delay:;
+	DLNG 0 1 90 c2 Framing Type:;
+	CST# 0 1 80 42 PPTP Control Framing;
+
+void PPTP Control Call Clear Request;
+	LABL 0 0  0 14 Call Clear Request;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	DWRD 0 1 90 c2 Reserved:;
+
+void PPTP Control Call Disconnect Notify;
+	LABL 0 0  0 14 Call Disconnect Notify;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Call Id:;
+	DBYT 0 1 90 c2 Result Code:;
+	CST# 0 1  0 14 PPTP Control Call Disconnect Result;
+	DBYT 0 1 90 c2 Error Code:;
+	HWRD 0 1 90 c2 Cause Code:;
+	HWRD 0 1 90 c2 Reserved:;
+	CHR# 80 0 90 c2 PPTP Control Call Disconnect Result;
+
+void PPTP Control WAN Error Notify;
+	LABL 0 0  0 14 WAN Error Notify;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Peer Call Id:;
+	DWRD 0 1 90 c2 Reserved:;
+	DLNG 0 1 90 c2 CRC Errors:;
+	DLNG 0 1 90 c2 Framing Errors:;
+	DLNG 0 1 90 c2 Hardware Overruns:;
+	DLNG 0 1 90 c2 Buffer Overruns:;
+	DLNG 0 1 90 c2 Time-out Errors:;
+	DLNG 0 1 90 c2 Alignment Errors:;
+
+void PPTP Control Set Link Info;
+	LABL 0 0  0 14 Set Link Info;
+	DWRD 0 1 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Peer Call Id:;
+	DWRD 0 1 90 c2 Reserved:;
+	HLNG 0 1 90 c2 Send ACCM:;
+	HLNG 0 1 90 c2 Receive ACCM:;
+
+str# PPTP Control Message Type;
+	PPTP Control Request;
+	PPTP Control Reply;
+	PPTP Control Stop Request;
+	PPTP Control Stop Reply;
+	PPTP Control Echo Request;
+	PPTP Control Echo Reply;
+	PPTP Control Outgoing Call Request;
+	PPTP Control Outgoing Call Reply;
+	PPTP Control Incoming Call Request;
+	PPTP Control Incoming Call Reply;
+	PPTP Control Incoming Call Connected;
+	PPTP Control Call Clear Request;
+	PPTP Control Call Disconnect Notify;
+	PPTP Control WAN Error Notify;
+	PPTP Control Set Link Info;
+
+str# PPTP Control Framing;
+	Asynchronous;
+	Synchronous;
+	Any;
+
+str# PPTP Control Bearer;
+	Analog;
+	Digital;
+	Any;
+
+str# PPTP Control Result;
+	Succesful;
+	General;
+	Command;
+	Requester;
+	Version;
+
+str# PPTP Control Stop Reason;
+	None;
+	Stop Protocol;
+	Stop Local Shutdown;
+
+str# PPTP Control Stop Error;
+	OK;
+	General;
+
+str# PPTP Control Echo Error;
+	OK;
+	General;
+
+str# PPTP Control Outgoing Result;
+	Connected;
+	General Error;
+	No Carrier;
+	Busy;
+	No Dial Tone;
+	Time-out;
+	Do Not Accept;
+
+str# PPTP Control Incoming Result;
+	Connected;
+	General Error;
+	Do Not Accept;
+
+str# PPTP Control Call Disconnect Result;
+	Lost Carrier;
+	General Error;
+	Admin Shutdown;
+	Request;

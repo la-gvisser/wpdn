@@ -1,0 +1,168 @@
+//Audio & Video Bridging
+//MSRP(0x22EA)	: not implemented
+//MVRP(0x88F5)	: not implemented
+//gPTP (0x88F7)	: not implemented
+//1722(0x22f0)	: coded with http://grouper.ieee.org/groups/1722/contributions/2008/avbtp-bartky-p1722-v1-1-cb-2008-08-25.pdf 
+//1722.1		: not implemented
+//Automotive Ethernet AVB Support
+//
+//
+//
+
+str# EProto::Names_Str;
+0x22EA	|	802.1Qat Multiple Stream Reservation Protocol;
+0x22f0	|	IEEE 1722 Audio Video Bridging Transport Protocol;
+//0x88F5	|	IEEE 802.1ak Multiple VLAN Registration Protocol;
+
+str# Ether::Branching_3_Str;
+0x22f0	|	IEEE1722AVBTP;
+
+str# IEEE1722AVBTP::SubType;
+0x00	|	IEC  61883/IIDC  over  AVBTP;
+0x01	|	MMA  payload  over  AVBTP;
+0xfe	|	MAAP;
+0xff	|	Proprietary/Experimental over AVBTP;
+
+str# IEEE1722AVBTP::SubType::SubTypeLdr;
+0x00	|	IEEE1722AVBTP::SubType::IEC61883;
+//0x01	|	MMA  payload  over  AVBTP;
+0x7F	|	IEEE1722AVBTP::SubType::PropExpSTControlFormat;
+//0xfe	|	MAAP;
+//0xff	|	Proprietary/Experimental over AVBTP;
+
+void IEEE1722AVBTP()
+{
+	LABL 0 0 00 b1 IEEE 1722 - Audio Video Bridging Transport Protocol;
+	GBIT( 1, l[1] );
+	CEQU( 0 , l[1], 0, 0x01, " - Data frame" );
+	CEQU( 1 , l[1], 0, 0x01, " - Control frame" );
+	TEQU( 0 , l[1], 0, 0x01, IEEE1722AVBTP::DataFrame );
+	TEQU( 1 , l[1], 0, 0x01, IEEE1722AVBTP::ControlFrame );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void IEEE1722AVBTP::DataFrame()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "C/D Indicator:" );
+	BBIT( 7, l[2], 0x90, 0xc2, "AVBTP Subtype:" );
+		CST#( 0 , l[4], 0, 0x14, IEEE1722AVBTP::SubType );
+		CLSE( 0, 0, 0, 0x14, "Reserved for future protocols" );	
+		TSB#( 0 , l[4], 0, 0x14, IEEE1722AVBTP::SubType::SubTypeLdr );
+}
+
+void IEEE1722AVBTP::SubType::IEC61883()
+{	
+	BBIT( 1, l[3], 0x90, 0xc2, "AVBTP Stream ID Valid:" );
+		CEQU( 1, l[3], 0, 0x14, "Valid" );
+		CLSE( 0, 0, 0, 0x14, "Not Valid" );	
+	BBIT( 3, l[4], 0x90, 0xc2, "AVBTP Version:" );
+		CEQU( 0 , l[4], 0, 0x14, IEEE 1722 AVB - TP 2011 );
+		CLSE( 0, 0, 0, 0x14, "Reserved for future protocols" );	
+	BBIT( 1, l[5], 0x90, 0xc2, "AVBTP Media Reset:" );
+	BBIT( 1, l[6], 0x90, 0xc2, "AVBTP Late presentation(reserved):" );
+	BBIT( 1, l[7], 0x90, 0xc2, "AVBTP Gatway Info Valid:" );
+	BBIT( 1, l[8], 0x90, 0xc2, "Source Timestamp Valid:" );
+	HBYT( 1, l[9], 0x90, 0xc2, "Sequence Number:" );
+	BBIT( 7, l[10], 0x90, 0xc2, "Reserved:" );
+	BBIT( 1, l[11], 0x90, 0xc2, "AVBTP Timestamp uncertain:" );
+	D64B( 1, l[12], 0x90, 0xc2, "Stream ID:" );
+	HLNG( 0, l[13], 0x90, 0xc2, "AVBTP Timestamp:" );
+	HLNG( 0, l[14], 0x90, 0xc2, "Gateway Info:" );
+	DWRD( 0, l[15], 0x90, 0xc2, "1394 Packet Data Length:" );
+	LABL 0 0 00 b7 IEEE 1722 - AVB - Protocol Specific Header:;
+		BBIT( 2, l[16], 0x90, 0xc2, "Format Tag:" );
+		DBIT( 6, l[17], 0x90, 0xc2, "Channel:" );
+			CEQU( 31, l[17], 0, 0x14, native AVB );
+			CLSE( 0, 0, 0, 0x14, "originating channel ID from 1394 network via 1394/61883 to 1722/61883 gateway" );	
+		DBIT( 4, l[18], 0x90, 0xc2, "Tcode:" );
+		DBIT( 4, l[19], 0x90, 0xc2, "sy:" );
+	LABL( 0, 0, 0, 0xb8 );
+	GBIT( 2, l[20] );
+	//DGLB( 0,l[20], 0x90, 0xc2, "CIP" );
+	if (l[20] == 1)
+	{
+		LABL 0 0 00 b7 IEC 61883-1 CIP Header;
+		DBIT( 2, l[20], 0x90, 0xc2, "CIP#:" );
+		DBIT( 6, l[21], 0x90, 0xc2, "SID:" );
+			CEQU( 63, l[25], 0, 0x14, source_packet_header_timestamp not present );
+			CLSE( 0, 0, 0, 0x14, "originating Source ID from IEEE 1394 network" );	
+		DBYT( 0, l[22], 0x90, 0xc2, "DBS (in Quadlets):" );
+			CEQU( 0, l[22], 0, 0x14, " = 256" );
+		DBIT( 2, l[23], 0x90, 0xc2, "FN:" );
+		DBIT( 3, l[24], 0x90, 0xc2, "QPC:" );
+		DBIT( 1, l[25], 0x90, 0xc2, "SPH:" );
+			CEQU( 0, l[25], 0, 0x14, source_packet_header_timestamp not present );
+			CEQU( 1, l[25], 0, 0x14, source_packet_header_timestamp present );
+		DBIT( 2, l[26], 0x90, 0xc2, "Reserved:" );
+		DBYT( 0, l[27], 0x90, 0xc2, "DBC:" );
+		DBIT( 2, l[20], 0x90, 0xc2, "CIP#:" );
+		DBIT( 6, l[21], 0x90, 0xc2, "FMT:" );
+		HBYT( 0, l[22], 0x90, 0xc2, "FDF:" );
+		HWRD( 0, l[22], 0x90, 0xc2, "SYT:" );
+		l[15] -= 8;
+		if (l[25] == 1)
+		{
+			HLNG( 0, l[22], 0x90, 0xc2, "avbtp_source_packet_header_timestamp:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (l[20] == 0)
+	{
+		LABL 0 0 00 b7 data field unformatted - IIDC 1394 trade association specification;
+		BWRD( 0, l[28], 0x90, 0xc2, "Protocol Specific Header:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (l[20] == 2)
+	{
+		LABL 0 0 00 b7 Reserved by IEEE 1394.1 clock adjustment;
+		BWRD( 0, l[28], 0x90, 0xc2, "Protocol Specific Header:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (l[20] == 3)
+	{
+		LABL 0 0 00 b7 Global asynchronous stream packet (GASP) format;
+		BWRD( 0, l[28], 0x90, 0xc2, "Protocol Specific Header:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (l[20] > 1)
+	{
+		BWRD( 0, l[], 0x90, 0xc2, "Protocol Specific Header:" );
+		
+	}
+	DUMP( 0, l[15], 0x90, 0xc2, "Protocol Specific Packet Data:" );
+}
+
+void IEEE1722AVBTP::SubType::PropExpSTControlFormat()
+{
+	BBIT( 1, l[3], 0x90, 0xc2, "AVBTP Stream ID Valid:" );
+		CEQU( 1, l[3], 0, 0x14, "Valid" );
+		CLSE( 0, 0, 0, 0x14, "Not Valid" );	
+	DBIT( 3, l[4], 0x90, 0xc2, "AVBTP Version:" );
+		CEQU( 0 , l[4], 0, 0x14, IEEE 1722 AVB - TP 2011 );
+		CLSE( 0, 0, 0, 0x14, "Reserved for future protocols" );
+	DBIT( 4, l[5], 0x90, 0xc2, "escape_type:" );
+	DBIT( 5, l[6], 0x90, 0xc2, "status:" );
+	DBIT( 11, l[7], 0x90, 0xc2, "control_frame_length(bytes):" );
+	D64B( 0, l[8], 0x90, 0xc2, "stream_id:" );
+	D64B( 0, l[8], 0x90, 0xc2, "EUI-64:" );
+}
+
+void IEEE1722AVBTP::ControlFrame()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "C/D Indicator:" );
+	BBIT( 7, l[2], 0x90, 0xc2, "AVBTP Subtype:" );
+		CST#( 0 , l[4], 0, 0x14, IEEE1722AVBTP::SubType );
+		CLSE( 0, 0, 0, 0x14, "Reserved for future protocols" );	
+	BBIT( 1, l[3], 0x90, 0xc2, "AVBTP Stream ID Valid:" );
+	BBIT( 3, l[4], 0x90, 0xc2, "AVBTP Version:" );
+		CEQU( 0 , l[4], 0, 0x14, IEEE 1722 AVB - TP 2011 );
+		CLSE( 0, 0, 0, 0x14, "Reserved for future protocols" );
+	BBIT( 1, l[5], 0x90, 0xc2, "AVBTP Media Reset:" );
+	BBIT( 1, l[6], 0x90, 0xc2, "AVBTP Late presentation:" );
+	BBIT( 1, l[7], 0x90, 0xc2, "AVBTP Gatway Info Valid:" );
+	BBIT( 1, l[8], 0x90, 0xc2, "Source Timestamp Valid:" );
+	HBYT( 1, l[9], 0x90, 0xc2, "Sequence Number:" );
+	BBIT( 7, l[10], 0x90, 0xc2, "Reserved:" );
+	BBIT( 1, l[11], 0x90, 0xc2, "AVBTP Timestamp uncertain:" );
+	D64B( 1, l[12], 0x90, 0xc2, "Stream ID:" );
+}

@@ -1,0 +1,5 @@
+* IPTalk - AppleTalk Encapsulated in IP
+
+void IPTalk;
+	LABL 0 0 0 b1 IPTalk - AppleTalk Encapsulated in IP;
+	TNXT -EtherTalk;

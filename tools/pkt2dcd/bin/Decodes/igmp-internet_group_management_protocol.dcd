@@ -1,0 +1,142 @@
+*  IGMP - Internet Group Management Protocol
+
+
+
+void IGMP()
+{
+	IGMP::Main();
+}
+	
+	
+void IGMP::Main()
+{
+	SGTE 8 10;		//SI: IGAP
+	SKIP 6;
+	INCR 8;
+	GBYT 0 1;
+	DECR 8;
+	SNEQ 10 1;
+	SKIP 1;
+	TNXT -IGAP;
+	GBYT 0 1;
+	TEQU 14 1 0 0 IGMP::LINK::PIMv1;
+	GBIT 4 1;
+	TEQU 0 1  0  0 IGMP::Version;
+	TEQU 1 1  0  0 IGMP::Version_1_and_2;
+	TEQU 2 1  0  0 IGMP::v3;
+	
+}
+
+void IGMP::LINK::PIMv1()
+{
+	PIMv1;
+}
+
+void IGMP::Version()
+{
+	LABL 0 0 0 b1 IGMP - Internet Group Management Protocol\IGMP:;
+	HBYT 0 1 90 c2 IGMP Type:\Type:;
+	CEQU 1 1  0 24 Create Group Request; 
+	CEQU 2 1  0 24 Create Group Reply;
+	CEQU 3 1  0 24 Join Group Request; 
+	CEQU 4 1  0 24 Join Group Reply;
+	CEQU 5 1  0 24 Leave Group Request;
+	CEQU 6 1  0 24 Leave Group Reply;
+	CEQU 7 1  0 24 Confirm Group Request;
+	CEQU 8 1  0 24 Confirm Group Reply;
+	DBYT 0 0 90 c2 IGMP Code:\Code:;
+	CEQU 1 1  0 24 Public; 
+	CEQU 2 1  0 24 Private;
+	HWRD 0 0 90 c2 Checksum:;
+	CKSM 3 0 24 14 Checksum invalid. Should be: ;
+	HLNG 0 1 90 c2 Identifier:;
+	IPLG 0 0 90 c2 Group Address:;
+	HEX# 8 1 90 c2 Access Key:;
+}
+
+
+void IGMP::Version_1_and_2()
+{
+	GBYT 0   1;						//read type 
+	TEQU 13  1   0  0 DVMRP;
+	LABL 0   0   0 b1 IGMP - Internet Group Management Protocol\IGMP:;
+	HBYT 0   1  90 c2 IGMP Type:\Type:;
+	CEQU 11  1   0 24 Group Membership Query;
+	CEQU 12  1   0 24 Version 1 - Membership Report;
+	CEQU 16  1   0 24 Version 2 - Membership Report;
+	CEQU 17  1   0 24 Leave Group;
+	DBYT  0  0  90 c2 Max Response Time:;
+	DWRD  0  0  90 c2 IGMP Checksum:\Checksum:;
+	CKSM  3  0  24 14 Checksum invalid. Should be: ;
+	IPLG  0  0  90 c2 Group Address:;
+}
+
+
+void IGMP::v3()
+{
+	LABL  0 0  0 b1 IGMPv3 - Internet Group Management Protocol\IGMPv3:;
+	HBYT  0 1 90 c2 IGMP Type:\Type:;
+	CEQU 11 1  0 24 Group Membership Query;
+	CEQU 12 1  0 24 Version 1 - Membership Report;
+	CEQU 16 1  0 24 Version 2 - Membership Report;
+	CEQU 17 1  0 24 Version 2 - Leave Group;
+	CEQU 22 1  0 24 Version 3 Membership Report;
+	CEQU 24 1  0 24 Multicast Router Advertisement;
+	CEQU 25 1  0 24 Multicast Router Solicitation;
+	CEQU 26 1  0 24 Multicast Router Termination;
+	DBYT  0 1 90 c2 IGMP Reserved:;
+	HWRD  0 0 90 c2 IGMP Checksum:\Chksm:;
+	CKSM  3 0 24 14 Checksum invalid. Should be: ;
+	DWRD  0 1 90 c2 Reserved:\R:;
+	DWRD  0 1 90 c2 Number of Records:\Records:;
+	IGMP::v3_GroupRecord();
+}
+
+* out params: g[3]=number of sources;
+
+
+void IGMP::v3_GroupRecord()
+{
+	TGTE 0 10  0  0 RETURN;
+	LABL 0  0  0 b7 Group Record;
+	DBYT 0  1 90 c2 Record Type:\Type:;
+	CST# 0  1  0 14 IGMP::v3_GroupRecord_TypeStr;
+	DBYT 0  2 90 c2 Auxiliary Data Len:\Len:;
+	DWRD 0  3 90 c2 Number of Sources:\Srcs:;
+	IPLG 0  4 90 c2 Multicast Address:\M Addr:;
+	if (g[16] == 0) 
+	{
+		LABL 0 0 0 b8;
+		TRTS; 
+	}
+	LABL 0 0 0 b7 Sources;
+	IGMP::v3_Sources();
+	LABL 0 0 0 b8;
+	SEQU 0 2;						//SI: if there's no aux data, then don't show it
+	SKIP 1;
+	HEX# 0 2 90 c2 Auxiliary data:;
+	LABL 0  0  0 b8;
+
+	TNXT -IGMP::v3_GroupRecord;
+}
+
+
+str# IGMP::v3_GroupRecord_TypeStr;
+    MODE_IS_INCLUDE;
+    MODE_IS_EXCLUDE;
+    CHANGE_TO_INCLUDE_MODE;
+    CHANGE_TO_EXCLUDE_MODE;
+    ALLOW_NEW_SOURCES;
+    BLOCK_OLD_SOURCES;
+
+// in params: g[3]=number of sources;
+
+void IGMP::v3_Sources()
+{
+	TGTE 0 10  0  0 RETURN;
+	TGTE 0  3 0 0 RETURN;
+	SUBG 1  3;
+	IPLG 0  4 90 c2 Source Address:;
+	TNXT -IGMP::v3_Sources;
+}
+

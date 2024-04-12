@@ -1,0 +1,44 @@
+//wavelink Avalanche Extension
+//only ports 1777 and 1778 are pspecs'd to avoid V/V Expert crashing
+
+str# UDP::Ports_Str;
+//Enterprise & Statistics Server Port
+	7221	|	WaveLink;			//Mobile device server requesting licenses from the License Server.
+	7225	|	WaveLink;			//InfoRail transmission of information between servers, consoles, databases.
+	7226	|	WaveLink;			//InfoRail.	
+//Mobile Device Server Ports
+	1777	|	WaveLink;		//Traffic between the server and the Enabler.
+	1778	|	WaveLink;		//Services persistent connections to mobile devices.
+	7225	|	WaveLink;		//InfoRail transmission of information to and from the Enterprise Server.
+//Smart Device Server Ports
+	7309	|	WaveLink;		//Traffic between server and Android device using ANS.
+	5228	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5229	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5230	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5223	|	WaveLink;		//Traffic between server and iOS device.
+	8443	|	WaveLink;		//Device enrollment.
+
+str# TCP::Ports_Str;
+//Enterprise & Statistics Server Port
+	7221	|	WaveLink;			//Mobile device server requesting licenses from the License Server.
+	7225	|	WaveLink;			//InfoRail transmission of information between servers, consoles, databases.
+	7226	|	WaveLink;			//InfoRail.	
+//Mobile Device Server Ports
+	1777	|	WaveLink;		//Traffic between the server and the Enabler.
+	1778	|	WaveLink;		//Services persistent connections to mobile devices.
+	7225	|	WaveLink;		//InfoRail transmission of information to and from the Enterprise Server.
+//Smart Device Server Ports
+	7309	|	WaveLink;		//Traffic between server and Android device using ANS.
+	5228	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5229	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5230	|	WaveLink;		//Traffic between server and Android device using GCM.
+	5223	|	WaveLink;		//Traffic between server and iOS device.
+	8443	|	WaveLink;		//Device enrollment.
+	
+void WaveLink()
+{
+	//for Port 1777
+	
+	LABL( 0, 0, 0, 0xb1, "wavelink Avalance Server Connection " );
+	HEX#( 0, g[16], 0x90, 0xc2, "wavelink Avalance Data:" );
+}

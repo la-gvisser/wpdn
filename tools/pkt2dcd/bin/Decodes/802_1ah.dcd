@@ -1,0 +1,30 @@
+//802.1ah
+//g[1] : Protocol type
+//
+//
+
+str# EProto::Names_Str;
+0x88E7	| 	802.1ah Provider Backbone Bridge (mac-in-mac);						//DW: TT26402
+
+str# Ether::Branching_3_Str;
+0x88E7	|	802_1ah;												//DW: TT26402
+
+void 802_1ah()
+{
+	LABL( 0, 0, 0, 0xb1, "IEEE 802.1ah" );
+	
+	BLNG( 0, 0, 0x57, 0xc7, "I-Tag, I-SID:" );	
+	DECR 4;	
+		HBIT( 3, 0, 0x90, 0xc2, "I-PCP:" );
+		BBIT( 1, 0, 0x90, 0xc2, "I-DEI:" );
+		BBIT( 1, 0, 0x90, 0xc2, "UCA:" );
+		BBIT( 1, 0, 0x90, 0xc2, "Res1:" );
+		HBIT( 2, 0, 0x90, 0xc2, "Res2:" );
+		DBIT( 0x18, 0, 0x90, 0xc2, "I-SID:" );
+	LABL 0 0 0 b8;
+	ETHR( 0, 0, 0x90, 0xc2, "C-Destination" );
+	ETHR( 0, 0, 0x90, 0xc2, "C-Source" );
+	g[1] = pw[0];
+	//HWRD( 0, g[1], 0x90, 0xc2, "Protocol Type:" );
+	Ether::Branching_2;
+}

@@ -1,0 +1,617 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Templates\1033\AboutDialog.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\Version.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\ByteVectRef.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\CaptureFile.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\ContextManager.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\ContextTab.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\FileCaptureBuffer.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\FileEx.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\GPSInfo.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\IpHeaders.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\Layers.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\NotifyService.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\OmniConsoleContext.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\OmniEngineContext.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\OmniPlugin.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\Options.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\OptionsDialog.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\OptionsView.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\Packet.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PacketArray.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PCapCaptureFile.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekCaptureFile.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekConsoleContext.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekContext.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekContextProxy.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekDataModeler.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekMessage.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekPlugin.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekProxy.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekStrings.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekTime.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekUnits.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekXml.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PluginManager.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PluginMessages.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PluginModule.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PluginTab.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\RefreshFile.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\RemotePlugin.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\Snapshot.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\StdAfx.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\TabHost.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Templates\1033\PeekStream.cpp">
+      <Filter>Template Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Template Files">
+      <UniqueIdentifier>{208e4e7f-fb48-4942-9569-943711ff9484}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HTML Files">
+      <UniqueIdentifier>{d5ac5db3-5e3e-4393-9660-7900d230b423}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Image Files">
+      <UniqueIdentifier>{368b6f72-3b99-4144-87c8-1d9f2b43cd92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Miscellaneous Files">
+      <UniqueIdentifier>{1e0bc93a-05f0-4a5b-86e8-8011e9f27559}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script Files">
+      <UniqueIdentifier>{30ec1d33-40c8-42a7-952d-5464652c60c4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="1033">
+      <UniqueIdentifier>{32d68085-6a3a-425c-96c6-ccdf02ef4bba}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Templates\1033\Plugin.rc">
+      <Filter>Template Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="HTML\1033\default.htm">
+      <Filter>HTML Files</Filter>
+    </None>
+    <None Include="Images\OmniEngine.gif">
+      <Filter>Image Files</Filter>
+    </None>
+    <None Include="Images\OmniEngine.ico">
+      <Filter>Image Files</Filter>
+    </None>
+    <None Include="Images\OmniEngine_Background.gif">
+      <Filter>Image Files</Filter>
+    </None>
+    <None Include="Images\spacer.gif">
+      <Filter>Image Files</Filter>
+    </None>
+    <None Include="default.vcxproj">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Scripts\1033\default.js">
+      <Filter>Script Files</Filter>
+    </None>
+    <None Include="Templates\1033\root.he">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\Framework.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\Helium.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\Library.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\Plugin.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\Templates.inf">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="Templates\1033\makezips.cmd">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\libheruntime.so">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\peekcore.so">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\Makefile">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\module.map">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\ac-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\cc-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\ec-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\oc-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\ah-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\ch-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\eh-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="Templates\1033\oh-index.html">
+      <Filter>Template Files</Filter>
+    </None>
+    <None Include="default.14.0.vcxproj">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="1033\styles.css">
+      <Filter>1033</Filter>
+    </None>
+    <None Include="OmniEngine11.14.0.vsz">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="OmniEngine11.vsdir">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="OmniEngine11.vsz">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="OmniEngine11.17.0.vsz">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+    <None Include="default.17.0.vcxproj">
+      <Filter>Miscellaneous Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Templates\1033\AboutDialog.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\ByteVectRef.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\CaptureBuffer.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\CaptureFile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\ContextManager.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\ContextTab.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\encodehex.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Ethernet.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\FileCaptureBuffer.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\FileEx.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\FilePacketArray.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\GlobalId.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\GPSInfo.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hecom.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hecomweak.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hecore.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\heid.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\heinttypes.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\helib.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hepoppack.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hepushpack.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\heresult.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hestdint.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hestr.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\heunk.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hevariant.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\heweakref.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlalloc.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlatomic.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlbase.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlclstab.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlcom.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hldef.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlexcept.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlid.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlptr.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlruntime.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlstr.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlstrconv.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlsync.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlvariant.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\hlweakref.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\idatatable.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\imemorystream.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\iomniengineplugin.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\IpHeaders.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\ixmldom.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Layers.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\MediaTypes.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\MemUtil.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\NotifyService.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\objectwithsiteimpl.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\omnicommands.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\OmniConsoleContext.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\OmniEngineContext.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\omnigraphs.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\OmniPlugin.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Options.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\OptionsDialog.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\OptionsView.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Packet.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PacketArray.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PacketHeaders.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PCapCaptureFile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Peek.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekArray.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekCaptureFile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekConsoleContext.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekContext.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekContextProxy.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peekcore.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekDataModeler.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekEngineContext.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekFile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peekfilters.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekHash.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekLock.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekMessage.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peeknames.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peeknotify.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekPacket.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekPlugin.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekProxy.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peekstats.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekStream.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekStrings.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekTable.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekTime.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekUnits.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peekutil.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\peekvoipcall.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PeekXml.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PluginController.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PluginManager.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PluginMessages.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PluginTab.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Protospecs.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PSDefs.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PSIDs.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\RefreshFile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\RemotePlugin.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\resource.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Snapshot.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\StdAfx.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\TabHost.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\tagfile.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\Version.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\wppoppack.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\wppushpack.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\WPTypes.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Templates\1033\PluginHandlersInterface.h">
+      <Filter>Template Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="Templates\1033\libheruntime.32.lib">
+      <Filter>Template Files</Filter>
+    </Library>
+    <Library Include="Templates\1033\libheruntime.64.lib">
+      <Filter>Template Files</Filter>
+    </Library>
+    <Library Include="Templates\1033\Protospecs.32.lib">
+      <Filter>Template Files</Filter>
+    </Library>
+    <Library Include="Templates\1033\Protospecs.64.lib">
+      <Filter>Template Files</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Templates\1033\savviuslogo.bmp">
+      <Filter>Template Files</Filter>
+    </Image>
+    <Image Include="OmniEngine11.ico">
+      <Filter>Miscellaneous Files</Filter>
+    </Image>
+  </ItemGroup>
+</Project>

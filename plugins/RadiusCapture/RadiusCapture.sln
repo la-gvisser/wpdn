@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RadiusCaptureOE", "RadiusCapture\RadiusCapture.vcproj", "{03AC6A9A-9148-4965-966C-5815108D0150}"
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 2
+		SccProjectUniqueName0 = RadiusCapture\\RadiusCapture.vcproj
+		SccLocalPath0 = RadiusCapture
+		SccLocalPath1 = .
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Debug|Win32.ActiveCfg = Debug|Win32
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Debug|Win32.Build.0 = Debug|Win32
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Debug|x64.ActiveCfg = Debug|x64
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Debug|x64.Build.0 = Debug|x64
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Release|Win32.ActiveCfg = Release|Win32
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Release|Win32.Build.0 = Release|Win32
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Release|x64.ActiveCfg = Release|x64
+		{03AC6A9A-9148-4965-966C-5815108D0150}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,379 @@
+//DOCSIS
+//globals used before DOCSIS Call: g[11], g[16], g[3], g[30] ,
+//DOCSIS Payload length = g[6]
+//DOCSIS Ext. Header length = g[4]
+//DOCSIS Done g[20] = 424242
+//DOCSIS Marker g[20]
+
+
+void DOCSIS::DETECTION::LENGTH()
+{
+	g[2] = pw[2];
+	l[2] = g[16];
+	l[2] -= 2;
+	if (g[2] == 0)
+	{
+		g[20] = 424242;
+		Ether::Branching;
+	}
+	l[10] = pb[0];				*test the header for mac options
+	ADDG( 0x3F, l[10]);
+	SHFR( 6 , l[10]);
+	if (l[10] == 3)
+	{
+		DOCSIS::SETG60;
+	}
+	g[61] = 0;
+	
+	l[11] = pw[16]; 					*Ethertype if no Docsis!
+	CST#( 0, l[11], 0, 0x5, EProto::Names_Str );
+	XTST( 0, 0, 0, 0, DOCSIS::SETG62 );
+	l[12] = pb[14];					*IPv4 Detection if it's no Docsis!
+	l[3] = pl[0];
+	l[4] = pl[6];
+	l[5] = pw[19];				*Ethertype if  it's Docsis!
+	l[6] = pb[1];
+	l[7] = 19;
+	l[7] += l[6];
+	//l[9] = pw[l[6]];
+	//GWRD( l[6], l[9] );			*Ethertype if it's Docsis!
+	if (g[62] == 1)				*check Ethertype if no Docsis!
+	{
+		g[20] = 424242;
+		Ether::Branching;
+	}
+	g[62] = 0;
+	CST#( 0, l[3], 0, 0x5, OIDS_Prv );
+	//XTST 0 0 0 0 MPLS::DOCSIS::SETG61;
+	CST#( 0, l[4], 0, 0x5, OIDS_Prv );
+	//XTST( 0, 0, 0, 0, DOCSIS::SETG62 );
+	CST#( 0, l[5], 0, 0x5, EProto::Names_Str );
+	XTST( 0, 0, 0, 0, DOCSIS::SETG61 );
+		CST#( 0, l[9], 0, 0x5, EProto::Names_Str );
+	XTST( 0, 0, 0, 0, DOCSIS::SETG62 );
+	//HGLB( 0,l[12], 0x90, 0xc2, "l12:" );
+	if (l[12] != 0x45)
+	{
+	if (g[60] == 1)
+	{	
+		if (g[2] >= l[2])
+			{
+				if (g[20] == 0)
+				{
+					DOCSIS::MAIN;
+				}
+				
+			}
+			if  (g[2] <= l[2])
+			{
+				if (g[20] != 424242)
+				{
+					DOCSIS::TRY_for_ZEROS;
+				}
+			}
+		DOCSIS::DETECTION::ZERO;
+	}
+	if (g[60] != 1)
+	{
+		if (g[61] != 1)
+		{
+			if (g[62] != 1)
+			{
+				if (g[2] >= l[2])
+				{
+					if (g[20] == 0)
+					{
+						DOCSIS::MAIN;
+					}
+					
+				}
+				if  (g[2] <= l[2])
+				{
+					if (g[20] != 424242)
+					{
+						DOCSIS::TRY_for_ZEROS;
+					}
+				}
+
+			DOCSIS::DETECTION::ZERO;
+			}
+		}
+	}
+	}
+}
+
+void DOCSIS::SETG60()
+{	
+	g[60] = 1;
+}
+
+void DOCSIS::SETG62()
+{
+	g[62] = 1;
+}
+
+void DOCSIS::SETG61()
+{
+	g[61] = 1;
+}
+
+void DOCSIS::TRY_for_ZEROS()
+{
+	g[2] = pw[2];
+	g[2] += 2;
+	GBYT( g[2], l[1] );
+	if ( l[1] == 0)
+	{
+		g[2] += 3;
+		GBYT( g[2], l[2] );
+		if ( l[2] == 0)
+		{
+			DOCSIS::MAIN;
+			g[2] += 1;
+			GBYT( g[2], l[3] );
+			if(l[3] == 0)
+			{
+				l[16] = g[16];
+				GBYT( l[16], l[4] );
+				if(l[4] == 0)
+				{
+					l[16] -= 1;
+					GBYT( l[16], l[5] );
+					if(l[5] == 0)
+					{
+						if (g[20] == 0)
+						{
+							DOCSIS::MAIN;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void DOCSIS::DETECTION::ZERO()
+{
+	GBYT( 0, l[1] );
+	l[16] = g[16];
+	l[16] -= 1;
+	
+	GBYT( 1, l[2] );
+	GBYT( l[16], l[3] );
+	GBYT( 3, l[4] );
+	if (l[1] == 0)
+	{
+		if (l[2] == 0)
+		{
+			if (l[3] == 0)
+			{
+				DUMP( 0, g[16], 0x90, 0xc2, "Filling Bytes" );
+				Ether::Branching;
+			}
+		}
+	}
+}
+
+void DOCSIS()
+{
+	DOCSIS::MAIN;
+	DOCSIS::DETECTION::ZERO;
+	Ether::Branching;
+}
+
+void DOCSIS::MAIN()
+{
+	g[20] = 424242;
+	LABL  0  0  0 b1 DOCSIS  -  Type: ;
+	GBIT( 2 , l[1] );
+	CST#( 0, l[1], 0, 0x01, DOCSIS::FCTYPE );
+	BBYT( 0, l[1], 0x90, 0xc9, "Header version:" );
+	DECR 1;
+	BBIT( 2, l[11], 0x90, 0xc2, "FCType:" );
+		CST#( 0, l[11], 0, 0x14, DOCSIS::FCTYPE );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	BBIT( 5, l[12], 0x90, 0xc2, "FCParm:" );
+		CST#( 0, l[12], 0, 0x14, DOCSIS::FCParam );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	BBIT( 1, l[13], 0x90, 0xc2, "Extended Hdr. present:" );
+		CST#( 0, l[13], 0, 0x14, DOCSIS::ExtHdrPresent );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	LABL 0 0 0 c8;
+	DBYT( 0, g[4], 0x90, 0xc2, "Ext. Header Length:" );
+	DWRD( 0, g[6], 0x90, 0xc2, "Payload length:" );	
+	//Extended Header
+	if (g[4] != 0)
+	{	
+		//HWRD( 0, l[5], 0x90, 0xc2, "Ext. Data:" );
+		//HWRD( 0, l[5], 0x90, 0xc2, "Ext. Data:" );
+		//l[2] -= 4;
+		if (g[4] != 0)
+		{
+			DUMP( 0, g[4], 0x90, 0xc2, "DOCSIS Ext. Header:" );
+			g[4] -= g[4];
+		}
+	}
+	HWRD( 0, l[6], 0x90, 0xc2, "Header check sequence:" );
+	g[13] = l[11];
+	TST#( 0, l[11], 0, 0, DOCSIS::FCTYPE::Call );
+	TLSE( 0, 0, 0, 0, DOCSIS::FCTYPE::FAIL );
+	LABL 0 0 0 c8;
+	g[20] = 424242;
+}
+
+void DOCSIS::FCTYPE::Packet_PDU()
+{
+	LABL 0 0 0 b8;
+	Ether::Branching;
+}
+
+void DOCSIS::FCTYPE::FAIL()
+{
+	DUMP( 0, g[6], 0x90, 0xc2, "DOCSIS DATA:" );
+	g[6] -= g[6];
+}
+
+void DOCSIS::FCTYPE::MAC_Specific()
+{
+	LABL  0  0  0 b1 DOCSIS  -  MAC Specific: ;
+	ETHR 0 0 90 c2 Destination:\D:;
+	ETHR 0 0 90 c2 Source:\S:;
+	DWRD 0 41 90 c2 Length:\L:;
+	HBYT 0 0 90 c2 DSAP:\DSAP:;
+	HBYT 0 0 90 c2 SSAP:\SSAP:;
+	HBYT 0 0 90 c2 Control:\C:;
+	HBYT 0 0 90 c2 Version:\V:;
+	HBYT 0 42 90 c2 Type:\T:;
+	CST# 0 42 00 14 DOCSIS::FCTYPE::MAC_Specific::Type:shrt;
+	HBYT 0 0 90 c2 Reserved:\Res:;
+	l[1] -= 6;
+	CST# 0 42 00 b1 DOCSIS::FCTYPE::MAC_Specific::Type:lng;
+	LABL 0 0 0 07 : ;
+	CST# 0 42 00 c2 DOCSIS::FCTYPE::MAC_Specific::Type:lng;
+	LABL 0 0 0 02 : ;
+	DUMP 0 41 90 02 ;
+	LABL 0 0 0 c8;
+}
+
+str# DOCSIS::FCTYPE::MAC_Specific::Type:shrt;
+1 | SYNC;
+2 | UCD;
+3 | MAP;
+4 | RNG_REQ;
+5 | RNG_RSP;
+6 | REG_REQ;
+7 | REG_RSP;
+8 | UCC_REQ;
+9 | UCC_RSP;
+10 | TRI_TCD;
+11 | TRI_TSI;
+12 | BPKM_REQ;
+13 | BPKM_RSP;
+14 | REG_ACK;
+15 | DSA_REQ;
+16 | DSA_RSP;
+17 | DSA_ACK;
+18 | DSC_REQ;
+19 | DSC_RSP;
+20 | DSC_ACK;
+21 | DSD_REQ;
+22 | DSD_RSP;
+23 | DCC_REQ;
+24 | DCC_RSP;
+25 | DCC_ACK;
+26 | DCI_REQ;
+27 | DCI_RSP;
+28 | UP_DIS;
+29 | TYPE29UCD;
+30 | INIT_RNG_REQ;
+31 | TEST_REQ;
+32 | DS_CH_DESC;
+33 | MDD;
+34 | B_INIT_RNG_REQ;
+35 | TYPE35UCD;
+36 | DBC_REQ;
+37 | DBC_RSP;
+38 | DBC_ACK;
+39 | DPV_REQ;
+40 | DPV_RSP;
+41 | CM_STATUS;
+42 | CM_CTRL_REQ;
+43 | CM_CTRL_RSP;
+44 | REG_REQ_MP;
+45 | REG_RSP_MP;
+
+str# DOCSIS::FCTYPE::MAC_Specific::Type:lng;
+1 | Timing Synchronisation (SYNC);
+2 | Upstream Channel Descriptor (UCD);
+3 | Upstream Channel Descriptor Type 29 (MAP);
+4 | Upstream Channel Descriptor Type 35 (RNG_REQ);
+5 | Upstream Bandwidth Allocation (RNG_RSP);
+6 | Ranging Request (REG_REQ);
+7 | Ranging Response (REG_RSP);
+8 | Registration Request (UCC_REQ);
+9 | Registration Response (UCC_RSP);
+10 | Upstream Channel Change Request (TRI_TCD);
+11 | Upstream Channel Change Response (TRI_TSI);
+12 | Telephony Channel Descriptor (BPKM_REQ);
+13 | Termination System Information (BPKM_RSP);
+14 | Privacy Key Management Request (REG_ACK);
+15 | Privacy Key Management Response (DSA_REQ);
+16 | Registration Acknowledge (DSA_RSP);
+17 | Dynamic Service Addition Request (DSA_ACK);
+18 | Dynamic Service Addition Response (DSC_REQ);
+19 | Dynamic Service Addition  Acknowledge (DSC_RSP);
+20 | Dynamic Service Change Request (DSC_ACK);
+21 | Dynamic Service Change Response (DSD_REQ);
+22 | Dynamic Service Change Acknowledge (DSD_RSP);
+23 | Dynamic Service Delete Request (DCC_REQ);
+24 | Dynamic Service Delete Response (DCC_RSP);
+25 | Dynamic Channel Change Request (DCC_ACK);
+26 | Dynamic Channel Change Response (DCI_REQ);
+27 | Dynamic Channel Change Acknowledge (DCI_RSP);
+28 | Device Class Identification Request (UP_DIS);
+29 | Device Class Identification Response (TYPE29UCD);
+30 | Upstream Channel Disable (INIT_RNG_REQ);
+31 | Initial Ranging Request (TEST_REQ);
+32 | Test Request Message (DS_CH_DESC);
+33 | Downstream Channel Descriptor (MDD);
+34 | MAC Domain Descriptor (B_INIT_RNG_REQ);
+35 | Bonded Initial Ranging Request (TYPE35UCD);
+36 | Dynamic Bonding Change Request (DBC_REQ);
+37 | Dynamic Bonding Change Response (DBC_RSP);
+38 | Dynamic Bonding Change Acknowledge (DBC_ACK);
+39 | DOCSIS Path Verify Request (DPV_REQ);
+40 | DOCSIS Path Verify Response (DPV_RSP);
+41 | CM Status Report (CM_STATUS);
+42 | CM Control Request (CM_CTRL_REQ);
+43 | CM Control Response (CM_CTRL_RSP);
+44 | Multipart Registration Request (REG_REQ_MP);
+45 | Multipart Registration Response (REG_RSP_MP);
+
+
+void DOCSIS::FCTYPE::ATM_PDU()
+{
+	
+}
+
+str# DOCSIS::FCTYPE;
+0x00	|	Packet PDU;
+0x01	|	ATM PDU;
+0x02	|	Reserved;
+0x03	|	MAC Specific;
+
+str# DOCSIS::FCTYPE::Call;
+0x00	|	DOCSIS::FCTYPE::Packet_PDU;
+//0x01	|	DOCSIS::FCTYPE::ATM_PDU;
+//0x02	|	DOCSIS::FCTYPE::Reserved;
+0x03	|	DOCSIS::FCTYPE::MAC_Specific;
+
+str# DOCSIS::ExtHdrPresent;
+0x00	|	Extended Header Absent;
+0x01	|	Extended Header Present;
+
+str# DOCSIS::FCParam;
+0x00	|	Timing Header;
+0x01	|	Mac Management Message;
+0x02	|	Request Frame;
+0x03	|	Fragmentation Header;
+0x1C	|	Concatenation Header;

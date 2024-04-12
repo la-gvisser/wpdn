@@ -1,0 +1,2 @@
+Laptop      fe80::6185:f596:bb5f:c01d%11
+Workstation fe80::fde1:50f3:bc60:ed7e%12

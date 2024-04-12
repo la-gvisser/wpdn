@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>About Engine Plugins</title>
+</head>
+<body>
+    <h1>About Engine Plugins</h1><br />
+    <h2>Overview</h2>
+    <p>
+        A Capture Engine for Omnipeek Analysis Module (an engine plugin) is similar to an Omnipeek
+        Analysis Module (a console plugin), but is targeted for the Capture Engine for Omnipeek.
+        Like console plugins, engine plugins perform packet filtering and analysis, and may
+        function as adapters to supply packets to the engine. An engine plugin is also used by
+        Omnipeek to provide the About box, Options (Settings) dialog, engine tab, capture tab and
+        packet summary information.
+    </p>
+
+    <h2>Architecture</h2>
+    <p>
+        The Engine Plugin Wizard provides a framework for the plugin that shields the developer
+        from the underlying architecture, life-cycle and protocols of an engine plugin. The
+        framework is written in C++ and hides all of the communication with engine. See
+        Appendix A: Capture Engine Plugin Interface for a detailed description.
+    </p>
+    <p>
+        The Capture Engine Plugin Framework is similar in concept to the Omnipeek Console Plugin
+        Framework. The Plugin and Context classes will be familiar to the plugin developer. But
+        the underlying architecture and behavior (protocols) of an engine plugin are dramatically
+        different from that of a console plugin, and some of these differences are visible. For
+        instance, the console plugin’s CPacket object limited knowledge of the packets structure
+        and layers, the engine's CPacket object allows for deep packet inspection. In the
+        console plugin framework, all calls to Omnipeek are made with ‘Do’ methods: DoNotify for
+        example. In the engine plugin framework a set of service objects are provided. So a
+        notification is made via the object’s Notify method.<br />
+    </p>
+    <p>
+        The Capture Engine Plugin Framework provides a rich set of objects to assist the developer
+        in decoding, filtering, storing and managing packets and conversations
+        (flows, streams,… ).<br />
+    </p>
+    <p>
+        An engine plugin is used in two environments: on the Capture Engine and on the Omnipeek
+        console. When on the engine, the plugin may filter, process and collect statistics of
+        packets. On the console side, the plugin may summarize packets, provide user setting and
+        About box dialogs. Alternately the framework allows the developer to create webpages that
+        describe the plugin's About box, settings dialog, engine tab and capture tab. When a
+        plugin is developed with this methodology the plugin is not installed on Omnipeek. Instead
+        Omnipeek will download  the webpages from the engine and display them in Webviews.
+    </p>
+
+    <h2>Objects</h2>
+    <p>
+        The COmniEngineContext is the primary class of interest to plugin developers. This class
+        is only instatiated on the Engine and includes the members: OnFilter, OnProcessPacket, 
+        OnProcessTime, OnResetCapture, OnStartCapture and OnStopCapture, among others. These are 
+        the work horse member functions of the plugin. An instance of this class is created for 
+        each capture created on an Engine.<br />
+
+        The COmniConsoleContext only instantiated in Omnipeek. It is used for several different 
+        tasks: a) When the user creates a new capture on an Engine. This context may be used to 
+        display the plugin's About and Options dialogs. b) When the user opens a Remote Capture 
+        Window. c) When the user selects Capture Options a capture on an Engine.<br />
+
+        The relationship between the Engine and its engine plugins is different than the 
+        relationship between Omnipeek and its plugins. Omnipeek loads and initializes the 
+        plugin and make calls via a single entry point in the dll (plugin). In an Omnipeek 
+        plugin, it is the plugin object that instantiates the context objects. The Engine
+        instantiates and initializes instances of the CRemotePlugin object. The engine views these 
+        as context objects. It is the framework that instantiates the plugin object (COmniPlugin). 
+        And the engine calls to the context only through the interfaces it implements. The context 
+        has a reference to the single plugin object and may call the plugin object's methods 
+        directly.<br />
+
+        The Engine recongnizes two different types of plugin: Engine Plugins and Peek Plugins. The
+        Engine Plugin Wizard creates plugins that implement both types. The Engine instantiates a
+        single instance of each Engine Plugin at start up. And a instance of each Peek Plugin when
+        a capture context is created. Capture Engine may also create a  second instance of each
+        Peek Plugin for each capture context to support Graphing. The Engine will instantiate all
+        the Engine Plugins and get their names inorder to build the list of plugins currently on
+        the engine. The framework insulates these kinds of behaviors from the developer.<br />
+
+        When Omnipeek connects to an Engine, Omnipeek loads an instance of each Engine Plugin that
+        is has installed that are also installed on the Engine. When an Engine's Capture's window
+        is opened, Omnipeek creates an instance of each Peek Plugin that is installed on the
+        Engine. In order for Omnipeek to instantiate either Engine or Peek Plugins, the Capture
+        Engine Plugin must be installed in Omnipeek. For engine plugins that implement HTML or CEF
+        Preferences a proxy object is created instead. The proxy object has references to the
+        webpages that belong to the engine plugin and will display the webpage when needed.<br />
+    </p>
+
+    <h2>Plugin Life Cycle</h2>
+    <p>
+        The first instance of the Capture Engine Plugin is created during the initialization
+        process of the Engine. This is an instance of the Engine Plugin does not have a Context
+        Identifier (context id). The framework will create an instance of COmniPlugin. This plugin
+        object is shared by all contexts. The framework calls OnInitialize and OnReadPrefs. A note
+        on preferences: plugin preferences are currently being used to persist and maintain
+        settings that will be used for Forensic Searchs. The framework creates and initializes the
+        context. The framework will call OnSetContextPrefs if the engine makes the appropriate
+        calls to the framework.<br />
+
+        When the capture is started the framework will call OnReset followed by OnCaptureStarting
+        which is called to allow the context to intitialize the private resources it needs to
+        capture packets. For example opening a database. Then OnStartCapture is called to signal
+        the context that the engine has created and initialized all of its resource for the
+        capture and the context can request access to any engine resources it needs. Finaly
+        OnCaptureStarted is called and the context should be fully prepared to filter and process
+        packets. These calls are optional, if disabled then the engine will not issue the
+        corrisponding calls to the framework and hence the framework will not call the context. To
+        disable these calls in the file StdAfx.h remove or comment the line:
+    </p>
+    <p class="codeP">
+        <i>#define IMPLEMENT_PACKETPROCESSOREVENTS</i>
+    </p>
+
+    <p>
+        For an engine plugin to filter packets the user must create an Advanced Filter that
+        contains an Analysis Module node with the node configured to the plugin. Then for each
+        packet the filter is executed and the Analysis Module node will call the framework which
+        will calls OnFilterPacket. And for each packet accepted by the filters the framework calls
+        OnProcessPacket. Once a second the framework calls OnProcessTime. And every now and then
+        other calls are made.<br />
+
+        When the capture is stopped first OnCaptureStopping is called to signal the context that
+        a Stop Capture command was issued. Then OnStopCapture is called to signal the context that
+        all the packets have been proccessed. Finally OnCaptureStopped is called to allow the
+        context to release the resources it uses while capturing packet. To continue the example
+        above, the database is closed. When the capture is deleted,  OnResetCapture and
+        OnTerminate are called. The context is then released and the COmniEngineContext is
+        destroyed.<br />
+
+        The Framework contains a Context Manager to simplify the life-cycle of the context
+        objects. The Capture Engine views Peek Plugins as very light weight objects and thus
+        creates, deletes and recreates them when ever the capture's settings are modified... etc.
+        The Context Manager holds the COmniEngineContext and COmneConsoleContext objects during
+        capture setting modification events. (This is too much detail.)
+    </p>
+
+    <h2>Packet Processing</h2>
+    <p>
+        The OnFilterPacket and OnProcessPacket member functions may need to perform deep packet
+        inspection. The  Layers and Headers classes facilitate in decoding packets. The plugin
+        calls the GetLayer members of CPacket. The arguments class determines which layer is
+        returned. If the resulting layer is not valid (IsNotValid() or !IsValid()) then the packet
+        does not contain the requested layer (protocol). <br />
+
+        The CIpLayer and CIpAddress classes support both IPv4 and IPv6. It is best to use these classes
+        until you absolutely need the protocol specific classes: CIpV4Layer and the CIpV6Layer. The layer
+        classes have interrogation members to retrieve 	and test specific fields of the header. Multi-byte
+        fields are returned in the host's native numeric format. All layers provide methods to return
+        their underlying header data structures.
+    </p>
+
+    <p class="codeP">
+        int<br />
+        CEngineContext::OnFilter(<br />
+        &nbsp;&nbsp;&nbsp;CPacket&&nbsp;inPacket,<br />
+        &nbsp;&nbsp;&nbsp;UInt16*&nbsp;outBytesToAccept,<br />
+        &nbsp;&nbsp;&nbsp;CGlobalId&&nbsp;outFilterId&nbsp;)<br />
+        {<br />
+        &nbsp;&nbsp;&nbsp;if ( inPacket.IsError() ) return PEEK_PLUGIN_FAILURE;<br />
+        &nbsp;&nbsp;&nbsp;CLayerIP&nbsp;layerIP;<br />
+        &nbsp;&nbsp;&nbsp;if ( !inPacket.GetLayer( layerIP ) ) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return PEEK_PLUGIN_FAILURE;<br />
+        &nbsp;&nbsp;&nbsp;}<br />
+        &nbsp;&nbsp;&nbsp;if ( layerIP.IsFragment() ) {<br />
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return PEEK_PLUGIN_FAILURE;<br />
+        &nbsp;&nbsp;&nbsp;}<br />
+        &nbsp;&nbsp;&nbsp;return PEEK_PLUGIN_SUCCESS;<br />
+        }<br />
+    </p>
+
+    <p>
+        The classes CIpAddress and CPort combined with the TPair template are used to build up the
+        CIpPortPair class. This class contains the IP Address and TCP Port of the source and destination
+        of a packet to create a flow/stream/conversation identifier. The comparison and matching methods
+        perform cross comparisons to match packets of either direction: client to host or host to client.
+        Packets also have a Flow Id that is retrieved via the FlowId method of CPacket.
+        <br />
+
+        The data bytes of a packet CPacket object my be either owned by the object (attached) or by another
+        object (detached). Copies of CPacket objects maintain their ownership state: a copy of the bytes is
+        made for attached packets, and a copy of the reference to the data is made for detached packets. The
+        bytes of a packet may be retrieved by either a CByteVectRef or a COmniStream. A CByteVectRef contains
+        a pointer to the data and the length of the data and is a safe way to access the bytes of a packet
+        without making copies or accessing memory outside of the packet data. A COmniStream has a copy of the
+        data and provides Seek and Read operations similar to a file, but at the cost of coping the data.<br />
+
+        The CCaptureBuffer class provides for long term in memory and on file storage of CPacket objects. Peek
+        Capture files (.pkt) may be read/loaded into CCaptureBuffer. Additional functionality includes: flushing
+        the contents to disk based on file size and age.
+        <b>
+            Versions of Omni prior to 6.6 contain a defect that causes only about 80% of a packet file (.pkt)
+            to be loaded into the capture buffer.
+        </b>
+        <br />
+
+        The framework uses CGlobalId to wrap the GUID structure. This light-weight class allows for
+        uninitialized (-1) and NULL (0) states. It also has a Create method to generate new GUIDs.
+    </p>
+</body>
+</html>

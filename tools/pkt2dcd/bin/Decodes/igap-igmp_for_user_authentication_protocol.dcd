@@ -1,0 +1,208 @@
+* IGAP - IGMP for user Authentication Protocol
+
+// globals used:
+// g[2] = subtype
+// g[5] = account size
+// g[6] = message size
+
+void IGAP;
+	LABL  0  0  0 b1 IGAP - IGMP for user Authentication Protocol;
+	HBYT  0  3 90 c2 Type:;				*save for report type
+	 CEQU 40  3  0 14 Membership Report (IGAP Join);
+	 CEQU 41  3  0 14 Membership Query;
+	 CEQU 42  3  0 14 Leave Group;
+	DBYT  0  1 90 c2 Max Resp Time:;
+	 LABL  0 0  0 14 (.1 seconds);
+	HWRD  0  1 90 c2 Checksum:;
+	CKSM  3  0 24 14 Checksum invalid. Should be: \;
+	IPLG  0  1 90 c2 Group Address:;	*if g3 == 40 or 42 then it's an ip
+	HBYT  0  1 90 c2 Version:;
+	CEQU  10 1  0 14 Version 1;
+	IGAP_Report_Type;
+	*DBYT  0  3 90 c2 Number of Aux Data:;		*save for later
+	HBYT  0  1 90 c2 Reserved:;
+	
+	*IGAP_Aux_Data;
+	
+	HBYT  0  1 90 c2 CHAP ID:;
+	DBYT  0  5 90 c2 Account Size:;
+	DBYT  0  6 90 c2 Message Size:;
+	HWRD  0  1 90 c2 Reserved:;
+	TGTE  0 10  0  0 RETURN;
+	CHR#  0  5 90 c2 User Account:;
+	g[1] = 16;
+	g[1] -= g[5];
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 User Account Padding:;
+	}
+	TGTE  0 10  0  0 RETURN;
+	IGAP_Message;
+	TRTS;
+
+void IGAP_Aux_Data;
+	TGTE 0 3  0  0 RETURN;
+	SUBG 1 3;
+	DBYT 0 4 90 c9 Aux Type:;
+	CST# 0 4  0 14 IGAP_Aux_Type_String;
+	DBYT 0 1 90 c2 Aux Data Length:;
+	CHR# 0 1 90 c2 Aux Data:;
+	LABL 0 0  0 c8;
+	TNXT -IGAP_Aux_Data;
+
+str# IGAP_Aux_Type_String;
+	User Account;
+	;
+	;
+	;
+	;					*5
+	;
+	;
+	;
+	;
+	;					*a
+	;
+	;
+	;
+	;
+	;
+	Password;			*11
+	Challenge Value;
+	Response Value;
+	;
+	;
+	;					*15
+	;
+	;
+	;
+	;
+	;					*1a
+	;
+	;
+	;
+	;
+	;
+	;					*20
+	Authentication Result;
+	Accounting Action Result;
+	Notification;
+	Error;
+	
+				
+
+void IGAP_Aux_Type_01;
+void IGAP_Aux_Type_11;
+void IGAP_Aux_Type_12;
+void IGAP_Aux_Type_13;
+void IGAP_Aux_Type_21;
+void IGAP_Aux_Type_22;
+void IGAP_Aux_Type_23;
+void IGAP_Aux_Type_24;
+
+
+void IGAP_Report_Type;
+	HBYT 0 2 90 c2 SubType:;		*si: save for message
+	SNEQ 40 3;				*si: this is taken from igap
+	 SKIP 2;
+	 CST# 0 2 0 14 IGAP_40;
+	 TNXT -RETURN;
+	SNEQ 41 3;
+	 SKIP 2;
+	 CST# 20 2 0 14 IGAP_41;
+	 TNXT -RETURN;
+	SNEQ 42 3;
+	 SKIP 1;
+	 CST# 40 2 0 14 IGAP_42;
+	TNXT -RETURN;
+	
+str# IGAP_40;
+	Basic Join;
+	PAP Join Authentication Request;
+	CHAP Join Challenge Request;
+	CHAP Join Response;
+
+str# IGAP_41;
+	Basic Query;
+	User Specific Query;
+	CHAP Challenge;
+	Authentication Message;
+	Accounting Message;
+	Notification Message;
+	Error Message;
+
+str# IGAP_42;
+	Basic Leave;
+	PAP Leave Authentication Request;
+	CHAP Leave Challenge Request;
+	CHAP Leave Response;
+
+void IGAP_Message;
+	TEQU  1 2 0 0 IGAP_Message_Unused;		*SI: g2 taken from report type
+	TEQU  3 2 0 0 IGAP_Message_Unused;
+	TEQU 22 2 0 0 IGAP_Message_Unused;
+	TEQU 41 2 0 0 IGAP_Message_Unused;
+	TEQU 43 2 0 0 IGAP_Message_Unused;
+
+	TEQU  2 2 0 0 IGAP_Message_userPass;
+	TEQU 42 2 0 0 IGAP_Message_userPass;
+
+	TEQU  4 2 0 0 IGAP_Message_ResVal;
+	TEQU 44 2 0 0 IGAP_Message_ResVal;
+
+	TEQU 26 2 0 0 IGAP_Message_VSV;
+	TEQU 27 2 0 0 IGAP_Message_VSV;
+
+	TEQU 24 2 0 0 IGAP_Message_24;
+	TEQU 25 2 0 0 IGAP_Message_25;
+
+	CHR# 10 0 90 c2 Message:;
+	TRTS;
+
+void IGAP_Message_Unused;
+	CHR# 0 6 95 c2 Message:;
+	LABL 0 0  0 54 Unused;
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP_Message_userPass;
+	CHR# 0 6 90 c2 Message:;
+	LABL 0 0  0 14 User Password (not encrypted);
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP_Message_ResVal;
+	CHR# 0 6 90 c2 Message:;
+	LABL 0 0  0 14 Response Value;
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP_Message_VSV;
+	CHR# 0 6 90 c2 Message:;
+	LABL 0 0  0 14 Vendor Specific Value;
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP_Message_24;
+	HBYT  0 1 90 c2 Message:;
+	 CEQU 11 1 0 14 Authentication Success;
+	 CEQU 21 1 0 14 Authentication Reject;
+	//INCR F;
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP_Message_25;
+	HBYT  0 1 90 c2 Message:;
+	 CEQU 11 1 0 14 Accounting Start;
+	 CEQU 21 1 0 14 Accounting Stop;
+	//DUMP 3f 0 90 c2 Padding:;
+	IGAP::Message::Padding;
+	TRTS;
+
+void IGAP::Message::Padding;
+	g[1] = 64;
+	g[1] -= g[6];
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Message Padding:;
+	}
+	TRTS;

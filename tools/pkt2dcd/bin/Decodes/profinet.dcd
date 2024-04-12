@@ -1,0 +1,1773 @@
+// -------------------------------------------------------------------------------------
+// PROFINET 
+//
+//	globals used:
+//		g[31] = FrameID
+//		g[32] = PROFINET length
+//		g[33] = BLOCK Length
+//		g[34] = Storage for 4 Byte Used for xxxx xxxx  xxxx xxxx  xxxx xxxx  xxxx xxxx
+//		g[35] = Padding
+//		s[23] = Activate Profinet!
+// -------------------------------------------------------------------------------------
+
+str# Ether::Branching_3_Str;
+0x8892	| PROFINET;
+
+str# UDP::Ports_Str;
+34962	| PROFINET::DCERPC::Catch;//PROFINET RT Unicast;
+34963	| PROFINET::DCERPC::Catch;//PROFINET RT Multicast;
+34964	| PROFINET::DCERPC::Catch;//PROFINET RT Context Manager;
+//maybe some improvement will follow here
+void PROFINET::DCERPC::Catch()
+{
+	if (g[1] != 34962)
+	{
+		g[2] = g[1];
+	}
+	if (g[1] != 34963)
+	{
+		g[2] = g[1];
+	}
+	if (g[1] != 34964)
+	{
+		g[2] = g[1];
+	}
+	MARK 1 2 0 0 PROFINET::List;
+	PROFINET::DCERPC;
+}
+
+str# PROFINET::List;
+	PROFINET::DCERPC::Catch;
+
+void PROFINET::DCERPC;
+{
+	LABL( 0, 0, 0, 0xb1, "Distributed Computing Environment / Remote Procedure Call (DCE/RPC)" );
+		g[32] = g[16];
+		DBYT( 0, l[1], 0x90, 0xc2, "Version:" );
+		DBYT( 0, l[2], 0x90, 0xc2, "Packet type:" );
+		BBYT( 0, l[3], 0x90, 0xc9, "Flags1:" );
+			CBIT( 7, l[3], 0x90, 0xd4, 1... .... Reserved: Set);
+			CLSE( 7, l[3], 0x90, 0xd4, 0... .... Reserved: Not set );
+			CBIT( 6, l[3], 0x90, 0xd4, .1.. .... Broadcast: Set);
+			CLSE( 6, l[3], 0x90, 0xd4, .0.. .... Broadcast: Not set );
+			CBIT( 5, l[3], 0x90, 0xd4, ..1. .... Idempotent: Set);
+			CLSE( 5, l[3], 0x90, 0xd4, ..0. .... Idempotent: Not set );
+			CBIT( 4, l[3], 0x90, 0xd4, ...1 .... Maybe: Set);
+			CLSE( 4, l[3], 0x90, 0xd4, ...0 .... Maybe: Not set );
+			CBIT( 3, l[3], 0x90, 0xd4, .... 1... No Fack: Set;
+			CLSE( 3, l[3], 0x90, 0xd4, .... 0... No Fack: Not set );
+			CBIT( 2, l[3], 0x90, 0xd4, .... .1.. Fragment: Set);
+			CLSE( 2, l[3], 0x90, 0xd4, .... .0.. Fragment: Not set );
+			CBIT( 1, l[3], 0x90, 0xd4, .... ..1. Last Fragment: Set);
+			CLSE( 1, l[3], 0x90, 0xd4, .... ..0. Last Fragment: Not set );
+			CBIT( 0, l[3], 0x90, 0xd4, .... ...1 Reserved: Set);
+			CLSE( 0, l[3], 0x90, 0xd4, .... ...0 Reserved: Not set );
+			LABL( 0, 0, 0, 0xb8);
+		HBYT( 0, l[4], 0x90, 0xc9, "Flags2:" );
+			CBIT( 7, l[4], 0x90, 0xd4, 1... .... Reserved: Set);
+			CLSE( 7, l[4], 0x90, 0xd4, 0... .... Reserved: Not set );
+			CBIT( 6, l[4], 0x90, 0xd4, .1.. .... Reserved: Set);
+			CLSE( 6, l[4], 0x90, 0xd4, .0.. .... Reserved: Not set );
+			CBIT( 5, l[4], 0x90, 0xd4, ..1. .... Reserved: Set);
+			CLSE( 5, l[4], 0x90, 0xd4, ..0. .... Reserved: Not set );
+			CBIT( 4, l[4], 0x90, 0xd4, ...1 .... Reserved: Set);
+			CLSE( 4, l[4], 0x90, 0xd4, ...0 .... Reserved: Not set );
+			CBIT( 3, l[4], 0x90, 0xd4, .... 1... Reserved: Set;
+			CLSE( 3, l[4], 0x90, 0xd4, .... 0... Reserved: Not set );
+			CBIT( 2, l[4], 0x90, 0xd4, .... .1.. Reserved: Set);
+			CLSE( 2, l[4], 0x90, 0xd4, .... .0.. Reserved: Not set );
+			CBIT( 1, l[4], 0x90, 0xd4, .... ..1. Cancel Pending: Set);
+			CLSE( 1, l[4], 0x90, 0xd4, .... ..0. Cancel Pending: Not set );
+			CBIT( 0, l[4], 0x90, 0xd4, .... ...1 Reserved: Set);
+			CLSE( 0, l[4], 0x90, 0xd4, .... ...0 Reserved: Not set );
+			LABL( 0, 0, 0, 0xb8);
+		HEX#( 0x40000000, 3, 0x90, 0xc9, "Data Rep:" );
+		DECR 3;
+			DBYT( 0, l[5], 0x90, 0xc2, "Byte Order:" );
+			DBYT( 0, l[6], 0x90, 0xc2, "Character:" );
+			DBYT( 0, l[7], 0x90, 0xc2, "Floating-point:" );
+			LABL( 0, 0, 0, 0xb8);
+		HBYT( 0, l[8], 0x90, 0xc2, "Serial High:" );
+		HEX#( 0x40000000, 16, 0x90, 0xc2, "Object UUID:" );
+		HEX#( 0x40000000, 16, 0x90, 0xc2, "Interface:" );
+		HEX#( 0x40000000, 16, 0x90, 0xc2, "Activity:" );
+		DLNG( 0x40000000, l[9], 0x90, 0xc2, "Server boot time:" );
+		DLNG( 0x40000000, l[10], 0x90, 0xc2, "Interface ver:" );
+		DLNG( 0x40000000, l[11], 0x90, 0xc2, "Sequence num:" );
+		DWRD( 0x40000000, l[12], 0x90, 0xc2, "Opnum:" );
+		HWRD( 0x40000000, l[13], 0x90, 0xc2, "Interface Hint:" );
+		HWRD( 0x40000000, l[14], 0x90, 0xc2, "Activity Hint:" );
+		DWRD( 0x40000000, g[32], 0x90, 0xc2, "Fragment len:" );
+		DWRD( 0x40000000, l[15], 0x90, 0xc2, "Fragment num:" );
+		DBYT( 0, l[16], 0x90, 0xc2, "Auth proto:" );
+		HBYT( 0, l[17], 0x90, 0xc2, "Serial Low:" );
+	if (g[16] > 4)
+	{
+		LABL( 0, 0, 0, 0xb1, "PROFINET IO Connect" );
+		DLNG( 0x40000000, l[7], 0x90, 0xc2, "ArgsMaximum:" );
+		DLNG( 0x40000000, l[7], 0x90, 0xc2, "ArgsLength:" );
+		DLNG( 0x40000000, l[7], 0x90, 0xc2, "MaximumCount:" );
+		DLNG( 0x40000000, l[7], 0x90, 0xc2, "Offset:" );
+		DLNG( 0x40000000, l[7], 0x90, 0xc2, "ActualCount:" );
+		//Block sequence
+		while (g[32] > 0)
+		{
+			HWRD( 0, l[21], 0x05, 0xb7, "BlockType: " );
+				CST#( 0, l[21], 0x90, 0x07, PROFINET::DCERPC::block_type );
+				HGLB( 0, l[21], 0x07, 0x07, " = ");
+				// links to the block functions
+					DWRD( 0, g[33], 0x90, 0xc2, "BlockLength:" );
+					DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionHigh:" );
+					DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionLow:" );
+					TSB#( 0, l[21], 0x90, 0xc2, PROFINET::DCERPC::block_type::call );
+				if (g[33] != 0)
+				{
+					g[33] -= 2;
+					HEX#( 0, g[33], 0x90, 0xc2, "Data:" );
+					g[32] -= g[33];
+					g[32] -= 4;
+				}
+		LABL( 0, 0, 0, 0xb8 );
+		}
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void PROFINET::DCERPC::BLOCK::Dump( )
+{
+	DWRD( 0, g[33], 0x90, 0xc2, "BlockLength:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionHigh:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionLow:" );
+	g[33] -= 2;
+	DUMP( 0, g[33], 0x90, 0xc2, "Data:" );
+	g[32] -= g[33];
+	g[32] -= 4;
+}
+
+//void PROFINET::DCERPC::BLOCK::Alarm Notification High()
+//{
+//	
+//}
+
+void PROFINET::DCERPC::BLOCK::Alarm Notification Low()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "AlarmType:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::AlarmType );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	if (l[1] == 0x000e)
+	{
+		HLNG( 0, l[2], 0x90, 0xc2, "API:" );
+		HWRD( 0, l[3], 0x90, 0xc2, "SlotNumber:" );
+		HWRD( 0, l[3], 0x90, 0xc2, "SubslotNumber:" );
+		HLNG( 0, l[4], 0x90, 0xc2, "ModuleIdentNumber:" );
+		HLNG( 0, l[5], 0x90, 0xc2, "SubmoduleIdentNumber:" );
+		BWRD( 0, l[6], 0x90, 0xc9, "AlarmSpecifier:" );
+			CBIT( 15, l[6], 0, 0xd4, "1....... ........ ARDiagnosisState: True" );
+			CLSE( 15, l[6], 0, 0xd4, "0....... ........ ARDiagnosisState: False" );
+			CBIT( 14, l[6], 0, 0xd4, ".1...... ........ Reserved: True" );
+			CLSE( 14, l[6], 0, 0xd4, ".0...... ........ Reserved: False" );
+			CBIT( 13, l[6], 0, 0xd4, "..1..... ........ SubmoduleDiagnosisState: True" );
+			CLSE( 13, l[6], 0, 0xd4, "..0..... ........ SubmoduleDiagnosisState: False" );
+			CBIT( 12, l[6], 0, 0xd4, "...1.... ........ ManufacturerSpecificDiagnosis: True" );
+			CLSE( 12, l[6], 0, 0xd4, "...0.... ........ ManufacturerSpecificDiagnosis: False" );
+			CBIT( 11, l[6], 0, 0xd4, "....1... ........ ChannelDiagnosis: True" );
+			CLSE( 11, l[6], 0, 0xd4, "....0... ........ ChannelDiagnosis: False" );
+			l[6] &= 0x7FF;
+			DGLB( 0, l[6], 0xd4, 0xd4, "SequenceNumber:" );
+			LABL( 0, 0, 0, 0xb8 );
+		HWRD( 0, l[7], 0x90, 0xc2, "UserStructureIdentifier:" );
+			CST#( 0, l[7], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::UserStructureIdentifier );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		HWRD( 0, l[8], 0x90, 0xc2, "ChannelNumber:" );
+		BWRD( 0, l[9], 0x90, 0xc9, "ChannelProperties:" );
+			l[13] = l[9];
+			l[13] &= 0xe000;
+			SHFR( 12, l[13] );
+			DGLB( 0, l[13], 0xd4, 0xd4, "xxx..... ........ Direction:" );
+				CST#( 0, l[13], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::Direction );
+				CLSE( 0, 0, 0, 0x14, "Reserved" );
+			l[13] = l[9];
+			l[13] &= 0x1800;
+			SHFR( 11, l[13] );
+			DGLB( 0, l[13], 0xd4, 0xd4, "...xx... ........ Specifier:" );
+				CST#( 0, l[13], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::Specifier );
+				CLSE( 0, 0, 0, 0x14, "Reserved" );	
+			l[13] = l[9];
+			l[13] &= 0x600;
+			SHFR( 9, l[13] );
+			DGLB( 0, l[13], 0xd4, 0xd4, ".....xx. ........ Maintenance (Severtiy):" );
+				CST#( 0, l[13], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::Maintenance );
+				CLSE( 0, 0, 0, 0x14, "Reserved" );
+			l[13] = l[9];
+			l[13] &= 0x100;
+			SHFR( 8, l[13] );
+			DGLB( 0, l[13], 0xd4, 0xd4, ".......x ........ Accumulative:" );
+				CEQU( 0, l[13], 0, 0x14, "Channel" );
+				CEQU( 1, l[13], 0, 0x14, "ChannelGroup" );			
+			l[13] = l[9];
+			l[13] &= 0xff;
+			DGLB( 0, l[13], 0xd4, 0xd4, "........ xxxxxxxx Type: " );
+				CST#( 0, l[13], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::Type );
+				CLSE( 0, 0, 0, 0x14, "Reserved" );
+			LABL( 0, 0, 0, 0xb8 );			
+		HWRD( 0, l[10], 0x90, 0xc2, "ChannelErrorType:" );
+			CST#( 0, l[10], 0, 0x14, PROFINET::DCERPC::BLOCK::Alarm Notification Low::ChannelErrorType );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		HWRD( 0, l[11], 0x90, 0xc2, "ExtChannelErrorType:" );
+			CEQU( 0x8000, l[11], 0, 0x14, "Power Budget" );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		HLNG( 0, l[12], 0x90, 0xc2, "ExtChannelAddValue:" );
+	}
+	if (l[1] != 0x000e)
+	{
+		HEX#( 0, g[33], 0x90, 0xc2, "Unknown AlarmType:" );
+	}
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::AlarmType;
+0x0000	|	Reserved;
+0x0001	|	Diagnosis;
+0x0002	|	Process;
+0x0003	|	Pull;
+0x0004	|	Plug;
+0x0005	|	Status;
+0x0006	|	Update;
+0x0007	|	Redundancy;
+0x0008	|	Controlled by supervisor;
+0x0009	|	Released;
+0x000A	|	Plug wrong submodule;
+0x000B	|	Return of submodule;
+0x000C	|	Diagnosis disappears;
+0x000D	|	Multicast communication mismatch notification;
+0x000E	|	Port data change notification;
+0x000F	|	Sync data changed notification;
+0x0010	|	Isochronous mode problem notification;
+0x0011	|	Network component problem notification;
+0x0012	|	Time data changed notification;
+0x0013	|	Dynamic Frame Packing problem notification;
+0x0015	|	Reserved;
+0x0016	|	Reserved;
+0x0017	|	Reserved;
+0x0018	|	Reserved;
+0x0019	|	Reserved;
+0x001A	|	Reserved;
+0x001B	|	Reserved;
+0x001C	|	Reserved;
+0x001D	|	Reserved;
+0x001E	|	Upload and retrieval notification;
+0x001F	|	Pull module;
+//0x0020 - 0x007F manufacturer specific
+//0x0080 - 0x00FF reserved for profiles
+//0x0100 - 0xFFFF reserved
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::UserStructureIdentifier;
+//0x0000 - 0x7FFF manufacturer specific
+0x8000	|	ChannelDiagnosis;
+0x8001	|	Multiple;
+0x8002	|	ExtChannelDiagnosis;
+0x8003	|	QualifiedChannelDiagnosis;
+//0x8004 - 0x80FF reserved
+0x8100	|	Maintenance;
+//0x8101 - 0x8FFF reserved
+//0x9000 - 0x9FFF reserved for profiles
+//0xA000 - 0xFFFF reserved
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::ChannelErrorType;
+0x0000	|	reserved;
+0x0001	|	short circuit;
+0x0002	|	Undervoltage;
+0x0003	|	Overvoltage;
+0x0004	|	Overload;
+0x0005	|	Overtemperature;
+0x0006	|	line break;
+0x0007	|	upper limit value exceeded;
+0x0008	|	lower limit value exceeded;
+0x0009	|	Error;
+//0x000A - 0x000F reserved
+0x0010	|	parametrization fault;
+0x0011	|	power supply fault;
+0x0012	|	fuse blown / open;
+0x0013	|	Manufacturer specific;
+0x0014	|	ground fault;
+0x0015	|	reference point lost;
+0x0016	|	process event lost / sampling error;
+0x0017	|	threshold warning;
+0x0018	|	output disabled;
+0x0019	|	safety event;
+0x001A	|	external fault;
+//0x001B - 0x001F manufacturer specific
+//0x0020 - 0x00FF reserved for common profiles
+//0x0100 - 0x7FFF manufacturer specific
+0x8000	|	Data transmission impossible;
+0x8001	|	Remote mismatch;
+0x8002	|	Media redundancy mismatch;
+0x8003	|	Sync mismatch;
+0x8004	|	IsochronousMode mismatch;
+0x8005	|	Multicast CR mismatch;
+0x8006	|	reserved;
+0x8007	|	Fiber optic mismatch;
+0x8008	|	Network component function mismatch;
+0x8009	|	Time mismatch;
+//added values for IEC version 2.3
+0x800A	|	Dynamic frame packing function mismatch;
+0x800B	|	Media redundancy with planned duplication mismatch;
+0x800C	|	System redundancy mismatch;
+//0x800D - 0x8FFF reserved
+//0x9000 - 0x9FFF reserved for profile
+//0xA000 - 0xFFFF reserved
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::Direction;
+0x0000	|	Manufacturer-specific;
+0x0001	|	Input;
+0x0002	|	Output;
+0x0003	|	Input/Output;
+//0x0004 - 0x0007 reserved;
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::Specifier;
+0x0000	|	All subsequent disappears;
+0x0001	|	Appears;
+0x0002	|	Disappears;
+0x0003	|	Disappears but others remain;
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::Maintenance;
+0x0000	|	Failure;
+0x0001	|	Maintenance required;
+0x0002	|	Maintenance demanded;
+0x0003	|	see QualifiedChannelQualifier;
+str# PROFINET::DCERPC::BLOCK::Alarm Notification Low::Type
+0x0000	|	submodule or unspecified;
+0x0001	|	1 Bit;
+0x0002	|	2 Bit;
+0x0003	|	4 Bit;
+0x0004	|	8 Bit;
+0x0005	|	16 Bit;
+0x0006	|	32 Bit;
+0x0007	|	64 Bit;
+
+void PROFINET::DCERPC::BLOCK::ARBlockReq()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "ARTYPE:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCERPC::BLOCK::ARTYPE );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HEX#( 0, 16, 0x90, 0xc2, "ARUUID:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "SessionKey:" );
+	ETHR( 0, l[3], 0x90, 0xc2, "CMInitiatorMacAdd:" );
+	HEX#( 0, 16, 0x90, 0xc2, "CMInitiatorObjectUUID:" );
+	HLNG( 0, l[4], 0x90, 0xc2, "ARProperties:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "CMInitiatorActivityTimeoutFactor:" );
+	DWRD( 0, l[6], 0x90, 0xc2, "CMInitiatorUDPRTPort:" );
+	DWRD( 0, l[7], 0x90, 0xc2, "StationNameLength:" );
+	CHR#( 0, l[7], 0x90, 0xc2, "CMInitiatorStationName:" );	
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+
+void PROFINET::DCERPC::BLOCK::ARBlockRes()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "ARTYPE:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCERPC::BLOCK::ARTYPE );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HEX#( 0, 16, 0x90, 0xc2, "ARUUID:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "SessionKey:" );
+	ETHR( 0, l[3], 0x90, 0xc2, "CMInitiatorMacAdd:" );
+	DWRD( 0, l[6], 0x90, 0xc2, "CMInitiatorUDPRTPort:" );
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+
+str# PROFINET::DCERPC::BLOCK::ARTYPE;
+0x0000	|	reserved;
+0x0001	|	IO Controller AR;
+0x0002	|	reserved;
+0x0003	|	IOCARCIR;
+0x0004	|	reserved;
+0x0005	|	reserved;
+0x0006	|	IO Supervisor AR / DeviceAccess AR;
+//0x0007 - 0x000F reserved 
+0x0010	|	IO Controller AR (RT_CLASS_3);
+//0x0011 - 0x001F reserved
+0x0020	|	IO Controller AR (sysred/CiR);
+//0x0007 - 0xFFFF reserved
+    
+void PROFINET::DCERPC::BLOCK::AlarmCRBlockReq()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "AlarmCRType:" );
+		CEQU( 0x0000, l[1], 0x00, 0x14, "reserved" );
+		CEQU( 0x0001, l[1], 0x00, 0x14, "Alarm CR" );
+		CLSE( 0x00, l[1], 0x00, 0x14, "reserved" );
+	HWRD( 0, l[3], 0x90, 0xc2, "LT:" );
+	HLNG( 0, l[4], 0x90, 0xc2, "AlarmCRProperties:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "RTATimeFactor:" );
+	DWRD( 0, l[6], 0x90, 0xc2, "RTARetries:" );	
+	DWRD( 0, l[7], 0x90, 0xc2, "LocalAlarmReference:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "MaxAlarmDataLength:" );
+	HWRD( 0, l[9], 0x90, 0xc2, "AlarmCRTagHeaderHigh:" );
+	HWRD( 0, l[10], 0x90, 0xc2, "AlarmCRTagHeaderLow:" );
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+
+void PROFINET::DCERPC::BLOCK::AlarmCRBlockRes()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "AlarmCRType:" );
+		CEQU( 0x0000, l[1], 0x00, 0x14, "reserved" );
+		CEQU( 0x0001, l[1], 0x00, 0x14, "Alarm CR" );
+		CLSE( 0x00, l[1], 0x00, 0x14, "reserved" );
+	DWRD( 0, l[7], 0x90, 0xc2, "LocalAlarmReference:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "MaxAlarmDataLength:" );
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+
+void PROFINET::DCERPC::BLOCK::IOCRBlockReq()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "IOCRType:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCERPC::BLOCK::IOCRType );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HWRD( 0, l[2], 0x90, 0xc2, "IOCRReference:" );
+	HWRD( 0, l[3], 0x90, 0xc2, "LT:" );
+	HLNG( 0, l[4], 0x90, 0xc2, "IOCRProperties:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "DataLength:" );
+	HWRD( 0, l[6], 0x90, 0xc2, "FrameID:" );
+	DWRD( 0, l[7], 0x90, 0xc2, "SendClockFactor:" );
+	DWRD( 0, l[8], 0x90, 0xc2, "ReductionRatio:" );
+	DWRD( 0, l[9], 0x90, 0xc2, "Phase:" );
+	DWRD( 0, l[10], 0x90, 0xc2, "Sequence:" );
+	HLNG( 0, l[11], 0x90, 0xc2, "FrameSendOffset:" );
+	DWRD( 0, l[12], 0x90, 0xc2, "WatchdogFactor:" );
+	DWRD( 0, l[13], 0x90, 0xc2, "DataHoldFactor:" );
+	HWRD( 0, l[14], 0x90, 0xc2, "IOCRTagHeader:" );
+	ETHR( 0, 0, 0x90, 0xc2, "IOCRMulticastMACAdd:" );
+	DWRD( 0, l[15], 0x90, 0xc2, "NumberOfAPIs:" );
+	g[33] -= 4;
+	g[33] -= 38;
+	//Decode the APIs
+	l[20] = l[15];
+	l[16] = 1;
+	if (l[15] != 0)
+	{
+		while( l[15] != 0 )
+		{
+			LABL( 0, 0, 0, 0xb7, "API # " );
+			DGLB( 0, l[16], 0x07, 0x07, );
+			LABL( 0, 0, 0, 0x07, " of " );
+			DGLB( 0, l[20], 0x07, 0x07 );
+				HLNG( 0, 0, 0x90, 0xc2, "API:" );
+				DWRD( 0, l[17], 0x90, 0xc2, "NumberofObjects:" );
+				while( l[17] != 0 )
+				{
+					LABL( 0, 0, 0, 0xb7, "IODataObject" );
+						HWRD( 0, 0, 0x90, 0xc2, "SlotNumber:" );
+						HWRD( 0, 0, 0x90, 0xc2, "SubSlotNumber:" );
+						DWRD( 0, 0, 0x90, 0xc2, "IODataObjectFrameOffset:" );
+					LABL( 0, 0, 0, 0xb8);
+					l[17] -= 1;
+				}
+				DWRD( 0, l[18], 0x90, 0xc2, "NumberofIOCS:" );
+				
+				if (l[18] != 0)
+				{
+					LABL( 0, 0, 0, 0xb7, "IOCS - List" );
+					while( l[18] != 0 )
+					{
+						LABL( 0, 0, 0, 0xb7, "IOCS" );
+							HWRD( 0, 0, 0x90, 0xc2, "SlotNumber:" );
+							HWRD( 0, 0, 0x90, 0xc2, "SubSlotNumber:" );
+							DWRD( 0, 0, 0x90, 0xc2, "IOCSFrameOffset:" );
+						LABL( 0, 0, 0, 0xb8);
+						l[18] -= 1;
+					}
+					LABL( 0, 0, 0, 0xb8);
+				}
+			
+			LABL( 0, 0, 0, 0xb8);
+			l[15] -= 1;
+			l[16] += 1;
+		}
+		g[32] -= g[33];
+		g[33] = 0;
+		g[32] -= 4;
+	}
+}
+
+void PROFINET::DCERPC::BLOCK::IOCRBlockRes()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "IOCRType:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCERPC::BLOCK::IOCRType );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HWRD( 0, l[2], 0x90, 0xc2, "IOCRReference:" );
+	HWRD( 0, l[3], 0x90, 0xc2, "FrameID:" );
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+str# PROFINET::DCERPC::BLOCK::IOCRType;
+0x0000	|	reserved;
+0x0001	|	Input CR;
+0x0002	|	Output CR;
+0x0003	|	Multicast Provider CR;
+0x0004	|	Multicast Consumera CR;
+//0x0005 - 0xFFFF reserved
+
+void PROFINET::DCERPC::BLOCK::ExpectedSubmoduleBlockReq()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "NumberOfAPIs:" );
+	l[2] = l[1];
+	l[3] = 1;	
+	if (l[1] > 0)
+	{
+		while( l[1] != 0 )
+		{
+			LABL( 0, 0, 0, 0xb7, "API # " );
+			DGLB( 0, l[3], 0x07, 0x07, );
+			LABL( 0, 0, 0, 0x07, " of " );
+			DGLB( 0, l[2], 0x07, 0x07 );
+			HLNG( 0, 0, 0x90, 0xc2, "API:" );
+			HWRD( 0, 0, 0x90, 0xc2, "SlotNumber:" );
+			HLNG( 0, 0, 0x90, 0xc2, "ModuleIdentNumber:" );
+			HWRD( 0, 0, 0x90, 0xc2, "ModuleProperties:" );
+			DWRD( 0, l[4], 0x90, 0xc2, "NumberofSubmodules:" );
+			g[33] -= 14;
+			g[33] -= 4;
+			while( l[4] != 0 )
+			{
+				LABL( 0, 0, 0, 0xb7, "Submodule" );
+					DWRD( 0, 0, 0x90, 0xc2, "SubslotNumber:" );
+					HLNG( 0, 0, 0x90, 0xc2, "SubmoduleIdentNumber:" );
+					BWRD( 0, l[6], 0x90, 0xc2, "SubmoduleProperties:" );
+						//tbc
+					if (l[6] != 0x03)
+					{
+						LABL( 0, 0, 0, 0xb7, "DataDescription" );
+							DWRD( 0, 0, 0x90, 0xc2, "DataDescription:" );
+							DWRD( 0, l[5], 0x90, 0xc2, "SubmoduleDataLength:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOCS:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOPS:" );
+						LABL( 0, 0, 0, 0xb8);
+					}
+					if (l[6] == 0x03)
+					{
+						LABL( 0, 0, 0, 0xb7, "DataDescription" );
+							DWRD( 0, 0, 0x90, 0xc2, "DataDescription:" );
+							DWRD( 0, l[5], 0x90, 0xc2, "SubmoduleDataLength:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOCS:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOPS:" );							
+						LABL( 0, 0, 0, 0xb8);
+						LABL( 0, 0, 0, 0xb7, "DataDescription" );
+							DWRD( 0, 0, 0x90, 0xc2, "DataDescription:" );
+							DWRD( 0, l[5], 0x90, 0xc2, "SubmoduleDataLength:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOCS:" );
+							DBYT( 0, 0, 0x90, 0xc2, "LengthIOPS:" );							
+						LABL( 0, 0, 0, 0xb8);
+					}
+				LABL( 0, 0, 0, 0xb8);
+				g[33] = 0;
+				l[4] -= 1;
+			}
+			LABL( 0, 0, 0, 0xb8);
+			l[1] -= 1;
+		}
+	}
+}
+
+void PROFINET::DCERPC::BLOCK::ModuleDiffBlock()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "NumberOfAPIs:" );
+	l[2] = l[1];
+	l[3] = 1;
+	if (l[1] > 0)
+	{
+		while (l[1] != 0)
+		{
+			LABL( 0, 0, 0, 0xb7, "API # " );
+			DGLB( 0, l[3], 0x07, 0x07, );
+			LABL( 0, 0, 0, 0x07, " of " );
+			DGLB( 0, l[2], 0x07, 0x07 );
+			HLNG( 0, 0, 0x90, 0xc2, "API:" );
+			DWRD( 0, l[4], 0x90, 0xc2, "NumberOfModules:" );
+			l[5] = l[4];
+			l[6] = 1;
+			if (l[4] > 0)
+			{
+				while (l[4] != 0)
+				{
+					LABL( 0, 0, 0, 0xb7, "Module # " );
+					DGLB( 0, l[6], 0x07, 0x07, );
+					LABL( 0, 0, 0, 0x07, " of " );
+					DGLB( 0, l[5], 0x07, 0x07 );
+						DWRD( 0, 0, 0x90, 0xc2, "SlotNumber:" );
+						HLNG( 0, l[7], 0x90, 0xc2, "ModuleIdentNumber:" );
+						HWRD( 0, l[8], 0x90, 0xc2, "ModuleState:" );
+						DWRD( 0, l[9], 0x90, 0xc2, "NumberOfSubmodules:" );
+						l[10] = l[9];
+						l[11] = 1;
+						if (l[9] > 0)
+						{
+							while (l[9] != 0)
+							{
+									LABL( 0, 0, 0, 0xb7, "Submodule # " );
+									DGLB( 0, l[11], 0x07, 0x07, );
+									LABL( 0, 0, 0, 0x07, " of " );
+									DGLB( 0, l[10], 0x07, 0x07 );
+									DWRD( 0, l[12], 0x90, 0xc2, "SubslotNumber:" );
+									HLNG( 0, l[13], 0x90, 0xc2, "SubmoduleIdentNumber:" );
+									BWRD( 0, l[14], 0x90, 0xc2, "SubmoduleState:" );
+									LABL( 0, 0, 0, 0xb8);
+								l[9] -= 1;
+								l[11] += 1;
+							}
+						}
+					LABL( 0, 0, 0, 0xb8);	
+					l[4] -= 1;
+					l[6] += 1;
+				}
+			}
+			LABL( 0, 0, 0, 0xb8);
+			l[1] -= 1;
+			l[3] += 1;
+		}
+	}
+	LABL( 0, 0, 0, 0xb8);
+}
+
+//void PROFINET::DCERPC::BLOCK::PrmServerBlockReq()
+//{
+//
+//}
+//void PROFINET::DCERPC::BLOCK::PrmServerBlockRes()
+//{
+//
+//}
+//void PROFINET::DCERPC::BLOCK::MCRBlockReq()
+//{
+//
+//}
+//void PROFINET::DCERPC::BLOCK::SubFrameBlock()
+//{
+//
+//}
+//void PROFINET::DCERPC::BLOCK::IRTFrameBlock()
+//{
+//
+//}
+
+void PROFINET::DCERPC::BLOCK::IODBlockReq()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "Reserved:" );
+	HEX#( 0, 16, 0x90, 0xc2, "ARUUID:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "SessionKey:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Reserved:" );
+	BWRD( 0, l[3], 0x90, 0xc9, "ControlCommand:" );
+		//tbc
+		LABL( 0, 0, 0, 0xd4, "xxxxxxxx x....... reserved" );
+		CBIT( 6, l[3], 0, 0xd4, "......... .1...... PrmBegin: PrmBegin" );
+		CLSE( 0, l[3], 0, 0xd4, "......... .0...... PrmBegin: No PrmBegin" );
+		CBIT( 5, l[3], 0, 0xd4, "......... ..1..... ReadyForRTClass3: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... ..0..... ReadyForRTClass3: No" );
+		CBIT( 4, l[3], 0, 0xd4, "......... ...1.... ReadyForCompanion: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... ...0.... ReadyForCompanion: No" );
+		CBIT( 3, l[3], 0, 0xd4, "......... ....1... Done: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... ....0... Done: No" );
+		CBIT( 2, l[3], 0, 0xd4, "......... .....1.. Release: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... .....0.. Release: No" );
+		CBIT( 1, l[3], 0, 0xd4, "......... ......1. ApplicationReady: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... ......0. ApplicationReady: No" );
+		CBIT( 0, l[3], 0, 0xd4, "......... .......1 PrmEnd: Yes" );
+		CLSE( 0, l[3], 0, 0xd4, "......... .......0 PrmEnd: No" );
+		LABL( 0, 0, 0, 0xb8);
+	HWRD( 0, l[4], 0x90, 0xc2, "ControlBlockProperties:" );
+	g[32] -= g[33];
+	g[33] = 0;
+	g[32] -= 4;
+}
+
+void PROFINET::DCERPC::BLOCK::IODBlockRes()
+{
+	PROFINET::DCERPC::BLOCK::IODBlockReq;
+}
+
+void PROFINET::DCERPC::BLOCK::IOXBlockReq()
+{
+	PROFINET::DCERPC::BLOCK::IODBlockReq;
+}
+
+void PROFINET::DCERPC::BLOCK::IOXBlockRes()
+{
+	PROFINET::DCERPC::BLOCK::IODBlockReq;
+}
+//------------------------------------------------------------------------------------------------------
+void PROFINET()
+{
+	//LABL( 0, 0, 0, 0xb1, "PROFINET" );
+	PROFINET::Frame;
+}
+
+void PROFINET::Frame( )
+{
+	//HWRD( 0, l[3], 0x90, 0xc2, "FrameID:" ); 	//frame control (frame type) field of a DLPDU
+		GWRD( 0, l[3]);
+		g[31] = l[3];
+		//HGLB( 0, l[3], 0x90, 0xc2, "FrameID:");
+		TSB#( 0, l[3], 0x90, 0xc2, PROFINET::FrameIDs );
+		
+	if ( l[3] >= 0x0000 )
+	{
+		if ( l[3] <= 0x00ff )
+		{
+			PROFINET::TS;
+		}
+	}
+	if ( l[3] >= 0x0100 )
+	{
+		if ( l[3] <= 0x07ff )
+		{
+			PROFINET::IRTtop;
+		}
+	}
+	if ( l[3] >= 0x8000 )
+	{
+		if ( l[3] <= 0xbfff )
+		{
+			
+			PROFINET::IRTflex;
+		}
+	}
+	if ( l[3] >= 0xc000 )
+	{
+		if ( l[3] <= 0xfbff )
+		{
+			PROFINET::RTUDP;
+		}
+	}
+	if ( l[3] >= 0xfc00 )
+	{
+		if ( l[3] <= 0xfcff )
+		{
+			
+			PROFINET::AT-high;
+		}
+	}
+	if ( l[3] >= 0xfd00 )
+	{
+		if ( l[3] <= 0xfdff )
+		{
+			PROFINET::Reserved;
+		}
+	}
+	if ( l[3] >= 0xfe00 )
+	{
+		if (l[3] == 0xFE01)
+		{
+			PROFINET::PN-RTA;
+		}
+		if (l[3] == 0xfefc)
+		{
+			PROFINET::PN-HELLO;
+		}
+		if (l[3] == 0xfefe)
+		{
+			PROFINET::PN-IDENT_REQ;
+		}
+		if (l[3] == 0xfeff)
+		{
+			PROFINET::PN-IDENT_RES;
+		}
+		if ( l[3] <= 0xfefc )
+		{
+			if (l[3] != 0xFE01)
+			{
+				if (l[3] != 0xFEFC)
+				{
+					if (l[3] != 0xFEFE)
+					{
+						if (l[3] != 0xFEFF)
+						{
+							PROFINET::AT-low;
+						}
+					}
+				}
+			}
+		}
+	}
+	if ( l[3] >= 0xfefd )
+	{
+		if ( l[3] <= 0xfeff )
+		{
+			PROFINET::DCP;
+		}
+	}
+	if ( l[3] >= 0xff00 )
+	{
+		if ( l[3] <= 0xffff )
+		{
+			//LABL( 0, 0, 0, 0x14, "Reserved" );
+		}
+	}
+}
+
+
+str# PROFINET::FrameIDs;
+0x0020	|	PROFINET::PTCP::RTSyncPDU;
+0x0021	|	PROFINET::PTCP::RTSyncPDU;
+0x0080	|	PROFINET::PTCP::RTSyncPDU;
+0x0081	|	PROFINET::PTCP::RTSyncPDU;
+0xff00	|	PROFINET::PTCP::AnnouncePDU;
+0xff01	|	PROFINET::PTCP::AnnouncePDU;
+0xff21	|	PROFINET::PTCP::FollowUpPDU;
+0xff40	|	PROFINET::PTCP::DelayPDU;  
+0xff41	|	PROFINET::PTCP::DelayPDU;
+0xff42	|	PROFINET::PTCP::DelayPDU;
+0xff43	|	PROFINET::PTCP::DelayPDU;
+
+str# PROFINET::FrameIDs::Names;
+0x0020	|	PROFINET PTCP RTSyncPDU;
+0x0021	|	PROFINET PTCP RTSyncPDU;
+0x0080	|	PROFINET PTCP RTSyncPDU;
+0x0081	|	PROFINET PTCP RTSyncPDU;
+0xff00	|	PROFINET PTCP AnnouncePDU;
+0xff01	|	PROFINET PTCP AnnouncePDU;
+0xff20	|	PROFINET PTCP FollowUpPDU;
+0xff21	|	PROFINET PTCP FollowUpPDU;
+0xff40	|	PROFINET PTCP DelayPDU;  
+0xff41	|	PROFINET PTCP DelayPDU;
+0xff42	|	PROFINET PTCP DelayPDU;
+0xff43	|	PROFINET PTCP DelayPDU;
+
+void PROFINET::PTCP::DelayPDU( )
+{
+		
+	LABL( 0, 0, 0, 0xb1, "PROFINET acylic Real-Time, Delay," ); 
+		HGLB( 0, g[31], 0x01, 0x01, "ID:");
+		HWRD( 0, l[1], 0x90, 0xc2, "FrameID:" );
+	//LABL( 0, 0, 0, 0x14, "PROFINET acylic Real-Time, Delay" );	
+	//LABL( 0, 0, 0, 0xb7);
+	LABL( 0, 0, 0, 0xb1, "PROFINET PTCP, Delay PDU" );
+		LABL( 0, 0, 0, 0xb7, "Header: " );
+			DUMP( 0, 12, 0x90, 0xc2, "Padding:");
+			DWRD( 0, l[2], 0x90, 0xc2, "SequenceID:" );
+			DUMP( 0, 2, 0x90, 0xc2, "Padding:"); //calculation must be added but where to get the length???
+			DLNG( 0, l[3], 0x90, 0xc2, "Delay1ns:" );
+			//GWRD( 0 , l[4] );
+			PROFINET::PTCP::BLOCK;
+		LABL( 0, 0, 0, 0xb8);
+	//LABL( 0, 0, 0, 0xb7);
+}
+
+void PROFINET::PTCP::BLOCK( )
+{
+	GBIT( 7, l[11] );
+	GWRD( 0, l[12] );
+	l[13] = l[12];
+	l[13] &= 0x01FF;
+	while ( g[40] != 0x72884871)
+	{
+				GBIT( 7, l[11] );
+				CST#( 0, l[11], 0, 0xb7, PROFINET::PTCP::BLOCK::Names );
+				CLSE( 0, l[11], 0, 0xb7, "Reserved" );
+				LABL( 0, 0, 0, 0x07, " - ");
+				LABL( 0, 0, 0, 0x07, "Block: " );
+				DBIT( 7, l[1], 0x07, 0x07, "- Type: " );
+				DBIT( 9, l[2], 0x07, 0x07, " - Length: " );
+				DECR 2;
+				LABL( 0, 0, 0xb2, 0xc9, "TLVHeader: " );
+					DBIT( 7, l[1], 0x90, 0xc2, "TypeLength.Type:" );
+						CST#( 0, l[1], 0, 0x14, PROFINET::PTCP::BLOCK::Names );
+						CLSE( 0, l[1], 0, 0x14, "Reserved" );
+					DBIT( 9, l[2], 0x90, 0xc2, "TypeLength.Length:" );
+				LABL( 0, 0, 0, 0xb8);
+					TSB#( 0, l[1], 0x90, 0xc2, PROFINET::PTCP::BLOCKs );
+				LABL( 0, 0, 0, 0xb8);
+	}
+	/*	
+	if (l[11] == 0x0000)
+	{
+		LABL( 0, l[1], 0, 0xb7, "End-Of-Sequence" );
+		LABL( 0, 0, 0, 0x07, " - ");
+		LABL( 0, 0, 0, 0x07, "Block: " );
+		DBIT( 7, l[1], 0x07, 0x07, "Type:" );
+		DBIT( 9, l[2], 0x07, 0x07, " Length:" );
+		TRTS;
+	}
+	*/
+	
+}
+
+void PROFINET::PTCP::End()
+{
+	g[40] = 0x72884871; //SAVVIUS1 on telephone
+	TRTS;
+}
+
+void PROFINET::PTCP::Subdomain( )
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Master Source Adress:" );	
+	TRTS;
+}
+void PROFINET::PTCP::Time( )
+{
+	DWRD( 0, 0, 0x90, 0xc2, "EpochNumber:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Seconds:" );
+	DLNG( 0, 0, 0x90, 0xc2, "NanoSeconds:" );
+	TRTS;
+}
+void PROFINET::PTCP::TimeExtension( )
+{
+	BWRD( 0, 0, 0x90, 0xc2, "Flags:" );
+	DWRD( 0, 0, 0x90, 0xc2, "CurrentUTCOffset:" );
+	TRTS;
+}
+void PROFINET::PTCP::Master( )
+{
+	BBYT( 0, 0, 0x90, 0xc2, "MasterPriority1:" );
+	BBYT( 0, 0, 0x90, 0xc2, "MasterPriority2:" );
+	BBYT( 0, 0, 0x90, 0xc2, "ClockClass:" );
+	BBYT( 0, 0, 0x90, 0xc2, "ClockAccuracy:" );
+	DWRD( 0, 0, 0x90, 0xc2, "ClockVariance:" );
+	TRTS;
+}
+void PROFINET::PTCP::DelayParameter( )
+{
+	ETHR( 0, 0, 0x90, 0xc2, "PortMACAddress:" );
+	TRTS;
+}
+void PROFINET::PTCP::PortParameter( )
+{
+	DLNG( 0, 0, 0x90, 0xc2, "T2TimeStamp:" );
+	DLNG( 0, 0, 0x90, 0xc2, "T2TimeStamp:" );
+	TRTS;
+}
+void PROFINET::PTCP::PortTime( )
+{
+	DLNG( 0, 0, 0x90, 0xc2, "T2PortRxDelay:" );
+	DLNG( 0, 0, 0x90, 0xc2, "T3PortTxDelay:" );
+	TRTS;
+}
+
+/*void PROFINET::PTCP::OrganizationalSpecific( )
+{
+	802_11::Print_OUI();
+	
+}*/
+
+str# PROFINET::PTCP::BLOCKs;
+0x00 	|	PROFINET::PTCP::End;
+0x01 	|	PROFINET::PTCP::Subdomain;
+0x02 	|	PROFINET::PTCP::Time;
+0x03 	|	PROFINET::PTCP::TimeExtension;
+0x04 	|	PROFINET::PTCP::Master;
+0x05 	|	PROFINET::PTCP::PortParameter;
+0x06 	|	PROFINET::PTCP::DelayParameter;
+0x07 	|	PROFINET::PTCP::PortTime;
+0x7F 	|	PROFINET::PTCP::OrganizationalSpecific;
+
+str# PROFINET::PTCP::BLOCK::Names;
+0x00 	|	End;
+0x01 	|	Subdomain;
+0x02 	|	Time;
+0x03 	|	TimeExtension;
+0x04 	|	Master;
+0x05 	|	PortParameter;
+0x06 	|	DelayParameter;
+0x07 	|	PortTime;
+0x7F 	|	Organizational Specific;
+
+void PROFINET::TS( )
+{
+	LABL( 0, 0, 0, 0x14, "Time Synchronization" );
+	
+}
+
+void PROFINET::IRTtop( )
+{
+	LABL( 0, 0, 0, 0x14, "RT_CLASS_3 Frames (IRTtop)" );
+	
+}
+
+void PROFINET::IRTflex( )
+{
+	LABL( 0, 0, 0, 0x14, "RT_CLASS_2 Frames (IRTflex)" );
+	l[1] = g[16];
+	INCR( 0, g[16] );
+	DECR( 4 );
+	DWRD( 0, l[4], 0x90, 0xc2, "Cycle Counter:" );
+		l[4] *= 31.25;
+		DGLB( 0, l[4], 0x4, 0x04, " ");
+		LABL( 0, 0, 0, 0x14, "us");	
+	HBYT( 0, l[3], 0x90, 0xc2, "Data Status:" );
+	 CBIT( 2, l[3], 0, 0x04, "  valid");
+	 CLSE( 0, 0, 0, 0x04,    "  invalid");
+     LABL( 0, 0, 0, 0xd4,    "00.. .... = Reserved (should be zero)");
+	 CBIT( 5, l[3], 0, 0xd4  "..1. .... = Station Problem Indicator: OK");
+	 CLSE( 0, 0, 0, 0xd4,    "..0. .... = Station Problem Indicator: Not OK");	
+	 CBIT( 4, l[3], 0, 0xd4, "...1 .... = Provider State: Run");
+	 CLSE( 0, 0, 0, 0xd4,    "...0 .... = Provider State: Stop");
+     LABL( 0, 0, 0, 0xd4,    ".... 0... = Reserved (should be zero)");
+	 CBIT( 2, l[3], 0, 0xd4, ".... .1.. = Data Valid: Valid");
+	 CLSE( 0, 0, 0, 0xd4,    ".... .0.. = Data Invalid: Invalid");
+     LABL( 0, 0, 0, 0xd4,    ".... ..0. = Reserved (should be zero)");
+	 CBIT( 0, l[3], 0, 0xd4, ".... ...1 = State: Primary");
+	 CLSE( 0, 0, 0, 0xd4,    ".... ...0 = Primary: Backup");	 
+	HBYT( 0, l[22], 0x90, 0xc2, "Transfer Status:" );
+		CEQU( 0, l[22], 0, 0x14, "ok" );
+	DECR( 0, l[1] );
+	l[1] -= 4;	
+	LABL( 0, 0, 0, 0xb1, "PROFINET IO Data" ); 
+	HBYT( 0, l[3], 0x90, 0xc2, "IOXS:" );
+	 CBIT( 7, l[3], 0, 0xd4  "1... .... = Data State: Good");
+	 CLSE( 0, 0, 0, 0xd4,    "0... .... = Data State: Bad");
+	 LABL( 0, 0, 0, 0xd4,  "." );
+	 CBIT( 6, l[3], 0, 0x04  "1");
+	 CLSE( 0, 0, 0, 0x04,    "0");
+	 CBIT( 5, l[3], 0, 0x04  "1");
+	 CLSE( 0, 0, 0, 0x04,    "0");
+	 LABL( 0, 0, 0, 0x04     ". .... = Instance (Only valid if DataState is bad");
+     LABL( 0, 0, 0, 0xd4,    "...0 000. = Reserved (should be zero)");
+	 CBIT( 0, l[3], 0, 0xd4, ".... ...1 = Extension: Another IOXS follows");
+	 CLSE( 0, 0, 0, 0xd4,    ".... ...0 = Extension: No IOXS follows");
+	 l[1] -= 1;
+	DUMP( 0, l[1], 0x90, 0xc2, "User Data:" );		
+	INCR( 4 );
+}
+
+void PROFINET::RTUDP( )
+{
+	LABL( 0, 0, 0, 0x14, "RT_CLASS_1 Frames (RT/UDP)" );
+		l[1] = g[16];
+	INCR( 0, g[16] );
+	DECR( 4 );
+	DWRD( 0, l[4], 0x90, 0xc2, "Cycle Counter:" );
+		l[4] *= 31.25;
+		DGLB( 0, l[4], 0x4, 0x04, " ");
+		LABL( 0, 0, 0, 0x14, "us");
+	
+	HBYT( 0, l[3], 0x90, 0xc2, "Data Status:" );
+	 CBIT( 2, l[3], 0, 0x04, "  valid");
+	 CLSE( 0, 0, 0, 0x04,    "  invalid");
+     LABL( 0, 0, 0, 0xd4,    "00.. .... = Reserved (should be zero)");
+	 CBIT( 5, l[3], 0, 0xd4  "..1. .... = Station Problem Indicator: OK");
+	 CLSE( 0, 0, 0, 0xd4,    "..0. .... = Station Problem Indicator: Not OK");	
+	 CBIT( 4, l[3], 0, 0xd4, "...1 .... = Provider State: Run");
+	 CLSE( 0, 0, 0, 0xd4,    "...0 .... = Provider State: Stop");
+     LABL( 0, 0, 0, 0xd4,    ".... 0... = Reserved (should be zero)");
+	 CBIT( 2, l[3], 0, 0xd4, ".... .1.. = Data Valid: Valid");
+	 CLSE( 0, 0, 0, 0xd4,    ".... .0.. = Data Invalid: Invalid");
+     LABL( 0, 0, 0, 0xd4,    ".... ..0. = Reserved (should be zero)");
+	 CBIT( 0, l[3], 0, 0xd4, ".... ...1 = State: Primary");
+	 CLSE( 0, 0, 0, 0xd4,    ".... ...0 = Primary: Backup");
+	 
+	HBYT( 0, l[22], 0x90, 0xc2, "Transfer Status:" );
+		CEQU( 0, l[22], 0, 0x14, "ok" );
+	DECR( 0, l[1] );
+	l[1] -= 4;
+	
+	LABL( 0, 0, 0, 0xb1, "PROFINET IO Data" ); 
+	HBYT( 0, l[3], 0x90, 0xc2, "IOXS:" );
+	 CBIT( 7, l[3], 0, 0xd4  "1... .... = Data State: Good");
+	 CLSE( 0, 0, 0, 0xd4,    "0... .... = Data State: Bad");
+	 
+	 
+	 LABL( 0, 0, 0, 0xd4,  "." );
+	 CBIT( 6, l[3], 0, 0x04  "1");
+	 CLSE( 0, 0, 0, 0x04,    "0");
+	 CBIT( 5, l[3], 0, 0x04  "1");
+	 CLSE( 0, 0, 0, 0x04,    "0");
+	 LABL( 0, 0, 0, 0x04     ". .... = Instance (Only valid if DataState is bad");
+
+     LABL( 0, 0, 0, 0xd4,    "...0 000. = Reserved (should be zero)");
+	 CBIT( 0, l[3], 0, 0xd4, ".... ...1 = Extension: Another IOXS follows");
+	 CLSE( 0, 0, 0, 0xd4,    ".... ...0 = Extension: No IOXS follows");
+	 l[1] -= 1;
+	INCR( 4 );
+}
+
+void PROFINET::AT-high( )
+{
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission high" );
+}
+
+void PROFINET::Reserved( )
+{
+	LABL( 0, 0, 0, 0x14, "Reserved" );
+}
+
+void PROFINET::AT-low( )
+{
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission low" );
+}
+
+void PROFINET::PN-RTA()
+{
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission low - PROFINET IO ALARM" );
+	LABL( 0, 0, 0, 0xb1, "PROFINET IO ALARM" );
+		HWRD( 0, l[2], 0x90, 0xc2, "FrameID:" );
+			LABL( 0, 0, 0, 0x14, "Acyclic transmission low - PROFINET IO ALARM" );
+		HWRD( 0, l[3], 0x90, 0xc2, "AlarmDstEndpoint:" );
+		HWRD( 0, l[4], 0x90, 0xc2, "AlarmSrcEndpoint:" );
+		BBYT( 0, l[5], 0x90, 0xc9, "PDUType:" );
+			l[10] = l[5];
+			l[10] &= 0xf0;
+			SHFR( 4, l[10] );
+			CEQU( 0, l[10], 0, 0xd4, "0000.... Version: 0" );
+			CEQU( 1, l[10], 0, 0xd4, "0001.... Version: 1" );
+			CEQU( 2, l[10], 0, 0xd4, "0010.... Version: 2" );
+			CEQU( 3, l[10], 0, 0xd4, "0011.... Version: 3" );
+			CEQU( 4, l[10], 0, 0xd4, "0100.... Version: 4" );
+			CEQU( 5, l[10], 0, 0xd4, "0101.... Version: 5" );
+			CEQU( 6, l[10], 0, 0xd4, "0110.... Version: 6" );
+			CEQU( 7, l[10], 0, 0xd4, "0111.... Version: 7" );
+			if (l[10] > 7)
+			{
+				LABL( 0, l[10], 0, 0xd4, "xxxx.... Version: unknown" );
+			}
+			l[10] = l[5];
+			l[10] &= 0x0f;
+			CEQU( 0, l[10], 0, 0xd4, "....0000 Type: reserved" );
+			CEQU( 1, l[10], 0, 0xd4, "....0001 Type: Data-RTA-PDU" );
+			CEQU( 2, l[10], 0, 0xd4, "....0010 Type: NACK-RTA-PDU" );
+			CEQU( 3, l[10], 0, 0xd4, "....0011 Type: ACK-RTA-PDU" );
+			CEQU( 4, l[10], 0, 0xd4, "....0100 Type: ERR-RTA-PDU" );
+			if (l[10] > 4)
+			{
+				LABL( 0, l[10], 0, 0xd4, "....xxxx Type: unknown" );
+			}
+		LABL( 0, 0, 0, 0xb8 );
+		BBYT( 0, l[6], 0x90, 0xc9, "AddFlags:" );
+			l[10] = l[5];
+			l[10] &= 0xf0;
+			SHFR( 4, l[10] );
+			CEQU( 0, l[10], 0, 0xd4, "0000.... TACK: 0" );
+			CEQU( 1, l[10], 0, 0xd4, "0001.... TACK: 1" );
+			CEQU( 2, l[10], 0, 0xd4, "0010.... TACK: 2" );
+			CEQU( 3, l[10], 0, 0xd4, "0011.... TACK: 3" );
+			CEQU( 4, l[10], 0, 0xd4, "0100.... TACK: 4" );
+			CEQU( 5, l[10], 0, 0xd4, "0101.... TACK: 5" );
+			CEQU( 6, l[10], 0, 0xd4, "0110.... TACK: 6" );
+			CEQU( 7, l[10], 0, 0xd4, "0111.... TACK: 7" );
+			if (l[10] > 7)
+			{
+				LABL( 0, l[10], 0, 0xd4, "xxxx.... TACK: unknown" );
+			}
+			l[10] = l[5];
+			l[10] &= 0x0f;
+			CEQU( 0, l[10], 0, 0xd4, "....0000 WindowSize: 0" );
+			CEQU( 1, l[10], 0, 0xd4, "....0001 WindowSize: 1" );
+			CEQU( 2, l[10], 0, 0xd4, "....0010 WindowSize: 2" );
+			CEQU( 3, l[10], 0, 0xd4, "....0011 WindowSize: 3" );
+			CEQU( 4, l[10], 0, 0xd4, "....0100 WindowSize: 4" );
+			if (l[10] > 4)
+			{
+				LABL( 0, l[10], 0, 0xd4, "....xxxx WindowSize: reserved" );
+			}
+		LABL( 0, 0, 0, 0xb8 );
+		HWRD( 0, l[7], 0x90, 0xc2, "SendSeqNum:" );
+		HWRD( 0, l[8], 0x90, 0xc2, "AckSeqNum:" );
+		DWRD( 0, l[9], 0x90, 0xc2, "VarPartLen:" );
+		g[32]  = l[9];
+		while (g[32] > 0)
+		{
+			HWRD( 0, l[21], 0x05, 0xb7, "BlockType: " );
+				CST#( 0, l[21], 0x90, 0x07, PROFINET::DCERPC::block_type );
+				HGLB( 0, l[21], 0x07, 0x07, " = ");
+				// links to the block functions
+					DWRD( 0, g[33], 0x90, 0xc2, "BlockLength:" );
+					DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionHigh:" );
+					DBYT( 0, l[7], 0x90, 0xc2, "BlockVersionLow:" );
+					//DGLB( 0, g[33], 0x90, 0xc2, "BlockLengthg33:" );
+					//HGLB( 0, l[21], 0x90, 0xc2, "BlockLengthl21:" );
+					TSB#( 0, l[21], 0x90, 0xc2, PROFINET::DCERPC::block_type::call );
+				if (g[33] != 0)
+				{
+					g[33] -= 2;
+					HEX#( 0, g[33], 0x90, 0xc2, "Data:" );
+					g[32] -= g[33];
+					g[32] -= 4;
+				}
+		LABL( 0, 0, 0, 0xb8 );
+		}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void PROFINET::PN-HELLO()
+{	
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission low - PROFINET HELLO" );
+	LABL( 0, 0, 0, 0xb1, "PROFINET HELLO" );
+	//t.b.c.
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void PROFINET::PN-IDENT_REQ()
+{
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission low - PROFINET IDENT REQ" );
+	LABL( 0, 0, 0, 0xb1, "PROFINET IDENT REQ" );
+	//t.b.c.
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void PROFINET::PN-IDENT_RES()
+{
+	LABL( 0, 0, 0, 0x14, "Acyclic transmission low - PROFINET IDENT RES" );
+	LABL( 0, 0, 0, 0xb1, "PROFINET IDENT RES" );
+	//t.b.c.
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void PROFINET::DCP( )
+{
+	
+		
+	LABL( 0, 0, 0, 0xb1, "PROFINET acylic Real-Time, " ); 
+		HGLB( 0, g[31], 0x01, 0x01, "ID:" );
+		HWRD( 0, l[1], 0x90, 0xc2, "FrameID:" );
+	LABL( 0, 0, 0, 0x14, "DCP" );
+	
+	DBYT( 0, l[1], 0x90, 0xc2, "Service-ID:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCP::Service-ID );
+		if ( l[1] == 5 )
+		{
+			l[1] = 3;
+		}
+		if ( l[1] == 6 )
+		{
+			l[1] = 3;
+		}
+	g[34] = l[1];
+	SHFL( 8 , g[34] );
+	DBYT( 0, l[2], 0x90, 0xc2, "Service-Type:" );
+		CEQU( 0, l[2], 0, 0x14, "Request Success");
+		CEQU( 1, l[2], 0, 0x14, "Response Success");
+		CEQU( 4, l[2], 0, 0x14, "Request fail");
+		CEQU( 5, l[2], 0, 0x14, "Response fail");
+		if ( l[2] == 5 )
+		{
+			l[2] = 1;
+		}
+		g[34] += l[2];
+	HLNG( 4, l[3], 0x90, 0xc2, "xid:" );
+	DWRD( 0, l[4], 0x90, 0xc2, "ResponseDelay:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "DCPDataLength:" );
+	g[33] = l[5];
+	while (g[33] > 0)
+	{
+		// Header
+			LABL( 0, 0, 0, 0xb7, "Block:  " );
+			GBYT( 0, l[6] );
+			
+			GBYT( 1, l[7] );
+			
+			CST#( 0, l[6], 0, 0x07, PROFINET::DCP::Options );
+			SHFL( 16 , l[6] );
+			l[7] += l[6];
+			LABL( 0, 0, 0, 0x07, " / " );
+			CST#( 0, l[7], 0, 0x07, PROFINET::DCP::SUBOPTIONS );
+		// EOF Header
+		DBYT( 0, l[6], 0x90, 0xc2, "Option:" );
+			CST#( 0, l[6], 0, 0x14, PROFINET::DCP::Options );
+			CLSE( 0, l[6], 0, 0x14, "Reserved" );
+		SHFL( 16 , l[6] );
+		DBYT( 0, l[7], 0x90, 0xc2, "Suboption:" );
+		l[7] += l[6];
+			CST#( 0, l[7], 0, 0x14, PROFINET::DCP::SUBOPTIONS );
+			CLSE( 0, l[7], 0, 0x14, "Reserved" );
+		DWRD( 0, l[8], 0x90, 0xc2, "BlockLength:" );
+		//HGLB( 0, g[34], 0x90, 0xc2, "BlockInfo:g34" );
+		g[32] = l[8];	
+		if (g[34] == 0x0301) 
+		{
+			DWRD( 0, l[9], 0x90, 0xc2, "BlockInfo:" );
+
+			g[33] -= 2;
+			g[32] -= 2;		
+		}
+		if (g[34] == 0x0400) 
+		{
+			DWRD( 0, l[9], 0x90, 0xc2, "BlockQualifier:" );
+				CST#( 0, l[9], 0, 0x14, PROFINET::DCP::BlockQualifier );
+				CLSE( 0, l[9], 0, 0x14, "reserved" );
+			g[33] -= 2;
+			g[32] -= 2;		
+		}
+		g[33] -= 4;
+		g[35] = l[8];
+		DGLB( 0, g[35], 0x90, 0xc2, "Padding Bytes:" );
+		BREM( 0, g[40] );		
+			TSB#( 0, l[7], 0x90, 0xc2, PROFINET::DCP::SUBOPTIONS::Call );
+		BREM( 0, g[41] );
+		//Dump Data if Suboption is not already loaded 
+		if (g[40] == g[41])
+		{
+			HEX#( 0, g[35], 0x90, 0xc2, "BlockData:" );
+		}		
+		if (g[35] != 0)
+		{
+			MODG( 2 , g[35]);
+			if (g[35] != 0)
+			{
+				l[8] = 2;	
+				l[8] -= g[35];					
+				DUMP( 0, l[8], 0x90, 0xc2, "Padding Bytes:" );
+				g[32] -= l[8];
+				g[33] -= l[8];
+			}			
+		}
+		LABL( 0, 0 , 0, 0xb8);
+	}
+}
+
+str# PROFINET::DCP::BlockQualifier;
+0x0000	|	Use the value temporary;
+0x0001	|	Save the value permanent;
+
+
+void PROFINET::DCP::IP parameter( )
+{
+	IPLG( 0, 0, 0x90, 0xc2, "IPaddress:\IP:" );
+	IPLG( 0, 0, 0x90, 0xc2, "Subnetmask:\SNM:" );
+	IPLG( 0, 0, 0x90, 0xc2, "StandardGateway:\SG:" );
+	g[33] -= 12;	
+}
+
+void PROFINET::DCP::Device Role( )
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "DeviceRoleDetails:\DRD:" );
+		CEQU( 0, l[1], 0, 0x14, "Unknown" );
+		CEQU( 1, l[1], 0, 0x14, "IO-Device" );
+		CEQU( 2, l[1], 0, 0x14, "IO-Controller" );
+		CEQU( 3, l[1], 0, 0x14, "IO-Multidevice" );
+		CEQU( 4, l[1], 0, 0x14, "PN-Supervisor" );
+		if (l[1] > 4)
+		{
+			LABL( 0, 0, 0, 0x14, "Unknown" );
+		}
+	HBYT( 0, 0, 0x90, 0xc2, "Reserved:" );
+	g[33] -= 2;
+}
+
+void PROFINET::DCP::Device ID( )
+{
+	HWRD( 0, 0, 0x90, 0xc2, "VendorID:\VID:" );
+	HWRD( 0, 0, 0x90, 0xc2, "DeviceID:\DID:" );
+	g[33] -= 4;	
+}
+
+void PROFINET::DCP::Manufacturer specific( )
+{
+	CHR#( 0, g[32], 0x90, 0xc2, "Data:/D:" );
+	g[33] -= g[32];
+}
+
+void PROFINET::DCP::Device Options( )
+{
+	//DGLB( 0, g[32], 0x90, 0xc2, "g[32]:" );
+	g[33] -= g[32];
+	while (g[32] > 0)
+	{
+		// Header
+			LABL( 0, 0, 0, 0xb7, "Block:" );
+			GBYT( 0, l[6] );			
+			GBYT( 1, l[7] );			
+			CST#( 0, l[6], 0, 0x07, PROFINET::DCP::Options );
+			CLSE( 0, 0, 0, 0x07, "Reserved");
+			SHFL( 16 , l[6] );
+			l[7] += l[6];
+			LABL( 0, 0, 0, 0x07, " / " );
+			CST#( 0, l[7], 0, 0x07, PROFINET::DCP::SUBOPTIONS );
+			CLSE( 0, 0, 0, 0x07, "Reserved");
+		// EOF Header
+		DBYT( 0, l[6], 0x90, 0xc2, "Option:" );
+			CST#( 0, l[6], 0, 0x14, PROFINET::DCP::Options );
+			CLSE( 0, l[6], 0, 0x14, "Reserved");
+		SHFL( 16 , l[6] );
+		DBYT( 0, l[7], 0x90, 0xc2, "Suboption:" );
+		l[7] += l[6];
+			CST#( 0, l[7], 0, 0x14, PROFINET::DCP::SUBOPTIONS );
+			CLSE( 0, l[7], 0, 0x14, "Reserved");
+			LABL( 0, 0 , 0, 0xb8);
+		g[32] -= 2;
+	}
+	
+}
+
+void PROFINET::DCP::Name of Station( )
+{
+	CHR#( 0, g[32], 0x90, 0xc2, "Data:" );
+	g[33] -= g[32];
+}
+
+void PROFINET::DCP::UTF8( )
+{
+	CHR#( 0, g[32], 0x90, 0xc2, "Data:" );
+	g[33] -= g[32];
+	TRTS;
+}
+
+void PROFINET::DCP::Response()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Response:" );
+		CST#( 0, l[1], 0, 0x14, PROFINET::DCP::Options );
+		CLSE( 0, l[1], 0, 0x14, "Reserved");
+	DBYT( 0, l[2], 0x90, 0xc2, "Suboption:" );
+		SHFL( 16 , l[1] );
+		l[2] += l[1];
+		CST#( 0, l[2], 0, 0x14, PROFINET::DCP::SUBOPTIONS );
+		CLSE( 0, l[2], 0, 0x14, "Reserved");	
+	DBYT( 0, l[3], 0x90, 0xc2, "BlockError:" );
+	g[33] -= g[32];
+}
+void PROFINET::DCP::Alias Name()
+{
+	CHR#( 0, g[32], 0x90, 0xc2, "Data:" );
+	g[33] -= g[32];
+}
+str# PROFINET::DCP::Options;
+0x00	|	Reserved;
+0x01	|	IP;
+0x02	|	Device properties;
+0x03	|	DHCP;
+0x04	|	LLDP;
+0x05	|	Control;
+0x06	|	Device Initiative;
+0x80	|	Manufacturer specific;
+0x81	|	Manufacturer specific;
+0x82	|	Manufacturer specific;
+0x83	|	Manufacturer specific;
+0x84	|	Manufacturer specific;
+0x85	|	Manufacturer specific;
+0x86	|	Manufacturer specific;
+0xff	|	All Selector;
+
+str# PROFINET::DCP::Option::Call;
+0	|	PROFINET::DCP::ENDLOOP;
+
+str# PROFINET::DCP::SUBOPTIONS;
+0x00010001	|	MAC address;
+0x00010002	|	IP parameter;
+0x00020001	|	Manufacturer specific (Type of Station);
+0x00020002	|	Name of Station;
+0x00020003	|	Device ID;
+0x00020004	|	Device Role;
+0x00020005	|	Device Options;
+0x00020006	|	Alias Name;
+0x0003000C	|	Host name;
+0x0003002B	|	Vendor specific;
+0x00030036	|	Server identifier;
+0x00030037	|	Parameter request list;
+0x0003003C	|	Class identifier;
+0x0003003D	|	DHCP client identifier;
+0x00030051	|	FQDN ( Fully Qualified Domain Name );
+0x00030061	|	UUID/GUID-based Client;
+0x000300FF	|	Control DHCP for address resolution;
+0x00050001	|	Start Transaction;
+0x00050002	|	End Transaction;
+0x00050003	|	Signal;
+0x00050004	|	Response;
+0x00050005	|	Reset Factory Settings;
+0x00060000	|	Reserved;
+0x00060001	|	Device Initiative;
+0x00ff00ff	|	All Selector;
+
+str# PROFINET::DCP::SUBOPTIONS::Call;
+0x00000000	|	PROFINET::DCP::ENDLOOP;
+0x00010002	|	PROFINET::DCP::IP parameter;
+0x00020004	|	PROFINET::DCP::Device Role;
+0x00020001	|	PROFINET::DCP::Manufacturer specific;
+0x00020002	|	PROFINET::DCP::Name of Station;
+0x00020005	|	PROFINET::DCP::Device Options;
+0x00020003	|	PROFINET::DCP::Device ID;
+0x00020006	|	PROFINET::DCP::Alias Name;
+0x00050004	|	PROFINET::DCP::Response;
+
+str# PROFINET::DCP::Service-ID;
+0	|	Reserved;
+1	|	Manufacturer specific;
+2	|	Manufacturer specific;
+3	|	Get;
+4	|	Set;
+5	|	Identify;
+6	|	Hello;
+
+
+void PROFINET::DCP::ENDLOOP( )
+{
+	g[33] = 0;
+	LABL( 0, 0 , 0, 0xb8);
+	TRTS;
+}
+
+void PROFINET::DCP::UTF8Strg( )
+{
+
+}
+
+
+
+void PROFINET::DCP::Universal::Deep( )
+{
+	
+}
+
+//DCErpc-pn-io
+
+str# PROFINET::DCERPC::block_type;
+0x0000	|	Reserved;
+0x0001	|	Alarm Notification High;
+0x0002	|	Alarm Notification Low;
+0x0008	|	IODWriteReqHeader;
+0x8008	|	IODWriteResHeader;
+0x0009	|	IODReadReqHeader;
+0x8009	|	IODReadResHeader;
+0x0010	|	DiagnosisData;
+0x0011	|	Reserved;
+0x0012	|	ExpectedIdentificationData;
+0x0013	|	RealIdentificationData;
+0x0014	|	SubstituteValue;
+0x0015	|	RecordInputDataObjectElement;
+0x0016	|	RecordOutputDataObjectElement;
+0x0017	|	reserved;
+0x0018	|	ARData;
+0x0019	|	LogData;
+0x001A	|	APIData;
+0x0020	|	I&M0;
+0x0021	|	I&M1;
+0x0022	|	I&M2;
+0x0023	|	I&M3;
+0x0024	|	I&M4;
+0x0025	|	I&M5;
+0x0026	|	I&M6;
+0x0027	|	I&M7;
+0x0028	|	I&M8;
+0x0029	|	I&M9;
+0x002A	|	I&M10;
+0x002B	|	I&M11;
+0x002C	|	I&M12;
+0x002D	|	I&M13;
+0x002E	|	I&M14;
+0x002F	|	I&M15;
+0x0030	|	I&M0FilterDataSubmodul;
+0x0031	|	I&M0FilterDataModul;
+0x0032	|	I&M0FilterDataDevice;
+0x8001	|	Alarm Ack High;
+0x8002	|	Alarm Ack Low;
+0x0101	|	ARBlockReq;
+0x8101	|	ARBlockRes;
+0x0102	|	IOCRBlockReq;
+0x8102	|	IOCRBlockRes;
+0x0103	|	AlarmCRBlockReq;
+0x8103	|	AlarmCRBlockRes;
+0x0104	|	ExpectedSubmoduleBlockReq;
+0x8104	|	ModuleDiffBlock;
+0x0105	|	PrmServerBlockReq;
+0x8105	|	PrmServerBlockRes;
+0x0106	|	MCRBlockReq;
+0x0107	|	SubFrameBlock;
+0x0108	|	IRTFrameBlock;
+0x0110	|	IODBlockReq;
+0x8110	|	IODBlockRes;
+0x0111	|	IODBlockReq;
+0x8111	|	IODBlockRes;
+0x0112	|	IOXBlockReq;
+0x8112	|	IOXBlockRes;
+0x0113	|	IOXBlockReq;
+0x8113	|	IOXBlockRes;
+0x0114	|	ReleaseBlockReq;
+0x8114	|	ReleaseBlockRes;
+0x0115	|	ARRPCServerBlockReq;
+0x8115	|	ARRPCServerBlockRes;
+0x0116	|	IOXBlockReq;
+0x8116	|	IOXBlockRes;
+0x0117	|	IOXBlockReq;
+0x8117	|	IOXBlockRes;
+0x0200	|	PDPortDataCheck;
+0x0201	|	PDevData;
+0x0202	|	PDPortDataAdjust;
+0x0203	|	PDSyncData;
+0x0204	|	IsochronousModeData;
+0x0205	|	PDIRData;
+0x0206	|	PDIRGlobalData;
+0x0207	|	PDIRFrameData;
+0x0208	|	PDIRBeginEndData;
+0x0209	|	AdjustDomainBoundary;
+0x020A	|	CheckPeers;
+0x020B	|	CheckLineDelay;
+0x020C	|	Checking MAUType;
+0x020E	|	Adjusting MAUType;
+0x020F	|	PDPortDataReal;
+0x0210	|	AdjustMulticastBoundary;
+0x0211	|	PDInterfaceMrpDataAdjust;
+0x0212	|	PDInterfaceMrpDataReal;
+0x0213	|	PDInterfaceMrpDataCheck;
+0x0214	|	PDPortMrpDataAdjust;
+0x0215	|	PDPortMrpDataReal;
+0x0216	|	Media redundancy manager parameters;
+0x0217	|	Media redundancy client parameters;
+0x0218	|	Media redundancy RT mode for manager;
+0x0219	|	Media redundancy ring state data;
+0x021A	|	Media redundancy RT ring state data;
+0x021B	|	Adjust LinkState;
+0x021C	|	Checking LinkState;
+0x021D	|	Media redundancy RT mode for clients;
+0x021E	|	CheckSyncDifference;
+0x021F	|	CheckMAUTypeDifference;
+0x0220	|	PDPortFODataReal;
+0x0221	|	Reading real fiber optic manufacturerspecific data;
+0x0222	|	PDPortFODataAdjust;
+0x0223	|	PDPortFODataCheck;
+0x0224	|	Adjust PeerToPeerBoundary;
+0x0225	|	Adjust DCPBoundary;
+0x0226	|	Adjust PreambelLength;
+0x0227	|	Adjust FastForwardingBoundary;
+0x0228	|	Reading real fiber optic diagnosis data;
+0x022A	|	PDIRSubframeData;
+0x022B	|	SubframeBlock;
+0x0230	|	PDNCDataCheck;
+0x0231	|	MrpInstanceDataAdjust;
+0x0232	|	MrpInstanceDataReal;
+0x0233	|	MrpInstanceDataCheck;
+0x0240	|	PDInterfaceDataReal;
+0x0250	|	PDInterfaceAdjust;
+0x0251	|	PDPortStatistic;
+0x0400	|	MultipleBlockHeader;
+0x0401	|	COContainerContent;
+0x0500	|	RecordDataReadQuery;
+0x0600	|	FSHello;
+0x0601	|	FSParameterBlock;
+0x0608	|	PDInterfaceFSUDataAdjust;
+0x0609	|	ARFSUDataAdjust;
+0x0700	|	AutoConfiguration;
+0x0701	|	AutoConfiguration Communication;
+0x0702	|	AutoConfiguration Configuration;
+0x0F00	|	MaintenanceItem;
+0xB050	|	Ext-PLL Control / RTC+RTA SyncID 0 (EDD);
+0xB051	|	Ext-PLL Control / RTA SyncID 1 (GSY);
+0xB060	|	EDD Trace Unit (EDD);
+0xB061	|	EDD Trace Unit (EDD);
+0xB070	|	OHA Info (OHA);
+0x0F01	|	Upload selected Records within Upload&RetrievalItem;
+0x0F02	|	iParameterItem;
+0x0F03	|	Retrieve selected Records within Upload&RetrievalItem;
+0x0F04	|	Retrieve all Records within Upload&RetrievalItem;
+
+str# PROFINET::DCERPC::block_type::call;
+0x0000	|	PROFINET::DCERPC::BLOCK::Reserved;							//done
+0x0001	|	PROFINET::DCERPC::BLOCK::Alarm Notification High;
+0x0002	|	PROFINET::DCERPC::BLOCK::Alarm Notification Low;			//done
+0x0008	|	PROFINET::DCERPC::BLOCK::IODWriteReqHeader;
+0x8008	|	PROFINET::DCERPC::BLOCK::IODWriteResHeader;
+0x0009	|	PROFINET::DCERPC::BLOCK::IODReadReqHeader;
+0x8009	|	PROFINET::DCERPC::BLOCK::IODReadResHeader;
+0x0010	|	PROFINET::DCERPC::BLOCK::DiagnosisData;
+0x0011	|	PROFINET::DCERPC::BLOCK::Reserved;							//done
+0x0012	|	PROFINET::DCERPC::BLOCK::ExpectedIdentificationData;
+0x0013	|	PROFINET::DCERPC::BLOCK::RealIdentificationData;
+0x0014	|	PROFINET::DCERPC::BLOCK::SubstituteValue;
+0x0015	|	PROFINET::DCERPC::BLOCK::RecordInputDataObjectElement;
+0x0016	|	PROFINET::DCERPC::BLOCK::RecordOutputDataObjectElement;
+0x0017	|	PROFINET::DCERPC::BLOCK::reserved;							//done
+0x0018	|	PROFINET::DCERPC::BLOCK::ARData;
+0x0019	|	PROFINET::DCERPC::BLOCK::LogData;
+0x001A	|	PROFINET::DCERPC::BLOCK::APIData;
+0x0020	|	PROFINET::DCERPC::BLOCK::I&M0;
+0x0021	|	PROFINET::DCERPC::BLOCK::I&M1;
+0x0022	|	PROFINET::DCERPC::BLOCK::I&M2;
+0x0023	|	PROFINET::DCERPC::BLOCK::I&M3;
+0x0024	|	PROFINET::DCERPC::BLOCK::I&M4;
+0x0025	|	PROFINET::DCERPC::BLOCK::I&M5;
+0x0026	|	PROFINET::DCERPC::BLOCK::I&M6;
+0x0027	|	PROFINET::DCERPC::BLOCK::I&M7;
+0x0028	|	PROFINET::DCERPC::BLOCK::I&M8;
+0x0029	|	PROFINET::DCERPC::BLOCK::I&M9;
+0x002A	|	PROFINET::DCERPC::BLOCK::I&M10;
+0x002B	|	PROFINET::DCERPC::BLOCK::I&M11;
+0x002C	|	PROFINET::DCERPC::BLOCK::I&M12;
+0x002D	|	PROFINET::DCERPC::BLOCK::I&M13;
+0x002E	|	PROFINET::DCERPC::BLOCK::I&M14;
+0x002F	|	PROFINET::DCERPC::BLOCK::I&M15;
+0x0030	|	PROFINET::DCERPC::BLOCK::I&M0FilterDataSubmodul;
+0x0031	|	PROFINET::DCERPC::BLOCK::I&M0FilterDataModul;
+0x0032	|	PROFINET::DCERPC::BLOCK::I&M0FilterDataDevice;
+0x8001	|	PROFINET::DCERPC::BLOCK::Alarm Ack High;
+0x8002	|	PROFINET::DCERPC::BLOCK::Alarm Ack Low;
+0x0101	|	PROFINET::DCERPC::BLOCK::ARBlockReq;						//done
+0x8101	|	PROFINET::DCERPC::BLOCK::ARBlockRes;						//done
+0x0102	|	PROFINET::DCERPC::BLOCK::IOCRBlockReq;						//done
+0x8102	|	PROFINET::DCERPC::BLOCK::IOCRBlockRes;						//done
+0x0103	|	PROFINET::DCERPC::BLOCK::AlarmCRBlockReq;					//done
+0x8103	|	PROFINET::DCERPC::BLOCK::AlarmCRBlockRes;					//done
+0x0104	|	PROFINET::DCERPC::BLOCK::ExpectedSubmoduleBlockReq;			//done
+0x8104	|	PROFINET::DCERPC::BLOCK::ModuleDiffBlock;					//done
+0x0105	|	PROFINET::DCERPC::BLOCK::PrmServerBlockReq;
+0x8105	|	PROFINET::DCERPC::BLOCK::PrmServerBlockRes;
+0x0106	|	PROFINET::DCERPC::BLOCK::MCRBlockReq;
+0x0107	|	PROFINET::DCERPC::BLOCK::SubFrameBlock;
+0x0108	|	PROFINET::DCERPC::BLOCK::IRTFrameBlock;
+0x0110	|	PROFINET::DCERPC::BLOCK::IODBlockReq;					//done
+0x8110	|	PROFINET::DCERPC::BLOCK::IODBlockRes;					//done
+0x0111	|	PROFINET::DCERPC::BLOCK::IODBlockReq;					//done
+0x8111	|	PROFINET::DCERPC::BLOCK::IODBlockRes;					//done
+0x0112	|	PROFINET::DCERPC::BLOCK::IOXBlockReq;					//done
+0x8112	|	PROFINET::DCERPC::BLOCK::IOXBlockRes;					//done
+0x0113	|	PROFINET::DCERPC::BLOCK::IOXBlockReq;					//done
+0x8113	|	PROFINET::DCERPC::BLOCK::IOXBlockRes;					//done
+0x0114	|	PROFINET::DCERPC::BLOCK::ReleaseBlockReq;
+0x8114	|	PROFINET::DCERPC::BLOCK::ReleaseBlockRes;
+0x0115	|	PROFINET::DCERPC::BLOCK::ARRPCServerBlockReq;
+0x8115	|	PROFINET::DCERPC::BLOCK::ARRPCServerBlockRes;
+0x0116	|	PROFINET::DCERPC::BLOCK::IOXBlockReq;
+0x8116	|	PROFINET::DCERPC::BLOCK::IOXBlockRes;
+0x0117	|	PROFINET::DCERPC::BLOCK::IOXBlockReq;
+0x8117	|	PROFINET::DCERPC::BLOCK::IOXBlockRes;
+0x0200	|	PROFINET::DCERPC::BLOCK::PDPortDataCheck;
+0x0201	|	PROFINET::DCERPC::BLOCK::PDevData;
+0x0202	|	PROFINET::DCERPC::BLOCK::PDPortDataAdjust;
+0x0203	|	PROFINET::DCERPC::BLOCK::PDSyncData;
+0x0204	|	PROFINET::DCERPC::BLOCK::IsochronousModeData;
+0x0205	|	PROFINET::DCERPC::BLOCK::PDIRData;
+0x0206	|	PROFINET::DCERPC::BLOCK::PDIRGlobalData;
+0x0207	|	PROFINET::DCERPC::BLOCK::PDIRFrameData;
+0x0208	|	PROFINET::DCERPC::BLOCK::PDIRBeginEndData;
+0x0209	|	PROFINET::DCERPC::BLOCK::AdjustDomainBoundary;
+0x020A	|	PROFINET::DCERPC::BLOCK::CheckPeers;
+0x020B	|	PROFINET::DCERPC::BLOCK::CheckLineDelay;
+0x020C	|	PROFINET::DCERPC::BLOCK::Checking MAUType;
+0x020E	|	PROFINET::DCERPC::BLOCK::Adjusting MAUType;
+0x020F	|	PROFINET::DCERPC::BLOCK::PDPortDataReal;
+0x0210	|	PROFINET::DCERPC::BLOCK::AdjustMulticastBoundary;
+0x0211	|	PROFINET::DCERPC::BLOCK::PDInterfaceMrpDataAdjust;
+0x0212	|	PROFINET::DCERPC::BLOCK::PDInterfaceMrpDataReal;
+0x0213	|	PROFINET::DCERPC::BLOCK::PDInterfaceMrpDataCheck;
+0x0214	|	PROFINET::DCERPC::BLOCK::PDPortMrpDataAdjust;
+0x0215	|	PROFINET::DCERPC::BLOCK::PDPortMrpDataReal;
+0x0216	|	PROFINET::DCERPC::BLOCK::Media redundancy manager parameters;
+0x0217	|	PROFINET::DCERPC::BLOCK::Media redundancy client parameters;
+0x0218	|	PROFINET::DCERPC::BLOCK::Media redundancy RT mode for manager;
+0x0219	|	PROFINET::DCERPC::BLOCK::Media redundancy ring state data;
+0x021A	|	PROFINET::DCERPC::BLOCK::Media redundancy RT ring state data;
+0x021B	|	PROFINET::DCERPC::BLOCK::Adjust LinkState;
+0x021C	|	PROFINET::DCERPC::BLOCK::Checking LinkState;
+0x021D	|	PROFINET::DCERPC::BLOCK::Media redundancy RT mode for clients;
+0x021E	|	PROFINET::DCERPC::BLOCK::CheckSyncDifference;
+0x021F	|	PROFINET::DCERPC::BLOCK::CheckMAUTypeDifference;
+0x0220	|	PROFINET::DCERPC::BLOCK::PDPortFODataReal;
+0x0221	|	PROFINET::DCERPC::BLOCK::Reading real fiber optic manufacturerspecific data;
+0x0222	|	PROFINET::DCERPC::BLOCK::PDPortFODataAdjust;
+0x0223	|	PROFINET::DCERPC::BLOCK::PDPortFODataCheck;
+0x0224	|	PROFINET::DCERPC::BLOCK::Adjust PeerToPeerBoundary;
+0x0225	|	PROFINET::DCERPC::BLOCK::Adjust DCPBoundary;
+0x0226	|	PROFINET::DCERPC::BLOCK::Adjust PreambelLength;
+0x0227	|	PROFINET::DCERPC::BLOCK::Adjust FastForwardingBoundary;
+0x0230	|	PROFINET::DCERPC::BLOCK::PDNCDataCheck;
+0x0240	|	PROFINET::DCERPC::BLOCK::PDInterfaceDataReal;
+0x0400	|	PROFINET::DCERPC::BLOCK::MultipleBlockHeader;
+0x0500	|	PROFINET::DCERPC::BLOCK::RecordDataReadQuery;
+0x0600	|	PROFINET::DCERPC::BLOCK::FSHello;
+0x0601	|	PROFINET::DCERPC::BLOCK::FSParameterBlock;
+0x0608	|	PROFINET::DCERPC::BLOCK::PDInterfaceFSUDataAdjust;
+0x0609	|	PROFINET::DCERPC::BLOCK::ARFSUDataAdjust;
+0x0700	|	PROFINET::DCERPC::BLOCK::AutoConfiguration;
+0x0701	|	PROFINET::DCERPC::BLOCK::AutoConfiguration Communication;
+0x0702	|	PROFINET::DCERPC::BLOCK::AutoConfiguration Configuration;
+0x0F00	|	PROFINET::DCERPC::BLOCK::MaintenanceItem;
+0x0F01	|	PROFINET::DCERPC::BLOCK::Upload selected Records within Upload&RetrievalItem;
+0x0F02	|	PROFINET::DCERPC::BLOCK::iParameterItem;
+0x0F03	|	PROFINET::DCERPC::BLOCK::Retrieve selected Records within Upload&RetrievalItem;
+0x0F04	|	PROFINET::DCERPC::BLOCK::Retrieve all Records within Upload&RetrievalItem;

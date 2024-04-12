@@ -1,0 +1,337 @@
+* WTP - Wireless Transaction Protocol
+
+void WTP()
+{
+	LABL( 0, 0, 0, 0xB1, "Wireless Transaction Protocol\WTP:");
+	BBIT 8 4 90 c9 Flags:\Flags:;
+	DECR 1;
+	BBIT 1 6 5 c9;
+	 CEQU 1 6 0 54 1... .... Continue Flag: TPI Present;
+	 CEQU 0 6 0 54 0... .... Continue Flag: No TPI;
+	BBIT 4 7 5 c9;
+	 CEQU 1 7 0 54 .000 1... PDU Type: Invoke (1);
+	 CEQU 2 7 0 54 .001 0... PDU Type: Result (2);
+	 CEQU 3 7 0 54 .001 1... PDU Type: Ack (3);
+	 CEQU 4 7 0 54 .010 0... PDU Type: Abort (4);
+	 CEQU 5 7 0 54 .010 1... PDU Type: Segmented Invoke (5);
+	 CEQU 6 7 0 54 .011 0... PDU Type: Segmented Result (6);
+	 CEQU 7 7 0 54 .011 1... PDU Type: Negative Ack (7);
+	 if (g[7] == 4)
+	 {
+	 	BBIT 3 4 5 c9;
+		CEQU 1 4 0 54 .... .001 Abort Type: User;
+		SKIP 8;
+	 }
+	BBIT 2 4 5 c9;
+	 CEQU 0 4 0 54 .... .0.. TVE/TOK Flag: False;
+	 CEQU 1 4 0 54 .... .01. GTR/Trailer Flags: Last Packet of Message;
+	 CEQU 2 4 0 54 .... .10. GTR/Trailer Flags: Last Packet of Group;
+	 CEQU 3 4 0 54 .... .11. Trailer Flags: Re-assembly not support;
+	BBIT 1 4 5 c9;
+	 CEQU 1 4 0 54 .... ...1 Re-Transmission Indicator (RID): Set;
+	 CEQU 0 4 0 54 .... ...0 Re-Transmission Indicator (RID): First Transmission;
+	LABL( 0, 0, 0, 0xc8);
+	BBIT( 1, g[4], 0x90, 0xc2, "TID Response:\TID Rsp:");
+	 CEQU 0 4 0 14 Original;
+	 CEQU 1 4 0 14 Response;
+	BBIT( 15, g[4], 0x90, 0xc2, "Transaction ID:\TID:");
+	LABL( 0, 0, 0, 0x14, "(");
+	DGLB 0 4 0 14;
+	LABL( 0, 0, 0, 0x04, ")");
+	if (g[6] == 1)
+	{
+		WTP::TPI();
+	}
+	TSB#( 0, g[7], 0, 0, WTP::PDU_Type);
+	if (g[7] == 3)
+	{
+		TRTS;
+	}
+	if (g[7] == 4)
+	{
+		WTP::Abort();
+		TRTS;
+	}
+	if (g[7] == 6)
+	{
+		TRTS;
+	}
+	if (g[7] == 7)
+	{
+		TRTS;
+	}
+	l[1] = pb[0];
+	TST#( 0, l[1], 0, 0, WTP::WSP_Check);
+*	l[1] = pb[1];
+*	if (l[1] == 0)
+*	{
+*		TRTS;
+*	}
+	LABL( 0, 0, 0, 0xb8);
+	l[1] = pb[0];
+	TST#( 0, l[1], 0, 0, WTP::WSP_Check1);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WTP::Transaction_Class()
+{
+	BBIT 8 2 90 c9 Transaction Class:\Class:;
+	DECR 1;
+	BBIT 2 2 5 c9;
+	 CEQU 2 2 0 54 10.. .... Version: Undefined;
+	 CEQU 0 2 0 54 00.. .... Version: Current;
+	BBIT 1 2 5 c9;
+	 CEQU 1 2 0 54 ..1. .... TIDNew: TID is New;
+	 CEQU 0 2 0 54 ..0. .... TIDNew: TID is Valid;
+	BBIT 1 2 5 c9;
+	 CEQU 1 2 0 54 ...1 .... U/P Flag: User Acknowledgement required;
+	 CEQU 0 2 0 54 ...0 .... U/P Flag: User Acknowledgement optional;
+	BBIT 2 2 5 c9;
+	 CEQU 0 2 0 54 .... 00.. Reserved;
+	 CEQU 1 2 0 54 .... 01.. Reserved;
+	 CEQU 1 2 0 54 .... 10.. Reserved;
+	 CEQU 3 2 0 54 .... 11.. Reserved;
+	BBIT 2 2 5 c9;
+	 CEQU 0 2 0 54 .... ..00 Transaction Class: Unreliable Invoke without Result (0);
+	 CEQU 1 2 0 54 .... ..01 Transaction Class: Reliable Invoke without Result (1);
+	 CEQU 2 2 0 54 .... ..10 Transaction Class: Reliable Invoke with Reliable Result (2);
+	 CEQU 3 2 0 54 .... ..10 Transaction Class: Unknown (3);
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WTP::TPI()
+{
+	BBIT 8 4 90 c9 TPI:;
+	DECR 1;
+	BBIT 1 3 5 c9;
+	 CEQU 0 3 0 54 0... .... Continue Flag;
+	 CEQU 1 3 0 54 1... .... Continue Flag;
+	BBIT 4 2 5 c9;
+	 CEQU 3 2 0 54 .001 1... Transport Information Item;
+	 CEQU 2 2 0 54 .001 0... Transport Information Item;
+	 CEQU 1 2 0 54 .000 1... Transport Information Item;
+	 CEQU 0 2 0 54 .000 0... Transport Information Item;
+	BBIT 1 2 5 c9;
+	 CEQU 1 2 0 54 .... .1.. Short TPI;
+	 CEQU 0 2 0 54 .... .0.. Short TPI;
+	BBIT 2 2 5 c9;
+	 CEQU 3 2 0 54 .... ..11 TPI Length;
+	 CEQU 2 2 0 54 .... ..10 TPI Length;
+	 CEQU 1 2 0 54 .... ..01 TPI Length;
+	 CEQU 0 2 0 54 .... ..00 TPI Length;
+	if (g[6] == 0)
+	{
+		DBYT 0 1 90 c2 Packet Sequence Number:;
+	}
+	WTP::TPI_Option;
+	LABL( 0, 0, 0, 0xb8);
+*	GBYT 0 1;
+*	 TEQU 13 1 0 0 WTP::TPI_Option;
+}
+
+void WTP::TPI_Option()
+{
+	LABL( 0, 0, 0, 0xb7, "TPI - Option");
+	if (g[4] == 0x13)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Option:\");
+		CST#( 0, l[1], 0, 0x14, WTP::TPI_Option_Str);
+		HWRD( 0, l[1], 0x90, 0xc2, "Option Value:\");
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	if (g[4] == 0x14)
+	{
+		DBYT( 0, l[5], 0x90, 0xc2, "Length:\");
+		HBYT( 0, l[1], 0x90, 0xc2, "Option:\");
+		l[5] -= 1;
+		CST#( 0, l[1], 0, 0x14, WTP::TPI_Option_Str);
+		HEX#( 0, l[5], 0x90, 0xc2, "Option Value:\");
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	if (g[4] == 0x19)
+	{
+		DBYT 0 1 90 c2 Packet Sequence Num:;
+		LABL( 0, 0, 0, 0xb8);
+		TRTS;
+	}
+	if (g[4] == 0x99)
+	{
+		DBYT 0 1 90 c2 Packet Sequence Num:;
+		LABL( 0, 0, 0, 0xb8);
+		LABL( 0, 0, 0, 0xb8);
+		WTP::TPI();
+		TRTS;	
+	}
+}
+
+void WTP::continuation()
+{
+	LABL( 0, 0, 0, 0xb1, "WAP Binary XML");
+	LABL( 0, 0, 0x90, 0xc4, "Continuation of existing WAP Binary XML stream");
+	l[1] = pw[0];
+	if (l[1] == 1)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "End of Inline String:\");
+		HBYT( 0, l[1], 0x90, 0xc2, "Unknown End Tag:\");
+		LABL( 0, 0, 0, 0x14 "</?>");
+		WAP::Data();
+	}
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void WTP::Abort()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Abort Reason:");
+	CST#( 0, l[1], 0, 0x14, WTP::Abort_Code_Str);
+}
+
+void WTP::Invoke()
+{
+	WTP::Transaction_Class();
+}
+
+void WTP::Ack()
+{
+	TRTS;
+}
+
+void WTP::Segmented_Invoke()
+{
+	DBYT(0, l[1], 0x90, 0xc2, "Packet Sequence Num:");
+	TRTS;
+}
+
+void WTP::Segmented_Result()
+{
+	DBYT(0, l[1], 0x90, 0xc2, "Packet Sequence Num:");
+	WTP::continuation();
+	TRTS;
+}
+
+void WTP::Negative_Ack()
+{
+	DBYT(0, l[1], 0x90, 0xc2, "Missing Packet:");
+	DBYT(0, l[1], 0x90, 0xc2, "Packet Sequence Num:");
+	TRTS;
+}
+
+str# WTP::PDU_Type;
+	1 | WTP::Invoke;
+*	2 | WTP::Result;
+	3 | WTP::Ack;
+*	4 | WTP::Abort;
+	5 | WTP::Segmented_Invoke;
+	6 | WTP::Segmented_Result;
+	7 | WTP::Negative_Ack;
+
+str# WTP::WSP_Check;
+*	 1 | WTP::continuation;
+	 2 | WSP:Label;
+	 3 | WSP:Label;
+	 4 | WSP:Label;
+*	 0x19 | WTP::TPI;
+*	 0x99 | WTP::TPI;
+/*	 0xE0 | WTP::Abort_Code;
+	 0xE1 | WTP::Abort_Code;
+	 0xE2 | WTP::Abort_Code;
+	 0xE3 | WTP::Abort_Code;
+	 0xE4 | WTP::Abort_Code;
+	 0xE5 | WTP::Abort_Code;
+	 0xE6 | WTP::Abort_Code;
+	 0xE7 | WTP::Abort_Code;
+	 0xE8 | WTP::Abort_Code;
+	 0xE9 | WTP::Abort_Code;
+	 0xEA | WTP::Abort_Code;*/
+
+str# WTP::WSP_Check1;
+	 1 | WSP:Label;
+	 5 | WSP:Label;
+	 0x40 | WSP:Label;
+	 0x41 | WSP:Label;
+	 0x42 | WSP:Label;
+	 0x43 | WSP:Label;
+	 0x44 | WSP:Label;
+/*	 0x45 | WSP:Label;
+	 0x46 | WSP:Label;
+	 0x47 | WSP:Label;
+	 0x48 | WSP:Label;
+	 0x49 | WSP:Label;
+	 0x4A | WSP:Label;
+	 0x4B | WSP:Label;
+	 0x4C | WSP:Label;
+	 0x4D | WSP:Label;
+	 0x4E | WSP:Label;
+	 0x4F | WSP:Label; 
+	 0x50 | WSP:Label;
+	 0x51 | WSP:Label;
+	 0x52 | WSP:Label;
+	 0x53 | WSP:Label;
+	 0x54 | WSP:Label;
+	 0x55 | WSP:Label;
+	 0x56 | WSP:Label;
+	 0x57 | WSP:Label;
+	 0x58 | WSP:Label;
+	 0x59 | WSP:Label;
+	 0x5A | WSP:Label;
+	 0x5B | WSP:Label;
+	 0x5C | WSP:Label;
+	 0x5D | WSP:Label;
+	 0x5E | WSP:Label;
+	 0x5F | WSP:Label; */
+	 0x60 | WSP:Label;
+/*	 0x61 | WSP:Label;
+	 0x62 | WSP:Label;
+	 0x63 | WSP:Label;
+	 0x64 | WSP:Label;
+	 0x65 | WSP:Label;
+	 0x66 | WSP:Label;
+	 0x67 | WSP:Label;
+	 0x68 | WSP:Label;
+	 0x69 | WSP:Label;
+	 0x6A | WSP:Label;
+	 0x6B | WSP:Label;
+	 0x6C | WSP:Label;
+	 0x6D | WSP:Label;
+	 0x6E | WSP:Label;
+	 0x6F | WSP:Label; 
+	 0x70 | WSP:Label;
+	 0x71 | WSP:Label;
+	 0x72 | WSP:Label;
+	 0x73 | WSP:Label;
+	 0x74 | WSP:Label;
+	 0x75 | WSP:Label;
+	 0x76 | WSP:Label;
+	 0x77 | WSP:Label;
+	 0x78 | WSP:Label;
+	 0x79 | WSP:Label;
+	 0x7A | WSP:Label;
+	 0x7B | WSP:Label;
+	 0x7C | WSP:Label;
+	 0x7D | WSP:Label;
+	 0x7E | WSP:Label;
+	 0x7F | WSP:Label; */
+
+str# WTP::TPI_Option_Str;
+	1 | Maximum Receive Unit;
+	2 | Total Message Size;
+	3 | Delay Transmission Timer;
+	4 | Maximum Group;
+	5 | Current TID;
+	6 | No Cached TID;
+
+str# WTP::Abort_Code_Str;
+	0xE0 | Protocol error, illegal PDU received;
+	0xE1 | Session has been disconnected;
+	0xE2 | Session has been suspended;
+	0xE3 | Session has been resumed;
+	0xE4 | The peer is congested and can not process the SDU;
+	0xE5 | Session Connect Failed;
+	0xE6 | Maximum Receive Unit size was exceeded;
+	0xE7 | Maximum Outstanding Request was exceeded;
+	0xE8 | Peer Request;
+	0xE9 | Network Error;
+	0xEA | User Request;
+
+* end WTP

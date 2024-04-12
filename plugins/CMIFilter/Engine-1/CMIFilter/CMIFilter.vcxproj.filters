@@ -1,0 +1,564 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{d663f4ca-4486-43e7-93ea-e5650d6bba65}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Helium Files">
+      <UniqueIdentifier>{db76f677-6fdc-4eb4-8972-33319106b883}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Framework Files">
+      <UniqueIdentifier>{9d6cd543-7b87-4bf3-aaad-d98a6f2eacf2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files">
+      <UniqueIdentifier>{2b407b82-d4db-4f69-b50d-f914315db586}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\Win32">
+      <UniqueIdentifier>{d908b134-57dd-4fe5-b5bf-b6c8a3604032}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Library Files\x64">
+      <UniqueIdentifier>{2a731966-ad73-484e-8aa2-ec4e99813bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Plugin Files">
+      <UniqueIdentifier>{5eaa5c8a-6e75-4ced-8079-af581e03686b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Options">
+      <UniqueIdentifier>{fc9246e2-04e4-48bc-889a-a3996c1d3f28}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{265c1a9a-11e4-4bd9-99db-8c2100083532}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Stdafx">
+      <UniqueIdentifier>{a9676f64-90cf-477e-af09-3e86d5f8e126}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Helium\hecom.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hecore.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\heid.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\heinttypes.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\helib.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hepoppack.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hepushpack.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\heresult.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hestdint.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hestr.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\heunk.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hevariant.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\heweakref.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlalloc.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlatomic.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlbase.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlclstab.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlcom.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hldef.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlexcept.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlid.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlptr.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlruntime.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlstr.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlstrconv.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlsync.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlvariant.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hlweakref.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\imemorystream.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\iomniengineplugin.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\ixmldom.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\objectwithsiteimpl.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\omnigraphs.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\ByteVectRef.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\CaptureBuffer.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\CaptureFile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\ContextManager.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Ethernet.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\FileCaptureBuffer.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\FileEx.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\FilePacketArray.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\GlobalId.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\GPSInfo.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\IpHeaders.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Layers.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\MediaTypes.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\MemUtil.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\NotifyService.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Packet.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PacketArray.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PacketHeaders.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PCapCaptureFile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Peek.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekArray.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekCaptureFile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekConsoleContext.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekContext.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekContextProxy.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekDataModeler.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekEngineContext.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekFile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekHash.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekLock.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekMessage.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekPacket.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekPlugin.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekProxy.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekStream.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekStrings.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekSummarySnapshot.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekSummaryStats.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekTime.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekUnits.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PeekXml.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PluginController.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PluginManager.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Protospecs.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\ProxySummaryStats.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PSDefs.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\PSIDs.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\RefreshFile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\RemotePlugin.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Snapshot.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Stats.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\std-tr1.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\tagfile.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\Version.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\wppoppack.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\wppushpack.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\WPTypes.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\AboutDialog.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\CMIHeaders.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\CMIPacket.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\CMIPacketList.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\OmniConsoleContext.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\OmniEngineContext.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\OmniPlugin.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\PluginMessages.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\TimeConv.h">
+      <Filter>Plugin Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\ContextTab.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\Options.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\OptionsDialog.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\OptionsView.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\PluginTab.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\TabHost.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\resource.h">
+      <Filter>Resource</Filter>
+    </ClInclude>
+    <ClInclude Include="Plugin\StdAfx.h">
+      <Filter>Stdafx</Filter>
+    </ClInclude>
+    <ClInclude Include="IpFilterDlg.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="ItemList.h">
+      <Filter>Options</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\hecomweak.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\peekutil.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Helium\peekvoipcall.h">
+      <Filter>Helium Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\peekstats.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\peekcore.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\peekfilters.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\peeknames.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Framework\peeknotify.h">
+      <Filter>Framework Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Framework\ByteVectRef.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\CaptureFile.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\ContextManager.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\FileCaptureBuffer.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\FileEx.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\GPSInfo.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\IpHeaders.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Layers.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\NotifyService.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Packet.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PacketArray.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PCapCaptureFile.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekCaptureFile.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekConsoleContext.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekContext.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekContextProxy.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekDataModeler.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekMessage.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekPlugin.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekProxy.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekStrings.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekSummarySnapshot.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekSummaryStats.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekTime.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekUnits.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PeekXml.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PluginManager.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\PluginModule.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\ProxySummaryStats.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\RefreshFile.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\RemotePlugin.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Snapshot.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Framework\Version.cpp">
+      <Filter>Framework Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\AboutDialog.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\CMIPacket.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\CMIPacketList.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\OmniConsoleContext.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\OmniEngineContext.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\OmniPlugin.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\PluginMessages.cpp">
+      <Filter>Plugin Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\ContextTab.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\Options.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\OptionsDialog.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\OptionsView.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\PluginTab.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\TabHost.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+    <ClCompile Include="Plugin\StdAfx.cpp">
+      <Filter>Stdafx</Filter>
+    </ClCompile>
+    <ClCompile Include="IpFilterDlg.cpp">
+      <Filter>Options</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="lib\Win32\libheruntime.lib">
+      <Filter>Library Files\Win32</Filter>
+    </Library>
+    <Library Include="lib\Win32\Protospecs.lib">
+      <Filter>Library Files\Win32</Filter>
+    </Library>
+    <Library Include="lib\x64\libheruntime.lib">
+      <Filter>Library Files\x64</Filter>
+    </Library>
+    <Library Include="lib\x64\Protospecs.lib">
+      <Filter>Library Files\x64</Filter>
+    </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Plugin\wplogo.bmp">
+      <Filter>Plugin Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Plugin\Plugin.rc">
+      <Filter>Resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CMIFilterOE-Install.bat" />
+    <None Include="CMIFilterOE.he" />
+    <None Include="..\Makefile" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,198 @@
+CMI Test Notes
+
+===============================================================================
+
+pktman -ccedst -i <baseline> -i <test>
+
+fciv -add CMIFilter.dll > CMIFilter.md5.txt
+
+===============================================================================
+
+CMI_Image5k_before_No_Mac.pkt
+
+CMI
+
+Source:		10.20.30.40 : 3333
+Destination:	40.30.20.10 : 3333
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 16,249
+After:   6,972
+
+One flow between 10.4.3.101:58590 and 184.25.56.952:80, 6972 packets, 19.9474 seconds.
+
+
+===============================================================================
+
+CMI_ImagePing_before_No_Mac.pkt
+
+CMI
+
+Source:		10.20.30.40 : 3333
+Destination:	40.30.20.10 : 3333
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 17,869
+After:   8,592
+
+
+Two flows
+
+
+===============================================================================
+
+CMI_before_No_Mac.pkt
+
+Source:		10.201.192.1 : 696
+Destination:	172.19.2.50  : 9004
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 7,075
+After:  1,705
+
+
+===============================================================================
+
+CMI_before_With_Mac.pkt
+
+Source:		33.33.33.10 : 8150
+Destination:	33.33.33.1  : 8150
+
+Before: 7,000
+After:  4,837
+
+
+===============================================================================
+
+PCLI_before_Fortworth_No_Mac.pkt
+
+Source:		33.33.33.10 : 4
+Destination:	33.33.33.1  : 4
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 3,560
+After:  3,190
+
+===============================================================================
+
+SecurityId_before_With_Mac.pkt
+
+Intercept Id:	0 46 E3 2E
+
+Source:		10.253.161.24 : 30000
+Destination:	10.253.42.38  : 30000
+
+Before: 10
+After:  10
+
+===============================================================================
+
+Ericsson_before_No_Mac.pkt
+
+Intercept Id:	1234
+Site Name:	bcnss02q
+
+Source:		10.253.161.219 : 80
+Destination:	10.253.42.38   : 5000 *
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 20
+After:  20
+
+===============================================================================
+
+Arris_before_No_Mac.pkt
+
+Intercept Id:	1
+
+Source:		172.24.34.109 : 65535 *
+Destination:	10.252.145.11 : 1043
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 22
+After:  22
+
+
+===============================================================================
+
+Juniper_before_No_Mac.pkt
+
+Intercept Id:	12345
+
+Source:		10.15.6.50 : 5000
+Destination:	10.15.6.35 : 5000
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 6
+After:  6
+
+===============================================================================
+
+Juniper_ip_No_Mac.pkt
+
+Intercept Id:	2
+
+Source:		67.70.219.162  : 6502
+Destination:	216.209.156.18 : 6502
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Before: 38
+After:  38
+
+===============================================================================
+
+*** IPv6 is not supported. ***
+
+jmirror_ipv6_No_Mac.pkt
+
+Source:		64.230.56.119 : 54301
+		64.230.45.123 : 54301
+Destination:	64.230.43.151 : 54301
+
+Insert MAC Address
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Intercept Id:	128
+
+Packets:  100
+Received: 
+Filtered: 
+Duration: 
+
+*** IPv6 is not supported. ***
+
+===============================================================================

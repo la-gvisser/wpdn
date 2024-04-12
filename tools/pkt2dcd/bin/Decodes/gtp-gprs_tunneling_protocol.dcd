@@ -1,0 +1,5382 @@
+// --------------------------------------------------------------------------------
+// GTP - GPRS Tunneling Protocol
+// 
+// runs on UDP port 3386, 2123, 3386, 2152
+//
+//  g[0x1] = random - don't expect this to stay preserved...it get's trampled over!
+//  g[0xa] = pkt length excluding header (20 bytes is header)
+//  g[0xb] = Message Type
+//  g[0xc] = holds the Extension type
+//  g[0xd] = tells if you've gone through an extension type or not
+//	added a check sequence for GTP Length and transported Content.
+// --------------------------------------------------------------------------------
+
+void GTP()
+{
+	//TT32842: add a check against the missuse of GTP Ports.	
+	GWRD( 2 , l[1]);			//get GTPvX Length
+	BREM( 0 , l[2]);			//get left  PKT length from here
+	
+	//left over length should be exact GTPvX Value + 12;
+	//FCS/SlicedPacket - Detection is not supported -> may cause wrong detection
+	l[1] += 12;
+	//Let's compare: NO -> other protocol; YES -> GTP! :)	
+	if (l[2] != l[1])
+	{
+		MOVE 2 9;		
+		//Decoder could jump out in the next line
+		//DUMP 0 10 90 c2 "Wrong Port used - Content Dump:\Extra:";;
+		//:) But -> Adaptive Decoder DCI for HTTP: detect HTML-CONTENT and decode it;
+		l[3] = 0;
+		//find class=
+		GSTR( 0x20000000, 0, 0, 0, "class=");
+		SKIP 80000001;
+		l[3] += 1;
+		GSTR 20000000 0 0 0 class=;
+		SKIP 80000001;
+		l[3] += 1;
+		//find </tr>
+		GSTR( 0x20000000, 0, 0, 0, "</tr>");
+		SKIP 80000001;
+		l[3] += 1;
+		GSTR 20000000 0 0 0 </tr>;
+		SKIP 80000001;
+		l[3] += 1;
+		//find </td>
+		GSTR( 0x20000000, 0, 0, 0, "</td>");
+		SKIP 80000001;
+		l[3] += 1;
+		GSTR 20000000 0 0 0 </td>;
+		SKIP 80000001;
+		l[3] += 1;
+		//find ='
+		GSTR( 0x20000000, 0, 0, 0, "='");
+		SKIP 80000001;
+		l[3] += 1;
+		GSTR 20000000 0 0 0 =';
+		SKIP 80000001;
+		l[3] += 1;
+		//Add other Detection Sequences here and copy the example
+		/*
+			GSTR( 0x20000000, 0, 0, 0, "DETECTION SEQUENCE");
+			SKIP 80000001;
+			l[3] += 1;
+			GSTR( 0x20000000, 0, 0, 0, "DETECTION SEQUENCE");
+			SKIP 80000001;
+			l[3] += 1;
+			if(l[3] >= 2)
+			{
+				PROTOCOL;		
+			}
+		*/
+		//if Keyword is found more than 2 times it should be HTTP
+		if (l[3] >= 2)
+		{
+			HTTP;		
+		}	
+		//add any other Protocol Detection under Port 3386, 2123, 3386, 2152 to avoid wrong GTP Detection
+		/* 
+			GSTR( 0x20000000, 0, 0, 0, "DETECTION SEQUENCE");
+			SKIP 80000001;
+			l[3] += 1;
+			GSTR( 0x20000000, 0, 0, 0, "DETECTION SEQUENCE");
+			SKIP 80000001;
+			l[3] += 1;
+			//Another Extension is possible. Add other protocol's detection keywords here"
+			if(l[3] >= 2)
+			{
+				PROTOCOL;		
+			}
+		*/
+	}	
+	if (l[2] == l[1])
+	{		
+		GBIT 3 1;
+		if (g[1] == 0)
+		{
+			TNXT -GTP::v0;
+		}
+		if (g[1] == 1)
+		{
+			TNXT -GTP::v1;
+		}
+		if (g[1] == 2)
+		{
+			TNXT -GTP::v2;
+		}	
+		TNXT -GTP::v0;
+	}	
+}
+
+void GTP::v0()
+{
+	LABL 0 0 0 b1 GPRS Tunneling Protocol\GPRS:;
+	DBIT 3 1 90 c2 Version:\;
+	DBIT 1 1 90 c2 Protocol Type Field:\Proto:;
+	 CEQU 1 1 0 14 = GTP;
+	 CLSE 0 0 0 14 Invalid;
+	BBIT 3 1 90 c2 Reserved (%111):;
+	BBIT 1 2 90 c2 SSN:;
+	 CEQU 1 2 0 14 Contains SNDCP N-PDU Num;
+	 CLSE 0 0 0 14 Does not contain SNDCP N-PDU Num;
+	DBYT 0 b 90 c2 Message Type:\Msg:;
+	CST# 0 b 0 14 GTP::Message_Type_List_V0;
+	DWRD 0 a 90 c2 Length:\;
+	HWRD 0 1 90 c2 Sequence Num:\SEQ:;
+	HWRD 0 1 90 c2 Flow Label:\Flow:;
+	HBYT 0 1 90 c2 SNDCP N-PDULLC Num:\;
+	HEX# 3 0 90 c2 Reserved:;
+	HEX# 8 0 90 c2 Tunnel ID:\ID:;
+	SGTE 0 10;
+	SKIP 1;
+	CST# 0 b 90 b7 GTP::Message_Type_List_V0;
+	
+	LABL 0 0 0 b8;
+	if (g[0x32] == 17)
+	{
+	 GBYT 0 1;
+	 TEQU 45 1 0 0 IP;
+	 TEQU 60 1 0 0 IPv6;
+	}
+	GTP::Extensions::V0;
+	TRTS;
+}
+
+
+void GTP::v1()
+{
+	LABL 0 0 0 b1 GPRS Tunneling Protocol\GPRS:;
+	BBIT 8 1 90 c9 Flags:;
+	LABL 0 0 00 d4 001. .... Version 1;
+	CBIT 4 1 00 d4 ...1 .... Protocol Type - GTP;
+	CLSE 0 0 00 d4 ...0 .... Protocol Type - Unknown;
+	CBIT 3 1 00 d4 .... 1... Reserved;
+	CLSE 0 0 00 d4 .... 0... Reserved;
+	CBIT 2 1 00 d4 .... .1.. Next Extension Header Present;
+	CLSE 0 0 00 d4 .... .0.. Next Extension Header Not Present;
+	CBIT 1 1 00 d4 .... ..1. Sequence Number Present;
+	CLSE 0 0 00 d4 .... ..0. Sequence Number Not Present;
+	CBIT 0 1 00 d4 .... ...1 N-PDU Number Present;
+	CLSE 0 0 00 d4 .... ...0 N-PDU Number Not Present;
+	LABL 0 0 00 c8;
+	l[1] = g[1];
+	l[1] &= 4;
+	l[2] = g[1];
+	l[2] &= 2;
+	l[3] = g[1];
+	l[3] &= 1;
+	DBYT 0 b 90 c2 Message Type:\Msg:;
+	CST# 0 b 00 14 GTP::Message_Type_List;
+	DWRD 0 a 90 c2 Length:;
+	HLNG 0 0 90 c2 TEID:;
+	g[2] = 1;
+	if (l[1] == 0)
+	{
+		if (l[2] == 0)
+		{
+			if (l[3] == 0)
+			{
+				g[2] = 0;
+			}
+		}
+	}
+	if (g[2] == 1)
+	{
+		HWRD 0 1 90 c2 Sequence Num:\SEQ:;
+		DGLB 0 1 04 14 (;
+		LABL 0 0 00 04 ")";
+		HBYT 0 0 90 c2 NPDU Num:\;
+		HBYT 0 0 90 c2 Next Extension Num:;
+		GBYT 0 1;
+		if (g[1] != 0x45)
+		{
+			if (g[0xb] != 0xff)
+			{
+			GTP::Extensions;
+			}
+		}
+	}
+	
+	
+	 if (g[0xb] == 0xff)
+	 {
+		GBYT 0 1;
+		SHFR 4 1;
+		
+		if (g[1] == 4)
+		{
+			IP;
+		}
+		if (g[1] == 6)
+		{
+			IPv6;
+		}
+	 }
+	 if (g[0xb] != 0xff)
+	 {
+		if (g[16] != 0)
+		{
+			
+			GTP::Extensions;
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+	 }
+}
+
+void GTP::v2()
+{
+	LABL( 0, 0, 0x90, 0xb1, "GPRS Tunneling Protocol Version 2");
+	BBIT 8 1 90 c9 Flags:;
+	LABL 0 0 00 d4 010. .... Version 2;
+	CBIT 4 1 00 d4 ...1 .... Piggybacking flag = 1;
+	CLSE 0 0 00 d4 ...0 .... Piggybacking flag = 0;
+	CBIT 3 1 00 d4 .... 1... TEID flag = 1;
+	CLSE 0 0 00 d4 .... 0... TEID flag = 0;
+	LABL 0 0 00 d4 .... .xxx Spare;
+	LABL 0 0 00 c8;	
+	l[1] = g[1];
+	l[1] &= 0x08;
+	DBIT( 8, g[4], 0x90, 0xc2, "Message Type:\Msg:");
+	if (g[4] >= 4)
+	{
+		if (g[4] <= 24)
+		{
+			LABL( 0, 0, 0x00, 0x14, "Reserved for S101 interface");
+		}
+	}
+	if (g[4] >= 25)
+	{
+		if (g[4] <= 31)
+		{
+			LABL( 0, 0, 0x00, 0x14, "Reserved for Sv interface");
+		}
+	}
+	CST#( 0, g[4], 0x00, 0x14, "GTP::v2::Message_Type_List_V2");
+	DWRD( 0, a, 0x90, 0xc2, "Length:");
+	if (l[1] == 0x08)
+	{
+		DBIT( 0, 32, 0x90, 0xc2, "Tunnel Endpoint ID:");
+	}
+	DBIT( 0, 24, 0x90, 0xc2, "Sequence Number:");
+	INCR(1);
+	GTP::Extensions::V2;
+}
+
+void GTP::Extensions;
+	TGTE 0 10 0 0 RETURN;
+	g[0xd] = 0;
+	HBYT 0 1 05 05 Identifier:;
+	CST# 0 1 00 b7 GTP::Extensions_List;
+	
+	g[57] = g[1];
+	TSB# 0 1 00 00 GTP::Extensions_Functions;
+	
+	TEQU 0 d 0 0 RETURN;
+	LABL 0 0 0 b8;
+	GTP::Extensions;
+
+void GTP::Extensions::V2
+{
+	TGTE( 0, 0x10, 0x00, 0x00, "RETURN");
+	g[0xd] = 0;
+	HBYT( 0, 1, 0x90, 0xc2, "Information Element Identifier:");
+	CST#( 0, g[1], 0x90, 0xc9, "GTP::Extensions_List_V2");
+	//LABL( 0, 0, 0x00, 0xb8);
+	g[57] = g[1];
+	//DGLB( 0, g[1], 0x90, 0xc2, "G1");
+	
+	//DGLB( 0, g[1], 0x90, 0xc2, "G1");
+	GWRD( 2, g[26] );
+	BREM 0 c;
+	g[11] = g[26];
+	g[11] -= 3;
+	TSB#( 0, g[1], 0x00, 0x00, "GTP::Extensions_Functions_V2");
+	BREM 0 d;
+	//DUMP if no Bytes consumed
+	if ( g[12] == g[13])
+	{
+		BREM 0 c;
+		DUMP 0 b 90 c2 Value:;
+		BREM 0 d;
+	}
+	//DUMP if sth else went wrong
+	//compare Length consumed vs Length it should consume
+	if ( g[12] != g[13])
+	{
+		l[10] = g[12];
+		l[11] = g[13];
+		l[10] -= l[11];
+		l[14] = g[26];
+		l[14] -= 2;
+		//Length is not right compare Length consumed l[10] vs Length it should consume l[14]
+		if ( l[10] != l[14])
+		{
+			//Length consumed is smaller than it should
+			if (l[10] < l[14])
+			{
+				l[14] -= l[10];
+				HEX#( 0, l[14], 0x90, 0xc2, "Value:" );
+				l[10] = 0;
+				l[14] = 0;
+			}
+			//Length consumed is greater than it should (this is very RARE!!)somehow it happens while using CHR# 
+			if (l[10] > l[14])
+			{
+				LABL 0 0 0 c2 DECODE WENT WRONG, DECREASING BYTE POINTER by ;
+					l[10] -= l[14];
+					DGLB 0 4a 02 02  ;
+					LABL( 0, 0, 0, 0x2, " Bytes!" );
+					DECR( 0 , l[10]);
+					LABL 0 0 0 14 Please send this packet or capture to your SAVVIUS.INC Support to correct that behaviour!;
+				//LABL 0 0 0 b8;
+			}
+		}
+	}
+	LABL( 0, 0, 0x00, 0xb8);
+	GTP::Extensions::V2;
+}
+
+str# GTP::Extensions_Functions_V2;
+	0x01	| GTP::Extensions_V2::IMSI;
+	0x02	| GTP::Extensions_V2::Cause;
+	0x03	| GTP::Extensions_V2::Recovery;
+	0x47	| GTP::Extensions_V2::APN;
+	0x48	| GTP::Extensions_V2::AMBR;
+	0x49	| GTP::Extensions_V2::EBI;
+	0x4a	| GTP::Extensions_V2::IP;
+	0x4b	| GTP::Extensions_V2::MEI;
+	0x4c	| GTP::Extensions_V2::MSISDN;
+	0x4d	| GTP::Extensions_V2::Indication;
+	0x4e	| GTP::Extensions_V2::PCO;
+	0x4f	| GTP::Extensions_V2::PAA;
+	0x50	| GTP::Extensions_V2::Bearer_QoS;
+	0x51	| GTP::Extensions_V2::Flow_QoS;
+	0x52	| GTP::Extensions_V2::RAT;
+	0x53	| GTP::Extensions_V2::Serving_Network;
+	0x54	| GTP::Extensions_V2::Bearer_TFT;
+	0x55	| GTP::Extensions_V2::TAD;
+	0x56	| GTP::Extensions_V2::ULI;
+	0x57	| GTP::Extensions_V2::F_TEID;
+	0x58	| GTP::Extensions_V2::TMSI;
+	0x59	| GTP::Extensions_V2::Global_CN_ID;
+	0x5a	| GTP::Extensions_V2::S103PDF;
+	0x5b	| GTP::Extensions_V2::S1UDF;
+	0x5c	| GTP::Extensions_V2::Delay_Value;
+	0x5d	| GTP::Extensions_V2::Bearer_Context;
+	0x5e	| GTP::Extensions_V2::Charging_ID;
+	0x5f	| GTP::Extensions_V2::Charging_Characteristics;
+	0x60    | GTP::Extensions_V2::Trace_Information;
+	0x61 	| GTP::Extensions_V2::Bearer_Flags;
+	0x63 	| GTP::Extensions_V2::PDN_Type;
+	0x64 	| GTP::Extensions_V2::PTID;
+	0x65 	| GTP::Extensions_V2::DRX;
+	0x67 	| GTP::Extensions_V2::GSMTrip;
+	0x68 	| GTP::Extensions_V2::UMTSCiphQuin;
+	0x69 	| GTP::Extensions_V2::GSMCiphQuin;
+	0x6a 	| GTP::Extensions_V2::UNTSCiphTrip;
+	0x6b 	| GTP::Extensions_V2::EPS;
+	0x6c 	| GTP::Extensions_V2::UMTSQuadQuin;
+	0x6d 	| GTP::Extensions_V2::PDN;
+	0x6e 	| GTP::Extensions_V2::PDU;
+	0x6f 	| GTP::Extensions_V2::P_TMSI;
+	0x70 	| GTP::Extensions_V2::P_TMSI_Sig;
+	0x71 	| GTP::Extensions_V2::Hop_Count;
+	0x72 	| GTP::Extensions_V2::UE_Time_Zone;
+	0x73 	| GTP::Extensions_V2::Trace_Ref;
+	0x74 	| GTP::Extensions_V2::CRM;
+	0x75 	| GTP::Extensions_V2::GUTI;
+	0x76 	| GTP::Extensions_V2::F_Container;
+	0x77 	| GTP::Extensions_V2::F_Cause;
+	0x78 	| GTP::Extensions_V2::Selected_PLMN_ID;
+	0x79 	| GTP::Extensions_V2::Target_ID;
+	0x7b 	| GTP::Extensions_V2::PFID;
+	0x7c 	| GTP::Extensions_V2::RAB; 
+	0x7d 	| GTP::Extensions_V2::SourceRNC_PDCPContextInfo;
+	0x7e 	| GTP::Extensions_V2::UDPSourcePortNumber;
+	0x7f 	| GTP::Extensions_V2::APN_Restriction;
+	0x80 	| GTP::Extensions_V2::Selection_Mode;
+	0x81 	| GTP::Extensions_V2::SourceID;
+	0x83 	| GTP::Extensions_V2::Change_Reporting_Action;
+	0x84 	| GTP::Extensions_V2::FQ_CSID;
+	0x85 	| GTP::Extensions_V2::Channel_needed;
+	0x86 	| GTP::Extensions_V2::eMLPP;
+	0x87 	| GTP::Extensions_V2::Node_Type;
+	0x88 	| GTP::Extensions_V2::FQDN;
+	0x89 	| GTP::Extensions_V2::TI;
+	0x8a 	| GTP::Extensions_V2::MBMS_Session_Duration;
+	0x8b 	| GTP::Extensions_V2::MBMS_Service_Area;
+	0x8c 	| GTP::Extensions_V2::MBMS_SessionID;
+	0x8d 	| GTP::Extensions_V2::MBMS_FlowID;
+	0x8e 	| GTP::Extensions_V2::MBMS_IPMD;
+	0x8f 	| GTP::Extensions_V2::MBMSDA;
+	0x90 	| GTP::Extensions_V2::RFSPI;
+	0x91 	| GTP::Extensions_V2::UCI;
+	0x92 	| GTP::Extensions_V2::CSGIRA;
+	0x93 	| GTP::Extensions_V2::CSGID;
+	0x94 	| GTP::Extensions_V2::CMI;
+	0x95 	| GTP::Extensions_V2::Service_indicator;
+	0x96 	| GTP::Extensions_V2::Detach_Type;
+	0x97 	| GTP::Extensions_V2::LDN;
+	0x98 	| GTP::Extensions_V2::Node_Features;
+	0x99 	| GTP::Extensions_V2::MBMSTDT;
+	0x9a 	| GTP::Extensions_V2::Throttling;
+	0x9b 	| GTP::Extensions_V2::ARP;
+	0x9c 	| GTP::Extensions_V2::EPC_Timer;
+	0x9d 	| GTP::Extensions_V2::SPI;
+	0x9e 	| GTP::Extensions_V2::TMGI;
+	0xff	| GTP::Extensions_V2::Private_Extension;
+
+
+str# GTP::Extensions_List_V2;
+	0x00	| Reserved;
+	0x01	| International Mobile Subscriber Identity (IMSI);
+	0x02	| Cause;
+	0x03	| Recovery (Restart Counter);
+	0x47	| Access Point Name (APN);
+	0x48	| Aggregate Maximum Bit Rate (AMBR);
+	0x49	| EPS Bearer ID (EBI);
+	0x4a	| IP Address;
+	0x4b	| Mobile Equipment Identity (MEI);
+	0x4c	| MSISDN;
+	0x4d	| Indication;
+	0x4e	| Protocol Configuration Options (PCO);
+	0x4f	| PDN Address Allocation (PAA);
+	0x50	| Bearer Level Quality of Service (Bearer QoS);
+	0x51	| Flow Quality of Service (Flow QoS);
+	0x52	| RAT Type;
+	0x53	| Serving Network;
+	0x54	| EPS Bearer Level Traffic Flow Template (Bearer TFT);
+	0x55	| Traffic Aggregation Description (TAD);
+	0x56	| User Location Information (ULI);
+	0x57	| Fully Qualified Tunnel Endpoint Identifier (F-TEID);
+	0x58	| TMSI;
+	0x59	| Global CN-Id;
+	0x5a	| S103 PDN Data Forwarding Info (S103PDF);
+	0x5b	| S1-U Data Forwarding Info (S1UDF);
+	0x5c	| Delay Value;
+	0x5d	| Bearer Context;
+	0x5e	| Charging ID;
+	0x5f	| Charging Characteristics;
+	0x60    | Trace Information;
+	0x61 	| Bearer Flags;
+	0x62 	| Reserved;
+	0x63 	| PDN Type;
+	0x64 	| Procedure Transaction ID;
+	0x65 	| DRX Parameter;
+	0x66 	| Reserved;
+	0x67 	| MM Context (GSM Key and Triplets);
+	0x68 	| MM Context (UMTS Key, Used Cipher and Quintuplets);
+	0x69 	| MM Context (GSM Key, Used Cipher and Quintuplets;
+	0x6a 	| MM Context (UMTS Key and Quintuplets);
+	0x6b 	| MM Context (EPS Security Context, Quadruplets);
+	0x6c 	| MM Context (UMTS Key, Quadruplets and Quintuplets);
+	0x6d 	| PDN Connection;
+	0x6e 	| PDU Numbers;
+	0x6f 	| P-TMSI;
+	0x70 	| P-TMSI Signature;
+	0x71 	| Hop Counter;
+	0x72 	| UE Time Zone;
+	0x73 	| Trace Reference;
+	0x74 	| Complete Request Message;
+	0x75 	| GUTI;
+	0x76 	| F-Container;
+	0x77 	| F-Cause;
+	0x78 	| Selected PLMN ID;
+	0x79 	| Target Identification;
+	0x7a 	| Reserved;
+	0x7b 	| Packet Flow ID;
+	0x7c 	| RAB Context; 
+	0x7d 	| Source RNC PDCP Context Info;
+	0x7e 	| UDP Source Port Number;
+	0x7f 	| APN Restriction;
+	0x80 	| Selection Mode;
+	0x81 	| Source Identification;
+	0x82 	| Reserved;
+	0x83 	| Change Reporting Action;
+	0x84 	| Fully Qualified PDN Connection Set Identifier (FQ-CSID);
+	0x85 	| Channel needed;
+	0x86 	| eMLPP Priority;
+	0x87 	| Node Type;
+	0x88 	| Fully Qualified Domain Name (FQDN);
+	0x89 	| Transaction Identifier (TI);
+	0x8a 	| MBMS Session Duration;
+	0x8b 	| MBMS Service Area;
+	0x8c 	| MBMS Session Identifier;
+	0x8d 	| MBMS Flow Identifier;
+	0x8e 	| MBMS IP Multicast Distribution;
+	0x8f 	| MBMS Distribution Acknowledge;
+	0x90 	| RFSP Index;
+	0x91 	| User CSG Information (UCI);
+	0x92 	| CSG Information Reporting Action;
+	0x93 	| CSG ID;
+	0x94 	| CSG Membership Indication (CMI);
+	0x95 	| Service indicator;
+	0x96 	| Detach Type;
+	0x97 	| Local Distiguished Name (LDN);
+	0x98 	| Node Features;
+	0x99 	| MBMS Time to Data Transfer;
+	0x9a 	| Throttling;
+	0x9b 	| Allocation-Retention Priority (ARP);
+	0x9c 	| EPC Timer;
+	0x9d 	| Signalling Priority Indication;
+	0x9e 	| Temporary Mobile Group Identity (TMGI);
+	0xff	| Private Extension;
+
+str# GTP::v2::Message_Type_List_V2;
+	0	  |    Reserved;
+	1	  |    Echo Request;
+	2	  |    Echo Response;
+	3	  |    Version Not Supported Indication;
+	32	  |    Create Session Request;
+	33	  |    Create Session Response;
+	36	  |    Delete Session Request;
+	37	  |    Delete Session Response;
+	34	  |    Modify Bearer Request;
+	35	  |    Modify Bearer Response;
+	38	  |    Change Notification Request;
+	39	  |    Change Notification Response;
+	164	  |    Resume Notification;
+	165	  |    Resume Acknowledge;
+	64	  |    Modify Bearer Command;
+	65	  |    Modify Bearer Failure Indication;
+	66	  |    Delete Bearer Command;
+	67	  |    Delete Bearer Failure Indication;
+	68	  |    Bearer Resource Command;
+	69	  |    Bearer Resource Failure Indication;
+	70	  |    Downlink Data Notification Failure Indication;
+	71	  |    Trace Session Activation;
+	72	  |    Trace Session Deactivation;
+	73	  |    Stop Paging Indication;
+	95	  |    Create Bearer Request;
+	96	  |    Create Bearer Response;
+	97	  |    Update Bearer Request;
+	98	  |    Update Bearer Response;
+	99	  |    Delete Bearer Request;
+	100	  |    Delete Bearer Response;
+	101	  |    Delete PDN Connection Set Request;
+	102	  |    Delete PDN Connection Set Response;
+	128	  |    Identification Request;
+	129	  |    Identification Response;
+	130	  |    Context Request;
+	131	  |    Context Response;
+	132	  |    Context Acknowledge;
+	133	  |    Forward Relocation Request;
+	134	  |    Forward Relocation Response;
+	135	  |    Forward Relocation Complete Notification;
+	136	  |    Forward Relocation Complete Acknowledge;
+	137	  |    Forward Access Context Notification;
+	138	  |    Forward Access Context Acknowledge;
+	139	  |    Relocation Cancel Request;
+	140	  |    Relocation Cancel Response;
+	141	  |    Configuration Transfer Tunnel;
+	152	  |    RAN Information Relay;
+	149	  |    Detach Notification;
+	150	  |    Detach Acknowledge;
+	151	  |    CS Paging Indication;
+	153	  |    Alert MME Notification;
+	154	  |    Alert MME Acknowledge;
+	155	  |    UE Activity Notification;
+	156	  |    UE Activity Acknowledge;
+	162	  |    Suspend Notification;
+	163	  |    Suspend Acknowledge;
+	160	  |    Create Forwarding Tunnel Request;
+	161	  |    Create Forwarding Tunnel Response;
+	166	  |    Create Indirect Data Forwarding Tunnel Request;
+	167	  |    Create Indirect Data Forwarding Tunnel Response;
+	168	  |    Delete Indirect Data Forwarding Tunnel Request;
+	169	  |    Delete Indirect Data Forwarding Tunnel Response;
+	170	  |    Release Access Bearers Request;
+	171	  |    Release Access Bearers Response;
+	176	  |    Downlink Data Notification;
+	177	  |    Downlink Data Notification Acknowledge;
+	179	  |    PGW Restart Notification;
+	180	  |    PGW Restart Notification Acknowledge;
+	178	  |    Reserved. Allocated in earlier version of the specification;
+	200	  |    Update PDN Connection Set Request;
+	201	  |    Update PDN Connection Set Response;
+	211	  |    Modify Access Bearers Request;
+	212	  |    Modify Access Bearers Response;
+	231	  |    MBMS Session Start Request;
+	232	  |    MBMS Session Start Response;
+	233	  |    MBMS Session Update Request;
+	234	  |    MBMS Session Update Response;
+	235	  |    MBMS Session Stop Request;
+	236	  |    MBMS Session Stop Response;
+
+// standard beginning of every information element without tracking length
+void GTP::Extensions_V2::OCT1_2()
+{
+	DBIT( 0, 16, 0x90, 0xc2, "Length:");
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "Instance:");
+}
+// standard beginning of every information element with tracking length
+void GTP::Extensions_V2::OCT1_2Length()
+{
+	g[1] = 0;
+	DBIT( 16, 1, 0x90, 0xc2, "Length:");
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "Instance:");
+}
+void GTP::Extensions_V2::IMSI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	HEX#( 0, 8, 0x90, 0xc2, "IMSI number:");
+	TRTS;
+}
+
+void GTP::Extensions_V2::MEI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	HEX#( 0, 8, 0x90, 0xc2, "MEI number:");
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	BBIT( 8, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 2, 0, 0x00, 0xd4, "00.. .... Spare Bits");
+	CBIT( 2, g[1], 0x00, 0xd4, "..1. .... LAI Present");
+	CLSE( 0, 0, 0x00, 0xd4, "..0. .... LAI Not Present");
+	CBIT( 3, g[1], 0x00, 0xd4, "...1 .... ECGI Present");
+	CLSE( 0, 0, 0x00, 0xd4, "...0 .... ECGI Not Present");
+	CBIT( 4, g[1], 0x00, 0xd4, ".... 1... TAI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... 0... TAI Not Present");
+	CBIT( 5, g[1], 0x00, 0xd4, ".... .1.. RAI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. RAI Not Present");
+	CBIT( 6, g[1], 0x00, 0xd4, ".... ..1. SAI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. SAI Not Present");
+	CBIT( 7, g[1], 0x00, 0xd4, ".... ...1 CGI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 CGI Not Present");
+	// XBIT uses global for bit position
+	g[2] = 7;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::CGI");
+	g[2] = 6;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::SAI");
+	g[2] = 5;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::RAI");
+	g[2] = 4;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::TAI");
+	g[2] = 3;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::ECGI");
+	g[2] = 2;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::ULI::LAI");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::LAI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Location Area Identifier:");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 8, 0x90, 0xc2, "Location Area Code (LAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::ECGI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "E-UTRAN Cell Global Identifier:");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	HBIT( 0, 4, 0x90, 0xc2, "ECI:");
+	HBIT( 0, 24, 0x90, 0xc2, "E-UTRAN Cell Identifier(ECI)");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::TAI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Tracking Area Identity:");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Tracking Area Code (TAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::RAI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Routing Area Identity (RAI):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Location Area Code (LAC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Routing Area Code (RAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::SAI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Routing Area Identity (SAI):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Location Area Code (LAC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Service Area Code (SAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::ULI::CGI()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Cell Global Identifier (CGI):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Location Area Code (LAC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Service Area Code (SAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+	TRTS;
+}
+
+void GTP::Extensions_V2::Serving_Network()
+{
+	GTP::Extensions_V2::OCT1_2();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+}
+
+void GTP::Extensions_V2::RAT()
+{
+	GTP::Extensions_V2::OCT1_2();
+	HBYT( 0, 3, 0x90, 0xc2, "RAT Type:");
+	if (g[3] >= 8)
+	{
+		if (g[3] <= 255)
+		{
+			DWRD( 0, 0, 0x90, 0xc2, "Spare");
+		}
+	}
+	CST#( 0, g[3], 0x00, 0x14, "GTP::Extensions_V2::RAT::Types");
+}
+
+str# GTP::Extensions_V2::RAT::Types;
+	0x00 | reserved;
+	0x01 | UTRAN;
+	0x02 | GERAN;
+	0x03 | WLAN;
+	0x04 | GAN;
+	0x05 | HSPA Evolution;
+	0x06 | EUTRAN;
+	0x07 | Virtual;
+
+void GTP::Extensions_V2::F_TEID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	BBIT( 2, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 1, g[1], 0x00, 0xd4, "1... .... IPv4 Present");
+	CLSE( 0, 0, 0x00, 0xd4, "0... .... IPv4 Not Present");
+	CBIT( 0, g[1], 0x00, 0xd4, ".1.. .... IPv6 Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".0.. .... IPv6 Not Present");
+	BBIT( 6, 3, 0x05, 0xc2, "Interface Type: ");
+	CST#( 0, g[3], 0x00, 0x14, "GTP::Extensions_V2::F_TEID::Interface_Types");
+	LABL( 0, 0, 0x00, 0xb8);
+	HEX#( 0, 4, 0x90, 0xc2, "TEID/GRE Key:");
+	g[2] = 1;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::F_TEID::IPv4");
+	g[2] = 0;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::F_TEID::IPv6");
+}
+
+void GTP::Extensions_V2::F_TEID::IPv4()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "IPv4 Address:");
+}
+
+void GTP::Extensions_V2::F_TEID::IPv6()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 Address:");
+}
+
+str# GTP::Extensions_V2::F_TEID::Interface_Types;
+	0   |   S1-U eNodeB GTP-U interface;
+	1   |   S1-U SGW GTP-U interface;
+	2   |   S12 RNC GTP-U interface;
+	3   |   S12 SGW GTP-U interface;
+	4   |   S5/S8 SGW GTP-U interface;
+	5   |   S5/S8 PGW GTP-U interface;
+	6   |   S5/S8 SGW GTP-C interface;
+	7   |   S5/S8 PGW GTP-C interface;
+	8   |   S5/S8 SGW PMIPv6 interface;
+	9   |   S5/S8 PGW PMIPv6 interface;
+	10  |   S11 MME GTP-C interface;
+	11  |   S11/S4 SGW GTP-C interface;
+	12  |   S10 MME GTP-C interface;
+	13  |   S3 MME GTP-C interface;
+	14  |   S3 SGSN GTP-C interface;
+	15  |   S4 SGSN GTP-U interface;
+	16  |   S4 SGW GTP-U interface;
+	17  |   S4 SGSN GTP-C interface;
+	18  |   S16 SGSN GTP-C interface;
+	19  |   eNodeB GTP-U interface for DL data forwarding;
+	20  |   eNodeB GTP-U interface for UL data forwarding;
+	21  |   RNC GTP-U interface for data forwarding;
+	22  |   SGSN GTP-U interface for data forwarding;
+	23  |   SGW GTP-U interface for DL data forwarding;
+	24  |   Sm MBMS GW GTP-C interface;
+	25  |   Sn MBMS GW GTP-C interface;
+	26  |   Sm MME GTP-C interface;
+	27  |   Sn SGSN GTP-C interface;
+	28  |   SGW GTP-U interface for UL data forwarding;
+	29  |   Sn SGSN GTP-U interface;
+	30  |   S2b ePDG GTP-C interface;
+	31  |   S2b-U ePDG GTP-U interface;
+	32  |   S2b PGW GTP-C interface;
+	33  |   S2b-U PGW GTP-U interface;
+
+void GTP::Extensions_V2::APN()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	CHR#( 0, g[1], 0x90, 0xc2, "Access Point Name (APN):");
+}
+
+void GTP::Extensions_V2::Selection_Mode()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 6, 0x90, 0xc2, "Spare:");
+	BBIT( 2, 1, 0x90, 0xc9, "Flags:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::Selection_Mode::Selection_Mode_Types");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+str# GTP::Extensions_V2::Selection_Mode::Selection_Mode_Types;
+	0   |   .... ..00 MS or network provided APN, subscribed verified;
+	1   |   .... ..01 MS provided APN, subscription not verified;
+	2   |   .... ..10 Network provided APN, subscription not verified;
+	3   |   .... ..11 Reserved;
+
+void GTP::Extensions_V2::PDN_Type()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	BBIT( 3, 1, 0x90, 0xc9, "PDN Type:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::PDN_Type::PDN_Type_Values");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+str# GTP::Extensions_V2::PDN_Type::PDN_Type_Values;
+	1   |   .... ..01 IPv4;
+	2   |   .... ..10 IPV6;
+	3   |   .... ..11 IPv4v6;
+
+void GTP::Extensions_V2::PAA()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	BBIT( 3, 1, 0x90, 0xc9, "PDN Type:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::PDN_Type::PDN_Type_Values");
+	g[2] = 0;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::PAA::IPv4");
+	g[2] = 1;
+	XBIT( g[2], g[1], 0x90, 0xc2, "GTP::Extensions_V2::PAA::IPv6");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+void GTP::Extensions_V2::PAA::IPv4()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "PDN Address and Prefix:");
+}
+
+void GTP::Extensions_V2::PAA::IPv6()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "PDN Address and Prefix:");
+}
+
+void GTP::Extensions_V2::APN_Restriction()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 8, 1, 0x90, 0xc9, "Restriction Type Value:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::APN_Restriction::APN_Restriction_Types");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+str# GTP::Extensions_V2::APN_Restriction::APN_Restriction_Types;
+	0   |   None;
+	1   |   Public-1;
+	2   |   Public-2;
+	3   |   Private-1;
+	4   |   Private-2;
+
+void GTP::Extensions_V2::AMBR()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 32, 0x90, 0xc2, "APN-AMBR for uplink (kbps):");
+	DBIT( 0, 32, 0x90, 0xc2, "APN-AMBR for downlink (kbps):");
+}
+
+void GTP::Extensions_V2::Bearer_Context()
+{
+	GTP::Extensions_V2::OCT1_2();
+}
+
+void GTP::Extensions_V2::EBI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "EPS Bearer ID (EBI):");
+}
+
+void GTP::Extensions_V2::Bearer_QoS()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 1, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "Pre-emption Capability:");
+	DBIT( 0, 4, 0x90, 0xc2, "Priority Level:");
+	DBIT( 0, 1, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "Pre-emption Vulnerability:");
+	DBIT( 0, 8, 0x90, 0xc2, "Label (QCI):");
+	DBIT( 0, 32, 0x90, 0xc2, "Maximum bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Maximum bit rate for downlink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Guaranteed bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Guaranteed bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+}
+
+void GTP::Extensions_V2::Recovery()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "Recovery (Restart Counter):");
+}
+
+void GTP::Extensions_V2::UE_Time_Zone()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "Time Zone:");
+	DBIT( 0, 6, 0x90, 0xc2, "Instance:");
+	DBIT( 2, 1, 0x90, 0xc2, "Daylight Saving Time:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::UE_Time_Zone::UE_Time_Zone_Types");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+str# GTP::Extensions_V2::UE_Time_Zone::UE_Time_Zone_Types;
+	0   |   No adjustment for Daylight Saving Time;
+	1   |   +1 hour adjustment for Daylight Saving Time;
+	2   |   +2 hours adjustment for Daylight Saving Time;
+	3   |   Spare;
+
+
+void GTP::Extensions_V2::Indication()
+{
+	GTP::Extensions_V2::OCT1_2();
+	BBIT( 8, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 0, g[1], 0x00, 0xd4, "1... .... Dual Address Bearer Flag (DAF) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "0... .... Dual Address Bearer Flag (DAF) Not Present");
+	CBIT( 1, g[1], 0x00, 0xd4, ".1.. .... Direct Tunnel Flag (DLF) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".0.. .... Direct Tunnel Flag (DLF) Not Present");
+	CBIT( 2, g[1], 0x00, 0xd4, "..1. .... Handover Indication (HI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "..0. .... Handover Indication (HI) Not Present");
+	CBIT( 3, g[1], 0x00, 0xd4, "...1 .... Direct Forwarding Indication (DFI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "...0 .... Direct Forwarding Indication (DFI) Not Present");
+	CBIT( 4, g[1], 0x00, 0xd4, ".... 1... Operating Indication (OI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... 0... Operating Indication (OI) Not Present");
+	CBIT( 5, g[1], 0x00, 0xd4, ".... .1.. Idle Mode Signaling Reduction Support Indication (ISRSI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. Idle Mode Signaling Reduction Support Indication (ISRSI) Present");
+	CBIT( 6, g[1], 0x00, 0xd4, ".... ..1. Idle Mode Signaling Reduction Activation Indication (ISRAI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. Idle Mode Signaling Reduction Activation Indication (ISRAI) Not Present");
+	CBIT( 7, g[1], 0x00, 0xd4, ".... ...1 SGW Change Indication (SGWCI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 SGW Change Indication (SGWCI) Not Present");
+	LABL( 0, 0, 0x00, 0xb8);
+
+	BBIT( 8, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 0, g[1], 0x00, 0xd4, "1... .... Subscribed QoS Change Indication (SGCI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "0... .... Subscribed QoS Change Indication (SGCI) Not Present");
+	CBIT( 1, g[1], 0x00, 0xd4, ".1.. .... Unauthenticated IMSI (UIMSI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".0.. .... Unauthenticated IMSI (UIMSI) Not Present");
+	CBIT( 2, g[1], 0x00, 0xd4, "..1. .... Change F-TEID Support Indication (CFSI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "..0. .... Change F-TEID Support Indication (CFSI) Not Present");
+	CBIT( 3, g[1], 0x00, 0xd4, "...1 .... Change Reporting Support Indication (CRSI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "...0 .... Change Reporting Support Indication (CRSI) Not Present");
+	CBIT( 4, g[1], 0x00, 0xd4, ".... 1... Piggybacking Supported (PS) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... 0... Piggybacking Supported (PS) Not Present");
+	CBIT( 5, g[1], 0x00, 0xd4, ".... .1.. Protocol Type (PT) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. Protocol Type (PT) Present");
+	CBIT( 6, g[1], 0x00, 0xd4, ".... ..1. Scope Indication (SI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. Scope Indication (SI) Not Present");
+	CBIT( 7, g[1], 0x00, 0xd4, ".... ...1 MS Validated (MSV) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 MS Validated (MSV) Not Present");
+	LABL( 0, 0, 0x00, 0xb8);
+
+	BBIT( 8, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 0, g[1], 0x00, 0xd4, "1... .... Spare Present");
+	CLSE( 0, 0, 0x00, 0xd4, "0... .... Spare Not Present");
+	CBIT( 1, g[1], 0x00, 0xd4, ".1.. .... Spare Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".0.. .... Spare Not Present");
+	CBIT( 2, g[1], 0x00, 0xd4, "..1. .... Spare Present");
+	CLSE( 0, 0, 0x00, 0xd4, "..0. .... Spare Not Present");
+	CBIT( 3, g[1], 0x00, 0xd4, "...1 .... Static IPv6 Address Flag (S6AF) Present");
+	CLSE( 0, 0, 0x00, 0xd4, "...0 .... Static IPv6 Address Flag (S6AF) Not Present");
+	CBIT( 4, g[1], 0x00, 0xd4, ".... 1... Static IPv4 Address Flag (S4AF) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... 0... Static IPv4 Address Flag (S4AF) Not Present");
+	CBIT( 5, g[1], 0x00, 0xd4, ".... .1.. Management Based MDT Allowed (MBMDT) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. Management Based MDT Allowed (MBMDT) Present");
+	CBIT( 6, g[1], 0x00, 0xd4, ".... ..1. ISR is activated for the UE (ISRAU) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. ISR is activated for the UE (ISRAU) Not Present");
+	CBIT( 7, g[1], 0x00, 0xd4, ".... ...1 CSG Change Reporting Support Indication (CCRSI) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 CSG Change Reporting Support Indication (CCRSI) Not Present");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+
+void GTP::Extensions_V2::Cause()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 8, 3, 0x90, 0xc2, "Cause Value:");
+	CST#( 0, g[3], 0x00, 0xd4,"GTP::Extensions_V2::Cause::Cause_Values");
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	BBIT( 3, 2, 0x90, 0xc9, "Flags:");
+	CBIT( 2, g[2], 0x00, 0xd4, ".... .1.. PDN Connection IE Error (PCE) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. PDN Connection IE Error (PCE) Not Present");
+	CBIT( 1, g[2], 0x00, 0xd4, ".... ..1. Bearer Context IE Error (BCE) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. Bearer Context IE Error (BCE) Not Present");
+	CBIT( 0, g[2], 0x00, 0xd4, ".... ...1 Case Source (CS) Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 Case Source (CS) Not Present");
+	LABL( 0, 0, 0x00, 0xb8);
+	if (g[1] == 6)
+	{
+		DBIT( 0, 8, 0x90, 0xc2, "Type of the Offending IE:");
+		DBIT( 0, 16, 0x90, 0xc2, "Length of the Offending IE:");
+		DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+		DBIT( 0, 4, 0x90, 0xc2, "Instance:");
+	}
+}
+
+str# GTP::Extensions_V2::Cause::Cause_Values;
+	0	  |   Reserved;
+	1	  |   Reserved;
+	2	  |   Local Detach;
+	3	  |   Complete Detach;
+	4	  |   RAT changed from 3GPP to Non-3GPP;
+	5	  |   ISR deactivation;
+	6	  |   Error Indication received from RNC/eNodeB;
+	7	  |   IMSI Detach Only;
+	8	  |   Reactivation Requested;
+	9	  |   PDN reconnection to this APN disallowed;
+	10	  |   Access changed from Non-3GPP to 3GPP;
+	16	  |   Request accepted;
+	17	  |   Request accepted partially;
+	18	  |   New PDN type due to network preference;
+	19	  |   New PDN type due to single address bearer only;
+	64	  |   Context Not Found;
+	65	  |   Invalid Message Format;
+	66	  |   Version not supported by next peer;
+	67	  |   Invalid length;
+	68	  |   Service not supported;
+	69	  |   Mandatory IE incorrect;
+	70	  |   Mandatory IE missing;
+	71	  |   Shall not be used;
+	72	  |   System failure;
+	73	  |   No resources available;
+	74	  |   Semantic error in the TFT operation;
+	75	  |   Syntactic error in the TFT operation;
+	76	  |   Semantic errors in packet filter(s);
+	77	  |   Syntactic errors in packet filter(s);
+	78	  |   Missing or unknown APN;
+	79	  |   Shall not be used;
+	80	  |   GRE key not found;
+	81	  |   Relocation failure;
+	82	  |   Denied in RAT;
+	83	  |   Preferred PDN type not supported;
+	84	  |   All dynamic addresses are occupied;
+	85	  |   UE context without TFT already activated;
+	86	  |   Protocol type not supported;
+	87	  |   UE not responding;
+	88	  |   UE refuses;
+	89	  |   Service denied;
+	90	  |   Unable to page UE;
+	91	  |   No memory available;
+	92	  |   User authentication failed;
+	93	  |   APN access denied – no subscription;
+	94	  |   Request rejected (reason not specified);
+	95	  |   P-TMSI Signature mismatch;
+	96	  |   IMSI not known;
+	97	  |   Semantic error in the TAD operation;
+	98	  |   Syntactic error in the TAD operation;
+	99	  |   Shall not be used;
+	100	  |   Remote peer not responding;
+	101	  |   Collision with network initiated request;
+	102	  |   Unable to page UE due to Suspension;
+	103	  |   Conditional IE missing;
+	104	  |   APN Restriction type Incompatible with currently active PDN connection;
+	105	  |   Invalid overall length of the triggered response message and a piggybacked initial message;
+	106	  |   Data forwarding not supported;
+	107	  |   Invalid reply from remote peer;
+	108	  |   Fallback to GTPv1;
+	109	  |   Invalid peer;
+	110	  |   Temporarily rejected due to handover procedure in progress;
+	111	  |   Modifications not limited to S1-U bearers;
+	112	  |   Request rejected for a PMIPv6 reason;
+	113	  |   APN Congestion;
+	114	  |   Bearer handling not supported;
+	115	  |   UE already re-attached;
+
+void GTP::Extensions_V2::Charging_ID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 32, 0x90, 0xc2, "Charging ID Value:");
+}
+
+void GTP::Extensions_V2::IP()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	if (g[1] == 4)
+	{
+		IPLG( 0, 0, 0x90, 0xc2, "IPv4 Address:");
+	}
+	if (g[1] == 16)
+	{
+		IPV6( 0, 0, 0x90, 0xc2, "IPv6 Address:");
+	}
+
+}
+
+void GTP::Extensions_V2::MSISDN()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "MSISDN Number:");
+}
+
+void GTP::Extensions_V2::PCO()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "Protocol Configuration Options (PCO):");
+}
+
+void GTP::Extensions_V2::Flow_QoS()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "Label (QCI):");
+	DBIT( 0, 32, 0x90, 0xc2, "Maximum bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Maximum bit rate for downlink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Guaranteed bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+	DBIT( 0, 32, 0x90, 0xc2, "Guaranteed bit rate for uplink (kbps):");
+	DBIT( 0, 8, 0, 0);
+}
+
+GTP::Extensions_V2::Bearer_TFT()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "EPS Bearer Level Traffic Flow Template (TFT):");
+}
+
+GTP::Extensions_V2::TAD()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "Traffic Aggregate Description (TAD):");
+}
+
+GTP::Extensions_V2::TMSI
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "TMSI:");
+}
+
+GTP::Extensions_V2::Global_CN_ID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	DBYT( 0, g[1], 0x90, 0xc2, "CN-ID:");
+}
+
+void GTP::Extensions_V2::S103PDF()
+{
+	GTP::Extensions_V2::OCT1_2();
+	g[1] = 0;
+	DBIT( 8, g[1], 0x90, 0xc2, "HSGW Address for forwarding Length:");
+	DBYT( 0, g[1], 0x90, 0xc2, "HSGW Address for forwarding:");
+	DBIT( 0, 32, 0x90, 0xc2, "GRE Key:");
+	DBIT( 8, g[1], 0x90, 0xc2, "EPS Bearer ID Number:");
+	while (g[1] > 0)
+	{
+		DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+		DBIT( 0, 4, 0x90, 0xc2, "EPS Bearer ID:");
+		g[1] -= 1;
+	}
+}
+
+void GTP::Extensions_V2::S1UDF()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "EPS Bearer ID:");
+	g[1] = 0;
+	DBIT( 8, g[1], 0x90, 0xc2, "Serving GW Address Length:");
+	DBYT( 0, g[1], 0x90, 0xc2, "Serving GW Address:");
+	DBIT( 0, 32, 0x90, 0xc2, "Serving GW S1-U TEID:");
+}
+
+void GTP::Extensions_V2::Delay_Value()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "Delay Value in integer multiples of 50 millisecs:");
+}
+
+void GTP::Extensions_V2::Charging_Characteristics()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "Charging Characteristics value:");
+}
+
+void GTP::Extensions_V2::Trace_Information()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	DBIT( 0, 24, 0x90, 0xc2, "Trace ID:");
+	DBIT( 0, 32, 0x90, 0xc2, "Triggering Events:");
+	DBIT( 0, 32, 0x00, 0x00);
+	DBIT( 0, 8, 0x00, 0x00);
+	DBIT( 0, 16, 0x90, 0xc2, "List of NE Types:");
+	DBIT( 0, 8, 0x90, 0xc2, "Session Trace Depth:");
+	DBIT( 0, 16, 0x90, 0xc2, "List of Interfaces:");
+	DBYT( 0, g[1], 0x90, 0xc2, "IP Address of Trace Collection Entity:");
+}
+
+void GTP::Extensions_V2::Bearer_Flags()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 6, 0x90, 0xc2, "Spare:");
+	BBIT( 2, 2, 0x90, 0xc9, "Flags:");
+	CBIT( 1, g[2], 0x00, 0xd4, ".... .1.. PPC Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. PPC Not Present");
+	CBIT( 0, g[2], 0x00, 0xd4, ".... ..1. VB Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. VB Not Present");
+}
+
+void GTP::Extensions_V2::PTID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "Procedure Transaction ID:");
+}
+
+GTP::Extensions_V2::DRX()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "DRX Parameter:");
+}
+
+void GTP::Extensions_V2::GSMTrip()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 3, 0x90, 0xc2, "Security Mode:");
+	DBIT( 0, 1, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "SDRXI:");
+	DBIT( 0, 3, 0x90, 0xc2, "CKSN:");
+	DBIT( 0, 3, 0x90, 0xc2, "Number of Triplet");
+	DBIT( 0, 3, 0x90, 0xc2, "Spare:");
+	BBIT( 2, 1, 0x90, 0xc9, "Flags:");
+	CBIT( 1, g[1], 0x00, 0xd4, ".... ..1. SAMBRI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. SAMBRI Not Present");
+	CBIT( 0, g[1], 0x00, 0xd4, ".... ...1 UAMBRI Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 UAMBRI Not Present");
+}
+GTP::Extensions_V2::UMTSCiphQuin()
+{
+	// need packet files ):
+}
+GTP::Extensions_V2::GSMCiphQuin()
+{
+	// need packet files ):
+}
+GTP::Extensions_V2::UNTSCiphTrip()
+{
+	// need packet files ):
+}
+GTP::Extensions_V2::EPS()
+{
+	// need packet files ):
+}
+GTP::Extensions_V2::UMTSQuadQuin()
+{
+	// need packet files ):
+}
+void GTP::Extensions_V2::GSMTrip::Authentication Triplet()
+{
+	// need packet files ):
+}
+
+void GTP::Extensions_V2::PDU()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "NASPI:");
+	DBIT( 0, 16, 0x90, 0xc2, "DL GTP-U Sequence Number:");
+	DBIT( 0, 16, 0x90, 0xc2, "DL GTP-U Sequence Number::");
+	DBIT( 0, 16, 0x90, 0xc2, "Send N-PDU Number:");
+	DBIT( 0, 16, 0x90, 0xc2, "Receive N-PDU Number:");
+}
+
+void GTP::Extensions_V2::P_TMSI()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "Packet TMSI (P-TMSI):");
+}
+
+void GTP::Extensions_V2::P_TMSI_Sig()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1], 0x90, 0xc2, "P-TMSI Signature:");
+}
+
+void GTP::Extesnions_V2::Hop_Count()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "Hop Counter:");
+}
+
+void GTP::Extensions_V2::Trace_Ref()
+{
+	GTP::Extensions_V2::OCT1_2();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	DBIT( 0, 24, 0x90, 0xc2, "Trace ID:");
+}
+
+void GTP::Extensions_V2::CRM()
+{ 
+	g[2] = 0;
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 8, g[2], 0x90, 0xc2, "Complete Request Message Type");
+	if (g[2] == 0)
+	{
+		LABL( 0, 0, 0x90, 0xc2, "Location Type: Complete Attach Request Message");
+	}
+	if (g[2] == 1)
+	{
+		LABL( 0, 0, 0x90, 0xc2, "Location Type: Complete TAU Request Message");
+	}
+	DBYT( 0, g[1], 0x90, 0xc2, "P-TMSI Signature:");
+}
+
+void GTP::Extensions_V2::GUTI()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	DBIT( 0, 16, 0x90, 0xc2, "MME Group ID:");
+	DBIT( 0, 8, 0x90, 0xc2, "MME Code:");
+	DBYT( 0, g[1], 0x90, 0xc2, "M-TMSI:");
+}
+
+GTP::Extensions_V2::F_Container()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	g[2] = 0;
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 4, g[2], 0x90, 0xc2, "Container Type:");
+	if (g[2] == 2)
+	{
+		DBIT( 0, 6, 0x90, 0xc2, "Spare:");
+		BBIT( 4, 2, 0x90, 0xc9, "Flags:");
+		CBIT( 3, g[2], 0x00, 0xd4, ".... 1... PHX Present");
+		CLSE( 0, 0, 0x00, 0xd4, ".... 0... PHX Not Present");
+		CBIT( 2, g[2], 0x00, 0xd4, ".... .1.. SAPI Present");
+		CLSE( 0, 0, 0x00, 0xd4, ".... .0.. SAPI Not Present");
+		CBIT( 1, g[2], 0x00, 0xd4, ".... ..1. RP Present");
+		CLSE( 0, 0, 0x00, 0xd4, ".... ..0. RP Not Present");
+		CBIT( 0, g[2], 0x00, 0xd4, ".... ...1 PFI Present");
+		CLSE( 0, 0, 0x00, 0xd4, ".... ...0 PFI Not Present");
+		g[3] = 0;
+		XBIT( g[3], g[2], 0x90, 0xc2, "GTP::Extensions_V2::F_Container::PFI");
+		g[3] = 1;
+		XBIT( g[3], g[2], 0x90, 0xc2, "GTP::Extensions_V2::F_Container::RP");
+		g[3] = 2;
+		XBIT( g[3], g[2], 0x90, 0xc2, "GTP::Extensions_V2::F_Container::SAPI");
+		g[3] = 3;
+		XBIT( g[3], g[2], 0x90, 0xc2, "GTP::Extensions_V2::F_Container::PHX");
+	}
+}
+
+void GTP::Extensions_V2::F_Container::PFI()
+{
+	DBIT( 0, 8, 0x90, 0xc2, "Packet Flow ID:");
+}
+void GTP::Extensions_V2::F_Container::SAPI()
+{
+	DBIT( 0, 4, 0x90, 0xc2, "SAPI:");
+}
+void GTP::Extensions_V2::F_Container::RP()
+{
+	DBIT( 0, 3, 0x90, 0xc2, "Radio Priority:");
+}
+void GTP::Extensions_V2::F_Container::PHX()
+{
+	DBIT( 0, 8, 0x90, 0xc2, "XiD parameters length:");
+	DBYT( 0, g[1]. 0x90, 0xc2, "XiD parameters:");
+}
+
+void GTP::Extensions_V2::F_Cause()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 4, g[2], 0x90, 0xc2, "Container Type:");
+}
+
+void GTP::Extensions_V2::Selected_PLMN_ID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "Selected PLMN ID:");
+}
+
+void GTP::Extensions_V2::Target_ID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	g[2] = 0;
+	DBIT( 8, g[2], 0x90, 0xc2, "Target Type:")
+	CST#( 0, g[2], 0x00, 0xd4, "GTP::Extensions_V2::Target_ID::Target_ID_Types");
+	if (g[2] == 0)
+	{
+		DBYT( 0, g[1]. 0x90, 0xc2, "RNC ID:");
+	}
+	if (g[2] == 1)
+	{
+		HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+		HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+		DBIT( 0, 4, 0x90, 0xc2, "Spare");
+		HBIT( 0, 20, 0x90, 0xc2, "Macro eNodeB ID:")
+		DBIT( 0, 16, 0x90, 0xc2, "Tracking Area Code (TAC)");
+	}
+	if (g[2] == 2)
+	{
+		DBYT( 0, g[1]. 0x90, 0xc2, "Cell Identifier:");
+	}
+	if (g[2] == 3)
+	{
+		HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+		HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+		DBIT( 0, 4, 0x90, 0xc2, "Spare");
+		HBIT( 0, 20, 0x90, 0xc2, "Home eNodeB ID:");
+		DBIT( 0, 16, 0x90, 0xc2, "Tracking Area Code (TAC)");
+	}
+}
+
+str# GTP::Extensions_V2::Target_ID::Target_ID_Types;
+	0   |   RNC ID;
+	1   |   Macro eNodeB ID;
+	2   |   Cell Identifier;
+	3   |   Home eNodeB ID;
+
+void GTP::Extensions_V2::PFID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "EBI:");
+	DBYT( 0, g[1]. 0x90, 0xc2, "Packet Flow ID:");	
+}
+
+void GTP::Extensions_V2::RAB()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 4, 0x90, 0xc2, "NSAPI:");
+	DBIT( 0, 16, 0x90, 0xc2, "DL GTP-U Sequence Number:");
+	DBIT( 0, 16, 0x90, 0xc2, "UL GTP-U Sequence Number:");
+	DBIT( 0, 16, 0x90, 0xc2, "DL PDCP Sequence Number:");
+	DBIT( 0, 16, 0x90, 0xc2, "UL PDCP Sequence Number:");
+}
+
+void GTP::Extensions_V2::SourceRNC_PDCPContextInfo()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "RRC Container:");
+}
+
+void GTP::Extensions_V2::UDPSourcePortNumber()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 8, 0x90, 0xc2, "UDP Source Port Number:");
+}
+
+void GTP::Extensions_V2::SourceID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	g[2] = 0;
+	D64B( 0, 0, 0x90, 0xc2, "Target Cell ID:");
+	DBIT( 8, g[2], 0x90, 0xc2, "Source Type:");
+	CST#( 0, g[2], 0x00, 0xd4, GTP::Extensions_V2::SourceID::SourceID_Types );
+	DBYT( 0, g[1]. 0x90, 0xc2, "Source ID:");	
+}
+
+str# GTP::Extensions_V2::SourceID::SourceID_Types;
+	0   |   Cell ID;
+	1   |   RNC ID;
+
+void GTP::Extensions_V2::Change_Reporting_Action()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90. 0xc2, "Action:");
+	CST#( 0, g[1], 0x00, 0xd4, "GTP::Extensions_V2::Change_Reporting_Action::Change_Reporting_Action_Values");
+}
+
+str# GTP::Extensions_V2::Change_Reporting_Action::Change_Reporting_Action_Values;
+	0   |   Stop Reporting;
+	1   |   Start Reporting CGI/SAI;
+	2   |   Start Reporting RAI;
+	3   |   Start Reporting TAI;
+	4   |   Start Reporting ECGI;
+	5   |   Start Reporting CGI/SAI and RAI;
+	6   |   Start Reporting TAI and ECGI;
+
+void GTP::Extensions_V2::FQ_CSID()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	g[2] = 0;
+	DBIT( 4, g[1], 0x90, 0xc2, "Node-ID Type:");
+	DBIT( 4, g[2], 0x90, 0xc2, "Number of CIDs:");
+	if (g[1] == 0)
+	{
+		IPLG( 0, 0, 0x90, 0xc2, "IPv4 Address:");
+	}
+	if (g[1] == 1)
+	{
+		IPV6( 0, 0, 0x90, 0xc2, "IPv6 Address:");
+	}
+	if (g[1] == 2)
+	{
+		DBIT( 0, 32, 0x90, 0xc2, "Node-ID:");
+	}
+	while (g[2] > 0)
+	{
+		DBIT( 0, 8, 0x90, 0xc2, "PDN Connection Set Identifier:");
+		g[2] -= 1;
+	}
+}
+
+void GTP::Extensions_V2::Channel_needed()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "Channel Needed:");
+}
+
+void GTP::Extensions_V2::eMLPP()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "eMLPP-Priority:");
+}
+
+void GTP::Extensions_V2::Node_Type()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 8, g[1], 0x05, 0x05);
+	if (g[1] == 0)
+	{
+		LABL( 0, 0, 0x90, 0xc2, "Node Type: MME");	
+	}
+	if (g[1] == 1)
+	{
+		LABL( 0, 0, 0x90, 0xc2, "Node Type: MME");	
+	}
+}
+
+void GTP::Extensions_V2::FQDN()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "FQDN:");
+}
+
+void GTP::Extensions_V2::TI()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "Transaction Identifier:");
+}
+
+void GTP::Extensions_V2::MBMS_Session_Duration()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 24, 0x90, 0xc2, "MBMS Session Duration:");
+}
+
+void GTP::Extensions_V2::MBMS_Service_Area()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "MBMS Service Area:");
+}
+
+void GTP::Extensions_V2::MBMS_SessionID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 24, 0x90, 0xc2, "MBMS Session Identifier:");
+}
+
+void GTP::Extensions_V2::MBMS_FlowID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 24, 0x90, 0xc2, "MBMS Flow Identifier:");
+}
+
+void GTP::Extensions_V2::MBMS_IPMD()
+{
+	// need packet file to see decode
+}
+
+void GTP::Extensions_V2::MBMSDA()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 0, 6, 0x90, 0xc2, "Spare:");
+	DBIT( 2, g[1], 0x90, 0xc2, "Distribution Indication:");
+	CST#( 0, g[1], 0x00, 0x00, "GTP::Extensions_V2::MBMSDA::MBMSDA_Types");
+}
+
+str# GTP::Extensions_V2::MBMSDA::MBMSDA_Types;
+	0   |   No RNCs have accepted IP multicast distribution;
+	1   |   All RNCs have accepted IP multicast distribution;
+	2   |   Some RNCs have accepted IP multicast distribution;
+
+void GTP::Extensions_V2::UCI()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Country Code (MCC):");
+	HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	HBIT( 0, 27, 0x90, 0xc2, "CSG ID:");
+	DBIT( 2, g[1], 0x90, 0xc2, "Access Mode:");
+	CST#( 0, g[1], 0x00, 0x00, "GTP::Extensions_V2::UCI::UCI_Access_Modes");
+	DBIT( 0, 4, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "LCSG:");
+	DBIT( 1, g[1], 0x90, 0xc2, "CMI:");
+	CST#( 0, g[1], 0x00, 0x00, "GTP::Extensions_V2::UCI::CMI");
+}
+
+str# GTP::Extensions_V2::UCI::UCI_Access_Modes;
+	0   |   Closed Mode;
+	1   |   Hybrid Mode;
+
+str# GTP::Extensions_V2::UCI::CMI;
+	0   |   Non CSG membership;
+	1   |   CSG membership;
+
+
+void GTP::Extensions_V2::IRA()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	BBIT( 3, 2, 0x90, 0xc9, "Flags:");
+	CBIT( 2, g[2], 0x00, 0xd4, ".... .1.. Start Reporting User CSG through Unsubscribed Hybrid Cell");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. UCIUHC Not Present");
+	CBIT( 1, g[2], 0x00, 0xd4, ".... ..1. Start Reporting User CSG through Subscribed Hybrid Cell");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. UCISHC Not Present");
+	CBIT( 0, g[2], 0x00, 0xd4, ".... ...1 Start Reporting User CSG through CSG Cell");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 UCICSG Not Present");
+}
+
+void GTP::Extensions_V2::RFSPI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 16, 0x90, 0xc2, "RFSP Index:");
+}
+
+void GTP::Extensions_V2::CSGID()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 5, 0x90, 0xc2, "Spare:");
+	HBIT( 0, 27, 0x90, 0xc2, "CSG ID:");
+}
+
+void GTP::Extensions_V2::CMI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 7, 0x90, 0xc2, "Spare:");
+	BBIT( 1, 2, 0x90, 0xc9, "Flags:");
+	CBIT( 0, g[2], 0x00, 0xd4, ".... ...1 Non CSG Membership");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 CSG Membership");
+}
+
+void GTP::Extensions_V2::Service_indicator()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 8, g[1], 0x90, 0xc2, "Service Indicator:");
+	if (g[1] == 1)
+	{
+		LABL( 0, 0, 0x00, 0x00, "CS Call Indicator");
+	}
+	if (g[1] == 2)
+	{
+		LABL( 0, 0, 0x00, 0x00, "SMS Indicator");
+	}
+}
+
+void GTP::Extensions_V2::Detach_Type()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 8, g[1], 0x90, 0xc2, "Detach Type:");
+	if (g[1] == 1)
+	{
+		LABL( 0, 0, 0x00, 0x00, "PS Detach");
+	}
+	if (g[1] == 2)
+	{
+		LABL( 0, 0, 0x00, 0x00, "Combined PS/CS Detach");
+	}
+}
+
+void GTP::Extensions_V2::LDN()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBYT( 0, g[1]. 0x90, 0xc2, "LDN:");
+}
+
+void GTP::Extensions_V2::Node_Features()
+{
+	GTP::Extensions_V2::OCT1_2();
+	BBIT( 8, 2, 0x90, 0xc9, "Flags:");
+	CBIT( 2, g[2], 0x00, 0xd4, ".... .1.. NTSR Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... .0.. NTSR Not Present");
+	CBIT( 1, g[2], 0x00, 0xd4, ".... ..1. MABR Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ..0. MABR Not Present");
+	CBIT( 0, g[2], 0x00, 0xd4, ".... ...1 PRN Present");
+	CLSE( 0, 0, 0x00, 0xd4, ".... ...0 PRN Not Present");
+}
+
+void GTP::Extensions_V2::MBMSTDT()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 16, 0x90, 0xc2, "MBMS Time to Data Transfer Value Part:");
+}
+
+void GTP::Extensions_V2::Throttling()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 3, g[2], 0x90, 0xc2, "Throttling Delay Unit:");
+	CST#( 0, g[2], 0x00, 0x00, "GTP::Extensions_V2::Timer_Types");
+	DBIT( 0, 3, 0x90, 0xc2, "Throttling Delay Value:");
+	DBIT( 0, 8, 0x90, 0xc2, "Throttling Factor:");
+}
+
+str# GTP::Extensions_V2::Timer_Types;
+	0   |   value is incremented in multiples of 2 seconds;
+	1   |   value is incremented in multiples of 1 minute;
+	2   |   value is incremented in multiples of 10 minutes;
+	3   |   value is incremented in multiples of 1 hour;
+	4   |   value is incremented in multiples of 10 hours;
+	5   |   timer deactivated;
+
+void GTP::Extensions_V2::ARP()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 1, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "PCI:");
+	DBIT( 0, 4, 0x90, 0xc2, "PL:");
+	DBIT( 0, 1, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "PVI:");
+}
+
+void GTP::Extensions_V2::EPC_Timer()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 3, g[2], 0x90, 0xc2, "EPC Timer:");
+	CST#( 0, g[2], 0x00, 0x00, GTP::Extensions_V2::Timer_Types );
+	DBIT( 5, g[2], 0x90, 0xc2, "Timer Value:");
+}
+
+void GTP::Extensions_V2::SPI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 7, 0x90, 0xc2, "Spare:");
+	DBIT( 0, 1, 0x90, 0xc2, "LAPI:");
+}
+
+void GTP::Extensions_V2::TMGI()
+{
+	GTP::Extensions_V2::OCT1_2();
+	DBIT( 0, 32, 0x90, 0xc2, "TMGI:");
+	DBIT( 0, 16, 0x00, 0x00);
+}
+
+void GTP::Extensions_V2::Private_Extension()
+{
+	GTP::Extensions_V2::OCT1_2Length();
+	DBIT( 0, 16, 0x90, 0xc2, "Enterprise ID:");
+	DBYT( 0, g[1]. 0x90, 0xc2, "Proprietary Value:");
+}
+
+void GTP::Extensions::V0;
+	TGTE 0 10 0 0 RETURN;
+	g[0xd] = 0;
+	HBYT 0 1 90 c2 Identifier:;
+	CST# 0 1 00 14 GTP::Extensions_List_V0;
+	g[57] = g[1];
+	TSB# 0 1 00 00 GTP::Extensions_Functions_V0;
+	XLSE 0 0 0 0 GTP::Extensions::Failed;
+	TEQU 0 d 0 0 RETURN;
+	GTP::Extensions::V0;
+
+str# GTP::Extensions_List_V0;
+	0x01 | Cause;
+	0x02 | IMSI;
+	0x03 | Routing Area Identity (RAI);
+	0x04 | Temporary Logical Link Identity (TLLI);
+	0x05 | Packet TMSI (P-TMSI);
+	0x06 | QOS;
+	0x08 | Reordering;
+	0x09 | Authentication Triplet;
+	0x0a | Spare;
+	0x0b | MAP Cause;
+	0x0c | P-TMSI Signature;
+	0x0d | MS Validated;
+	0x0e | Recovery;
+	0x0f | Selection_Mode;
+	0x10 | Flow Label Data I;
+	0x11 | Flow Label Signalling;
+	0x12 | Flow Label Data II;
+	0x13 | MS Not Reachable Reason;
+	0x14 | NSAPI;
+	0x15 | RANAP Cause;
+	0x16 | RAB Context;
+	0x17 | Radio Priority SMS;
+	0x18 | Radio Priority;
+	0x19 | Packet Flow Id;
+	0x1a | Charging Characteristics;
+	0x1b | Trace Reference;
+	0x1c | Trace Type;
+	0x1d | MS Not Reachable Reason;
+	0x7f | Charging ID; 
+	0x80 | End User Address;
+	0x83 | Access Point Name;
+	0x84 | Protocol Config;
+	0x85 | GSN Address;
+	0x86 | MSISDN;
+	0x87 | Quality of Service;
+	0x88 | Authentication Quintuplet;
+	0x89 | Traffic Flow Template;
+	0x8A | Target Identification;
+	0x8B | UTRAN Transparent Container;
+	0x8C | RAB Setup Information;
+	0x8D | Extension Header Type List;
+	0x8E | Trigger Id;
+	0x8F | OMC Identity;
+	0x90 | RAN Transparent Container;
+	0x91 | PDP Context Prioritization;
+	0x92 | Additional RAB Setup Information;
+	0x94 | Common Flags;
+	0x95 | APN Restriction;
+	0x97 | RAT Type;
+	0x98 | User Location Information;
+	0x99 | MS Time Zone;
+	0x9A | IMEI(SV);
+	0x9B | CAMEL Charging Information Container;
+	0xA1 | Source RNC PDCP context info;
+	0xA2 | Additional Trace Info;
+	0xA3 | Hop Counter;
+	0xA4 | Selected PLMN ID;
+	0xA5 | MBMS Session Identifier;
+	0xA6 | MBMS 2G 3G Indicator;
+	0xA7 | Enhanced NSAPI;
+	0xA9 | Additional MBMS Trace Info;
+	0xAA | MBMS Session Repetition Number;
+	0xAB | MBMS Time To Data Transfer;
+	0xAD | BSS Container;
+	0xAE | Cell Identification;
+	0xAF | PDU Numbers;
+	0xB0 | BSSGP Cause;
+	0xB1 | Required MBMS bearer capabilities;
+	0xB2 | RIM Routing Address Discriminator;
+	0xB3 | List of set-up PFCs;
+	0xB4 | PS Handover XID Parameters;
+	0xB5 | MS Info Change Reporting Action;
+	0xB6 | Direct Tunnel Flags;
+	0xB7 | Correlation-ID;
+	0xB8 | Bearer Control Mode;
+	0xB9 | MBMS Flow Identifier;
+	0xBA | MBMS IP Multicast Distribution;
+	0xBB | MBMS Distribution Acknowledgement;
+	0xBC | Reliable INTER RAT HANDOVER INFO ;
+	0xBE | Fully Qualified Domain Name (FQDN);
+	0xBF | Evolved Allocation Retention Priority I;
+	0xC0 | Evolved Allocation Retention Priority II;
+	0xC1 | Extended Common Flags;
+	0xC5 | CSG Membership Indication (CMI);
+	0xFB | Charging Gateway Address;
+	0xFF | Priv Extension;
+
+
+str# GTP::Extensions_Functions_V0;
+	0x01 | GTP::Extensions::0x01;
+	0x02 | GTP::Extensions::0x02;
+	0x03 | GTP::Extensions::0x03;
+	0x04 | GTP::Extensions::0x04;
+	0x05 | GTP::Extensions::0x05;
+	0x06 | GTP::Extensions::0x06;
+	0x08 | GTP::Extensions::0x08;
+	0x09 | GTP::Extensions::0x09;
+	0x0a | GTP::Extensions::0x0a;
+	0x0b | GTP::Extensions::0x0b;
+	0x0c | GTP::Extensions::0x0c;
+	0x0d | GTP::Extensions::0x0d;
+	0x0e | GTP::Extensions::0x0e;
+	0x0f | GTP::Extensions::0x0f;
+	0x10 | GTPv0::Extensions::0x10;
+	0x11 | GTPv0::Extensions::0x11;
+	0x12 | GTPv0::Extensions::0x12;
+	0x13 | GTP::Extensions::0x1d;
+	0x14 | GTP::Extensions::0x14;
+	0x15 | GTP::Extensions::0x15;
+	0x16 | GTP::Extensions::0x16;
+	0x17 | GTP::Extensions::0x17;
+	0x18 | GTP::Extensions::0x18;
+	0x19 | GTP::Extensions::0x19;
+	0x1a | GTP::Extensions::0x1a;
+	0x1b | GTP::Extensions::0x1b;
+	0x1c | GTP::Extensions::0x1c;
+	0x1d | GTP::Extensions::0x1d;
+	0x7f | GTP::Extensions::0x7f;
+	0x80 | GTP::Extensions::0x80;
+	0x81 | GTPv0::Extensions::0x81;
+	0x82 | GTP::Extensions::0x82;
+	0x83 | GTP::Extensions::0x83;
+	0x84 | GTP::Extensions::0x84;
+	0x85 | GTP::Extensions::0x85;
+	0x86 | GTP::Extensions::0x86;
+	0x87 | GTP::Extensions::0x87;
+	0x88 | GTP::Extensions::0x88;
+	0x89 | GTP::Extensions::0x89;
+	0x8A | GTP::Extensions::0x8A;
+	0x8B | GTP::Extensions::0x8B;
+	0x8C | GTP::Extensions::0x8C;
+	0x8D | GTP::Extensions::0x8D;
+	0x8E | GTP::Extensions::0x8E;
+	0x8F | GTP::Extensions::0x8F;
+	0x90 | GTP::Extensions::0x90;
+	0x91 | GTP::Extensions::0x91;
+	0x92 | GTP::Extensions::0x92;
+	0x93 | GTP::Extensions::0x93;
+	0x94 | GTP::Extensions::0x94;
+	0x95 | GTP::Extensions::0x95;
+	0x96 | GTP::Extensions::0x96;
+	0x97 | GTP::Extensions::0x97;
+	0x98 | GTP::Extensions::0x98;
+	0x99 | GTP::Extensions::0x99;
+	0x9A | GTP::Extensions::0x9A;
+	0x9B | GTP::Extensions::0x9B;
+	0x9C | GTP::Extensions::0x9C;
+	0x9D | GTP::Extensions::0x9D;
+	0x9E | GTP::Extensions::0x9E;
+	0x9F | GTP::Extensions::0x9F;
+	0xA0 | GTP::Extensions::0xA0;
+	0xA1 | GTP::Extensions::0xA1;
+	0xA2 | GTP::Extensions::0xA2;
+	0xA3 | GTP::Extensions::0xA3;
+	0xA4 | GTP::Extensions::0xA4;
+	0xA5 | GTP::Extensions::0xA5;
+	0xA6 | GTP::Extensions::0xA6;
+	0xA7 | GTP::Extensions::0xA7;
+	0xA8 | GTP::Extensions::0xA8;
+	0xA9 | GTP::Extensions::0xA9;
+	0xAA | GTP::Extensions::0xAA;
+	0xAB | GTP::Extensions::0xAB;
+	0xAC | GTP::Extensions::0xAC;
+	0xAD | GTP::Extensions::0xAD;
+	0xAE | GTP::Extensions::0xAE;
+	0xAF | GTP::Extensions::0xAF;
+	0xB0 | GTP::Extensions::0xB0;
+	0xB1 | GTP::Extensions::0xB1;
+	0xB2 | GTP::Extensions::0xB2;
+	0xB3 | GTP::Extensions::0xB3;
+	0xB4 | GTP::Extensions::0xB4;
+	0xB5 | GTP::Extensions::0xB5;
+	0xB6 | GTP::Extensions::0xB6;
+	0xB7 | GTP::Extensions::0xB7;
+	0xB8 | GTP::Extensions::0xB8;
+	0xB9 | GTP::Extensions::0xB9;
+	0xBA | GTP::Extensions::0xBA;
+	0xBB | GTP::Extensions::0xBB;
+	0xBC | GTP::Extensions::0xBC;
+	0xBD | GTP::Extensions::0xBD;
+	0xBE | GTP::Extensions::0xBE;
+	0xBF | GTP::Extensions::0xBF;
+	0xC0 | GTP::Extensions::0xC0;
+	0xC1 | GTP::Extensions::0xC1;
+	0xC2 | GTP::Extensions::0xC2;
+	0xC3 | GTP::Extensions::0xC3;
+	0xC4 | GTP::Extensions::0xC4;
+	0xC5 | GTP::Extensions::0xC5;
+	0xC6 | GTP::Extensions::0xC6;
+	0xFB | GTP::Extensions::0xFB;
+	0xFF | GTP::Extensions::0xFF;
+	
+str# GTP::Extensions_List;
+	0x01 | Cause;
+	0x02 | IMSI;
+	0x03 | Routing Area Identity (RAI);
+	0x04 | Temporary Logical Link Identity (TLLI);
+	0x05 | Packet TMSI (P-TMSI);
+	0x06 | QOS;
+	0x08 | Reordering;
+	0x09 | Authentication Triplet;
+	0x0a | Spare;
+	0x0b | MAP Cause;
+	0x0c | P-TMSI Signature;
+	0x0d | MS Validated;
+	0x0e | Recovery;
+	0x0f | Selection_Mode;
+	0x10 | TEID Data;
+	0x11 | TEID Control Plane;
+	0x12 | TEID II;
+	0x13 | Teardown Indication;
+	0x14 | NSAPI;
+	0x15 | RANAP Cause;
+	0x16 | RAB Context;
+	0x17 | Radio Priority SMS;
+	0x18 | Radio Priority;
+	0x19 | Packet Flow Id;
+	0x1a | Charging Characteristics;
+	0x1b | Trace Reference;
+	0x1c | Trace Type;
+	0x1d | MS Not Reachable Reason;
+	0x7f | Charging ID;
+	0x80 | End User Address;
+	0x83 | Access Point Name;
+	0x84 | Protocol Config;
+	0x85 | GSN Address;
+	0x86 | MSISDN;
+	0x87 | Quality of Service;
+	0x88 | Authentication Quintuplet;
+	0x89 | Traffic Flow Template;
+	0x8A | Target Identification;
+	0x8B | UTRAN Transparent Container;
+	0x8C | RAB Setup Information;
+	0x8D | Extension Header Type List;
+	0x8E | Trigger Id;
+	0x8F | OMC Identity;
+	0x90 | RAN Transparent Container;
+	0x91 | PDP Context Prioritization;
+	0x92 | Additional RAB Setup Information;
+	0x94 | Common Flags;
+	0x95 | APN Restriction;
+	0x97 | RAT Type;
+	0x98 | User Location Information;
+	0x99 | MS Time Zone;
+	0x9A | IMEI(SV);
+	0x9B | CAMEL Charging Information Container;
+	0xA1 | Source RNC PDCP context info;
+	0xA2 | Additional Trace Info;
+	0xA3 | Hop Counter;
+	0xA4 | Selected PLMN ID;
+	0xA5 | MBMS Session Identifier;
+	0xA6 | MBMS 2G 3G Indicator;
+	0xA7 | Enhanced NSAPI;
+	0xA9 | Additional MBMS Trace Info;
+	0xAA | MBMS Session Repetition Number;
+	0xAB | MBMS Time To Data Transfer;
+	0xAD | BSS Container;
+	0xAE | Cell Identification;
+	0xAF | PDU Numbers;
+	0xB0 | BSSGP Cause;
+	0xB1 | Required MBMS bearer capabilities;
+	0xB2 | RIM Routing Address Discriminator;
+	0xB3 | List of set-up PFCs;
+	0xB4 | PS Handover XID Parameters;
+	0xB5 | MS Info Change Reporting Action;
+	0xB6 | Direct Tunnel Flags;
+	0xB7 | Correlation-ID;
+	0xB8 | Bearer Control Mode;
+	0xB9 | MBMS Flow Identifier;
+	0xBA | MBMS IP Multicast Distribution;
+	0xBB | MBMS Distribution Acknowledgement;
+	0xBC | Reliable INTER RAT HANDOVER INFO ;
+	0xBE | Fully Qualified Domain Name (FQDN);
+	0xBF | Evolved Allocation Retention Priority I;
+	0xC0 | Evolved Allocation Retention Priority II;
+	0xC1 | Extended Common Flags;
+	0xC5 | CSG Membership Indication (CMI);
+	0xFB | Charging Gateway Address;
+	0xFF | Priv Extension;
+
+
+str# GTP::Extensions_Functions;
+	0x01 | GTP::Extensions::0x01;
+	0x02 | GTP::Extensions::0x02;
+	0x03 | GTP::Extensions::0x03;
+	0x04 | GTP::Extensions::0x04;
+	0x05 | GTP::Extensions::0x05;
+	0x06 | GTP::Extensions::0x06;
+	0x08 | GTP::Extensions::0x08;
+	0x09 | GTP::Extensions::0x09;
+	0x0a | GTP::Extensions::0x0a;
+	0x0b | GTP::Extensions::0x0b;
+	0x0c | GTP::Extensions::0x0c;
+	0x0d | GTP::Extensions::0x0d;
+	0x0e | GTP::Extensions::0x0e;
+	0x0f | GTP::Extensions::0x0f;
+	0x10 | GTP::Extensions::0x10;
+	0x11 | GTP::Extensions::0x11;
+	0x12 | GTP::Extensions::0x12;
+	0x13 | GTP::Extensions::0x13;
+	0x14 | GTP::Extensions::0x14;
+	0x15 | GTP::Extensions::0x15;
+	0x16 | GTP::Extensions::0x16;
+	0x17 | GTP::Extensions::0x17;
+	0x18 | GTP::Extensions::0x18;
+	0x19 | GTP::Extensions::0x19;
+	0x1a | GTP::Extensions::0x1a;
+	0x1b | GTP::Extensions::0x1b;
+	0x1c | GTP::Extensions::0x1c;
+	0x1d | GTP::Extensions::0x1d;
+	0x7f | GTP::Extensions::0x7f;
+	0x80 | GTP::Extensions::0x80;
+	0x81 | GTP::Extensions::0x81;
+	0x82 | GTP::Extensions::0x82;
+	0x83 | GTP::Extensions::0x83;
+	0x84 | GTP::Extensions::0x84;
+	0x85 | GTP::Extensions::0x85;
+	0x86 | GTP::Extensions::0x86;
+	0x87 | GTP::Extensions::0x87;
+	0x88 | GTP::Extensions::0x88;
+	0x89 | GTP::Extensions::0x89;
+	0x8A | GTP::Extensions::0x8A;
+	0x8B | GTP::Extensions::0x8B;
+	0x8C | GTP::Extensions::0x8C;
+	0x8D | GTP::Extensions::0x8D;
+	0x8E | GTP::Extensions::0x8E;
+	0x8F | GTP::Extensions::0x8F;
+	0x90 | GTP::Extensions::0x90;
+	0x91 | GTP::Extensions::0x91;
+	0x92 | GTP::Extensions::0x92;
+	0x93 | GTP::Extensions::0x93;
+	0x94 | GTP::Extensions::0x94;
+	0x95 | GTP::Extensions::0x95;
+	0x96 | GTP::Extensions::0x96;
+	0x97 | GTP::Extensions::0x97;
+	0x98 | GTP::Extensions::0x98;
+	0x99 | GTP::Extensions::0x99;
+	0x9A | GTP::Extensions::0x9A;
+	0x9B | GTP::Extensions::0x9B;
+	0x9C | GTP::Extensions::0x9C;
+	0x9D | GTP::Extensions::0x9D;
+	0x9E | GTP::Extensions::0x9E;
+	0x9F | GTP::Extensions::0x9F;
+	0xA0 | GTP::Extensions::0xA0;
+	0xA1 | GTP::Extensions::0xA1;
+	0xA2 | GTP::Extensions::0xA2;
+	0xA3 | GTP::Extensions::0xA3;
+	0xA4 | GTP::Extensions::0xA4;
+	0xA5 | GTP::Extensions::0xA5;
+	0xA6 | GTP::Extensions::0xA6;
+	0xA7 | GTP::Extensions::0xA7;
+	0xA8 | GTP::Extensions::0xA8;
+	0xA9 | GTP::Extensions::0xA9;
+	0xAA | GTP::Extensions::0xAA;
+	0xAB | GTP::Extensions::0xAB;
+	0xAC | GTP::Extensions::0xAC;
+	0xAD | GTP::Extensions::0xAD;
+	0xAE | GTP::Extensions::0xAE;
+	0xAF | GTP::Extensions::0xAF;
+	0xB0 | GTP::Extensions::0xB0;
+	0xB1 | GTP::Extensions::0xB1;
+	0xB2 | GTP::Extensions::0xB2;
+	0xB3 | GTP::Extensions::0xB3;
+	0xB4 | GTP::Extensions::0xB4;
+	0xB5 | GTP::Extensions::0xB5;
+	0xB6 | GTP::Extensions::0xB6;
+	0xB7 | GTP::Extensions::0xB7;
+	0xB8 | GTP::Extensions::0xB8;
+	0xB9 | GTP::Extensions::0xB9;
+	0xBA | GTP::Extensions::0xBA;
+	0xBB | GTP::Extensions::0xBB;
+	0xBC | GTP::Extensions::0xBC;
+	0xBD | GTP::Extensions::0xBD;
+	0xBE | GTP::Extensions::0xBE;
+	0xBF | GTP::Extensions::0xBF;
+	0xC0 | GTP::Extensions::0xC0;
+	0xC1 | GTP::Extensions::0xC1;
+	0xC2 | GTP::Extensions::0xC2;
+	0xC3 | GTP::Extensions::0xC3;
+	0xC4 | GTP::Extensions::0xC4;
+	0xC5 | GTP::Extensions::0xC5;
+	0xC6 | GTP::Extensions::0xC6;
+	0xFB | GTP::Extensions::0xFB;
+	0xFF | GTP::Extensions::0xFF;
+
+
+void GTP::Extensions::0x01;
+	DBYT 00 1 90 c2 Cause Class:;
+		if (g[1] >= 0x00)
+		{
+			if (g[1] <= 0x40)
+			{
+				LABL 0 0 90 14 request;
+			}
+			if (g[1] >= 0x41)
+			{
+				if (g[1] <= 0x7F)
+				{
+					LABL 0 0 90 14 request;
+				}
+			}
+			if (g[1] >= 0x80)
+			{
+				if (g[1] <= 0xBF)
+				{
+					LABL 0 0 90 14 repsonse acc;
+				}
+			}
+			if (g[1] >= 0xC0)
+			{
+				if (g[1] <= 0xFF)
+				{
+					LABL 0 0 90 14 response / rejection;
+				}
+			}
+		}
+	DECR 1;
+	DBYT 00 1 90 c2 Cause:;
+		CEQU 0 1 00 14 Request IMSI; 
+		CEQU 1 1 00 14 Request IMEI; 
+		CEQU 2 1 00 14 Request IMSI and IMEI; 
+		CEQU 3 1 00 14 No identity needed; 
+		CEQU 4 1 00 14 MS Refuses; 
+		CEQU 5 1 00 14 MS is not GPRS Responding; 
+		if (g[1] >= 0x06)
+		{
+			if (g[1] <= 0x30)
+			{
+				LABL 0 1 00 14 For future use; 
+			}
+		}
+		if (g[1] >= 0x31)
+		{
+			if (g[1] <= 0x3F)
+			{
+				LABL 0 1 00 14 Cause values reserved for GPRS charging protocol use; 
+			}
+		}
+		if (g[1] >= 0x40)
+		{
+			if (g[1] <= 0x7F)
+			{
+				LABL 0 1 00 14 For future use; 
+			}
+		}
+		CEQU 80 1 00 14 Request accepted; 
+		CEQU 81 1 00 14 New PD type due to network preference; 
+		CEQU 82 1 00 14 New PD type due to single address bearer only; 
+		CEQU 83 1 00 14 For future use; 
+		CEQU B1 1 00 14 Cause values reserved for GPRS charging protocol use; 
+		CEQU C0 1 00 14 Non-existent;
+		CEQU C1 1 00 14 Invalid message format; 
+		CEQU C2 1 00 14 IMSI not known;
+		CEQU C3 1 00 14 MS is GPRS Detached; 
+		CEQU C4 1 00 14 MS is not GPRS Responding; 
+		CEQU C5 1 00 14 MS Refuses; 
+		CEQU C6 1 00 14 Version not supported ; 
+		CEQU C7 1 00 14 No resources available; 
+		CEQU C8 1 00 14 Service not supported; 
+		CEQU C9 1 00 14 Mandatory IE incorrect; 
+		CEQU CA 1 00 14 Mandatory IE missing; 
+		CEQU CB 1 00 14 Optional IE incorrect; 
+		CEQU CC 1 00 14 System failure; 
+		CEQU CD 1 00 14 Roaming restriction; 
+		CEQU CE 1 00 14 P-TMSI Signature mismatch; 
+		CEQU CF 1 00 14 GPRS connection suspended; 
+		CEQU D0 1 00 14 Authentication failure; 
+		CEQU D1 1 00 14 User authentication failed; 
+		CEQU D2 1 00 14 Context not found; 
+		CEQU D3 1 00 14 All dynamic PDP addresses are occupied; 
+		CEQU D4 1 00 14 No memory is available; 
+		CEQU D5 1 00 14 Relocation failure; 
+		CEQU D6 1 00 14 Unknown mandatory extension header; 
+		CEQU D7 1 00 14 Semantic error in the TFT operation; 
+		CEQU D8 1 00 14 Syntactic error in the TFT operation; 
+		CEQU D9 1 00 14 Semantic errors in packet filter(s); 
+		CEQU DA 1 00 14 Syntactic errors in packet filter(s); 
+		CEQU DB 1 00 14 Missing or unknown APN; 
+		CEQU DC 1 00 14 Unknown PDP address or PDP type; 
+		CEQU DD 1 00 14 PDP context without TFT already activated; 
+		CEQU DE 1 00 14 APN access denied – no subscription; 
+		CEQU DF 1 00 14 APN Restriction type incompatibility with currently active PDP Contexts; 
+		CEQU E0 1 00 14 MS MBMS Capabilities Insufficient; 
+		CEQU E1 1 00 14 Invalid Correlation-ID; 
+		CEQU E2 1 00 14 MBMS Bearer Context Superseded; 
+		CEQU E3 1 00 14 Bearer Control Mode violation; 
+		CEQU E4 1 00 14 Collision with network initiated request;
+		if (g[1] >= 0xe5)
+		{
+			if (g[1] <= 0xf0)
+			{
+				LABL 0 1 00 14 For future use; 
+			}
+		}
+		if (g[1] >= 0xf1)
+		{
+			if (g[1] <= 0xff)
+			{
+				LABL 0 1 00 14 Cause values reserved for GPRS charging protocol use; 
+			}
+		}
+	g[0xd] = 1;
+	TRTS;
+
+
+void GTP::Extensions::0x1a;
+	DBYT 2 0 90 c2 Charging Characteristics:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x02;
+	g[60] = 8;
+	LABL 0 0 90 c2 IMSI:;
+	GTP::EXTHelp::TBCDRead;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x03;
+	
+	
+	GTP::EXTHelp::MCC-MNC;
+	DWRD 0 0 90 c2 LAC:;
+	DBYT 0 0 90 c2 RAC:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::EXTHelp::MCC-MNC;
+	BBIT 4 1 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 1:;
+	g[59] = g[3];
+	g[59] *= 100;
+	DGLB 0 1 05 05 MCC digit 2:;
+	g[1] *= 10;
+	g[59] += g[1];
+	BBIT 4 4 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 3:;
+	g[59] += g[3];
+	DGLB 0 3b 90 c2 MCC:;
+	CST# 0 3b 90 14 GTP::MobileCountryCode;
+	BBIT 4 2 05 05 Holder;
+	DBIT 4 1 05 05 MNC digit 1:;
+	DGLB 0 2 05 05 MNC digit 2:;
+	DGLB 0 4 05 05 MNC digit 3:;
+		if (g[4] == 15)
+		{
+			
+			g[58] = g[1];
+			g[58] *= 10;
+			g[58] += g[2];
+			DGLB 0 3a 90 c2 MNC:;
+			g[59] *= 100;
+			g[59] += g[58];
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+		}
+		if (g[4] <= 14)
+		{
+			g[58] = g[1];
+			g[58] *= 100;
+			g[2] *= 10;
+			g[58] += g[2];
+			g[58] += g[3];
+			g[59] *= 100;
+			g[59] + = g[58];
+			DGLB 0 3a 90 c2 MNC:;
+		}
+
+void GTP::EXTHelp::TBCDRead;
+	GBYT 0 1;
+	if (g[1] == 0x91)
+		{
+			
+			LABL 0 0 90 14 +;
+			INCR 1;
+			g[60] -= 1;
+		}
+	while (g[60] >= 1)
+	{
+		
+		DBIT 4 2 05 05;
+		if (g[2] != 0xf)
+		{
+			DBIT 4 0 90 14;
+			DGLB 0 2 90 14;
+			g[60] -= 1;
+		}
+		if (g[2] == 0xf)
+		{
+			DBIT 4 0 90 14;
+			g[60] -= 1;
+			
+		}
+	}
+
+void GTP::Extensions::0x04;
+	DLNG 0 0 90 c2 TLLI:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x05;
+	DLNG 0 0 90 c2 P-TMSI:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x06;
+	HEX# 3 0 90 c2 QOS:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x08;
+	HBYT 0 1 90 c2 Reordering Required:;
+	SHFR 7 1;
+		CEQU 0 1 90 14 No;
+		CEQU 1 1 90 14 Yes;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x09;
+	LABL 0 0 90 c2 Random String:;
+	LABL 0 0 90 c2 Signed Response:;
+	LABL 0 0 90 c2 ciphering Key:;
+	g[16] -= 28;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x0b;
+	DBYT 0 1 90 c2 Map Cause Value:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x0c;
+	DBIT 24 1 90 c2 P-TMSI Signature:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x0d;
+	HBYT 0 1 90 c2 MS Validated:;
+		CEQU fe 1 90 14 No;
+		CEQU ff 1 90 14 Yes;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x0e;
+	DBYT 0 1 90 c2 Recovery:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x0f;
+	BBIT 6 1 90 c2 Spare:;
+		CEQU 3f 1 90 14 Valid spare bit coding;
+		CLSE 0 0 90 14 Not a valid spare bit coding;
+	BBIT 2 1 90 c2 Selection Mode:;
+		CEQU 0 1 90 14 MS or network provided APN, subscribed verified;
+		CEQU 1 1 90 14 MS provided APN, subscription not verified;
+		CEQU 2 1 90 14 Network provided APN, subscription not verified;
+		CEQU 3 1 90 14 For future use. Shall not be sent. If received, Network provided APN, subscription not verified.;
+	g[0xd] = 1;
+	TRTS;
+
+void GTPv0::Extensions::0x10;
+	HWRD 0 0 90 c2 Flow Label Data I:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x10;
+	HLNG 0 0 90 c2 TEID Data:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTPv0::Extensions::0x11;
+	HWRD 0 0 90 c2 Flow Label Signalling:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x11;
+	HLNG 0 0 90 c2 TEID Control Plane:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTPv0::Extensions::0x12;
+	LABL 0 0 90 c2 Flow Label Data II:; 
+	BBIT 4 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	HWRD 0 0 90 c2 Downlink Flow Label Data:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x12;
+	LABL 0 0 90 c2 Tunnel Endpoint Identifier Data II:; 
+	BBIT 4 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	HLNG 0 0 90 c2 TEID Data II:;
+	g[0xd] = 1;
+	TRTS;
+
+
+void GTP::Extensions::0x13;
+	BBIT 7 1 90 c2 Spare:;
+		CEQU 7f 1 90 14 Valid spare bit coding;
+		CLSE 0 0 90 14 Spare bits shall be send as 1;
+	BBIT 1 1 90 c2 Teardown Ind.:;
+		CEQU 0 1 90 14 No;
+		CEQU 1 1 90 14 Yes;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x14;
+	GBYT 0 1;
+	DGLB 0 1 90 c2 NSAPI:;
+	BBIT 4 1 90 c2 Spare:;
+		CEQU 0 1 90 14 Valid spare bit coding;
+		CLSE 0 0 90 14 Spare bits shall be send as 0;
+	BBIT 4 1 90 c2 NSAPI:;
+	g[0xd] = 1;
+	TRTS;
+
+
+void GTP::Extensions::0x15;
+	DBYT 0 1 90 c2 RANAP Cause:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x16;
+	LABL 0 0 90 c2 RAB Context:;
+	BBIT 4 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	HEX# 2 0 90 c2 DL GTP-U Sequence Number:;
+	HEX# 2 0 90 c2 UL GTP-U Sequence Number:;
+	HEX# 2 0 90 c2 DL PDCP Sequence Number:;
+	HEX# 2 0 90 c2 DL PDCP Sequence Number:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x17;
+	LABL 0 0 90 c2 Radio Priority SMS:;
+	BBIT 5 0 90 c2 Spare:;
+	DBIT 3 0 90 c2 Radio Priority SMS:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x18;
+	LABL 0 0 90 c2 Radio Priority:;
+	BBIT 4 0 90 c2 NSAPI:;
+	BBIT 1 0 90 c2 Spare:;
+	BBIT 3 0 90 c2 Radio Priority:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x19;
+	LABL 0 0 90 c2 Packet Flow Id:;
+	BBIT 5 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	BBYT 0 0 90 c2 Packet Flow Id:;
+	g[0xd] = 1;
+	TRTS;
+
+
+
+void GTP::Extensions::0x1B;
+	DBYT 2 0 90 c2 Trace Reference:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x1C;
+	DBYT 2 0 90 c2 Trace Type:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x1D;
+	DBYT 1 0 90 c2 MS Not Reachable Reason:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x7f;
+	HLNG 0 1 90 c2 Charging ID:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x80;
+	DWRD 0 2 90 c2 Length:;
+	HBYT 0 1 90 c2 PDP Type Org:;
+		CEQU 0 1 90 14 ETSI;
+		CEQU 1 1 90 14 IETF;
+		CLSE 0 0 90 14 Reserved;
+	 SUBG 1 2;
+	HBYT 0 1 90 c2 PDP Type Num:;
+		CEQU 1 1 90 14 PPP;
+		CLSE 0 0 90 14 Reserved;
+	 SUBG 1 2;
+	SEQU 0 2;
+	 SKIP;
+		SNEQ 4 2;
+		SKIP 1;
+		IPLG 0 1 90 c2 End User Address:;
+		SKIP 80000001;
+		HEX# 2 0 90 c2 EUA Data:;
+	 ENDS;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x81;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Dump:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTPv0::Extensions::0x81;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 DUMP:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x82;
+	DWRD 0 2 90 c2 Length:;
+	CHR# 0 2 90 c2 DUMP:;
+	
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x83;
+	DWRD 0 1 90 c2 APN Length:;
+	SEQU 0 1;
+	SKIP 1;
+	 CHR# 0 1 90 c2 APN:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x84;
+	DWRD 0 31 90 c2 Length:;
+	BBIT 1 0 90 c2 Extension:;
+	BBIT 4 0 90 c2 Spare:;
+	BBIT 3 1 90 c2 Configuration Protocol;
+		CEQU 0 1 90 14 PPP;
+	while (g[49] >= 3 )
+	{
+		HWRD 0 2 90 c2 Protocol ID:;
+		CST# 0 2 90 14 GTP::Extensions::0x84::ProtoID;
+		DBYT 0 1 90 c2 Protocol Length:;
+		TSB# 0 2 90 00 GTP::Extensions::0x84::ProtoCall;
+		XLSE 0 0 90 00 GTP::Extensions::Value1Dump;
+		g[1] += 3;
+		g[49] -= g[1];
+	}
+	
+	g[0xd] = 1;
+	TRTS;
+
+str# GTP::Extensions::0x84::ProtoID;
+0xc021 | LCP;
+0xc023 | PAP;
+0xc223 | CHAP;
+0x8021 | IPCP;
+
+str# GTP::Extensions::0x84::ProtoCall;
+0xc021 | PPP-LCP;
+0xc023 | Password Authentication Protocol;
+0xc223 | PPP-CHAP;
+0x8021 | IPCP TLV;
+
+void GTP::Extensions::Value1Dump;
+	CHR# 0 1 90 c2 Data:;
+	
+
+void GTP::Extensions::0x85;
+	DWRD 0 1 90 c2 Length:;
+	IPLG 0 1 90 c2 Address:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x86;
+	DWRD 0 1 90 c2 Length:;
+	LABL 0 0 90 c2 MSISDN:;
+	
+	g[60] = g[1];
+	GTP::EXTHelp::TBCDRead;
+	g[0xd] = 1;
+	TRTS;
+
+
+
+void GTP::Extensions::0x87;
+	DWRD 0 0 90 c2 Length:;
+	DBYT 0 0 90 c2 Alloc/Reten Priority:;
+	BBYT 0 1 90 c9 Flags:;
+	LABL 0 0 00 d4 xx.. .... Spare;
+	g[2] = g[1];
+	g[2] &= 0x38;
+	SHFR 3 2;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags1::Delay;
+	g[2] = g[1];
+	g[2] &= 0x07;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags1::Reliability;
+	LABL 0 0 00 c8;
+	BBYT 0 1 90 c9 Flags:;
+	g[2] = g[1];
+	g[2] &= 0xf0;
+	SHFR 4 2;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags2::PeakThroughput;
+	CBIT 0 2 00 d4 .... 1... Spare;
+	CLSE 0 0 00 d4 .... 0... Spare;
+	g[2] = g[1];
+	g[2] &= 0x07;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags2::Precedence;
+	LABL 0 0 00 c8;
+	BBYT 0 1 90 c9 Flags:;
+	LABL 0 0 00 d4 xxx. .... Spare:;
+	g[2] = g[1];
+	g[2] &= 0x1f;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags3::MeanThroughput;
+	LABL 0 0 00 c8;
+	BBYT 0 1 90 c9 Flags:;
+	g[2] = g[1];
+	g[2] &= 0xe0;
+	SHFR 5 2;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags4::TrafficClass;
+	g[2] = g[1];
+	g[2] &= 0x18;
+	
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags4::DeliveryOrder;
+	g[2] = g[1];
+	g[2] &= 0x07;
+	CST# 0 2 00 d4 GTP::Extensions::0x87::Flags4::Erroneous;
+	LABL 0 0 00 c8;
+	LABL 0 0 90 c2 Max SDU Size:;
+	DBYT 0 1 05 0;
+	if (g[1] <= 150 )
+	{
+		g[1] *= 10;
+		DGLB 0 1 90 00;
+		g[1] = 0;
+	}
+	if (g[1] >= 151 )
+	{
+		CEQU 151 1 0 00 1502;
+		CEQU 152 1 0 00 1510;
+		CEQU 153 1 0 00 1520;
+		if (g[1] >= 154)
+		{
+			g[1] -= 1;
+			g[1] *= 10;
+			DGLB 0 1 90 00;
+			g[1] = 0;
+		}
+	}
+	LABL 0 0 90 c2 Max BitRate Uplink:;
+	DBYT 0 1 05 00;
+	if (g[1] == 255 )
+	{
+		LABL 0 0 90 0 0;
+		LABL 0 0 00 14 kbps;
+	}
+	if (g[1] == 0 )
+	{
+		LABL 0 0 90 0 Reserved;
+	}
+	if (g[1] >= 1 )
+	{
+		if (g[1] <= 63 )
+		{
+			g[1] += 1;
+			DGLB 0 1 90 00;
+		}
+		if (g[1] >= 64 )
+		{
+			if (g[1] <= 127 )
+			{
+			g[1] -= 64;
+			g[1] *= 8;
+			g[1] += 64;
+			DGLB 0 1 90 00;
+			LABL 0 0 00 14 kbps;
+			}
+		}
+		if (g[1] >= 128 )
+		{
+			if (g[1] <= 254 )
+			{
+			g[1] -= 128;
+			g[1] *= 64;
+			g[1] += 576;
+			DGLB 0 1 90 00;
+			LABL 0 0 00 14 kbps;
+			}
+		}
+	}
+	
+	
+	LABL 0 0 90 c2 Max BitRate Downlink:;
+	DBYT 0 1 05 00;
+	if (g[1] == 255 )
+	{
+		LABL 0 0 90 0 0;
+		LABL 0 0 00 14 kbps;
+	}
+	if (g[1] == 0 )
+	{
+		LABL 0 0 90 0 Reserved;
+	}
+	if (g[1] >= 1 )
+	{
+		if (g[1] <= 63 )
+		{
+			g[1] += 1;
+			DGLB 0 1 90 00;
+		}
+		if (g[1] >= 64 )
+		{
+			if (g[1] <= 127 )
+			{
+			g[1] -= 64;
+			g[1] *= 8;
+			g[1] += 64;
+			DGLB 0 1 90 00;
+			LABL 0 0 00 14 kbps;
+			}
+		}
+		if (g[1] >= 128 )
+		{
+			if (g[1] <= 254 )
+			{
+			g[1] -= 128;
+			g[1] *= 64;
+			g[1] += 576;
+			DGLB 0 1 90 00;
+			LABL 0 0 00 14 kbps;
+			}
+		}
+	}
+	LABL 0 0 00 c9 Flags:;
+	BBIT 4 1 10 c2 Residual Bit Error Rate:;
+		CEQU 0 1 0 24 Reserved;
+		CEQU 1 1 0 24 5;
+		CEQU 2 1 0 24 1;
+		CEQU 3 1 0 24 5;
+		CEQU 4 1 0 24 4;
+		CEQU 5 1 0 24 1;
+		CEQU 6 1 0 24 1;
+		CEQU 7 1 0 24 1;
+		CEQU 8 1 0 24 1;
+		CEQU 9 1 0 24 1;
+	BBIT 4 1 10 c2 SDU Error Ratio:;
+		CEQU 0 1 0 24 Reserved;
+		CEQU 1 1 0 24 1;
+		CEQU 2 1 0 24 7;
+		CEQU 3 1 0 24 1;
+		CEQU 4 1 0 24 1;
+		CEQU 5 1 0 24 1;
+		CEQU 6 1 0 24 1;
+		CEQU 7 1 0 24 1;
+		if (g[1] >= 8 )
+		{
+			if (g[1] <= 16 )
+			{
+				LABL 0 0 00 24 Reserved;
+			}
+		}
+	LABL 0 0 00 c8;	
+	LABL 0 0 00 c9 Flags:;
+	BBIT 6 1 10 c2 Transfer Delay:;
+	if (g[1] == 0 )
+	{
+		LABL 0 0 0 24 Reserved;
+	}
+	if (g[1] == 255 )
+	{
+		LABL 0 0 0 24 Reserved;
+	}		
+	if (g[1] >= 1 )
+	{
+		if (g[1] <=15 )
+		{
+			
+		}
+		if (g[1] >= 16 )
+		{
+			if (g[1] <= 31 )
+			{
+				
+			}
+		}
+	}
+	BBIT 2 1 10 c2 Traffic Handling Priority:;
+		CEQU 0 1 0 24 Reserved;
+		CEQU 1 1 0 24 Priority level 1;
+		CEQU 2 1 0 24 Priority level 2;
+		CEQU 3 1 0 24 Priority level 3;
+	LABL 0 0 00 c8;	
+	DBYT 0 0 90 c2 Guar BitRate Downlink:;
+	DBYT 0 0 90 c2 Guar BitRate Uplink:;
+	g[0xd] = 1;
+
+str# GTP::Extensions::0x87::Flags1::Delay;
+	0 | ..00 0... QoS Delay: 0;
+	1 | ..00 1... QoS Delay: 1;
+	2 | ..01 0... QoS Delay: 2;
+	3 | ..01 1... QoS Delay: 3;
+	4 | ..10 0... QoS Delay: 4;
+	5 | ..10 1... QoS Delay: 5;
+	6 | ..11 0... QoS Delay: 6;
+	7 | ..11 1... QoS Delay: 7;
+
+str# GTP::Extensions::0x87::Flags1::Reliability;
+	0 | .... .000 QoS Reliability: 0;
+	1 | .... .001 QoS Reliability: 1;
+	2 | .... .010 QoS Reliability: 2;
+	3 | .... .011 QoS Reliability: 3;
+	4 | .... .100 QoS Reliability: 4;
+	5 | .... .101 QoS Reliability: 5;
+	6 | .... .110 QoS Reliability: 6;
+	7 | .... .111 QoS Reliability: 7;
+
+str# GTP::Extensions::0x87::Flags2::PeakThroughput;
+	0 | 0000 .... QoS Peak Throughput: 0;
+	1 | 0001 .... QoS Peak Throughput: 1;
+	2 | 0010 .... QoS Peak Throughput: 2;
+	3 | 0011 .... QoS Peak Throughput: 3;
+	4 | 0100 .... QoS Peak Throughput: 4;
+	5 | 0101 .... QoS Peak Throughput: 5;
+	6 | 0110 .... QoS Peak Throughput: 6;
+	7 | 0111 .... QoS Peak Throughput: 7;
+	8 | 1000 .... QoS Peak Throughput: 8;
+	9 | 1001 .... QoS Peak Throughput: 9;
+	10 | 1010 .... QoS Peak Throughput: 10;
+	11 | 1011 .... QoS Peak Throughput: 11;
+	12 | 1100 .... QoS Peak Throughput: 12;
+	13 | 1101 .... QoS Peak Throughput: 13;
+	14 | 1110 .... QoS Peak Throughput: 14;
+	15 | 1111 .... QoS Peak Throughput: 15;
+
+str# GTP::Extensions::0x87::Flags2::Precedence;
+	0 | .... .000 QoS Precedence: 0;
+	1 | .... .001 QoS Precedence: 1;
+	2 | .... .010 QoS Precedence: 2;
+	3 | .... .011 QoS Precedence: 3;
+	4 | .... .100 QoS Precedence: 4;
+	5 | .... .101 QoS Precedence: 5;
+	6 | .... .110 QoS Precedence: 6;
+	7 | .... .111 QoS Precedence: 7;
+
+str# GTP::Extensions::0x87::Flags3::MeanThroughput;
+	 0 | ...0 0000 QoS Mean Throughput: 0;
+	 1 | ...0 0001 QoS Mean Throughput: 1;
+	 2 | ...0 0010 QoS Mean Throughput: 2;
+	 3 | ...0 0011 QoS Mean Throughput: 3;
+	 4 | ...0 0100 QoS Mean Throughput: 4;
+	 5 | ...0 0101 QoS Mean Throughput: 5;
+	 6 | ...0 0110 QoS Mean Throughput: 6;
+	 7 | ...0 0111 QoS Mean Throughput: 7;
+	 8 | ...0 1000 QoS Mean Throughput: 8;
+	 9 | ...0 1001 QoS Mean Throughput: 9;
+	10 | ...0 1010 QoS Mean Throughput: 10;
+	11 | ...0 1011 QoS Mean Throughput: 11;
+	12 | ...0 1100 QoS Mean Throughput: 12;
+	13 | ...0 1101 QoS Mean Throughput: 13;
+	14 | ...0 1110 QoS Mean Throughput: 14;
+	15 | ...0 1111 QoS Mean Throughput: 15;
+	16 | ...1 0000 QoS Mean Throughput: 16;
+	17 | ...1 0001 QoS Mean Throughput: 17;
+	18 | ...1 0010 QoS Mean Throughput: 18;
+	19 | ...1 0011 QoS Mean Throughput: 19;
+	20 | ...1 0100 QoS Mean Throughput: 20;
+	21 | ...1 0101 QoS Mean Throughput: 21;
+	22 | ...1 0110 QoS Mean Throughput: 22;
+	23 | ...1 0111 QoS Mean Throughput: 23;
+	24 | ...1 1000 QoS Mean Throughput: 24;
+	25 | ...1 1001 QoS Mean Throughput: 25;
+	26 | ...1 1010 QoS Mean Throughput: 26;
+	27 | ...1 1011 QoS Mean Throughput: 27;
+	28 | ...1 1100 QoS Mean Throughput: 28;
+	29 | ...1 1101 QoS Mean Throughput: 29;
+	30 | ...1 1110 QoS Mean Throughput: 30;
+	31 | ...1 1111 QoS Mean Throughput: 31;
+	
+str# GTP::Extensions::0x87::Flags4::TrafficClass;
+	0 | 000. .... Traffic Class: 0;
+	1 | 001. .... Traffic Class: 1;
+	2 | 010. .... Traffic Class: 2;
+	3 | 011. .... Traffic Class: 3;
+	4 | 100. .... Traffic Class: 4;
+	5 | 101. .... Traffic Class: 5;
+	6 | 110. .... Traffic Class: 6;
+	7 | 111. .... Traffic Class: 7;
+	
+str# GTP::Extensions::0x87::Flags4::DeliveryOrder;
+	0 | ...0 0... Delivery Order: 0;
+	1 | ...0 1... Delivery Order: 1;
+	2 | ...1 0... Delivery Order: 2;
+	3 | ...1 1... Delivery Order: 3;
+
+str# GTP::Extensions::0x87::Flags4::Erroneous;
+	0 | .... .000 Delivery of Erroneous SDU: 0;
+	1 | .... .001 Delivery of Erroneous SDU: 1;
+	2 | .... .010 Delivery of Erroneous SDU: 2;
+	3 | .... .011 Delivery of Erroneous SDU: 3;
+	4 | .... .100 Delivery of Erroneous SDU: 4;
+	5 | .... .101 Delivery of Erroneous SDU: 5;
+	6 | .... .110 Delivery of Erroneous SDU: 6;
+	7 | .... .111 Delivery of Erroneous SDU: 7;
+	
+
+void GTP::Extensions::0x88;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 Authentication Quintuplet:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x89;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 TFT:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8A;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 RNC-ID:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8B;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 UTRAN transport field:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8C;
+	DWRD 0 1 90 c2 Length:;
+	BBIT 5 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	g[1] -= 1;
+	if (g[1] >= 5)
+	{
+		HLNG 0 0 90 c2 TEID Data:;
+		SEQU 0 1;
+		SKIP 1;
+		IPLG 0 0 90 c2 RNC IP Address:;
+	}
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8D;
+	DWRD 0 1 90 c2 Length:;
+	g[1] += 2;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 Extension Types list:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8E;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 Trigger Id:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x8F;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 OMC Identity:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x90;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 RAN Transparent Container Field:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x91;
+	DWRD 0 1 90 c2 Length:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x92;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 Additional RAB Setup Information:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x93;
+	DWRD 0 1 90 c2 Length:;
+		SEQU 0 1;
+		SKIP 1;
+		CHR# 0 1 90 c2 SGSN Number:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x94;
+	DWRD 0 1 90 c2 Length:;
+	BBIT 1 0 90 c2 Dual Address Bearer Flag:;
+	BBIT 1 0 90 c2 Upgrade QoS Supported;
+	BBIT 1 0 90 c2 NRSN;
+	BBIT 1 0 90 c2 No QoS negotiation;
+	BBIT 1 0 90 c2 MBMS Counting Information;
+	BBIT 1 0 90 c2 RAN Procedures Ready;
+	BBIT 1 0 90 c2 MBMS Service Type;
+	BBIT 1 0 90 c2 Prohibit Payload Compression;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x95;
+	DWRD 0 1 90 c2 Length:;
+	BBYT 0 0 90 c2 Restriction Type value:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x96;
+	DWRD 0 1 90 c2 Length:;
+	BBIT 5 0 90 c2 Spare:;
+	BBIT 3 0 90 c2 Radio Priority LCS:;
+	g[0xd] = 1;
+	TRTS;
+
+
+void GTP::Extensions::0x97;
+	DWRD 0 0 90 c2 Length:;
+	BBYT 0 1 90 c2 RAT Type value:;
+		CEQU 0 1 00 14 <reserved>;
+		CEQU 1 1 00 14 UTRAN; 
+		CEQU 2 1 00 14 GERAN; 
+		CEQU 3 1 00 14 WLAN; 
+		CEQU 4 1 00 14 GAN; 
+		CEQU 5 1 00 14 HSPA Evolution; 
+		if (g[1] >= 6)
+		{
+			LABL 0 0 00 14 spare; 
+		}
+	g[0xd] = 1;
+	TRTS;
+	
+
+void GTP::Extensions::0x98;
+	DWRD 0 0 90 c2 Length:;
+	DBYT 0 42 90 c2 Geographic Location Type:;
+	if (l[2] == 1)
+	{
+		GTP::EXTHelp::MCC-MNC;
+		DWRD 0 0 90 c2 LAC:;
+		DWRD 0 0 90 c2 CI:;
+	}
+	if (l[2] == 2)
+	{
+		GTP::EXTHelp::MCC-MNC;
+		DWRD 0 0 90 c2 LAC:;
+		DBYT 0 0 90 c2 SAC:;
+	}
+	if (l[2] == 3)
+	{
+		GTP::EXTHelp::MCC-MNC;
+		DWRD 0 0 90 c2 LAC:;
+		DWRD 0 0 90 c2 RAC:;
+	}
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x99;
+	DWRD 0 1 90 c2 Length:;
+	BBYT 0 0 90 c2 Time Zone:; 
+	BBIT 6 0 90 c2 Spare:; 
+	BBIT 2 1 90 c2 Daylight Saving Time:; 
+		CEQU 0 1 00 14 No adjustment for Daylight Saving Time; 
+		CEQU 1 1 00 14 +1 hour adjustment for Daylight Saving Time; 
+		CEQU 2 1 00 14 +2 hours adjustment for Daylight Saving Time; 
+		CEQU 3 1 00 14 Reserved; 
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x9A;
+	DWRD 0 1 90 c2 Length:;
+	g[60] = g[1];
+	LABL 0 0 90 c2 IMEI(SV):;
+	GTP::EXTHelp::TBCDRead;
+	g[0xd] = 1;
+	TRTS;
+
+
+
+void GTP::Extensions::0x9B;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 CAMELInformationPDP:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x9C;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 MBMS UE Context:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x9D;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Temporary Mobile Group Identity (TMGI):;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x9E;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 RIM Routing Address:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0x9F;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 MBMS Protocol Configuration Options:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA0;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 MMBMS Service Area:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA1;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 RRC Container:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA2;
+	DWRD 0 1 90 c2 Length:;
+	DWRD 0 1 90 c2 Trace Reference2:;
+	DWRD 0 1 90 c2 Trace Recording Session Reference:;
+	BBYT 0 0 90 c2 Triggering events in GGSN:;
+	BBYT 0 0 90 c2 Trace Depth:;
+	BBYT 0 0 90 c2 List of interfaces in GGSN:;
+	BBYT 0 1 90 c2 Trace Activity Control:;
+		CEQU 0 1 00 14 Trace Deactivation; 
+		CEQU 1 1 00 14 Trace Activation; 
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xA3;
+	DWRD 0 1 90 c2 Length:;							
+	CHR# 0 1 90 c2 Hop Counter:;				
+	g[0xd] = 1;							
+	TRTS;									
+	
+void GTP::Extensions::0xA4;
+	DWRD 0 1 90 c2 Length(should be 2):;
+	CHR# 0 1 90 c2 Selected PLMN Identity:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA5;
+	DWRD 0 1 90 c2 Length(should be 1):;
+	CHR# 0 1 90 c2 MBMS Session Identifier:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA6;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBYT 0 1 90 c2 MBMS 2G/3G Indicator:;
+		CEQU 0 1 00 14 2G only;
+		CEQU 1 1 00 14 3G only;
+		CEQU 2 1 00 14 both 2G and 3G;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA7;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBYT 0 1 90 c2 Enhanced NSAPI:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA8;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 MBMS Session Duration:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xA9;
+	DWRD 0 1 90 c2 Length:;
+	DWRD 0 1 90 c2 Trace Reference2:;
+	DWRD 0 1 90 c2 Trace Recording Session Reference:;
+	BBYT 0 0 90 c2 Triggering events in BM-SC:;
+	BBYT 0 0 90 c2 Trace Depth:;
+	BBYT 0 0 90 c2 List of interfaces in BM-SC:;
+	BBYT 0 1 90 c2 Trace Activity Control:;
+		CEQU 0 1 00 14 Trace Deactivation; 
+		CEQU 1 1 00 14 Trace Activation; 
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xAA;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBYT 0 1 90 c2 MBMS Session Repetition Number:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xAB;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBYT 0 1 90 c2 MBMS Time To Data Transfer:;
+		
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xAC;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 PS Handover Request Context:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xAD;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 BSS Container:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xAE;
+	DWRD 0 1 90 c2 Length:;							
+	CHR# 0 1 90 c2 Cell Identification:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xAF;							
+	LABL 0 0 90 c2 PDU Numbers:;							
+	BBIT 4 0 90 c2 Spare:;							
+	BBIT 4 0 90 c2 NSAPI:;							
+	HEX# 2 0 90 c2 DL GTP-U Sequence Number:;							
+	HEX# 2 0 90 c2 UL GTP-U Sequence Number:;							
+	HEX# 2 0 90 c2 DL N-PDU Sequence Number:;							
+	HEX# 2 0 90 c2 DL N-PDU Sequence Number:;							
+	g[0xd] = 1;							
+	TRTS;
+
+void GTP::Extensions::0xB0;
+	DWRD 0 0 90 c2 Length(should be 1):;							
+	BBYT 0 1 90 c2 BSSGP Cause:;				
+		
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB1;
+	DWRD 0 1 90 c2 Length:;							
+	CHR# 0 1 90 c2 Required MBMS Bearer Capabilities:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB2;
+	DWRD 0 1 90 c2 Length:;							
+	BBIT 4 0 90 c2 Spare:;				
+	BBIT 4 0 90 c2 RIM Routing Address Discriminator:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB3;
+	DWRD 0 1 90 c2 Length:;							
+	CHR# 0 1 90 c2 List of set-up PFCs:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB4;
+	DWRD 0 1 90 c2 Length:;							
+	BBIT 4 0 90 c2 Spare:;				
+	BBIT 4 0 90 c2 RIM Routing Address Discriminator:;				
+	BBYT 0 1 90 c2 XiD parameters length:;							
+	CHR# 0 1 90 c2 XiD parameters:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB5;
+	DWRD 0 0 90 c2 Length(should be 1):;							
+	BBYT 0 1 90 c2 Action:;						
+		CEQU 0 1 00 14 Stop Reporting; 
+		CEQU 1 1 00 14 Start Reporting CGI/SAI; 
+		CEQU 2 1 00 14 Start Reporting RAI;
+		if (g[1] >= 3)
+		{
+			LABL 0 0 00 14 Stop Reporting;
+		}
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB6;
+	DWRD 0 1 90 c2 Length:;							
+	while (g[1] >= 0)
+	{
+		BBIT 5 0 90 c2 Spare:;				
+		BBIT 1 0 90 c2 EI:;				
+		BBIT 1 0 90 c2 GCSI:;				
+		BBIT 1 0 90 c2 DTI:;				
+		g[1] -= 1;
+	}
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB7;
+	DWRD 0 0 90 c2 Length(should be 1):;							
+	BBYT 0 1 90 c2 Correlation-ID:;						
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xB8;
+	DWRD 0 0 90 c2 Length(should be 1):;							
+	BBYT 0 1 90 c2 Bearer Control Mode:;				
+		CEQU 0 1 00 14 MS_only; 
+		CEQU 1 1 00 14 MS/NW;
+		if (g >= 2)
+		{
+			LABL 0 0 00 14 Reserved;
+		}
+	g[0xd] = 1;							
+	TRTS;	
+
+void GTP::Extensions::0xB9;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 MBMS Flow Identifier:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xBA;
+	DWRD 0 1 90 c2 Length:;							
+	DLNG 0 0 90 c2 Common Tunnel Endpoint Identifier Data:;	
+	CHR# 0 1 90 c2 MBMS Flow Identifier:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xBB;
+	DWRD 0 0 90 c2 Length(should be 1):;							
+	BBIT 6 0 90 c2 Spare:;						
+	BBIT 2 0 90 c2 Distr Ind:;				
+		CEQU 0 1 00 14 No RNCs have accepted IP multicast distribution;
+		CEQU 1 1 00 14 All RNCs have accepted IP multicast distribution;
+		CEQU 2 1 00 14 Some RNCs have accepted IP multicast distribution;
+		CEQU 3 1 00 14 Spare. For future use.;
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xBC;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBYT 0 1 90 c2 Reliable INTER RAT HANDOVER INFO:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xBD;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 RFSP Index:;
+	g[0xd] = 1;
+	TRTS;
+
+
+void GTP::Extensions::0xBE;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	g[0x01] += 3;
+	CHR# 0 1 90 c2 FQDN:;
+
+	g[0xd] = 1;							
+	TRTS;									
+
+void GTP::Extensions::0xBF;
+	DWRD 0 1 90 c2 Length:;							
+	BBIT 1 0 90 c2 Spare:;				
+	BBIT 1 0 90 c2 PCI (Pre-emption Capability):;				
+	BBIT 4 0 90 c2 PL  (Priority Level):;				
+	BBIT 1 0 90 c2 Spare:;				
+	BBIT 1 0 90 c2 PVI (Pre-emption Vulnerability):;				
+	BBYT 0 1 90 c2 XiD parameters length:;							
+	CHR# 0 1 90 c2 XiD parameters:;				
+	g[0xd] = 1;							
+	TRTS;									
+
+
+void GTP::Extensions::0xC0;
+	DWRD 0 1 90 c2 Length:;
+	BBIT 4 0 90 c2 Spare:;
+	BBIT 4 0 90 c2 NSAPI:;
+	BBIT 1 0 90 c2 Spare:;
+	BBIT 1 0 90 c2 PCI (Pre-emption Capability):;
+	BBIT 4 0 90 c2 PL (Priority Level):;
+	BBIT 1 0 90 c2 Spare:;
+	BBIT 1 0 90 c2 PVI (Pre-emption Vulnerability):;
+	BBYT 0 1 90 c2 XiD parameters length:;
+	CHR# 0 1 90 c2 XiD parameters:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC1;
+	DWRD 0 1 90 c2 Length:;
+	while (g[1] >= 0)
+	{
+		BBIT 6 0 90 c2 Spare:;
+		BBIT 1 0 90 c2 CCRSI:;
+		BBIT 1 0 90 c2 Unauthenticated IMSI:;
+		g[1] -= 1;
+	}
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC2;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 User CSG Information (UCI):;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC3;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 CSG Information Reporting Action:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC4;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 CSG ID:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC5;
+	DWRD 0 0 90 c2 Length(should be 1):;
+	BBIT 7 0 90 c2 Spare:;
+	BBIT 2 0 90 c2 CSG Membership Ind:;
+		CEQU 0 1 00 14 CSG membership; 
+		CEQU 1 1 00 14 Non CSG membership;
+		g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xC6;
+	DWRD 0 1 90 c2 Length:;
+	CHR# 0 1 90 c2 Aggregate Maximum Bit Rate (AMBR):;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xFB;
+	DWRD 0 1 90 c2 Length:;
+	if (g[1] == 4)
+	{
+		IPLG 0 0 90 c2 IP Address:;
+		g[1] = 20;
+	}
+	if (g[1] == 16)
+	{
+		IPV6 0 0 90 c2 IPv6 Address:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::0xFF;
+	DWRD 0 1 90 c2 Length:;
+	DWRD 0 0 90 c2 Extension Identifier:;
+	g[1] -= 2;
+	CHR# 0 1 90 c2 Extension Value:;
+	g[0xd] = 1;
+	TRTS;
+
+void GTP::Extensions::Failed;
+	if (g[57] >= 128 )
+	{
+		DWRD 0 1 90 c2 Length:;
+		LABL 0 0 00 14 This IE is not decoded!;
+		DUMP 0 1 90 c2 Content:;
+	}
+	g[0xd] = 1;
+	TRTS;
+
+
+
+str# GTP::Message_Type_List_V0
+	0x00 | For future use. Shall not be sent. If received, shall be treated as an Unknown message.;
+	0x01 | Echo Request;
+	0x02 | Echo Response;
+	0x03 | Version Not Supported;
+	0x04 | Node Alive Request;
+	0x05 | Node Alive Response;
+	0x06 | Redirection Request;
+	0x07 | Redirection Response;
+	0x10 | Create PDP Context Request;
+	0x11 | Create PDP Context Response;
+	0x12 | Update PDP Context Request;
+	0x13 | Update PDP Context Response;
+	0x14 | Delete PDP Context Request;
+	0x15 | Delete PDP Context Response;
+	0x16 | Create AA PDP Context Request;
+	0x17 | Create AA PDP Context Response;
+	0x18 | Delete AA PDP Context Request;
+	0x19 | Delete AA PDP Context Response;
+	0x1A | Error Indication;
+	0x1B | PDU Notification Request;
+	0x1C | PDU Notification Response;
+	0x1D | PDU Notification Reject Request;
+	0x1E | PDU Notification Reject Response;
+	0x1F | For future use. Shall not be sent. If received, shall be treated as an Unknown message.;
+	0x20 | Send Routeing Information for GPRS Request;
+	0x21 | Send Routeing Information for GPRS Response;
+	0x22 | Failure Report Request;
+	0x23 | Failure Report Response;
+	0x24 | Note MS GPRS Present Request;
+	0x25 | Note MS GPRS Present Response;
+	0x30 | Identification Request;
+	0x31 | Identification Response;
+	0x32 | SGSN Context Request;
+	0x33 | SGSN Context Response;
+	0x34 | SGSN Context Acknowledge;
+	0xF0 | Data Record Transfer Request;
+	0xF1 | Data Record Transfer Response;
+	0xFF | T-PDU;
+
+str# GTP::Message_Type_List
+	0x00 | For future use. Shall not be sent. If received, shall be treated as an Unknown message.;
+	0x01 | Echo Request;
+	0x02 | Echo Response;
+	0x03 | Version Not Supported;
+	0x04 | Node Alive Request;
+	0x05 | Node Alive Response;
+	0x06 | Redirection Request;
+	0x07 | Redirection Response;
+	0x10 | Create PDP Context Request;
+	0x11 | Create PDP Context Response;
+	0x12 | Update PDP Context Request;
+	0x13 | Update PDP Context Response;
+	0x14 | Delete PDP Context Request;
+	0x15 | Delete PDP Context Response;
+	0x16 | Initiate PDP Context Activation Request;
+	0x17 | Initiate PDP Context Activation Response;
+	0x1A | Error Indication;
+	0x1B | PDU Notification Request;
+	0x1C | PDU Notification Response;
+	0x1D | PDU Notification Reject Request;
+	0x1E | PDU Notification Reject Response;
+	0x1F | Supported Extension Headers Notification;
+	0x20 | Send Routeing Information for GPRS Request;
+	0x21 | Send Routeing Information for GPRS Response;
+	0x22 | Failure Report Request;
+	0x23 | Failure Report Response;
+	0x24 | Note MS GPRS Present Request;
+	0x25 | Note MS GPRS Present Response;
+	0x30 | Identification Request;
+	0x31 | Identification Response;
+	0x32 | SGSN Context Request;
+	0x33 | SGSN Context Response;
+	0x34 | SGSN Context Acknowledge;
+	0x35 | Forward Relocation Request;
+	0x36 | Forward Relocation Response;
+	0x37 | Forward Relocation Complete;
+	0x38 | Relocation Cancel Request;
+	0x39 | Relocation Cancel Response;
+	0x3A | Forward SRNS Context;
+	0x3B | Forward Relocation Complete Acknowledge;
+	0x3C | Forward SRNS Context Acknowledge;
+	0x46 | RAN Information Relay;
+	0x60 | MBMS Notification Request;
+	0x61 | MBMS Notification Response;
+	0x62 | MBMS Notification Reject Request;
+	0x63 | MBMS Notification Reject Response;
+	0x64 | Create MBMS Context Request;
+	0x65 | Create MBMS Context Response;
+	0x66 | Update MBMS Context Request;
+	0x67 | Update MBMS Context Response;
+	0x68 | Delete MBMS Context Request;
+	0x69 | Delete MBMS Context Response;
+	0x70 | MBMS Registration Request;
+	0x71 | MBMS Registration Response;
+	0x72 | MBMS De-Registration Request;
+	0x73 | MBMS De-Registration Response;
+	0x74 | MBMS Session Start Request;
+	0x75 | MBMS Session Start Response;
+	0x76 | MBMS Session Stop Request;
+	0x77 | MBMS Session Stop Response;
+	0x78 | MBMS Session Update Request;
+	0x79 | MBMS Session Update Response;
+	0x80 | MS Info Change Notification Request;
+	0x81 | MS Info Change Notification Response;
+	0xF0 | Data Record Transfer Request;
+	0xF1 | Data Record Transfer Response;
+	0xFE | End Marker;
+	0xFF | G-PDU;
+
+str# GTP::v2::Message_Type_List_V2
+	0	  |    Reserved;
+	1	  |    Echo Request;
+	2	  |    Echo Response;
+	3	  |    Version Not Supported Indication;
+	32	  |    Create Session Request;
+	33	  |    Create Session Response;
+	36	  |    Delete Session Request;
+	37	  |    Delete Session Response;
+	34	  |    Modify Bearer Request;
+	35	  |    Modify Bearer Response;
+	38	  |    Change Notification Request;
+	39	  |    Change Notification Response;
+	164	  |    Resume Notification;
+	165	  |    Resume Acknowledge;
+	64	  |    Modify Bearer Command;
+	65	  |    Modify Bearer Failure Indication;
+	66	  |    Delete Bearer Command;
+	67	  |    Delete Bearer Failure Indication;
+	68	  |    Bearer Resource Command;
+	69	  |    Bearer Resource Failure Indication;
+	70	  |    Downlink Data Notification Failure Indication;
+	71	  |    Trace Session Activation;
+	72	  |    Trace Session Deactivation;
+	73	  |    Stop Paging Indication;
+	95	  |    Create Bearer Request;
+	96	  |    Create Bearer Response;
+	97	  |    Update Bearer Request;
+	98	  |    Update Bearer Response;
+	99	  |    Delete Bearer Request;
+	100	  |    Delete Bearer Response;
+	101	  |    Delete PDN Connection Set Request;
+	102	  |    Delete PDN Connection Set Response;
+	128	  |    Identification Request;
+	129	  |    Identification Response;
+	130	  |    Context Request;
+	131	  |    Context Response;
+	132	  |    Context Acknowledge;
+	133	  |    Forward Relocation Request;
+	134	  |    Forward Relocation Response;
+	135	  |    Forward Relocation Complete Notification;
+	136	  |    Forward Relocation Complete Acknowledge;
+	137	  |    Forward Access Context Notification;
+	138	  |    Forward Access Context Acknowledge;
+	139	  |    Relocation Cancel Request;
+	140	  |    Relocation Cancel Response;
+	141	  |    Configuration Transfer Tunnel;
+	152	  |    RAN Information Relay;
+	149	  |    Detach Notification;
+	150	  |    Detach Acknowledge;
+	151	  |    CS Paging Indication;
+	153	  |    Alert MME Notification;
+	154	  |    Alert MME Acknowledge;
+	155	  |    UE Activity Notification;
+	156	  |    UE Activity Acknowledge;
+	162	  |    Suspend Notification;
+	163	  |    Suspend Acknowledge;
+	160	  |    Create Forwarding Tunnel Request;
+	161	  |    Create Forwarding Tunnel Response;
+	166	  |    Create Indirect Data Forwarding Tunnel Request;
+	167	  |    Create Indirect Data Forwarding Tunnel Response;
+	168	  |    Delete Indirect Data Forwarding Tunnel Request;
+	169	  |    Delete Indirect Data Forwarding Tunnel Response;
+	170	  |    Release Access Bearers Request;
+	171	  |    Release Access Bearers Response;
+	176	  |    Downlink Data Notification;
+	177	  |    Downlink Data Notification Acknowledge;
+	179	  |    PGW Restart Notification;
+	180	  |    PGW Restart Notification Acknowledge;
+	178	  |    Reserved. Allocated in earlier version of the specification;
+	200	  |    Update PDN Connection Set Request;
+	201	  |    Update PDN Connection Set Response;
+	211	  |    Modify Access Bearers Request;
+	212	  |    Modify Access Bearers Response;
+	231	  |    MBMS Session Start Request;
+	232	  |    MBMS Session Start Response;
+	233	  |    MBMS Session Update Request;
+	234	  |    MBMS Session Update Response;
+	235	  |    MBMS Session Stop Request;
+	236	  |    MBMS Session Stop Response;
+
+str# GTP::Message_Type_Func
+	0x00	| For future use;
+	0x10	| GTP::Create_PDP_Context_Request;
+	0x11	| GTP::Create_PDP_Context_Response;
+	0x12	| GTP::Update_PDP_Context_Request;
+	0x15	| GTP::Delete_PDP_Context_Response;	
+	0xff	| IP;
+
+str# GTP::MobileCountryCode
+	202 | Greece;
+	204 | Netherlands (Kingdom of the);
+	206 | Belgium;
+	208 | France;
+	212 | Monaco (Principality of);
+	213 | Andorra (Principality of);
+	214 | Spain;
+	216 | Hungary (Republic of);
+	218 | Bosnia and Herzegovina;
+	219 | Croatia (Republic of);
+	220 | Serbia (Republic of);
+	222 | Italy;
+	225 | Vatican City State;
+	226 | Romania;
+	228 | Switzerland (Confederation of);
+	230 | Czech Republic;
+	231 | Slovak Republic;
+	232 | Austria;
+	234 | United Kingdom of Great Britain and Northern Ireland;
+	235 | United Kingdom of Great Britain and Northern Ireland;
+	238 | Denmark;
+	240 | Sweden;
+	242 | Norway;
+	244 | Finland;
+	246 | Lithuania (Republic of);
+	247 | Latvia (Republic of);
+	248 | Estonia (Republic of);
+	250 | Russian Federation;
+	255 | Ukraine;
+	257 | Belarus (Republic of);
+	259 | Moldova (Republic of);
+	260 | Poland (Republic of);
+	262 | Germany (Federal Republic of);
+	266 | Gibraltar;
+	268 | Portugal;
+	270 | Luxembourg;
+	272 | Ireland;
+	274 | Iceland;
+	276 | Albania (Republic of);
+	278 | Malta;
+	280 | Cyprus (Republic of);
+	282 | Georgia;
+	283 | Armenia (Republic of);
+	284 | Bulgaria (Republic of);
+	286 | Turkey;
+	288 | Faroe Islands;
+	290 | Greenland (Denmark);
+	292 | San Marino (Republic of);
+	293 | Slovenia (Republic of);
+	294 | The Former Yugoslav Republic of Macedonia;
+	295 | Liechtenstein (Principality of);
+	297 | Montenegro (Republic of);
+	302 | Canada;
+	308 | Saint Pierre and Miquelon (Collectivité territoriale de la République francaise );
+	310 | United States of America;
+	311 | United States of America;
+	312 | United States of America;
+	313 | United States of America;
+	314 | United States of America;
+	315 | United States of America;
+	316 | United States of America;
+	330 | Puerto Rico;
+	332 | United States Virgin Islands;
+	334 | Mexico;
+	338 | Jamaica;
+	340 | Martinique (French Department of);
+	340 | Guadeloupe (French Department of);
+	342 | Barbados;
+	344 | Antigua and Barbuda;
+	346 | Cayman Islands;
+	348 | British Virgin Islands;
+	350 | Bermuda;
+	352 | Grenada;
+	354 | Montserrat;
+	356 | Saint Kitts and Nevis;
+	358 | Saint Lucia;
+	360 | Saint Vincent and the Grenadines;
+	362 | Netherlands Antilles;
+	363 | Aruba;
+	364 | Bahamas (Commonwealth of the);
+	365 | Anguilla;
+	366 | Dominica (Commonwealth of);
+	368 | Cuba;
+	370 | Dominican Republic;
+	372 | Haiti (Republic of);
+	374 | Trinidad and Tobago;
+	376 | Turks and Caicos Islands;
+	400 | Azerbaijani Republic;
+	401 | Kazakhstan (Republic of);
+	402 | Bhutan (Kingdom of);
+	404 | India (Republic of);
+	405 | India (Republic of);
+	406 | India (Republic of);
+	410 | Pakistan (Islamic Republic of);
+	412 | Afghanistan;
+	413 | Sri Lanka (Democratic Socialist Republic of);
+	414 | Myanmar (Union of);
+	415 | Lebanon;
+	416 | Jordan (Hashemite Kingdom of);
+	417 | Syrian Arab Republic;
+	418 | Iraq (Republic of);
+	419 | Kuwait (State of);
+	420 | Saudi Arabia (Kingdom of);
+	421 | Yemen (Republic of);
+	422 | Oman (Sultanate of);
+	424 | United Arab Emirates;
+	425 | Israel (State of);
+	426 | Bahrain (Kingdom of);
+	427 | Qatar (State of);
+	428 | Mongolia;
+	429 | Nepal (Federal Democratic Republic of);
+	430 | United Arab Emirates b;
+	431 | United Arab Emirates b;
+	432 | Iran (Islamic Republic of);
+	434 | Uzbekistan (Republic of);
+	436 | Tajikistan (Republic of);
+	437 | Kyrgyz Republic;
+	438 | Turkmenistan;
+	440 | Japan;
+	441 | Japan;
+	450 | Korea (Republic of);
+	452 | Viet Nam (Socialist Republic of);
+	454 | Hong Kong, China;
+	455 | Macao, China;
+	456 | Cambodia (Kingdom of);
+	457 | Lao People's Democratic Republic;
+	460 | China (People's Republic of);
+	461 | China (People's Republic of);
+	466 | Taiwan, China;
+	467 | Democratic People's Republic of Korea;
+	470 | Bangladesh (People's Republic of);
+	472 | Maldives (Republic of);
+	502 | Malaysia;
+	505 | Australia;
+	510 | Indonesia (Republic of);
+	514 | Democratic Republic of Timor-Leste;
+	515 | Philippines (Republic of the);
+	520 | Thailand;
+	525 | Singapore (Republic of);
+	528 | Brunei Darussalam;
+	530 | New Zealand;
+	536 | Nauru (Republic of);
+	537 | Papua New Guinea;
+	539 | Tonga (Kingdom of);
+	540 | Solomon Islands;
+	541 | Vanuatu (Republic of);
+	542 | Fiji (Republic of);
+	543 | Wallis and Futuna (Territoire français d'outre-mer);
+	544 | American Samoa;
+	545 | Kiribati (Republic of);
+	546 | New Caledonia (Territoire français d'outre-mer);
+	547 | French Polynesia (Territoire français d'outre-mer);
+	548 | Cook Islands;
+	549 | Samoa (Independent State of);
+	550 | Micronesia (Federated States of);
+	551 | Marshall Islands (Republic of the);
+	552 | Palau (Republic of);
+	602 | Egypt (Arab Republic of);
+	603 | Algeria (People's Democratic Republic of);
+	604 | Morocco (Kingdom of);
+	605 | Tunisia;
+	606 | Libya (Socialist People's Libyan Arab Jamahiriya);
+	607 | Gambia (Republic of the);
+	608 | Senegal (Republic of);
+	609 | Mauritania (Islamic Republic of);
+	610 | Mali (Republic of);
+	611 | Guinea (Republic of);
+	612 | Côte d'Ivoire (Republic of);
+	613 | Burkina Faso;
+	614 | Niger (Republic of the);
+	615 | Togolese Republic;
+	616 | Benin (Republic of);
+	617 | Mauritius (Republic of);
+	618 | Liberia (Republic of);
+	619 | Sierra Leone;
+	620 | Ghana;
+	621 | Nigeria (Federal Republic of);
+	622 | Chad (Republic of);
+	623 | Central African Republic;
+	624 | Cameroon (Republic of);
+	625 | Cape Verde (Republic of);
+	626 | Sao Tome and Principe (Democratic Republic of);
+	627 | Equatorial Guinea (Republic of);
+	628 | Gabonese Republic;
+	629 | Congo (Republic of the);
+	630 | Democratic Republic of the Congo;
+	631 | Angola (Republic of);
+	632 | Guinea-Bissau (Republic of);
+	633 | Seychelles (Republic of);
+	634 | Sudan (Republic of the);
+	635 | Rwanda (Republic of);
+	636 | Ethiopia (Federal Democratic Republic of);
+	637 | Somali Democratic Republic;
+	638 | Djibouti (Republic of);
+	639 | Kenya (Republic of);
+	640 | Tanzania (United Republic of);
+	641 | Uganda (Republic of);
+	642 | Burundi (Republic of);
+	643 | Mozambique (Republic of);
+	645 | Zambia (Republic of);
+	646 | Madagascar (Republic of);
+	647 | French Departments and Territories in the Indian Ocean;
+	648 | Zimbabwe (Republic of);
+	649 | Namibia (Republic of);
+	650 | Malawi;
+	651 | Lesotho (Kingdom of);
+	652 | Botswana (Republic of);
+	653 | Swaziland (Kingdom of);
+	654 | Comoros (Union of the);
+	655 | South Africa (Republic of);
+	657 | Eritrea;
+	702 | Belize;
+	704 | Guatemala (Republic of);
+	706 | El Salvador (Republic of);
+	708 | Honduras (Republic of);
+	710 | Nicaragua;
+	712 | Costa Rica;
+	714 | Panama (Republic of);
+	716 | Peru;
+	722 | Argentine Republic;
+	724 | Brazil (Federative Republic of);
+	730 | Chile;
+	732 | Colombia (Republic of);
+	734 | Venezuela (Bolivarian Republic of);
+	736 | Bolivia (Plurinational State of);
+	738 | Guyana;
+	740 | Ecuador;
+	742 | French Guiana (French Department of);
+	744 | Paraguay (Republic of);
+	746 | Suriname (Republic of);
+	748 | Uruguay (Eastern Republic of);
+	750 | Falkland Islands (Malvinas);
+
+	901 | International Mobile, shared code c;
+
+str# GTP::MobileNetworkCodes; 
+	20201 | Cosmote;
+	20205 | Vodafone - Panafon;
+	20209 | Info Quest S.A.;
+	20210 | WIND Hellas;
+	20402 | Tele2 (Netherlands) B.V.;
+	20403 | Blyk N.V.;
+	20404 | Vodafone Libertel N.V.;
+	20405 | Elephant Talk Comm. Premium Rate Serv. Neth. B.V.;
+	20406 | Barablu Mobile Benelux Ltd;
+	20407 | Teleena holding B.V.;
+	20408 | KPN Mobile The Netherlands B.V.;
+	20410 | KPN B.V.;
+	20412 | Telfort B.V.;
+	20414 | INMO B.V.;
+	20416 | T-Mobile Netherlands B.V.;
+	20418 | Telfort B.V.;
+	20420 | Orange Nederland N.V.;
+	20421 | ProRail B.V.;
+	20460 | KPN B.V.;
+	20469 | KPN Mobile The Netherlands B.V.;
+	20601 | Proximus;
+	20610 | Mobistar;
+	20620 | Base;
+	20801 | Orange France;
+	20802 | Orange France;
+	20805 | Globalstar Europe;
+	20806 | Globalstar Europe;
+	20807 | Globalstar Europe;
+	20810 | S.F.R.;
+	20811 | S.F.R. (UMTS);
+	20813 | SFR (Zones Blanches);
+	20820 | Bouygues Telecom;
+	20821 | Bouygues Telecom;
+	20822 | Transatel;
+	20888 | Bouygues Telecom (Zones Blanches);
+	21303 | Mobiland;
+	21401 | Vodafone España, SAU;
+	21403 | France Telecom España, SA;
+	21404 | Xfera Móviles, SA;
+	21405 | Telefónica Móviles España, SAU;
+	21406 | Vodafone España, SAU;
+	21407 | Telefónica Móviles España, SAU;
+	21408 | Euskaltel, SA;
+	21409 | France Telecom España, SA;
+	21415 | BT España Compañia de Servicios Globales de ;
+	21416 | Telecable de Asturias, SAU;
+	21417 | R Cable y Telecomunicaciones Galicia, SA;
+	21418 | Cableuropa, SAU;
+	21419 | E-Plus Móviles, SL;
+	21420 | Fonyou Telecom, SL;
+	21421 | Jazz Telecom, SAU;
+	21422 | Best Spain Telecom, SL;
+	21423 | Barablu Móvil España, SLU;
+	21424 | Vizzavi España, SL;
+	21425 | Lycamobile, SL;
+	21426 | Lleida Networks Serveis Telemátics, SL;
+	21601 | Pannon GSM;
+	21630 | Westel Mobile;
+	21670 | Vodafone;
+	21803 | Eronet Mobile Communications Ltd.;
+	21805 | MOBI'S (Mobilina Srpske);
+	21890 | GSMBIH;
+	21901 | T-Mobile Hrvatska d.o.o./T-Mobile Croatia LLC;
+	21902 | Tele2/Tele2 d.o.o.;
+	21910 | VIPnet/VIPnet d.o.o.;
+	22001 | Telenor d.o.o.;
+	22003 | Telekom Srbija a.d.;
+	22005 | Vip mobile d.o.o.;
+	22201 | Telecom Italia Mobile (TIM);
+	22202 | Elsacom;
+	22210 | Omnitel Pronto Italia (OPI);
+	22277 | IPSE 2000;
+	22288 | Wind;
+	22298 | Blu;
+	22299 | H3G;
+	22601 | Vodafone Romania SA;
+	22602 | Romtelecom (CDMA);
+	22603 | Cosmorom;
+	22610 | Orange Romania;
+	22801 | Swisscom Mobile AG;
+	22802 | TDC Switzerland AG;
+	22803 | Orange Communications SA;
+	22805 | Comfone AG;
+	22806 | SBB AG;
+	22807 | IN&Phone SA;
+	22808 | Tele2 Telecommunications AG;
+	22812 | TDC Switzerland AG;
+	22851 | Bebbicell AG;
+	23001 | T-Mobile Czech Republic a.s.;
+	23002 | Telefónica O2 Czech Republic a.s.;
+	23003 | Vodafone Czech Republic a.s.;
+	23004 | Mobilkom a.s.;
+	23098 | Sprava Zeleznicni Dopravni Cesty;
+	23099 | Vodafone Czech Republic a.s. R&D Centre;
+	23101 | Orange, GSM;
+	23102 | Eurotel, GSM & NMT;
+	23104 | Eurotel, UMTS;
+	23105 | Orange, UMTS;
+	23201 | Mobilkom Austria Aktiengesellschaft;
+	23202 | Mobilkom Austria Aktiengesellschaft;
+	23203 | T-Mobile Austria GmbH;
+	23204 | T-Mobile Austria GmbH;
+	23205 | Orange Austria Telecommunication GmbH;
+	23206 | Orange Austria Telecommunication GmbH;
+	23207 | T-Mobile Austria GmbH;
+	23209 | Mobilkom Austria Aktiengesellschaft;
+	23210 | Hutchison 3G Austria GmbH;
+	23211 | Mobilkom Austria Aktiengesellschaft;
+	23212 | Orange Austria Telecommunication GmbH;
+	23214 | Hutchison 3G Austria GmbH;
+	23215 | Barablu Mobile Austria Ltd;
+	23291 | OBB - Infrastruktur Bau AG;
+	23400 | British Telecom;
+	23401 | Mapesbury Communications Ltd.;
+	23402 | O2 UK Ltd.;
+	23403 | Jersey Airtel Ltd;
+	23404 | FMS Solutions Ltd;
+	23405 | Colt Mobile Telecommunications Ltd;
+	23406 | Internet Computer Bureau Ltd;
+	23407 | Cable and Wireless plc;
+	23408 | OnePhone (UK) Ltd;
+	23409 | Wire9 Telecom plc;
+	23410 | O2 UK Ltd.;
+	23411 | O2 UK Ltd.;
+	23412 | Ntework Rail Infrastructure Ltd;
+	23413 | Ntework Rail Infrastructure Ltd;
+	23414 | Hay Systems Ltd;
+	23415 | Vodafone Ltd.;
+	23416 | Opal Telecom Ltd;
+	23417 | Flextel Ltd;
+	23418 | Wire9 Telecom plc;
+	23419 | Teleware plc;
+	23420 | Hutchison 3G UK Ltd.;
+	23421 | LogicStar Ltd;
+	23422 | Routo Telecommunications Ltd;
+	23423 | Vectone Network Ltd;
+	23424 | Stour Marine Ltd;
+	23425 | Software Cellular Network Ltd;
+	23426 | Lycamobile UK Ltd.;
+	23430 | T-Mobile UK;
+	23431 | T-Mobile UK;
+	23432 | T-Mobile UK;
+	23433 | Orange;
+	23434 | Orange;
+	23450 | Jersey Telecom;
+	23455 | Cable and Wireless Guensey Ltd;
+	23458 | Manx Telecom;
+	23476 | British Telecom;
+	23478 | Airwave mmO2 Ltd;
+	23577 | British Telecom;
+	23591 | Vodafone Ltd;
+	23592 | Cable and Wireless plc;
+	23594 | Hutchison 3G UK Ltd;
+	23595 | Network Rail Infrastructure Ltd;
+	23801 | TDC Mobil;
+	23802 | Sonofon;
+	23803 | MIGway A/S;
+	23806 | Hi3G;
+	23807 | Barablu Mobile Ltd.;
+	23810 | TDC Mobil;
+	23812 | Lycamobile Denmark;
+	23820 | Telia;
+	23830 | Telia Mobile;
+	23877 | Tele2;
+	24001 | Telia Sonera Sverige AB;
+	24002 | H3G Access AB;
+	24003 | AINMT Sverige AB;
+	24004 | 3G Infrastructure Services AB;
+	24005 | Svenska UMTS-Nät AB;
+	24006 | Telenor Sverige AB;
+	24007 | Tele2 Sverige AB;
+	24008 | Telenor Sverige AB;
+	24009 | Djuice Mobile Sweden, filial till Telenor Mobile Sweden AS;
+	24010 | Spring Mobil AB;
+	24011 | Linholmen Science Park AB;
+	24012 | Barablu Mobile Scandinavia Ltd;
+	24013 | Ventelo Sverige AB;
+	24014 | TDC Mobil A/S;
+	24015 | Wireless Maingate Nordic AB;
+	24016 | 42IT AB;
+	24017 | Götalandsnätet AB;
+	24018 | Generic Mobile Systems Sweden AB;
+	24019 | Mundio Mobile Sweden Ltd;
+	24020 | iMEZ AB;
+	24021 | Banverket;
+	24022 | EuTel AB;
+	24024 | Net4Mobility HB;
+	24201 | Telenor Mobil AS;
+	24202 | Netcom GSM AS;
+	24203 | Teletopia Mobile Communications AS;
+	24204 | Tele2 Norge AS;
+	24404 | Finnet Networks Ltd.;
+	24405 | Elisa Matkapuhelinpalvelut Ltd.;
+	24409 | Finnet Group;
+	24412 | Finnet Networks Ltd.;
+	24414 | Alands Mobiltelefon AB;
+	24416 | Oy Finland Tele2 AB;
+	24421 | Saunalahti Group Ltd.;
+	24491 | Sonera Carrier Networks Oy;
+	24601 | Omnitel;
+	24602 | Bité GSM;
+	24603 | Tele2;
+	24701 | Latvijas Mobilais Telefons SIA;
+	24702 | Tele2;
+	24703 | Telekom Baltija;
+	24704 | Beta Telecom;
+	24705 | Bite Mobile;
+	24706 | Rigatta;
+	24707 | Master Telecom;
+	24708 | IZZI;
+	24801 | EMT GSM;
+	24802 | RLE;
+	24803 | Tele2;
+	24804 | OY Top Connect;
+	24805 | AS Bravocom Mobiil;
+	24806 | ProGroup Holding OY;
+	24807 | Televõrgu AS;
+	24871 | Siseministeerium (Ministry of Interior);
+	25001 | Mobile Telesystems;
+	25002 | Megafon;
+	25003 | Nizhegorodskaya Cellular Communications;
+	25004 | Sibchallenge;
+	25005 | Mobile Comms System;
+	25007 | BM Telecom;
+	25010 | Don Telecom;
+	25011 | Orensot;
+	25012 | Baykal Westcom;
+	25013 | Kuban GSM;
+	25016 | New Telephone Company;
+	25017 | Ermak RMS;
+	25019 | Volgograd Mobile;
+	25020 | ECC;
+	25028 | Extel;
+	25039 | Uralsvyazinform;
+	25044 | Stuvtelesot;
+	25092 | Printelefone;
+	25093 | Telecom XXI;
+	25099 | Beeline;
+	25501 | Ukrainian Mobile Communication, UMC;
+	25502 | Ukranian Radio Systems, URS;
+	25503 | Kyivstar GSM;
+	25504 | International Telecommunications Ltd.;
+	25505 | Golden Telecom;
+	25506 | Astelit;
+	25507 | Ukrtelecom;
+	25521 | CJSC - Telesystems of Ukraine;
+	25701 | MDC Velcom;
+	25702 | MTS;
+	25901 | Orange Moldova GSM;
+	25902 | Moldcell GSM;
+	25904 | Eventis Mobile GSM;
+	26001 | Plus GSM (Polkomtel S.A.);
+	26002 | ERA GSM (Polska Telefonia Cyfrowa Sp. Z.o.o.);
+	26003 | Idea (Polska Telefonia Komórkowa Centertel Sp. Z.o.o);
+	26004 | Tele2 Polska (Tele2 Polska Sp. Z.o.o.);
+	26005 | IDEA (UMTS)/PTK Centertel sp. Z.o.o.;
+	26006 | Netia Mobile;
+	26007 | Premium internet;
+	26008 | E-Telko;
+	26009 | Telekomunikacja Kolejowa (GSM-R);
+	26010 | Telefony Opalenickie;
+	26201 | T-Mobile Deutschland GmbH;
+	26202 | Vodafone D2 GmbH;
+	26203 | E-Plus Mobilfunk GmbH & Co. KG;
+	26204 | Vodafone D2 GmbH;
+	26205 | E-Plus Mobilfunk GmbH & Co. KG;
+	26206 | T-Mobile Deutschland GmbH;
+	26207 | O2 (Germany) GmbH & Co. OHG;
+	26208 | O2 (Germany) GmbH & Co. OHG;
+	26209 | Vodafone D2 GmbH;
+	26210 | Arcor AG & Co.;
+	26211 | O2 (Germany) GmbH & Co. OHG;
+	26212 | Dolphin Telecom (Deutschland) GmbH;
+	26213 | Mobilcom Multimedia GmbH;
+	26214 | Group 3G UMTS GmbH (Quam);
+	26215 | Airdata AG;
+	26276 | Siemens AG, ICMNPGUSTA;
+	26277 | E-Plus Mobilfunk GmbH & Co. KG;
+	26601 | Gibtelecom GSM;
+	26606 | CTS;
+	26609 | Cloud9 Mobile Communications;
+	26801 | Vodafone Telecel - Comunicaçôes Pessoais, S.A.;
+	26803 | Optimus - Telecomunicaçôes, S.A.;
+	26805 | Oniway - Inforcomunicaçôes, S.A.;
+	26806 | TMN - Telecomunicaçôes Movéis Nacionais, S.A.;
+	27001 | P&T Luxembourg;
+	27077 | Tango;
+	27099 | Voxmobile S.A.;
+	27201 | Vodafone Ireland Plc;
+	27202 | Digifone mm02 Ltd.;
+	27203 | Meteor Mobile Communications Ltd.;
+	27207 | Eircom;
+	27209 | Clever Communications Ltd.;
+	27401 | Iceland Telecom Ltd.;
+	27402 | Og fjarskipti hf (Vodafone Iceland);
+	27402 | P/F Kall;
+	27403 | Og fjarskipti hf (Vodafone Iceland);
+	27404 | IMC Islande ehf;
+	27407 | IceCell ehf;
+	27601 | Albanian Mobile Communications (AMC);
+	27602 | Vodafone Albania;
+	27603 | Eagle Mobile;
+	27604 | Mobile 4 AL;
+	27801 | Vodafone Malta;
+	27821 | go mobile;
+	27877 | 3G Telecommunications Ltd;
+	28001 | CYTA;
+	28010 | Scancom (Cyprus) Ltd.;
+	28201 | Geocell Ltd.;
+	28202 | Magti GSM Ltd.;
+	28203 | Iberiatel Ltd.;
+	28204 | Mobitel Ltd.;
+	28205 | Silknet JSC;
+	28401 | M-Tel GSM BG;
+	28405 | Globul;
+	28601 | Turkcell;
+	28602 | Telsim GSM;
+	28603 | Aria;
+	28604 | Aycell;
+	28801 | Faroese Telecom - GSM;
+	28802 | Kall GSM;
+	29001 | Tele Greenland;
+	29201 | SMT - San  Marino Telecom;
+	29340 | SI Mobil;
+	29341 | Mobitel;
+	29364 | T-2 d.o.o.;
+	29370 | Tusmobil d.o.o.;
+	29401 | T-Mobile;
+	29402 | Cosmofon;
+	29403 | Nov Operator;
+	29501 | Telecom FL AG;
+	29502 | Viag Europlatform AG;
+	29505 | Mobilkom (Liechstein) AG;
+	29577 | Tele2 AG;
+	29703 | MTEL d.o.o. Podgorica;
+	30236 | Clearnet;
+	30237 | Microcell;
+	30262 | Ice Wireless;
+	30263 | Aliant Mobility;
+	30264 | Bell Mobility;
+	302656 | Tbay Mobility;
+	30266 | MTS Mobility;
+	30267 | CityTel Mobility;
+	30268 | Sask Tel Mobility;
+	30271 | Globalstar;
+	30272 | Rogers Wireless;
+	30286 | Telus Mobility;
+	30801 | St. Pierre-et-Miquelon Télécom;
+	310010 | Verizon Wireless;
+	310012 | Verizon Wireless;
+	310013 | Verizon Wireless;
+	310016 | Cricket Communications;
+	310017 | North Sight Communications Inc;
+	310020 | Union Telephone Company;
+	310030 | Centennial Communications;
+	310035 | ETEX Communications dba ETEX Wireless;
+	310040 | MTA Communications dba MTA Wireless;
+	310050 | ACS Wireless Inc;
+	310060 | Consolidated Telcom;
+	310070 | Cingular Wireless;
+	310080 | Corr Wireless Communications LLC;
+	310090 | Cingular Wireless;
+	310100 | New Mexico RSA 4 East Ltd. Partnership;
+	310110 | Pacific Telecom Inc;
+	310130 | Carolina West Wireless;
+	310140 | GTA Wireless LLC;
+	310150 | Cingular Wireless;
+	310160 | T-Mobile USA;
+	310170 | Cingular Wireless;
+	310180 | West Central Wireless;
+	310190 | Alaska Wireless Communications LLC;
+	310200 | T-Mobile USA;
+	310210 | T-Mobile USA;
+	310220 | T-Mobile USA;
+	310230 | T-Mobile USA;
+	310240 | T-Mobile USA;
+	310250 | T-Mobile USA;
+	310260 | T-Mobile USA;
+	310270 | T-Mobile USA;
+	310280 | Contennial Puerto Rio License Corp.;
+	310290 | Nep Cellcorp Inc.;
+	310300 | Blanca Telephone Company;
+	310310 | T-Mobile USA;
+	310320 | Smith Bagley Inc, dba Cellular One;
+	310340 | High Plains Midwest LLC, dba Wetlink Communications;
+	310350 | Mohave Cellular L.P.;
+	310360 | Cellular Network Partnership dba Pioneer Cellular;
+	310370 | Guamcell Cellular and Paging;
+	310380 | New Cingular Wireless PCS, LLC;
+	310390 | TX-11 Acquistion LLC;
+	310400 | Wave Runner LLC;
+	310410 | Cingular Wireless;
+	310420 | Cincinnati Bell Wireless LLC;
+	310430 | Alaska Digitel LLC;
+	310440 | Numerex Corp;
+	310450 | North East Cellular Inc.;
+	310460 | TMP Corporation;
+	310470 | nTELOS Communications Inc;
+	310480 | Choice Phone LLC;
+	310490 | T-Mobile USA;
+	310500 | Public Service Cellular, Inc.;
+	310520 | Transactions Network Services;
+	310530 | Iowa Wireless Services LLC;
+	310540 | Oklahoma Western Telephone Company;
+	310550 | Wireless Solutions International;
+	310560 | Cingular Wireless;
+	310570 | MTPCS LLC;
+	310580 | Inland Cellular Telephone Company;
+	310590 | Western Wireless Corporation;
+	310600 | New Cell Inc. dba Cellcom;
+	310610 | Elkhart Telephone Co. Inc. dba Epic Touch Co.;
+	310620 | Coleman County Telecommunications Inc. (Trans Texas PCS);
+	310640 | Airadigm Communications;
+	310650 | Jasper Wireless Inc.;
+	310660 | T-Mobile USA;
+	310670 | AT&T Mobility Vanguard Services;
+	310680 | Cingular Wireless;
+	310690 | Keystane Wireless LLC;
+	310700 | Cross Valiant Cellular Partnership;
+	310710 | Arctic Slope Telephone Association Cooperative;
+	310720 | Wireless Solutions International Inc.;
+	310730 | US Cellular;
+	310740 | Convey Communications Inc;
+	310750 | East Kentucky Network LLC dba Appalachian Wireless;
+	310760 | Lynch 3G Communications Corporation;
+	310770 | Iowa Wireless Services LLC dba I Wireless;
+	310780 | Connect Net Inc;
+	310790 | PinPoint Communications Inc.;
+	310800 | T-Mobile USA;
+	310810 | LCFR LLC;
+	310820 | South Canaan Cellular Communications Co. LP;
+	310830 | Caprock Cellular Ltd. Partnership;
+	310840 | Telecom North America Mobile Inc;
+	310850 | Aeris Communications, Inc.;
+	310860 | TX RSA 15B2, LP dba Five Star Wireless;
+	310870 | Kaplan Telephone Company Inc.;
+	310880 | Advantage Cellular Systems, Inc.;
+	310890 | Rural Cellular Corporation;
+	310900 | Cable & Communications Corporation dba Mid-Rivers Wireless;
+	310910 | Verizon Wireless;
+	310930 | Copper Valley Wireless;
+	310940 | Iris Wireless LLC;
+	310950 | Texas RSA 1 dba XIT Wireless;
+	310960 | UBET Wireless;
+	310970 | Globalstar USA;
+	310980 | Texas RSA 7B3 dba Peoples Wireless Services;
+	310990 | Worldcall Interconnect;
+	311000 | Mid-Tex Cellular Ltd.;
+	311010 | Chariton Valley Communications Corp., Inc.;
+	311020 | Missouri RSA No. 5 Partnership;
+	311030 | Indigo Wireless, Inc.;
+	311040 | Commnet Wireless, LLC;
+	311050 | Thumb Cellular Limited Partnership;
+	311060 | Space Data Corporation;
+	311080 | Pine Telephone Company dba Pine Cellular;
+	311090 | LongLines Wireless;
+	311100 | Nex-Tech Wireless LLC;
+	311110 | Verizon Wireless;
+	311120 | Choice Phone LLC;
+	311140 | MBO Wireless Inc./Cross Telephone Company;
+	311150 | Wilkes Cellular Inc.;
+	311170 | PetroCom LLC;
+	311180 | Cingular Wireless, Licensee Pacific Telesis Mobile Services, LLC;
+	311190 | Cellular Properties Inc.;
+	311200 | ARINC;
+	311220 | United States Cellular;
+	311240 | Cordova Wireless Communications Inc;
+	311250 | Wave Runner LLC;
+	311260 | SLO Cellular Inc. dba CellularOne of San Luis Obispo;
+	311270 | Verizon Wireless;
+	311271 | Verizon Wireless;
+	311272 | Verizon Wireless;
+	311273 | Verizon Wireless;
+	311274 | Verizon Wireless;
+	311275 | Verizon Wireless;
+	311276 | Verizon Wireless;
+	311277 | Verizon Wireless;
+	311278 | Verizon Wireless;
+	311279 | Verizon Wireless;
+	311280 | Verizon Wireless;
+	311281 | Verizon Wireless;
+	311282 | Verizon Wireless;
+	311283 | Verizon Wireless;
+	311284 | Verizon Wireless;
+	311285 | Verizon Wireless;
+	311286 | Verizon Wireless;
+	311287 | Verizon Wireless;
+	311288 | Verizon Wireless;
+	311289 | Verizon Wireless;
+	311290 | Pinpoint Wireless Inc.;
+	311310 | Leaco Rural Telephone Company Inc;
+	311320 | Commnet Wireless LLC;
+	311330 | Bug Tussel Wireless LLC;
+	311340 | Illinois Valley Cellular;
+	311350 | Sagebrush Cellular Inc dba Nemont;
+	311360 | Stelera Wireless LLC;
+	311370 | GCI Communications Corp.;
+	311380 | New Dimension Wireless Ltd;
+	311390 | Verizon Wireless;
+	311410 | Iowa RSA No.2 Ltd Partnership;
+	311420 | Northwest Missouri Cellular Limited Partnership;
+	311430 | RSA 1 Limited Partnership dba Cellular 29 Plus;
+	311440 | Bluegrass Cellular LLC;
+	311450 | Panhandle Telecommunication Systems Inc.;
+	311460 | Fisher Wireless Services Inc;
+	311470 | Vitelcom Cellular Inc dba Innovative Wireless;
+	311480 | Verizon Wireless;
+	311481 | Verizon Wireless;
+	311482 | Verizon Wireless;
+	311483 | Verizon Wireless;
+	311484 | Verizon Wireless;
+	311485 | Verizon Wireless;
+	311486 | Verizon Wireless;
+	311487 | Verizon Wireless;
+	311488 | Verizon Wireless;
+	311489 | Verizon Wireless;
+	311490 | Strata8 Networks Inc/Wirefree Partners LLC;
+	311500 | CTC Telecom Inc;
+	311530 | Wireless Communications Venture;
+	311540 | Keystone Wireless Inc;
+	311550 | Commnet Midwest LLC;
+	311560 | OTZ Communications Inc;
+	311570 | Bend Cable Communications LLC;
+	311580 | United States Cellular;
+	311590 | California RSA No3 Ltd Partnership dba Golden State Cellular;
+	311600 | Cox TMI Wireless LLC;
+	311610 | North Dakota Network Co.;
+	311620 | Terrestar Networks Inc;
+	311630 | Corr Wireless Communications;
+	311640 | Standing Rock Telecommunications;
+	311650 | United Wireless Inc;
+	311660 | Metro PCS Wireless Inc;
+	311670 | Pine Belt Cellular Inc dba Pine Belt Wireless;
+	311680 | GreenFly LLC;
+	311690 | TeleBeeper of New Mexico Inc;
+	311700 | TotalSolutions Telecom LLC;
+	311710 | Northeast Wireless Networks LLC;
+	311720 | Maine PCS LLC;
+	316010 | Nextel Communications Inc;
+	316011 | Southern Communications Services Inc.;
+	334020 | Telcel;
+	338020 | Cable & Wireless Jamaica Ltd.;
+	338050 | Mossel (Jamaica) Ltd.;
+	34001 | Orange Caraïbe Mobiles;
+	34002 | Outremer Telecom;
+	34003 | Saint Martin et Saint Barthelemy Telcell Sarl;
+	34008 | Dauphin Telecom;
+	34010 | Guadeloupe Téléphone Mobile;
+	34011 | Guyane Téléphone Mobile;
+	34012 | Martinique Téléphone Mobile;
+	34020 | Bouygues Telecom Caraïbe;
+	342600 | Cable & Wireless (Barbados) Ltd.;
+	342820 | Sunbeach Communications;
+	344030 | APUA PCS;
+	344920 | Cable & Wireless (Antigua);
+	344930 | AT&T Wireless (Antigua);
+	346140 | Cable & Wireless (Cayman);
+	348170 | Cable & Wireless (BVI) Ltd;
+	348370 | BVI Cable TV Ltd;
+	348570 | Caribbean Cellular Telephone Ltd.;
+	348770 | Digicel (BVI) Ltd;
+	36251 | TELCELL GSM;
+	36269 | CT GSM;
+	36291 | SETEL GSM;
+	36301 | Setar GSM;
+	365010 | Weblinks Limited;
+	36801 | ETECSA;
+	37001 | Orange Dominicana, S.A.;
+	37002 | Verizon Dominicana S.A.;
+	37003 | Tricom S.A.;
+	37004 | CentennialDominicana;
+	37201 | Comcel;
+	37202 | Digicel;
+	37203 | Rectel;
+	37412 | TSTT Mobile;
+	374130 | Digicel Trinidad and Tobago Ltd.;
+	374140 | LaqTel Ltd.;
+	376352 | IslandCom Communications Ltd.;
+	376360 | IslandCom Communication Ltd;
+	40001 | Azercell Limited Liability Joint Venture;
+	40002 | Bakcell Limited Liability Company;
+	40003 | Catel JV;
+	40004 | Azerphone LLC;
+	40101 | Kar-Tel llc;
+	40102 | TSC Kazak Telecom;
+	40211 | Bhutan Telecom Ltd;
+	40217 | B-Mobile of Bhutan Telecom;
+	40400 | Dishnet Wireless Ltd, Madhya Pradesh;
+	40401 | Aircell Digilink India Ltd., Haryana;
+	40402 | Bharti Airtel Ltd., Punjab;
+	40403 | Bharti Airtel Ltd., H.P.;
+	40404 | Idea Cellular Ltd., Delhi;
+	40405 | Fascel Ltd., Gujarat;
+	40406 | Bharti Airtel Ltd., Karnataka;
+	40407 | Idea Cellular Ltd., Andhra Pradesh;
+	40409 | Reliance Telecom Ltd., Assam;
+	40410 | Bharti Airtel Ltd., Delhi;
+	40411 | Hutchison Essar Mobile Services Ltd, Delhi;
+	40412 | Idea Mobile Communications Ltd., Haryana;
+	40413 | Hutchinson Essar South Ltd., Andhra Pradesh;
+	40414 | Spice Communications PVT Ltd., Punjab;
+	40415 | Aircell Digilink India Ltd., UP (East);
+	40416 | Bharti Airtel Ltd, North East;
+	40417 | Dishnet Wireless Ltd, West Bengal;
+	40418 | Reliance Telecom Ltd., H.P.;
+	40419 | Idea Mobile Communications Ltd., Kerala;
+	40420 | Hutchinson Essar Ltd, Mumbai;
+	40421 | BPL Mobile Communications Ltd., Mumbai;
+	40422 | Idea Cellular Ltd., Maharashtra;
+	40423 | Idea Cellular Ltd, Maharashtra;
+	40424 | Idea Cellular Ltd., Gujarat;
+	40425 | Dishnet Wireless Ltd, Bihar;
+	40427 | Hutchison Essar Cellular Ltd., Maharashtra;
+	40429 | Dishnet Wireless Ltd, Assam;
+	40430 | Hutchison Telecom East Ltd, Kolkata;
+	40431 | Bharti Airtel Ltd., Kolkata;
+	40433 | Dishnet Wireless Ltd, North East;
+	40434 | BSNL, Haryana;
+	40435 | Dishnet Wireless Ltd, Himachal Pradesh;
+	40436 | Reliance Telecom Ltd., Bihar;
+	40437 | Dishnet Wireless Ltd, J&K;
+	40438 | BSNL, Assam;
+	40440 | Bharti Airtel Ltd., Chennai;
+	40441 | Aircell Cellular Ltd, Chennai;
+	40442 | Aircel Ltd., Tamil Nadu;
+	40443 | Hutchison Essar Cellular Ltd., Tamil Nadu;
+	40444 | Spice Communications PVT Ltd., Karnataka;
+	40446 | Hutchison Essar Cellular Ltd., Kerala;
+	40448 | Dishnet Wireless Ltd, UP (West);
+	40449 | Bharti Airtel Ltd., Andra Pradesh;
+	40450 | Reliance Telecom Ltd., North East;
+	40451 | BSNL, H.P.;
+	40452 | Reliance TelecomLtd., Orissa;
+	40453 | BSNL, Punjab;
+	40454 | BSNL, UP (West);
+	40455 | BSNL, UP (East);
+	40456 | Idea Mobile Communications Ltd., UP (West);
+	40457 | BSNL, Gujarat;
+	40458 | BSNL, Madhya Pradesh;
+	40459 | BSNL, Rajasthan;
+	40460 | Aircell Digilink India Ltd., Rajasthan;
+	40461 | Dishnet Wireless Ltd, Punjab;
+	40462 | BSNL, J&K;
+	40463 | Dishnet Wireless Ltd, Haryana;
+	40464 | BSNL, Chennai;
+	40465 | Dishnet Wireless Ltd, UP (East);
+	40466 | BSNL, Maharashtra;
+	40467 | Reliance Telecom Ltd., Madhya Pradesh;
+	40468 | MTNL, Delhi;
+	40469 | MTNL, Mumbai;
+	40470 | Bharti Hexacom Ltd, Rajasthan;
+	40471 | BSNL, Karnataka;
+	40472 | BSNL, Kerala;
+	40473 | BSNL, Andhra Pradesh;
+	40474 | BSNL, West Bengal;
+	40475 | BSNL, Bihar;
+	40476 | BSNL, Orissa;
+	40477 | BSNL, North East;
+	40478 | BTA Cellcom Ltd., Madhya Pradesh;
+	40479 | BSNL, Andaman & Nicobar;
+	40480 | BSNL, Tamil Nadu;
+	40481 | BSNL, Kolkata;
+	40482 | Idea Telecommunications Ltd, H.P.;
+	40483 | Reliable Internet Services Ltd., Kolkata;
+	40484 | Hutchinson Essar South Ltd., Chennai;
+	40485 | Reliance Telecom Ltd., W.B. & A.N.;
+	40486 | Hutchinson Essar South Ltd., Karnataka;
+	40487 | Idea Telecommunications Ltd, Rajasthan;
+	40488 | Hutchison Essar South Ltd, Punjab;
+	40489 | Idea Telecommunications Ltd, UP (East);
+	40490 | Bharti Airtel Ltd., Maharashtra;
+	40491 | Dishnet Wireless Ltd, Kolkata;
+	40492 | Bharti Airtel Ltd., Mumbai;
+	40493 | Bharti Airtel Ltd., Madhya Pradesh;
+	40494 | Bharti Airtel Ltd., Tamil Nadu;
+	40495 | Bharti Airtel Ltd., Kerala;
+	40496 | Bharti Airtel Ltd., Haryana;
+	40497 | Bharti Airtel Ltd., UP (West);
+	40498 | Bharti Airtel Ltd., Gujarat;
+	40499 | Dishnet Wireless Ltd, Kerala;
+	40500 | Shyam Telelink Ltd, Rajasthan;
+	40501 | Reliance Infocomm Ltd, Andhra Pradesh;
+	40503 | Reliance Infocomm Ltd, Bihar;
+	40504 | Reliance Infocomm Ltd, Chennai;
+	40505 | Reliance Infocomm Ltd, Delhi;
+	40506 | Reliance Infocomm Ltd, Gujarat;
+	40507 | Reliance Infocomm Ltd, Haryana;
+	40508 | Reliance Infocomm Ltd, Himachal Pradesh;
+	40509 | Reliance Infocomm Ltd, J&K;
+	40510 | Reliance Infocomm Ltd, Karnataka;
+	40511 | Reliance Infocomm Ltd, Kerala;
+	40512 | Reliance Infocomm Ltd, Kolkata;
+	40513 | Reliance Infocomm Ltd, Maharashtra;
+	40514 | Reliance Infocomm Ltd, Madhya Pradesh;
+	40515 | Reliance Infocomm Ltd, Mumbai;
+	40517 | Reliance Infocomm Ltd, Orissa;
+	40518 | Reliance Infocomm Ltd, Punjab;
+	40520 | Reliance Infocomm Ltd, Tamilnadu;
+	40521 | Reliance Infocomm Ltd, UP (East);
+	40522 | Reliance Infocomm Ltd, UP (West);
+	40523 | Reliance Infocomm Ltd, West bengal;
+	40525 | Tata Teleservices Ltd, Andhra Pradesh;
+	40527 | Tata Teleservices Ltd, Bihar;
+	40528 | Tata Teleservices Ltd, Chennai;
+	40529 | Tata Teleservices Ltd, Delhi;
+	40530 | Tata Teleservices Ltd, Gujarat;
+	40531 | Tata Teleservices Ltd, Haryana;
+	40532 | Tata Teleservices Ltd, Himachal Pradesh;
+	40534 | Tata Teleservices Ltd, Karnataka;
+	40535 | Tata Teleservices Ltd, Kerala;
+	40536 | Tata Teleservices Ltd, Kolkata;
+	40537 | Tata Teleservices Ltd, Maharashtra;
+	40538 | Tata Teleservices Ltd, Madhya Pradesh;
+	40539 | Tata Teleservices Ltd, Mumbai;
+	40541 | Tata Teleservices Ltd, Orissa;
+	40542 | Tata Teleservices Ltd, Punjab;
+	40543 | Tata Teleservices Ltd, Rajasthan;
+	40544 | Tata Teleservices Ltd, Tamilnadu;
+	40545 | Tata Teleservices Ltd, UP (East);
+	40546 | Tata Teleservices Ltd, UP (West);
+	40547 | Tata Teleservices Ltd, West Bengal;
+	40552 | Bharti Airtel Ltd, Bihar;
+	40553 | Bharti Airtel Ltd, Orissa;
+	40554 | Bharti Airtel Ltd, UP (East);
+	40555 | Bharti Airtel Ltd, J&K;
+	40556 | Bharti Airtel Ltd, Assam;
+	40566 | Hutchison Essar South Ltd, UP (West);
+	40567 | Hutchison Essar South Ltd, Orissa;
+	40568 | Vodaphone/Hutchison, Madhya Pradesh;
+	40570 | Aditya Birla Telecom Ltd, Bihar;
+	40571 | Essar Spacetel Ltd, Himachal Pradesh;
+	40572 | Essar Spacetel Ltd, North East;
+	40573 | Essar Spacetel Ltd, Assam;
+	40574 | Essar Spacetel Ltd, J&K;
+	40575 | Essar Spacetel Ltd, Bihar;
+	40576 | Essar Spacetel Ltd, Orissa;
+	40577 | Essar Spacetel Ltd, Maharashtra;
+	40580 | Aircell Ltd, Karnataka;
+	40581 | Aircell Ltd, Delhi;
+	40582 | Aircell Ltd, Andhra Pradesh;
+	40583 | Aircell Ltd, Gujarat;
+	40584 | Aircell Ltd, Maharashtra;
+	40585 | Aircell Ltd, Mumbai;
+	40586 | Aircell Ltd, Rajasthan;
+	41001 | Mobilink;
+	41003 | PAK Telecom Mobile Ltd. (UFONE);
+	41004 | CMPak;
+	41006 | Telenor Pakistan;
+	41007 | Warid Telecom;
+	41201 | AWCC;
+	41220 | Roshan;
+	41230 | New1;
+	41240 | Areeba Afghanistan;
+	41288 | Afghan Telecom;
+	41302 | MTN Network Ltd.;
+	41303 | Celtel Lanka Ltd.;
+	41401 | Myanmar Post and Telecommunication;
+	41505 | Ogero Telecom;
+	41532 | Cellis;
+	41533 | Cellis;
+	41534 | Cellis;
+	41535 | Cellis;
+	41536 | Libancell;
+	41537 | Libancell;
+	41538 | Libancell;
+	41539 | Libancell;
+	41601 | Fastlink;
+	41602 | Xpress;
+	41603 | Umniah;
+	41677 | Mobilecom;
+	41701 | Syriatel;
+	41702 | Spacetel Syria;
+	41709 | Syrian Telecom;
+	41805 | Asia Cell;
+	41820 | Zain Iraq (previously Atheer);
+	41830 | Zain Iraq (previously Iraqna);
+	41840 | Korek Telecom;
+	41847 | Iraq Central Cooperative Association for Communication and Transportation;
+	41848 | ITC Fanoos;
+	41849 | Iraqtel;
+	41862 | Itisaluna;
+	41870 | Kalimat;
+	41880 | Iraqi Telecommunications & Post Company (ITPC);
+	41881 | ITPC (Al-Mazaya);
+	41883 | ITPC (Sader Al-Iraq);
+	41884 | ITPC (Eaamar Albasrah);
+	41885 | ITPC (Anwar Yagotat Alkhalee);
+	41886 | ITPC (Furatfone);
+	41887 | ITPC (Al-Seraj);
+	41888 | ITPC (High Link);
+	41889 | ITPC (Al-Shams);
+	41891 | ITPC (Belad Babel);
+	41892 | ITPC (Al Nakheel);
+	41893 | ITPC (Iraqcell);
+	41894 | ITPC (Shaly);
+	41902 | Mobile Telecommunications Company;
+	41903 | Wataniya Telecom;
+	41904 | Viva;
+	42001 | Saudi Telecom;
+	42003 | Etihad Etisalat Company (Mobily);
+	42101 | Yemen Mobile Phone Company;
+	42102 | Spacetel Yemen;
+	42202 | Oman Mobile Telecommunications Company (Oman Mobile);
+	42203 | Oman Qatari Telecommunications Company (Nawras);
+	42204 | Oman Telecommunications Company (Omantel);
+	42402 | Etisalat;
+	42501 | Partner Communications Co. Ltd.;
+	42502 | Cellcom Israel Ltd.;
+	42503 | Pelephone Communications Ltd.;
+	42504 | Globalsim Ltd;
+	42506 | Wataniya;
+	42601 | BHR Mobile Plus;
+	42701 | QATARNET;
+	42899 | Mobicom;
+	42901 | Nepal Telecommunications;
+	43211 | Telecommunication Company of Iran (TCI);
+	43214 | Telecommunication Kish Co. (KIFZO);
+	43219 | Telecommunication Company of Iran (TCI) - Isfahan Celcom ;
+	43401 | Buztel;
+	43402 | Uzmacom;
+	43404 | Daewoo Unitel;
+	43405 | Coscom;
+	43407 | Uzdunrobita;
+	43601 | JC Somoncom;
+	43602 | CJSC Indigo Tajikistan;
+	43603 | TT mobile;
+	43604 | Josa Babilon-T;
+	43605 | CTJTHSC Tajik-tel;
+	43701 | Bitel GSM;
+	43801 | Barash Communication Technologies (BCTI);
+	43802 | TM-Cell;
+	44001 | NTT DoCoMo, Inc.;
+	44002 | NTT DoCoMo Kansai, Inc.;
+	44003 | NTT DoCoMo Hokuriku, Inc.;
+	44004 | Vodafone;
+	44006 | Vodafone;
+	44007 | KDDI Corporation;
+	44008 | KDDI Corporation;
+	44009 | NTT DoCoMo Kansai Inc.;
+	44010 | NTT DoCoMo Kansai Inc.;
+	44011 | NTT DoCoMo Tokai Inc.;
+	44012 | NTT DoCoMo Inc.;
+	44013 | NTT DoCoMo Inc.;
+	44014 | NTT DoCoMo Tohoku Inc.;
+	44015 | NTT DoCoMo Inc.;
+	44016 | NTT DoCoMo Inc.;
+	44017 | NTT DoCoMo Inc.;
+	44018 | NTT DoCoMo Tokai Inc.;
+	44019 | NTT DoCoMo Hokkaido;
+	44020 | NTT DoCoMo Hokuriku Inc.;
+	44021 | NTT DoCoMo Inc.;
+	44022 | NTT DoCoMo Kansai Inc.;
+	44023 | NTT DoCoMo Tokai Inc.;
+	44024 | NTT DoCoMo Chugoku Inc.;
+	44025 | NTT DoCoMo Hokkaido Inc.;
+	44026 | NTT DoCoMo Kyushu Inc.;
+	44027 | NTT DoCoMoTohoku Inc.;
+	44028 | NTT DoCoMo Shikoku Inc.;
+	44029 | NTT DoCoMo Inc.;
+	44030 | NTT DoCoMo Inc.;
+	44031 | NTT DoCoMo Kansai Inc.;
+	44032 | NTT DoCoMo Inc.;
+	44033 | NTT DoCoMo Tokai Inc.;
+	44034 | NTT DoCoMo Kyushu Inc.;
+	44035 | NTT DoCoMo Kansai Inc.;
+	44036 | NTT DoCoMo Inc.;
+	44037 | NTT DoCoMo Inc.;
+	44038 | NTT DoCoMo Inc.;
+	44039 | NTT DoCoMo Inc.;
+	44040 | Vodafone;
+	44041 | Vodafone;
+	44042 | Vodafone;
+	44043 | Vodafone;
+	44044 | Vodafone;
+	44045 | Vodafone;
+	44046 | Vodafone;
+	44047 | Vodafone;
+	44048 | Vodafone;
+	44049 | NTT DoCoMo Inc.;
+	44050 | KDDI Corporation;
+	44051 | KDDI Corporation;
+	44052 | KDDI Corporation;
+	44053 | KDDI Corporation;
+	44054 | KDDI Corporation;
+	44055 | KDDI Corporation;
+	44056 | KDDI Corporation;
+	44058 | NTT DoCoMo Kansai Inc.;
+	44060 | NTT DoCoMo Kansai Inc.;
+	44061 | NTT DoCoMo Chugoku Inc.;
+	44062 | NTT DoCoMo Kyushu Inc.;
+	44063 | NTT DoCoMo Inc.;
+	44064 | NTT DoCoMo Inc.;
+	44065 | NTT DoCoMo Shikoku Inc.;
+	44066 | NTT DoCoMo Inc.;
+	44067 | NTT DoCoMo Tohoku Inc.;
+	44068 | NTT DoCoMo Kyushu Inc.;
+	44069 | NTT DoCoMo Inc.;
+	44070 | KDDI Corporation;
+	44071 | KDDI Corporation;
+	44072 | KDDI Corporation;
+	44073 | KDDI Corporation;
+	44074 | KDDI Corporation;
+	44075 | KDDI Corporation;
+	44076 | KDDI Corporation;
+	44077 | KDDI Corporation;
+	44078 | Okinawa Cellular Telephone;
+	44079 | KDDI Corporation;
+	44080 | TU-KA Cellular Tokyo Inc.;
+	44081 | TU-KA Cellular Tokyo Inc.;
+	44082 | TU-KA Phone Kansai Inc.;
+	44083 | TU-KA Cellular Tokai Inc.;
+	44084 | TU-KA Phone Kansai Inc.;
+	44085 | TU-KA Cellular Tokai Inc.;
+	44086 | TU-KA Cellular Tokyo Inc.;
+	44087 | NTT DoCoMo Chugoku Inc.;
+	44088 | KDDI Corporation;
+	44089 | KDDI Corporation;
+	44090 | Vodafone;
+	44092 | Vodafone;
+	44093 | Vodafone;
+	44094 | Vodafone;
+	44095 | Vodafone;
+	44096 | Vodafone;
+	44097 | Vodafone;
+	44098 | Vodafone;
+	44099 | NTT DoCoMo Inc.;
+	44140 | NTT DoCoMo Inc.;
+	44141 | NTT DoCoMo Inc.;
+	44142 | NTT DoCoMo Inc.;
+	44143 | NTT DoCoMo Kansai Inc.;
+	44144 | NTT DoCoMo Chugoku Inc.;
+	44145 | NTT DoCoMo Shikoku Inc.;
+	44150 | TU-KA Cellular Tokyo Inc.;
+	44151 | TU-KA Phone Kansai Inc.;
+	44161 | Vodafone;
+	44162 | Vodafone;
+	44163 | Vodafone;
+	44164 | Vodafone;
+	44165 | Vodafone;
+	44170 | KDDI Corporation;
+	44190 | NTT DoCoMo Inc.;
+	44191 | NTT DoCoMo Inc.;
+	44192 | NTT DoCoMo Inc.;
+	44193 | NTT DoCoMo Hokkaido Inc.;
+	44194 | NTT DoCoMo Tohoku Inc.;
+	44198 | NTT DoCoMo Kyushu Inc.;
+	44199 | NTT DoCoMo Kyushu Inc.;
+	45002 | KT Freetel;
+	45003 | SK Telecom;
+	45201 | Mobifone;
+	45202 | Vinaphone;
+	45203 | S Telecom (CDMA);
+	45204 | Viettel;
+	45207 | Beeline VN/GTEL Mobile JSC;
+	45400 | GSM900/HKCSL;
+	45401 | MVNO/CITIC;
+	45402 | 3G Radio System/HKCSL3G;
+	45403 | 3G Radio System/Hutchison 3G;
+	45404 | GSM900/GSM1800/Hutchison;
+	45405 | CDMA/Hutchison;
+	45406 | GSM900/SmarTone;
+	45407 | MVNO/China Unicom International Ltd.;
+	45408 | MVNO/Trident;
+	45409 | MVNO/China Motion Telecom (HK) Ltd.;
+	45410 | GSM1800New World PCS Ltd.;
+	45411 | MVNO/CHKTL;
+	45412 | GSM1800/Peoples Telephone Company Ltd.;
+	45415 | 3G Radio System/SMT3G;
+	45416 | GSM1800/Mandarin Communications Ltd.;
+	45418 | GSM7800/Hong Kong CSL Ltd.;
+	45419 | 3G Radio System/Sunday3G;
+	4542X | Public Mobile Networks/Reserved;
+	4543X | Public Mobile Networks/Reserved;
+	45500 | Smartone Mobile Communications (Macao) Ltd.;
+	45501 | CTM GSM;
+	45503 | Hutchison Telecom;
+	45601 | Mobitel (Cam GSM);
+	45602 | Hello;
+	45603 | S Telecom (CDMA);
+	45604 | Cadcomms;
+	45605 | Starcell;
+	45606 | Smart;
+	45608 | Viettel;
+	45618 | Mfone;
+	45701 | Lao Telecommunications;
+	45702 | ETL Mobile;
+	45708 | Millicom;
+	46000 | China Mobile;
+	46001 | China Unicom;
+	46003 | China Unicom CDMA;
+	46004 | China Satellite Global Star Network;
+	47001 | GramenPhone;
+	47002 | Aktel;
+	47003 | Mobile 2000;
+	47201 | DhiMobile;
+	50210 | DIGI Telecommunications;
+	50212 | Malaysian Mobile Services Sdn Bhd;
+	50213 | Celcom (Malaysia) Berhad;
+	50214 | Telekom Malaysia Berhad;
+	50216 | DIGI Telecommunications;
+	50217 | Malaysian Mobile Services Sdn Bhd;
+	50218 | U Mobile Sdn. Bhd.;
+	50219 | CelCom (Malaysia) Berhad;
+	50220 | Electcoms Wireless Sdn Bhd;
+	50501 | Telstra Corporation Ltd.;
+	50502 | Optus Mobile Pty. Ltd.;
+	50503 | Vodafone Network Pty. Ltd.;
+	50504 | Department of Defence;
+	50505 | The Ozitel Network Pty. Ltd.;
+	50506 | Hutchison 3G Australia Pty. Ltd.;
+	50507 | Vodafone Network Pty. Ltd.;
+	50508 | One.Tel GSM 1800 Pty. Ltd.;
+	50509 | Airnet Commercial Australia Ltd.;
+	50510 | Norfolk Telecom;
+	50511 | Telstra Corporation Ltd.;
+	50512 | Hutchison Telecommunications (Australia) Pty. Ltd.;
+	50513 | Railcorp;
+	50514 | AAPT Ltd.;
+	50515 | 3GIS Pty Ltd. (Telstra & Hutchison 3G);
+	50516 | Victorian Rail Track;
+	50517 | Vivid Wireless Pty Ltd;
+	50518 | Pactel International Pty Ltd;
+	50519 | Lycamobile Pty Ltd;
+	50524 | Advanced Communications Technologies Pty. Ltd.;
+	50571 | Telstra Corporation Ltd.;
+	50572 | Telstra Corporation Ltd.;
+	50588 | Localstar Holding Pty. Ltd.;
+	50590 | Optus Ltd.;
+	50599 | One.Tel GSM 1800 Pty. Ltd.;
+	51000 | PSN;
+	51001 | Satelindo;
+	51008 | Natrindo (Lippo Telecom);
+	51010 | Telkomsel;
+	51011 | Excelcomindo;
+	51021 | Indosat - M3;
+	51028 | Komselindo;
+	51501 | Islacom;
+	51502 | Globe Telecom;
+	51503 | Smart Communications;
+	51505 | Digitel;
+	52000 | CAT CDMA;
+	52001 | AIS GSM;
+	52015 | ACT Mobile;
+	52501 | SingTel ST GSM900;
+	52502 | SingTel ST GSM1800;
+	52503 | MobileOne;
+	52505 | Starhub;
+	52512 | Digital Trunked Radio Network;
+	52811 | DST Com;
+	53000 | Reserved for AMPS MIN based IMSI's;
+	53001 | Vodafone New Zealand GSM Network;
+	53002 | Teleom New Zealand CDMA Network;
+	53003 | Woosh Wireless - CDMA Network;
+	53004 | TelstraClear - GSM Network;
+	53005 | Telecom New Zealand - UMTS Ntework;
+	53024 | NZ Communications - UMTS Network;
+	53701 | Bmobile;
+	53702 | Greencom;
+	53703 | Digicel Ltd;
+	53901 | Tonga Communications Corporation;
+	53943 | Digicel;
+	53988 | Digicel (Tonga) Ltd;
+	54101 | SMILE;
+	54105 | Digicel Vanuatu;
+	54201 | Vodafone (Fiji) Ltd;
+	54202 | Digicel (Fiji) Ltd;
+	54203 | Telecom Fiji Ltd (CDMA);
+	54601 | OPT Mobilis;
+	54702 | Digicel Tahiti;
+	54710 | Mara Telecom;
+	54720 | Tikiphone;
+	54801 | Telecom Cook;
+	54901 | Telecom Samoa Cellular Ltd.;
+	54927 | GoMobile SamoaTel Ltd;
+	55001 | FSM Telecom;
+	55201 | Palau National Communications Corp. (a.k.a. PNCC);
+	60201 | Mobinil;
+	60202 | Vodafone;
+	60203 | Etisalat;
+	60301 | Algérie Telecom;
+	60302 | Orascom Telecom Algérie;
+	60400 | Méditélécom (GSM);
+	60401 | Ittissalat Al Maghrid;
+	60502 | Tunisie Telecom;
+	60503 | Orascom Telecom;
+	60701 | Gamcel;
+	60702 | Africell;
+	60703 | Comium Services Ltd;
+	60801 | Sonatel;
+	60802 | Sentel GSM;
+	60901 | Mattel S.A.;
+	60902 | Chinguitel S.A.;
+	60910 | Mauritel Mobiles;
+	61001 | Malitel;
+	61101 | Orange Guinée;
+	61102 | Sotelgui;
+	61105 | Cellcom Guinée SA;
+	61202 | Atlantique Cellulaire;
+	61203 | Orange Côte d'Ivoire;
+	61204 | Comium Côte d'Ivoire;
+	61205 | Loteny Telecom;
+	61206 | Oricel Côte d'Ivoire;
+	61207 | Aircomm Côte d'Ivoire;
+	61302 | Celtel;
+	61303 | Telecel;
+	61401 | Sahel.Com;
+	61402 | Celtel;
+	61403 | Telecel;
+	61501 | Togo Telecom;
+	61601 | Libercom;
+	61602 | Telecel;
+	61603 | Spacetel Benin;
+	61701 | Cellplus;
+	61702 | Mahanagar Telephone (Mauritius) Ltd.;
+	61710 | Emtel;
+	61804 | Comium Liberia;
+	61901 | Celtel;
+	61902 | Millicom;
+	61903 | Africell;
+	61904 | Comium (Sierra Leone) Ltd.;
+	61905 | Lintel (Sierra Leone) Ltd.;
+	61925 | Mobitel;
+	61940 | Datatel (SL) Ltd GSM;
+	61950 | Datatel (SL) Ltd CDMA;
+	62001 | Spacefon;
+	62002 | Ghana Telecom Mobile;
+	62003 | Mobitel;
+	62004 | Kasapa Telecom Ltd.;
+	62011 | Netafriques Dot Com Ltd;
+	62120 | Econet Wireless Nigeria Ltd.;
+	62130 | MTN Nigeria Communications;
+	62140 | MTEL;
+	62150 | Globacom;
+	62160 | EMTS;
+	62201 | Celtel;
+	62202 | Tchad Mobile;
+	62301 | Centrafrique Telecom Plus (CTP);
+	62302 | Telecel Centrafrique (TC);
+	62303 | Celca (Socatel);
+	62401 | Mobile Telephone Networks Cameroon;
+	62402 | Orange Cameroun;
+	62501 | Cabo Verde Telecom;
+	62502 | T+Telecomunicaçôes;
+	62601 | Companhia Santomese de Telecomunicações;
+	62701 | Guinea Ecuatorial de Telecomunicaciones Sociedad Anónima ;
+	62801 | Libertis S.A.;
+	62802 | Telecel Gabon S.A.;
+	62803 | Celtel Gabon S.A.;
+	62804 | USAN Gabon;
+	62901 | Celtel;
+	62910 | Libertis Telecom;
+	63001 | Vodacom Congo RDC sprl;
+	63005 | Supercell Sprl;
+	63086 | Congo-Chine Telecom s.a.r.l.;
+	63102 | Unitel;
+	63201 | Guinétel S.A.;
+	63202 | Spacetel Guiné-Bissau S.A.;
+	63301 | Cable & Wireless (Seychelles) Ltd.;
+	63302 | Mediatech International Ltd.;
+	63310 | Telecom (Seychelles) Ltd.;
+	63401 | SD Mobitel;
+	63402 | Areeba-Sudan;
+	63405 | Network of the World Ltd (NOW);
+	63499 | MTN Sudan;
+	63510 | MTN Rwandacell;
+	63601 | ETH MTN;
+	63730 | Golis Telecommunications Company;
+	63801 | Evatis;
+	63902 | Safaricom Ltd.;
+	63903 | Kencell Communications Ltd.;
+	64002 | MIC (T) Ltd.;
+	64003 | Zantel;
+	64004 | Vodacom (T) Ltd.;
+	64005 | Celtel (T) Ltd.;
+	64101 | Celtel Uganda;
+	64110 | MTN Uganda Ltd.;
+	64111 | Uganda Telecom Ltd.;
+	64114 | House of Integrated Technology and Systems Uganda Ltd ;
+	64122 | Warid Telecom Uganda Ltd.;
+	64166 | i-Tel Ltd;
+	64201 | ECONET;
+	64202 | AFRICELL;
+	64203 | ONAMOB;
+	64207 | LACELL;
+	64208 | HITS TELECOM;
+	64282 | U.COM;
+	64301 | T.D.M. GSM;
+	64304 | VM Sarl;
+	64501 | Celtel Zambia Ltd.;
+	64502 | Telecel Zambia Ltd.;
+	64503 | Zamtel;
+	64601 | Celtel Madagascar (Zain), GSM;
+	64602 | Orange Madagascar, GSM;
+	64603 | Madamobil, CDMA 2000;
+	64604 | Telecom Malagasy Mobile, GSM;
+	64700 | Orange La Réunion;
+	64702 | Outremer Telecom;
+	64710 | Société Réunionnaise du Radiotéléphone;
+	64801 | Net One;
+	64803 | Telecel;
+	64804 | Econet;
+	64901 | Mobile Telecommunications Ltd.;
+	64903 | Powercom Pty Ltd;
+	65001 | Telekom Network Ltd.;
+	65010 | Celtel ltd.;
+	65101 | Vodacom Lesotho (pty) Ltd.;
+	65102 | Econet Ezin-cel;
+	65201 | Mascom Wireless (Pty) Ltd.;
+	65202 | Orange Botswana (Pty) Ltd.;
+	65204 | Botswana Telecommunications Corporation (BTC);
+	65301 | SPTC;
+	65310 | Swazi MTN;
+	65401 | HURI - SNPT;
+	65501 | Vodacom (Pty) Ltd.;
+	65502 | Telkom SA Ltd;
+	65506 | Sentech (Pty) Ltd.;
+	65507 | Cell C (Pty) Ltd.;
+	65510 | Mobile Telephone Networks (MTN) Pty Ltd;
+	65511 | SAPS Gauteng;
+	65512 | Mobile Telephone Networks (MTN) Pty Ltd;
+	65513 | Neotel Pty Ltd;
+	65521 | Cape Town Metropolitan Council;
+	65530 | Bokamoso Consortium Pty Ltd;
+	65531 | Karabo Telecoms (Pty) Ltd.;
+	65532 | Ilizwi Telecommunications Pty Ltd;
+	65533 | Thinta Thinta Telecommunications Pty Ltd;
+	65534 | Bokone Telecoms Pty Ltd;
+	65535 | Kingdom Communications Pty Ltd;
+	65536 | Amatole Telecommunication Pty Ltd;
+	70267 | Belize Telecommunications Ltd., GSM 1900;
+	70268 | International Telecommunications Ltd. (INTELCO);
+	70401 | Servicios de Comunicaciones Personales Inalámbricas, S.A. ;
+	70402 | Comunicaciones Celulares S.A.;
+	70403 | Telefónica Centroamérica Guatemala S.A.;
+	70601 | CTE Telecom Personal, S.A. de C.V.;
+	70602 | Digicel, S.A. de C.V.;
+	70603 | Telemóvil El Salvador, S.A.;
+	708001 | Megatel;
+	708002 | Celtel;
+	708040 | Digicel Honduras;
+	71021 | Empresa Nicaragüense de Telecomunicaciones, S.A. (ENITEL);
+	71073 | Servicios de Comunicaciones, S.A. (SERCOM);
+	71201 | Instituto Costarricense de Electricidad - ICE;
+	71401 | Cable & Wireless Panama S.A.;
+	71402 | BSC de Panama S.A.;
+	714020 | Telefónica Móviles Panamá S.A.;
+	71403 | Claro Panamá, S.A.;
+	71404 | Digicel (Panamá), S.A.;
+	71610 | TIM Peru;
+	722010 | Compañia de Radiocomunicaciones Moviles S.A.;
+	722020 | Nextel Argentina srl;
+	722070 | Telefónica Comunicaciones Personales S.A.;
+	722310 | CTI PCS S.A.;
+	722320 | Compañia de Telefonos del Interior Norte S.A.;
+	722330 | Compañia de Telefonos del Interior S.A.;
+	722341 | Telecom Personal S.A.;
+	72400 | Telet;
+	72401 | CRT Cellular;
+	72402 | Global Telecom;
+	72403 | CTMR Cel;
+	72404 | BCP;
+	72405 | Telesc Cel;
+	72406 | Tess;
+	72407 | Sercontel Cel;
+	72408 | Maxitel MG;
+	72409 | Telepar Cel;
+	72410 | ATL Algar;
+	72411 | Telems Cel;
+	72412 | Americel;
+	72413 | Telesp Cel;
+	72414 | Maxitel BA;
+	72415 | CTBC Cel;
+	72416 | BSE;
+	72417 | Ceterp Cel;
+	72418 | Norte Brasil Tel;
+	72419 | Telemig Cel;
+	72421 | Telerj Cel;
+	72423 | Telest Cel;
+	72425 | Telebrasilia Cel;
+	72427 | Telegoias Cel;
+	72429 | Telemat Cel;
+	72431 | Teleacre Cel;
+	72433 | Teleron Cel;
+	72435 | Telebahia Cel;
+	72437 | Telergipe Cel;
+	72439 | Telasa Cel;
+	72441 | Telpe Cel;
+	72443 | Telepisa Cel;
+	72445 | Telpa Cel;
+	72447 | Telern Cel;
+	72448 | Teleceara Cel;
+	72451 | Telma Cel;
+	72453 | Telepara Cel;
+	72455 | Teleamazon Cel;
+	72457 | Teleamapa Cel;
+	72459 | Telaima Cel;
+	73001 | Entel Telefónica Móvil;
+	73002 | Telefónica Móvil;
+	73003 | Smartcom;
+	73004 | Centennial Cayman Corp. Chile S.A.;
+	73005 | Multikom S.A.;
+	73006 | Blue Two Chile SA;
+	73007 | Telefónica Móviles Chile S.A.;
+	73010 | Entel;
+	732001 | Colombia Telecomunicaciones S.A. - Telecom;
+	732002 | Edatel S.A.;
+	732020 | Emtelsa;
+	732099 | Emcali;
+	732101 | Comcel S.A. Occel S.A./Celcaribe;
+	732102 | Bellsouth Colombia S.A.;
+	732103 | Colombia Móvil S.A.;
+	732111 | Colombia Móvil S.A.;
+	732123 | Telefónica Móviles Colombia S.A.;
+	732130 | Avantel;
+	73401 | Infonet;
+	73402 | Corporación Digitel;
+	73403 | Digicel;
+	73404 | Telcel, C.A.;
+	73406 | Telecomunicaciones Movilnet, C.A.;
+	73601 | Nuevatel S.A.;
+	73602 | ENTEL S.A.;
+	73603 | Telecel S.A.;
+	73801 | Cel;
+	74000 | Otecel S.A. - Bellsouth;
+	74001 | Porta GSM;
+	74002 | Telecsa S.A.;
+	74401 | Hola Paraguay S.A.;
+	74402 | Hutchison Telecom S.A.;
+	74403 | Compañia Privada de Comunicaciones S.A.;
+	74602 | Telesur;
+	74603 | Digicel;
+	74604 | Intelsur;
+	74605 | Telesur (CDMA);
+	74800 | Ancel - TDMA;
+	74801 | Ancel - GSM;
+	74803 | Ancel;
+	74807 | Movistar;
+	74810 | CTI Móvil;
+	750001 | Touch;
+	90101 | ICO Global Communications;
+	90102 | Sense Communications International AS;
+	90103 | Iridium Communications Inc;
+	90105 | Thuraya RMSS Network;
+	90106 | Thuraya Satellite Telecommunications Company;
+	90109 | Tele1 Europe;
+	90110 | Asia Cellular Satellite (AceS);
+	90111 | Inmarsat Ltd.;
+	90112 | Maritime Communications Partner AS (MCP network);
+	90113 | Global Networks Switzerland AG;
+	90114 | Telenor ;
+	90115 | OnAir;
+	90116 | Jasper Wireless, Inc.;
+	90117 | Jersey Telecom;
+	90118 | Cingular Wireless;
+	90119 | Vodafone Malta (Vodafone Group);
+	90120 | Intermatica;
+	90121 | Seanet Maritime Communications AB;
+	90122 | MediaLincc Ltd;
+	90123 | Beeline;
+	90124 | Voxbone SA;
+	90125 | In & Phone;
+	90126 | Telecom Italia;
+	90127 | Onair;
+	90128 | Vodafone Group;
+	90129 | Telenor Connexion AB;
+	90130 | Terrestar Netwoks;
+	90188 | UN Office for the Coordination of Humanitarian Affairs (OCHA);

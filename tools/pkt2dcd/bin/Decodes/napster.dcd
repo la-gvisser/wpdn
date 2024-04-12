@@ -1,0 +1,29 @@
+* Napster
+
+void Napster;
+	TEQU 0 10 0 0 RETURN;
+	LABL 0 0 0 b1 Napster;
+	DWRD 60000000 1 90 c2 Length;
+	DWRD 60000000 2 90 c2 Type;
+	CEQU 0 2 80 c0 error message [s]: message;
+	CEQU 2 2 80 c0 client login message [c]: user pass port info link;
+	CEQU 3 2 80 c0 login ack [s]: email;
+	CEQU 4 2 80 c0 version check [c]: version;
+	CEQU 5 2 80 c0 auto upgrade [s]: version host:file;
+	CEQU 6 2 80 c0 alternate login format [c]: nick pass port info link email;
+	CEQU 7 2 80 c0 client registration message [c]: nick;
+	CEQU 8 2 80 c0 registration success [s]:;
+	CEQU 9 2 80 c0 nickname already registered [s]:;
+	CEQU a 2 80 c0 invalid nickname [s]:;
+	CEQU b 2 80 c0 ??? [c]: nick pass;
+	CEQU c 2 80 c0 ??? [s]:;
+	CEQU e 2 80 c0 login options [c]:;
+	CEQU 64 2 80 c0 client noification of shared file [c]: file md5 size bitrate freq time;
+	CEQU 66 2 80 c0 remove file [c]: file;
+	CEQU c8 2 80 c0 client search request [c]: ?;
+	CEQU c9 2 80 c0 search response [s]: file md5 size bitrate freq length nick ip link;
+	CEQU ca 2 80 c0 end of search;
+	CEQU cb 2 80 c0 download request [c]: nick file;
+	CEQU cc 2 80 c0 download ack [s]: nick ip port file md5 link;
+	CEQU cd 2 80 c0 private message [c,s]: nick message;
+	CHR# 0 1 40 c2 Data  ;

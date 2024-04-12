@@ -1,0 +1,360 @@
+//Service Area Broadcast Protocol (SABP)   
+//UTRAN Iu-BC interface
+//ETSI TS 125 419 V12.1.0 (2015-01)
+//Universal Mobile Telecommunications System (UMTS); 
+
+
+
+str# TCP::Ports_Str;
+	3452	|	SABP;
+str# SCTP::Payload_Prot_ID::Func;
+0x0000001F	|	SABP;
+
+	
+void SABP()
+{
+	LABL( 0, 0, 0, 0xb1, "Service Area Broadcast Protocol" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Flags:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Type:" );
+		CST#( 0, l[1], 0, 0x14, SABP::Types );
+		CLSE( 0, 0, 0, 0x14, "Unknown" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Flags:" );
+	GBYT( 0, l[31]);
+	if (l[31] >= 128)
+	{
+		DBYT( 0, l[3], 0x90, 0xc2, "Additional Length Info:" );
+	}
+	DBYT( 0, g[55], 0x90, 0xc2, "Open Length:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Flags:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Number of Elements:" );
+	//DGLB( 0, g[55], 0x90, 0xc2, "Length g[55]:" );
+	g[55] -= 3;
+	while (g[55] != 0)
+		{
+			GWRD(  0, l[6] );
+			CST#( 0, l[6], 0, 0xb7, SABP::IEs );
+			CLSE( 0, 0, 0, 0xb7, "Unknown" );
+				DWRD( 0, g[51], 0x90, 0xc2, "Type:" );
+					CST#( 0, g[51], 0, 0x14, SABP::IEs );
+					CLSE( 0, 0, 0, 0x14, "Unknown" );
+					SKIP 1;
+					DUMP 0 10 90 c2 Unknown DUMP;
+				DBYT( 0, l[7], 0x90, 0xc2, "Flags:" );
+				DBYT( 0, g[54], 0x90, 0xc2, "Open Length:" );
+				BREM( 0, g[52] );
+				TSB#( 0, g[51], 0, 0, SABP::IEs::Ldr );
+				BREM( 0, g[53] );
+				if (g[52] == g[53])
+					{
+						DUMP( 0, g[54], 0x90, 0xc2, "ie Data:" );
+					}
+				g[55] -= 4;
+				g[55] -= g[54];
+			LABL 0 0 0 b8;
+		}
+	//HEX#( 0, g[16], 0x90, 0xc2, "SABP Data:" );
+}
+
+//Message Types
+str# SABP::Types;
+0	|	id-Write-Replace;
+1	|	id-Kill;
+2	|	id-Load-Status-Enquiry;
+3	|	id-Message-Status-Query;
+4	|	id-Restart-Indication;
+5	|	id-Reset;
+6	|	id-Failure-Indication;
+7	|	id-Error-Indication;
+
+//-- IEs 
+str# SABP::IEs;
+0	|	id-Broadcast-Message-Content;
+1	|	id-Category; 
+2	|	id-Cause;
+3	|	id-Criticality-Diagnostics;
+4	|	id-Data-Coding-Scheme;
+5	|	id-Failure-List;
+6	|	id-Message-Identifier;
+7	|	id-New-Serial-Number;
+8	|	id-Number-of-Broadcasts-Completed-List;
+9	|	id-Number-of-Broadcasts-Requested;
+10	|	id-Old-Serial-Number;
+11	|	id-Radio-Resource-Loading-List;
+12	|	id-Recovery-Indication;
+13	|	id-Repetition-Period;
+14	|	id-Serial-Number;
+15	|	id-Service-Areas-List;
+16	|	id-MessageStructure;
+17	|	id-TypeOfError;
+18	|	id-Paging-ETWS-Indicator;
+19	|	id-Warning-Type;
+20	|	id-WarningSecurityInfo;
+21	|	id-Broadcast-Message-Content-Validity-Indicator;
+
+str# SABP::IEs::Ldr;
+0	|	SABP::IEs::id-Broadcast-Message-Content;
+1	|	SABP::IEs::id-Category; 
+2	|	SABP::IEs::id-Cause;
+3	|	SABP::IEs::id-Criticality-Diagnostics;
+4	|	SABP::IEs::id-Data-Coding-Scheme;
+5	|	SABP::IEs::id-Failure-List;
+6	|	SABP::IEs::id-Message-Identifier;
+7	|	SABP::IEs::id-New-Serial-Number;
+8	|	SABP::IEs::id-Number-of-Broadcasts-Completed-List;
+9	|	SABP::IEs::id-Number-of-Broadcasts-Requested;
+10	|	SABP::IEs::id-Old-Serial-Number;
+11	|	SABP::IEs::id-Radio-Resource-Loading-List;
+12	|	SABP::IEs::id-Recovery-Indication;
+13	|	SABP::IEs::id-Repetition-Period;
+14	|	SABP::IEs::id-Serial-Number;
+15	|	SABP::IEs::id-Service-Areas-List;
+16	|	SABP::IEs::id-MessageStructure;
+17	|	SABP::IEs::id-TypeOfError;
+18	|	SABP::IEs::id-Paging-ETWS-Indicator;
+19	|	SABP::IEs::id-Warning-Type;
+20	|	SABP::IEs::id-WarningSecurityInfo;
+21	|	SABP::IEs::id-Broadcast-Message-Content-Validity-Indicator;
+
+void SABP::IEs::SAI()
+{
+ 	LABL( 0, 0, 0x90, 0xc9, "Routing Area Identity (SAI):");
+	//HBIT( 12, l[1], 0x90, 0xc2, "Mobile Country Code (MCC):");
+	GTP::EXTHelp::MCC-MNC;
+	//HBIT( 0, 12, 0x90, 0xc2, "Mobile Network Code (MNC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Location Area Code (LAC):");
+	HBIT( 0, 16, 0x90, 0xc2, "Service Area Code (SAC):");
+	LABL( 0, 0, 0x00, 0xb8);
+}
+void SABP::IEs::id-Broadcast-Message-Content()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "Bit String Length:" );
+	g[54] -= 2;
+	HEX#( 0, g[54], 0x90, 0xc2, "id-Broadcast-Message-Content:" );
+}
+void SABP::IEs::id-Category()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Category:" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "Category:" );
+	}
+	//high-priority,background-priority,normal-priority,default-priority,
+}
+void SABP::IEs::id-Cause()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Cause:" );
+		CST#( 0, l[1], 0, 0x14, SABP::IEs::id-Causes );
+		CLSE( 0, 0, 0, 0x14, "Unknown" );
+}
+str# SABP::IEs::id-Causes;
+0	|	Parameter-not-recognised;
+1	|	Parameter-value-invalid;
+2	|	Valid-CN-message-notidentified;
+3	|	Service-Area-identity-notvalid;
+4	|	Unrecognised-message;
+5	|	Missing-mandatory-element;
+6	|	RNC-capacity-exceeded;
+7	|	RNC-memory-exceeded;
+8	|	Service-Area-broadcast-not-supported;
+9	|	Service-Area-broadcast-not-operational;
+10	|	Message-reference already-used;
+11	|	Unspecified-error;
+12	|	Semantic Error;
+14	|	Message not compatible with receiver state;
+15	|	Abstract Syntax Error (Reject);
+16	|	Abstract Syntax Error (Ignore and Notify);
+17	|	Abstract Syntax Error (Falsely Constructed Message);
+
+void SABP::IEs::id-Criticality-Diagnostics()
+{
+	
+}
+void SABP::IEs::id-Data-Coding-Scheme()
+{
+	BBIT( 4, l[1], 0x90, 0xc2, "Coding Group:" );
+	BBIT( 4, l[2], 0x90, 0xc2, "Language:" );
+}
+void SABP::IEs::id-Failure-List()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Failure-List:" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "Failure-List:" );
+	}	
+	if (g[54] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "Failure-List:" );
+	}
+	if (g[54] == 5)
+	{
+		DBYT( 0, l[2], 0x5, 0x5, "Failure-List:" );
+		DLNG( 0, l[1], 0x5, 0x5, "Failure-List:" );		
+		SHFL( 32, l[2] );
+		l[2] += l[1];
+		DGLB( 0, l[2], 0x90, 0xc2, "Failure-List:" );
+	}
+	if (g[54] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "Failure-List:" );
+	}
+	if (g[54] > 8)
+	{
+		HEX#( 0, g[54], 0x90, 0xc2, "Failure-List:" );
+	}
+}
+void SABP::IEs::id-Message-Identifier()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Message-Identifier:" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "Message-Identifier:" );
+	}	
+	if (g[54] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "Message-Identifier:" );
+	}
+	if (g[54] == 5)
+	{
+		DBYT( 0, l[2], 0x5, 0x5, "Message-Identifier:" );
+		DLNG( 0, l[1], 0x5, 0x5, "Message-Identifier:" );		
+		SHFL( 32, l[2] );
+		l[2] += l[1];
+		DGLB( 0, l[2], 0x90, 0xc2, "Message-Identifier:" );
+	}
+	if (g[54] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "Message-Identifier:" );
+	}
+	if (g[54] > 8)
+	{
+		HEX#( 0, g[54], 0x90, 0xc2, "Message-Identifier:" );
+	}
+}
+void SABP::IEs::id-New-Serial-Number()
+{
+	HEX#( 0, g[54], 0x90, 0xc2, "New-Serial-Number:" );
+}
+void SABP::IEs::id-Number-of-Broadcasts-Completed-List()
+{
+	SABP::IEs::SAI;
+	SABP::IEs::id-Number-of-Broadcasts-Requested;
+	DBYT( 0, 0, 0x90, 0xc2, "Number-Of-Broadcasts-Completed-Info:" );
+	g[54] -= 10;
+	HEX#( 0, g[54], 0x90, 0xc2, "Extension:" );
+}
+void SABP::IEs::id-Number-of-Broadcasts-Requested()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Number-of-Broadcasts-Requested:" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "Number-of-Broadcasts-Requested:" );
+	}	
+}
+void SABP::IEs::id-Old-Serial-Number()
+{
+	HEX#( 0, g[54], 0x90, 0xc2, "Old-Serial-Number:" );
+}
+void SABP::IEs::id-Radio-Resource-Loading-List()
+{
+	
+}
+void SABP::IEs::id-Recovery-Indication()
+{
+	
+}
+void SABP::IEs::id-Repetition-Period()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "Repetition-Period:" );
+		LABL( 0, 0, 0, 0x14, "(" );
+		l[1] += 1;
+		DGLB( 0, l[1], 0x04, 0 );
+		LABL( 0, 0, 0, 0x04, ")" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, l[1], 0x90, 0xc2, "Repetition-Period:" );
+		LABL( 0, 0, 0, 0x14, "(" );
+		l[1] += 1;
+		DGLB( 0, l[1], 0x04, 0 );
+		LABL( 0, 0, 0, 0x04, ")" );
+	}	
+	if (g[54] == 4)
+	{
+		DLNG( 0, 0, 0x90, 0xc2, "Repetition-Period:" );
+	}
+	if (g[54] == 5)
+	{
+		DBYT( 0, l[2], 0x5, 0x5, "Repetition-Period:" );
+		DLNG( 0, l[1], 0x5, 0x5, "Repetition-Period:" );		
+		SHFL( 32, l[2] );
+		l[2] += l[1];
+		DGLB( 0, l[2], 0x90, 0xc2, "Repetition-Period:" );
+	}
+	if (g[54] == 8)
+	{
+		D64B( 0, 0, 0x90, 0xc2, "Repetition-Period:" );
+	}
+	if (g[54] > 8)
+	{
+		HEX#( 0, g[54], 0x90, 0xc2, "Repetition-Period:" );
+	}
+}
+void SABP::IEs::id-Serial-Number()
+{
+	HEX#( 0, g[54], 0x90, 0xc2, "Serial-Number:" );
+}
+void SABP::IEs::id-Service-Areas-List()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "Sequence Length:" );
+	g[54] -= 2;
+	while (g[54] > 0)
+	{
+		SABP::IEs::SAI;
+		g[54] -= 7;
+	}
+}
+void SABP::IEs::id-MessageStructure()
+{
+	HEX#( 0, g[54], 0x90, 0xc2, "MessageStructure:" );
+}
+void SABP::IEs::id-TypeOfError()
+{
+	
+}
+void SABP::IEs::id-Paging-ETWS-Indicator()
+{
+	
+}
+void SABP::IEs::id-Warning-Type()
+{
+	
+}
+void SABP::IEs::id-WarningSecurityInfo()
+{
+	
+}
+void SABP::IEs::id-Broadcast-Message-Content-Validity-Indicator()
+{
+	if (g[54] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Broadcast-Message-Content-Validity-Indicator:" );
+	}
+	if (g[54] == 2)
+	{
+		DWRD( 0, 0, 0x90, 0xc2, "Broadcast-Message-Content-Validity-Indicator:" );
+	}
+}

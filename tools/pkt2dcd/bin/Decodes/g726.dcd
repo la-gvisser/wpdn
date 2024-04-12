@@ -1,0 +1,72 @@
+//G.726
+//a=rtpmap:2 G726-32/8000
+//RFC 3551 (2003)[Bearbeiten | Quelltext bearbeiten]
+//Little Endian (X.420 und RFC 3551)				Big Endian (I.366.2 Annex E und RFC 3551)	veraltet nach RFC 1890
+//G726-16 a=rtpmap:{from 96 to 127} G726-16/8000	AAL2-G726-16 a=rtpmap:{von 96 to 127} 		AAL2-G726-16/8000	a=rtpmap:2 G726-16/8000
+//G726-24 a=rtpmap:{from 96 to 127} G726-24/8000	AAL2-G726-24 a=rtpmap:{von 96 to 127} 		AAL2-G726-24/8000	a=rtpmap:2 G726-16/8000
+//G726-32 a=rtpmap:{from 96 to 127} G726-32/8000	AAL2-G726-32 a=rtpmap:{von 96 to 127} 		AAL2-G726-32/8000	a=rtpmap:2 G726-16/8000
+//G726-40 a=rtpmap:{from 96 to 127} G726-40/8000	AAL2-G726-40 a=rtpmap:{von 96 to 127} 		AAL2-G726-40/8000	a=rtpmap:2 G726-16/8000
+//
+//Detection for RTP Dynamic should come out of H.225
+
+//I.366.2 Annex E
+//G.726 - 16
+	/*
+		LABL( 0, 0, 0, 0xb7, "Codeword Block" );
+			BBIT( 2, 0, 0x90, 0xc2, "AA - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "BB - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "CC - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "DD - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "EE - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "FF - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "GG - Codeword:" );
+			BBIT( 2, 0, 0x90, 0xc2, "HH - Codeword:" );
+		LABL( 0, 0, 0, 0xb8 );
+	*/
+	//G.726 - 24
+	/*
+		LABL( 0, 0, 0, 0xb7, "Codeword Block" );
+			BBIT( 3, 0, 0x90, 0xc2, "AAA - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "BBB - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "CCC - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "DDD - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "EEE - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "FFF - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "GGG - Codeword:" );
+			BBIT( 3, 0, 0x90, 0xc2, "HHH - Codeword:" );
+		LABL( 0, 0, 0, 0xb8 );
+	*/
+		//G.726 - 40
+	/*
+		LABL( 0, 0, 0, 0xb7, "Codeword Block" );
+			BBIT( 5, 0, 0x90, 0xc2, "AAAAA - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "BBBBB - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "CCCCC - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "DDDDD - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "EEEEE - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "FFFFF - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "GGGGG - Codeword:" );
+			BBIT( 5, 0, 0x90, 0xc2, "HHHHH - Codeword:" );
+		LABL( 0, 0, 0, 0xb8 );
+	*/
+	
+//this is only G.726 - 32 coded like I.366.2 Annex E
+void G726::32()
+{
+	//here we should try to determe the Type of G.726
+	LABL( 0, 0, 0, 0xb1, "G.726 - 32" );
+		while(g[16] > 4 )
+		{
+			LABL( 0, 0, 0, 0xb7, "Codeword Block" );
+				BBIT( 4, 0, 0x90, 0xc2, "AAAA - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "BBBB - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "CCCC - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "DDDD - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "EEEE - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "FFFF - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "GGGG - Codeword:" );
+				BBIT( 4, 0, 0x90, 0xc2, "HHHH - Codeword:" );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+	LABL( 0, 0, 0, 0xb8 );
+}

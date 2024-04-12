@@ -1,0 +1,1281 @@
+* Decoder version: 5.0.1.2
+
+
+//--------------------
+// 	Ether::Main
+//---------------------
+
+void Ether::Main()
+{
+	TRAK(  1,	g[16] );
+	LABL(  0,	0,		0x0,	0xb1, "Packet Info\Info:" );
+	PRV7  0  0 90 c3 Packet Number:;
+	PRV2(  0,	g[11],	0x90,	0xc3, "Flags:\F:");
+	BST#(  0,	g[11],	0x0,	0x14, Ether::GenericFlagsStr );
+	PRV3(  0,	g[2],	0x90,	0xc3, "Status:\S:" );
+	CBIT(  1,	g[2],	0x0,	0x14, "Truncated " );
+	CBIT(  5,	g[2],	0x0,	0x14, "Sliced" );
+	PRV4(  0,	g[16],	0x90,	0xc3, "Packet Length:\L:" );
+	PRV5(  0,	g[15],	0x20,	0x23, "Slice Length:" );
+	PRV1(  0,	0,		0x90,	0xc3, "Timestamp:\T:" );
+	DCHN(  0,   0,      0x90,   0xc3, "Channel:" );
+	PRV8(  0,	0,		0x90,	0xc3, "Filter:" );
+	
+	// if slice length != 0
+	
+	if ( g[15] != 0 ) 
+	{
+		// if packet length > slice length
+		if (g[16] > g[15])
+		{
+			g[16] = g[15];
+		}
+	}
+	
+	// else
+	
+	if (g[15] == 0) 
+	{
+		g[16] -= 4;  // subtract fcs
+	}
+		
+	Ether::Branching();
+}
+
+//--------------------
+// 	Ether::Send_Main
+//---------------------
+
+void Ether::Send_Main()
+{
+	TRAK  1 10;
+	LABL  0  0  0 b1 Packet Info;
+	PRV4  0 10 90 c3 Packet Length:;
+	PRV2  0  b 5;
+	PRV5  0  f  0 ;
+	
+	Ether::Branching();
+}
+
+//--------------------
+// 	Ether::Generic
+//---------------------
+
+void Ether::Generic()
+{
+	LABL  0  0  0 b1 Packet Info\Info:;
+	PRV7  0  0 90 c3 Packet Number:;
+	PRV2  0  2 90 c3 Flags:\F:;
+	BST#  0  2  0 14 Ether::GenericFlagsStr;
+	PRV3  0  2 90 c3 Status:;
+	CBIT  1  2  0 14 Truncated ;
+	CBIT  5  2  0 14 Sliced;
+	PRV4  0  0 90 c3 Packet Length:\Len:;
+	PRV5  0  0  0 23 Slice Length:;
+	PRV1  0  0 90 c3 Timestamp:\Time:;
+	DCHN  0  0 90 c3 Channel:;
+	PRV8  0  0 90 c3 Filter:;
+	TNXT  -Ether::Header;
+}
+
+//-------------------------
+//	Ether::GenericFlagsStr
+//-------------------------
+
+str# Ether::GenericFlagsStr;
+	1 | CRC Error ;
+	2 | Frame Error ;
+	4 | Oversize ;
+	5 | Runt ;
+	6 | Trigger ;
+	7 | 802.3 ;
+	8 | Prior Pkt(s) Dropped;
+	
+	
+// -------------------------------------------------------
+// 	Ether::Header
+// -------------------------------------------------------
+
+void Ether::Header()
+{
+	DUMP  0  0 90 b1 Raw Packet Data;
+}
+
+
+// -------------------------------------------------------
+// 	Ether::Branching
+// -------------------------------------------------------
+
+void Ether::Branching()
+{
+	CiscoFabricPath::Detection;
+	// SI: null/loopback pkts - tt7540
+	GLNG 40000000 1;
+	l[2] = pb[4];
+	if (g[1] == 2)
+	{
+		if (l[2] == 0x45)		//check to make sure IP4 is present
+		{
+			TNXT -Ether::Null_Loopback;
+		}
+		if (l[2] >= 0x60)		//check to make sure IP6 is present
+		{
+			TNXT -Ether::Null_Loopback;
+		}
+	}
+	
+	// SI: check for CISCO ISL packet format - tt9183
+	g[1] = pl[0];
+	g[2] = pb[4];
+	if (g[1] == 0x01000c00)
+	{
+		if (g[2] == 0)
+		{
+		
+			TNXT -Cisco::ISL;
+		}
+	}
+	if (g[1] == 0x03000c00)
+	{
+		if (g[2] == 0)
+		{
+			TNXT -Cisco::ISL;
+		}
+	}
+	
+	// DW: check for DOCSIS packet - TT6969
+	g[2] = pw[2];
+	l[2] = g[16];
+	l[2] -= 2;
+	l[3] = pl[0];
+	l[4] = pl[6];
+	/*DGLB( 0,l[2],0x90,0xc2, "l[2]:" );
+	DGLB( 0,l[3],0x90,0xc2, "l[2]:" );
+	DGLB( 0,l[4],0x90,0xc2, "l[2]:" );
+	DGLB( 0,g[2],0x90,0xc2, "g[2]:" );
+	*/
+	CST#( 0, l[3], 0, 0x5, OIDS_Prv );
+	//SKIP;
+		CST#( 0, l[4], 0, 0x5, OIDS_Prv );
+	//SKIP;
+	if (g[2] <= l[2] )
+	{
+		if (g[20] == 0 )							*marker from run through DOCSIS
+		{
+			// BL: Disable DOCSIS for now (see TT 27899)
+			// DW: Enable DOCSIS to solve, by any kind of missdetection please disble it again or add th IPv6 or more level detection(TT6969)
+			DOCSIS::DETECTION::LENGTH;
+		}
+	}
+	//ENDS;
+	// DW: MPLS Check for Bots
+	if (g[12] == 1)					*MPLS Bottom of the stack (g[12]) == true
+	{
+		g[10] = pw[12]; 				* get the potential Ethertype if there would be no ControlWord
+		g[14] = pw[16];					* get the potential Ethertype if there is a ControlWord
+		//HGLB( 0 , g[10], 0x90, 0xc2, l10: );
+		//HGLB( 0 , g[14], 0x90, 0xc2, l14: );
+		CST#( 0, g[10], 0, 0x5, Ether::Branching_3_Str );
+		XLSE 0 a 0 0 MPLS::SETCW;
+		CST#( 0, g[14], 0, 0x5, EProto::Names_Str );
+		XTST( 0, 0, 0, 0, MPLS::SETCW2 );
+		ETHR 0 4b 5 5 TestSource;
+		DECR 6;
+		if (g[62] == 1)					*no valid Ethertype when Bots within the packet
+		{
+			if (g[61] == 1)				*valid Ethertype with Bots
+			{
+				if (l[12] == 0) 		*no valid Destination
+				{
+					//LABL 0 0 90 c2 test;
+					//test for  Generic PW MPLS Control WordBits
+					GBYT( 0, l[13]);
+					SHFR( 4, l[13]);
+					if (l[13] == 0)
+					{
+						MPLS::Control Word;
+					}		
+				}
+			}
+		}
+	}
+	//
+	CBIT 7 b 0 b1 802.3 Header\802.3;
+	CLSE 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+	ETHR 0 0 90 c2 Destination:\D:;
+	ETHR 0 0 90 c2 Source:\S:;
+	
+	g[1] = pw[0];
+	if (g[1] <= 0x5dc)
+	{
+		802_2();				//SI: so this used to tsub into 802_2 but now if you go to 802_2, you are it
+		TRTS;					//		because it would go into ether::Branching_2 ... which would show a protocol type... and that's no good!
+	}
+	if (g[1] == 0x8808)			//ethernet PAUSE frame - for gig
+	{
+		802.3::MAC_Control;
+		TRTS;
+	}
+	TGTE 0 10 0 0 RETURN;		*si: stop if there's no data left!!!!
+
+	//SamChen
+	if (g[1] == 0x22e5)
+	{
+		// LABL( 0, 0, 0x90, 0xc9, "Gigamon Timestamp ");  
+		// Use l[6] - l[10]
+		l[8] = 8;
+		HWRD( 0, g[1], 0x90, 0xc2, "Gigamon Header Type: ");
+		GBYT( 0, l[6] );  // Look ahead to get length
+
+//		while (l[6] > 0)
+//		{
+			DBYT( 0, l[6], 0x90, 0xc2, "Length: ");                       l[6] -= 1;
+			// Skip packet size ID (0x01) and ps length (0x02)
+			// INCR 2;													  l[6] -= 2;
+			//DWRD( 0, 0, 0x05, 0x05, "Invisible: ");					  l[6] -= 2;
+			DWRD( 0, 0, 0x90, 0xc2, "Gigamon Upcode: ");						  l[6] -= 2;
+			DWRD( 0, g[1], 0x90, 0xc2, "Original Packet Size: ");         l[6] -= 2;		   
+		    // Skip timestamp ID (0x03) and ts length (0x08)
+			// INCR 2;                                                    l[6] -= 2;
+			DWRD( 0, 0, 0x90, 0xc2, "Timestamp Upcode: ");                l[6] -= 2;
+			//HEX#( 0, l[8], 0x90, 0xc2, "Gigamon Timestamp: ");		  l[6] -= 8;
+			PRV1( 0, 33, 0x90, 0xc2, "Gigamon Timestamp: ");              l[6] -= 8;
+//			HEX#( 0, l[6], 0x90, 0xc2, "Padding: ");                      l[6] -= l[6];
+			DBYT( 0, 1, 0x90, 0xc2, "Padding: ");                         l[6] -= l[6];
+//		}
+	}
+
+	Ether::Branching_2();
+}
+void MPLS::SETCW()
+{
+	g[62] = 1;
+}
+void MPLS::SETCW2()
+{
+	g[61] = 1;
+}
+// -------------------------------------------------------
+// 	Ether::Branching_2
+// -------------------------------------------------------
+
+#define kProto_8021q 0x8100
+
+#define kEthernetProto 1
+
+void Ether::Branching_2()
+{
+	PRTO( kEthernetProto, 1, 0x90, 0xc2, "Protocol Type:\" );
+	SKIP 1;
+	EProto::Names();
+	
+	if (g[1] == kProto_8021q)
+	{
+		802_1q();
+
+		* test for snap
+		g[1] = pb[2];
+		if (g[1] == 0xAA) { 802_2(); TRTS; }
+		if (g[1] == 0x42) { 802_2(); TRTS; }
+		
+		* BD: added to stop loops that this function can sometimes get into with 802.1q packets
+		BREM 0 51;
+		TLTE 4 51 -RETURN;
+		
+		TNXT -Ether::Branching_2;
+	}
+	
+	Ether::Branching_3();
+}
+
+// -------------------------------------------------------
+// 	Ether::Branching_3
+// -------------------------------------------------------
+
+void Ether::Branching_3()
+{
+	TST# 0 1 -Ether::Branching_3_Str;
+}
+	
+// -------------------------------------------------------
+// 	Ether::Branching_3_Str
+// -------------------------------------------------------
+	
+str# Ether::Branching_3_Str;
+	0x010b	| 802.1;						// si: tt6869
+	0x0600  | XNS;
+	0x0800  | IP;
+	0x0806  | ARP;
+	0x0807  | XNS;
+	0x0bad  | VINES Internet;
+	0x0baf  | VINES Echo;
+	0x2003	| Cisco::VTP;
+	0x2004	| Cisco::DISL;					//SI: TT7734
+	0x6001  | DECnet MOP Dump/Load;
+	0x6002  | DECnet MOP Remote Console;
+	0x6003 	| DECnet Phase IV;
+	0x6004 	| DECnet LAT;
+	0x6005 	| DECnet Diagnostic Protocol;
+	0x6007 	| DECnet Phase IV;
+	0x8021 	| PPP-IPCP;						//SI: tt2715
+	0x8035 	| RARP;
+	0x809b 	| EtherTalk;
+	0x80c4 	| VINES Internet;
+	0x80c5 	| VINES Echo;
+	0x80f3 	| AARP;
+	0x80fd 	| PPP-CCP;						//SI: tt4347
+	0x8100 	| 802_1q;
+	0x8137 	| IPX Top;
+	0x8138 	| XNS;
+	0x81fd	| ISMP;
+	0x86dd 	| IPv6;
+	0x8809 	| LACP;							//TD: TT5187
+	0x880b 	| PPP;
+	0x8847 	| MPLS::Unicast;
+	0x8848 	| MPLS::Multicast;
+	0x8863 	| PPPoE Discovery;
+	0x8864 	| PPPoE Session;
+	0x886d	| Intel_ANS;					//SI: TT6867
+	0x8881	| PPP;
+	0x888E 	| 802.1x Authentication;		//SI: TT1675
+	0x88a8	| 802_1ad;
+	0x88ae	| Boardwalk;					//SI: FC Encapsulation
+	0x88bb	| LWAPP;						//SI: TT9900
+	0x9000 	| Loopback;
+	0xbbbb	| LWAPP;
+	0xc021 	| PPP-LCP;						//SI: TT4351
+	0xc023 	| PAP;
+	0xc223 	| PPP-CHAP;						//SI
+
+
+void EProto::Names()
+{
+	CST# 0 1 0 14 EProto::Names_Str;
+}
+
+str# EProto::Names_Str;
+0x0200	|	XEROX PUP;
+0x0201	|	PUP Addr Trans;
+0x0400	|	Nixdorf;
+0x0600	|	XEROX NS IDP;
+0x0660	|	DLOG;
+0x0661	|	DLOG;
+0x0800	|	Internet Protocol version 4 (IPv4);
+0x0801	|	X.75 Internet;
+0x0802	|	NBS Internet;
+0x0803	|	ECMA Internet;
+0x0804	|	Chaosnet;
+0x0805	|	X.25 Level 3;
+0x0806	|	Address Resolution Protocol (ARP);
+0x0807	|	XNS Compatability;
+0x0808	|	Frame Relay ARP;
+0x081C	|	Symbolics Private;
+0x0888	|	Xyplex;
+0x0889	|	Xyplex;
+0x088A	|	Xyplex;
+0x0900	|	Ungermann-Bass net debugr;
+0x0A00	|	Xerox IEEE802.3 PUP;
+0x0A01	|	PUP Addr Trans;
+0x0BAD	|	Banyan VINES;
+0x0BAE	|	VINES Loopback;
+0x0BAF	|	VINES Echo;
+0x1000	|	Berkeley Trailer nego;
+0x1001	|	Berkeley Trailer encap/IP;
+0x1002	|	Berkeley Trailer encap/IP;
+0x1003	|	Berkeley Trailer encap/IP;
+0x1004	|	Berkeley Trailer encap/IP;
+0x1005	|	Berkeley Trailer encap/IP;
+0x1006	|	Berkeley Trailer encap/IP;
+0x1007	|	Berkeley Trailer encap/IP;
+0x1008	|	Berkeley Trailer encap/IP;
+0x1009	|	Berkeley Trailer encap/IP;
+0x100A	|	Berkeley Trailer encap/IP;
+0x100B	|	Berkeley Trailer encap/IP;
+0x100C	|	Berkeley Trailer encap/IP;
+0x100D	|	Berkeley Trailer encap/IP;
+0x100E	|	Berkeley Trailer encap/IP;
+0x100F	|	Berkeley Trailer encap/IP;
+0x1234	|	DCA - Multicast;
+0x1600	|	Valid Systems;
+0x1989	|	Artificial Horizons;
+0x1995	|	Datapoint Corporation;
+0x22F3	|	TRILL;
+0x22F4	|	L2-IS-IS;
+0x3C00	|	3Com NBP virtual circuit datagram (like XNS SPP);
+0x3C01	|	3Com NBP System control datagram;
+0x3C02	|	3Com NBP Connect request;
+0x3C03	|	3Com NBP Connect repsonse;
+0x3C04	|	3Com NBP Connect complete;
+0x3C05	|	3Com NBP Close request;
+0x3C06	|	3Com NBP Close response;
+0x3C07	|	3Com NBP Datagram;
+0x3C08	|	3Com NBP Datagram broadcast;
+0x3C09	|	3Com NBP Claim NetBIOS name;
+0x3C0A	|	3Com NBP Delete Netbios name;
+0x3C0B	|	3Com NBP Remote adaptor status request;
+0x3C0C	|	3Com NBP Remote adaptor response;
+0x3C0D	|	3Com NBP Reset;
+0x4242	|	PCS Basic Block Protocol;
+0x424C	|	Information Modes Little Big LAN diagnostic;
+0x4321	|	THD - Diddle;
+0x4C42	|	Information Modes Little Big LAN;
+0x5208	|	BBN Simnet;
+0x6000	|	DEC Unassigned (Exp.);
+0x6001	|	DEC MOP Dump/Load;
+0x6002	|	DEC MOP Remote Console;
+0x6003	|	DEC DECNET Phase IV Route;
+0x6004	|	DEC LAT;
+0x6005	|	DEC Diagnostic Protocol;
+0x6006	|	DEC Customer Protocol;
+0x6007	|	DEC LAVC, SCA;
+0x6008	|	DEC AMBER;
+0x6009	|	DEC MUMPS;
+0x6010	|	3Com Corporation;
+0x6011	|	3Com Corporation;
+0x6012	|	3Com Corporation;
+0x6013	|	3Com Corporation;
+0x6014	|	3Com Corporation;
+0x6558	|	Trans Ether Bridging;
+0x6559	|	Raw Frame Relay;
+0x7000	|	Ungermann-Bass download;
+0x7001	|	Ungermann-Bass NIUs;
+0x7002	|	Ungermann-Bass dia/loop;
+0x7003	|	Ungermann-Bass(NMC to/from UB Bridge);
+0x7005	|	Ungermann-Bass Bridge Spanning Tree;
+0x7007	|	OS/9 Microware;
+0x7009	|	OS/9 Net;
+0x7020	|	LRT;
+0x7021	|	LRT;
+0x7022	|	LRT;
+0x7023	|	LRT;
+0x7024	|	LRT;
+0x7025	|	LRT;
+0x7026	|	LRT;
+0x7027	|	LRT;
+0x7028	|	LRT;
+0x7029	|	LRT;
+0x7030	|	Proteon;
+0x7031	|	Prime NTS (Network Terminal Service);
+0x7034	|	Cabletron;
+0x8003	|	Cronus VLN;
+0x8004	|	Cronus Direct;
+0x8005	|	HP Probe;
+0x8006	|	Nestar;
+0x8008	|	AT&T;
+0x8010	|	Excelan;
+0x8013	|	SGI diagnostics;
+0x8014	|	SGI network games;
+0x8015	|	SGI reserved;
+0x8016	|	SGI bounce server;
+0x8019	|	Apollo Domain;
+0x802E	|	Tymshare;
+0x802F	|	Tigan, Inc.;
+0x8035	|	Reverse Address Resolution Protocol (RARP);
+0x8036	|	Aeonic Systems;
+0x8038	|	DEC LANBridge;
+0x8039	|	DEC Unassigned;
+0x8040	|	DEC Unassigned;
+0x8041	|	DEC Unassigned;
+0x8042	|	DEC Unassigned;
+0x803D	|	DEC Ethernet Encryption;
+0x803E	|	DEC Unassigned;
+0x803F	|	DEC LAN Traffic Monitor;
+0x8040	|	DEC Unassigned;
+0x8041	|	DEC Unassigned;
+0x8042	|	DEC Unassigned;
+0x8044	|	Planning Research Corp.;
+0x8046	|	AT&T;
+0x8047	|	AT&T;
+0x8049	|	ExperData;
+0x805B	|	Stanford V Kernel exp.;
+0x805C	|	Stanford V Kernel prod.;
+0x805D	|	Evans & Sutherland;
+0x8060	|	Little Machines;
+0x8062	|	Counterpoint Computers;
+0x8065	|	Univ. of Mass. @ Amherst;
+0x8066	|	Univ. of Mass. @ Amherst;
+0x8067	|	Veeco Integrated Auto.;
+0x8068	|	General Dynamics;
+0x8069	|	AT&T;
+0x806A	|	Autophon;
+0x806C	|	ComDesign;
+0x806D	|	Computgraphic Corp.;
+0x806E	|	Landmark Graphics Corp.;
+0x806F	|	Landmark Graphics Corp.;
+0x8070	|	Landmark Graphics Corp.;
+0x8071	|	Landmark Graphics Corp.;
+0x8072	|	Landmark Graphics Corp.;
+0x8073	|	Landmark Graphics Corp.;
+0x8074	|	Landmark Graphics Corp.;
+0x8075	|	Landmark Graphics Corp.;
+0x8076	|	Landmark Graphics Corp.;
+0x8077	|	Landmark Graphics Corp.;
+0x807A	|	Matra;
+0x807B	|	Dansk Data Elektronik;
+0x807C	|	Merit Internodal;
+0x807D	|	Vitalink Communications;
+0x807E	|	Vitalink Communications;
+0x807F	|	Vitalink Communications;
+0x8080	|	Vitalink TransLAN III;
+0x8081	|	Counterpoint Computers;
+0x8082	|	Counterpoint Computers;
+0x8083	|	Counterpoint Computers;
+0x809B	|	Appletalk;
+0x809C	|	Datability;
+0x809F	|	Spider Systems Ltd.;
+0x80A3	|	Nixdorf Computers;
+0x80A4	|	Siemens Gammasonics Inc.;
+0x80C0	|	DCA Data Exchange Cluster;
+0x80C4	|	Banyan Systems;
+0x80C5	|	Banyan Systems;
+0x80C6	|	Pacer Software;
+0x80C7	|	Applitek Corporation;
+0x80C8	|	Intergraph Corporation;
+0x80C9	|	Intergraph Corporation;
+0x80CA	|	Intergraph Corporation;
+0x80CB	|	Intergraph Corporation;
+0x80CC	|	Intergraph Corporation;
+0x80CD	|	Harris Corporation;
+0x80CE	|	Harris Corporation;
+0x80CF	|	Taylor Instrument;
+0x80D0	|	Taylor Instrument;
+0x80D1	|	Taylor Instrument;
+0x80D2	|	Taylor Instrument;
+0x80D3	|	Rosemount Corporation;
+0x80D4	|	Rosemount Corporation;
+0x80D5	|	IBM SNA Service on Ether;
+0x80DD	|	Varian Associates;
+0x80DE	|	Integrated Solutions TRFS;
+0x80DF	|	Integrated Solutions TRFS;
+0x80E0	|	Allen-Bradley;
+0x80E1	|	Allen-Bradley;
+0x80E2	|	Allen-Bradley;
+0x80E3	|	Allen-Bradley;
+0x80E4	|	Datability;
+0x80E5	|	Datability;
+0x80E6	|	Datability;
+0x80E7	|	Datability;
+0x80E8	|	Datability;
+0x80E9	|	Datability;
+0x80EA	|	Datability;
+0x80EB	|	Datability;
+0x80EC	|	Datability;
+0x80ED	|	Datability;
+0x80EF	|	Datability;
+0x80F0	|	Datability;
+0x80F2	|	Retix;
+0x80F3	|	AppleTalk AARP (Kinetics);
+0x80F4	|	Kinetics;
+0x80F5	|	Kinetics;
+0x80F7	|	Apollo Computer;
+0x80FF	|	Wellfleet Communications;
+0x8100	|	802.1Q;
+0x8101	|	Wellfleet Communications;
+0x8102	|	Wellfleet Communications;
+0x8103	|	Wellfleet Communications;
+0x8107	|	Symbolics Private;
+0x8108	|	Symbolics Private;
+0x8109	|	Symbolics Private;
+0x8130	|	Hayes Microcomputers;
+0x8131	|	VG Laboratory Systems;
+0x8132	|	Bridge Communications;
+0x8133	|	Bridge Communications;
+0x8134	|	Bridge Communications;
+0x8135	|	Bridge Communications;
+0x8136	|	Bridge Communications;
+0x8137	|	Novell, Inc.;
+0x8138	|	Novell, Inc.;
+0x8139	|	KTI;
+0x813A	|	KTI;
+0x813B	|	KTI;
+0x813C	|	KTI;
+0x813D	|	KTI;
+0x8148	|	Logicraft;
+0x8149	|	Network Computing Devices;
+0x814A	|	Alpha Micro;
+0x814C	|	SNMP;
+0x814D	|	BIIN;
+0x814E	|	BIIN;
+0x814F	|	Technically Elite Concept;
+0x8150	|	Rational Corp;
+0x8151	|	Qualcomm;
+0x8152	|	Qualcomm;
+0x8153	|	Qualcomm;
+0x815C	|	Computer Protocol Pty Ltd;
+0x815D	|	Computer Protocol Pty Ltd;
+0x815E	|	Computer Protocol Pty Ltd;
+0x8164	|	Charles River Data System;
+0x8165	|	Charles River Data System;
+0x8166	|	Charles River Data System;
+0x817D	|	XTP;
+0x817E	|	SGI/Time Warner prop.;
+0x8180	|	HIPPI-FP encapsulation;
+0x8181	|	STP, HIPPI-ST;
+0x8182	|	Reserved for HIPPI-6400;
+0x8183	|	Reserved for HIPPI-6400;
+0x8184	|	Silicon Graphics prop.;
+0x8185	|	Silicon Graphics prop.;
+0x8186	|	Silicon Graphics prop.;
+0x8187	|	Silicon Graphics prop.;
+0x8188	|	Silicon Graphics prop.;
+0x8189	|	Silicon Graphics prop.;
+0x818A	|	Silicon Graphics prop.;
+0x818B	|	Silicon Graphics prop.;
+0x818C	|	Silicon Graphics prop.;
+0x818D	|	Motorola Computer;
+0x819A	|	Qualcomm;
+0x819B	|	Qualcomm;
+0x819C	|	Qualcomm;
+0x819D	|	Qualcomm;
+0x819E	|	Qualcomm;
+0x819F	|	Qualcomm;
+0x81A1	|	Qualcomm;
+0x81A2	|	Qualcomm;
+0x81A3	|	Qualcomm;
+0x81A4	|	ARAI Bunkichi;
+0x81A5	|	RAD Network Devices;
+0x81A6	|	RAD Network Devices;
+0x81A7	|	RAD Network Devices;
+0x81A8	|	RAD Network Devices;
+0x81A9	|	RAD Network Devices;
+0x81AA	|	RAD Network Devices;
+0x81AB	|	RAD Network Devices;
+0x81AC	|	RAD Network Devices;
+0x81AD	|	RAD Network Devices;
+0x81AE	|	RAD Network Devices;
+0x81B7	|	Xyplex;
+0x81B8	|	Xyplex;
+0x81B9	|	Xyplex;
+0x81CC	|	Apricot Computers;
+0x81CD	|	Apricot Computers;
+0x81CE	|	Apricot Computers;
+0x81CF	|	Apricot Computers;
+0x81D0	|	Apricot Computers;
+0x81D1	|	Apricot Computers;
+0x81D2	|	Apricot Computers;
+0x81D3	|	Apricot Computers;
+0x81D4	|	Apricot Computers;
+0x81D5	|	Apricot Computers;
+0x81D6	|	Artisoft;
+0x81D7	|	Artisoft;
+0x81D8	|	Artisoft;
+0x81D9	|	Artisoft;
+0x81DA	|	Artisoft;
+0x81DB	|	Artisoft;
+0x81DC	|	Artisoft;
+0x81DD	|	Artisoft;
+0x81E6	|	Polygon;
+0x81E7	|	Polygon;
+0x81E8	|	Polygon;
+0x81E9	|	Polygon;
+0x81EA	|	Polygon;
+0x81EB	|	Polygon;
+0x81EC	|	Polygon;
+0x81ED	|	Polygon;
+0x81EF	|	Polygon;
+0x81F0	|	Comsat Labs;
+0x81F1	|	Comsat Labs;
+0x81F2	|	Comsat Labs;
+0x81F3	|	SAIC;
+0x81F4	|	SAIC;
+0x81F5	|	SAIC;
+0x81F6	|	VG Analytical;
+0x81F7	|	VG Analytical;
+0x81F8	|	VG Analytical;
+0x8203	|	Quantum Software;
+0x8204	|	Quantum Software;
+0x8205	|	Quantum Software;
+0x8221	|	Ascom Banking Systems;
+0x8222	|	Ascom Banking Systems;
+0x823E	|	Advanced Encryption Syste;
+0x823F	|	Advanced Encryption Syste;
+0x8240	|	Advanced Encryption Syste;
+0x827F	|	Athena Programming;
+0x8280	|	Athena Programming;
+0x8281	|	Athena Programming;
+0x8282	|	Athena Programming;
+0x8263	|	Charles River Data System;
+0x8264	|	Charles River Data System;
+0x8265	|	Charles River Data System;
+0x8266	|	Charles River Data System;
+0x8267	|	Charles River Data System;
+0x8268	|	Charles River Data System;
+0x8269	|	Charles River Data System;
+0x826A	|	Charles River Data System;
+0x829A	|	Inst Ind Info Tech;
+0x829B	|	Inst Ind Info Tech;
+0x829C	|	Taurus Controls;
+0x829D	|	Taurus Controls;
+0x829E	|	Taurus Controls;
+0x829F	|	Taurus Controls;
+0x82A1	|	Taurus Controls;
+0x82A2	|	Taurus Controls;
+0x82A3	|	Taurus Controls;
+0x82A4	|	Taurus Controls;
+0x82A5	|	Taurus Controls;
+0x82A6	|	Taurus Controls;
+0x82A7	|	Taurus Controls;
+0x82A8	|	Taurus Controls;
+0x82A9	|	Taurus Controls;
+0x82AA	|	Taurus Controls;
+0x82AB	|	Taurus Controls;
+0x82AC	|	Walker Richer & Quinn;
+0x82AD	|	Walker Richer & Quinn;
+0x82AE	|	Walker Richer & Quinn;
+0x82AF	|	Walker Richer & Quinn;
+0x8693	|	Walker Richer & Quinn;
+0x8694	|	Idea Courier;
+0x8695	|	Idea Courier;
+0x8696	|	Idea Courier;
+0x8697	|	Idea Courier;
+0x8698	|	Idea Courier;
+0x8699	|	Idea Courier;
+0x869A	|	Idea Courier;
+0x869B	|	Idea Courier;
+0x869C	|	Idea Courier;
+0x869D	|	Idea Courier;
+0x869E	|	Computer Network Tech;
+0x869F	|	Computer Network Tech;
+0x86A0	|	Computer Network Tech;
+0x86A1	|	Computer Network Tech;
+0x86A3	|	Gateway Communications;
+0x86A4	|	Gateway Communications;
+0x86A5	|	Gateway Communications;
+0x86A7	|	Gateway Communications;
+0x86A8	|	Gateway Communications;
+0x86A9	|	Gateway Communications;
+0x86AA	|	Gateway Communications;
+0x86AB	|	Gateway Communications;
+0x86AC	|	Gateway Communications;
+0x86AD	|	Gateway Communications;
+0x86AE	|	Gateway Communications;
+0x86AF	|	Gateway Communications;
+0x86DB	|	SECTRA;
+0x86DE	|	Delta Controls;
+0x86DD	|	Internet Protocol version 6 (IPv6);
+0x86DF	|	ATOMIC;
+0x86E0	|	Landis & Gyr Powers;
+0x86E1	|	Landis & Gyr Powers;
+0x86E2	|	Landis & Gyr Powers;
+0x86E3	|	Landis & Gyr Powers;
+0x86E4	|	Landis & Gyr Powers;
+0x86E5	|	Landis & Gyr Powers;
+0x86E6	|	Landis & Gyr Powers;
+0x86E7	|	Landis & Gyr Powers;
+0x86E8	|	Landis & Gyr Powers;
+0x86E9	|	Landis & Gyr Powers;
+0x86EA	|	Landis & Gyr Powers;
+0x86EB	|	Landis & Gyr Powers;
+0x86EC	|	Landis & Gyr Powers;
+0x86ED	|	Landis & Gyr Powers;
+0x86EE	|	Landis & Gyr Powers;
+0x86EF	|	Landis & Gyr Powers;
+0x8700	|	Motorola;
+0x8701	|	Motorola;
+0x8702	|	Motorola;
+0x8703	|	Motorola;
+0x8704	|	Motorola;
+0x8705	|	Motorola;
+0x8706	|	Motorola;
+0x8707	|	Motorola;
+0x8708	|	Motorola;
+0x8709	|	Motorola;
+0x8710	|	Motorola;
+0x876B	|	TCP/IP Compression;
+0x876C	|	IP Autonomous Systems;
+0x876D	|	Secure Data;
+0x8808	|	IEEE Std 802.3 - Ethernet Passive Optical Network (EPON);
+0x880B	|	Point-to-Point Protocol (PPP);
+0x880C	|	General Switch Management Protocol (GSMP);
+0x8847	|	MPLS;
+0x8848	|	MPLS with upstream-assigned label;
+0x8861	|	Multicast Channel Allocation Protocol (MCAP);
+0x8863	|	PPP over Ethernet (PPPoE) Discovery Stage;
+0x8864	|	PPP over Ethernet (PPPoE) Session Stage;
+0x888E	|	IEEE Std 802.1X - Port-based network access control;
+0x88A8	|	IEEE Std 802.1Q - Service VLAN tag identifier (S-Tag);
+0x8A96	|	Invisible Software;
+0x8A97	|	Invisible Software;
+0x88B5	|	IEEE Std 802 - Local Experimental Ethertype;
+0x88B6	|	IEEE Std 802 - Local Experimental Ethertype;
+0x88B7	|	IEEE Std 802 - OUI Extended Ethertype;
+0x88C7	|	IEEE Std 802.11 - Pre-Authentication (802.11i);
+0x88CC	|	IEEE Std 802.1AB - Link Layer Discovery Protocol (LLDP);
+0x88E5	|	IEEE Std 802.1AE - Media Access Control Security;
+0x88F5	|	IEEE Std 802.1Q - Multiple VLAN Registration Protocol (MVRP);
+0x88F6	|	IEEE Std 802.1Q - Multiple Multicast Registration Protocol (MMRP);
+0x890D	|	IEEE Std 802.11 - Fast Roaming Remote Request (802.11r);
+0x8917	|	IEEE Std 802.21 - Media Independent Handover Protocol;
+0x8929	|	IEEE Std 802.1Qbe - Multiple I-SID Registration Protocol;
+0x893B	|	TRILL Fine Grained Labeling (FGL);
+0x8940	|	IEEE Std 802.1Qbg - ECP Protocol (also used in 802.1BR);
+0x8946	|	TRILL RBridge Channel;
+0x8947	|	GeoNetworking as defined in ETSI EN 302 636-4-1;
+0x9000	|	Loopback;
+0x9001	|	3Com(Bridge) XNS Sys Mgmt;
+0x9002	|	3Com(Bridge) TCP-IP Sys;
+0x9003	|	3Com(Bridge) loop detect;
+0xbbbb	|	LWAPP;
+0xc021	|	PPP Link Control Protocol;
+0xc023	|	Password Authentication Protocol;
+0xc223	|	PPP Challenge-Handshake Authentication Protocol;
+0xFAF5	|	Sonix Arpeggio;
+0xFF00	|	BBN VITAL-LanBridge cache;
+0xFF00	|	ISC Bunker Ramo;
+0xFF01	|	ISC Bunker Ramo;
+0xFF02	|	ISC Bunker Ramo;
+0xFF03	|	ISC Bunker Ramo;
+0xFF04	|	ISC Bunker Ramo;
+0xFF05	|	ISC Bunker Ramo;
+0xFF06	|	ISC Bunker Ramo;
+0xFF07	|	ISC Bunker Ramo;
+0xFF08	|	ISC Bunker Ramo;
+0xFF09	|	ISC Bunker Ramo;
+0xFF0A	|	ISC Bunker Ramo;
+0xFF0B	|	ISC Bunker Ramo;
+0xFF0C	|	ISC Bunker Ramo;
+0xFF0D	|	ISC Bunker Ramo;
+0xFF0E	|	ISC Bunker Ramo;
+0xFF0F	|	ISC Bunker Ramo;
+0xFFFF	|	Reserved;
+
+// -------------------------------------------------------
+//	GIG Pause Frame
+// -------------------------------------------------------
+void 802.3::MAC_Control()
+{
+	LABL(	0,		0,		0,		0xb1, "MAC Control");
+	HWRD(	0,		g[1],	0x90,	0xc2, "Identifier:");
+	HWRD(	0,		g[1],	0x90,	0xc2, "Opcode:");
+	CEQU(	1,		g[1],	0,		0x14, "Pause");
+	if (g[1] == 0)
+	{
+		HWRD(	0,		g[1],	0x90,	0xc2, "Parameters:");
+		DUMP(	0x2a,	0,		0x90,	0xc2, "Reserved:");
+	}
+	if (g[1] == 1)
+	{
+		LABL(   0,      0,      0,      0xb1, "Pause Frame Time");
+		HWRD(	0,		g[1],	0x90,	0xc2, "Pause Time:");
+		DUMP(	0x2a,	0,		0x90,	0xc2, "Padding:");
+	}
+	LABL(	0,		0,		0,		0x14, "All Zero's");
+	TRTS;
+}
+
+// -------------------------------------------------------
+//	Null / Loopback Packet
+// -------------------------------------------------------
+void Ether::Null_Loopback()
+{
+	LABL(0, 0, 0, 0xb1, "Null/Loopback");
+	HLNG(0x40000000, 1, 0x90, 0xc2, "Family:");
+	TNXT -IPv6;					//si: the family type is going to be 2... and that's how you know it's IP i think
+}
+
+//--------------------
+// 	Token::Generic
+//---------------------
+
+void Token::Generic()
+{
+	PRV2  0  6 90 43 Flags:;
+	CBIT  3  6  0 14 Routing Info ;
+	CBIT  6  6  0 14 Trigger ;
+	PRV3  0  2 90 c3 Status:;
+	CBIT  1  2  0 14 Truncated ;
+	CBIT  5  2  0 14 Sliced;
+	PRV4  0  0 90 c3 Packet Length:;
+	PRV5  0  0 20 23 Slice Length:;
+	PRV1  0  0 90 c3 Timestamp:;
+	PRV8  0  0 90 c3 Filter:;
+	TNXT  -Token::Header;
+}
+
+//--------------------
+// 	Token::Header
+//---------------------
+
+void Token::Header()
+{
+	DUMP  0  0 90 b1 Raw Packet Data;
+}
+
+void Ether::Dump()
+{
+	BREM 0 1;		* get remaining bytes
+
+	l[8] = 0;
+
+	if (g[1] == 22)  // SamChen: General Trailer format
+	{
+		l[8] = 2;
+	}
+
+	if (g[1] == 23)  // SamChen: Gigamon Timestamp
+	{
+		l[1] = g[1];
+		l[1] -= 8;  // Trailer Format:  Data + 2-byte Gigamon Code (0x22e5) + 2-byte padding + 4-byte FCS
+
+		GBYT( l[1], l[2] );
+		l[1] += 1;
+		GBYT( l[1], l[3] );
+
+		if (l[2] == 0x22)
+		{
+			if (l[3] == 0xe5)
+			{
+				l[4] = 2;   // Look ahead position, skip packet size ID (0x01) and ps length (0x02)
+				GBYT( l[4], l[5] );  // l[5] = Original Packet Size
+				SHFL( 8, l[5]);
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				l[5] += l[6];
+				l[4] += 2;  // Skip timestamp ID (0x03) and ts length (0x08)
+				GBYT( l[4], l[6] );  // l[6] = 8-byte Gigamon Timestamp
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[6] );
+				l[4] += 1;
+				GBYT( l[4], l[7] );  // l[7] = Length
+
+				l[8] = 1;
+			}
+		}
+	}
+	
+	if (g[1] == 19)
+	{
+		l[7] = 15;
+		l[9] = 0;
+		l[10] = 0;
+		l[11] = 0;
+		l[12] = 0;
+		GBYT( 0, l[9] );
+		GBYT( 1, l[10] );
+		GBYT( 2, l[11] );
+		GBYT( 10, l[12] );
+		if (l[9] == 0x04)
+		{
+			if (l[10] == 0x08)
+			{
+				if (l[11] >= 0x49)
+				{
+					if (l[11] < 0x57)
+					{
+						if (l[12] == 0x0a)
+						{
+							LABL 0 0 0 b1 "Ixia Trailer\Ixia:";
+							INCR( 2, 0 );
+							l[7] -= 2;
+							PRV1( 0, 33, 0x90, 0xc2, "Timestamp: ");
+							l[7] -= 8;
+							DBYT( 0, 0, 0x90, 0xc2, "Length: ");
+							l[7] -= 1;
+							HEX#( 0, 2, 0x90, 0xc2, "Magic Number: ");
+							l[7] -= 2;
+							HEX#( 0, 2, 0x90, 0xc2, "Checksum: ");
+							l[7] -= 2;
+							l[7] = 0;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if (l[8] == 1)
+	{
+		LABL( 0, 0, 0, 0xb1, "Gigamon Trailer\Gigamon" );
+		INCR 2;  // Skip packet size ID (0x01) and ps length (0x02)
+		DWRD( 0, l[10], 0x90, 0xc2, "Original Packet Size: ");
+		INCR 2;  // Skip timestamp ID (0x03) and ts length (0x08)
+		//HEX#( 0, 8, 0x90, 0xc2, "Gigamon Timestamp: ");
+		PRV1( 0, 33, 0x90, 0xc2, "Gigamon Timestamp: ");
+		DBYT( 0, l[10], 0x90, 0xc2, "Length: ");
+		HWRD( 0, 0, 0x90, 0xc2, "Gigamon Trailer Type: "); 
+	}
+
+	if (l[8] == 2)
+	{
+		LABL 0 0 0 b1 "General Trailer:";
+		HEX#( 0, 4, 0x90, 0xc2, "Original CRC: ");
+		HEX#( 0, 2, 0x90, 0xc2, "Src Port: ");
+		PRV1( 0, 33, 0x90, 0xc2, "Timestamp: ");
+	}
+
+	if (g[16] > 4)
+	{
+		LABL 0 0 0 b1 "Extra bytes\Extra:";
+		DUMP 1 0 90 c2 Number of bytes:;
+	}
+
+	FCS();
+}
+
+// -------------------------------------------------------
+//	FCS	
+// ------------------------------------------------------- 
+// si: also works for wan!
+ 
+void FCS()
+{
+	MDIA( 0, g[11] );
+	
+	PRV5( 0, g[2], 5 );				//si: see if peod was due to sliced pkt
+		
+	if (g[2] != 0) 
+	{
+		PEOD_Sliced();
+		TRTS;
+	}
+	
+	// turn off packet boundry range checking
+	RANG( 0 );
+	
+	PRV4( 0, g[1], 5, 5 );			//si: get the pkt's length
+	GOTO( 0, g[1] );				//si: goto end of pkt to do fcs
+
+	BREM( 0, g[1] );
+	INCR( 0, g[1] );
+	if (g[11] == 4)
+	{
+		DECR( 2 );					//si: wan
+	}
+	if (g[11] != 4)
+	{
+		DECR( 4 );					//si: not wan
+	}
+
+	//   Put the packet FCS in a global
+	if (g[11] == 4)
+	{	
+		GWRD 0 1d;		//si: WAN
+	}
+	if (g[11] != 4)
+	{
+		GLNG 0 1d;		//si: not WAN... hahahaahaha
+	}
+	
+	LABL 0 0 80 b1 FCS - Frame Check Sequence\FCS:;
+	FCSC 0 1e;		//   Put the calculated FCS in a global
+	
+	//   Test if the packet FCS is zero
+	if (g[0x1d] == 0)
+	{
+		HGLB 0 1e 90 c2 "FCS:";
+		LABL 0 0 0 14 "Calculated";
+		if (g[11] == 4)
+		{	
+			INCR 2;			//si: WAN
+		}
+		if (g[11] != 4)
+		{
+			INCR 4;			//si: not WAN... hahahaahaha
+		}
+		TNXT -RETURN;
+	}
+
+	//   Display packet FCS.
+	if (g[11] == 4)
+	{	
+		HWRD 0 0 90 c2 FCS:;		//si: WAN
+	}
+	if (g[11] != 4)
+	{
+		HLNG 0 0 90 c2 FCS:;		//si: not WAN... hahahaahaha
+	}
+		//   Test if packet FCS is correct (same as calculated)
+		//   Unfortunately, there's no way to test globals directly
+	MOVE 1d 9f;
+	NOTG 0 1f;
+	ANDG 1e 9f;
+		//   Return if FCS is correct
+	TEQU 0 1f 0 0 RETURN;
+		//   Display calculated value
+	LABL 0 0 0 14 FCS invalid. Should be: ;
+	HGLB 0 1e 4;
+}
+
+void PEOD_Sliced()
+{
+	PRV5( 0, 2, 5, 5);
+	LABL( 0, 0, 0, 0xc4, "Packet sliced at byte ");
+	DGLB( 0, g[2], 0x4);
+}
+
+void Token::Dump()
+{
+	DUMP( 1, 0, 0x90, 0xb6, "Extra bytes:\Extra:" );
+	FCS();
+}
+
+void RETURN()
+{
+	// does nothing
+}
+
+
+void Loopback()
+{
+	LABL  0 1  0 b1  Loopback;
+	DWRD  0 1 90 c2  Skip count:;
+	DWRD  0 1 90 c2  Function:;			*si: changed to tom's spec - TT5212 i think this was bogus
+	CEQU  1 1 0  14  Reply;
+	CEQU  2 1 0  14  Forward Data;
+	TEQU  1 1 0  0   Loopback::Reply;
+	TEQU  2 1 0  0   Loopback::Forward_Data;
+}
+	
+void Loopback::Reply()
+{
+	LABL 0  0 90 c7 Reply;
+	DWRD 0  1 90 c2 Receipt Number:;
+	DUMP 0  0 90 c2 Reply Data:;
+	LABL 0  0  0 c8;
+}
+	
+	
+void Loopback::Forward_Data()
+{
+	LABL 0 0 90 c7 Forward Data;
+	CHR# 6 0 90 c2 Forwarding Address:;
+	DUMP 0 0 90 c2 Data:;
+	LABL 0 0  0 c8;
+}
+
+void MPLS::Unicast()
+{
+	LABL  0 0  0 b1 MPLS - MultiProtocol Label Switching (Unicast)\MPLS Unicast:;
+	MPLS::Common;
+	TEQU  0 2  0  0 MPLS::Unicast;
+	* BD: This is the way ethereal decodes whats next
+	GBYT 0 31;
+	ANDG F0 31;
+	SEQU 60 31;
+	SKIP 80000002;
+	MOVE  86dd 1;  * BD: assign that IPv6 is next 
+	TNXT  -Ether::Branching_3;
+	SEQU 40 31;
+	SKIP 80000002;
+	MOVE  800 1;  * BD: assign that IP is next
+	TNXT  -Ether::Branching_3;
+	* Else it is ethernet
+	Ether::Branching;
+}
+
+void MPLS::Control Word()
+{
+	LABL 0  0 0  b1 MPLS - PW Control Word\MPLS PW Control Word:;
+	DLNG 0 0 90 c2 MPLS PW Control Word:;
+	TNXT  -Ether::Branching_3;
+}
+void MPLS::Multicast()
+{
+	LABL 0  0 0  b1 MPLS - MultiProtocol Label Switching (Multicast)\MPLS Multicast:;
+	MPLS::Common;
+	TEQU  0 2  0  0 MPLS::Multicast;
+	TNXT  -Ether::Branching_3;
+}
+
+void MPLS::Common()
+{
+	HBIT( 20, 2, 0x90, 0xc2, "Label:" );
+	DGLB 0 2 00 10 "(";
+	LABL 0 0 00 00 ")";
+	DBIT  3 1 90 c2 Experimental:;
+	DBIT  1 2 90 c2 Bottom of stack:;
+	g[12] = g[2];
+	DBYT  1 1 90 c2 TTL:;
+}
+
+* "2024" = 20:summary  2:skip2  4:message
+
+void Token::Main()
+{
+	TRAK  1 10;
+	LABL  0  0  0 b1 Packet Info;
+	PRV7  0  0 90 c3 Packet Number:;
+	PRV2  0  6 90 c3 Flags:;
+	CBIT  3  6  0 14 Routing Info ;
+	CBIT  6  6  0 14 Trigger ;
+	PRV3  0  2 90 c3 Status:;
+	CBIT  1  2  0 14 Truncated ;
+	CBIT  5  2  0 14 Sliced;
+	PRV4  0 10 90 c3 Packet Length:;
+	PRV5  0  f 20 23 Slice Length:;
+	PRV1  0  0 90 c3 Timestamp:;
+	PRV8  0  0 90 c3 Filter:;
+	TNXT  -Token::Branching;
+}
+
+void Token::Send_Main()
+{
+	TRAK  1 10;
+	LABL  0  0  0 b1 Packet Info;
+	PRV4  0 10 90 c3 Packet Length:;
+	PRV5  0  f  0 ;
+	TNXT  -Token::Branching;
+}
+
+void Token::Branching()
+{
+	LABL 0 0 0 b1 MAC Header;
+	BBIT 3 0 90 c2 Token/Frame Priority:;
+	BBIT 1 2 90 c2 Token Indicator:;
+	CBIT 0 2 0 14 Frame;
+	CLSE 0 2 0 14 Token;
+	BBIT 1 2 90 c2 Monitor Count:;
+	CBIT 0 2 0 14 Repeated;
+	CLSE 0 2 0 14 Not Repeated;
+	BBIT 3 0 90 c2 Priority Reservation:;
+	BBIT 2 3 90 c2 Frame Type:;
+	CST# ffffffff 3 0 14 Token::MAC Frame Types;
+	BBIT 2 0 90 c2 Unused:;
+	BBIT 4 2 90 c2 PCF Attention Code:;
+	CST# ffffffff 2 0 14 Token::PCF Attn Codes;
+	LABL 0 0 0 b1 802.5 Header;
+	TRNG 0 0 90 c2 Destination:;
+	GBYT 0 4;
+	TRNG 1 0 90 c2 Source:;
+	CBIT 7 4 0 14 (routing info);
+	TTST -TR Routing Info;
+	TR::802_2();
+}
+
+str# Token::MAC Frame Types;
+	Medium Access Control (MAC) Frame;
+	Logical Link Control (LLC) Frame;
+	Reserved;
+	Reserved;
+
+str# Token::PCF Attn Codes;
+	;
+	Express Buffer;
+	Beacon;
+	Claim Token;
+	Ring Purge;
+	Active Monitor Present;
+	Standby Monitor Present;
+	
+//-----------------------------
+// a call that does nothing
+//-----------------------------
+
+void Dummy()
+{
+	TRTS;
+}
+

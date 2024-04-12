@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly>
+  <file name="FolderAdapterOE">
+    <comClass catid="{4C116C92-7B4C-4C93-B586-B87570862337}" clsid="{7355AD46-B1B0-459F-87FF-CEAF1B2FCE25}" progid="ThirdPartyPlugins.FolderAdapter" />
+    <comClass catid="{6166FE20-D4C6-4B42-BC71-8F1AABE7B5A2}" clsid="{7355AD46-B1B0-459F-87FF-CEAF1B2FCE25}" progid="ThirdPartyPlugins.FolderAdapter" />
+    <comClass catid="{4C116C92-7B4C-4C93-B586-B87570862337}" clsid="{96129F62-C378-49A1-8441-916B1DD7FA5F}" progid="ThirdPartyPlugins.FolderAdapterStats" />
+    <comClass catid="{D8A51BAC-0297-4247-BF9A-9C956262ABD5}" clsid="{96129F62-C378-49A1-8441-916B1DD7FA5F}" progid="ThirdPartyPlugins.FolderAdapterStats" />
+  </file>
+</assembly>

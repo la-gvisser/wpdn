@@ -1,0 +1,5 @@
+SCC = This is a source code control file
+
+[FTPCapture.vcproj]
+SCC_Aux_Path = "P4SCC#perforce.wildpackets.com:1666##pskiff##PETERS-1"
+SCC_Project_Name = Perforce Project

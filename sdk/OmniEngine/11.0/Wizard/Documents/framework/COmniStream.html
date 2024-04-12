@@ -1,0 +1,442 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>COmniStream Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">COmniStream Class</h1>
+
+    <!-- Description -->
+    <p class="onlyG">
+        The COmniStream class implements streaming in the plugin code. For an expanded
+        discussion on COmniStream and its usage see
+        <a href="OmniStreams.html"><i>Uses of OmniStreams in the OmniEngine Plugin</i></a>.
+    </p>
+
+    <!-- Code -->
+    <p class="codeG" style="margin-left:20px; margin-top:18px">
+        class COmniStream
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Constructors</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" style="width:85px"><a href="#COmniStream::COmniStream1">COmniStream</a></td>
+            <td>Default constructor.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::COmniStream2">COmniStream</a></td>
+            <td>Constructor with byte vector ref argument.</td>
+        </tr>
+    </table>
+
+    <!-- Public Member Functions List -->
+    <table cellspacing="1" cellpadding="1" style="margin-top:15px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Public Member Functions</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" style="width:68px"><a href="#COmniStream::Append">Append</a></td>
+            <td>Appends one omni stream onto an existing omni stream.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::GetData1">GetData</a></td>
+            <td>Returns a pointer to the omni stream's data.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::GetData2">GetData</a></td>
+            <td>Sets a byte vector ref with the omni stream data pointer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::GetLength">GetLength</a></td>
+            <td>Returns length of the omni stream's data.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::IsNotValid">IsNotValid</a></td>
+            <td>Returns true to indicate that the omni stream does not have valid data.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::IsValid">IsValid</a></td>
+            <td>Returns boolean value indicating whether or not the omni stream has valid data.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::Read">Read</a></td>
+            <td>Reads specified number of bytes out from the omni stream to a receiving buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::Rewind">Rewind</a></td>
+            <td>Sets the omni stream data pointer back to beginning of the data.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::Seek">Seek</a></td>
+            <td>Moves the omni stream data pointer forward or back.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#COmniStream::SetSize">SetSize</a></td>
+            <td>Sets the internal data buffer size.</td>
+        </tr>
+    </table>
+
+    <!-- COmniStream Class Member Functions -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>COmniStream Public Member Functions</h2>
+
+    <!-- COmniStream default constructor -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::COmniStream1"></a>COmniStream::COmniStream</h3>
+    <p class="onlyG">Constructs a COmniStream object.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">COmniStream();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        Instantiates a COmniStream object with no data.
+    </p>
+
+    <!-- COmniStream constructor with byte vector argument -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::COmniStream2"></a>COmniStream::COmniStream</h3>
+    <p class="onlyG">Constructs a COmniStream whose data is created from a byte vector ref.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">COmniStream(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>inData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inData</em></dt>
+        <dd>A byte vector ref from which to construct the COmniStream.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        Creates an omni stream containing a replication of the data from the byte vector ref argument.
+    </p>
+
+
+    <!-- Append -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::Append"></a>COmniStream::Append</h3>
+    <p class="onlyG">Appends one omni stream onto an existing omni stream.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 Append(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>COmniStream&</td>
+            <td><em>otherStream</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>COmniStream</em></dt>
+        <dd>Remote omni stream to add to the existing.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The number of bytes read from the other omni stream and written into the internal stream.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method appends an entire omni stream to the end of the existing (calling) omni stream.
+    </p>
+
+    <!-- GetData -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::GetData1"></a>COmniStream::GetData</h3>
+    <p class="onlyG">Returns a pointer to the omni stream's internal data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">const UInt8* GetData();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Pointer to the omni stream's internal data.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a pointer to the internal data held by the omni stream.
+    </p>
+
+    <!-- GetData -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::GetData2"></a>COmniStream::GetData</h3>
+    <p class="onlyG">Sets a byte vector ref with the omni stream data pointer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt16 GetData(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>CByteVectRef</td>
+            <td><em>outData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>outData</em></dt>
+        <dd>Byte vector ref to receive the data pointer and data size.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Number of bytes set in the byte vector ref (i.e data size).</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the CByteVectorRef object received as the parameter
+        with the omni stream's data pointer and data size. If the omni stream
+        data is too large (unlikely), the method will return zero.
+    </p>
+
+    <!-- GetLength -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::GetLength"></a>COmniStream::GetLength</h3>
+    <p class="onlyG">Returns length of the omni stream's data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetLength() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Length of the data contained in the omni stream.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the length of the data that is contained in the omni stream.
+    </p>
+
+    <!-- IsNotValid -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::IsNotValid"></a>COmniStream::IsNotValid</h3>
+    <p class="onlyG">Returns true to indicate that the omni stream does not have valid data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsNotValid();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">True if the omni stream does not have valid data, otherwise false.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a boolean value as indicator that the omni stream does not have
+        valid data. The actual indication is that the internal data pointer
+        is null.
+    </p>
+
+    <!-- IsValid -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::IsValid"></a>COmniStream::IsValid</h3>
+    <p class="onlyG">Returns boolean value indicating whether or not the omni stream has valid data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsValid();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">True if the omni stream has data, otherwise false.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a boolean value indicating whether the omni stream has a
+        non-null internal data pointer (i.e. has valid data).
+    </p>
+
+    <!-- Read -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::Read"></a>COmniStream::Read</h3>
+    <p class="onlyG">Reads specified number of bytes out from the omni stream to a receiving buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 Read(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>const UInt32</td>
+            <td><em>inBytes</em></td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>void*</td>
+            <td><em>outData</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inBytes</em></dt>
+        <dd>Number of bytes to be read out.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>outData</em></dt>
+        <dd>Pointer to buffer receiving the data.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Number of bytes returned in outData.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method reads a specified number of bytes from the omni stream out to a receiving buffer.
+    </p>
+
+    <!-- Rewind -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::Rewind"></a>COmniStream::Rewind</h3>
+    <p class="onlyG">Sets the omni stream data pointer back to beginning of the data.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void Rewind() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        Omni streams maintain an internal pointer to "remember" the
+        point to which a series of read or write operations has
+        proceeded. This method resets that pointer to the top
+        of the data.
+    </p>
+
+    <!-- Seek -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::Seek"></a>COmniStream::Seek</h3>
+    <p class="onlyG">Moves the omni stream data pointer forward or back.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 Seek(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>SInt64</td>
+            <td><em>inBytesToMove</em></td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inOrigin</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px;">
+        <dt><em>inBytesToMove</em></dt>
+        <dd>Number of bytes to move the data pointer. Negative number indicates "backward".</dd>
+    </dl>
+    <dl class="breakAfterS" style="margin-left:25px;">
+        <dt><em>inOrigin</em></dt>
+        <dd>
+            Value to indicate the startpoint for the data pointer repositioning
+            (see Remarks section for acceptable values).
+        </dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Number of bytes the data pointer actually moved.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG">
+        This method moves the pointer to a new postion in the omni stream internal
+        buffer. The move can be forward (positive value to the inBytesToMove
+        argument) or negative (negative value to the inBytesToMove
+        argument). The inOrigin argument specifies the startpoint
+        for the pointer repositioning.
+    </p>
+    Values that the inOrigin argument can have:
+    <table class="codeP">
+        <tr>
+            <td class="style1">&nbsp;</td>
+            <td class="style2">STREAM_SEEK_SET</td>
+            <td>From beginning of buffer.</td>
+        </tr>
+        <tr>
+            <td class="style1">&nbsp;</td>
+            <td class="style2">STREAM_SEEK_CUR</td>
+            <td>From current location, inBytesToMove may be negative.</td>
+        </tr>
+        <tr>
+            <td class="style1">&nbsp;</td>
+            <td class="style2">STREAM_SEEK_END</td>
+            <td>From the end of the buffer.</td>
+        </tr>
+    </table>
+    <br>
+
+    <!-- SetSize -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:12px;"><a name="COmniStream::SetSize"></a>COmniStream::SetSize</h3>
+    <p class="onlyG">
+        Sets the internal data buffer size.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetSize(</td>
+        </tr>
+        <tr>
+            <td style="width:40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inNewSize</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inNewSize</em></dt>
+        <dd>Size to set the internal buffer to.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the size of the internal omni stream data buffer.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

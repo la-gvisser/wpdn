@@ -1,0 +1,893 @@
+* RSVP - Resource Reservation Protocol
+
+void RSVP;
+	LABL 0 0   0 b1 RSVP - Resource ReSerVation Protocol\RSVP:;
+	DBIT 4 1  90 c2 Version:;
+	BBIT 4 1  90 c2 Flags:;
+	CBIT 0 1   0 24 Refresh reduction capable;
+	DBYT 0 1  90 c2 Message Type:;
+	*Begin Message Types
+	CEQU  1 1 0 24 Path;
+	CEQU  2 1 0 24 Resv;
+	CEQU  3 1 0 24 PathErr;
+	CEQU  4 1 0 24 ResvErr;
+	CEQU  5 1 0 24 PathTear;
+	CEQU  6 1 0 24 ResvTear;
+	CEQU  7 1 0 24 ResvConf;
+	CEQU  8 1 0 24 DREQ (Diagnostic Request);
+	CEQU  9 1 0 24 DREP (Diagnostic Reply);
+	CEQU  a 1 0 24 ResvTearConfirm;     
+	CEQU  c 1 0 24 Bundle;
+	CEQU  d 1 0 24 ACK;
+	CEQU  f 1 0 24 Srefresh;   
+	CEQU 14 1 0 24 Hello;     
+	CEQU 19 1 0 24 Integrity Challenge;
+	CEQU 20 1 0 24 Integrity Response;
+	CEQU 42 1 0 24 DSBM_willing;   
+	CEQU 43 1 0 24 I_AM_DSBM; 
+	*End Message Types
+	DWRD 0 1  90 c2 RSVP Checksum:;
+	DBYT 0 1  90 c2 Send TTL;
+	DBYT 0 1  90 c2 Reserved:;
+	DWRD 0 11 90 c2 RSVP Length:;
+	SUBG 8 11;
+	SEQU 10 91;
+	SKIP 1;
+	DGLB 0 10 0 0 length should be:;
+	TNEQ 0 10  0  0 RSVP Object;
+
+void RSVP Object;
+	TEQU 0 10  0  0 RETURN;
+	GWRD 0 1;  *Length
+	INCR 2;
+	GBYT 0 2;  *Class
+	INCR 1;
+	GBYT 0 3;  *Type
+	INCR 1;
+	DECR 2; * backup up to class
+	GWRD 0 4;      * read class and type
+	INCR 2;
+	SUBG 4 1;		* the length was the length of the whole object so subg the header
+	TEQU 0101 4 0  0 RSVP Object Session Type 1;
+	TEQU 0102 4 0  0 RSVP Object Session Type 2;
+	TEQU 0301 4 0  0 RSVP Object RSVP_HOP Type 1;
+	TEQU 0302 4 0  0 RSVP Object RSVP_HOP Type 2;
+	TEQU 5    2 0  0 RSVP Object TIME_VALUES;
+	TEQU 0601 4 0  0 RSVP Object ERROR_SPEC Type 1;
+	TEQU 0602 4 0  0 RSVP Object ERROR_SPEC Type 2;
+	TEQU 0701 4 0  0 RSVP Object SCOPE Type 1;
+	TEQU 0702 4 0  0 RSVP Object SCOPE Type 2;
+	TEQU 8    2 0  0 RSVP Object STYLE;
+	TEQU 0902 4 0  0 RSVP Object FLOWSPEC;
+	TEQU 0A01 4 0  0 RSVP Object FILTER_SPEC Type 1;
+	TEQU 0A02 4 0  0 RSVP Object FILTER_SPEC Type 2;
+	TEQU 0A03 4 0  0 RSVP Object FILTER_SPEC Type 3;
+	TEQU 0B01 4 0  0 RSVP Object SENDER_TEMPLATE Type 1;
+	TEQU 0B02 4 0  0 RSVP Object SENDER_TEMPLATE Type 2;
+	TEQU 0B03 4 0  0 RSVP Object SENDER_TEMPLATE Type 3;
+	TEQU 0C02 4 0  0 RSVP Object SENDER_TSPEC Type 2;
+	TEQU 0D02 4 0  0 RSVP Object ADSPEC Type 2;
+	TEQU 0F01 4 0  0 RSVP Object RESV_CONFIRM Type 1;
+	TEQU 0F02 4 0  0 RSVP Object RESV_CONFIRM Type 2;
+	TEQU 1E01 4 0  0 RSVP Object DIAGNOSTIC Type 1;
+	TEQU 1E02 4 0  0 RSVP Object DIAGNOSTIC Type 2;
+	TEQU 2001 4 0  0 RSVP Object DIAG_RESPONSE Type 1;   
+	TEQU 1701 4 0  0 RSVP Object MESSAGE_ID Type 1;
+	TEQU 1801 4 0  0 RSVP Object MESSAGE_ID_ACK Type 1;
+	TEQU 1802 4 0  0 RSVP Object MESSAGE_ID_NACK Type 2;
+	TEQU 1901 4 0  0 RSVP Object MESSAGE_ID_LIST Type 1;
+	TEQU 1902 4 0  0 RSVP Object MESSAGE_ID_LIST Type 2;
+	TEQU 1903 4 0  0 RSVP Object MESSAGE_ID_LIST Type 3;
+	TEQU 1904 4 0  0 RSVP Object MESSAGE_ID_LIST Type 4;
+	TEQU 1905 4 0  0 RSVP Object MESSAGE_ID_LIST Type 5;
+	LABL 0 0 0 b7 RSVP Object;
+	RSVP Object Common;
+	DUMP 0 1  90 c2 Object Contents:;
+	LABL 0 0 0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object Common;
+	DGLB 0 1 90 c2 Length:;
+	MOVE 1 85;  *length is used later in objects that must loop
+	DGLB 0 2 90 c2 Class:;
+	*Begin Classes
+	CEQU  0 2 0 24  NULL;
+	CEQU  1 2 0 24  SESSION;
+	CEQU  3 2 0 24  RSVP_HOP;
+	CEQU  4 2 0 24  INTEGRITY;
+	CEQU  5 2 0 24  TIME_VALUES;
+	CEQU  6 2 0 24  ERROR_SPEC;
+	CEQU  7 2 0 24  SCOPE;
+	CEQU  8 2 0 24  STYLE;
+	CEQU  9 2 0 24  FLOWSPEC;
+	CEQU  a 2 0 24  FILTER_SPEC;
+	CEQU  b 2 0 24  SENDER_TEMPLATE;
+	CEQU  c 2 0 24  SENDER_TSPEC;
+	CEQU  d 2 0 24  ADSPEC;
+	CEQU  e 2 0 24  POLICY_DATA;
+	CEQU  f 2 0 24  RESV_CONFIRM;
+	CEQU 10 2 0 24  RSVP_LABEL;  
+	CEQU 11 2 0 24  HOP_COUNT;   
+	CEQU 12 2 0 24  STRICT_SOURCE_ROUTE;  
+	CEQU 13 2 0 24  LABEL_REQUEST;
+	CEQU 14 2 0 24  EXPLICIT_ROUTE;  
+	CEQU 15 2 0 24  ROUTE_RECORD; 
+	CEQU 16 2 0 24  HELLO;
+	CEQU 17 2 0 24  MESSAGE_ID;
+	CEQU 18 2 0 24  MESSAGE_ID_ACK;
+	CEQU 19 2 0 24  MESSAGE_ID_LIST;
+	CEQU 1e 2 0 24  DIAGNOSTIC;  
+	CEQU 1f 2 0 24  ROUTE;
+	CEQU 20 2 0 24  DIAG_RESPONSE;   
+	CEQU 21 2 0 24  DIAG_SELECT;  
+	CEQU 2a 2 0 24  DSBM IP ADDRESS;  
+	CEQU 2b 2 0 24  SBM_PRIORITY; 
+	CEQU 2c 2 0 24  DSBM TIMER INTERVALS; 
+	CEQU 2d 2 0 24  SBM_INFO;
+	CEQU 40 2 0 24  CHALLENGE;
+	CEQU 80 2 0 24  NODE_CHAR;
+	CEQU a1 2 0 24  RSVP_HOP_L2;   
+	CEQU a2 2 0 24  LAN_NHOP_L2;  
+	CEQU a3 2 0 24  LAN_NHOP_L3;  
+	CEQU a4 2 0 24  LAN_LOOPBACK;  
+	CEQU a5 2 0 24  TCLASS;
+	CEQU c0 2 0 24  TUNNEL;
+	CEQU cf 2 0 24  SESSION_ATTRIBUTE;  
+	CEQU e1 2 0 24  DCLASS;
+	CEQU e2 2 0 24  PACKETCABLE EXTENSIONS;   
+	*End Classes
+	DGLB 0 3 90 c2 Type:;
+	*Begin Types
+	CEQU 0101 4 0 24 (IPv4/UDP);
+	CEQU 0102 4 0 24 (IPv6/UDP);
+	CEQU 0103 4 0 24 (IPv4/GPI);
+	CEQU 0104 4 0 24 (IPv6/GPI);
+	CEQU 0106 4 0 24 (tagged_tunnel_IPv4);
+	CEQU 0301 4 0 24 (IPv4);
+	CEQU 0302 4 0 24 (IPv6);
+	CEQU 0401 4 0 24 (Type 1 Integrity Value);
+	CEQU 0601 4 0 24 (IPv4);
+	CEQU 0602 4 0 24 (IPv6);
+	CEQU 0701 4 0 24 (IPv4);
+	CEQU 0702 4 0 24 (IPv6);
+	CEQU 0801 4 0 24 (Type 1 Style);
+	CEQU 0901 4 0 24 (Reserved (obsolete) flowspec object;
+	CEQU 0902 4 0 24 (Inv-serv Flowspec object);
+	CEQU 0A01 4 0 24 (IPv4);
+	CEQU 0A02 4 0 24 (IPv6);
+	CEQU 0A03 4 0 24 (IPv6 Flow-label FILTER_SPEC);
+	CEQU 0A04 4 0 24 (IPv4/GPI);
+	CEQU 0A05 4 0 24 (IPv6/GPI);
+	CEQU 0A06 4 0 24 (tagged_tunnel_IPv4);
+	CEQU 0B01 4 0 24 (IPv4);
+	CEQU 0B02 4 0 24 (IPv6);
+	CEQU 0B03 4 0 24 (IPv6 Flow-label);
+	CEQU 0B04 4 0 24 (IPv4/GPI);
+	CEQU 0B05 4 0 24 (IPv6/GPI);
+	CEQU 0B06 4 0 24 (tagged_tunnel_IPv4);
+	CEQU 0C02 4 0 24 (Intserv);
+	CEQU 0D02 4 0 24 (Intserv);
+	CEQU 0E01 4 0 24 (Type 1);
+	CEQU 0F01 4 0 24 (IPv4);
+	CEQU 0F02 4 0 24 (IPv6);
+	CEQU 1001 4 0 24 (Type 1 Label);  
+	CEQU 1101 4 0 24 (IPv4);   
+	CEQU 1E01 4 0 24 (IPv4);
+	CEQU 1E02 4 0 24 (IPv6);
+	CEQU 1F01 4 0 24 (IPv4);
+	CEQU 1F02 4 0 24 (IPv6);
+	CEQU 2A01 4 0 24 (IPv4);   
+	CEQU 2A02 4 0 24 (IPv6);   
+	CEQU 2B01 4 0 24 (Default);
+	CEQU 2C01 4 0 24 (Default);  
+	CEQU 2D01 4 0 24 (Media Type); 
+	CEQU 4001 4 0 24 (Type 1 Challenge Value);
+	CEQU A101 4 0 24 (IEEE Canonical Address);   
+	CEQU A201 4 0 24 (IEEE Canonical Address);   
+	CEQU A301 4 0 24 (IPv4);  
+	CEQU A302 4 0 24 (IPv6);  
+	CEQU A401 4 0 24 (IPv4);   
+	CEQU A402 4 0 24 (IPv6);   
+	CEQU C001 4 0 24 (IPv4/UDP);  
+	CEQU C002 4 0 24 (IPv6/UDP);  
+	CEQU C003 4 0 24 (IPv4/GPI);  
+	CEQU C004 4 0 24 (IPv6/GPI); 
+	*End Types
+	TRTS;
+
+void RSVP Object Session Type 1;
+	LABL 0 0  0 b7 RSVP Session Object;
+	RSVP Object Common;
+	IPLG 0 1 90 c2 Destination Address:;	
+	DBYT 0 1 90 c2 Protocol ID:;
+	DBYT 0 1 90 c2 Flags:;
+	CBIT 0 1  0 24 E_Police flag;
+	DWRD 0 1 90 c2 Destination Port:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object Session Type 2;
+	LABL 0 0 0  b7 RSVP Session Object;
+	RSVP Object Common;
+	IPV6 0 1 90 c2 Destination Address:;
+	DBYT 0 1 90 c2 Protocol ID:;
+	DBYT 0 1 90 c2 Flags:;
+	CBIT 0 1  0 24 E_Police flag;
+	DWRD 0 1 90 c2 Destination Port:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object RSVP_HOP Type 1;
+	LABL 0 0  0 b7 RSVP_HOP Object;
+	RSVP Object Common;
+	IPLG 0 1 90 c2 Hop Address:;	
+	DLNG 0 1 90 c2 Interface Handle:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object RSVP_HOP Type 2;
+	LABL 0 0  0 b7 RSVP_HOP Object;
+	RSVP Object Common;
+	IPV6 0 1 90 c2 Hop Address:;
+	DLNG 0 1 90 c2 Interface Handle:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object TIME_VALUES;
+	LABL 0 0  0 b7 TIME_VALUES Object;
+	RSVP Object Common;
+	DLNG 0 1 90 c2 Refresh Period:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object ERROR_SPEC Type 1;
+	LABL 0 0 0  b7 ERROR_SPEC Object;
+	RSVP Object Common;
+	IPLG 0 1 90 c2 Error Node Address:;	
+	DBYT 0 1 90 c2 Flags:;
+	CBIT 1 1  0 24 InPlace;
+	CBIT 2 1  0 24 Not Guilty;
+	DBYT 0 1 90 c2 Error Code:;
+	ADDG 1 1;    *strs are 0 based so add1
+	CST# 0 1  0 24 RSVP Error Codes;
+	DWRD 0 1 90 c2 Error Value:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+	
+void RSVP Object ERROR_SPEC Type 2;
+	LABL 0 0  0 b7 ERROR_SPEC Object;
+	RSVP Object Common;
+	IPV6 0 1 90 c2 Error Node Address:;	
+	DBYT 0 1 90 c2 Flags:;
+	CBIT 1 1  0 24 InPlace;
+	CBIT 2 1  0 24 Not Guilty;
+	DBYT 0 1 90 c2 Error Code:;
+	ADDG 1 1;    *strs are 0 based so add1
+	CST# 0 1  0 24 RSVP Error Codes;
+	DWRD 0 1 90 c2 Error Value:;
+	LABL 0 0  0 b8;
+	TNXT -RSVP Object;
+	
+str# RSVP Error Codes;
+	Confirmation;
+	Admission Control Failure;
+	Policy Control Failure;
+	No path information for this Resv message;
+	No sender information for this Resv message;
+	Conflicting reservation style;
+	Unknown reservation style;
+	Conflicting dest ports;
+	Conflicting sender ports;
+	Reserved;
+	Reserved;
+	Reserved;
+	Service preempted;
+	Unknown object class;
+	Unknown object C-Type;
+	Reserved;
+	Reserved;
+	Reserved;
+	Reserved;
+	Reserved;
+	Reserved for API;
+	Traffic Control Error;
+	Traffic Control System error;
+	RSVP System error;
+
+void RSVP Object SCOPE Type 1;
+	LABL 0  0  0 b7  SCOPE Object;
+	RSVP Object Common;
+	RSVP Object SCOPE Type 1 Loop;
+	LABL 0  0  0 b8;
+	TNXT -RSVP Object;
+	
+void RSVP Object SCOPE Type 1 Loop;
+	TEQU 0 5 0 0 RETURN;
+	IPLG 0 1 90 c2 Source Address:;	
+	SUBG 4 5;
+	RSVP Object SCOPE Type 1 Loop;
+
+void RSVP Object SCOPE Type 2;
+	LABL 0  0  0 b7  SCOPE Object;
+	RSVP Object Common;
+	RSVP Object SCOPE Type 2 Loop;
+	LABL 0  0  0 b8;
+	TNXT -RSVP Object;
+	
+void RSVP Object SCOPE Type 2 Loop;
+	TEQU 0  5 0 0 RETURN;
+	IPV6 0  1 90 c2 Source Address:;	
+	SUBG 16 5;
+	RSVP Object SCOPE Type 2 Loop;
+
+void RSVP Object STYLE;
+	LABL 0   0   0  b7 STYLE Object;
+	RSVP Object Common;
+	DBYT 0   1  90  c2 Flags:;
+	LABL 0   0   0  b7 Option Vector (24 bits);
+	BBIT 8   1  90  c2 Reserved:;
+	BBIT 8   1  90  c2 Reserved:;
+	BBIT 3   1  90  c2 Reserved:;
+	BBIT 2   1  90  c2 Sharing Control:;
+	CBIT 00  1   0  24 Reserved;
+	CBIT 01  1   0  24 Distinct Reservations;
+	CBIT 10  1   0  24 Shared Reservations;
+	CBIT 11  1   0  24 Reserved;
+	BBIT 3   1  90  c2 Sender Selection:;
+	CBIT 000 1   0  24 Reserved;
+	CBIT 001 1   0  24 Wildcard;
+	CBIT 010 1   0  24 Explicit;
+	LABL 0   0   0  b8;
+	LABL 0   0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object FLOWSPEC;
+	LABL   0   0   0  b7 FLOWSPEC Object;
+	RSVP Object Common;
+	DBIT   4   1  90  c2 Version:;
+	GBIT   4   1;		* put the rest of the byte in g1
+	INCR   1;
+	MULG  FF   1;		* shift left
+	GBYT   0   7;		* put another byte
+	ANDG   7  81;       * g7 & g1
+	DGLB   0   1  90  c2 Reserved;
+	INCR   1;
+	DWRD   0   1  90  c2 Length:;
+	DBYT   0   1  90  c2 Service Number:;
+	TEQU   5   1   0   0 RSVP Object FLOWSPEC Controlled Load;
+	TEQU   2   1   0   0 RSVP Object FLOWSPEC Guaranteed;
+
+void RSVP Object FLOWSPEC Controlled Load;
+	LABL  0  0   0 24 Controlled-Load;
+	DBYT  0  1  90 c2 Reserved:;
+	DWRD  0  1  90 c2 Length:;
+	DBYT  0  1  90 c2 Param 127 ID:;
+	DBYT  0  1  90 c2 Param 127 Flags:;
+	DWRD  0  1  90 c2 Param 127 Length:;
+	DLNG  0  1  90 c2 Token Bucket Rate:;
+	LABL  0  0   0 24 IEEE floating point number;
+	DLNG  0  1  90 c2 Token Bucket Size:;
+	LABL  0  0   0 24 IEEE floating point number;
+	DLNG  0  1  90 c2 Peak Date Rate:;
+	LABL  0  0   0 24 IEEE floating point number;
+	DLNG  0  1  90 c2 Minimum Policed Unit:;
+	DLNG  0  1  90 c2 Maximum Policed Unit:;
+	LABL  0  0   0 b8;
+	TNXT  -RSVP Object;
+
+void RSVP Object FLOWSPEC Guaranteed;
+	LABL  0  0  0 24 Guaranteed;
+	DBYT  0  1 90 c2 Reserved:;
+	DWRD  0  1 90 c2 Length:;
+	DBYT  0  1 90 c2 ID:;
+	LABL  0  0  0 24 Token Bucket TSpec;
+	DBYT  0  1 90 c2 Flags:;
+	DWRD  0  1 90 c2 Length:;
+	DLNG  0  1 90 c2 Token Bucket Rate:;
+	LABL  0  0  0 24 IEEE floating point number;
+	DLNG  0  1 90 c2 Token Bucket Size:;
+	LABL  0  0  0 24 IEEE floating point number;
+	DLNG  0  1 90 c2 Peak Date Rate:;
+	LABL  0  0  0 24 IEEE floating point number;
+	DLNG  0  1 90 c2 Minimum Policed Unit:;
+	DLNG  0  1 90 c2 Maximum Policed Unit:;
+	DBYT  0  1 90 c2 ID:;
+	LABL  0  0  0 24 Token Bucket TSpec;
+	DBYT  0  1 90 c2 Flags:;
+	DWRD  0  1 90 c2 Length:;	
+	DLNG  0  1 90 c2 Rate:;
+	LABL  0  0  0 24 IEEE floating point number;
+	DLNG  0  1 90 c2 Slack Term:;
+	LABL  0  0  0 b8;
+	TNXT - RSVP Object;
+
+void RSVP Object FILTER_SPEC Type 1;
+	LABL 0  0   0  b7 FILTER_SPEC Object;
+	RSVP Object Common;
+	IPLG 0  1  90  c2 Source Address:;
+	BBIT 8  1  90  c2 Unused:;
+	BBIT 8  1  90  c2 Unused:;
+	DWRD 0  1  90  c2 Source Port:;
+	LABL 0  0  0 b8;
+	TNXT -RSVP Object;
+
+void RSVP Object FILTER_SPEC Type 2;
+	LABL 0   0   0  b7 FILTER_SPEC Object;
+	RSVP Object Common;
+	IPV6 0   1  90  c2 Source Address:;
+	BBIT 8   1  90  c2 Unused:;
+	BBIT 8   1  90  c2 Unused:;
+	DWRD 0   1  90  c2 Source Port:;
+	LABL 0   0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object FILTER_SPEC Type 3;
+	LABL 0   0   0  b7 FILTER_SPEC Object;
+	RSVP Object Common;
+	IPV6 0   1  90  c2 Source Address:;
+	BBIT 8   1  90  c2 Unused:;
+	DBIT 18  1  90  c2 Flow Label:;
+	LABL 0   0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object SENDER_TEMPLATE Type 1;
+	LABL 0  0   0  b7 SENDER_TEMPLATE Object Type 1;
+	RSVP Object Common;
+	IPLG 0  1  90  c2 Source Address:;
+	BBIT 8  1  90  c2 Unused:;
+	BBIT 8  1  90  c2 Unused:;
+	DWRD 0  1  90  c2 Source Port:;
+	LABL 0  0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object SENDER_TEMPLATE Type 2;
+	LABL 0   0   0  b7 SENDER_TEMPLATE Object Type 2;
+	RSVP Object Common;
+	IPV6 0   1  90  c2 Source Address:;
+	BBIT 8   1  90  c2 Unused:;
+	BBIT 8   1  90  c2 Unused:;
+	DBYT 0   1  90  c2 Source Port:;
+	LABL 0   0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object SENDER_TEMPLATE Type 3;
+	LABL 0   0   0  b7 SENDER_TEMPLATE Object Type 3;
+	RSVP Object Common;
+	IPV6 0   1  90  c2 Source Address:;
+	BBIT 8   1  90  c2 Unused:;
+	DBIT 18  1  90  c2 Flow Label:;
+	LABL 0   0   0  b8;
+	TNXT -RSVP Object;
+
+void RSVP Object SENDER_TSPEC Type 2;
+	LABL   0   0   0   b7 SENDER_TSPEC Object Type 2;
+	RSVP Object Common;
+	DBIT   4   1  90   c2 Version:;
+	GBIT   4   1;			* put the rest of the byte in g1
+	INCR   1;
+	MULG  FF   1;			* shift left
+	GBYT   0   7;			* put another byte
+	ANDG   7  81;			* g7 & g1
+	DGLB   0   1  90   c2 Reserved;
+	INCR   1;
+	DWRD   0   1  90   c2 Overall Length:;
+	DBYT   0   1  90   c2 Service Number:;
+	LABL   0   0   0   24 Controlled-Load;
+	DBYT   0   1  90   c2 Reserved:;
+	DWRD   0   1  90   c2 Service Data Length:;
+
+	LABL   0   0   0   b7 Parameter 127;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flags:;
+	DWRD   0   1  90   c2 Length:;
+	LABL   0   0   0   b8
+	;
+	DLNG   0   1  90   c2 Token Bucket Rate:;
+	LABL   0   0   0   24 IEEE floating point number;
+	DLNG   0   1  90   c2 Token Bucket Size:;
+	LABL   0   0   0   24 IEEE floating point number;
+	DLNG   0   1  90   c2 Peak Date Rate:;
+	LABL   0   0   0   24 IEEE floating point number;
+	DLNG   0   1  90   c2 Minimum Policed Unit:;
+	DLNG   0   1  90   c2 Maximum Policed Unit:;
+	LABL   0   0   0   b8;
+	TNXT  -RSVP Object;
+
+
+* g[a] Overall Length
+
+void RSVP Object ADSPEC Type 2;
+	LABL   0   0   0   b7 ADSPEC Object Type 2;
+	RSVP Object Common;
+	DBIT   4   1  90   c2 Version:;
+	GBIT   4   1;			* put the rest of the byte in g1
+	INCR   1;
+	MULG  FF   1;			* shift left
+	GBYT   0   7;			* put another byte
+	ANDG   7  81;			* g7 & g1
+	DGLB   0   1  90   c2 Reserved;
+	INCR   1;
+	DWRD   0   a  90   c2 Overall Length:;
+	MULG   4   a;			* length is made of 32  bit words so mult by 4 so we can do bytes
+	LABL   0   0   0   24 in 32 bit words (does not include header word);
+	TSUB -RSVP Object ADSPEC Default General Parameters Fragment;
+	TSUB -RSVP Object ADSPEC Fragment Loop;
+	TSUB -RSVP Object ADSPEC Check Loop;		*SI: added this in case there are more Fragment loops
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object ADSPEC Check Loop;		*SI: added this
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 2;
+	SNEQ 2 2;
+	 SKIP 2;
+	 TSUB -RSVP Object ADSPEC Fragment Loop;
+	 TNXT -RSVP Object ADSPEC Check Loop;
+	SNEQ 5 2;
+	 SKIP 2;
+	 TSUB -RSVP Object ADSPEC Fragment Loop;
+	 TNXT -RSVP Object ADSPEC Check Loop;
+	TNXT -RETURN;
+
+void RSVP Object ADSPEC Default General Parameters Fragment;
+	LABL   0   0   0   b7 Default General Characterization Parameters;
+	DBYT   0   1  90   c2 Service Number:;
+	BBIT   1   1  90   c2 Global Break Bit:;
+	BBIT   7   1  90   c2 Reserved:;
+	LABL   0   0   0   24 7 bits;
+	DWRD   0   1  90   c2 Length:;
+
+	LABL   0   0   0   b7 Parameter 4;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 IS Hop Count:;
+	LABL   0   0   0   24 (32-bit unsigned integer);
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 6;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Path b/w estimate:;
+	LABL   0   0   0   24 (32-bit IEEE floating point number);
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 8;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Minimum path latency:;
+	LABL   0   0   0   24 (32-bit integer);
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 10;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Composed MTU:;
+	LABL   0   0   0   24 (32-bit unsigned integer);
+	LABL   0   0   0   b8;
+
+	SUBG  24   a;  
+	LABL   0   0   0   b8;
+	TRTS;
+
+void RSVP Object ADSPEC Fragment Loop;
+	TEQU   0   a   0    0 RETURN; 
+	GBYT   0   2;
+	TEQU   2   2   0    0 RSVP Object ADSPEC Guaranteed Service Fragment;
+	TEQU   5   2   0    0 RSVP Object ADSPEC Controlled-Load Service Fragment;
+	TNXT   -RSVP Object ADSPEC Fragment Loop;
+
+void RSVP Object ADSPEC Guaranteed Service Fragment;
+	LABL   0   0   0   b7 Guaranteed Service Fragment;
+	DBYT   0   1  90   c2 Service Number:;
+	DBYT   0   1  90   c2 Reserved:;
+	DWRD   0   b  90   c2 Length:;
+
+	LABL   0   0   0   b7 Parameter 133;
+	DBYT   0   1  90   c2 ID:;
+	LABL   0   0   0   24 (Composed Ctot);
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Value:;
+	LABL   0   0   0   24 End-to-end composed value for C [Ctot];
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 134;
+	DBYT   0   1  90   c2 ID:;
+	LABL   0   0   0   24 (Composed Ctot);
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Value:;
+	LABL   0   0   0   24 End-to-end composed value for D [Dtot];
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 135;
+	DBYT   0   1  90   c2 ID:;
+	LABL   0   0   0   24 (Composed Csum);
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Value:;
+	LABL   0   0   0   24 Since-last-reshaping point composed C [Csum];
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 Parameter 136;
+	DBYT   0   1  90   c2 ID:;
+	DBYT   0   1  90   c2 Flag byte:;
+	DWRD   0   1  90   c2 Length:;
+	DLNG   0   1  90   c2 Value:;
+	LABL   0   0   0   24 Since-last-reshaping point composed D [Dsum];
+	LABL   0   0   0   b8;
+
+	SUBG  24   a;
+	SUBG  24   b;
+
+	LABL   0   0   0   b8;
+	TRTS;
+
+void RSVP Object ADSPEC Guaranteed Service Fragment Data Loop;
+	TEQU   0   b   0    0 RETURN;
+	DBYT   0   1  90   c2 Service Number:;
+	DBYT   0   1  90   c2 Break Bit:;
+	DWRD   0   1  90   c2 Length:;
+
+	SUBG  24   a;
+	SUBG  24   b;
+
+	TNXT   -RSVP Object ADSPEC Guaranteed Service Fragment Data Loop;
+	
+
+void RSVP Object ADSPEC Controlled-Load Service Fragment;
+	LABL   0   0   0   b7 Controlled-Load Service Fragment;
+	DBYT   0   1  90   c2 Service Number:;
+	DBYT   0   1  90   c2 Break Bit:;
+	DWRD   0   1  90   c2 Length:;
+	MULG   4   1;    * convert length to 8bit segments
+	SUBG   4   a;
+	DUMP   0   1  90   c2 Service Data:;
+	SUBG   1  8a;    * g[10] - g[1]
+	SUBG   1 144;    * g[a] - g[1]
+	LABL   0   0   0   b8;
+	TRTS;
+
+void RSVP Object RESV_CONFIRM Type 1;
+	LABL   0   0   0   b7 RESV_CONFIRM Object Type 1;
+	RSVP Object Common;
+	IPLG   0   1  90   c2 Receiver Address:;	
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+	
+void RSVP Object RESV_CONFIRM Type 2;
+	LABL   0   0   0   b7 RESV_CONFIRM Object Type 2;
+	RSVP Object Common;
+	IPV6   0   1  90   c2 Receiver Address:;	
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+	
+void RSVP Object DIAGNOSTIC Type 1;
+	LABL   0   0   0   b7 RESV_CONFIRM Object Type 1;
+	RSVP Object Common;
+	DBYT   0   1  90   c2 Max-RSVP-hops:;
+	BBIT   8   1  90   c2 Reserved:;
+	BBIT   7   1  90   c2 Reserved:;
+	BBIT   1   1  90   c2 More Fragments:;
+	DWRD   0   1  90   c2 Path MTU:;
+	DWRD   0   1  90   c2 Fragment Offset:;
+	IPLG   0   1  90   c2 LAST-HOP Address:;
+
+	LABL 0  0   0  b7 SENDER_TEMPLATE Object Type 1;
+	RSVP Object Common;
+	IPLG 0  1  90  c2 Source Address:;
+	BBIT 8  1  90  c2 Unused:;
+	BBIT 8  1  90  c2 Unused:;
+	DWRD 0  1  90  c2 Source Port:;
+	LABL 0  0   0  b8;
+
+	LABL 0  0   0  b7 FILTER_SPEC Object Type 1;
+	RSVP Object Common;
+	IPLG 0  1  90  c2 Source Address:;
+	BBIT 8  1  90  c2 Unused:;
+	BBIT 8  1  90  c2 Unused:;
+	DWRD 0  1  90  c2 Source Port:;
+	LABL 0  0  0 b8;
+
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+	
+void RSVP Object DIAGNOSTIC Type 2;
+	LABL   0   0   0   b7 RESV_CONFIRM Object Type 2;
+	RSVP Object Common;
+	DBYT   0   1  90   c2 Max-RSVP-hops:;
+	BBIT   8   1  90   c2 Reserved:;
+	BBIT   7   1  90   c2 Reserved:;
+	BBIT   1   1  90   c2 More Fragments:;
+	DWRD   0   1  90   c2 Path MTU:;
+	DWRD   0   1  90   c2 Fragment Offset:;
+	IPV6   0   1  90   c2 LAST-HOP Address:;
+
+	LABL   0   0   0   b7 SENDER_TEMPLATE Object Type 2;
+	RSVP Object Common;
+	IPV6   0   1  90   c2 Source Address:;
+	BBIT   8   1  90   c2 Unused:;
+	BBIT   8   1  90   c2 Unused:;
+	DWRD   0   1  90   c2 Source Port:;
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b7 FILTER_SPEC Object Type 2;
+	RSVP Object Common;
+	IPV6   0   1  90   c2 Source Address:;
+	BBIT   8   1  90   c2 Unused:;
+	BBIT   8   1  90   c2 Unused:;
+	DWRD   0   1  90   c2 Source Port:;
+	LABL   0   0   0   b8;
+
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+
+void RSVP Object DIAG_RESPONSE Type 1;
+	LABL   0   0   0   b7 DIAG_RESPONSE Object Type 2;
+	RSVP Object Common;
+	DLNG   0   1  90   c2 DREQ Arrival Time:;
+	IPLG   0   1  90   c2 Incoming Interface:;
+	IPLG   0   1  90   c2 Outgoing Interface:;
+	IPLG   0   1  90   c2 Previous-RSVP-Hop Router:;
+	DBYT   0   1  90   c2 D-TTL:;
+	BBIT   1   1  90   c2 M Flag:;
+	DBIT   3   1  90   c2 R Error:;
+	CBIT   0   1   0   24 No error;
+	CBIT   1   1   0   24 No PATH state;
+	CBIT   2   1   0   24 packet too big;
+	CBIT   4   1   0   24 ROUTE object too big;
+	DBIT   4   1  90   c2 Refresh Timer Multiple:;
+	DWRD   0   1  90   c2 Timer Value:;
+	LABL   0   0   0   24 seconds;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+	
+void RSVP Object MESSAGE_ID Type 1;
+	LABL   0   0   0   b7 MESSAGE_ID Object Type 1;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	DLNG   0   1  90   c2 Identifier:;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_ACK Type 1;
+	LABL   0   0   0   b7 MESSAGE_ID_ACK Object Type 1;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	DLNG   0   1  90   c2 Identifier:;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_NACK Type 2;
+	LABL   0   0   0   b7 MESSAGE_ID_NACK Object Type 2;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	DLNG   0   1  90   c2 Identifier:;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 1;
+	LABL   0   0   0   b7 MESSAGE_ID_LIST Object Type 1;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	RSVP Object MESSAGE_ID_LIST Type 1 Loop;
+	DLNG   0   1  90   c2 Identifier:;
+	SUBG   4   5;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 1 Loop;
+	TEQU   0  10   0    0 RETURN;
+	DLNG   0   1  90   c2 Identifier:;
+	RSVP Object MESSAGE_ID_LIST Type 1 Loop;
+
+* g[3] used to count tuples
+
+void RSVP Object MESSAGE_ID_LIST Type 2;
+	LABL   0   0   0   b7 MESSAGE_ID_LIST Object Type 2;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	MOVE   0   3;     * g[3] used to count tuples
+	RSVP Object MESSAGE_ID_LIST Type 2 Loop;
+	DLNG   0   1  90   c2 Identifier:;
+	SUBG   4   5;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 2 Loop;
+	TEQU   0   5   0    0 RETURN;
+	ADDG   1   3;     * add 1 to tuple count
+	LABL   0   0   0   b7 Message ID Tuple ;
+	DGLB   0   3  01; * display tuple count
+	DLNG   0   1  90   c2 Identifier:;
+	IPLG   0   1  90   c2 Source Address:;
+	LABL   0   0   0   b8;
+	SUBG   8   5;
+	RSVP Object MESSAGE_ID_LIST Type 2 Loop;
+
+* g[3] used to count tuples
+
+void RSVP Object MESSAGE_ID_LIST Type 3;
+	LABL   0   0   0   b7 MESSAGE_ID_LIST Object Type 3;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	MOVE   0   3;     * g[3] used to count tuples
+	RSVP Object MESSAGE_ID_LIST Type 3 Loop;
+	DLNG   0   1  90   c2 Identifier:;
+	SUBG   4   5;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 3 Loop;
+	TEQU   0   5   0    0 RETURN;
+	ADDG   1   3;     * add 1 to tuple count
+	LABL   0   0   0   b7 Message ID Tuple ;
+	DGLB   0   3  01; * display tuple count
+	DLNG   0   1  90   c2 Identifier:;
+	IPV6   0   1  90   c2 Source Address:;
+	LABL   0   0   0   b8;
+	SUBG   8   5;
+	RSVP Object MESSAGE_ID_LIST Type 3 Loop;
+
+* g[3] used to count tuples
+
+void RSVP Object MESSAGE_ID_LIST Type 4;
+	LABL   0   0   0   b7 MESSAGE_ID_LIST Object Type 4;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	MOVE   0   3;     * g[3] used to count tuples
+	RSVP Object MESSAGE_ID_LIST Type 4 Loop;
+	DLNG   0   1  90   c2 Identifier:;
+	SUBG   4   5;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 4 Loop;
+	TEQU   0   5   0    0 RETURN;
+	ADDG   1   3;     * add 1 to tuple count
+	LABL   0   0   0   b7 Message ID Tuple ;
+	DGLB   0   3  01; * display tuple count
+	DLNG   0   1  90   c2 Identifier:;
+	IPLG   0   1  90   c2 Source Address:;
+	IPLG   0   1  90   c2 Destination Address:;
+	LABL   0   0   0   b8;
+	SUBG   c   5;
+	RSVP Object MESSAGE_ID_LIST Type 4 Loop;
+
+* g[3] used to count tuples
+
+void RSVP Object MESSAGE_ID_LIST Type 5;
+	LABL   0   0   0   b7 MESSAGE_ID_LIST Object Type 5;
+	RSVP Object Common;
+	BBIT   0   1  90   c2 Flags:;
+	DBIT  18   1  90   c2 Epoch:;
+	MOVE   0   3;     * g[3] used to count tuples
+	RSVP Object MESSAGE_ID_LIST Type 5 Loop;
+	DLNG   0   1  90   c2 Identifier:;
+	SUBG   4   5;
+	LABL   0   0   0   b8;
+	TNXT   -RSVP Object;
+
+void RSVP Object MESSAGE_ID_LIST Type 5 Loop;
+	TEQU   0   5   0    0 RETURN;
+	ADDG   1   3;     * add 1 to tuple count
+	LABL   0   0   0   b7 Message ID Tuple ;
+	DGLB   0   3  01; * display tuple count
+	DLNG   0   1  90   c2 Identifier:;
+	IPV6   0   1  90   c2 Source Address:;
+	IPV6   0   1  90   c2 Destination Address:;
+	LABL   0   0   0   b8;
+	SUBG  24   5;
+	RSVP Object MESSAGE_ID_LIST Type 5 Loop;

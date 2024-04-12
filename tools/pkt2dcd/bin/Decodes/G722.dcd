@@ -1,0 +1,22 @@
+
+
+
+
+void G.722; 			
+    LABL    0   0   0   b1  G.722 Payload;
+    MOVE    10  84  0   0   ;
+    MOVE    10  85  0   0   ;
+	MOVE    10  86  0   0   ;
+	MULG	8	4;
+	MULG	32	4;
+    DIVG    1   4;* get no. of data blocks (block size = 1)
+    DGLB    0   4   90  c2  Bit Rate:;
+	   LABL    0   0   0   14  (RFC3047);
+	//MODG	190 4;
+	//check for valid bit rate...
+	DGLB    0   5   90  c2  Number of Octets:;
+    LSTS    0   5   0   c2  G.722 Octect # ;
+    HBYT    0   0   90  0   :;
+    SUBG    1   5;
+    LSTZ    0   5;
+	TNXT    -Dump Data;

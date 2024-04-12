@@ -1,0 +1,202 @@
+CMI Filter Plugin Testing
+Compare 'after' files to test output with '-ccedst' flags.
+(Don't compare: CRCs, Ethernet addresses, and time stamps.)
+
+
+CMI Testing
+-----------
+Note: The No Mac packets must be played back at timestamp rate.
+Otherwise only 1705 packets are filtered of which only 339 match.
+
+CMI_before_No_Mac.pkt		7,075
+CMI_after_No_Mac.pkt		3,528
+
+Protocol: CMI
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+File Adapter Speed:	1.0
+
+Received:
+Filtered: 3,528
+Duration: 0:02:45
+Last Pkt: 2:39.566538
+
+All packets match: 3528 of 3528
+
+
+CMI_before_With_Mac.pkt		7,000
+CMI_after_With_Mac.pkt		4,837
+
+Protocol: CMI
+
+Filter:
+	Source:		33.33.33.10
+	Port:		8150
+	Destination:	33.33.33.1
+
+Received: 11,837
+Filtered: 4,837
+Duration: 00:01:15
+
+All packets match
+
+
+PCLI Test Notes
+---------------
+
+PCLI_before_No_Mac.pkt	3,560
+PCLI_after_No_Mac.pkt	3,190
+
+Protocol: PCLI
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 6,750
+Filtered: 3,190
+Duration: 0:01:00
+Last Pkt: 0.031790
+
+2.9 vs 2.10:
+Pkt 843 differs in the protocol type: IP vs IPv6.
+
+Note: Numerous IP Fragments are the result of the source not having
+Ethernet headers. The CMI Filter assumes the packets are IP, when they
+were originally something else: SAP, ...
+
+
+SecurityId Test
+---------------
+
+SecurityId_before_With_Mac.pkt
+SecurityId_after_With_Mac.pkt
+
+Protocol: SecurityId
+	Id:	0 46 E3 2E
+
+Filter:
+	Source:		10.253.161.24
+	Port:		30000
+	Destination:	10.253.42.38
+	Port:		30000
+
+Received: 20
+Filtered: 10
+Duration: 0:00:02
+Last Pkt: 0.002431
+
+
+Ericsson Testing
+----------------
+
+The settings for the packets listed below are:
+•	Intercept Id: 1234 – captures 1 packet
+•	Intercept Id: 4567 – captures 1 packet
+•	Intercept Id: 9876 – captures 1 packet
+•	Site name: bcnss02q  – captures 3 packet
+
+An Intercept Id of 0 (zero) will match all intercept ids.
+An empty Site Name will match all site names.
+
+Ericsson Test Notes
+-------------------
+
+Ericsson_before_No_Mac.pkt	20
+Ericsson_after_No_Mac.pkt	20
+
+Protocol: Ericsson
+	Id:		1234
+	Site Name:	bcnss02q
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 40
+Filtered: 20
+Duration: 0:00:02
+Last Pkt: 0.002418
+
+
+Arris Test Notes
+----------------
+
+Arris_before_No_Mac.pkt	22
+Arris_after_No_Mac.pkt	22
+
+Protocol: Arris
+	Id: 1
+
+No Filter: * Need to check filtering
+	Source:		172.24.34.109
+	Port:		65535
+	Destination:	10.252.145.11
+	Port:		1043
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 44
+Filtered: 22
+Duration: 0:00:05
+
+
+Juniper/Nokia Test Notes
+------------------------
+
+Juniper_ip_before_No_Mac.pkt	38
+Juniper_ip_after_No_Mac.pkt	38
+
+Protocol: Juniper/Nokia
+	Id: 2
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 76
+Filtered: 38
+Duration: 0:00:00.037206
+
+
+Nokia_before_No_Mac.pkt
+Nokia_after_No_Mac.pkt
+
+Protocol: Juniper/Nokia
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 2,000
+Filtered: 1,000
+Duration: 0:00:05
+Lask Pkt: 0.009976
+
+
+Nokia_before_No_Mac.pkt
+Nokia_after_No_Mac-2.pkt
+
+Protocol: Juniper/Nokia
+	Id: 779123
+
+MAC Address:
+	Source:		00:14:2F:00:AA:00
+	Destination:	00:14:2F:00:00:22
+	Protocol:	IP
+
+Received: 1,595
+Filtered: 595
+Duration: 0:00:05
+Lask Pkt: 0.009976

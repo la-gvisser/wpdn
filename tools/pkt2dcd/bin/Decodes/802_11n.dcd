@@ -1,0 +1,1090 @@
+// 802.11n
+// EWC MAC spec v124 & Draft 2.0
+// Version: 1.0.0.7 (6/5/2007)
+
+// 5.1 MAC Frame Formats
+// 5.1.1 HT Control Field
+// HT Control Field may be included in any frame except a non-QoS Data frame.
+
+void 802_11N::HTControlField()
+{
+	LABL 0 0 0 b7 HT Control Field;
+
+	802_11N::RDG_More_PPDU();
+	802_11N::ACConstraint();
+	BBIT( 5, l[1], 0x90, 0xc2, "Reserved:");
+	802_11N::NDPAnnouncement();
+	802_11N::CSI_Steering();
+	BBIT 2 0 90 c2 Reserved;
+	BBIT( 2, l[1], 0x90, 0xc2, "Calibration Sequence:");
+	802_11N::CalibrationControl();
+	
+	LABL 0 0 90 c9 Link Adaptation Control;
+	802_11N::LAC();
+	LABL 0 0 0 c8;
+	
+	LABL 0 0 0 b8;
+}
+
+// Link Adaptation Control field
+void 802_11N::LAC()
+{
+	/*
+	BBIT 7 41 5 5;	//MFB/ASELC
+	BBIT 3 42 5 5;	//MFSI
+	BBIT 4 43 5 5;	//MAI
+	*/
+	//MFB/ASELC
+	GWRD( 0, l[5] );
+	l[6] = l[5];
+	l[6] &= 0xFE00;
+	SHFR( 9, l[6] );
+	l[1] = l[6];
+	//MFSI
+	l[6] = l[5];
+	l[6] = l[5];
+	l[6] &= 0x01C0;
+	SHFR( 6, l[6] );
+	l[2] = l[6];
+	//MAI
+	l[6] = l[5];
+	l[6] = l[5];
+	l[6] &= 0x003C;
+	SHFR( 2, l[6] );
+	l[3] = l[6];
+	//we need to check the MAI field to determine whether the MFB/ASELC
+	//contains feeback information or antenna selection information
+	BBIT 7 41 5 5;
+	if( l[3] == 0xe )
+	{
+		//antenna selection
+		l[5] = l[1];
+		l[5] &= 0x78;
+		SHFR 3 45;
+		CST# 0 45 0 14 802_11N::ASEL_Data;
+		
+		l[5] = l[1];
+		l[5] &= 0x07;
+		CST# 0 45 0 14 802_11N::ASEL_Command;
+	}
+	
+	if( l[3] < 0xe )
+	{
+		//MCS Feedback
+		DGLB 0 41 90 c2 MFB - MCS Feedback:;
+		CEQU 7f 41 0 14 No Feedback;
+	}
+	BBIT 3 42 5 5;
+	DGLB 0 42 90 c2 MFSI - MFB Sequence Identifier:;
+	CEQU 7 42 0 14 Unsolicited MFB;
+	BBIT 4 43 5 5;
+	l[5] = l[3];
+	l[5] &= 0xe;
+	SHFR 1 45;
+	l[6] = l[3];
+	l[6] &= 0x1;
+	
+	DGLB 0 45 90 c2 MCS Request Sequence Identifier:;
+	CEQU 0 46 0 14 Reserved;
+	
+	DGLB 0 46 90 c2 MCS Request:;
+	CEQU 0 46 0 14 No Feedback Requested;
+	CEQU 1 46 0 14 Feedback Requested;
+	
+	BBIT 1 45 90 c2 Sounding Request:;
+	CEQU 0 45 0 14 Not requesting a sounding PPDU;
+	CEQU 1 45 0 14 Requesting a sounding PPDU;
+	
+	BBIT 1 0 90 c2 Reserved:;
+}
+
+// Calibration Control Subfield
+void 802_11N::CalibrationControl()
+{
+	BBIT( 2, l[1], 0x90, 0xc2, "Calibration Position:");
+		CEQU( 0, l[1], 0x0, 0x14, "Not a Calibration Frame");
+		CEQU( 1, l[1], 0x0, 0x14, "Calibration Start");
+		CEQU( 2, l[1], 0x0, 0x14, "Sounding Response");
+		CEQU( 3, l[1], 0x0, 0x14, "Sounding Complete");
+}
+
+// Feedback Request Subfield
+void 802_11N::FeedbackRequest()
+{
+	BBIT( 2, l[1], 0x90, 0xc2, "Feedback Request:");
+		CEQU( 0, l[1], 0x0, 0x14, "No Request");
+		CEQU( 1, l[1], 0x0, 0x14, "Unsolicited Feedback Only");
+		CEQU( 2, l[1], 0x0, 0x14, "Immediate Feedback");
+		CEQU( 3, l[1], 0x0, 0x14, "Aggregated Feedback");
+}
+
+// CSI/Steering Subfield
+void 802_11N::CSI_Steering()
+{
+	BBIT( 2, l[1], 0x90, 0xc2, "CSI/Steering:");
+	CEQU( 0, l[1], 0x0, 0x14, "No feedback required");
+	CEQU( 1, l[1], 0x0, 0x14, "CSI");
+	CEQU( 2, l[1], 0x0, 0x14, "Non-Compressed Beamforming");
+	CEQU( 3, l[1], 0x0, 0x14, "Compressed Beamforming");		
+}
+
+// NDP Announcement Subfield
+void 802_11N::NDPAnnouncement()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "Null Data Packet (NDP) Announcement:");
+	CEQU( 0, l[1], 0x0, 0x14, "No NDP follows this frame");
+	CEQU( 1, l[1], 0x0, 0x14, "NDP will follow this frame");
+}
+
+// ZLF Announcement Subfield
+void 802_11N::ZLFAnnouncement()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "ZLF Announcement:");
+		CEQU( 0, l[1], 0x0, 0x14, "No ZLF will follow");
+		CEQU( 1, l[1], 0x0, 0x14, "ZLF will follow");
+}
+
+// AC Constraint Subfield
+void 802_11N::ACConstraint()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "AC Constraint:");
+	CEQU( 0, l[1], 0x0, 0x14, "May Contain Data From Any TID");
+	CEQU( 1, l[1], 0x0, 0x14, "May Contain Data Only From The Same AC");
+}
+
+// RDG/More PPDU Subfield
+void 802_11N::RDG_More_PPDU()
+{
+	BBIT( 1, l[1], 0x90, 0xc2, "RDG/More PPDU:");
+	//RDG value depends on whether the transmitter is an RD Initiator or an RD Responder
+	CEQU( 0, l[1], 0x0, 0x14, "No Reverse Grant or Last PPDU by Responder");
+	CEQU( 1, l[1], 0x0, 0x14, "Reverse Direction Grant or Another PPDU will follow");
+}
+
+// 5.2 Control frames
+// 5.2.1 Block Ack (BA)
+void 802_11N::BA_Control()
+{
+	BBIT( 4, g[2], 0x90, 0xc2, "TID:");
+	BBIT( 9, l[1], 0x90, 0xc2, "Reserved:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Compressed BA:");
+		CEQU( 0, l[1], 0x0, 0x14, "BitMap size 128 byte");
+		CEQU( 1, l[1], 0x0, 0x14, "BitMap size 8 byte");
+	BBIT( 1, l[1], 0x90, 0xc2, "MTID:");
+		CEQU( 0, l[1], 0x0, 0x14, "BA");
+		CEQU( 1, l[1], 0x0, 0x14, "MTBA");
+	BBIT( 1, l[1], 0x90, 0xc2, "ACK policy:");
+		CEQU( 0, l[1], 0x0, 0x14, "Normal acknowledgement");
+		CEQU( 1, l[1], 0x0, 0x14, "No Acknowledgement");
+}
+
+// 5.2.2 Block Ack Request (BAR)
+void 802_11N::BAR_Control()
+{
+	BBIT( 4, g[2], 0x90, 0xc2, "TID:");
+	BBIT( 9, l[1], 0x90, 0xc2, "Reserved:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Compressed BA:");
+		CEQU( 0, l[1], 0x0, 0x14, "BitMap size 128 byte");
+		CEQU( 1, l[1], 0x0, 0x14, "BitMap size 8 byte");
+	BBIT( 1, l[1], 0x90, 0xc2, "MTID:");
+		CEQU( 0, l[1], 0x0, 0x14, "BA");
+		CEQU( 1, l[1], 0x0, 0x14, "MTBA");
+	BBIT( 1, l[1], 0x90, 0xc2, "ACK policy:");
+		CEQU( 0, l[1], 0x0, 0x14, "Normal acknowledgement");
+		CEQU( 1, l[1], 0x0, 0x14, "No Acknowledgement");
+}
+
+// 5.2.3 Multiple TID Block Acknowledgement Request
+void 802_11N::MTBAR()
+{
+	802_11N::BAR_Control();
+	while (g[2] > 0)
+	{
+		802_11N::PER_TID_Info();
+		802_11::BA_Starting_Sequence();
+		g[2] -= 1;
+	}
+}
+
+// 5.2.4 Multiple TID Block Acknowledgement
+void 802_11N::MTBA()
+{
+	802_11N::BA_Control();
+	while (g[2] > 0)
+	{
+		802_11N::PER_TID_Info();
+		802_11::BA_Starting_Sequence();
+		802_11::BA_Bitmap();
+		g[2] -= 1;
+	}
+}
+
+// PER TID Info
+void 802_11N::PER_TID_Info()
+{
+	LABL( 0, 0, 0, 0xc9, "PER TID");
+	BBIT( 4, l[1], 0x90, 0xc2, "TID Value:");
+	BBIT( 0xc, l[1], 0x90, 0xc2, "Reserved:");
+}
+
+// BA Starting Sequence
+void 802_11::BA_Starting_Sequence()
+{
+	BBIT( 2, l[1], 0x90, 0xc2, "BA Starting Sequence:");
+}
+
+// BA Bitmap
+void 802_11::BA_Bitmap()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "BA Bitmap:");
+}
+
+// 5.3 Management Frame formats
+// 5.3.1 HT Capabilities
+// Element ID = 45
+
+void 802_11::IE_HT_Capability()
+{
+	802_11::HT_Capability_Info();
+	802_11::HT_Parameters_Info();
+	802_11::Supported_MCS_Set();
+	802_11::Extended_HT_Capabilities_Info();
+	802_11::TX_Beamforming_Capability();
+	802_11::Antenna_Selection_Capability();
+}
+
+// HT Capability element is present in beacons, association, re-association request, and in probe response frames.
+void 802_11::HT_Capability_Info()
+{
+	BWRD( 0x40000000, l[2], 0x90, 0xc9, "HT Capability Info:");
+	CBIT( 15, l[2], 0, 0xd4, "1....... ........ L-SIG TXOP Protection Support: Supported");
+	CLSE(  0,    0, 0, 0xd4, "0....... ........ L-SIG TXOP Protection Support: Not Supported");
+	if (g[0xe] == 0) // association request
+	{
+		CBIT( 14, l[2], 0, 0xd4, ".1...... ........ AP is required to restrict the use of 40 MHz transmissions within its BSS");
+		CLSE(  0,    0, 0, 0xd4, ".0...... ........ AP is not required to restrict the use of 40 MHz transmissions within its BSS");
+	}
+	if (g[0xe] == 3) // re-association request
+	{
+		CBIT( 14, l[2], 0, 0xd4, ".1...... ........ AP allows use of 40 MHz Transmissions in Neighboring BSSs.");
+		CLSE(  0,    0, 0, 0xd4, ".0...... ........ AP does Not allow use of 40MHz Transmissions In Neighboring BSSs");
+	}
+	if (g[0xe] == 4) // probe request
+	{
+		CBIT( 14, l[2], 0, 0xd4, ".1...... ........ AP allows use of 40 MHz Transmissions in Neighboring BSSs.");
+		CLSE(  0,    0, 0, 0xd4, ".0...... ........ AP does Not allow use of 40MHz Transmissions In Neighboring BSSs");
+	}
+	if (g[0xe] == 5) // probe response
+	{
+		CBIT( 14, l[2], 0, 0xd4, ".1...... ........ AP allows use of 40 MHz Transmissions in Neighboring BSSs.");
+		CLSE(  0,    0, 0, 0xd4, ".0...... ........ AP does Not allow use of 40MHz Transmissions In Neighboring BSSs");
+	}
+	if (g[0xe] == 8) // beacon
+	{
+		CBIT( 14, l[2], 0, 0xd4, ".1...... ........ AP allows use of 40 MHz Transmissions in Neighboring BSSs.");
+		CLSE(  0,    0, 0, 0xd4, ".0...... ........ AP does Not allow use of 40MHz Transmissions In Neighboring BSSs");
+	}
+	CBIT( 13, l[2], 0, 0xd4, "..1..... ........ Reserved");
+	CLSE(  0,    0, 0, 0xd4, "..0..... ........ Reserved");
+	if (g[0xe] == 0) // association request
+	{
+		CBIT( 12, l[2], 0, 0xd4, "...1.... ........ Device will use DSSS/CCK Rates @40MHz");
+		CLSE(  0,    0, 0, 0xd4, "...0.... ........ Device will Not use DSSS/CCK Rates @40MHz");
+	}
+	if (g[0xe] == 3) // re-association request
+	{
+		CBIT( 12, l[2], 0, 0xd4, "...1.... ........ Device will use DSSS/CCK Rates @40MHz");
+		CLSE(  0,    0, 0, 0xd4, "...0.... ........ Device will Not use DSSS/CCK Rates @40MHz");
+	}
+	if (g[0xe] == 4) // probe request
+	{
+		CBIT( 12, l[2], 0, 0xd4, "...1.... ........ BSS does Allow Use of DSSS/CCK Rates @40MHz");
+		CLSE(  0,    0, 0, 0xd4, "...0.... ........ BSS does Not Allow Use of DSSS/CCK Rates @40MHz");
+	}
+	if (g[0xe] == 5) // probe response
+	{
+		CBIT( 12, l[2], 0, 0xd4, "...1.... ........ BSS does Allow Use of DSSS/CCK Rates @40MHz");
+		CLSE(  0,    0, 0, 0xd4, "...0.... ........ BSS does Not Allow Use of DSSS/CCK Rates @40MHz");
+	}
+	if (g[0xe] == 8) // beacon
+	{
+		CBIT( 12, l[2], 0, 0xd4, "...1.... ........ BSS does Allow use of DSSS/CCK Rates @40MHz");
+		CLSE(  0,    0, 0, 0xd4, "...0.... ........ BSS does Not Allow Use of DSSS/CCK Rates @40MHz");
+	}
+	CBIT( 11, l[2], 0, 0xd4, "....1... ........ Maximal A-MSDU size: 7935 bytes");
+	CLSE(  0,    0, 0, 0xd4, "....0... ........ Maximal A-MSDU size: 3839 bytes");
+	CBIT( 10, l[2], 0, 0xd4, ".....1.. ........ Does Support HT-Delayed BlockAck Operation");
+	CLSE(  0,    0, 0, 0xd4, ".....0.. ........ Does Not Support HT-Delayed BlockAck Operation");
+	l[1] = l[2];
+	ANDG 300 41;
+	SHFR 8 41;
+	CEQU( 0, l[1], 0, 0xd4, "......00 ........ No Rx STBC Support");
+	CEQU( 1, l[1], 0, 0xd4, "......01 ........ Rx STBC: Rx Support of One Spatial Stream");
+	CEQU( 2, l[1], 0, 0xd4, "......10 ........ Rx STBC: Rx Support of One and Two Spatial Streams");
+	CEQU( 3, l[1], 0, 0xd4, "......11 ........ Rx STBC: Rx Support of One, Two and Three Spatial Streams");
+	CBIT( 7, l[2], 0, 0xd4, "........ 1....... Transmitter does Support Tx STBC");
+	CLSE( 0,    0, 0, 0xd4, "........ 0....... Transmitter does Not Support Tx STBC");
+	CBIT( 6, l[2], 0, 0xd4, "........ .1...... Short GI for 40 MHz: Supported");	//(400n)?
+	CLSE( 0,    0, 0, 0xd4, "........ .0...... Short GI for 40 MHz: Not Supported");	//(400n)?
+	CBIT( 5, l[2], 0, 0xd4, "........ ..1..... Short GI for 20 MHz: Supported");	//(400n)?
+	CLSE( 0,    0, 0, 0xd4, "........ ..0..... Short GI for 20 MHz: Not Supported");	//(400n)?
+	CBIT( 4, l[2], 0, 0xd4, "........ ...1.... Can receive PPDUs with HT-Greenfield format");
+	CLSE( 0,    0, 0, 0xd4, "........ ...0.... Can Not receive PPDUs with HT-Greenfield format");
+	l[1] = l[2];
+	ANDG C 41;
+	SHFR 2 41;
+	CEQU( 0, l[1], 0, 0xd4, "........ ....00.. Static SM Power Save mode");
+	CEQU( 1, l[1], 0, 0xd4, "........ ....01.. Dynamic SM Power Save mode");
+	CEQU( 2, l[1], 0, 0xd4, "........ ....10.. Reserved");
+	CEQU( 3, l[1], 0, 0xd4, "........ ....11.. SM Power Save Disabled");
+	CBIT( 1, l[2], 0, 0xd4, "........ ......1. Both 20MHz and 40MHz Operation is Supported");
+	CLSE( 0,    0, 0, 0xd4, "........ ......0. Only 20MHz Operation is Supported");
+	CBIT( 0, l[2], 0, 0xd4, "........ .......1 LDPC coding capability: Supported");
+	CLSE( 0,    0, 0, 0xd4, "........ .......0 LDPC coding capability: Not Supported");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.3.1.3 MAC HT Parameters Info field
+void 802_11::HT_Parameters_Info()
+{
+	BBYT( 0x40000000, l[2], 0x90, 0xc9, "A-MPDU Parameters:");
+	l[1] = l[2];
+	LABL( 0, 0, 0, 0xd4, "xxx..... Reserved");
+	ANDG 1C 41;
+	SHFR 2 41;
+		CEQU( 0, l[1], 0, 0xd4, "...000.. Minimum MPDU Start Spacing: No Restriction");
+		CEQU( 1, l[1], 0, 0xd4, "...001.. Minimum MPDU Start Spacing: 1/4 usec");
+		CEQU( 2, l[1], 0, 0xd4, "...010.. Minimum MPDU Start Spacing: 1/2 usec");
+		CEQU( 3, l[1], 0, 0xd4, "...011.. Minimum MPDU Start Spacing: 1 usec");
+		CEQU( 4, l[1], 0, 0xd4, "...100.. Minimum MPDU Start Spacing: 2 usec");
+		CEQU( 5, l[1], 0, 0xd4, "...101.. Minimum MPDU Start Spacing: 4 usec");
+		CEQU( 6, l[1], 0, 0xd4, "...110.. Minimum MPDU Start Spacing: 8 usec");
+		CEQU( 7, l[1], 0, 0xd4, "...111.. Minimum MPDU Start Spacing: 16 usec");
+	l[1] = l[2];
+	ANDG 3 41;
+	CEQU( 0, l[1], 0, 0xd4, "......00 Maximum Rx A-MPDU Size: 8,191 Bytes");
+		CEQU( 1, l[1], 0, 0xd4, "......01 Maximum Rx A-MPDU Size: 16,383 Bytes");
+		CEQU( 2, l[1], 0, 0xd4, "......10 Maximum Rx A-MPDU Size: 32,767 Bytes");
+		CEQU( 3, l[1], 0, 0xd4, "......11 Maximum Rx A-MPDU Size: 65,535 Bytes");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.3.1.4 Supported MCS Set
+void 802_11::Supported_MCS_Set()
+{
+	LABL( 0, 0, 0, 0xc9, "Supported MCS Set ");
+	BBYT( 0, l[1], 0x90, 0xc9, "Spatial Stream 1:");		//b0-b7
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 0 Supported - BPSK. Coding Rate: 1/2");
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 1 Supported - QPSK. Coding Rate: 1/2");
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 2 Supported - QPSK. Coding Rate: 3/4");
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 3 Supported - 16 QAM. Coding Rate: 1/2");
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 4 Supported - 16 QAM. Coding Rate: 3/4");
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 5 Supported - 64 QAM. Coding Rate: 2/3");
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 6 Supported - 64 QAM. Coding Rate: 3/4");
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 7 Supported - 64 QAM. Coding Rate: 5/6");
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0, l[1], 0x90, 0xc9, "Spatial Stream 2:");		//b8-b15
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 8 Supported - BPSK. Coding Rate: 1/2");
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 9 Supported - QPSK. Coding Rate: 1/2");
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 10 Supported - QPSK. Coding Rate: 3/4");
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 11 Supported - 16 QAM. Coding Rate: 1/2");
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 12 Supported - 16 QAM. Coding Rate: 3/4");
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 13 Supported - 64 QAM. Coding Rate: 2/3");
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 14 Supported - 64 QAM. Coding Rate: 3/4");
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 15 Supported - 64 QAM. Coding Rate: 5/6");
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0, l[1], 0x90, 0xc9, "Spatial Stream 3:");		//b16-b23
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 16 Supported - BPSK. Coding Rate: 1/2");
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 17 Supported - QPSK. Coding Rate: 1/2");
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 18 Supported - QPSK. Coding Rate: 3/4");
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 19 Supported - 16 QAM. Coding Rate: 1/2");
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 20 Supported - 16 QAM. Coding Rate: 3/4");
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 21 Supported - 64 QAM. Coding Rate: 2/3");
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 22 Supported - 64 QAM. Coding Rate: 3/4");
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 23 Supported - 64 QAM. Coding Rate: 5/6");
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0, l[1], 0x90, 0xc9, "Spatial Stream 4:");		//b24-b31
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 24 Supported - BPSK. Coding Rate: 1/2");
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 25 Supported - QPSK. Coding Rate: 1/2");
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 26 Supported - QPSK. Coding Rate: 3/4");
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 27 Supported - 16 QAM. Coding Rate: 1/2");
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 28 Supported - 16 QAM. Coding Rate: 3/4");
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 29 Supported - 64 QAM. Coding Rate: 2/3");
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 30 Supported - 64 QAM. Coding Rate: 3/4");
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 31 Supported - 64 QAM. Coding Rate: 5/6");
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b32-b39:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b40-b47:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b48-b55:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b56-b63:");
+	BBIT( 0xD, l[1], 0x90, 0xc2, "Rx Bitmask b64-b76:");
+	BBIT( 3, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT( 0xa, l[1], 0x90, 0xc2, "Highest Supported Rate:");
+	LABL( 0, 0, 0, 0x14, "Mbps");
+	BBIT( 6, l[1], 0x90, 0xc2, "Reserved:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx Supported MCS Set:");
+	 CEQU( 0, l[1], 0, 0x14, "Not Defined");
+	 CEQU( 1, l[1], 0, 0x14, "Defined");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx and Rx MCS Set:");
+	 CEQU( 0, l[1], 0, 0x14, "Equal");
+	 CEQU( 1, l[1], 0, 0x14, "Not Equal");
+	BBIT( 2, l[1], 0x20, 0xc2, "Tx Max # Spatial Streams Supported:");
+	 CEQU( 0, l[1], 0, 0x14, "1 Spatial Stream");
+	 CEQU( 1, l[1], 0, 0x14, "2 Spatial Streams");
+	 CEQU( 2, l[1], 0, 0x14, "3 Spatial Streams");
+	 CEQU( 3, l[1], 0, 0x14, "4 Spatial Streams");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx Unequal Modulation:");
+	 CEQU( 0, l[1], 0, 0x14, "Not Supported");
+	 CEQU( 1, l[1], 0, 0x14, "Supported");
+	BBIT( 0x1b, l[1], 0x90, 0xc2, "Reserved:");
+	LABL( 0, 0, 0, 0x14, "b101-b127");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.3.1.5 Extended HT Capabilities Info field
+void 802_11::Extended_HT_Capabilities_Info()
+{
+	BWRD( 0x40000000, g[1], 0x20, 0xc9 "HT Extended Capabilities Info:");
+	LABL( 0,	0, 0, 0xd4, "xxxx .... .... .... Reserved");
+	CBIT( B, g[1], 0, 0xd4, ".... 1... .... .... Reverse Direction Responder: Supported");
+	CLSE( 0, g[1], 0, 0xd4, ".... 0... .... .... Reverse Direction Responder: Not Supported");
+	CBIT( A, g[1], 0, 0xd4, ".... .1.. .... .... +HTC Support: Supported");
+	CLSE( 0, g[1], 0, 0xd4, ".... .0.. .... .... +HTC Support: Not Supported");
+	l[1] = g[1];
+	ANDG 300 41;
+	SHFR 8 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... ..00 .... .... MCS Feedback: STA Does Not Provide MCS Feedback");
+		CEQU( 1, l[1], 0, 0xd4, ".... ..01 .... .... MCS Feedback: Reserved");
+		CEQU( 2, l[1], 0, 0xd4, ".... ..10 .... .... MCS Feedback: STA Provides Only Unsolicited MCS Feedback");
+		CEQU( 3, l[1], 0, 0xd4, ".... ..11 .... .... MCS Feedback: STA Can Provide MCS Feedback in Response to MRQ");
+	LABL( 0, 0, 0, 0xd4, ".... .... xxxx x... Reserved");
+	l[1] = g[1];
+	ANDG 6 41;
+	SHFR 1 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... .00. Transition Time: No Transition");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... .01. Transition Time: 400 us");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... .10. Transition Time: 1.5 ms");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... .11. Transition Time: 5 ms");
+	CBIT( 0, g[1], 0, 0xd4, ".... .... .... ...1 Transmitter Supports PCO: Supported");
+	CLSE( 0, g[1], 0, 0xd4, ".... .... .... ...0 Transmitter Supports PCO: Not Supported");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.3.1.6 Transmit Beamforming Capability
+void 802_11::TX_Beamforming_Capability()
+{
+	BLNG( 0x40000000, g[1], 0x20, 0xc9, "Tx Beam Forming Capability (TxBF):");
+	LABL( 0, 0, 0, 0xd4, "xxx. .... .... .... .... .... .... .... Reserved");
+	l[1] = g[1];
+	ANDG 18000000 41;
+	SHFR 1B 41;
+		CEQU( 0, l[1], 0, 0xd4, "...0 0... .... .... .... .... .... .... Channel Estimation Capability: 1 Space Time Stream");
+		CEQU( 1, l[1], 0, 0xd4, "...0 1... .... .... .... .... .... .... Channel Estimation Capability: 2 Space Time Streams");
+		CEQU( 2, l[1], 0, 0xd4, "...1 0... .... .... .... .... .... .... Channel Estimation Capability: 3 Space Time Streams");
+		CEQU( 3, l[1], 0, 0xd4, "...1 1... .... .... .... .... .... .... Channel Estimation Capability: 4 Space Time Streams");
+	l[1] = g[1];
+	ANDG 6000000 41;
+	SHFR 19 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .00. .... .... .... .... .... .... CSI Max Number of Rows: 1 Row of CSI");
+		CEQU( 1, l[1], 0, 0xd4, ".... .01. .... .... .... .... .... .... CSI Max Number of Rows: 2 Rows of CSI");
+		CEQU( 2, l[1], 0, 0xd4, ".... .10. .... .... .... .... .... .... CSI Max Number of Rows: 3 Rows of CSI");
+		CEQU( 3, l[1], 0, 0xd4, ".... .11. .... .... .... .... .... .... CSI Max Number of Rows: 4 Rows of CSI");
+	l[1] = g[1];
+	ANDG 1800000 41;
+	SHFR 17 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... ...0 0... .... .... .... .... .... Compressed BF Feedback Matrix: 1 TX Antenna Sounding");
+		CEQU( 1, l[1], 0, 0xd4, ".... ...0 1... .... .... .... .... .... Compressed BF Feedback Matrix: 2 TX Antenna Sounding");
+		CEQU( 2, l[1], 0, 0xd4, ".... ...1 0... .... .... .... .... .... Compressed BF Feedback Matrix: 3 TX Antenna Sounding");
+		CEQU( 3, l[1], 0, 0xd4, ".... ...1 1... .... .... .... .... .... Compressed BF Feedback Matrix: 4 TX Antenna Sounding");
+	l[1] = g[1];
+	ANDG 600000 41;
+	SHFR 15 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .00. .... .... .... .... .... Uncompressed BF Feedback Matrix: 1 TX Antenna Sounding");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .01. .... .... .... .... .... Uncompressed BF Feedback Matrix: 2 TX Antenna Sounding");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .10. .... .... .... .... .... Uncompressed BF Feedback Matrix: 3 TX Antenna Sounding");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .11. .... .... .... .... .... Uncompressed BF Feedback Matrix: 4 TX Antenna Sounding");
+	l[1] = g[1];
+	ANDG 180000 41;
+	SHFR 13 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... ...0 0... .... .... .... .... CSI Number of BF Antennas: 1 TX Antenna Sounding");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... ...0 1... .... .... .... .... CSI Number of BF Antennas: 2 TX Antenna Sounding");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... ...1 0... .... .... .... .... CSI Number of BF Antennas: 3 TX Antenna Sounding");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... ...1 1... .... .... .... .... CSI Number of BF Antennas: 4 TX Antenna Sounding");
+	l[1] = g[1];
+	ANDG 60000 41;
+	SHFR 11 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... .00. .... .... .... .... Minimal Grouping: STA Supports Groups of 1 (No Grouping)");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... .01. .... .... .... .... Minimal Grouping: Indicates Groups of 1, 2");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... .10. .... .... .... .... Minimal Grouping: Indicates Groups of 1, 4");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... .11. .... .... .... .... Minimal Grouping: Indicates Groups of 1, 2, 4");
+	l[1] = g[1];
+	ANDG 18000 41;
+	SHFR F 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... ...0 0... .... .... .... Compressed BF Feedback Matrix: Not Supported");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... ...0 1... .... .... .... Compressed BF Feedback Matrix: Delayed Feedback");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... ...1 0... .... .... .... Compressed BF Feedback Matrix: Immediate Feedback");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... ...1 1... .... .... .... Compressed BF Feedback Matrix: Delayed and Immediate Feedback");
+	l[1] = g[1];
+	ANDG 6000 41;
+	SHFR D 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... .... .00. .... .... .... Uncompressed BF Feedback Matrix: Not Supported");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... .... .01. .... .... .... Uncompressed BF Feedback Matrix: Delayed Feedback");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... .... .10. .... .... .... Uncompressed BF Feedback Matrix: Immediate Feedback");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... .... .11. .... .... .... Uncompressed BF Feedback Matrix: Delayed and Immediate Feedback");
+	l[1] = g[1];
+	ANDG 1800 41;
+	SHFR B 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... .... ...0 0... .... .... TxBF CSI Feedback: Not Supported");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... .... ...0 1... .... .... TxBF CSI Feedback: Delayed Feedback");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... .... ...1 0... .... .... TxBF CSI Feedback: Immediate Feedback");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... .... ...1 1... .... .... TxBF CSI Feedback: Delayed and Immediate Feedback");
+	CBIT( A, g[1], 0, 0xd4, ".... .... .... .... .... .1.. .... .... Compressed BF Feedback Matrix Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .0.. .... .... Compressed BF Feedback Matrix Capable: Not Supported");
+	CBIT( 9, g[1], 0, 0xd4, ".... .... .... .... .... ..1. .... .... Uncompressed BF Feedback Matrix: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... ..0. .... .... Uncompressed BF Feedback Matrix: Not Supported");
+	CBIT( 8, g[1], 0, 0xd4, ".... .... .... .... .... ...1 .... .... Explicit CSI TxBF Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... ...0 .... .... Explicit CSI TxBF Capable: Not Supported");
+	l[1] = g[1];
+	ANDG C0 41;
+	SHFR 6 41;
+		CEQU( 0, l[1], 0, 0xd4, ".... .... .... .... .... .... 00.. .... Calibration: Not Supported");
+		CEQU( 1, l[1], 0, 0xd4, ".... .... .... .... .... .... 01.. .... Calibration: Can Respond to Calibration Request");
+		CEQU( 2, l[1], 0, 0xd4, ".... .... .... .... .... .... xx.. .... Calibration: Reserved");
+		CEQU( 3, l[1], 0, 0xd4, ".... .... .... .... .... .... 11.. .... Calibration: Can Initiate and Respond to Calibration Request");
+	CBIT( 5, g[1], 0, 0xd4, ".... .... .... .... .... .... ..1. .... Implicit TxBF Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... ..0. .... Implicit TxBF Capable: Not Supported");
+	CBIT( 4, g[1], 0, 0xd4, ".... .... .... .... .... .... ...1 .... Tx NDP Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... ...0 .... Tx NDP Capable: Not Supported");
+	CBIT( 3, g[1], 0, 0xd4, ".... .... .... .... .... .... .... 1... Rx NDP Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... .... 0... Rx NDP Capable: Not Supported");
+	CBIT( 2, g[1], 0, 0xd4, ".... .... .... .... .... .... .... .1.. Tx Staggered Sounding Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... .... .0.. Tx Staggered Sounding Capable: Not Supported");
+	CBIT( 1, g[1], 0, 0xd4, ".... .... .... .... .... .... .... ..1. Rx Staggered Sounding Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... .... ..0. Rx Staggered Sounding Capable: Not Supported");
+	CBIT( 0, g[1], 0, 0xd4, ".... .... .... .... .... .... .... ...1 Implicit TxBF Receiving Capable: Supported");
+	CLSE( 0,    0, 0, 0xd4, ".... .... .... .... .... .... .... ...0 Implicit TxBF Receiving Capable: Not Supported");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.3.1.7 Antenna Selection Capability
+void 802_11::Antenna_Selection_Capability()
+{
+	BBYT 0 1 20 c9 Antenna Selection Capability (ASEL):;
+		CBIT 7 1 0 d4 x... .... Reserved;
+		CLSE 0 0 0 d4 x... .... Reserved;
+		CBIT 6 1 0 d4 .1.. .... Tx Sounding PPDUs Capable: Supported;
+		CLSE 0 0 0 d4 .0.. .... Tx Sounding PPDUs Capable: Not Supported;
+		CBIT 5 1 0 d4 ..1. .... Rx ASEL Capable: Supported;
+		CLSE 0 0 0 d4 ..0. .... Rx ASEL Capable: Not Supported;
+		CBIT 4 1 0 d4 ...1 .... Antenna Indices Feedback Capable: Supported;
+		CLSE 0 0 0 d4 ...0 .... Antenna Indices Feedback Capable: Not Supported;
+		CBIT 3 1 0 d4 .... 1... Explicit CSI Feedback: Tx AS Capable: Supported;
+		CLSE 0 0 0 d4 .... 0... Explicit CSI Feedback: Tx AS Capable: Not Supported;
+		CBIT 2 1 0 d4 .... .1.. Antenna Indices Feedback Based Tx ASEL Capable: Supported;
+		CLSE 0 0 0 d4 .... .0.. Antenna Indices Feedback Based Tx ASEL Capable: Not Supported;
+		CBIT 1 1 0 d4 .... ..1. Re-Explicit CSI Feedback Tx ASEL Capable: Supported;
+		CLSE 0 0 0 d4 .... ..0. Re-Explicit CSI Feedback Tx ASEL Capable: Not Supported;
+		CBIT 0 1 0 d4 .... ...1 Antenna Selection Capable: Supported;
+		CLSE 0 0 0 d4 .... ...0 Antenna Selection Capable: Not Supported;
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 7.3.2.50 Additional HT Information Elements
+// Element ID: 61
+							
+void 802_11::IE_Additional_HT()
+{
+	if (g[2] != 22)
+	{
+		LABL( 0, 0, 0, 0x14, "Length is not correct, should be 22 Bytes!" );
+	}
+	DBYT( 0, l[1], 0x90, 0xc2, "Primary Channel:");
+	//bleh, they want this displayed in the order shown in the 802.11n draft
+	BBYT 0 41 90 c9 HT Operation Element 1:;
+	LABL( 0, 0, 0, 0xd4,		"xxxx.... Reserved");
+	l[2] = l[1];
+	l[2] &= 0x03;
+	CBIT( 3, l[1], 0, 0xd4, "....1... RIFS Mode: Use of RIFS Permitted");
+	CLSE( 0, 0, 0, 0xd4,	"....0... RIFS Mode: Use of RIFS Prohibited");
+	CBIT( 2, l[1], 0, 0xd4, ".....1.. STA Channel Width: Use Any Channel Width Enabled Under Supported Channel Width Set");
+	CLSE( 0, 0, 0, 0xd4,	".....0.. STA Channel Width: 20 MHz Channel Width");
+	CEQU( 0, l[2], 0, 0xd4, "......00 2nd Channel Offset: No Secondary Channel Present");
+	CEQU( 1, l[2], 0, 0xd4, "......01 2nd Channel Offset: Above the Primary Channel");
+	CEQU( 2, l[2], 0, 0xd4, "......10 2nd Channel Offset: Reserved");
+	CEQU( 3, l[2], 0, 0xd4, "......11 2nd Channel Offset: Below the Primary Channel");	
+//	CBIT( 4, l[1], 0, 0xd4, "...1.... PSMP STAs Only: Association Requests are Accepted From Only PSMP Capable STA");
+//	CLSE( 0, 0, 0, 0xd4,	"...0.... PSMP STAs Only: Association Requests are Accepted Regardless of PSMP Capability");
+	l[2] = l[1];
+	l[2] &= 0xe0;
+//	CEQU( 0, l[2], 0, 0xd4, "000..... Srvc Int Granularity: 5ms");
+//	CEQU( 1, l[2], 0, 0xd4, "001..... Srvc Int Granularity: 10ms");
+//	CEQU( 2, l[2], 0, 0xd4, "010..... Srvc Int Granularity: 15ms");
+//	CEQU( 3, l[2], 0, 0xd4, "011..... Srvc Int Granularity: 20ms");
+//	CEQU( 4, l[2], 0, 0xd4, "100..... Srvc Int Granularity: 25ms");
+//	CEQU( 5, l[2], 0, 0xd4, "101..... Srvc Int Granularity: 30ms");
+//	CEQU( 6, l[2], 0, 0xd4, "110..... Srvc Int Granularity: 35ms");
+//	CEQU( 7, l[2], 0, 0xd4, "111..... Srvc Int Granularity: 40ms");	
+	LABL 0 0 0 c8;
+	
+	BWRD( 0x40000000, g[2], 0x90, 0xc9, "HT Operation Element 2:");
+	LABL( 0, 0, 0, 0xd4,		"xxxxxxxx xxx..... Reserved");
+	CBIT( 4, g[2], 0, 0xd4,		"........ ...1.... OBSS Non-HT STAs: Use of Protection for Non-HT STAs");
+	CLSE( 0, 0, 0, 0xd4,		"........ ...0.... OBSS Non-HT STAs: Use of Protection for Non-HT STAs Not Needed");
+	CBIT( 3, g[2], 0, 0xd4,		"........ ....1... Reserved: set");
+	CLSE( 0, 0, 0, 0xd4,		"........ ....0... Reserved: not set");
+	CBIT( 2, g[2], 0, 0xd4,		"........ .....1.. Non-Greenfield STAs: One or more HT STAs are Not Greenfield Capable");
+	CLSE( 0, 0, 0, 0xd4,		"........ .....0.. Non-Greenfield STAs: HT STAs associated are Greenfield Capable");
+	l[1] = g[2];
+	ANDG 3 41;
+		CEQU( 0, l[1], 0, 0xd4, "........ ......00 HT Protection: Pure HT (No Protection) - All STAs in the BSS are 20/40 MHz HT");
+		CEQU( 1, l[1], 0, 0xd4, "........ ......01 HT Protection: HT Non-Member Protection Mode");
+		CEQU( 2, l[1], 0, 0xd4, "........ ......10 HT Protection: HT 20MHz Protection Mode - Only HT STAs are Associated in the BSS");
+		CEQU( 3, l[1], 0, 0xd4, "........ ......11 HT Protection: HT Mixed Mode");
+	LABL( 0, 0, 0, 0xc8);
+	
+	BWRD( 0x40000000, g[2], 0x90, 0xc9, "HT Operation Element 3:");
+	LABL( 0,	0, 0, 0xd4, "xxxx.... ........ Reserved");
+	CBIT( B, g[2], 0, 0xd4, "....1... ........ PCO Phase: Switch To/Continue Use 40MHz Phase");
+	CLSE( 0,	0, 0, 0xd4, "....0... ........ PCO Phase: Switch To/Continue Use 20MHz Phase");	
+	CBIT( A, g[2], 0, 0xd4, ".....1.. ........ PCO Active: Active in the BSS");
+	CLSE( 0,	0, 0, 0xd4, ".....0.. ........ PCO Active: Not Active in the BSS");
+	CBIT( 9, g[2], 0, 0xd4, "......1. ........ L-SIG TXOP Protection: Full Support");
+	CLSE( 0,	0, 0, 0xd4, "......0. ........ L-SIG TXOP Protection: Not Full Support");
+	CBIT( 8, g[2], 0, 0xd4, ".......1 ........ Secondary Beacon: Secondary Beacon");
+	CLSE( 0,	0, 0, 0xd4, ".......0 ........ Secondary Beacon: Primary Beacon");
+	CBIT( 7, g[2], 0, 0xd4, "........ 1....... Dual CTS Protection: Required");
+	CLSE( 0,	0, 0, 0xd4, "........ 0....... Dual CTS Protection: Not Required");
+	CBIT( 6, g[2], 0, 0xd4, "........ .1...... Dual Beacon: Secondary Beacon Transmitted");
+	CLSE( 0,	0, 0, 0xd4, "........ .0...... Dual Beacon: No Secondary Beacon Transmitted");
+	LABL( 0,	0, 0, 0xd4, "........ ..xxxxxx Reserved");
+	LABL( 0, 0, 0, 0xc8);
+	
+	LABL( 0, l[1], 0x90, 0xc9, "Basic MCS Set");
+	BBYT( 0x40000000, l[1], 0x90, 0xc9, "One Spatial Stream:");		//b0-b7
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 0 Supported - BPSK. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 0 Not Supported - BPSK. Coding Rate: 1/2;
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 1 Supported - QPSK. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 1 Not Supported - QPSK. Coding Rate: 1/2;
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 2 Supported - QPSK. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 2 Not Supported - QPSK. Coding Rate: 3/4;
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 3 Supported - 16 QAM. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 3 Not Supported - 16 QAM. Coding Rate: 1/2;
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 4 Supported - 16 QAM. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 4 Not Supported - 16 QAM. Coding Rate: 3/4;
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 5 Supported - 64 QAM. Coding Rate: 2/3");
+		CLSE 0 0 0 c4 MCS Index 5 Not Supported - 64 QAM. Coding Rate: 2/3;
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 6 Supported - 64 QAM. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 6 Not Supported - 64 QAM. Coding Rate: 3/4;
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 7 Supported - 64 QAM. Coding Rate: 5/6");
+		CLSE 0 0 0 c4 MCS Index 7 Not Supported - 64 QAM. Coding Rate: 5/6;
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0x40000000, l[1], 0x90, 0xc9, "Two Spatial Streams:");		//b8-b15
+		CBIT( 0, l[1], 0, 0xc4, "MCS Index 8 Supported - BPSK. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 8 Not Supported - BPSK. Coding Rate: 1/2;
+		CBIT( 1, l[1], 0, 0xc4, "MCS Index 9 Supported - QPSK. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 9 Not Supported - QPSK. Coding Rate: 1/2;
+		CBIT( 2, l[1], 0, 0xc4, "MCS Index 10 Supported - QPSK. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 10 Not Supported - QPSK. Coding Rate: 3/4;
+		CBIT( 3, l[1], 0, 0xc4, "MCS Index 11 Supported - 16 QAM. Coding Rate: 1/2");
+		CLSE 0 0 0 c4 MCS Index 11 Not Supported - 16 QAM. Coding Rate: 1/2;
+		CBIT( 4, l[1], 0, 0xc4, "MCS Index 12 Supported - 16 QAM. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 12 Not Supported - 16 QAM. Coding Rate: 3/4;
+		CBIT( 5, l[1], 0, 0xc4, "MCS Index 13 Supported - 64 QAM. Coding Rate: 2/3");
+		CLSE 0 0 0 c4 MCS Index 13 Not Supported - 64 QAM. Coding Rate: 2/3;
+		CBIT( 6, l[1], 0, 0xc4, "MCS Index 14 Supported - 64 QAM. Coding Rate: 3/4");
+		CLSE 0 0 0 c4 MCS Index 14 Not Supported - 64 QAM. Coding Rate: 3/4;
+		CBIT( 7, l[1], 0, 0xc4, "MCS Index 15 Supported - 64 QAM. Coding Rate: 5/6");
+		CLSE 0 0 0 c4 MCS Index 15 Not Supported - 64 QAM. Coding Rate: 5/6;
+	LABL( 0, 0, 0, 0xc8);
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b16-b23:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b24-b31:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b32-b39:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b40-b47:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b48-b55:");
+	BBYT( 0, l[1], 0x90, 0xc2, "Rx Bitmask b56-b63:");
+	BBIT( 0xD, l[1], 0x90, 0xc2, "Rx Bitmask b64-b76:");
+	BBIT( 3, l[1], 0x90, 0xc2, "Reserved:");
+	DBIT( 0xa, l[1], 0x90, 0xc2, "Highest Supported Rate:");
+	LABL( 0, 0, 0, 0x14, "Mbps");
+	BBIT( 6, l[1], 0x90, 0xc2, "Reserved:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx Supported MCS Set:");
+	 CEQU( 0, l[1], 0, 0x14, "Not Defined");
+	 CEQU( 1, l[1], 0, 0x14, "Defined");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx and Rx MCS Set:");
+	 CEQU( 0, l[1], 0, 0x14, "Equal");
+	 CEQU( 1, l[1], 0, 0x14, "Not Equal");
+	BBIT( 2, l[1], 0x20, 0xc2, "Tx Max # Spatial Streams Supported:");
+	 CEQU( 0, l[1], 0, 0x14, "1 Spatial Stream");
+	 CEQU( 1, l[1], 0, 0x14, "2 Spatial Streams");
+	 CEQU( 2, l[1], 0, 0x14, "3 Spatial Streams");
+	 CEQU( 3, l[1], 0, 0x14, "4 Spatial Streams");
+	BBIT( 1, l[1], 0x90, 0xc2, "Tx Unequal Modulation:");
+	 CEQU( 0, l[1], 0, 0x14, "Not Supported");
+	 CEQU( 1, l[1], 0, 0x14, "Supported");
+	BBIT( 0x1b, l[1], 0x90, 0xc2, "Reserved:");
+	LABL( 0, 0, 0, 0x14, "b101-b127");
+	LABL( 0, 0, 0, 0xc8);
+	if (g[2] == 24)
+	{
+		HWRD( 0, l[1], 0x90, 0xc2, "Reserved:");
+	}
+}
+
+// 7.3.2.37 Neighbor Report Element
+void 802_11N::Neighbor_Report()
+{
+	BBIT( 0x14, l[1], 0x90, 0xc2, "Reserved:");
+	BBIT( 1, l[1], 0x90, 0xc2, "High Throughput:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Mobility Domain:");
+	BBIT( 6, l[1], 0x90, 0xc2, "Capabilities:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Key Scope:");
+	BBIT( 1, l[1], 0x90, 0xc2, "Security:");
+	BBIT( 2, l[1], 0x90, 0xc2, "AP Reachability:");
+}
+
+// 7.3.2.20a Secondary Channel Offset
+// Element ID 62
+void 802_11N::IE_Secondary_Channel_Offset()
+{
+	DBYT 0 41 90 c2 Secondary Channel Offset:;
+	CST# 0 41 0 14 802_11N::Secondary_Channel_Offset_Str;
+	CLSE 0 0 0 14 Reserved;
+}
+
+// 7.3.2.61 20/40 BSS Coexistence Element
+// Element ID 72
+void 802_11N::20_40_BSS_Coexistence()
+{
+	BBYT 0 41 90 c9 20/40 BSS Coexistence:;
+	LABL 0 0 0 d4	xxx. .... Reserved;
+	CBIT 4 41 0 d4	...1 .... OBSS Scanning Exemption Granted;
+	CLSE 0 0 0 d4	...0 .... OBSS Scanning Exemption Not Granted;
+	CBIT 3 41 0 d4	.... 1... OBSS Scanning Exemption Requested;
+	CLSE 0 0 0 d4	.... 0... OBSS Scanning Exemption Not Requested;
+	CBIT 2 41 0 d4	.... .1.. 20/40MHz BSS Prohibited;
+	CLSE 0 0 0 d4	.... .0.. 20/40MHz BSS Allowed;
+	CBIT 1 41 0 d4	.... ..1. 40Mhz BSS Intolerant;
+	CLSE 0 0 0 d4	.... ..0. 40MHz BSS Allowed;
+	CBIT 0 41 0 d4	.... ...1 20/40MHz BSS Coexistence Management Frame Request;
+	CLSE 0 0 0 d4	.... ...0 20/40MHz BSS Coexistence Management Frame Not Requested;
+}
+
+// 7.3.2.61 20/40 BSS Intolerant Channel Report
+// Element ID 73
+void 802_11N::20_40_BSS_Intolerant_Channel_Report()
+{
+	//we need to know the number of bytes in this IE
+	//g2 should have the length
+	l[2] = g[2];
+	l[2] -= 1;	//subtract one for the regulatory class
+	DBYT 0 41 90 c2 Regulatory Class:;
+	
+	if( l[2] > 0 )
+	{
+		LABL 0 0 90 c9 20/40MHz Intolerant Channels List;
+		
+		while( l[2] > 0 )
+		{
+			DBYT 0 41 90 c2 Channel:;
+			l[2] -= 1;
+		}
+		
+		LABL 0 0 0 c8;
+	}
+}
+
+// 7.3.2.60 Overlapping BSS Scan Parameters
+// Element ID 74
+void 802_11N::Overlapping_BSS_Scan_Params()
+{
+	DWRD 40000000 41 90 c2 OBSS Scan Passive Dwell:;
+	DWRD 40000000 41 90 c2 OBSS Scan Active Dwell:;
+	DWRD 40000000 41 90 c2 BSS Channel Width Trigger Scan Interval:;
+	LABL 0 0 0 14 seconds;
+	DWRD 40000000 41 90 c2 OBSS Scan Passive Total Per Channel:;
+	DWRD 40000000 41 90 c2 OBSS Scan Active Total Per Channel:;
+	DWRD 40000000 41 90 c2 BSS Width Channel Transition Delay Factor:;
+	DWRD 40000000 41 90 c2 OBSS Scan Activity Threshold:;
+	LABL 0 0 0 14 hundreths of a percent;
+}
+
+// 5.4 Management Action Frames
+
+void 802_11N::Management_Action_Frame()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Category:");
+		CST#( 0, l[1], 0, 0x14, 802_11N::Management_Category_Str);
+	DBYT( 0, l[2], 0x90, 0xc2, "Action:");
+		CST#( 0, l[2], 0, 0x14, 802_11N::Management_Action_Str);
+	TSB#( 0, l[2], 0, 0, 802_11N::Management_Action);
+}
+
+str# 802_11N::Management_Category_Str;
+	0	| HT;
+	
+str# 802_11N::Management_Action_Str;
+	0	| Set Recommended Tx Channel Width;
+	1	| MIMO Power Save;
+	2	| PSMP;
+	3	| PCO Phase Request;
+	4	| MIMO Channel Measurement Report;
+	5	| Reciprocity Correction;
+	6	| MIMO CSI Matrices Message;
+	7	| MIMO Uncompressed Steering Matrices Message;
+	8	| Compressed Steering Matrices Feedback;
+
+str# 802_11N::Management_Action;
+	0	| 802_11N::Recommended_Transmission_Channel;
+	1	| 802_11N::MIMO_Power_Save;
+	2	| 802_11N::PSMP;
+	3	| 802_11N::PCO_Phase_Request;
+	4	| 802_11N::MIMO_Channel_Measurement;
+	5	| 802_11N::Reciprocity_Correction;
+	6	| 802_11N::MIMO_CSI_Matrices;
+	7	| 802_11N::MIMO_Uncompressed_Matrix;
+	8	| 802_11N::MIMO_Compressed_Matrix;
+
+// Category = HT
+// 5.4.1 Recommended Transmission Channel Width Management Action Frame = 0
+void 802_11N::Recommended_Transmission_Channel()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Channel Width:");
+		CEQU( 0, l[1], 0, 0x14, "Use 20MHz Channel (Control)");
+		CEQU( 1, l[1], 0, 0x14, "Use Any Channel Width Enabled under Supported Channel");
+}
+
+// 5.4.2 MIMO Power Save Management Action Frame = 1
+void 802_11N::MIMO_Power_Save()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "MIMO Power Save:");
+		CEQU( 0, l[1], 0, 0x14, "Enable");
+		CEQU( 1, l[1], 0, 0x14, "Disable");
+	DBYT( 0, l[1], 0x90, 0xc2, "MIMO Power Save Mode:");
+		CEQU( 0, l[1], 0, 0x14, "Static");
+		CEQU( 1, l[1], 0, 0x14, "Dynamic");
+}
+
+// 5.4.3 PCO Phase Request Management Action Frame = 3
+void 802_11N::PCO_Phase_Request()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "PCO Phase Request:");
+		CEQU( 0, l[1], 0, 0x14, "Switch to 20MHz Phase");
+		CEQU( 1, l[1], 0, 0x14, "Switch to 40MHz Phase");
+}
+
+// 5.4.4 MIMO Channel Measurement frame = 4
+void 802_11N::MIMO_Channel_Measurement()
+{
+	802_11N::Tx_Beamforming_Control();
+	DBYT( 0, l[1], 0x90, 0xc2, "MCMR Segment Sequence:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Explicit Feedback Sequence:");
+	// MIMO Channel Measurement Report3 x Ns x Ni x Nr ???
+}
+
+void 802_11N::Tx_Beamforming_Control()
+{
+	BWRD( 0, l[1], 0x90, 0xc2, "Tx Beamforming Control:");
+	DECR 2;
+	BBIT( 4, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, "xxxx .... .... .... Reserved");
+	BBIT( 4, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... 0000 .... .... Unused");
+		CEQU( 1, l[1], 0, 0x54, ".... 0001 .... .... Unused");
+		CEQU( 2, l[1], 0, 0x14, ".... 0010 .... .... Unused");
+		CEQU( 3, l[1], 0, 0x14, ".... 0011 .... .... Unused");
+	BBIT( 1, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... 0... .... Explicit Channel Feedback");
+		CEQU( 1, l[1], 0, 0x54, ".... .... 1... .... Explicit Channel Feedback");
+	BBIT( 1, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... .0.. .... Calibration Complete: ?");
+		CEQU( 1, l[1], 0, 0x54, ".... .... .1.. .... Calibration Complete: STA Tx MIMO CM");
+	BBIT( 2, l[1], 0x5, 0xc9;
+		CEQU( 0, l[1], 0, 0x54, ".... .... ..00 .... Calibration Sequence: 0");
+		CEQU( 1, l[1], 0, 0x54, ".... .... ..01 .... Calibration Sequence: 1");
+		CEQU( 2, l[1], 0, 0x54, ".... .... ..10 .... Calibration Sequence: 2");
+		CEQU( 3, l[1], 0, 0x54, ".... .... ..11 .... Calibration Sequence: 3");
+	BBIT( 2, l[2], 0x5, 0xc9);
+		CEQU( 0, l[2], 0, 0x54, ".... .... ..00 .... Ni: 0 antennas @ STA Tx MIMO Channel Measurement");
+		CEQU( 1, l[2], 0, 0x54, ".... .... ..01 .... Ni: 1 antenna @ STA Tx MIMO Channel Measurement");
+		CEQU( 2, l[2], 0, 0x54, ".... .... ..10 .... Ni: 2 antennas @ STA Tx MIMO Channel Measurement");
+		CEQU( 3, l[2], 0, 0x54, ".... .... ..11 .... Ni: 3 antennas @ STA Tx MIMO Channel Measurement");
+	BBIT( 2, l[3], 0x5, 0xc9);
+		CEQU( 0, l[3], 0, 0x54, ".... .... ..00 .... Nr: 0 antennas @ STA which the frame is directed");
+		CEQU( 1, l[3], 0, 0x54, ".... .... ..01 .... Nr: 1 antenna @ STA which the frame is directed");
+		CEQU( 2, l[3], 0, 0x54, ".... .... ..10 .... Nr: 2 antennas @ STA which the frame is directed");
+		CEQU( 3, l[3], 0, 0x54, ".... .... ..11 .... Nr: 3 antennas @ STA which the frame is directed");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.4.5 Reciprocity Correction frame = 5
+void 802_11N::Reciprocity_Correction()
+{
+	802_11N::Tx_Beamforming_Control();
+	DBYT( 0, l[1], 0x90, 0xc2, "MCMR Segment Sequence:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Explicit Feedback Sequence:");
+	//Reciprocity Correction Vector 3 x Ns x Nr 
+}
+
+// 5.4.6 MIMO CSI Matrices frame = 6
+void 802_11N::MIMO_CSI_Matrices()
+{
+	802_11N::CSI_Matrices_Control();
+	DBYT( 0, l[1], 0x90, 0xc2, "MCMR Segment Sequence:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Explicit Feedback Sequence:");
+	//CSI matrices report
+}
+
+void 802_11N::CSI_Matrices_Control()
+{
+	BWRD( 0, l[1], 0x90, 0xc2, "CSI Matrices Control:");
+	DECR 2;
+	BBIT( 4, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, "xxxx .... .... .... Reserved");
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... 00.. .... .... EFF: Grouping - Ng=1 (No Grouping)");
+		CEQU( 1, l[1], 0, 0x54, ".... 01.. .... .... EFF: Grouping - Ng=2");
+		CEQU( 2, l[1], 0, 0x14, ".... 10.. .... .... EFF: Grouping - Ng=4");
+		CEQU( 3, l[1], 0, 0x14, ".... 11.. .... .... EFF: Grouping - Reserved");
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... ..00 .... .... EFF: Coefficients Size (Nb) - 4 bits");
+		CEQU( 1, l[1], 0, 0x54, ".... ..01 .... .... EFF: Coefficients Size (Nb) - 5 bits");
+		CEQU( 2, l[1], 0, 0x14, ".... ..10 .... .... EFF: Coefficients Size (Nb) - 6 bits");
+		CEQU( 3, l[1], 0, 0x14, ".... ..11 .... .... EFF: Coefficients Size (Nb) - 8 bits");
+	BBIT( 1, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... 0... .... Explicit Channel Feedback");
+		CEQU( 1, l[1], 0, 0x54, ".... .... 1... .... Explicit Channel Feedback");
+	BBIT( 1, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, ".... .... .x.. .... Calibration Complete");
+	BBIT( 2, l[1], 0x5, 0xc9);
+		LABL( 0, 0, 0, 0x54, ".... .... ..xx .... Calibration Sequence");
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... .... 00.. Nr: 0 rows in each CSI matrix");
+		CEQU( 1, l[1], 0, 0x54, ".... .... .... 01.. Nr: 1 row in each CSI matrix");
+		CEQU( 2, l[1], 0, 0x54, ".... .... .... 10.. Nr: 2 rows in each CSI matrix");
+		CEQU( 3, l[1], 0, 0x54, ".... .... .... 11.. Nr: 3 rows in each CSI matrix");
+	BBIT( 2, l[1], 0x5, 0xc9);
+		CEQU( 0, l[1], 0, 0x54, ".... .... .... ..00 Nc: 0 columns in each CSI matrix");
+		CEQU( 1, l[1], 0, 0x54, ".... .... .... ..01 Nc: 1 column in each CSI matrix");
+		CEQU( 2, l[1], 0, 0x54, ".... .... .... ..10 Nc: 2 columns in each CSI matrix");
+		CEQU( 3, l[1], 0, 0x54, ".... .... .... ..11 Nc: 3 columns in each CSI matrix");
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 5.4.7 MIMO Uncompressed Steering Matrices frame = 7
+void 802_11N::MIMO_Uncompressed_Matrix()
+{
+	802_11N::CSI_Matrices_Control();
+	DBYT( 0, l[1], 0x90, 0xc2, "MCMR Segment Sequence:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Explicit Feedback Sequence:");
+	//Steering Matrices Report
+}
+
+// 5.4.8 Compressed Steering Matrices Feedback frame = 8
+void 802_11N::MIMO_Compressed_Matrix()
+{
+	802_11N::CSI_Matrices_Control();
+	DBYT( 0, l[1], 0x90, 0xc2, "MCMR Segment Sequence:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Explicit Feedback Sequence:");
+	//Quantized Steering Matrices Feedback Information
+}
+
+// 5.4.11 PSMP = 2
+void 802_11N::PSMP()
+{
+	BBIT( 5, l[1], 0x90, 0xc2, "N_STA:");
+	BBIT( 1, l[1], 0x90, 0xc2, "More PSMP:");
+		CEQU( 0, l[1], 0, 0x14, "PSMP Sequence is Last in Current Service Period");
+		CEQU( 1, l[1], 0, 0x14, "PSMP Sequence Followed Another PSMP Sequence");
+	BBIT( 0xa, l[1], 0x90, 0xc2, "PSMP Sequence Duration:");
+	// STA Info
+	DBYT( 0, l[1], 0x90, 0xc2, "TSIDs set:");
+	DWRD( 0, l[1], 0x90, 0xc2, "STA ID:");
+	BBIT( 0xb, l[1], 0x90, 0xc2, "DLT Start Offset:");
+	DBYT( 0, l[1], 0x90, 0xc2, "DLT Duration:");
+	BBIT( 0xb, l[1], 0x90, 0xc2, "ULT Start Offset:");
+	BBIT( 0xb, l[1], 0x90, 0xc2, "ULT Duration:");
+}
+
+void 802_11N::A_MPDU()
+{
+	//get the number of bytes left in the packet and store it in l[10]
+	BREM 0 4a 5 5;
+	
+	DLNG 40000000 41 5 5;
+	
+	LABL 0 0 0 b9 A-MPDU;
+	
+	//the a-mpdu delimiter is 4 bytes so we need to have at least that much data
+	while( l[10] > 4 )
+	{
+		//save the mpdu length in l3
+		l[3] = l[1];
+		l[3] &= 0xfff0;
+		SHFR 4 43;
+		DGLB 0 43 90 c2 MPDU Length:;
+		
+		l[2] = l[1];
+		l[2] &= 0xff0000;
+		SHFR 10 42;
+		DGLB 0 42 90 c2 CRC:;
+		
+		l[2] = l[1];
+		l[2] &= 0xff000000;
+		SHFR 18 42;
+		DGLB 0 42 90 c2 Delimiter Signature:;
+		
+		//get the remaining number of bytes
+		BREM 0 44 5 5;
+		
+		LABL 0 0 0 b9 MPDU;
+		802_11::Main2();
+		LABL 0 0 0 b8;
+		
+		BREM 0 45 5 5;
+		l[4] -= l[5];	//calculate the number of bytes read
+		
+		//calculate any padding bytes
+		l[6] = l[3];
+		l[6] += 4;	//include the 4 bytes of the a-mpdu delimiter
+		l[6] %= 4;	//l6 should now contain the number of pad bytes needed
+		
+		//see if we read less than the mpdu length
+		l[3] -= l[4];
+		if( l[3] > 0  )
+		{
+			DUMP 0 43 90 c2 Extra Data:;
+		}
+		
+		INCR 0 46 5 5;	//skip pad bits
+	
+		BREM 0 4a 5 5;	//update l[10] with the number of bytes remaining
+	}
+	
+	LABL 0 0 0 b8;
+}
+
+str# 802_11N::ASEL_Data;
+	0 | Number of remaining sounding PPDUs;
+	1 | Number of first sounding PPDU transmitted;
+	2 | Number of remaining sounding PPDUs;
+	3 | Total number sounding PPDUs required;
+	4 | Sequence number of PPDU corresponding to a CSI frame;
+	5 | First sounding PPDU that was not received properly;
+	6 | Number of remaining sounding PPDUs to be transmitted;
+	7 | Reserved;
+	
+str# 802_11N::ASEL_Command;
+	0 | Transmit Antenna Selection Sounding Indication (TXASSI);
+	1 | Transmit Antenna Selection Sounding Request/Resumption (TXASSR);
+	2 | Receive Antenna Selection Sounding Indication (RXASSI);
+	3 | Receive Antenna Selection Sounding Request (RXASSR);
+	4 | Sounding Label;
+	5 | No feedback, antenna selection training failure;
+	6 | Transmit Antenna Selection Sounding Indication Feeback Request(TXASSI-CSI);
+	7 | Reserved;
+
+str# 802_11N::Secondary_Channel_Offset_Str;
+	0 | No Secondary Channel;
+	1 | Above Primary Channel;
+	2 | Reserved;
+	3 | Below Primary Channel;

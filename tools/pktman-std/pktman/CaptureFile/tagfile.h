@@ -1,0 +1,137 @@
+// =============================================================================
+//	tagfile.h
+// =============================================================================
+//	Copyright (c) 2000-2015 WildPackets, Inc. All rights reserved.
+//	Copyright (c) 2015-2017 Savvius, Inc. All rights reserved.
+//	Copyright (c) 2017-2023 LiveAction, Inc. All rights reserved.
+
+#pragma once
+
+#include "WPTypes.h"
+
+#include "wppushpack.h"
+
+namespace TaggedFile
+{
+	// Each section of the file is a block that start with a block type (4 bytes).
+	// Defined block types
+	enum BlockType : UInt32 { 
+		kCaptureFileUnknownBlock				= 0x00000000,	// Null Block type.
+		kCaptureFileVersionBlock				= 0x7F766572,	// 0x7f + 'ver' (XML format)
+		kCaptureFileSessionBlock				= 0x73657373,	// capture session block (XML format)
+		kCaptureFilePacketsBlock				= 0x706B7473,	// packet data block (binary format)
+		kCaptureFileGpsBlock					= 0x67707369,	// gps information (binary format)
+		kCaptureFileIdBlock						= 0x63706964,	// packet capture id block (XML format)
+	#if __BYTE_ORDER == __LITTLE_ENDIAN
+		kCaptureFileNPktSessionBlock			= 0x746B706E,	// capture session block for npkt (XML format)
+		kCaptureFileNPktPacketsBlock			= 0x78746B70,	// packet segments block for npkt (binary format)
+		kCaptureFileNPktCompressedPacketsBlock	= 0x7A746B70	// compressed packet segments block for npkt (binary format)
+	#elif __BYTE_ORDER == __BIG_ENDIAN
+		kCaptureFileNPktSessionBlock			= 0x6E706B74,	// capture session block for npkt (XML format)
+		kCaptureFileNPktPacketsBlock			= 0x706B7478,	// packet data block for npkt (binary format)
+		kCaptureFileNPktCompressedPacketsBlock	= 0x706B747A	// compressed packet segments block for npkt (binary format)
+	#endif
+	};
+
+	// The entire block header for each block.
+	struct BLOCK_HEADER {	
+		BlockType	nType;		// 4 byte type field
+		UInt32		nLength;	// length of block, 0 => entire rest of file
+		UInt32		nFlags;		// 1st byte is CompressionType, 2nd byte is FormatType, 3 & 4 are reserved
+	} WP_PACK_STRUCT;
+	
+	enum CompressionType {
+		Uncompressed,			// not compressed
+		ZLIB					// zlib style compression
+	};
+
+	enum FormatType {
+		BinaryFormat,			// special binary format
+		TextFormat,				// UNICODE text block
+		XMLFormat,				// XML encoded block
+		HTMLFormat				// HTML encoded block
+	};
+
+	// Packet attributes for the packet block
+	enum PacketAttrib {
+		Attrib_ActualLength,					// length of the packet on the wire
+		Attrib_TimeStampLo,						// low 32 bits of the UTC timestamp, in nanoseconds from 1/1/1601
+		Attrib_TimeStampHi,						// high 32 bits of timestamp
+		Attrib_FlagsStatus,						// high 16 bits are PEEK status bits, low 16 are PEEK flags
+		Attrib_ChannelNumber,					// channel number
+		Attrib_DataRate,						// wireless data rate in 0.5Mbs
+		Attrib_SignalStrength,					// signal strength, 0-100%
+		Attrib_SignaldBm,						// signal dBm, (signed)
+		Attrib_NoiseStrength,					// noise strength, 0-100%
+		Attrib_NoisedBm,						// noise dBm (signed)
+		Attrib_MediaSpecType,					// type of media specific info that follows
+		Attrib_Protocol,						// WAN Protocol (X.25, Frame Relay, PPP,....)
+		Attrib_Direction,						// WAN Direction (to DTE or to DCE)
+		Attrib_ChannelFreq,						// channel frequency (wireless)
+		Attrib_ChannelBand,						// channel band (a, b, turbo, etc.)
+		Attrib_SignaldBm1,						// signal dBm, (signed)
+		Attrib_SignaldBm2,						// signal dBm, (signed)
+		Attrib_SignaldBm3,						// signal dBm, (signed)
+		Attrib_NoisedBm1,						// noise dBm (signed)
+		Attrib_NoisedBm2,						// noise dBm (signed)
+		Attrib_NoisedBm3,						// noise dBm (signed)
+		Attrib_FlagsN,							// 802.11N flags
+		Attrib_SignaldBm4,						// signal dBm, (signed)
+		Attrib_NoisedBm4,						// noise dBm, (signed)
+		Attrib_AccessPointAddress1,				// remote access point IP address (part 1)
+		Attrib_AccessPointAddress2,				// remote access point IP address (part 2)
+		Attrib_AccessPointAddress3,				// remote access point IP address (part 3)
+		Attrib_AccessPointAddress4,				// remote access point IP address (part 4)
+		Attrib_RemoteAPCollectorPort,			// port where packets from remote access point were received
+		Attrib_PacketDataLength = 0xffff		// length of the packet data (always follows this attribute)
+	};
+
+	struct PacketAttribute {
+		UInt16	fieldType;						// PacketAttrib 
+		UInt32	fieldValue;						// data for corresponding attribute
+	} WP_PACK_STRUCT;
+}
+
+// These are some useful XML attributes that are used in the version and session blocks.
+
+#define kCaptureFileVersionBlock_Root				L"VersionInfo"
+#define kCaptureFileVersionBlock_AppVersion			L"AppVersion"
+#define kCaptureFileVersionBlock_ProductVersion		L"ProdVersion"
+#define kCaptureFileVersionBlock_FileVersion		L"FileVersion"
+
+#define kCaptureFileSessionBlock_Root				L"Session"
+#define kCaptureFileSessionBlock_RawTime			L"RawTime"		// time_t units
+#define kCaptureFileSessionBlock_Time				L"Time"
+#define kCaptureFileSessionBlock_TimeZoneBias		L"TimeZoneBias"
+#define kCaptureFileSessionBlock_MediaType			L"MediaType"
+#define kCaptureFileSessionBlock_MediaSubType		L"MediaSubType"
+#define kCaptureFileSessionBlock_LinkSpeed			L"LinkSpeed"		// bps
+#define kCaptureFileSessionBlock_PacketCount		L"PacketCount"
+#define kCaptureFileSessionBlock_Comment			L"Comment"
+#define kCaptureFileSessionBlock_SessionStartTime	L"SessionStartTime"
+#define kCaptureFileSessionBlock_SessionEndTime		L"SessionEndTime"
+#define kCaptureFileSessionBlock_AdapterName		L"AdapterName"
+#define kCaptureFileSessionBlock_AdapterAddr		L"AdapterAddr"
+#define kCaptureFileSessionBlock_Adapters			L"Adapters"
+#define kCaptureFileSessionBlock_Adapter			L"Adapter"
+#define kCaptureFileSessionBlock_CaptureName		L"CaptureName"
+#define kCaptureFileSessionBlock_CaptureID			L"CaptureID"
+#define kCaptureFileSessionBlock_Owner				L"Owner"
+#define kCaptureFileSessionBlock_FileIndex			L"FileIndex"
+#define kCaptureFileSessionBlock_Host				L"Host"
+#define kCaptureFileSessionBlock_EngineName			L"EngineName"
+#define kCaptureFileSessionBlock_EngineAddr			L"EngineAddr"
+#define kCaptureFileSessionBlock_MediaDomain		L"Domain"
+#define kCaptureFileSessionBlock_DataRates			L"DataRates"
+#define kCaptureFileSessionBlock_Rate				L"Rate"
+#define kCaptureFileSessionBlock_ChannelList		L"ChannelList"
+#define kCaptureFileSessionBlock_Channel			L"Channel"		// for enumerated channels (non-wireless), this is the channel number
+#define kCaptureFileSessionBlock_Channel_Freq		L"Frequency"	// for wireless channels, these 3 things indicate the channel details
+#define kCaptureFileSessionBlock_Channel_Band		L"Band"
+#define kCaptureFileSessionBlock_Channel_Number		L"Number"
+
+#define kCaptureFileIdBlock_Root					L"CaptureId"
+#define kCaptureFileIdBlock_Id						L"Id"
+#define kCaptureFileIdBlock_Index					L"Index"
+
+#include "wppoppack.h"

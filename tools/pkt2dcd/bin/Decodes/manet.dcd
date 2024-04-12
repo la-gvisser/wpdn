@@ -1,0 +1,352 @@
+//A mobile ad hoc network (MANET) is a continuously self-configuring, infrastructure-less network of mobile devices connected wirelessly.
+//manet	269	tcp	MANET Protocols RFC5498 links to rfc5444 
+//http://www.iana.org/assignments/manet-parameters/manet-parameters.xhtml
+//
+//
+//
+str# UDP::Ports_Str;
+269	|	MANET;
+str# TCP::Ports_Str;
+269	|	MANET;
+
+void MANET()
+{
+	LABL( 0, 0, 0, 0xb1, "MANET - Mobile Ad hoc NETwork" );
+	LABL 0 0 0 b7 Header:;
+		DBIT( 4, l[1], 0x90, 0xc2, "Message Version:" );
+		BBIT( 4, l[2], 0x90, 0xc9, "Flags:" );
+			CBIT( 3, l[2], 0, 0xd4, ".... 1... Has Sequence Number: true" );
+			CLSE( 3, l[2], 0, 0xd4, ".... 0... Has Sequence Number: false" );
+			CBIT( 2, l[2], 0, 0xd4, ".... .1.. Has TLV block: true" );
+			CLSE( 2, l[2], 0, 0xd4, ".... .0.. Has TLV block: false" );
+			LABL( 0, 0, 0, 0xd4, .... ..xx reserved);
+		LABL( 0, 0, 0, 0xb8 );
+		l[3] = l[2];
+		l[3] &= 0x08;
+		SHFR( 3, l[3] );
+		if (l[3] == 1)
+		{
+			DWRD( 0, 0, 0x90, 0xc2, "Sequence Number:" );
+		}
+		l[3] = l[2];
+		l[3] &= 0x04;
+		SHFR( 2, l[3] );
+		if (l[3] == 1)
+		{
+			//Add TLV Blocks
+			HEX#( 0, g[16], 0x90, 0xc2, "TLV Block:" );
+			
+		}
+	LABL( 0, 0, 0, 0xb8 );
+	MANET::MESSAGE::HEADER;
+}
+
+str# MANET::MESSAGETYPES::STR;
+0	|	HELLO: Local signaling;				// - [RFC6130]
+1	|	TC: Topology Control (MANET-wide signaling);		// - [RFC7181]
+
+void MANET::MESSAGE::HEADER()
+{
+	LABL 0 0 0 b7 Messages:;
+	l[1] = 1;
+	while(g[16] > 4)
+	{
+		LABL 0 0 0 b7 Message #;
+		DGLB 0 41 7 0;
+		LABL( 0 0 0 07 ": - ");
+		GBYT( 0, l[3] );
+		CST#( 0, l[3], 0, 0x07, MANET::MESSAGETYPES::STR );
+			DBYT( 0, l[3], 0x90, 0xc2, "Message Type:" );
+				CST#( 0, l[3], 0, 0x14, MANET::MESSAGETYPES::STR );
+				CLSE( 0, 0, 0, 0x14, "Unassigned" );
+			BBIT( 4, l[4], 0x90, 0xc9, "Message Flags:" );
+				CBIT( 3, l[4], 0, 0xd4, "1... .... Has Orignator Address: true" );			
+				CLSE( 0, 0, 0, 0xd4, "0... .... Has Orignator Address: false" );
+				CBIT( 2, l[4], 0, 0xd4, ".1.. .... Has Hoplimit: true" );
+				CLSE( 0, 0, 0, 0xd4, ".0.. .... Has Hoplimit: false" );
+				CBIT( 1, l[4], 0, 0xd4, "..1. .... Has Hopcount: true" );
+				CLSE( 0, 0, 0, 0xd4, "..0. .... Has Hopcount: false" );
+				CBIT( 0, l[4], 0, 0xd4, "...1 .... Has Sequence Number: true" );
+				CLSE( 0, 0, 0, 0xd4, "...0 .... Has Sequence Number: false" );
+			LABL( 0, 0, 0, 0xb8 );
+			DBIT( 4, l[5], 0x90, 0xc2, "AddressSize: " );
+			l[5] += 1;
+			LABL( 0, 0, 0, 0x14, "(" );
+			DGLB( 0, l[5], 0x04, 0 );
+			LABL( 0, 0, 0, 0x04, ")" );
+			DWRD( 0, l[6], 0x90, 0xc2, "Message Size:" );
+			l[6] -= 4;
+			l[40] = l[4];
+			l[40] &= 0x8;
+			SHFR( 3, l[40]);
+			if (l[40] == 1)
+			{
+				if (l[5] == 4)
+				{
+					IPLG( 0, 0, 0x90, 0xc2, "originator address:" );	l[6] -= 4;
+				}
+				if (l[5] == 16)
+				{
+					IPV6( 0, 0, 0x90, 0xc2, "originator address:" );	l[6] -= 16;
+				}
+				if (l[5] != 4)
+				{
+					if (l[5] != 16)
+					{
+						HEX#( 0, l[5], 0x90, 0xc2, "originator address:" );	l[6] -= l[5];
+					}
+				}			
+			}
+			l[40] = l[4];
+			l[40] &= 0x4;
+			SHFR( 2, l[40]);
+			if (l[40] == 1)
+			{
+				DBYT( 0, 0, 0x90, 0xc2, "Hop Limit:" );	l[6] -= 1;
+			}
+			l[40] = l[4];
+			l[40] &= 0x2;
+			SHFR( 1, l[40]);
+			if (l[40] == 1)
+			{
+				DBYT( 0, 0, 0x90, 0xc2, "Hop Count:" );	l[6] -= 1;
+			}
+			l[40] = l[4];
+			l[40] &= 0x1;
+			if (l[40] == 1)
+			{
+				DWRD( 0, 0, 0x90, 0xc2, "Sequence Number:" );	l[6] -= 2;
+			}
+			if (g[16] <= l[6])
+			{
+				LABL 0 0 0 b7 Data Dump:;
+				LABL 0 0 0 14 Too less bytes remaining in packet, data might be fragmented or sliced!; 
+					HEX#( 0, l[6], 0x90, 0xc2, "Message:" );	
+				LABL( 0, 0, 0, 0xb8 );
+			}
+			if (g[16] >= l[6])
+			{
+				LABL 0 0 0 b7 TLV Block:;
+					DWRD( 0, l[7], 0x90, 0xc2, "Length:" );
+					l[15] = l[7];
+					while(l[15] != 0)
+					{
+						GBYT( 0, l[11] );
+						CST#( 0, l[11], 0, 0xb7, MANET::MESSAGE::MSG::TLVS::STR );
+						CLSE( 0, 0, 0, 0xb7, "Unknown TLV" );
+							DBYT( 0, l[11], 0x90, 0xc2, "TLV Type:" );
+							BBYT( 0, l[12], 0x90, 0xc9, "TLV Flags:" );
+								CBIT( 7, l[12], 0, 0xd4, "1... .... Has type-ext: true" );			
+									CLSE( 0, 0, 0, 0xd4, "0... .... Has type-ext: false" );
+								CBIT( 6, l[12], 0, 0xd4, ".1.. .... Has Single Index: true" );
+									CLSE( 0, 0, 0, 0xd4, ".0.. .... Has Single Index: false" );
+								CBIT( 5, l[12], 0, 0xd4, "..1. .... Has Mulitple Indices: true" );
+									CLSE( 0, 0, 0, 0xd4, "..0. .... Has Mulitple Indices: false" );
+								CBIT( 4, l[12], 0, 0xd4, "...1 .... Has Value: true" );
+									CLSE( 0, 0, 0, 0xd4, "...0 .... Has Value: false" );
+								CBIT( 3, l[12], 0, 0xd4, ".... 1... Has extended length: true" );
+									CLSE( 0, 0, 0, 0xd4, ".... 0... Has extended length: false" );
+								CBIT( 2, l[12], 0, 0xd4, ".... .1.. Has multiple Values: true" );
+									CLSE( 0, 0, 0, 0xd4, ".... .0.. Has multiple Values: false" );
+								LABL( 0, 0, 0, 0xd4, ".... ..xx Reserved" );
+							LABL( 0, 0, 0, 0xb8 );
+							l[30] = l[12];
+							l[30] &= 0x80;
+							SHFR( 7, l[30] );
+							l[31] = l[12];
+							l[31] &= 0x40;
+							SHFR( 6, l[31] );
+							l[32] = l[12];
+							l[32] &= 0x20;
+							SHFR( 5, l[32] );
+							l[33] = l[12];
+							l[33] &= 0x10;
+							SHFR( 4, l[33] );
+							l[34] = l[12];
+							l[34] &= 0x08;
+							SHFR( 3, l[34] );
+							l[35] = l[12];
+							l[35] &= 0x04;
+							SHFR( 2, l[35] );
+							DBYT( 0, l[13], 0x90, 0xc2, "TLV Length:" );
+							HEX#( 0, l[13], 0x90, 0xc2, "TLV Data (Hex):" );
+							if (l[13] == 1)
+							{
+								DECR 1;
+								DBYT( 0, 0, 0x90, 0xc2, "TLV Data (Int):" );
+							}
+						l[15] -= 3; l[15] -= l[13];
+						LABL( 0, 0, 0, 0xb8 );
+					}
+					l[7] += 2;
+					l[6] -= l[7];					//Subract TLV BLock from Message Length
+				LABL( 0, 0, 0, 0xb8 );
+				LABL 0 0 0 b7 Address Block:;
+					DBYT( 0, l[15], 0x90, 0xc2, "Count:" );
+					BBYT( 0, l[17], 0x90, 0xc9, "Flags:" );
+					//tbc
+						CBIT( 7, l[17], 0, 0xd4, "1... .... Has head: true" );			
+						CLSE( 0, 0, 0, 0xd4, "0... .... Has head: false" );
+						CBIT( 6, l[17], 0, 0xd4, ".1.. .... Has full tail: true" );
+						CLSE( 0, 0, 0, 0xd4, ".0.. .... Has full tail: false" );
+						CBIT( 5, l[17], 0, 0xd4, "..1. .... Has zero tail: true" );
+						CLSE( 0, 0, 0, 0xd4, "..0. .... Has zero tail: false" );
+						CBIT( 4, l[17], 0, 0xd4, "...1 .... Has Single Prelen: true" );
+						CLSE( 0, 0, 0, 0xd4, "...0 .... Has Single Prelen: false" );
+						CBIT( 3, l[17], 0, 0xd4, ".... 1... Has multiple prelen: true" );
+						CLSE( 0, 0, 0, 0xd4, ".... 0... Has multiple prelen: false" );
+						LABL( 0, 0, 0, 0xd4, ".... .xxx Reserved" );
+					LABL( 0, 0, 0, 0xb8 );
+					l[30] = l[17];
+					l[30] &= 0x80;
+					SHFR( 7, l[30] );
+					l[31] = l[17];
+					l[31] &= 0x40;
+					SHFR( 6, l[31] );
+					l[32] = l[17];
+					l[32] &= 0x20;
+					SHFR( 5, l[32] );
+					l[33] = l[17];
+					l[33] &= 0x10;
+					SHFR( 4, l[33] );
+					l[34] = l[17];
+					l[34] &= 0x08;
+					SHFR( 3, l[34] );
+					l[26] =  l[16];
+					l[6] -= 2;
+					l[16] = l[15];
+					l[21] = 1;
+					while (l[15] != 0)
+					{
+						LABL( 0, 0, 0x90, 0xc2, "Address #" );
+						DGLB( 0 ,l[21], 0x02, 0 );
+						LABL( 0, 0, 0, 0x02, ":" );
+						IPLG( 0, 0, 0x90, 0 );
+						l[6] -= 4;
+						l[21] += 1;
+						l[15] -= 1;
+					}
+					l[15] = l[16];
+					l[21] = 1;
+					if (l[17] != 0)
+					{
+						while (l[15] != 0)
+						{
+							LABL( 0, 0, 0x90, 0xc2, "Prefix #" );
+							DGLB( 0 ,l[21], 0x02, 0 );
+							LABL( 0, 0, 0, 0x02, ":" );
+							DBYT( 0, 0, 0x90, 0 );
+							l[6] -= 1;
+							l[21] += 1;
+							l[15] -= 1;
+						}
+					}
+					if (l[6] != 0)
+					{
+						LABL 0 0 0 b7 Address TLV Block:;
+							DWRD( 0, l[16], 0x90, 0xc2, "Length:" );
+							l[6] -= 2;
+							l[25] = l[16];
+							while (l[25] != 0)
+							{
+								GBYT( 0, l[11] );
+								CST#( 0, l[11], 0, 0xb7, MANET::MESSAGE::ADDRESSMSG::TLVS::STR );
+								CLSE( 0, 0, 0, 0xb7, "Unknown TLV" );
+									DBYT( 0, l[11], 0x90, 0xc2, "TLV Type:" );
+									BBYT( 0, l[12], 0x90, 0xc9, "TLV Flags:" );
+									CBIT( 7, l[12], 0, 0xd4, "1... .... Has type-ext: true" );			
+										CLSE( 0, 0, 0, 0xd4, "0... .... Has type-ext: false" );
+									CBIT( 6, l[12], 0, 0xd4, ".1.. .... Has Single Index: true" );
+										CLSE( 0, 0, 0, 0xd4, ".0.. .... Has Single Index: false" );
+									CBIT( 5, l[12], 0, 0xd4, "..1. .... Has Mulitple Indices: true" );
+										CLSE( 0, 0, 0, 0xd4, "..0. .... Has Mulitple Indices: false" );
+									CBIT( 4, l[12], 0, 0xd4, "...1 .... Has Value: true" );
+										CLSE( 0, 0, 0, 0xd4, "...0 .... Has Value: false" );
+									CBIT( 3, l[12], 0, 0xd4, ".... 1... Has extended length: true" );
+										CLSE( 0, 0, 0, 0xd4, ".... 0... Has extended length: false" );
+									CBIT( 2, l[12], 0, 0xd4, ".... .1.. Has multiple Values: true" );
+										CLSE( 0, 0, 0, 0xd4, ".... .0.. Has multiple Values: false" );
+									LABL( 0, 0, 0, 0xd4, ".... ..xx Reserved" );
+									LABL( 0, 0, 0, 0xb8 );
+									l[30] = l[12];
+									l[30] &= 0x80;
+									SHFR( 7, l[30] );
+									l[31] = l[12];
+									l[31] &= 0x40;
+									SHFR( 6, l[31] );
+									l[32] = l[12];
+									l[32] &= 0x20;
+									SHFR( 5, l[32] );
+									l[33] = l[12];
+									l[33] &= 0x10;
+									SHFR( 4, l[33] );
+									l[34] = l[12];
+									l[34] &= 0x08;
+									SHFR( 3, l[34] );
+									l[35] = l[12];
+									l[35] &= 0x04;
+									SHFR( 2, l[35] );
+									if (l[31] == 1)
+									{
+										DBYT( 0, 0, 0x90, 0xc2, "Index Start:" );
+										l[25] -= 1;
+									}
+									if (l[32] == 1)
+									{
+										DBYT( 0, 0, 0x90, 0xc2, "Index Start:" );
+										DBYT( 0, 0, 0x90, 0xc2, "Index End:" );
+										l[25] -= 2;
+									}
+									DBYT( 0, l[13], 0x90, 0xc2, "TLV Length:" );
+									HEX#( 0, l[13], 0x90, 0xc2, "TLV Data:" );
+									if (l[13] == 1)
+									{
+										DECR 1;
+										DBYT( 0, 0, 0x90, 0xc2, "TLV Data:" );
+									}
+								l[25] -= 3; l[25] -= l[13];
+								LABL( 0, 0, 0, 0xb8 );
+							}
+							//HEX#( 0, l[16], 0x90, 0xc2, "Message:" );
+							l[16] += 2;
+							l[6] -= l[16];					//Subract TLV BLock from Message Length
+						LABL( 0, 0, 0, 0xb8 );
+						if (l[6] != 0)
+						{
+							HEX#( 0, l[6], 0x90, 0xc2, "Message:" );	
+						}
+					}
+				LABL( 0, 0, 0, 0xb8 );
+			}
+			
+		LABL( 0, 0, 0, 0xb8 );
+		l[1] += 1;								//MessageCounter
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# MANET::MESSAGE::MSG::TLVS::STR;
+0	|	INTERVAL_TIME;
+1	|	VALIDITY_TIME;
+//2	|	LOCAL_IF;					//rfc6130
+//3	|	LINK_STATUS;				//rfc6130
+//4	|	OTHER_NEIGHB;				//rfc6130
+5	|	ICV;						//RFC 7182;
+6	|	TIMESTAMP;					//RFC 7182;
+7	|	MPR_WILLING;				//RFC 7181;
+8	|	CONT_SEQ_NUM;				//RFC 7181;
+
+str# MANET::MESSAGE::ADDRESSMSG::TLVS::STR;
+0	|	INTERVAL_TIME;					//[RFC5497]
+1	|	VALIDITY_TIME;					//[RFC5497]
+2	|	LOCAL_IF;						//rfc6130
+3	|	LINK_STATUS;					//rfc6130
+4	|	OTHER_NEIGHB;					//rfc6130
+5	|	ICV;							//[RFC7182]
+6	|	TIMESTAMP;						//[RFC7182]
+7	|	LINK_METRIC;					//[RFC7181]
+8	|	MPR;							//[RFC7181]
+9	|	NBR_ADDR_TYPE;					//[RFC7181]
+10	|	GATEWAY;		//[RFC7181]
+//11-223	Unassigned	
+//224-255	Reserved for Experimental Use	[RFC5444]

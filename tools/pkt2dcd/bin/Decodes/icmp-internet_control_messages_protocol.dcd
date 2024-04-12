@@ -1,0 +1,628 @@
+// ICMP - Internet Control Messages Protocol
+// ICMP v6
+// Date: 3/5/08
+
+void ICMP-IP;
+	LABL 0  0  0 b1 ICMP - Internet Control Messages Protocol\ICMP:;
+	DBYT 1  1 90 c2 ICMP Type:;
+	ADDG 1  1 ;
+	CST# 0  1  0 14 ICMP Types;
+	DBYT 1  2 90 c2 ICMP Code:;
+	TST# 0  1  0 0 ICMP Types;
+	CLSE 0  0  0 94 Unknown;
+	ICMPChecksum();
+	DUMP 0  10 90 c2 ICMP Data Area:;
+
+void Echo Reply;
+	ICMPChecksum();
+	HWRD 0 0 90 c2 Identifier:;
+	DWRD 0 0 90 c2 Sequence Number:;
+	BREM 0 1;
+	g[1] -= 4; // For FCS.
+	CHR# 0 10 90 c2 ICMP Data Area:;
+
+void Destination Unreachable;
+	ADDG 1 2;
+	CST# 0 2 0 14 Unreachable Types;
+	ICMPChecksum();
+	HWRD 0 0 90 c2 Unused (must be zero):;
+	DWRD 0 0 90 c2 Next-Hop MTU:;
+	TNXT -ICMP Error Common;
+
+void Source Quench;
+	ICMPChecksum();
+	HLNG 0 0 90 c2 Unused (must be zero):;
+	TNXT -ICMP Error Common;
+
+void Redirect;
+	ADDG 1 2;
+	CST# 0 2 0 14 Redirect Types;
+	ICMPChecksum();
+	IPLG 0 0 90 c2 Gateway IP Address:;
+	TNXT -ICMP Error Common;
+
+
+void Router Advertisement;
+	ICMPChecksum();
+	DBYT 0 a 90 c2 Num Addresses:;
+	DBYT 0 0 90 c2 Address Entry Size:;
+	DWRD 0 0 90 c2 Lifetime:;
+	Router Advertisement Addresses g10;
+
+void Router Advertisement Addresses g10;
+	SEQU 0 a 90 42;
+	SKIP 5 0 90 c4;
+	SUBG 1 a 90 42;
+	DGLB 0 a 90 c2 Address #  ;
+	IPLG 1 0 90 c2 Router Address:;
+	DLNG 1 0 90 c2 Preference Level:;
+	Router Advertisement Addresses g10;
+	TRTS;
+
+void Router Solicitation;
+	ICMPChecksum();
+	HLNG 0 0 90 c2 Reserved:;
+
+void Time Exceeded;
+	CEQU 0 2 0 14 Time to Live count exceeded;
+	CEQU 1 2 0 14 Fragment reassembly time exceeded;
+	ICMPChecksum();
+	HLNG 0 0 90 c2 Unused (must be zero):;
+	TNXT -ICMP Error Common;
+
+void Param Problem;
+	ICMPChecksum();
+	HBYT 0 0 90 c2 Octet Pointer:;
+	HEX# 3 0 90 c2 Unused (must be zero):;
+	TNXT -ICMP Error Common;
+
+void Timestamp Request;
+	ICMPChecksum();
+	HWRD 0 0 90 c2 Identifier:;
+	DWRD 0 0 90 c2 ICMP Sequence Number:;
+	TIME 2 0 90 c2 Originate Timestamp:;
+	TIME 2 0 90 c2 Receive Timestamp:;
+	TIME 2 0 90 c2 Transmit Timestamp:;
+
+void Timestamp Reply;
+	TNXT -Timestamp Request;
+
+void Info Request;
+	TNXT -Echo Reply;
+
+void Info Reply;
+	TNXT -Echo Reply;
+
+void Address Mask Request;
+	ICMPChecksum();
+	HWRD 0 0 90 c2 Identifier:;
+	DWRD 0 0 90 c2 ICMP Sequence Number:;
+	HLNG 0 0 90 c2 Address Mask:;
+	DUMP 1 0 90 c2 ICMP Data Area:;
+
+void Address Mask Reply;
+	TNXT -Address Mask Request;
+
+void ICMP Error Common;
+	LABL 0 0 0 80;
+	LABL 0 0 0 b4 Header of packet that caused error follows.;
+	TNXT -IP;
+
+void ICMPChecksum()
+{
+	HWRD 0 0 90 c2 ICMP Checksum:;
+	CKSM 3 0 24 14 Checksum invalid. Should be: ;
+}
+
+str# ICMP Types;
+	Echo Reply;
+	;
+	;
+	Destination Unreachable;
+	Source Quench;
+	Redirect;
+	;
+	;
+	Echo Request;
+	Router Advertisement;
+	Router Solicitation;
+	Time Exceeded;
+	Param Problem;
+	Timestamp Request;
+	Timestamp Reply;
+	Info Request;
+	Info Reply;
+	Address Mask Request;
+	Address Mask Reply;
+
+str# Unreachable Types;
+	Network Unreachable;
+	Host Unreachable;
+	Protocol Unreachable;
+	Port Unreachable;
+	Fragmentation Needed and DF Set;
+	Source Route Failed;
+	Destination Network Unknown;
+	Destination Host Unknown;
+	Source Host Isolated;
+	Communication with Destination Network is Administratively Prohibited;
+	Communication with Destination Host is Administratively Prohibited;
+	Destination Network Unreachable for Type of Service;
+	Destination Host Unreachable for Type of Service;
+	Communication Administratively Prohibited;
+	Host Precedence Violation;
+	Precedence cutoff in effect;
+
+str# Redirect Types;
+	for Net;
+	for Host;
+	for Type of Service and Net;
+	for Type of Service and Host;
+
+
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------
+//	ICMPv6
+
+void IPv6-ICMP;
+	LABL 0 0 0 b1 ICMPv6 - Internet Control Messages Protocol Version 6\ICMPv6:;
+	DBYT 0 3 90 c2 ICMPv6 Type:;
+	CST# 0 3 0 14 ICMPv6 Information;
+	DBYT 0 2 90 c2 ICMPv6 Code:;
+	SLTE 80 3;
+	SKIP 2;
+	CST# 0 3 0 14 ICMPv6 Errors;
+	TST# 0 3 0 0 ICMPv6 Err Jmp;
+	//CST# 0 3 0 14 ICMPv6 Information;
+	TST# 7f 3 0 0 ICMPv6 Info Jmp;
+	ICMPv6Checksum();
+	DUMP 1 0 90 c2 ICMP Data Area:;
+
+// ----------------------------------------------
+//	Error Packets
+
+void IPv6 Dest Unreach;
+	CST# ffffffff 2 0 14 ICMPv6 DU;
+	ICMPv6Checksum();
+	HLNG 0 0 90 c2 Unused:;
+	TNXT -ICMP Error Common;
+
+void IPv6 Pkt 2 Big;
+	ICMPv6Checksum();
+	DLNG 0 0 90 c2 Max Transmit Unit:;
+	TNXT -ICMP Error Common;
+
+void IPv6 Time Excd;
+	CEQU 0 2 0 14 Hop Limit Exceeded In Transit;
+	CLSE 0 2 0 14 Fragment Reassembly Time Exceeded;
+	ICMPv6Checksum();
+	HLNG 0 0 90 c2 Unused:;
+	TNXT -ICMP Error Common;
+
+void IPv6 Param Prob;
+	CST# ffffffff 2 0 14 ICMPv6 Param Prob;
+	ICMPv6Checksum();
+	DLNG 0 0 90 c2 Pointer (offset):;
+	TNXT -ICMP Error Common;
+
+
+
+// ----------------------------------------------
+//	Info Packets
+
+
+void IPv6 Echo;
+	ICMPv6Checksum();
+	HWRD 0 0 90 c2 Identifier:;
+	DWRD 0 0 90 c2 Sequence Number:;
+	BREM 0 1;
+	g[1] -= 4; // For FCS.
+	CHR# 0 1 90 c2 ICMP Data Area:;
+
+void IPv6 Grp Mmbr;
+	ICMPv6Checksum();
+	DWRD 0 0 90 c2 Max Response Delay:;
+	HWRD 0 0 90 c2 Unused:;
+	IPV6 0 0 90 c2 Multicast Address:;
+	DBIT 4 41 90 c2 S Flag:;
+	DBIT 4 00 90 c2 Robustness:;
+	DBYT 0 00 90 c2 QQI:;
+
+void IPv6 Rtr Solicit;
+	ICMPv6Checksum();
+	HLNG 0 f 90 c2 Reserved:;
+	TNXT -ICMPv6::Options;
+
+void IPv6 Rtr Ad;
+	ICMPv6Checksum();
+	DBYT 0 3 90 c2 Current Hop Count:;
+	CEQU 0 3 0 14 Unspecified;
+	HBYT 0 3 90 c2 Flags:;
+	CBIT 7 3 0 f4 Managed Address Configuration;
+	CBIT 6 3 0 f4 Autoconfig Non-address Information;
+	DWRD 0 2 90 c2 Router Lifetime:;
+	LABL - " sec";
+	CEQU 0 2 0 14 Not A Default Router;
+	SKIP 1;
+	SecToTime;
+	DLNG 0 2 90 c2 Reachable Time:;
+	LABL - " ms";
+	CEQU 0 2 0 14 Unspecified;
+	SKIP 2;
+	DIVG 3e8 2;
+	SecToTime;
+	DLNG 0 2 90 c2 Retransmission Time:;
+	LABL - " ms";
+	CEQU 0 2 0 14 Unspecified;
+	SKIP 2;
+	DIVG 3e8 2;
+	SecToTime;
+	TNXT -ICMPv6::Options;
+
+void IPv6 Nhbr Solicit;
+	ICMPv6Checksum();
+	HLNG 0 f 90 c2 Reserved:;
+	IPV6 0 0 90 c2 Target Address:;
+	TNXT -ICMPv6::Options;
+
+void IPv6 Nhbr Ad;
+	ICMPv6Checksum();
+	HLNG 0 3 90 c9 Flags:;
+	CBIT 1f 3 0 d4 Sender Is A Router;
+	CBIT 1e 3 0 d4 Response To Neighbor Solicitation;
+	CBIT 1d 3 0 d4 Override Any Existing Cache Entry;
+	LABL 0 0 0 c8;
+	IPV6 0 0 90 c2 Target Address:;
+	TNXT -ICMPv6::Options;
+
+void IPv6 Redirect;
+	ICMPv6Checksum();
+	HLNG 0 3 90 c2 Reserved:;
+	IPV6 0 0 90 c2 Target Address:;
+	IPV6 0 0 90 c2 Destination Address:;
+	TNXT -ICMPv6::Options;
+	
+void IPv6 MLD()
+{
+	ICMPv6Checksum();
+	HWRD 0 0 90 c2 Reserved:;
+	DWRD 0 1 90 c2 # Mcast Address Records:;
+	while (g[1] > 0)
+	{
+		IPv6 MLD::Multicast_Address_Record();
+		g[1] -= 1;
+	}
+}
+
+void ICMPv6Checksum()
+{
+	HWRD 0 0 90 c2 ICMPv6 Checksum:;
+	CKSM 4 0 24 14 Checksum invalid. Should be: ;
+}
+
+void IPv6 MLD::Multicast_Address_Record()
+{
+	DBYT 0 41 90 c9 Record Type:;
+	  CST# 0 41 0 14 IPv6 MLD::MAR_Record_Type_Str;
+	DBYT 0 0 90 c2 Aux Data Len:;
+	DWRD 0 42 90 c2 Number of Sources:;
+	IPV6 0 0 90 c2 Multicast Address:;
+	while (l[2] > 0)
+	{
+		IPV6 0 0 90 c2 Source Address:;
+	}
+	LABL 0 0 00 c8;
+}
+
+str# IPv6 MLD::MAR_Record_Type_Str;
+	1	|	MODE_IS_INCLUDE;
+	2	|	MODE_IS_EXCLUDE;
+	3	|	CHANGE_TO_INCLUDE_MODE;
+	4	|	CHANGE_TO_EXCLUDE_MODE;
+	5	|	ALLOW_NEW_SOURCES;
+	6	|	BLOCK_OLD_SOURCES;
+
+
+// ----------------------------------------------
+//	Options
+
+void ICMPv6::Options;
+	TEQU 0 10 0 0 IP Null;
+	TLTE bb8 10 0 0 IP Null;
+	GBYT 0 2;
+	CST# 0 2 00 b7 ICMPv6 Option Str;
+	CLSE 0 0 00 b7 Unknown ICMPv6 Option;
+	DBYT 0 2 90 c2 Option Type:;
+	CST# 0 2 00 14 ICMPv6 Option Str;
+	CLSE 0 0 00 14 Unknown;
+	DBYT 0 3 90 c2 Option Length:;
+	MULG 8 3;
+	TST# 0 2 00 00 ICMPv6 Option Jmp;
+	SUBG 2 3;
+	DUMP 0 3 90 c2 ICMPv6 Option Data:;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::SourceLLA;
+	SEQU 8 3;
+	SKIP 3;
+	SUBG 2 3;
+	DUMP 0 3 90 c2 Source Address:;
+	TNXT -ICMPv6::Options;
+	ETHR 0 0 90 c2 Source Address:;
+	LABL 0 0  0 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::TargetLLA;
+	SEQU 8 3;
+	SKIP 3;
+	SUBG 2 3;
+	DUMP 0 3 90 c2 Target Address:;
+	TNXT -ICMPv6::Options;
+	ETHR 0 0 90 c2 Target Address:;
+	LABL 0 0  0 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::PrefixInfo;
+	DBYT 0 2 90 c2 Prefix Length:;
+	LABL - " bits";
+	HBYT 0 3 90 c9 Flags:;
+		CBIT 7 3 0 d4 1... .... On-link Determination;
+		CLSE 0 0 0 d4 0... .... Not On-link Determination;
+		CBIT 6 3 0 d4 .1.. .... Autonomous Address Configuration;
+		CLSE 0 0 0 d4 .0.. .... Not Autonomous Address Configuration;
+		CBIT 5 3 0 d4 ..1. .... Router Address;
+		CLSE 0 0 0 d4 ..0. .... Not Router Address;
+		CBIT 4 3 0 d4 ...1 .... Site Prefix;
+		CLSE 0 0 0 d4 ...0 .... Not Site Prefix;
+		LABL 0 0 0 d4 .... xxxx Reserved;
+		LABL 0 0 0 c8;
+	DLNG 0 2 90 c2 Valid Lifetime:;
+	LABL - " sec";
+	CEQU ffffffff 2 0 14 Infinity;
+	SKIP 1;
+	SecToTime;
+	DLNG 0 2 90 c2 Preferred Lifetime:;
+	LABL - " sec";
+	CEQU ffffffff 2 0 14 Infinity;
+	SKIP 1;
+	SecToTime;
+	HLNG 0 0 90 c2 Reserved:;
+	IPV6 0 0 90 c2 Prefix:;
+	LABL 0 0  0 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::RedirectedHeader;
+	HWRD 0 0 90 c2 Reserved:;
+	HLNG 0 0 90 c2 Reserved:;
+	LABL 0 0  0 b8;
+	TNXT -ICMP Error Common;
+
+void ICMPv6::Options::MTU;
+	HWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Max Transmit Unit:;
+	LABL 0 0  0 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::AdvertisementIntervalOption;				// type 7
+	HWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Adv Interval:;
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::HomeAgentInformationOption;				// type 8
+	HWRD 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Home Agent Pref:;
+	DWRD 0 0 90 c2 Home Agent Lifetime:;
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::AddressList;								// type 9
+	DUMP 6 0 90 c2 Reserved:;
+	g[3] -= 2;
+	while (g[3] > 0)
+	{
+		IPV6 0 0 90 c2 IPv6 Address:;
+		g[3] -= 1;
+	}
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+
+/*
+void ICMPv6::Options::CGAOption;								// type 10
+	DBYT 0 1 90 c2 Pad Length:;
+	HBYT 0 0 90 c2 Reserved:;
+	
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Padding:;
+	}
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+*/
+	
+void ICMPv6::Options::RSASignatureOption;						// type 11
+
+void ICMPv6::Options::TimestampOption;							// type 12
+	DUMP 6 0 90 c2 Reserved:;
+	TIME 5 0 90 c2 Timestamp:;					// supposed to be utc time
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+
+void ICMPv6::Options::NonceOption;								// type 13
+	g[3] *= 8;
+	g[3] -= 2;
+	HEX# 0 3 90 c2 Nonce:;
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+
+/*
+void ICMPv6::Options::TrustAnchorOption;						// type 14
+	DBYT 0 1 90 c2 Name Type:;
+	CEQU 1 1 00 14 DER Encoded X.501 Name;
+	CEQU 2 1 00 14 FQDN;
+	DBYT 0 2 90 c2 Pad Length:;
+	Name:;
+	LABL 0 0 00 b8;
+	TNXT -ICMPv6::Options;
+*/
+
+/*
+void ICMPv6::Options::CertificateOption;						// type 15
+	DBYT 0 1 90 c2 Cert Type:;
+	CEQU 1 1 00 14 X.509v3 Certificate;
+	HBYT 0 0 90 c2 Reserved:;
+	Certificate:;
+	Padding:;
+*/	
+
+// ----------------------------------------------
+//	Helper Funcs
+
+void SecToTime;
+	MOVE 2 83;
+	MOVE 2 84;
+	DIVG e10 4;
+	DGLB 0 4 4 14 (;
+	MULG 3c 4;
+	DIVG 3c 3;
+	SUBG 4 83;
+	DGLB 0 3 4 4  hrs ;
+	MULG 3c 4;
+	MULG 3c 3;
+	SUBG 4 82;
+	SUBG 3 82;
+	DGLB 0 2 4 4  min ;
+	LABL 0 0 4 34  sec);
+	TRTS;
+
+
+// ----------------------------------------------
+//	Strings
+
+
+str# ICMPv6 Errors;
+	Destination Unreachable;
+	Packet Too Big;
+	Time Exceeded;
+	Parameter Problem;
+
+str# ICMPv6 Information;
+	1 | Destination Unreachable;
+	2 | Packet Too Big;
+	3 | Time Exceeded;
+	4 | Parameter Problem;
+	100 | Private experimentation;
+	101 | Private experimentation;
+	127	| Reserved for expansion of ICMPv6 error messages;
+	128 | Echo Request;
+	129 | Echo Reply;
+	130 | Multicast Listener Query;
+	131 | Multicast Listener Report;
+	132 | Multicast Listener Done;
+	133 | Router Solicitation;
+	134 | Router Advertisement;
+	135 | Neighbor Solicitation;
+	136 | Neighbor Advertisement;
+	137 | Redirect Message;
+	138 | Router Renumbering;
+	139 | ICMP Node Information Query;
+	140 | ICMP Node Information Response;
+	141 | Inverse Neighbor Discovery Solicitation Message;
+	142 | Inverse Neighbor Discovery Advertisement Message;
+	143 | Version 2 Multicast Listener Report;
+	144 | Home Agent Address Discovery Request Message;
+	145 | Home Agent Address Discovery Reply Message;
+	146 | Mobile Prefix Solicitation;
+	147 | Mobile Prefix Advertisement;
+	148 | Certification Path Solicitation Message;
+	149 | Certification Path Advertisement Message;
+	150 | ICMP messages utilized by experimental mobility protocols such as Seamoby;// 	[RFC4065]
+	151 | Multicast Router Advertisement;// 	[RFC4286]
+	152 | Multicast Router Solicitation;// 	[RFC4286]
+	153 | Multicast Router Termination;// 	[RFC4286]
+	154 | FMIPv6 Messages;// 	[RFC5568]
+	155 | RPL Control Message;// 	[RFC6550]
+	156 | ILNPv6 Locator Update Message;// 	[RFC6743]
+	157 | Duplicate Address Request;// 	[RFC6775]
+	158 | Duplicate Address Confirmation;// 	[RFC6775]
+	159 | MPL Control Message;// 	[RFC7731]
+	//160-199 	Unassigned 	
+	200 | Private experimentation;// 	[RFC4443]
+	201 | Private experimentation;// 	[RFC4443]
+	255 | Reserved for expansion of ICMPv6 informational messages;// 	[RFC4443]
+
+
+str# ICMPv6 Err Jmp;
+	IPv6 Dest Unreach;
+	IPv6 Pkt 2 Big;
+	IPv6 Time Excd;
+	IPv6 Param Prob;
+
+str# ICMPv6 Info Jmp;
+	IPv6 Echo;
+	IPv6 Echo;
+	IPv6 Grp Mmbr;
+	IPv6 Grp Mmbr;
+	IPv6 Grp Mmbr;
+	IPv6 Rtr Solicit;
+	IPv6 Rtr Ad;
+	IPv6 Nhbr Solicit;
+	IPv6 Nhbr Ad;
+	IPv6 Redirect;
+	;
+	;
+	;
+	;
+	;
+	IPv6 MLD;
+
+str# ICMPv6 DU;
+	No Route To Destination;
+	Communication With Destination Administratively Prohibited;
+	Not A Neighbor;
+	Address Unreachable;
+	Port Unreachable;
+
+str# ICMPv6 Param Prob;
+	No Route To Destination;
+	Communication With Destination Administratively Prohibited;
+	Not A Neighbor;
+
+str# ICMPv6 Option Str;
+	Source Link-Layer Address;
+	Target Link-Layer Address;
+	Prefix Information;
+	Redirected Header;
+	Maximum Transmission Unit (MTU);
+	NBMA Shortcut Limit Option;
+	Advertisement Interval Option;		//[RFC3775]							07
+	Home Agent Information Option;		//[RFC3775]							08
+    Source Address List;				//[RFC3122]							09
+	Target Address List;				//[RFC3122]							10
+	CGA Option;							//[RFC-ietf-send-ndopt-06.txt]		11
+	RSA Signature Option;				//[RFC-ietf-send-ndopt-06.txt]		12
+	Timestamp Option;					//[RFC-ietf-send-ndopt-06.txt]		13
+	Nonce Option;						//[RFC-ietf-send-ndopt-06.txt]		14
+	Trust Anchor Option;				//[RFC-ietf-send-ndopt-06.txt]		15
+	Certificate Option;					//[RFC-ietf-send-ndopt-06.txt]		16
+
+	
+
+str# ICMPv6 Option Jmp;
+	ICMPv6::Options::SourceLLA;
+	ICMPv6::Options::TargetLLA;
+	ICMPv6::Options::PrefixInfo;
+	ICMPv6::Options::RedirectedHeader;
+	ICMPv6::Options::MTU;
+	;
+	ICMPv6::Options::AdvertisementIntervalOption;				// 7
+	ICMPv6::Options::HomeAgentInformationOption;				// 8
+	ICMPv6::Options::AddressList;								// 9
+	;			//ICMPv6::Options::AddressList;								// 10
+	ICMPv6::Options::RSASignatureOption;						// 11
+	ICMPv6::Options::TimestampOption;							// 12
+	ICMPv6::Options::NonceOption;								// 13
+	;			//ICMPv6::Options::TrustAnchorOption;							// 14
+	;			//ICMPv6::Options::CertificateOption;							// 15
+	

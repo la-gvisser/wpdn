@@ -1,0 +1,400 @@
+// New Technology LAN Manager - NTLM SSP
+// 9/20/2007
+
+// si: stupid MAPI uses it too...and i think that one's jacked up... 
+//	so i had to rename mine ntlm2 ... pos
+//	btw, this thing jumps all over the pkt ... so be careful not to mess up globals
+
+void NTLM::Check;
+	g[1] = pl[0];
+	// 0x4e544c4d = NTLM
+	if (g[1] == 0x4e544c4d)
+	{
+		g[1] = pl[4];
+		// 0x53535000 = SSP.
+		if (g[1] == 0x53535000)
+		{
+			TNXT -NTLM2;
+		}
+	}
+
+void NTLM2;
+	LABL 0 0  0 b7 NTLM;
+	CHR# 8 0 90 c2 NTLM Identifier:\ID:;
+	DLNG 40000000 1 90 c2 NTLM Message Type:\Type:;
+	CST# 0 1  0 14 NTLM2::Msg_Types::List;
+	TST# 0 1  0  0 NTLM2::Msg_Types::Func;
+	DUMP 0 10 90 c2 Unknown NTLM Msg:;
+	LABL 0 0  0 b8;
+	TRTS;
+
+str# NTLM2::Msg_Types::List;
+	1 | Negotiate;
+	2 | Challenge;
+	3 | Authenticate;
+	8 | Unknonwn Message;
+
+str# NTLM2::Msg_Types::Func;
+	1 | NTLM2::Negotiate;
+	2 | NTLM2::Challenge;
+	3 | NTLM2::Authenticate;
+	8 | NTLM2::Unknown_Message;
+
+void NTLM2::Negotiate;					// 1
+	g[2] = 0;                   //si: used to count how many bytes we've used for the value fields
+	g[3] = 12;                  //si: used to count the bytes from the beginning of ntlmssp data
+
+	BREM 0 4A 0 0;
+	l[10] += 12;
+	l[10] -= 4;
+
+  HLNG 40000000 1 90 c9 Negotiate Flags:;
+    BST# 0 1 0 d4 NTLM2::Negotiate::Flags_Str;
+	LABL 0 0  0 c8;
+	g[3] += 4;
+
+	LABL 0 0 0 c9 Supplied Domain Security Buffer:;
+	DWRD 40000000 41 90 c2 Length:;
+	LABL 0 0 0 24 Bytes;
+	DWRD 40000000 42 90 c2 Allocated Space:;
+	LABL 0 0 0 24 Bytes;
+	DLNG 40000000 43 90 c2 Buffer Offset:;
+	LABL 0 0 0 24 Bytes;
+	if (l[3] != 0)
+	{
+		l[10] = l[3];
+	}
+	g[3] += 8;
+	if (l[1] > 0)
+	{
+		l[3] -= g[3];
+		INCR 0 43;
+		CHR# 0 41 90 c2 Domain String:;
+		l[3] += l[1];
+		DECR 0 43;
+	}
+	LABL 0 0  0 c8;
+	LABL 0 0 0 c9 Supplied Workstation Security Buffer:;
+	DWRD 40000000 41 90 c2 Length:;
+	LABL 0 0 0 24 Bytes;
+	DWRD 40000000 42 90 c2 Allocated Space:;
+	LABL 0 0 0 24 Bytes;
+	DLNG 40000000 43 90 c2 Buffer Offset:;
+	LABL 0 0 0 24 Bytes;
+	if (l[3] != 0)
+	{
+		l[10] = l[3];
+	}
+	g[3] += 8;
+	if (l[1] > 0)
+	{
+		l[3] -= g[3];
+		INCR 0 43;
+		CHR# 0 41 90 c2 Workstation String:;
+		l[3] += l[1];
+		DECR 0 43;
+	}
+	LABL 0 0  0 c8;
+
+	g[1] = l[10];
+	NTLM2::OS_Version_Struct;
+
+	LABL 0 0  0 b8 ;
+	TRTS;
+
+void NTLM2::OS_Version_Struct;
+	if (g[3] < g[1])
+	{
+		LABL 0 0 0 c9 OS Version Structure:;
+		DBYT 0 0 90 c2 Major Version:;
+		DBYT 0 0 90 c2 Minor Version:;
+		DWRD 40000000 0 90 c2 Build Number:;
+		HLNG 0 42 90 c2 Unknown:;
+	if (l[2] != 0x0000000f)
+	{
+		LABL 0 0 0 24 (This value should be 0x0000000f);
+	}
+	LABL 0 0  0 c8;
+	}
+	TRTS;
+
+str# NTLM2::Negotiate::Flags_Str;
+	31 | 1....... ........ ........ ........  Negotiate 56:              Server Supports Medium Encryption (56-bit);
+		 0....... ........ ........ ........  Negotiate 56:              Medium Encryption Not Supported;
+	30 | .1...... ........ ........ ........  Negotiate Key Exchange:    Client Provides an Encrypted Master Key;
+		 .0...... ........ ........ ........  Negotiate Key Exchange:    Client does NOT Provide an Encrypted Master Key;
+	29 | ..1..... ........ ........ ........  Negotiate 128:             Server Supports Strong Encryption (128-bit);
+	     ..0..... ........ ........ ........  Negotiate 128:             Strong Encryption Not Supported;
+	19 | ........ ....1... ........ ........  Negotiate NTLM2 Key:       Supports NTLM2 Signing & Sealing Scheme;
+	     ........ ....0... ........ ........  Negotiate NTLM2 Key:       Does Not Support NTLM2 Signing & Sealing Scheme;
+	15 | ........ ........ 1....... ........  Negotiate Always Sign:     Signed with a "dummy" Signature;
+	     ........ ........ 0....... ........  Negotiate Always Sign:     Signed;
+	13 | ........ ........ ..1..... ........  Negotiate WS Supplied:     The Name of the Workstation Included;
+	     ........ ........ ..0..... ........  Negotiate WS Supplied:     The Name of the Workstation NOT Included;
+	12 | ........ ........ ...1.... ........  Negotiate Domain Supplied: The Name of the Domain Included;
+	     ........ ........ ...0.... ........  Negotiate Domain Supplied: The Name of the Domain NOT Included;
+	9  | ........ ........ ......1. ........  Negotiate NTLM:            NTLM Authentication Supported;
+	     ........ ........ ......0. ........  Negotiate NTLM:            NTLM Authentication Not Supported;
+	7  | ........ ........ ........ 1.......  Negotiate Lan Manager Key: Use LM Session Key for Sign/Seal;
+	     ........ ........ ........ 0.......  Negotiate Lan Manager Key: Do Not Use LM Session Key for Sign/Seal;
+	6  | ........ ........ ........ .1......  Negotiate Datagram Style:  Datagram Auth is being Used;
+	     ........ ........ ........ .0......  Negotiate Datagram Style:  Datagram Auth is NOT Used;
+	5  | ........ ........ ........ ..1.....  Negotiate Seal:            Request Message Confidentiality;
+	     ........ ........ ........ ..0.....  Negotiate Seal:            Message Confidentiality Not Requested;
+	4  | ........ ........ ........ ...1....  Negotiate Sign:            Request Message Integrity;
+	     ........ ........ ........ ...0....  Negotiate Sign:            Message Integrity Not Requested;
+	2  | ........ ........ ........ .....1..  Request Target:            Server Return its Auth Realm;
+	     ........ ........ ........ .....0..  Request Target:            Server Not to Return its Auth Realm;
+	1  | ........ ........ ........ ......1.  Negotiate OEM:             Use OEM Strings;
+	     ........ ........ ........ ......0.  Negotiate OEM:             Do Not Use OEM Strings;
+	0  | ........ ........ ........ .......1  Negotiate Unicode:         Text Strings Are in Unicode;
+	     ........ ........ ........ .......0  Negotiate Unicode:         Text Strings Are Not in Unicode;
+
+void NTLM2::Challenge;					// 2
+	g[2] = 0;									//si: used to count how many bytes we've used for the value fields
+	g[3] = 12;									//si: used to count the bytes from the beginning of ntlmssp data
+
+	BREM 0 4A 0 0;
+	l[10] += 12;
+	l[10] -= 4;
+
+	LABL 0 0 0 c9 Target Domain\Tgt Dmn:;
+	INCR 4;
+	DLNG 40000000 43 5 5;
+	if (l[3] != 0)
+	{
+		l[10] = l[3];
+	}
+	DECR 8;
+	g[4] = 1;
+	NTLM2::Authenticate::Sec_Buffer;
+	l[10] = l[3];
+	LABL 0 0 0 c8;
+	HLNG 40000000 1 90 c9 Flags:;
+    BST# 0 1 0 d4 NTLM2::Challenge::Flags_Str;
+	LABL 0 0 0 c8;
+	g[3] += 4;
+
+	HEX# 8 0 90 c2 NTLM Challenge:;
+	g[3] += 8;
+	HEX# 8 0 90 c2 Context:;
+	g[3] += 8;
+
+	LABL 0 0 0 c9 Target Information Security Buffer:;
+	g[4] = 1;
+	DWRD 40000000 41 90 c2 Length:;
+	g[2] += l[1];
+	DWRD 40000000 42 90 c2 Max Length:;
+	DLNG 40000000 43 90 c2 Buffer:;
+	g[3] += 8;
+	if (l[1] > 0)
+	{
+		l[3] -= g[3];
+		INCR 0 43;
+		l[3] += l[1];
+
+		while (l[1] > 0)
+		{
+			g[1] = pb[0];		// type field
+			CST# 0 1 90 c2 NTLM2::Challenge::List;
+			INCR 2;
+
+			g[1] = pb[0];
+			l[1] -= g[1];		// length field
+			INCR 2;
+			l[1] -= 4;			// for the type and length field
+
+			CHR# 0 1 90 2;
+		}
+		DECR 0 43;
+	}
+	LABL 0 0 0 c8;
+
+	g[1] = l[10];
+	NTLM2::OS_Version_Struct;
+
+	INCR 0 2;									//si: we've already used this... so incr past it
+	//LABL 0 0 0 b8;
+
+	l[1] = pb[0];
+	if (l[1] == 0xa3) 
+	{
+		LABL 0 0 0  b7 mechListMIC;
+		ASN1_SkipTag;	*a3 ll
+		HBYT 0 1 90 c2 Identifier:;
+		HBYT 0 1 90 c2 Type:;
+		DBYT 0 1 90 c2 Length:;
+		TSUB -NTLM::Check;
+		LABL 0 0 0  b8;
+	}
+
+	LABL 0 0  0 b8 ;
+	TRTS;
+
+str# NTLM2::Challenge::List;
+	1 | Server NetBIOS Name:;
+	2 | Domain NetBIOS Name:;
+	3 | Server DNS Name:;
+	4 | Domain DNS Name:;
+
+str# NTLM2::Challenge::Flags_Str;
+	31 | 1....... ........ ........ ........  Negotiate 56:              Server Supports Medium Encryption (56-bit);
+	     0....... ........ ........ ........  Negotiate 56:              Medium Encryption Not Supported;
+	30 | .1...... ........ ........ ........  Negotiate Key Exchange:    Client Provides an Encrypted Master Key;
+	     .0...... ........ ........ ........  Negotiate Key Exchange:    Client does NOT Provide an Encrypted Master Key;
+	29 | ..1..... ........ ........ ........  Negotiate 128:             Server Supports Strong Encryption (128-bit);
+	     ..0..... ........ ........ ........  Negotiate 128:             Strong Encryption Not Supported;
+	23 | ........ 1....... ........ ........  Negotiate Target Info:     Target Information Block Sent with Message;
+	     ........ 0....... ........ ........  Negotiate Target Info:     Target Information Block Not Sent;
+	19 | ........ ....1... ........ ........  Negotiate NTLM2 Key:       Supports NTLM2 Signing & Sealing Scheme;
+	     ........ ....0... ........ ........  Negotiate NTLM2 Key:       Does Not Support NTLM2 Signing & Sealing Scheme;
+	18 | ........ .....1.. ........ ........  Target Type Share:         Target Type is a Share;
+	     ........ .....0.. ........ ........  Target Type Share:         Target Type is Not a Share;
+	17 | ........ ......1. ........ ........  Target Type Server:        Target Type is an NT Server;
+	     ........ ......0. ........ ........  Target Type Server:        Target Type is Not an NT Server;
+	16 | ........ .......1 ........ ........  Target Type Domain:        Target Type is a Domain Controller;
+	     ........ .......0 ........ ........  Target Type Domain:        Target Type is Not a Domain Controller;
+	15 | ........ ........ 1....... ........  Negotiate Always Sign:     Signed with a "dummy" Signature;
+	     ........ ........ 0....... ........  Negotiate Always Sign:     Signed;
+	14 | ........ ........ .1...... ........  Negotiate Local Call:      Server and Client on the Same Machine;
+         ........ ........ .0...... ........  Negotiate Local Call:      Server and Client NOT on the Same Machine;
+	9  | ........ ........ ......1. ........  Negotiate NTLM:            NTLM Authentication Supported;
+	     ........ ........ ......0. ........  Negotiate NTLM:            NTLM Authentication Not Supported;
+	2  | ........ ........ ........ .....1..  Request Target:            Server Return its Auth Realm;
+	     ........ ........ ........ .....0..  Request Target:            Server Not to Return its Auth Realm;
+	1  | ........ ........ ........ ......1.  Negotiate OEM:             Use OEM Strings;
+	     ........ ........ ........ ......0.  Negotiate OEM:             Do Not Use OEM Strings;
+	0  | ........ ........ ........ .......1  Negotiate Unicode:         Text Strings Are in Unicode;
+	     ........ ........ ........ .......0  Negotiate Unicode:         Text Strings Are Not in Unicode;
+
+void NTLM2::Authenticate;				// 3
+	g[2] = 0;									//si: used to count how many bytes we've used for the value fields
+	g[3] = 12;									//si: used to count the bytes from the beginning of ntlmssp data
+
+	BREM 0 4A 0 0;
+	l[10] += 12;
+	l[10] -= 4;
+
+	LABL 0 0 0 c9 LmChallenge Response;
+	INCR 4;
+	DLNG 40000000 43 5 5;
+	if (l[3] != 0)
+	{
+		l[10] = l[3];
+	}
+	DECR 8;
+	g[4] = 2;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 NtChallenge Response;
+	g[4] = 2;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Domain Name;
+	g[4] = 1;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 User Name;
+	g[4] = 1;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Workstation;
+	g[4] = 1;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	LABL 0 0 0 c9 Session Key; 
+	g[4] = 2;
+	NTLM2::Authenticate::Sec_Buffer;
+	LABL 0 0 0 c8;
+	HLNG 40000000 1 90 c9 Negotiate Flags;
+    BST# 0 1 0 d4 NTLM2::Full_Flags_Str;
+	LABL 0 0  0 c8;
+
+	//LABL 0 0 0 b8;
+
+	g[1] = l[10];
+	NTLM2::OS_Version_Struct;
+
+	INCR 0 2;                  //si: we've already used this... so incr past it
+	LABL 0 0 0 b8;
+	TRTS;
+
+void NTLM2::Authenticate::Sec_Buffer;
+	DWRD 40000000 41 90 c2 Length:;
+	g[2] += l[1];
+	DWRD 40000000 42 90 c2 Max Length:;
+	DLNG 40000000 43 90 c2 Buffer:;
+	g[3] += 8;
+	if (l[1] > 0)
+	{
+		l[3] -= g[3];
+		INCR 0 43;
+		if (g[4] == 1)
+		{
+			CHR# 0 41 90 c2 Value:;
+		}
+		if (g[4] == 2)
+		{
+			HEX# 0 41 90 c2 Value:;
+		}
+		l[3] += l[1];
+		DECR 0 43;
+	}
+	TRTS;
+
+str# NTLM2::Full_Flags_Str;
+	31 | 1....... ........ ........ ........  Negotiate 56:              Server Supports Medium Encryption (56-bit);
+		 0....... ........ ........ ........  Negotiate 56:              Medium Encryption Not Supported;
+	30 | .1...... ........ ........ ........  Negotiate Key Exchange:    Client Provides an Encrypted Master Key;
+	     .0...... ........ ........ ........  Negotiate Key Exchange:    Client does NOT Provide an Encrypted Master Key;
+	29 | ..1..... ........ ........ ........  Negotiate 128:             Server Supports Strong Encryption (128-bit);
+	     ..0..... ........ ........ ........  Negotiate 128:             Strong Encryption Not Supported;
+	23 | ........ 1....... ........ ........  Negotiate Target Info:     Target Information Block Sent with Message;
+	     ........ 0....... ........ ........  Negotiate Target Info:     Target Information Block Not Sent;
+	22 | ........ .1...... ........ ........  Request NonNT Session Key: Reserved;
+	     ........ .0...... ........ ........  Request NonNT Session Key: Reserved;
+	21 | ........ ..1..... ........ ........  Request Accept Response:   Reserved;
+	     ........ ..0..... ........ ........  Request Accept Response:   Reserved;
+	20 | ........ ...1.... ........ ........  Request Init Response:     Reserved;
+	     ........ ...0.... ........ ........  Request Init Response:     Reserved;
+	19 | ........ ....1... ........ ........  Negotiate NTLM2 Key:       Supports NTLM2 Signing & Sealing Scheme;
+	     ........ ....0... ........ ........  Negotiate NTLM2 Key:       Does Not Support NTLM2 Signing & Sealing Scheme;
+	18 | ........ .....1.. ........ ........  Target Type Share:         Target Type is a Share;
+	     ........ .....0.. ........ ........  Target Type Share:         Target Type is Not a Share;
+	17 | ........ ......1. ........ ........  Target Type Server:        Target Type is an NT Server;
+	     ........ ......0. ........ ........  Target Type Server:        Target Type is Not an NT Server;
+	16 | ........ .......1 ........ ........  Target Type Domain:        Target Type is a Domain Controller;
+	     ........ .......0 ........ ........  Target Type Domain:        Target Type is Not a Domain Controller;
+	15 | ........ ........ 1....... ........  Negotiate Always Sign:     Signed with a "dummy" Signature;
+	     ........ ........ 0....... ........  Negotiate Always Sign:     Signed;
+	14 | ........ ........ .1...... ........  Negotiate Local Call:      Server and Client on the Same Machine;
+	     ........ ........ .0...... ........  Negotiate Local Call:      Server and Client NOT on the Same Machine;
+	13 | ........ ........ ..1..... ........  Negotiate WS Supplied:     The Name of the Workstation Included;
+	     ........ ........ ..0..... ........  Negotiate WS Supplied:     The Name of the Workstation NOT Included;
+	12 | ........ ........ ...1.... ........  Negotiate Domain Supplied: The Name of the Domain Included;
+	     ........ ........ ...0.... ........  Negotiate Domain Supplied: The Name of the Domain NOT Included;
+	11 | ........ ........ ....1... ........  Negotiate Anonymous:       Anonymous Context Established;
+	     ........ ........ ....0... ........  Negotiate Anonymous:       No Anonymous Context Established;
+	9  | ........ ........ ......1. ........  Negotiate NTLM:            NTLM Authentication Supported;
+	     ........ ........ ......0. ........  Negotiate NTLM:            NTLM Authentication Not Supported;
+	8  | ........ ........ ......1. ........  Negotiate Netware:         Reserved;
+	     ........ ........ ......0. ........  Negotiate Netware:         Reserved;
+	7  | ........ ........ ........ 1.......  Negotiate Lan Manager Key: Use LM Session Key for Sign/Seal;
+	     ........ ........ ........ 0.......  Negotiate Lan Manager Key: Do Not Use LM Session Key for Sign/Seal;
+	6  | ........ ........ ........ .1......  Negotiate Datagram Style:  Datagram Auth is being Used;
+	     ........ ........ ........ .0......  Negotiate Datagram Style:  Datagram Auth is NOT Used;
+	5  | ........ ........ ........ ..1.....  Negotiate Seal:            Request Message Confidentiality;
+	     ........ ........ ........ ..0.....  Negotiate Seal:            Message Confidentiality Not Requested;
+	4  | ........ ........ ........ ...1....  Negotiate Sign:            Request Message Integrity;
+	     ........ ........ ........ ...0....  Negotiate Sign:            Message Integrity Not Requested;
+	2  | ........ ........ ........ .....1..  Request Target:            Server Return its Auth Realm;
+	     ........ ........ ........ .....0..  Request Target:            Server Not to Return its Auth Realm;
+	1  | ........ ........ ........ ......1.  Negotiate OEM:             Use OEM Strings;
+	     ........ ........ ........ ......0.  Negotiate OEM:             Do Not Use OEM Strings;
+	0  | ........ ........ ........ .......1  Negotiate Unicode:         Text Strings Are in Unicode;
+		 ........ ........ ........ .......0  Negotiate Unicode:         Text Strings Are Not in Unicode;
+
+void NTLM2::Unknown_Message;			// 8
+	// !? ummm....dunno what the unknown message looks like
+	LABL 0 0 0 b8 ;
+	TRTS;

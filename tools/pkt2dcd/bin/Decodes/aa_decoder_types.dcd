@@ -1,0 +1,7 @@
+#define kLayer	0xb1
+#define kData	0x90
+#define kLabel	0xc2
+#define kMsg	0x14
+
+
+

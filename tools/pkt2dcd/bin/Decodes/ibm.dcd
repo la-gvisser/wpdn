@@ -1,0 +1,1390 @@
+* Decoder version: 5.0.1.0
+ 
+void SNA::802_2()
+{
+	LABL 0 0 0 b1 SNA - System Network Architecture Protocol\SNA:;
+	LABL 0 0 0 b1 TH - Transmission Header;
+	HBYT 0 4 a0 c2 Field Descriptor:;
+	SNA FID2 Bitmap;
+	HBYT 0 0 a0 c2 Reserved:;
+	HBYT 0 0 a0 c2 Dest. Address Field:;
+	HBYT 0 0 a0 c2 Origin Address Field:;
+	DWRD 0 4 a0 c2 Sequence Number Field:;
+	SBIT 1 5;
+	TLSE -SNA FID2 Data;
+	LABL 0 0 0 b1 RH - Request/Response Header;
+	HBYT 0 4 90 c2 RH Byte 0:;
+	SNA RH0 Bitmap;
+*   is it a response? 
+	SBIT 7 4;
+*   skip if so 
+	SKIP 6;
+	HBYT 0 5 90 c2 RH Byte 1:;
+	SNA RH1 Req Bitmap;
+	HBYT 0 5 90 c2 RH Byte 2:;
+	SNA RH2 Req Bitmap;
+*   is it a response? 
+	SBIT 7 4;
+*   skip if not 
+	SKIP 80000004;
+	HBYT 0 5 90 c2 RH Byte 1:;
+	SNA RH1 Rsp Bitmap;
+	HBYT 0 5 90 c2 RH Byte 2:;
+	LABL 0 0 0 14 (reserved/ignored);
+	TGTE 0 10 0 0 SNA Null;
+	TEQU 0 8 0 0 SNA FMD-RU;
+	TEQU 1 8 0 0 SNA NC-RU;
+	TEQU 2 8 0 0 SNA DFC-RU;
+	TEQU 3 8 0 0 SNA SC-RU;
+}
+
+void SNA FID2 Data;
+	LABL 0 0 0 b1 SNA FID2 Segment;
+*   EBCDIC 
+	DMPE 0 10 a0 c2 Data:;
+void SNA Control Vectors;
+	TGTE 0 10 0 0 SNA Null;
+	GBYT 0 7 0 2;
+	TEQU 0 7 0 0 SNA CV00;
+	TEQU 7 7 0 0 SNA CV07;
+	TEQU c 7 0 0 SNA CV0C;
+	TEQU e 7 0 0 SNA CV0E;
+	TEQU 10 7 0 0 SNA CV10;
+	TEQU 22 7 0 0 SNA CV22;
+	TEQU 2b 7 0 0 SNA CV2B;
+	TEQU 2c 7 0 0 SNA CV2C;
+	TEQU 2d 7 0 0 SNA CV2D;
+	TEQU 35 7 0 0 SNA CV35;
+	TEQU 46 7 0 0 SNA CV46;
+	TEQU 60 7 0 0 SNA CV60;
+	TEQU 66 7 0 0 SNA CV66;
+	TEQU 80 7 0 0 SNA CV80;
+	LABL 0 0 0 b1 Unknown Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 0 a0 c2 Length:;
+*   EBCDIC 
+	DMPE 0 10 a0 c2 Vector Data:;
+void SNA CV00;
+	LABL 0 0 0 b1 SSCP-LU Session Capabilities Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	HBYT 0 0 a0 c2 Maximum RU Size:;
+	HWRD 0 7 a0 c2 LU Capabilities:;
+	CBIT f 7 0 f4 SSCP may send unsolicited character-coded requests;
+	CLSE 0 0 0 f4 SSCP may NOT send unsolicited character-coded requests;
+	CBIT e 7 0 f4 SSCP may send unsolicited field-formatted requests;
+	CLSE 0 0 0 f4 SSCP may NOT send unsolicited field-formatted requests;
+	HBYT 0 0 a0 c2 Reserved:;
+	TNXT -SNA Control Vectors;
+void SNA CV07;
+	LABL 0 0 0 b1 PU FMD-RU-Usage Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	HBYT 0 0 a0 c2 Capabilities:;
+	CBIT 1 7 0 f4 Adjacent PU Can Load The T2 Node;
+	CLSE 0 0 0 f4 Adjacent PU CANNOT Load The T2 Node;
+	CBIT 0 7 0 f4 PU Can Receive FMD Requests From The SSCP;
+	CLSE 0 0 0 f4 PU CANNOT Receive FMD Requests From The SSCP;
+	HEX# 6 0 a0 c2 Reserved:;
+	TNXT -SNA Control Vectors;
+void SNA CV0C;
+	LABL 0 0 0 b1 LU-LU Session Services Capabilities Control Vector;
+	HBYT 0 7 a0 c2 Control Vector Key:;
+	DBYT 0 a a0 c2 Length:;
+	HBYT 0 7 a0 c2 Secondary LU Capability:;
+	ANDG f 7;
+	CEQU 0 7 0 14 Inhibited;
+	CEQU 1 7 0 14 Disabled;
+	CEQU 3 7 0 14 Enabled;
+	DWRD 0 0 a0 c2 LU-LU Session Limit:;
+	DWRD 0 0 a0 c2 LU-LU Session Count:;
+	HBYT 0 0 a0 c2 Reserved:;
+	TNXT -SNA Control Vectors;
+void SNA CV0E;
+	LABL 0 0 0 b1 Network Name Control Vector;
+	HBYT 0 7 a0 c2 Control Vector Key:;
+	DBYT 0 a a0 c2 Length:;
+	HBYT 0 7 a0 c2 Name Type:;
+*   display indexed string 
+	CST# f0 7 0 14 SNA CV Name Types;
+	SUBG 1 a;
+*   EBCDIC 
+	EBC# 0 a a0 c2 Name:;
+	TNXT -SNA Control Vectors;
+void SNA CV10;
+	LABL 0 0 0 b1 Product Set ID Control Vector;
+	HBYT 0 7 a0 c2 Control Vector Key:;
+	DBYT 0 f a0 c2 Control Vector Length:;
+	HBYT 0 0 a0 c2 Reserved:;
+	SUBG 1 f;
+	TGTE 0 f 0 0 SNA Control Vectors;
+	SNA Common Subvectors;
+	TGTE 0 f 0 0 SNA Control Vectors;
+	SNA Common Subvectors;
+	TNXT -SNA Control Vectors;
+void SNA CV22;
+	LABL 0 0 0 b1 XID Negotiation Error Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+*  equals 4 or 8
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	HWRD 0 0 a0 c2 Error Byte Offset:;
+	HBYT 0 0 a0 c2 Error Bit Offset:;
+*   length equals 4? 
+	SEQU 4 7;
+*   skip if so 
+	SKIP 1;
+	HLNG 0 0 a0 c2 Optional Sense Data:;
+	TNXT -SNA Control Vectors;
+void SNA CV2B;
+	LABL 0 0 0 b1 Route Selection Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	DBYT 0 8 a0 c2 Max Hop Count:;
+	DBYT 0 8 a0 c2 Current Hop Count:;
+	SUBG 2 7;
+*  decode not finished, need to consider LT format for control vectors X'0E' and X'46'
+void SNA CV2C;
+	LABL 0 0 0 b1 COS/TPF Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	HBYT 0 8 a0 c2 Network & Trnsmssn Prior:;
+	CBIT 2 8 0 f4 PIUs for this session flow at network priority, which is highest priority;
+	CLSE 0 0 0 f4 PIUs for this session flow at priority specified on next line;
+*   Is network priority bit set? 
+	SBIT 2 8 0 b4;
+*   skip if so 
+	SKIP 2;
+	ANDG 3 8;
+	CST# ffffffff 8 0 f4 SNA Trans Prior;
+*   display indexed string 
+	DBYT 0 8 a0 c2 COS Name Field Length:;
+	EBC# 0 8 a0 c2 COS Name:;
+*  EBCDIC
+	TNXT -SNA Control Vectors;
+void SNA CV2D;
+	LABL 0 0 0 b1 Mode Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	DBYT 0 8 a0 c2 Mode Name Field Length:;
+*  EBCDIC
+	EBC# 0 8 a0 c2 Mode Name:;
+	TNXT -SNA Control Vectors;
+void SNA CV35;
+	LABL 0 0 0 b1 Extended Sense Data Control Vector;
+void SNA CV46;
+	LABL 0 0 0 b1 TG Descriptor Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	SNA TG Descriptor Subflds;
+	TNXT -SNA Control Vectors;
+void SNA TG Descriptor Subflds;
+	LABL 0 0 0 b1 TG Descriptor Subfield;
+	DBYT 0 8 c0 c2 TG Descriptor Subfield Length:;
+	HBYT 0 9 c0 c2 TG Descriptor Subfield Type:;
+	CEQU 80 9 0 14 TG Identifier;
+	CEQU 82 9 0 14 DLC Signaling Information;
+	CEQU 83 9 0 14 Real Partner CP Name;
+	TEQU 80 9 0 0 SNA TG Descript Subfld 80;
+	TEQU 82 9 0 0 SNA TG Descript Subfld 82;
+	TEQU 83 9 0 0 SNA TG Descript Subfld 83;
+*  TO DO - Check if type is not 80, 82, or 83.
+	TRTS;
+void SNA TG Descript Subfld 80;
+	HBYT 0 0 c0 c2 TG Number:;
+	DBYT 0 9 c0 c2 TG-Partner Net-Qual CP Name Length:;
+*  EBCDIC
+	EBC# 0 9 c0 c2 Name:;
+	HBYT 0 9 c0 c2 Indicators:;
+	CBIT 7 9 0 f4 The TG-Partner Node's Network-Qualified CP Name field does identify a link connection network;
+	CLSE 0 0 0 f4 The TG-Partner Node's Network-Qualified CP Name field DOES NOT identify a link connection network;
+	CBIT 2 9 0 f4 This link is an intersubnet link;
+	CLSE 0 0 0 f4 This link is NOT an intersubnet link;
+	SUBG 8 87;
+*   did this subfield take up rest of vector data?? 
+	SEQU 0 7;
+*   skip if so 
+	SKIP 1;
+	TNXT -SNA TG Descriptor Subflds;
+*   go back to "SNA CV46" 
+	TRTS;
+void SNA TG Descript Subfld 82;
+*  Decode For Token-Ring Nets Only
+	HEX# 6 0 c0 c2 MAC Address:;
+	HBYT 0 0 c0 c2 LSAP Address:;
+	SUBG 8 87;
+*   did this subfield take up whole vector data?? 
+	SEQU 0 7;
+*   skip if so 
+	SKIP 1;
+	TNXT -SNA TG Descriptor Subflds;
+*   go back to "SNA CV46" 
+	TRTS;
+void SNA TG Descript Subfld 83;
+	DBYT 0 9 c0 c2 TG-Partner Net-Qual CP Name Length:;
+*  EBCDIC
+	EBC# 0 9 c0 c2 Name:;
+	SUBG 8 87;
+*   did this subfield take up whole vector data?? 
+	SEQU 0 7;
+*   skip if so 
+	SKIP 1;
+	TNXT -SNA TG Descriptor Subflds;
+*   go back to "SNA CV46" 
+	TRTS;
+void SNA CV60;
+	LABL 0 0 0 b1 Fully Qualified PCID Control Vector;
+	HBYT 0 0 a0 c2 Control Vector Key:;
+	DBYT 0 7 a0 c2 Control Vector Length:;
+	HLNG 0 0 a0 c2 PCID:;
+	HLNG 80000000 0 0 2;
+	DBYT 0 7 a0 c2 Net-Qual CP Name Fld Length:;
+*   EBCDIC 
+	EBC# 0 7 a0 c2 Net-Qualified CP Name:;
+	TNXT -SNA Control Vectors;
+void SNA CV66;
+	LABL 0 0 0 b1 Length-Checked Compression Control Vector;
+	HBYT 0 7 a0 c2 Control Vector Key:;
+	DBYT 0 8 a0 c2 Control Vector Length:;
+	TEQU 81 7 0 0 SNA RLE/LZ Comp Bid Subfld 81;
+	TEQU 82 7 0 0 SNA RLE/LZ Comp Result Subfld 82;
+	LABL 0 0 0 b4 Subfield Data Invalid;
+	HEX# 0 8 a0 c2 Subfield Data:;
+	TNXT -SNA Control Vectors;
+void SNA RLE/LZ Comp Bid Subfld 81;
+	DBYT 0 0 a0 c2 Subfield Length:;
+	HBYT 0 0 a0 c2 Subfield Key:;
+	LABL 0 0 0 44 RLE/LZ Compression Bid;
+	LABL 0 0 0 b1 RLE/LZ Compression Bid Subfield;
+	HBYT 0 7 a0 c2 Lngth-Chcked Compress Flgs:;
+	CBIT 7 7 0 f4 Compression/Decompression done only by session endpoints;
+	CLSE 0 0 0 f4 Compression/Decompression may be performed by intermediate nodes;
+	CBIT 6 7 0 f4 LZ and RLE Compression in series is allowed;
+	CLSE 0 0 0 f4 LZ and RLE Compression in series is NOT allowed;
+	HBYT 0 7 a0 c2 Negotable Compress Flds:;
+	LABL 0 0 0 d2 Compression capability of nodes so far:;
+	MOVE 7 89;
+	DIVG 10 9;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 9 0 f4 SNA Cmprss Cap Nds So Far;
+	LABL 0 0 0 d2 Compression level needed by links so far:;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 7 0 f4 SNA Cmprss Lvl Need So Far;
+	HBYT 0 7 a0 c2 Static Compress Flds:;
+	LABL 0 0 0 d2 Desired compression level of RUs going from PLU to SLU:;
+	MOVE 7 89;
+	DIVG 10 9;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 9 0 f4 SNA Cmprss Lvl RUs frm PLU to SLU;
+	LABL 0 0 0 d2 Desired compression level of RUs going from SLU to PLU:;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 7 0 f4 SNA Cmprss Lvl RUs frm SLU to PLU;
+	TNXT -SNA Control Vectors;
+void SNA RLE/LZ Comp Result Subfld 82;
+	DBYT 0 0 a0 c2 Subfield Length:;
+	HBYT 0 0 a0 c2 Subfield Key:;
+	LABL 0 0 0 44 RLE/LZ Compression Result;
+	LABL 0 0 0 b1 RLE/LZ Compression Result Subfield;
+	HBYT 0 7 a0 c2 Lngth-Chcked Compress Flgs:;
+	CBIT 7 7 0 f4 Compression/Decompression done only by session endpoints;
+	CLSE 0 0 0 f4 Compression/Decompression may be performed by intermediate nodes;
+	CBIT 6 7 0 f4 LZ and RLE Compression in series is allowed;
+	CLSE 0 0 0 f4 LZ and RLE Compression in series is NOT allowed;
+	HBYT 0 7 a0 c2 Negotable Compress Flds:;
+	LABL 0 0 0 d2 Actual compression level of RUs going from PLU to SLU:;
+	MOVE 7 89;
+	DIVG 10 9;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 9 0 f4 SNA Cmprss Lvl RUs frm PLU to SLU;
+	LABL 0 0 0 d2 Actual compression level of RUs going from SLU to PLU:;
+	ANDG f 7;
+*   display indexed string 
+	CST# ffffffff 7 0 f4 SNA Cmprss Lvl RUs frm SLU to PLU;
+	TNXT -SNA Control Vectors;
+void SNA CV80;
+	LABL 0 0 0 b1 PU Capabilities ACTPU Control Vector;
+	HBYT 0 7 a0 c2 Control Vector Key:;
+	DBYT 0 f a0 c2 Control Vector Length:;
+	HBYT 0 7 a0 c2 Vector Data:;
+	CBIT 7 7 0 14 Supports unsolicited NMVT's for PSID;
+	CLSE 0 0 0 14 Does not support unsolicited NMVT's for PSID;
+	TNXT -SNA Control Vectors;
+void SNA Common Subvectors;
+	LABL 0 0 0 c2 Common Subvector:;
+	DBYT 0 9 a0 d2 Length:;
+	HBYT 0 7 a0 d2 Subvector Key:;
+	SUBG 9 8f;
+	SUBG 2 9;
+*   EBCDIC 
+	DMPE 0 9 a0 d2 Subvector Data:;
+	TRTS;
+void SNA FMD-RU;
+	LABL 0 0 0 b1 FMD-RU - Function Management Data Request/Response Units;
+	TBIT 7 4 0 0 SNA Three Byte Response;
+	GBYT 0 7;
+	TEQU 1 7 0 0 SNA FMD-RU-NS-S;
+	TEQU 41 7 0 0 SNA FMD-RU-NS-S;
+	TEQU 81 7 0 0 SNA FMD-RU-NS-S;
+*   EBCDIC 
+	DMPE 0 0 b0 d2 Function Management Data:;
+void SNA FMD-RU-NS-S;
+	GLNG 0 7;
+	DIVG 100 7;
+	ANDG ffffff 7;
+	HWRD 0 0 b0 c2 NS Header:;
+	HBYT 80000000;
+	TEQU 1021b 7 0 0 SNA FMD-RU-REQDISCONT;
+	TEQU 10601 7 0 0 SNA FMD-RU-NSPE;
+	TEQU 10681 7 0 0 SNA FMD-RU-INIT-SELF0;
+	TEQU 10683 7 0 0 SNA FMD-RU-TERM-SELF0;
+	TEQU 410304 7 0 0 SNA FMD-RU-REQMS;
+	TEQU 410305 7 0 0 SNA FMD-RU-TESTMODE;
+	TEQU 410307 7 0 0 SNA FMD-RU-ROUTE-TEST;
+	TEQU 410384 7 0 0 SNA FMD-RU-RECFMS;
+	TEQU 410385 7 0 0 SNA FMD-RU-RECTR;
+	TEQU 410386 7 0 0 SNA FMD-RU-ER-TESTED;
+	TEQU 41038d 7 0 0 SNA FMD-RU-NMVT;
+	TEQU 810620 7 0 0 SNA FMD-RU-NOTIFY;
+	TEQU 810681 7 0 0 SNA FMD-RU-INIT-SELF1;
+	TEQU 810683 7 0 0 SNA FMD-RU-TERM-SELF1;
+	LABL 0 0 0 14 Unknown FMD-RU Data;
+void SNA NC-RU;
+	LABL 0 0 0 b1 NC-RU - Network Control Request/Response Units;
+	TBIT 7 4 0 0 SNA One Byte Response;
+	HBYT 0 7 b0 c2 NC Request/Response Code:;
+void SNA DFC-RU;
+	LABL 0 0 0 b1 DFC-RU - Data Flow Control Request/Response Units;
+	TBIT 7 4 0 0 SNA One Byte Response;
+	HBYT 0 7 b0 c2 DFC Request/Response Code:;
+	TEQU 4 7 0 0 SNA DFC-RU-LUSTAT;
+	TEQU 5 7 0 0 SNA DFC-RU-RTR;
+	TEQU 70 7 0 0 SNA DFC-RU-BIS;
+	TEQU 71 7 0 0 SNA DFC-RU-SBI;
+	TEQU 80 7 0 0 SNA DFC-RU-QEC;
+	TEQU 81 7 0 0 SNA DFC-RU-QC;
+	TEQU 82 7 0 0 SNA DFC-RU-RELQ;
+	TEQU 83 7 0 0 SNA DFC-RU-CANCEL;
+	TEQU 84 7 0 0 SNA DFC-RU-CHASE;
+	TEQU c0 7 0 0 SNA DFC-RU-SHUTD;
+	TEQU c1 7 0 0 SNA DFC-RU-SHUTC;
+	TEQU c2 7 0 0 SNA DFC-RU-RSHUTD;
+	TEQU c8 7 0 0 SNA DFC-RU-BID;
+	TEQU c9 7 0 0 SNA DFC-RU-SIG;
+	LABL 0 0 0 14 Unknown DFC-RU Data;
+void SNA SC-RU;
+	LABL 0 0 0 b1 SC-RU - Session Control Request/Response Units;
+	HBYT 0 7 b0 c2 SC Request/Response Code:;
+	TEQU d 7 0 0 SNA SC-RU-ACTLU;
+	TEQU e 7 0 0 SNA SC-RU-DACTLU;
+	TEQU 11 7 0 0 SNA SC-RU-ACTPU;
+	TEQU 12 7 0 0 SNA SC-RU-DACTPU;
+	TEQU 31 7 0 0 SNA SC-RU-BIND;
+	TEQU 32 7 0 0 SNA SC-RU-UNBIND;
+	TEQU a0 7 0 0 SNA SC-RU-SDT;
+	TEQU a1 7 0 0 SNA SC-RU-CLEAR;
+	TEQU a2 7 0 0 SNA SC-RU-STSN;
+	TEQU a3 7 0 0 SNA SC-RU-RQR;
+	TEQU c0 7 0 0 SNA SC-RU-CRV;
+	LABL 0 0 0 14 Unknown SC-RU Data;
+void SNA DFC-RU-LUSTAT;
+	LABL 0 0 0 14 Logical Unit Status (LUSTAT);
+	HWRD 0 7 b0 c2 Status Value:;
+	CEQU 0 7 0 14 User status;
+	CEQU 1 7 0 14 Component now available;
+	CEQU 2 7 0 14 Sender no FMD requests;
+	CEQU 3 7 0 14 Component entering attended mode;
+	CEQU 4 7 0 14 Component entering unattended mode;
+	CEQU 5 7 0 14 Prepare to commit all resources;
+	CEQU 6 7 0 14 No-op;
+	CEQU 7 7 0 14 No FMD requests to transmit;
+	CEQU 801 7 0 14 Component not available;
+	CEQU 802 7 0 14 Component failure (intervention required);
+	CEQU 81c 7 0 14 Component failure (permanent error);
+	CEQU 824 7 0 14 Function cancelled;
+	CEQU 82b 7 0 14 Presentation integrity lost;
+	CEQU 831 7 0 14 Component disconnected;
+	CEQU 848 7 0 14 Cryptography compnent failure;
+	CEQU 400a 7 0 14 No-response mode not allowed;
+	HWRD 0 7 b0 c2 Status Extension Field:;
+void SNA DFC-RU-RTR;
+	LABL 0 0 0 14 Ready to Receive (RTR);
+void SNA DFC-RU-BIS;
+	LABL 0 0 0 14 Bracket Initiation Stopped (BIS);
+void SNA DFC-RU-SBI;
+	LABL 0 0 0 14 Stop Bracket Initiation (SBI);
+void SNA DFC-RU-QEC;
+	LABL 0 0 0 14 Quiesce At End Of Chain (QEC);
+void SNA DFC-RU-QC;
+	LABL 0 0 0 14 Quiesce Complete (QC);
+void SNA DFC-RU-RELQ;
+	LABL 0 0 0 14 Release Quiesce (RELQ);
+void SNA DFC-RU-CANCEL;
+	LABL 0 0 0 14 CANCEL;
+void SNA DFC-RU-CHASE;
+	LABL 0 0 0 14 CHASE;
+void SNA DFC-RU-SHUTD;
+	LABL 0 0 0 14 Shutdown (SHUTD);
+void SNA DFC-RU-SHUTC;
+	LABL 0 0 0 14 Shutdown Complete (SHUTC);
+void SNA DFC-RU-RSHUTD;
+	LABL 0 0 0 14 Request Shutdown (RSHUTD);
+void SNA DFC-RU-BID;
+	LABL 0 0 0 14 BID;
+void SNA DFC-RU-SIG;
+	LABL 0 0 0 14 Signal (SIG);
+	HWRD 0 a b0 c2 Signal Code:;
+	CST# ffffffff a 0 14 SNA SIG Signal Code;
+	HWRD 0 a b0 c2 Signal Extention:;
+void SNA SC-RU-ACTLU;
+	LABL 0 0 0 14 Activate Logical Unit (ACTLU);
+	HBYT 0 a b0 c2 Format/Requested Activation:;
+	ANDG 3 a;
+	CEQU 1 a 0 14 Cold Activation Request;
+	CEQU 2 a 0 14 ERP Activation Request;
+	GBYT 0 a;
+	DIVG 10 a;
+	ANDG f a;
+	HBYT 0 b b0 c2 FM Profile/TS Profile:;
+	ANDG f b;
+	CEQU 0 a 0 14 FM Profile;
+	CEQU 1 b 0 14 TS Profile 1;
+	TBIT 7 4 0 0 SNA SC-RU-ACTLU Rsp;
+	TNXT -SNA Control Vectors;
+void SNA SC-RU-DACTLU;
+	LABL 0 0 0 14 Deactivate Logical Unit (DACTLU);
+	HBYT 0 8 b0 c2 Type Of Deactivation Reqstd:;
+	CEQU 3 8 0 14 Session-Outage Notification (SON);
+	SKIP 80000004;
+	HBYT 0 9 b0 d2 Cause:;
+	CST# 6 9 0 14 SNA DACLU Causes;
+	SEQU 3 8 0 4;
+	SKIP 3;
+	CEQU 1 8 0 14 Normal Deactivation;
+	CLSE 0 0 0 14 Undefined Deactivation;
+	HBYT 0 9 b0 d2 Reserved:;
+void SNA SC-RU-ACTPU;
+	LABL 0 0 0 14 Activate Physical Unit (ACTPU);
+	GBYT 0 9;
+	DIVG 10 9;
+	ANDG f 9;
+	HBYT 0 a b0 c2 Format/Requested Activation:;
+	ANDG f a;
+	CEQU 0 9 0 14 Format;
+	CEQU 1 9 0 14 Format 1;
+	CEQU 1 a 0 14 Cold Activation Request;
+	CEQU 2 a 0 14 ERP Activation Request;
+	TBIT 7 4 0 0 SNA SC-RU-ACTPU Rsp;
+	GBYT 0 a;
+	DIVG 10 a;
+	ANDG f a;
+	HBYT 0 b b0 c2 FM Profile/TS Profile:;
+	ANDG f b;
+	CEQU 0 a 0 14 FM Profile;
+	CEQU 1 b 0 14 TS Profile 1;
+	HBYT 0 0 b0 c2 Node Type:;
+	HEX# 5 0 b0 c2 Issuer's SSCP ID:;
+	TNXT -SNA Control Vectors;
+void SNA SC-RU-DACTPU;
+	LABL 0 0 0 14 Deactivate Physical Unit (DACTPU);
+	HBYT 0 8 b0 c2 Type Of Deactivation Reqstd:;
+	CEQU 3 8 0 14 Session-Outage Notification (SON);
+	SKIP 80000004;
+	HBYT 0 9 b0 c2 Cause:;
+	CST# 6 9 0 14 SNA DACPU Causes;
+*  Session-Outage?
+	SEQU 3 8 0 4;
+*  skip if Session-Outage
+	SKIP 3;
+	CEQU 1 8 0 14 Final use, physical connection may be broken;
+	CEQU 2 8 0 14 Not final use, physical connection should not be broken;
+	CLSE 0 0 0 14 Undefined Deactivation;
+	HBYT 0 9 b0 c2 Reserved:;
+void SNA SC-RU-BIND;
+	LABL 0 0 0 14 BIND Session;
+	TGTE 0 10 0 0 SNA Null;
+	HBYT 0 7 b0 c2 BIND Format:;
+	ANDG f 7;
+	CST# ffffffff 7 0 14 SNA BIND Format;
+	DBYT 0 0 b0 c2 FM Profile:;
+	DBYT 0 0 b0 c2 TS Profile:;
+	HBYT 0 7 b0 c2 Primary LU FM Usage:;
+	SNA FM Usage Bitmap;
+	HBYT 0 7 b0 c2 Secondary LU FM Usage:;
+	SNA FM Usage Bitmap;
+	HWRD 0 7 b0 c2 Common LU FM Usage:;
+	SNA Common FM Usage Bitmap;
+	GBYT 0 8 0 2;
+	HWRD 0 7 b0 c2 TS Secondary Staging Usage:;
+	CBIT 7 8 0 f4 Secondary to primary flow window size is two-stage pacing;
+	CLSE 0 0 0 f4 Secondary to primary flow window size is one-stage pacing;
+	ANDG 3f 8;
+	LABL 0 0 0 f4 Secondary send window size is;
+	DGLB 0 8 24 4;
+	CBIT 7 7 0 f4 Adaptive pacing supported by sending node;
+	CLSE 0 0 0 f4 Adaptive pacing NOT supported by sending node;
+	ANDG 3f 7;
+	LABL 0 0 0 f4 Secondary receive window size is;
+	DGLB 0 7 24 4;
+	HBYT 0 7 b0 c2 Max RU Size (secondary):;
+	HBYT 0 7 b0 c2 Max RU Size (primary):;
+	GBYT 0 8 0 2;
+	HWRD 0 7 b0 c2 TS Primary Staging Usage:;
+	CBIT 7 8 0 f4 Primary to secondary flow window size is two-stage pacing;
+	CLSE 0 0 0 f4 Primary to secondary flow window size is one-stage pacing;
+	ANDG 3f 8;
+	LABL 0 0 0 f4 Primary send window size is;
+	DGLB 0 8 24 4;
+	ANDG 3f 7;
+	LABL 0 0 0 f4 Primary receive window size is;
+	DGLB 0 7 24 4;
+	GBYT 0 8 0 2;
+	DBYT 0 7 b0 c2 LU Type:;
+*   EBCDIC 
+	DMPE 0 10 b0 c2 Remaining BIND Data:;
+void SNA SC-RU-UNBIND;
+	LABL 0 0 0 14 UNBIND Session;
+	TGTE 0 10 0 0 SNA Null;
+	HBYT 0 7 b0 c2 UNBIND Type:;
+	CEQU fe 7 0 14 Session failure;
+	SKIP 1;
+	CST# 0 7 0 14 SNA UNBIND Types;
+	TGTE 0 10 0 0 SNA Null;
+	DMPE 0 10 b0 c2 Remaining UNBIND Data:;
+void SNA SC-RU-SDT;
+	LABL 0 0 0 14 Start Data Traffic (SDT);
+void SNA SC-RU-CLEAR;
+	LABL 0 0 0 14 CLEAR;
+void SNA SC-RU-STSN;
+	LABL 0 0 0 14 Set and Test Sequence Numbers (STSN);
+	SBIT 7 4;
+*   skip if it's a response 
+	SKIP 6;
+	BBIT 2 1 b0 c2 Action Code S->P:;
+	CST# ffffffff 1 0 14 SNA STSN Action Codes;
+	BBIT 2 2 b0 c2 Action Code P->S:;
+	CST# ffffffff 2 0 14 SNA STSN Action Codes;
+*   skip if it's a request 
+	SBIT 7 4;
+*   skip if there is no user data 
+	SKIP 80000002;
+	BBIT 2 1 b0 c2 Result For Code S->P Action:;
+	BBIT 2 2 b0 c2 Result For Code P->S Action:;
+	BBIT 4 0 b0 c2 Reserved:;
+*   Sequence Number Data Present? 
+	SBIT 0 1 0 14 No user data;
+	SKIP 80000001;
+	HWRD 0 0 b0 c2 S->P Sequence Number:;
+*   Sequence Number Data Present? 
+	SBIT 0 2 0 14 No user data;
+*   skip if there is no user data 
+	SKIP 80000001;
+	HWRD 0 0 b0 c2 P->S Sequence Number:;
+void SNA SC-RU-RQR;
+	LABL 0 0 0 14 Request Recovery (RQR);
+void SNA SC-RU-CRV;
+	LABL 0 0 0 14 Cryptography Verification (CRV);
+	DMPE 0 10 b0 c2 Cryptography Seed:;
+void SNA FID2 Bitmap;
+	MOVE 4 85;
+	ANDG f0 5;
+	CEQU 20 5 0 f4 FID2 (Format ID 2);
+	TLSE -SNA Null;
+	MOVE 4 85;
+	DIVG 4 5;
+	ANDG 3 5;
+	CST# ffffffff 5 0 f4 SNA FID2 MPF;
+	CBIT 1 4 0 f4 ODAI (address field negotiation) Set;
+	CLSE 0 0 0 f4 ODAI (address field negotiation) Clear;
+	CBIT 0 4 0 f4 Expedited Flow;
+	CLSE 0 0 0 f4 Normal Flow;
+	TRTS;
+void SNA RH0 Bitmap;
+	CBIT 7 4 0 f4 Response Header;
+	CLSE 0 0 0 f4 Request Header;
+	MOVE 4 88;
+	DIVG 20 8;
+	ANDG 3 8;
+	CST# ffffffff 8 0 f4 SNA RU Category;
+	CBIT 3 4 0 f4 Either FM or NS Header follows;
+	CLSE 0 0 0 f4 Neither FM nor NS Header follows;
+	CBIT 2 4 0 f4 Sense Data Included;
+	CLSE 0 0 0 f4 Sense Data Not Included;
+	MOVE 4 85;
+	ANDG 3 5;
+	CST# ffffffff 5 0 f4 SNA RU Chain;
+	TRTS;
+void SNA RH1 Req Bitmap;
+	CBIT 7 5 0 f4 Definite Response 1;
+	CLSE 0 0 0 f4 Not Definite Response 1;
+	CBIT 6 5 0 f4 RU is Length-Checked Compressed;
+	CLSE 0 0 0 f4 RU is NOT Length-Checked Compressed;
+	CBIT 5 5 0 f4 Definite Response 2;
+	CLSE 0 0 0 f4 Not Definite Response 2;
+	CBIT 4 5 0 f4 Exception Response Requested;
+	CLSE 0 0 0 f4 Definite Response Requested;
+	CBIT 2 5 0 f4 Larger pacing window requested;
+	CLSE 0 0 0 f4 Larger pacing window NOT requested;
+	CBIT 1 5 0 f4 Enqueue response in TC queues;
+	CLSE 0 0 0 f4 Response bypasses TC queues;
+	CBIT 0 5 0 f4 Use pacing;
+	CLSE 0 0 0 f4 Do not use pacing;
+	TRTS;
+void SNA RH1 Rsp Bitmap;
+	CBIT 7 5 0 f4 Definite Response 1;
+	CLSE 0 0 0 f4 Not Definite Response 1;
+	CBIT 5 5 0 f4 Definite Response 2;
+	CLSE 0 0 0 f4 Not Definite Response 2;
+	CBIT 4 5 0 f4 Negative Response Type;
+	CLSE 0 0 0 f4 Positive Response Type;
+	CBIT 1 5 0 f4 Enqueue response in TC queues;
+	CLSE 0 0 0 f4 Response bypasses TC queues;
+	CBIT 0 5 0 f4 Use pacing;
+	CLSE 0 0 0 f4 Do not use pacing;
+	TRTS;
+void SNA RH2 Req Bitmap;
+	CBIT 7 5 0 f4 Beginning bracket;
+	CLSE 0 0 0 f4 Not beginning bracket;
+	CBIT 6 5 0 f4 Ending bracket;
+	CLSE 0 0 0 f4 Not ending bracket;
+	CBIT 5 5 0 f4 Change direction;
+	CLSE 0 0 0 f4 Do not change direction;
+	CBIT 3 5 0 f4 Select code 1;
+	CLSE 0 0 0 f4 Select code;
+	CBIT 2 5 0 f4 RU is enciphered;
+	CLSE 0 0 0 f4 RU is NOT enciphered;
+	CBIT 1 5 0 f4 RU is padded;
+	CLSE 0 0 0 f4 RU is NOT padded;
+	CBIT 0 5 0 f4 Conditional end bracket;
+	CLSE 0 0 0 f4 NOT conditional end bracket;
+	TRTS;
+void SNA FM Usage Bitmap;
+	CBIT 7 7 0 f4 Multiple-RU chains allowed;
+	CLSE 0 0 0 f4 Only single-RU chains allowed;
+	CBIT 6 7 0 f4 Delayed request control mode;
+	CLSE 0 0 0 f4 Immediate request control mode;
+	MOVE 7 88;
+	DIVG 10 8;
+	ANDG 3 8;
+	LABL 0 0 0 f4 LU half-session response protocol is ;
+	CST# ffffffff 8 0 4 SNA BIND Chain Resp;
+	CBIT 3 7 0 f4 2-phase commit supported;
+	CLSE 0 0 0 f4 2-phase commit NOT supported;
+	CBIT 1 7 0 f4 FMH-1 SCB compression may be used;
+	CLSE 0 0 0 f4 FMH-1 SCB compression may NOT be used;
+	CBIT 0 7 0 f4 May send end bracket;
+	CLSE 0 0 0 f4 Will NOT send end bracket;
+	TRTS;
+void SNA Common FM Usage Bitmap;
+	CBIT f 7 0 f4 Segments not supported. Whole BIUs only.;
+	CLSE 0 0 0 f4 Sending node supports receipt of segments;
+	CBIT e 7 0 f4 FM Headers allowed;
+	CLSE 0 0 0 f4 FM Headers NOT allowed;
+	CBIT d 7 0 f4 Brackets are used and bracket reset states are BETB;
+	CLSE 0 0 0 f4 Brackets are used only in some conditions;
+	CBIT c 7 0 f4 Brackets use conditional termination Rule 1;
+	CLSE 0 0 0 f4 Brackets use unconditional termination Rule 2;
+	CBIT b 7 0 f4 Alternate code set may be used;
+	CLSE 0 0 0 f4 Alternate code set will not be used;
+	CBIT a 7 0 f4 Synch point sequence numbers available;
+	CLSE 0 0 0 f4 Synch point sequence numbers NOT available;
+	CBIT 9 7 0 f4 BIS sent;
+	CLSE 0 0 0 f4 BIS NOT sent;
+	CBIT 8 7 0 f4 BIND may be queued and delayed;
+	CLSE 0 0 0 f4 BIND may be not queued;
+	MOVE 7 88;
+	DIVG 40 8;
+	ANDG 3 8;
+	LABL 0 0 0 f4 Normal flow send/receive mode is ;
+	CST# ffffffff 8 0 4 SNA BIND x/r mode;
+	CBIT 5 7 0 f4 Symmetric recovery responsibility;
+	CLSE 0 0 0 f4 Contention loser responsible for recovery;
+	CBIT 4 7 0 f4 Primary is contention winner;
+	CLSE 0 0 0 f4 Secondary is contention winner;
+	CBIT 1 7 0 f4 Control vectors are included after SLU name;
+	CLSE 0 0 0 f4 Control vectors are NOT included after SLU name;
+	CBIT 0 7 0 f4 HDX FF reset state is send/receive for primary/secondary;
+	CLSE 0 0 0 f4 HDX FF reset state is receive/send for primary/secondary;
+	TRTS;
+void SNA FMD-RU-REQDISCONT;
+	LABL 0 0 0 14 Request Discontact (REQDISCOUNT);
+	TGTE 0 10 0 0 SNA Null;
+	GBYT 0 7 0 32;
+	INCR 1;
+	MOVE 7 88;
+	DIVG 10 8;
+	ANDG f 8;
+	HGLB 0 8 a0 c2 Type:;
+	CEQU 0 8 0 14 Normal;
+	CEQU 8 8 0 14 Immediate;
+	ANDG f 7;
+	HGLB 0 7 a0 c2 CONTACT Information:;
+	CEQU 0 8 0 14 Do NOT send CONTACT immediately;
+	CEQU 1 8 0 14 Send CONTACT immediately;
+void SNA FMD-RU-NSPE;
+	LABL 0 0 0 44 NS Procedure Error (NSPE);
+	TGTE 0 10 0 0 SNA Null;
+	HBYT 0 8 b0 c2 Reason:;
+	TBIT 0 8 0 0 SNA NSPE Comprhsv Fmt Bit Map;
+	SBIT 0 8;
+	TLSE -SNA NSPE Condsd Fmt Bit Map;
+void SNA FMD-RU-INIT-SELF0;
+	LABL 0 0 0 44 Initiate Self - Format 0 (INIT-SELF);
+	GBYT 0 8 0 32;
+	INCR 1;
+	MOVE 8 89;
+	DIVG 10 9;
+	ANDG f 9;
+	HGLB 0 9 b0 c2 Format:;
+	LABL 0 0 0 c4 PLU/SLU specification:;
+	SBIT 1 8 0 84;
+	CLSE 0 0 0 e4 DLU is PLU (only value defined);
+	CBIT 0 8 0 e4 Initiate/Enqueue (I/Q): Enqueue the request if it cannot be satisfied immediatly;
+	CLSE 0 0 0 e4 Initiate Only (I): Do not enqueue;
+	HLNG 0 0 b0 c2 Mode Name:;
+	HLNG 80000000 0 0 2;
+	LABL 0 0 0 c2 Uninterpreted Name of DLU:;
+	HBYT 0 0 b0 d2 Type:;
+	DBYT 0 9 b0 d2 DLU Name Length:;
+*   EBCDIC 
+	EBC# 0 9 b0 d2 Name:;
+	HWRD 0 0 b0 c2 Retired:;
+	DBYT 0 9 b0 c2 User Data Length:;
+*  No user data?
+	CEQU 0 9 0 14 No user data;
+*   skip if there is no user data 
+	SKIP 9;
+	HBYT 0 a b0 c2 User Data Key:;
+*  keeping track of user data field length for repeating user data fields
+	SUBG 1 9;
+*  structured subfields follow?
+	CEQU 0 a 0 14 Structured subfields follow;
+*   skip if there are structured subfields 
+	SKIP 2;
+	HEX# 0 9 b0 c2 Remainder Of Unstructured Data:;
+*   skip because two previous line already printed user data 
+	SKIP 1;
+	SNA Structrd Data Subflds;
+	TNXT -SNA Control Vectors;
+void SNA FMD-RU-TERM-SELF0;
+	LABL 0 0 0 14 Terminate Self - Format 0 (TERM-SELF);
+void SNA FMD-RU-REQMS;
+	LABL 0 0 0 14 Request Maintenance Statistics (REQMS);
+void SNA FMD-RU-TESTMODE;
+	LABL 0 0 0 14 TESTMODE;
+void SNA FMD-RU-ROUTE-TEST;
+	LABL 0 0 0 14 ROUTE-TEST;
+void SNA FMD-RU-RECFMS;
+	LABL 0 0 0 14 Record Formatted Maintenance Statistics (RECFMS);
+void SNA FMD-RU-RECTR;
+	LABL 0 0 0 14 RECTR;
+void SNA FMD-RU-ER-TESTED;
+	LABL 0 0 0 14 ER-TESTED;
+void SNA FMD-RU-NMVT;
+	LABL 0 0 0 14 Network Management Vector Transport (NMVT);
+void SNA FMD-RU-NOTIFY;
+	LABL 0 0 0 14 NOTIFY;
+	TGTE 0 10 0 0 SNA Null;
+	HBYT 0 7 b0 c2 Notify Vector:;
+	CEQU 3 7 0 14 ILU/TLU;
+*   skip if it is ILU/TLU 
+	SKIP 10;
+	CEQU c 7 0 14 LU-LU Session Services Capabilities;
+*   skip if it is LU-LU 
+	SKIP 2;
+	LABL 0 0 0 14 Unknown NOTIFY Vector;
+	TNXT -SNA Null;
+	DBYT 0 8 b0 c2 Vector Length:;
+	HBYT 0 7 b0 c2 LU-LU Session Capability:;
+	ANDG ff 7;
+	CST# ffffffff 7 0 14 SNA Notify Session Capability;
+	HWRD 0 0 b0 c2 Retired:;
+	HWRD 0 0 b0 c2 Retired:;
+	HBYT 80000000 0 b0 2;
+	SUBG 6 8;
+	TGTE 0 8 0 f4 SNA Null;
+	HLNG 0 0 b0 c2 Retired:;
+	HLNG 80000000 0 b0 2;
+	TNXT -SNA Null;
+	HBYT 0 7 b0 c2 Status:;
+	CST# ffffffff 7 0 14 SNA Notify Status;
+	HLNG 0 0 b0 c2 Reserved:;
+	HLNG 80000000 0 b0 2;
+	HBYT 0 7 b0 c2 Reason:;
+void SNA FMD-RU-INIT-SELF1;
+	LABL 0 0 0 14 Initiate Self - Format 1 (INIT-SELF);
+void SNA FMD-RU-TERM-SELF1;
+	LABL 0 0 0 14 Terminate Self - Format 1 (TERM-SELF);
+void SNA NSPE Comprhsv Fmt Bit Map;
+*  Takedown Procedure?
+	CBIT 3 8 0 d4 Takedown Procedure Error:;
+*   skip if not 
+	SKIP 80000005;
+	CBIT 7 8 0 e4 CTERM error in reaching the PLU;
+	CBIT 6 8 0 e4 UNBIND error in reaching the SLU;
+	CBIT 5 8 0 e4 Takedown reject at the PLU;
+	CBIT 4 8 0 e4 Takedown reject at the SLU;
+	CBIT 2 8 0 e4 Takedown reject at SSCP;
+*  Takedown Procedure?
+	SBIT 3 8 0 84;
+*   skip if so 
+	SKIP 7;
+	SBIT 3 8;
+	CLSE 0 0 0 d4 Setup Procedure Error:;
+	CBIT 7 8 0 e4 CINIT error in reaching the PLU;
+	CBIT 6 8 0 e4 BIND error in reaching the SLU;
+	CBIT 5 8 0 e4 Setup reject at the PLU;
+	CBIT 4 8 0 e4 Setup reject at the SLU;
+	CBIT 1 8 0 e4 Setup reject at SSCP;
+	HLNG 0 0 b0 c2 Sense Data:;
+	LABL 0 0 0 c4 Session Key = 0x60;
+	SNA Session Key 0x06;
+void SNA NSPE Condsd Fmt Bit Map;
+	CBIT 7 8 0 e4 CINIT error in reaching PLU;
+	CBIT 6 8 0 e4 BIND error in reaching the SLU;
+	CBIT 5 8 0 e4 Setup reject at the PLU;
+	CBIT 4 8 0 e4 Setup reject at the SLU;
+	CBIT 3 8 0 e4 Takedown failure;
+	CBIT 2 8 0 e4 Takedown reject at the SSCP;
+	CBIT 1 8 0 e4 Setup reject at SSCP;
+	LABL 0 0 0 c4 Uninterpreted Name Of PLU:;
+	HBYT 0 0 b0 d2 Type:;
+	DBYT 0 9 b0 d2 PLU Name Length:;
+*   EBCDIC 
+	EBC# 0 9 b0 d2 Name:;
+	LABL 0 0 0 c4 Uninterpreted Name Of SLU:;
+	HBYT 0 0 b0 d2 Type:;
+	DBYT 0 9 b0 d2 SLU Name Length:;
+*   EBCDIC 
+	EBC# 0 9 b0 d2 Name:;
+void SNA Session Key 0x06;
+	LABL 0 0 0 b1 Network Name Pair or Uninterpreted Name Pair Session Key;
+	HBYT 0 0 b0 c2 Session Key:;
+	HBYT 0 0 b0 c2 Type:;
+	DBYT 0 9 b0 c2 PLU (or OLU or LU1) Name Lngth:;
+*   EBCDIC 
+	EBC# 0 9 b0 c2 Name:;
+	HBYT 0 0 b0 c2 Type:;
+	DBYT 0 9 b0 c2 SLU (or DLU or LU2) Name Lngth:;
+*   EBCDIC 
+	EBC# 0 9 b0 c2 Name:;
+	TRTS;
+
+void SNA Structrd Data Subflds;
+*   End of user data? 
+	SEQU 0 9;
+*   skip if not 
+	SKIP 80000001;
+	TRTS;
+	LABL 0 0 0 31 Structured Data Subfield;
+	DBYT 0 a b0 c2 Length of Remainder of Subfield:;
+	DBYT 0 b b0 c2 Subfield ID:;
+	SUBG 1 a;
+*   keep track of subfld length for global_16 subtraction and subfield DCod's
+	SUBG 2 9;
+	TEQU 0 b 0 0 SNA SDS00;
+	TEQU 1 b 0 0 SNA SDS01;
+	TEQU 2 b 0 0 SNA SDS02;
+	TEQU 3 b 0 0 SNA SDS03;
+	TEQU 4 b 0 0 SNA SDS04;
+	TEQU 5 b 0 0 SNA SDS05;
+	TEQU 11 b 0 0 SNA SDS11;
+	TEQU 12 b 0 0 SNA SDS12;
+	LABL 0 0 0 14 Undefined Subfield;
+	HEX# 0 a b0 c2 Subfield Data:;
+	SUBG a 89;
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS00;
+	LABL 0 0 0 14 Unformatted Data Structured Data Subfield;
+*   global_10 contains length of rest of this substructure
+*   don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS01;
+	LABL 0 0 0 14 Session Qualifier Structured Data Subfield;
+*   global_10 contains length of rest of this substructure
+*   don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS02;
+	LABL 0 0 0 14 Mode Name Structured Data Subfield;
+*   global_10 contains length of rest of this substructure
+*   don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS03;
+	LABL 0 0 0 14 Session Instance Structured Data Subfield;
+*  global_10 contains length of rest of this substructure
+*  don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS04;
+	LABL 0 0 0 14 Network-Qualified PLU Network Name Structured Data Subfield;
+*  global_10 contains length of rest of this substructure
+*  don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS05;
+	LABL 0 0 0 14 Network-Qualified SLU Network Name Structured Data Subfield;
+*  global_10 contains length of rest of this substructure
+*  don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS11;
+	LABL 0 0 0 14 Random Data Structured Data Subfield;
+*  global_10 contains length of rest of this substructure
+*  don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SDS12;
+	LABL 0 0 0 14 Enciphered Data Structured Data Subfield;
+*  global_10 contains length of rest of this substructure
+*  don't forget to subtract what user data is printed out from global_9, needed for end of user data check
+	TNXT -SNA Structrd Data Subflds;
+void SNA SC-RU-ACTLU Rsp;
+	TLTE 3 10 0 10 SNA Control Vectors;
+	LABL 0 0 0 b1 SC-ACTLU Response Vector;
+	HWRD 0 0 a0 c2 Two Byte Response:;
+	LABL 0 0 0 e4 Maximum RU Size = 256 bytes;
+	LABL 0 0 0 e4 LU-LU Session Limit = 1;
+	LABL 0 0 0 e4 LU Can Act As Secondary LU;
+	LABL 0 0 0 e4 All Other SSCP-LU Session Capabilities are;
+	LABL 0 0 0 e4 All Other LU-LU Session Services Capabilities are;
+void SNA SC-RU-ACTPU Rsp;
+	MOVE 8 b;
+*   EBCDIC 
+	DMPE 0 b a0 c2 Contents ID:;
+*   done if format 0 
+	TEQU 0 9 0 10 SNA Null;
+	HWRD 0 0 a0 c2 Reserved:;
+	TNXT -SNA Control Vectors;
+void SNA One Byte Response;
+	HBYT 0 0 a0 c2 Response:;
+void SNA Three Byte Response;
+	HEX# 3 0 a0 c2 Response:;
+void SNA Null;
+*  ** NetBEUI - NetBIOS under its own LSAP **
+void NetBEUI;
+	LABL 0 0 0 b1 NetBEUI/NetBIOS - Network Basic Input/Output System\NetBEUI:;
+	DWRD 40000000 f 90 c2 Length:;
+	SUBG 2 f;
+	GWRD 0 1;
+	TNEQ ffef 1 0 0 NetBIOS Command;
+	HWRD 40000000 0 90 c2 NetBIOS Delimiter:;
+	SUBG 2 f;
+*   br if swap of 0xEFFF not next? 
+	TNXT -NetBIOS Command;
+
+void NetBIOS Command;
+	HBYT 0 4 90 c2 Command:;
+*   copy command number for later 
+	MOVE 4 81;
+	ANDG 7f 4;
+	CST# ffffffff 4 0 14 NB Cmd $00;
+	CBIT 7 1 0 4  (No Wait);
+	CLSE 0 0 0 4  (Wait);
+	NB Option Data;
+	HLNG 40000000 0 90 c2 Xmit/Resp Correlator:;
+*   cmd <= 13? 
+	SGTE 13 4;
+*   skip if so 
+	SKIP 5;
+	DBYT 0 c 90 c2 Destination Number:;
+	DBYT 0 d 90 c2 Source Number:;
+	SUBG a f;
+*   LLC2 or LLC3? 
+	SLTE 14 4;
+*   skip if not 
+	SKIP 2;
+	NB Dst & Src Names;
+	SUBG 28 f;
+*   is that it for the header? 
+	SEQU 0 f;
+*   skip if so 
+	SKIP 3;
+*   paranoia, count is off, but is that it for the header? 
+	SLTE 5dc f;
+*   skip if not 
+	SKIP 2;
+*   remainder of the header 
+	DUMP 0 f 90 c2 Optional Data:;
+*   br if that is it for the packet? 
+	TEQU 0 10 0 0 AFP The End;
+*   paranoia, count is off, but br if that is it for the packet? 
+	TLTE 5dc 10 0 0 AFP The End;
+	GLNG 0 4;
+*   br if that is it for the packet? 
+	TEQU ff534d42 4 0 0 SMB File Share;
+
+*   test for TNS
+*   tests the checksum field for 0
+*   not very robust test
+	INCR 2;
+	GBYT 0 4;
+	DECR 2;
+	TEQU 0 4 0 0 TNS;
+
+	DUMP 0 10 90 c2 Remaining NetBIOS Data:;
+
+void NB Dst & Src Names;
+*   cmd == Status Response? 
+	SEQU f 4;
+*   skip if so 
+	SKIP 6;
+	CHR# f 0 90 c2 Destination Name:;
+	LABL -<;
+	HBYT 0 12;
+	LABL ->;
+*   cmd != Status Response? 
+	SNEQ f 4;
+*   skip if so 
+	SKIP 4;
+	HEX# f 0 90 c2 Destination Name:;
+	LABL -<;
+	HBYT 0 12;
+	LABL ->;
+*   cmd == Name In Conflict? 
+	SEQU 2 4;
+*   skip if so 
+	SKIP 4;
+*   cmd == Status Query? 
+	SEQU 3 4;
+*   skip if so 
+	SKIP 5;
+	CHR# f 0 90 c2 Source Name:;
+	LABL -<;
+	HBYT 0 12;
+	LABL ->;
+	TRTS;
+	HEX# f 0 90 c2 Source Name:;
+	LABL -<;
+	HBYT 0 12;
+	LABL ->;
+	TRTS;
+void NB Option Data;
+*   br if $03 command 
+	TEQU 3 4 0 0 NB Cmd $03;
+*   br if $0A command 
+	TEQU a 4 0 0 NB Cmd $0A;
+*   br if $0D command 
+	TEQU d 4 0 0 NB Cmd $0D;
+*   br if $0E command 
+	TEQU e 4 0 0 NB Cmd $0E;
+*   br if $0F command 
+	TEQU f 4 0 0 NB Cmd $0F;
+*   br if $15 command 
+	TEQU 15 4 0 0 NB Cmd $15;
+*   br if $16 command 
+	TEQU 16 4 0 0 NB Cmd $16;
+*   br if $17 command 
+	TEQU 17 4 0 0 NB Cmd $17;
+*   br if $18 command 
+	TEQU 18 4 0 0 NB Cmd $18;
+*   br if $19 command 
+	TEQU 19 4 0 0 NB Cmd $19;
+*   br if $1A command 
+	TEQU 1a 4 0 0 NB Cmd $1A;
+*   br if $1B command 
+	TEQU 1b 4 0 0 NB Cmd $1B;
+*   default case... "reserved" 
+	HBYT 0 0 90 c2 Option Data 1:;
+	LABL 0 0 0 14 Reserved;
+	HWRD 40000000 0 90 c2 Option Data 2:;
+	LABL 0 0 0 14 Reserved;
+	TRTS;
+void NB Cmd $03;
+	DBYT 0 1 90 c2 Option Data 1:;
+	CEQU 0 1 0 14 NetBIOS 1.x or 2.0 Status Request;
+	SKIP 2;
+	CEQU 1 1 0 14 Initial Status Request for NetBIOS 2.1;
+	CLSE 0 0 0 14 NetBIOS 2.1: Names Received So Far.  More Requested.;
+	DWRD 40000000 0 90 c2 User Buffer Length:;
+	TRTS;
+void NB Cmd $0A;
+	HBYT 0 0 90 c2 Option Data 1:;
+	LABL 0 0 0 14 Reserved;
+	DBYT 0 1 90 c2 Session Number:;
+	CEQU 0 1 0 14 FIND.NAME Request;
+	DBYT 0 1 90 c2 Name Type:;
+	CEQU 0 1 0 14 Unique Name;
+	CEQU 1 1 0 14 Group Name;
+	TRTS;
+void NB Cmd $0D;
+	DBYT 0 1 90 c2 Option Data 1:;
+	CEQU 0 1 0 14 Add Name Not In Process;
+	CEQU 1 1 0 14 Add Name In Progress;
+	DWRD 40000000 1 90 c2 Option Data 2:;
+	CEQU 0 1 0 14 Unique Name;
+	CEQU 1 1 0 14 Group Name;
+	TRTS;
+void NB Cmd $0E;
+	HBYT 0 0 90 c2 Option Data 1:;
+	LABL 0 0 0 14 Reserved;
+	DBYT 0 1 90 c2 Session Number:;
+	CEQU 0 1 0 14 FIND.NAME Request Or No LISTEN Pending;
+	CEQU ff 1 0 14 LISTEN Pending But Insufficient Resources;
+	DBYT 0 1 90 c2 Name Type:;
+	CEQU 0 1 0 14 Unique Name;
+	CEQU 1 1 0 14 Group Name;
+	TRTS;
+void NB Cmd $0F;
+	DBYT 0 1 90 c2 Option Data 1:;
+	CEQU 0 1 0 14 NetBIOS 1.x or 2.0 Status Response;
+	CLSE 0 0 0 14 NetBIOS 2.1: Names Received So Far.;
+	HWRD 40000000 1 90 c2 Length Of Data Sent:;
+*   2nd copy of option word 
+	MOVE 1 82;
+	ANDG 3fff 2;
+	DGLB 0 2 4 14 "(";
+	LABL 0 0 0 4 ")";
+	CBIT f 1 0 f4 Data Exceeds Maximum UI Frame Size;
+	CBIT e 1 0 f4 Data Exceeds Size Of User's Buffer;
+	TRTS;
+void NB Cmd $15;
+	HBYT 0 1 90 c9 Option Data 1:;
+	CBIT 3 1 0 f4 Acknowledge Included;
+	CLSE 0 0 0 f4 Acknowledge Not Included;
+	CBIT 1 1 0 f4 NO.ACK Included;
+	CLSE 0 0 0 f4 NO.ACK Not Included;
+	CBIT 0 1 0 f4 RECEIVE_CONTINUE Requested;
+	CLSE 0 0 0 f4 RECEIVE_CONTINUE Not Requested;
+	LABL 0 0 0 c8;
+	HWRD 40000000 1 90 c2 Option Data 2:;
+	CEQU 1 1 0 14 First DATA_FIRST_MIDDLE;
+	CLSE 0 0 0 14 Not First DATA_FIRST_MIDDLE;
+	TRTS;
+void NB Cmd $16;
+	HBYT 0 1 90 c9 Option Data 1:;
+	CBIT 3 1 0 f4 ACKNOWLEDGE_INCLUDED Indicated;
+	CLSE 0 0 0 f4 No ACKNOWLEDGE_INCLUDED Indicated;
+	CBIT 2 1 0 f4 ACKNOWLEDGE_WITH_DATA_ALLOWED Indicated;
+	CLSE 0 0 0 f4 No ACKNOWLEDGE_WITH_DATA_ALLOWED Indicated;
+	CBIT 1 1 0 f4 NO.ACK Indicated;
+	CLSE 0 0 0 f4 No NO.ACK Indicated;
+	LABL 0 0 0 c8;
+	HWRD 40000000 1 90 c2 Option Data 2:;
+	CEQU 1 1 0 14 First DATA_ONLY_LAST;
+	CLSE 0 0 0 14 Not First DATA_ONLY_LAST;
+	TRTS;
+void NB Cmd $17;
+	HBYT 0 1 90 c2 Option Data 1:;
+	CBIT 0 1 0 f4 NetBIOS Version 2.00 Or Higher;
+	CLSE 0 0 0 f4 NetBIOS Version 1.xx;
+	CBIT 7 1 0 f4 Can Handle SEND.NO.ACK Or CHAIN.SEND.NO.ACK;
+	CLSE 0 0 0 f4 NetBIOS Version Earlier Than 2.20;
+	DWRD 40000000 0 90 c2 Max Data Receive Size:;
+	TRTS;
+void NB Cmd $18;
+	HBYT 0 0 90 c2 Option Data 1:;
+	LABL 0 0 0 14 Reserved;
+	HWRD 40000000 1 90 c2 Option Data 2:;
+	CEQU 0 1 0 14 Normal Session End (HANG.UP);
+	CEQU 1 1 0 14 Abnormal Session End (Timeout?);
+	TRTS;
+void NB Cmd $19;
+	HBYT 0 1 90 c2 Option Data 1:;
+	CBIT 0 1 0 f4 NetBIOS Version 2.00 Or Higher;
+	CLSE 0 0 0 f4 NetBIOS Version 1.xx;
+	CBIT 7 1 0 f4 Can Handle SEND.NO.ACK Or CHAIN.SEND.NO.ACK;
+	CLSE 0 0 0 f4 NetBIOS Version Earlier Than 2.20;
+	ANDG f 1;
+	DIVG 2 1;
+	DGLB 0 1 4 f4 Largest Frame Seen By MAC Layer: ;
+	DWRD 40000000 0 90 c2 Max Data Receive Size:;
+	TRTS;
+void NB Cmd $1A;
+	HBYT 0 1 90 c2 Option Data 1:;
+	CBIT 1 1 0 f4 Received SEND.NO.ACK Or CHAIN.SEND.NO.ACK;
+	CLSE 0 0 0 f4 NetBIOS Version Earlier Than 2.20;
+	DWRD 40000000 0 90 c2 Bytes Accepted:;
+	TRTS;
+void NB Cmd $1B;
+	HBYT 0 0 90 c2 Option Data 1:;
+	LABL 0 0 0 14 Reserved;
+	DWRD 40000000 0 90 c2 Max Data Receive Size:;
+	TRTS;
+*   Expects 16th byte of NBios name in g18
+
+void NB Special Name;
+	CST# 0 12 0 14 NB::Special_Name_Str;
+	TRTS;
+	
+str# NB::Special_Name_Str;
+	0x0  | Workstation;
+	0x3  | Messenger Service;
+	0x6  | RAS Server Service;
+	0x1b | Primary Domain Controller;
+	0x1d | Master Browser Backup;
+	0x1f | NetDDE Service;
+	0x20 | Server Service;
+	0x21 | RAS Client Service;
+	0x22 | MSMail Connector;
+	0x23 | Microsoft Exchange Store;
+	0x24 | Microsoft Exchange Directory;
+	0x2b | Lotus Notes Server Service;
+	0x30 | Modem Sharing Server Service;
+	0x31 | Modem Sharing Client Service;
+	0x43 | SMS Clients Remote Control;
+	0x44 | SMS Administrators Remote Control;
+	0x45 | SMS Clients Remote Chat;
+	0x46 | SMS Clients Remote Transfer;
+	0x4c | DEC Pathworks TCP/IP Service;
+	0x52 | DEC Pathworks TCP/IP Service;
+	0x6a | Microsoft Exchange IMC;
+	0x87 | Microsoft Exchange MTA;
+	0xbe | Network Monitor Agent;
+	0xbf | Network Monitor Analyzer;
+	
+	
+str# SNA CV Name Types;
+	PU;
+	;
+	LU;
+	CP;
+	SSCP;
+	NNCP;
+	Link Station;
+str# SNA Trans Prior;
+	Low Priority;
+	Medium Priority;
+	High Priority;
+	Reserved;
+str# SNA Cmprss Cap Nds So Far;
+	No compression;
+	RLE compression only;
+	RLE and small-table LZ compression;
+	RLE and medium-table LZ compression;
+	RLE and large-table LZ compression;
+str# SNA Cmprss Lvl Need So Far;
+	No compression;
+	RLE compression only;
+	Small-table LZ compression, optionally preceded by RLE;
+	Medium-table LZ compression, optionally preceded by RLE;
+	Large-table LZ compression, optionally preceded by RLE;
+str# SNA Cmprss Lvl RUs frm PLU to SLU;
+	No compression;
+	RLE compression only;
+	Small-table LZ compression, optionally preceded by RLE;
+	Medium-table LZ compression, optionally preceded by RLE;
+	Large-table LZ compression, optionally preceded by RLE;
+str# SNA Cmprss Lvl RUs frm SLU to PLU;
+	No compression;
+	RLE compression only;
+	Small-table LZ compression, optionally preceded by RLE;
+	Medium-table LZ compression, optionally preceded by RLE;
+	Large-table LZ compression, optionally preceded by RLE;
+str# SNA SIG Signal Code;
+	No-op (no system-defined code);
+	Request to send (only value defined for LU 6.2);
+	Assistance requested;
+	Intervention required (no data loss);
+str# SNA DACLU Causes;
+	Virtual route inoperative;
+	Route extension inoperative;
+	Hierarchical reset;
+	;
+	Virtual route deactivated;
+	SSCP or LU failure - unrecoverable;
+	Session override;
+	SSCP or LU failure - recoverable;
+	Cleanup;
+str# SNA DACPU Causes;
+	Virtual route inoperative;
+	Route extension inoperative;
+	Hierarchical reset;
+	;
+	Virtual route deactivated;
+	SSCP or PU failure - unrecoverable;
+	Session override;
+	SSCP or PU failure - recoverable;
+	Cleanup;
+	ALS reset;
+	Give-Back;
+str# SNA BIND Format;
+	Negotiable;
+	Nonnegotiable;
+str# SNA UNBIND Types;
+	Normal end of session;
+	BIND forthcoming;
+	;
+	;
+	;
+	Invalid session parameters;
+	Virtual route inoperative;
+	Route extension inoperative;
+	Hierarchical reset;
+	SSCP gone;
+	Virtual route deactivated;
+	Unrecoverable LU failure;
+	;
+	Recoverable LU failure;
+	Cleanup;
+	;
+	Gateway node cleanup;
+str# SNA STSN Action Codes;
+	Ignore;
+	Set As Follows;
+	Sense;
+	Set And Test;
+str# SNA FID2 MPF;
+	Middle segment of BIU;
+	Last segment of BIU;
+	First segment of BIU;
+	Only segment of BIU;
+str# SNA RU Category;
+	FM Data (FMD);
+	Network Control (NC);
+	Data Flow Control (DFC);
+	Session Control (SC);
+str# SNA RU Chain;
+	Middle RU in Chain;
+	Last RU in Chain;
+	First RU in Chain;
+	Only RU in Chain;
+str# SNA BIND Chain Resp;
+	no response;
+	exception response;
+	definite response;
+	definite or exception response;
+str# SNA BIND x/r mode;
+	full duplex;
+	half duplex contention;
+	half duplex flip-flop;
+	reserved/undefined;
+str# SNA Notify Session Capability;
+	SLU capability inhibited;
+	SLU capability disabled;
+	Reserved;
+	SLU capability enabled;
+str# SNA Notify Status;
+	SSCP (OLU) and (SSCP (DLU) not logically connected;
+	Session terminated;
+	Session set up;
+	Procedure error;
+str# NB Cmd $00;
+	Add Group Name Query;
+	Add Name Query;
+	Name In Conflict;
+	Status Query;
+	;
+	;
+	;
+	Terminate Trace (Remote Only);
+	Datagram;
+	Datagram Broadcast;
+	Name Query;
+	;
+	;
+	Add Name Response;
+	Name Recognized;
+	Status Response;
+	;
+	;
+	;
+	Terminate Trace (Local And Remote);
+	Data Ack;
+	Data First Middle;
+	Data Only Last;
+	Session Confirm;
+	Session End;
+	Session Initialize;
+	No Receive;
+	Receive Outstanding;
+	Receive Continue;
+	;
+	;
+	Session Alive;

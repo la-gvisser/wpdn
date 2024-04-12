@@ -1,0 +1,2412 @@
+* DHCP - Dynamic Host Configuration Protocol
+//updated 24.10.2013 from http://www.iana.org/assignments/bootp-dhcp-parameters/bootp-dhcp-parameters.xml, dw
+
+void NDHCP::Start()
+{
+	LABL 0 0 0 b1 DHCP - Dynamic Host Configuration Protocol\DHCP:;
+	HLNG 0 0 90 c2 DHCP Magic Cookie:;
+	MOVE 0 9;
+}
+
+void DHCP Start;
+	LABL 0 0 0 b1 DHCP - Dynamic Host Configuration Protocol\DHCP:;
+	HLNG 0 0 90 c2 DHCP Magic Cookie:;
+	MOVE 0 9;
+	TNXT -DHCP Option Vector;
+
+void DHCP Option Vector;
+	SEQU 0 9; *use g9 to tell if this is the first one or not
+	SKIP 1;
+	LABL 0 0 0 b8;
+	MOVE 1 9;
+	TEQU 0 10 0 0 IP Null;
+	TLTE 640 10 0 0 IP Null;
+	GBYT 0 3;
+	TEQU 0 3 0 0 DHCP Pad;
+	TNEQ ff 3 0 0 DHCP Opt Vec 1;
+	LABL 0 0 0 b7 DHCP Option End;
+	DBYT 0 0 90 c2 Option Code:;
+	LABL 0 0 0 b8;
+
+void DHCP Opt Vec 1;
+	CST# 0 3 0 b7 DHCP Option Strings;
+	CLSE 0 0 0 b7 Unknown;
+	*LABL 0 0 0 2  - DHCP Option;
+	DBYT 0 0 90 c2 Option Code:;
+	CST# 0 3 0 14 DHCP Option Strings;
+	TEQU 0 3 0 0 DHCP Option Vector;
+	DBYT 0 4 90 c2 Option Length:;
+	TST# ffffffff 3 0 0 DHCP Opt Branching;
+	TNXT -DHCP Dump;
+
+void DHCP Dump;
+	HEX# 0 4 90 c2 Option Data:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Byte;
+	DBYT 0 0 90 c2 Value:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Word;
+	DWRD 0 0 90 c2 Value:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Long;
+	DLNG 0 0 90 c2 Value:;
+	TNXT -DHCP Option Vector;
+
+void DHCP String;
+	CHR# 0 4 90 c2 String:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Addr;
+	IPLG 0 4 90 c2 Address:;
+	TNXT -DHCP Option Vector;
+
+void DHCP List;
+	TEQU 0 4 0 0 DHCP Option Vector;
+	IPLG 0 0 90 c2 Address:;
+	SUBG 4 4;
+	TNXT -DHCP List;
+
+void DHCP Listv6;
+	TEQU 0 4 0 0 DHCP Option Vector;
+	IPV6 0 0 90 c2 Address:;
+	SUBG 8 4;
+	TNXT -DHCP List;
+
+void DHCP Request;
+	DBYT 0 4 90 c2 Message Type:;
+	CST# 0 4 0 14 DHCP Msgs;
+	TNXT -DHCP Option Vector;
+
+void DHCP Option List;
+	TEQU 0 4 0 0 DHCP Option Vector;
+	DBYT 0 3 90 c2 Requested Option:;
+	CST# 0 3 0 14 DHCP Option Strings;
+	CEQU ff 3 0 14 End;
+	SUBG 1 4;
+	TNXT -DHCP Option List;
+
+void DHCP Pair;
+	TEQU 0 4 0 0 DHCP Option Vector;
+	IPLG 0 0 90 c2 Address Pair:;
+	IPLG - and ;
+	SUBG 8 4;
+	TNXT -DHCP Pair;
+
+void DHCP Client;
+	DBYT 0 5 90 c2 Hardware Type:;
+	SEQU 7 4;
+	SKIP 3;
+	SUBG 1 4;
+	DUMP 0 4 90 c2 Hardware Address:;
+	TNXT -DHCP Option Vector;
+	ETHR 0 0 90 c2 Hardware Address:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Pad;
+	LABL 0 0 0 c2 Pad DHCP Option;
+	MOVE 0 6;
+	TNXT -DHCP Pad 2;
+
+void DHCP Pad 2;
+	ADDG 1 6;
+	INCR 1;
+	SEQU 0 10;
+	SKIP 2;
+	GBYT 0 7;
+	TEQU 0 7 0 0 DHCP Pad 2;
+	DECR 0 6;
+	TEQU 1 6 0 0 DHCP Pad 3;
+	DUMP 0 6 90 c2 Pad Option Data:;
+	TNXT -DHCP Option Vector;
+
+void DHCP Pad 3;
+	DBYT 0 0 90 c2 Option Code:;
+	LABL 0 0 0 14 Pad;
+	TNXT -DHCP Option Vector;
+
+void DHCP::Option78::SLPDA()
+{
+	HBYT 0 41 90 c2 Mandatory:;
+	
+	g[4] -= 1;
+	l[2] = g[4];
+	MODG( 4 , l[2] );
+	l[3] = g[4];
+	l[3] /= 4;	
+	while ( l[3] != 0 )
+	{	
+		IPLG 0 0 90 c2 Address:;
+		g[4] -= 4;
+		l[3] -= 1;
+	}
+	if ( g[4] < 4 )
+	{		
+		HEX# 0 4 90 c2 Add. Data:;
+		g[4] -= g[4];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option79::SLPSSO()
+{
+	HBYT 0 0 90 c2 Mandatory:;
+	g[4] -= 1;
+	if ( g[4] < 0 )
+	{		
+		HEX# 0 4 90 c2 Scope List:;
+		g[4] -= g[4];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option81::ClientFQDN()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "Flags:" );
+		l[2] = l[1];
+		l[2] &= 0xf0;
+		CBIT( 4, l[2], 0, 0xd4, "....1... N: the server SHOULD NOT perform any DNS updates" );
+		CLSE( 0, l[2], 0, 0xd4, "....0... N: the server SHOULD perform any DNS updates" );
+		CBIT( 5, l[2], 0, 0xd4, ".....1.. E: encoding of the Domain Name field: now-deprecated ASCII encoding" );
+		CLSE( 0, l[2], 0, 0xd4, ".....0.. E: encoding of the Domain Name field: canonical wire format" );
+		CBIT( 6, l[2], 0, 0xd4, "......1. O: yes" );
+		CLSE( 0, l[2], 0, 0xd4, "......0. O: no" );
+		CBIT( 7, l[2], 0, 0xd4, ".......1 S: the server SHOULD perform the A RR (FQDN-to-address) DNS updates" );
+		CLSE( 0, l[2], 0, 0xd4, ".......0 S: the server SHOULD NOT perform the A RR (FQDN-to-address) DNS updates" );
+	DBYT( 0, l[3], 0x90, 0xc2, "RCODE 1:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "RCODE 2:" );
+	g[4] -= 3;
+	CHR#( 0, g[4], 0x90, 0xc2, "Domain Name:" );
+	g[4] -= g[4];
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option82::RelayAgentInformation()
+{
+	while (g[4] > 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "Agent Information Option" );
+		l[2] = pb[0];
+		
+		if (l[2] == 1)
+		{
+			DBYT( 0, l[4], 0x90, 0xc2, "SubOpt:" );
+			CEQU( 1, l[4], 0, 0x14, "Agent Circuit ID Sub-option" );
+			DBYT( 0, l[5], 0x90, 0xc2, "Length:" );
+			g[4] -= 2;
+			HEX#( 0, l[5], 0x90, 0xc2, "Agent Circuit ID" );
+			g[4] -= l[5];
+		}
+		if (l[2] == 2)
+		{
+			DBYT( 0, l[4], 0x90, 0xc2, "SubOpt:" );
+			CEQU( 1, l[4], 0, 0x14, "Agent Remote ID Sub-option" );
+			DBYT( 0, l[5], 0x90, 0xc2, "Length:" );
+			g[4] -= 2;
+			HEX#( 0, l[5], 0x90, 0xc2, "Agent Remote ID" );
+			g[4] -= l[5];
+		}
+		if (l[2] > 2)
+		{
+			DBYT( 0, l[4], 0x90, 0xc2, "SubOpt:" );
+			CEQU( 1, l[4], 0, 0x14, "Unknown Sub-option" );
+			DBYT( 0, l[5], 0x90, 0xc2, "Length:" );
+			g[4] -= 2;
+			HEX#( 0, l[5], 0x90, 0xc2, "Sub-option data" );
+			g[4] -= l[5];
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option83::iSNS()
+{
+	BWRD( 0, l[1], 0x90, 0xc2, "iSNS Functions:" );
+		LABL( 0, 0, 0, 0xd4, "xxxxxxxxxxxxx... Reserved" );
+		CBIT( 13, l[1], 0, 0xd4, ".............1.. Security Policy Distribution: yes" );
+		CLSE( 00000, 0, 0, 0xd4, ".............0.. Security Policy Distribution: no" );
+		CBIT( 14, l[1], 0, 0xd4, "..............1. DD-Based Authorization: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "..............0. DD-Based Authorization: no" );
+		CBIT( 15, l[1], 0, 0xd4, "...............1 Function Fields Enabled: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "...............0 Function Fields Enabled: no" );
+	BWRD( 0, l[2], 0x90, 0xc2, "Discovery Domain Access:" );
+		LABL( 0, 0, 0, 0xd4, "xxxxxxxxxx...... Reserved" );		
+		CBIT( 10, l[2], 0, 0xd4, "..........1..... iFCP Initiator Port: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "..........0..... iFCP Initiator Port: no" );
+		CBIT( 11, l[2], 0, 0xd4, "...........1.... iFCP Target Port: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "...........0.... iFCP Target Port: no" );
+		CBIT( 12, l[2], 0, 0xd4, "............1... iSCSI Initiator: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "............0... iSCSI Initiator: no" );
+		CBIT( 13, l[2], 0, 0xd4, ".............1.. iSCSI Target: yes" );
+		CLSE( 00000, 0, 0, 0xd4, ".............0.. iSCSI Target: no" );
+		CBIT( 14, l[2], 0, 0xd4, "..............1. Control Node: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "..............0. Control Node: no" );
+		CBIT( 15, l[2], 0, 0xd4, "...............1 Enabled: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "...............0 Enabled: no" );
+	BWRD( 0, l[3], 0x90, 0xc2, "Administrative FLAGS:" );
+		LABL( 0, 0, 0, 0xd4, "xxxxxxxxxxxx.... Reserved" );		
+		CBIT( 12, l[3], 0, 0xd4, "............1... Default Discovery Domain: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "............0... Default Discovery Domain: no" );
+		CBIT( 13, l[3], 0, 0xd4, ".............1.. Management SCNs: yes" );
+		CLSE( 00000, 0, 0, 0xd4, ".............0.. Management SCNs: no" );
+		CBIT( 14, l[3], 0, 0xd4, "..............1. Heartbeat: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "..............0. Heartbeat: no" );
+		CBIT( 15, l[3], 0, 0xd4, "...............1 Enabled: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "...............0 Enabled: no" );
+	BLNG( 0, l[4], 0x90, 0xc2, "iSNS Server Security Bitmap:" );
+		LABL( 0, 0, 0, 0xd4, "xxxxxxxxxxxxxxxx xxxxxxxx........ Reserved" );		
+		CBIT( 25, l[4], 0, 0xd4, "................ .........1...... Tunnel Mode: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ .........0...... Tunnel Mode: no" );
+		CBIT( 26, l[4], 0, 0xd4, "................ ..........1.....  Transport Mode: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ ..........0.....  Transport Mode: no" );
+		CBIT( 27, l[4], 0, 0xd4, "................ ...........1.... PFS: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ ...........0.... PFS: no" );
+		CBIT( 28, l[4], 0, 0xd4, "................ ............1... Aggressive Mode: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ ............0... Aggressive Mode: no" );
+		CBIT( 29, l[4], 0, 0xd4, "................ .............1.. Main Mode: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ .............0.. Main Mode: no" );
+		CBIT( 30, l[4], 0, 0xd4, "................ ..............1. IKE/IPSec: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ ..............0. IKE/IPSec: no" );
+		CBIT( 31, l[4], 0, 0xd4, "................ ...............1 Enabled: yes" );
+		CLSE( 00000, 0, 0, 0xd4, "................ ...............0 Enabled: no" );
+	IPLG( 0, l[5], 0x90, 0xc2, "IP Adress:" );
+	IPLG( 0, l[6], 0x90, 0xc2, "IP Adress:" );
+	SUBG( 40 , g[4]);
+	while(g[4] > 0)
+	{
+		IPLG( 0, l[7], 0x90, 0xc2, "IP Adress:" );
+		g[4] -= 4;
+	}
+	if ( g[4] != 0 )
+	{		
+		HEX# 0 4 90 c2 Add. Data:;
+		g[4] -= g[4];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option90::Authentication()
+{
+	HBYT 0 41 90 c2 Protocol:;
+	HBYT 0 41 90 c2 Algorithm:;
+	HBYT 0 41 90 c2 RDM:;
+	D64B 0 41 90 c2 Replay Detection:;
+	g[4] -= 11;
+	if ( g[4] < 0 )
+	{		
+		HEX# 0 4 90 c2 Authentication Information:;
+		g[4] -= g[4];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Type::93()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Architecture Name:" );
+		CST#( 0, l[1], 0, 0x14, DHCP Type 9::Architecture Name );
+	SUBG( 1 , g[4]);
+	TNXT -DHCP Option Vector;
+}
+
+ void DHCP::Type::94()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Major:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Minor:" );
+	SUBG( 2 , g[4]);
+	if ( g[4] > 0 )
+	{
+		while ( g[4] > 0 )
+		{
+			DBYT( 0, l[2], 0x90, 0xc2, "Rest:" );
+			g[4] -= 1;
+		}
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option97::UUID()
+{
+	LABL( 0, 0, 0x90, 0xc2 , "UUID:" );
+	INCR( 4 );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );
+	INCR( 6 );
+	LABL( 0, 0, 0x90, 0, " -" ); 	LABL( 0, 0, 0x90, 0, " " );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );
+	INCR( 4 );
+	LABL( 0, 0, 0x90, 0, " -" );	LABL( 0, 0, 0x90, 0, " " );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );
+	INCR( 4 );
+	LABL( 0, 0, 0x90, 0, " -" );	LABL( 0, 0, 0x90, 0, " " );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );
+	INCR( 8 );
+	LABL( 0, 0, 0x90, 0, " -" );	LABL( 0, 0, 0x90, 0, " " );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 2 );
+	HBYT 80000000 0 90 0; DECR( 2 );HBYT 80000000 0 90 0; DECR( 1 );
+	INCR( 6 );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option98::UserAuthenticationProtocol()
+{
+	//Length to check for spaces
+	l[1] = g[4];		
+	//counter against length
+	l[2] = 0;			
+	//counter of parts
+	l[20] = 0;			
+	while (g[4] > 0)
+	{
+	while (l[20] != 0x23)
+		{
+			GBYT( l[2], l[10], 0, 0 );
+			if(l[10] == 0x20)
+			{
+				l[2] += 1;
+				l[20] = 0x23;
+				
+			}
+			l[2] += 1;
+		}
+		CHR#( 0, l[2], 0x90, 0xc2, "URL:" );
+		g[4] -= l[2];
+		l[2] = 0;
+		l[20] = 0;
+	}	
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option99::GEOCONF_CIVIC()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "what:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "country:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "code:" );
+	g[4] -= 3;
+	LABL( 0, 0, 0, 0xb7, "civic address elements" );
+	while ( g[4] < 2 )
+	{		
+		DBYT( 0, l[1], 0x90, 0xc2, "CAtype:" );
+		CST#( 0, l[1], 0, 0x14, DHCP::Option99::GEOCONF_CIVIC:CAType );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+		DBYT( 0, l[2], 0x90, 0xc2, "CAlength:" );
+		HEX# 0 42 90 c2 CAvalue:;
+		l[2] += 2;
+		g[4] -= l[2];
+	}
+	LABL( 0, 0, 0, 0xb8 );
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP::Option99::GEOCONF_CIVIC:CAType;
+ 0       |   language;
+ 16      |   leading street direction;
+ 17      |   trailing street suffix;
+ 18      |   street suffix or type;
+ 19      |   house number;
+ 20      |   house number suffix;
+ 21      |   landmark or vanity;
+ 22      |   additional location;
+ 23      |   name;
+ 24      |   postal/zip code;
+ 25      |   building (structure);
+ 26      |   unit (apartment, suite);
+ 27      |   floor;
+ 28      |   room;
+ 29      |   type of place;
+ 30      |   postal community name;
+ 31      |   post office box (P.O.);
+ 32      |   additional code;
+ 33      |   seat (desk, cubicle);
+ 34      |   primary road name;
+ 35      |   road section;
+ 36      |   branch road name;
+ 37      |   sub-branch road name;
+ 38      |   street name pre-modifier;
+ 39      |   street name post-modifier;
+ 128     |   script;
+ 255     |   reserved;
+ 
+void DHCP::Option116::Auto-ConfigureOption()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Auto-Configure Value:" );
+		CEQU( 0, l[1], 0, 0x14, DoNotAutoConfigure );
+		CLSE( 1, l[1], 0, 0x14, AutoConfigure );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option117::NameServiceSearch()
+{
+	while ( g[4] < 2 )
+	{		
+		DWRD( 0, l[1], 0x90, 0xc2, "CAtype:" );
+		CST#( 0, l[1], 0, 0x14, DHCP::Option117::NameServiceSearch::Str );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+		g[4] -= 2;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP::Option117::NameServiceSearch::Str;
+ 6	|   Domain Name Server Option;
+41	|   Network Information Servers Option;
+44	|   NetBIOS over TCP/IP Name Server Option;
+65	|   Network Information Service+ Servers Option;
+
+void DHCP::Option120::SIP Servers()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "enc:" );
+		if (l[1] == 0)
+		{
+			DHCP String;	
+		}
+		if (l[1] == 1)
+		{
+			l[3] = g[4];
+			l[3] /= 4;	
+			while ( l[3] != 0 )
+			{	
+				IPLG 0 0 90 c2 Address:;
+				g[4] -= 4;
+				l[3] -= 1;
+			}
+			if ( g[4] < 4 )
+			{		
+				HEX# 0 4 90 c2 Add. Data:;
+				g[4] -= g[4];
+			}
+		}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option122::CableLabsClientConfiguration()
+{
+	l[2] = 1;
+	while ( g[4] < 2 )
+	{		
+		LABL( 0, 0, 0, 0xb7, "Sub-option #" );
+		DGLB( 0, l[2], 0, 0x07 );
+		GBYT( 0, l[1] );
+		//CST#( 0, l[1], 0x07, 0x07 );
+		LABL( 0, l[2], 0, 0x07, ":" );		
+		DBYT( 0, l[1], 0x90, 0xc2, "Sub-option Code:" );
+			CST#( 0, l[1], 0, 0x14, DHCP::Option122::CableLabsClientConfiguration::SUCODE );
+			CLSE( 0, l[1], 0, 0x14, "Reserved" );
+		DBYT( 0, l[3], 0x90, 0xc2, "Sub-option Length:" );
+			if (l[1] == 1)
+			{
+				IPLG 0 0 90 c2 Address:;
+			}
+			if (l[1] == 2)
+			{
+				IPLG 0 0 90 c2 Address:;
+			}
+			if (l[1] == 3)
+			{
+				DBYT( 0, l[4], 0x90, 0xc2, "Type:" );
+				if (l[4] == 0)
+				{
+					CHR# 0 43 90 c2 FQDN:;
+				}
+				if (l[4] == 1)
+				{
+					IPLG 0 0 90 c2 Address:;
+				}
+			}
+			if (l[1] == 4)
+			{
+				DLNG( 0, l[5], 0x90, 0xc2, "Nom Timeout:" );
+				DLNG( 0, l[5], 0x90, 0xc2, "Max Timeout:" );
+				DLNG( 0, l[5], 0x90, 0xc2, "Max Retries:" );
+			}
+			if (l[1] == 5)
+			{
+				DLNG( 0, l[5], 0x90, 0xc2, "Nom Timeout:" );
+				DLNG( 0, l[5], 0x90, 0xc2, "Max Timeout:" );
+				DLNG( 0, l[5], 0x90, 0xc2, "Max Retries:" );
+			}
+			if (l[1] == 6)
+			{
+				CHR# 0 43 90 c2 Kerberos Realm Name:;
+			}
+			if (l[1] == 7)
+			{
+				DBYT( 0, l[4], 0x90, 0xc2, "Value:" );
+					CEQU( 0, l[4], 0x90, 0xc2, "false" );
+					CEQU( 1, l[4], 0x90, 0xc2, "true" );
+			}
+			if (l[1] == 8)
+			{
+				DBYT( 0, l[4], 0x90, 0xc2, "Value:" );
+			}
+		LABL( 0, 0, 0, 0xb8 );
+		l[2] += 1;
+		l[3] += 2;
+		g[4] -= l[3];		
+	}
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP::Option122::CableLabsClientConfiguration::SUCODE;
+1     |   TSP's Primary DHCP Server Address;
+2     |   TSP's Secondary DHCP Server Address;
+3     |   TSP's Provisioning Server Address;
+4     |   TSP's AS-REQ/AS-REP Backoff and Retry;
+5     |   TSP's AP-REQ/AP-REP Backoff and Retry;
+6     |   TSP's Kerberos Realm Name;
+7     |   TSP's Ticket Granting Server Utilization;
+8     |   TSP's Provisioning Timer Value;
+
+void DHCP::Option123::GeoConfOption()
+{
+	DBIT( 6, l[1], 0x90, 0xc2, "Latitude Resolution:" );
+	HBIT( 25, l[2], 0x90, 0xc2, "Latitude Fraction:" );
+	DBIT( 9, l[3], 0x90, 0xc2, "Latitude Integer:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "Longitude Resolution:" );
+	HBIT( 25, l[5], 0x90, 0xc2, "Longitude Fraction:" );
+	DBIT( 9, l[6], 0x90, 0xc2, "Longitude Integer:" );
+	DBIT( 4, l[7], 0x90, 0xc2, "AType:" );
+	HBIT( 30, l[8], 0x90, 0xc2, "Altitude:" );
+	DBIT( 5, l[9], 0x90, 0xc2, "Res:" );
+	DBIT( 3, l[10], 0x90, 0xc2, "Datum:" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option124::OPTION_V-I_VENDOR_CLASS()
+{
+	while (g[4] > 3)
+	{
+		DLNG( 0, l[1], 0x90, 0xc2, "enterprise-number:" );
+		DBYT( 0, l[2], 0x90, 0xc2, "data-len:" );
+		DBYT( 0, l[2], 0x90, 0xc2, "Vendor-Data:" );
+		g[4] -= l[2];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option125::OPTION_V-I_VENDOR_OPTS()
+{
+	while (g[4] > 3)
+	{
+		DLNG( 0, l[1], 0x90, 0xc2, "enterprise-number:" );
+		DBYT( 0, l[2], 0x90, 0xc2, "data-len:" );
+		DBYT( 0, l[2], 0x90, 0xc2, "Vendor-Data:" );
+		g[4] -= l[2];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option136::PANAAuthenticationAgent()
+{
+	while (g[4] > 4)
+	{
+		IPLG( 0, l[2], 0x90, 0xc2, "PAA IPv4 Address:" );
+		g[4] -= 4;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option138::OPTION_CAPWAP_AC_V4()
+{
+	while (g[4] > 4)
+	{
+		IPLG( 0, l[2], 0x90, 0xc2, "AC IPv4 Address:" );
+		g[4] -= 4;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option139::OPTION-IPv4_Address-MoS()
+{
+	l[2] = 1;
+	while ( g[4] < 2 )
+	{		
+		LABL( 0, 0, 0, 0xb7, "Sub-option #" );
+		DGLB( 0, l[2], 0, 0x07, );
+		GBYT( 0, l[1] );
+		LABL( 0, 0, 0, 0x07, " " );
+		CST#( 0, l[1], 0, 0x07, DHCP::Option139::OPTION-IPv4_Address-MoS::SUCODE );
+		LABL( 0, l[2], 0, 0x07, ":" );		
+		DBYT( 0, l[1], 0x90, 0xc2, "Sub-option Code:" );
+			CST#( 0, l[1], 0, 0x14, DHCP::Option139::OPTION-IPv4_Address-MoS::SUCODE );
+			CLSE( 0, l[1], 0, 0x14, "Reserved" );
+		DBYT( 0, l[3], 0x90, 0xc2, "Sub-option Length:" );
+		if (l[3] != 0)	
+		{
+			IPLG 0 0 90 c2 Address:;
+		}				
+		LABL( 0, 0, 0, 0xb8 );
+		l[2] += 1;
+		l[3] += 2;
+		g[4] -= l[3];		
+	}
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP::Option139::OPTION-IPv4_Address-MoS::SUCODE;
+1	|   IS; 
+2	|   CS;
+3	|   ES;
+
+void DHCP::Option140::OPTION-IPv4_FQDN-MoS()
+{
+	l[2] = 1;
+	while ( g[4] < 2 )
+	{		
+		LABL( 0, 0, 0, 0xb7, "Sub-option #" );
+		DGLB( 0, l[2], 0, 0x07 );
+		GBYT( 0, l[1] );
+		LABL( 0, 0, 0, 0x07, " " );
+		CST#( 0, l[1], 0, 0x07, DHCP::Option139::OPTION-IPv4_Address-MoS::SUCODE );
+		LABL( 0, l[2], 0, 0x07, ":" );			
+		DBYT( 0, l[1], 0x90, 0xc2, "Sub-option Code:" );
+			CST#( 0, l[1], 0, 0x14, DHCP::Option139::OPTION-IPv4_Address-MoS::SUCODE );
+			CLSE( 0, l[1], 0, 0x14, "Reserved" );
+		DBYT( 0, l[3], 0x90, 0xc2, "Sub-option Length:" );
+		if (l[3] != 0)	
+		{
+			IPLG 0 0 90 c2 Address:;
+		}				
+		LABL( 0, 0, 0, 0xb8 );
+		l[2] += 1;
+		l[3] += 2;
+		g[4] -= l[3];		
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option::IPv4List()
+{
+	while (g[4] > 4)
+	{
+		IPLG( 0, l[2], 0x90, 0xc2, "IPv4 Address:" );
+		g[4] -= 4;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option::IPv6List()
+{
+	while (g[4] > 4)
+	{
+		IPV6( 0, l[2], 0x90, 0xc2, "IPv6 Address:" );
+		g[4] -= 16;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option144::GeoLocOption()
+{
+	DBIT( 6, l[1], 0x90, 0xc2, "LatUnc:" );
+	HBIT( 25, l[2], 0x90, 0xc2, "Latitude Fraction:" );
+	DBIT( 9, l[3], 0x90, 0xc2, "Latitude Integer:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "LongUnc:" );
+	HBIT( 25, l[5], 0x90, 0xc2, "Longitude Fraction:" );
+	DBIT( 9, l[6], 0x90, 0xc2, "Longitude Integer:" );
+	DBIT( 4, l[7], 0x90, 0xc2, "AType:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "AltUnc  :" );
+	HBIT( 30, l[8], 0x90, 0xc2, "Altitude:" );
+	DBIT( 2, l[9], 0x90, 0xc2, "Ver:" );
+	DBIT( 3, l[9], 0x90, 0xc2, "Res:" );
+	DBIT( 3, l[10], 0x90, 0xc2, "Datum:" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option146::RDNSSSelection()
+{
+	DBIT( 6, l[1], 0x90, 0xc2, "Reserved:" );
+	DBIT( 2, l[2], 0x90, 0xc2, "prf:" );
+		CEQU( 0, l[2], 0, 0x14, "Medium" );
+		CEQU( 1, l[2], 0, 0x14, "High" );
+		CEQU( 2, l[2], 0, 0x14, "Reserved" );
+		CEQU( 3, l[2], 0, 0x14, "Low" );
+	IPLG( 0, l[3], 0x90, 0xc2, "Primary RDNSS Selection:" );
+	IPLG( 0, l[4], 0x90, 0xc2, "Secondary RDNSS Selection:" );
+	g[4] -= 9;
+	CHR#( 0, g[4], 0x90, 0xc2, "Names:");
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Type::150()
+{
+	l[2] = g[4];
+	MODG( 4 , l[2] );
+	l[3] = g[4];
+	l[3] /= 4;
+	while ( l[3] != 0 )
+	{	
+		IPLG 0 0 90 c2 Address:;
+		g[4] -= 4;
+		l[3] -= 1;
+	}
+	DGLB 0 4 90 c2 Left Length:;
+	if ( g[4] < 4 )
+	{		
+		HEX# 0 4 90 c2 Add. Data:;
+		g[4] -= g[4];
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option151::StatusCode()
+{
+	while (g[4] > 1)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "Status Code:" );
+		CEQU( 0, l[1], 0, 0x14, "Success" );
+		CEQU( 1, l[1], 0, 0x14, "UnspecFail" );
+		CEQU( 2, l[1], 0, 0x14, "QueryTerminated" );
+		CEQU( 3, l[1], 0, 0x14, "MalformedQuery" );
+		CEQU( 4, l[1], 0, 0x14, "NotAllowed" );
+		g[4] -= 1;
+	}
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option152::base-time()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "base-time:" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option153::start-time-of-state()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Sec. in the past from base-time:" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option156::dhcp-state()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "state:" );
+		CST#( 0, l[1], 0, 0x14, DHCP::Option156::dhcp-state::Value );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP::Option156::dhcp-state::Value;
+1	|   AVAILABLE;
+2	|   ACTIVE;
+3	|   EXPIRED;
+4	|   RELEASED;
+5	|   ABANDONED;
+6	|   RESET;
+7	|   REMOTE;
+8	|   TRANSITIONING;
+
+void DHCP::Option157::data-source()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "Flags:" );
+		CBIT( 7, l[1], 0, 0xd4, ".......1 Remote" );
+		CLSE( 0, 0, 0, 0xd4, ".......0 Local" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option208::MAGIC_Packet()
+{
+	HLNG( 0, l[1], 0x90, 0xc2, "MAGIC Option:" );
+		CEQU( 0xf100747e, l[1], 0, 0x14, "right" );
+		CLSE( 0, 0, 0, 0x14, "wrong" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option212::6rd_DHCPv4()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "IPv4MaskLen:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "6rdPrefixLen:" );
+	HEX#( 16, 0, 0x90, 0xc2, "6rdPrefix:" );
+	g[4] -= 18;
+	HEX#( 0, g[4], 0x90, 0xc2, "6rdBRIPv4Address:" );
+	TNXT -DHCP Option Vector;
+}
+
+void DHCP::Option220::Subnet_Allocation()
+{
+	BBYT( 0, l[1], 0x90, 0xc2, "Flags:" );
+	g[4] -= 1;
+	while (g[4] > 2)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "SubOption:" );
+		DBYT( 0, l[3], 0x90, 0xc2, "Length:" );
+		g[4] -= 2;
+		if (l[2] == 1)
+		{
+			BBYT( 0, l[4], 0x90, 0xc2, "Flags:" );
+				CBIT( 7, l[4], 0, 0xd4, ".......1 Hierarchical flag: Client will be allocating addresses from this subnet" );
+				CLSE( 0, 0, 0, 0xd4, ".......0 Hierarchical flag: Client will be relaying DHCP requests to the Server from this subnet" );
+				CBIT( 6, l[4], 0, 0xd4, "......1. Information flag: Client is seeking information about previously allocated subnets" );
+				CLSE( 0, 0, 0, 0xd4, "......0. Information flag: Client is seeking a new subnet allocation" );				
+			DBYT( 0, l[5], 0x90, 0xc2, "Prefix:" );
+			g[4] -= l[3];
+		}
+		if (l[2] == 2)
+		{
+			BBYT( 0, l[4], 0x90, 0xc2, "Flags:" );
+				CBIT( 7, l[4], 0, 0xd4, ".......1 Server flag: Deprecation of this subnet is requested" );
+				CLSE( 0, 0, 0, 0xd4, ".......0 Server flag: No deprecation is needed" );
+				CBIT( 6, l[4], 0, 0xd4, "......1. Client flag: Client will be allocating addresses from this subnet" );
+				CLSE( 0, 0, 0, 0xd4, "......0. Client flag: Client will be relaying DHCP requests to the Server from this subnet" );
+			l[3] -= 1;
+			while (l[3] > 7)
+			{
+				IPLG 0 0 90 c2 Network:;
+				DBYT( 0, l[4], 0x90, 0xc2, "Prefix:" );
+				BBYT( 0, l[5], 0x90, 0xc2, "Flags:" );
+				DBYT( 0, l[6], 0x90, 0xc2, "Stat-Length:" );
+				HEX#( 0, l[6], 0x90, 0xc2, "Stats:" );
+				g[4] -= l[6];
+				g[4] -= 7;
+				l[3] -= l[6];
+				l[3] -= 7;
+			}
+		}
+		if (l[2] == 3)
+		{
+			CHR# 0 4 90 c2 Name:;
+		}
+		if (l[2] == 4)
+		{
+			DLNG 0 0 90 c2 Suggested-Lease-Time:;
+		}
+	}
+	TNXT -DHCP Option Vector;
+}
+
+str# DHCP Type 9::Architecture Name;
+0	|	Intel x86PC;
+1	|	NEC/PC98;
+2	|	EFI Itanium;
+3	|	DEC Alpha;
+4	|	Arc x86;
+5	|	Intel Lean Client;
+6	|	EFI IA32;
+7	|	EFI BC;
+8	|	EFI Xscale;
+9	|	EFI x86-64;
+
+str# DHCP Option Strings;
+0 | Pad;
+1 | Subnet Mask;
+2 | Time Offset;
+3 | Routers;
+4 | Time Servers;
+5 | Name Servers;
+6 | Domain Name Servers;
+7 | Log Servers;
+8 | Cookie Servers;
+9 | LPR Servers;
+10 | Impress Servers;
+11 | Rsrc Location Servers;
+12 | Host Name Address;
+13 | Boot File Size;
+14 | Merit Dump File;
+15 | Domain Name;
+16 | Swap Server;
+17 | Root Path;
+18 | Extensions Path;
+19 | IP Forwarding;
+20 | Non-Local Source Routing;
+21 | Policy Filter List;
+22 | Max Datagram Reassembly Size;
+23 | Default IP Time-to-live;
+24 | Path MTU Aging Timeout;
+25 | Path MTU Plateau Table;
+26 | Interface MTU;
+27 | All Subnets Are Local;
+28 | Broadcast Address;
+29 | Perform Mask Discovery;
+30 | Mask Supplier;
+31 | Perform Router Discovery;
+32 | Router Solicitation Address;
+33 | Static Routes;
+34 | Trailer Encapsulation;
+35 | ARP Cache Timeout;
+36 | Ethernet Encapsulation;
+37 | TCP Default TTL;
+38 | TCP Keepalive Interval;
+39 | TCP Keepalive Garbage;
+40 | Network Info Service Domain;
+41 | Network Info Servers;
+42 | Network Time Servers;
+43 | Vendor Specific Information;
+44 | NetBIOS (TCP/IP) Name Servers;
+45 | NetBIOS (TCP/IP) DDSs;
+46 | NetBIOS (TCP/IP) Node Type;
+47 | NetBIOS (TCP/IP) Scope;
+48 | X Window Font Servers;
+49 | X Window Display Mgr;
+50 | Requested IP Address;
+51 | IP Address Lease Time;
+52 | Option Overload;
+53 | Message Type;
+54 | Server Identifier;
+55 | Parameter Request List;
+56 | Message;
+57 | Maximum Message Size;
+58 | Renewal (T1) Time Value;
+59 | Rebinding (T2) Time Value;
+60 | Vendor Class Identifier;
+61 | Client Identifier;
+64 | NIS+ Domain;
+65 | NIS+ Servers;
+66 | TFTP Server Name;
+67 | Bootfile Name;
+68 | Mobile IP Home Agents;
+69 | SMTP Servers;
+70 | POP3 Servers;
+71 | Network News Servers;
+72 | Default WWW Servers;
+73 | Default Finger Servers;
+74 | Default Chat (IRC) Servers;
+75 | StreetTalk (STDA) Servers;
+76 | STDA Servers;
+77 | User Class Information;
+78 | Directory Agent;
+79 | Service Scope;
+80 | Rapid Commit;
+81 | Client FQDN;
+82 | Relay Agent Information;   //RFC 3046, RFC 5010
+83 | Internet Storage Name Service;   //RFC 4174
+84 | Unnamed;   //RFC 3679
+85 | NDS servers;   //RFC 2241
+86 | NDS tree name;   //RFC 2241
+87 | NDS context;   //RFC 2241
+88 | BCMCS Controller Domain Name list;   //RFC 4280
+89 | BCMCS Controller IPv4 address list;   //RFC 4280
+90 | Authentication;   //RFC 3118
+91 | client-last-transaction-time;   //RFC 4388
+92 | associated-ip;   //RFC 4388
+93 | Client System Architecture Type;   //RFC 4578
+94 | Client Network Interface Identifier;   //RFC 4578
+95 | LDAP, Lightweight Directory Access Protocol;   //RFC 3679
+96 | unnamed ;   //RFC 3679
+97 | Client Machine Identifier;   //RFC 4578
+98 | Open Group's User Authentication;   //RFC 2485
+99 | GEOCONF_CIVIC;   //RFC 4776
+100 | IEEE 1003.1 TZ String;   //RFC 4833
+101 | Reference to the TZ Database;   //RFC 4833
+112 | Netinfo Address;
+113 | Netinfo Tag;
+114 | URL;
+115 | REMOVED/Unassigned;
+116 | Auto-Configure;
+117 | Name Service Search;   //RFC 2937
+118 | Subnet Selection;   //RFC 3011
+119 | DNS domain search list;   //RFC 3397
+120 | SIP Servers DHCP Option;   //RFC 3361
+121 | Classless Static Route Option;   //RFC 3442
+122 | CCC, CableLabs Client Configuration;   //RFC 3495, RFC 3594, RFC 3634
+123 | GeoConf;   //RFC 3825
+124 | Vendor-Identifying Vendor Class;   //RFC 3925
+125 | Vendor-Identifying Vendor-Specific;   //RFC 3925
+126 | Removed;   //RFC 3679
+127 | Removed;   //RFC 3679
+128 | TFTP Server IP address;   //RFC 4578
+129 | Call Server IP address;   //RFC 4578
+130 | Discrimination string;   //RFC 4578
+131 | Remote statistics server IP address;   //RFC 4578
+132 | 802.1P VLAN ID;   //RFC 4578
+133 | 802.1Q L2 Priority;   //RFC 4578
+134 | Diffserv Code Point;   //RFC 4578
+135 | HTTP Proxy for phone-specific applications;   //RFC 4578
+136 | PANA Authentication Agent;   //RFC 5192
+137 | LoST Server;   //RFC 5223
+138 | CAPWAP Access Controller addresses;   //RFC 5417
+139 | OPTION-IPv4_Address-MoS;   //RFC 5678
+140 | OPTION-IPv4_FQDN-MoS;   //RFC 5678
+141 | SIP UA Configuration Service Domains;   //RFC 6011
+142 | OPTION-IPv4_Address-ANDSF;   //RFC 6153
+143 | OPTION-IPv6_Address-ANDSF;   //RFC 6153
+144 | GeoLoc;
+145 | FORCERENEW_NONCE_CAPABLE;
+146 | RDNSS Selection;
+150 | TFTP server address;   //RFC 5859
+151 | status-code;   //RFC 5859
+152 | base-time;   //RFC 5859
+153 | start-time-of-state;   //RFC 5859
+154 | query-start-time;   //RFC 5859
+155 | query-end-time;   //RFC 5859
+156 | dhcp-state;   //RFC 5859
+157 | data-source;   //RFC 5859
+175 | Etherboot; 
+176 | IP Telephone;
+177 | Etherboot-PacketCable and CableHome;
+208 | pxelinux.magic (string) = F1:00:74:7E (241.0.116.126);   //RFC 5071
+209 | pxelinux.configfile (text);   //RFC 5071
+210 | pxelinux.pathprefix (text);   //RFC 5071
+211 | pxelinux.reboottime (unsigned integer 32 bits);   //RFC 5071
+212 | OPTION_6RD;   //RFC 5969
+213 | OPTION_V4_ACCESS_DOMAIN;   //RFC 5986
+220 | Subnet Allocation;   // 
+221 | Virtual Subnet Selection;   //RFC 6607
+222 | Unassigned;	//RFC 3942
+223 | Unassigned;	//RFC 3942
+224 | Reserved;
+225 | Reserved;
+226 | Reserved;
+227 | Reserved;
+228 | Reserved;
+229 | Reserved;
+230 | Reserved;
+231 | Reserved;
+232 | Reserved;
+233 | Reserved;
+234 | Reserved;
+235 | Reserved;
+236 | Reserved;
+237 | Reserved;
+238 | Reserved;
+239 | Reserved;
+240 | Reserved;
+241 | Reserved;
+242 | Reserved;
+243 | Reserved;
+244 | Reserved;
+245 | Reserved;
+246 | Reserved;
+247 | Reserved;
+248 | Reserved;
+249 | Reserved;
+250 | Reserved;
+251 | Reserved;
+252 | Reserved;
+253 | Reserved;
+254 | Reserved;
+255 | End;	// RFC 2132
+
+
+str# DHCP Opt Branching;
+	PAD;
+	DHCP Addr;
+	DHCP Long;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;				*Type 10
+	DHCP List;
+	DHCP String;
+	DHCP Word;
+	DHCP String;
+	DHCP String;
+	DHCP Addr;
+	DHCP String;
+	DHCP String;
+	DHCP Byte;
+	DHCP Byte;				*Type 20
+	DHCP Pair;
+	DHCP Word;
+	DHCP Byte;
+	DHCP Long;
+	DHCP Dump;
+	DHCP Word;
+	DHCP Byte;
+	DHCP Addr;
+	DHCP Byte;
+	DHCP Byte;				*Type 30
+	DHCP Byte;
+	DHCP Addr;
+	DHCP Pair;
+	DHCP Byte;
+	DHCP Long;
+	DHCP Byte;
+	DHCP Byte;
+	DHCP Long;
+	DHCP Byte;
+	DHCP String;			*Type 40
+	DHCP List;
+	DHCP List;
+	DHCP Dump;
+	DHCP List;
+	DHCP List;
+	DHCP Byte;
+	DHCP String;
+	DHCP List;
+	DHCP List;
+	DHCP Addr;				*Type 50
+	DHCP Long;
+	DHCP Byte;
+	DHCP Request;
+	DHCP Addr;
+	DHCP Option List;
+	DHCP String;
+	DHCP Word;
+	DHCP Long;
+	DHCP Long;
+	DHCP String;						*Type 60
+	DHCP Client;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP String;
+	DHCP List;
+	DHCP String;
+	DHCP String;
+	DHCP List;
+	DHCP List;
+	DHCP List;							*Type 70
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP List;
+	DHCP String;
+	DHCP::Option78::SLPDA;
+	DHCP::Option79::SLPSSO;
+	DHCP Dump;							*Type 80
+	DHCP::Option81::ClientFQDN;
+	DHCP::Option82::RelayAgentInformation;
+	DHCP::Option83::iSNS;
+	DHCP Dump;
+	DHCP List;
+	DHCP String;
+	DHCP String;
+	DHCP String;
+	DHCP List;
+	DHCP::Option90::Authentication;			*Type 90		
+	DHCP Long;
+	DHCP List;
+	DHCP::Type::93;
+	DHCP::Type::94;
+	DHCP Dump;					*Type 95
+	DHCP Dump;
+	DHCP::Option97::UUID;
+	DHCP::Option98::UserAuthenticationProtocol;
+	DHCP::Option99::GEOCONF_CIVIC;
+	DHCP String;					*Type 100
+	DHCP String;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;						*Type 105
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;						*Type 110					
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;						*Type 115
+	DHCP::Option116::Auto-ConfigureOption;
+	DHCP::Option117::NameServiceSearch;
+	DHCP Addr;
+	DHCP String;
+	DHCP::Option120::SIP Servers;						*Type 120
+	DHCP Dump;
+	DHCP::Option122::CableLabsClientConfiguration;
+	DHCP::Option123::GeoConfOption;
+	DHCP::Option124::OPTION_V-I_VENDOR_CLASS;
+	DHCP::Option125::OPTION_V-I_VENDOR_OPTS;							*Type 125
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;							*Type 130
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP String;						*Type 135
+	DHCP::Option136::PANAAuthenticationAgent;
+	DHCP String;
+	DHCP::Option138::OPTION_CAPWAP_AC_V4;
+	DHCP::Option139::OPTION-IPv4_Address-MoS;
+	DHCP::Option140::OPTION-IPv4_FQDN-MoS;							*Type 140
+	DHCP String;
+	DHCP::Option::IPv4List;
+	DHCP::Option::IPv6List;
+	DHCP::Option144::GeoLocOption;
+	DHCP Dump;								*Type 145
+	DHCP::Option146::RDNSSSelection;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP::Type::150;						*Type 150
+	DHCP::Option151::StatusCode;
+	DHCP::Option152::base-time;
+	DHCP::Option153::start-time-of-state;
+	DHCP Long;
+	DHCP Long;								*Type 155
+	DHCP::Option156::dhcp-state;
+	DHCP::Option157::data-source;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 160
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 165
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 170
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 175
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 180
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 185
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 190
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 195
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 200
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 205
+	DHCP Dump;
+	DHCP Dump;
+	DHCP::Option208::MAGIC_Packet;
+	DHCP String;
+	DHCP String;								*Type 210
+	DHCP Long;
+	DHCP::Option212::6rd_DHCPv4;
+	DHCP String;
+	DHCP Dump;
+	DHCP::Option220::Subnet_Allocation;								*Type 220
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 225
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 230
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 235
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 240
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 245	
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 250
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;
+	DHCP Dump;								*Type 255
+	
+str# DHCP Msgs;
+	Discover;
+	Offer;
+	Request;
+	Decline;
+	ACK;
+	NACK;
+	Release;
+	Inform;
+	Force Renew;
+	LEASE QUERY;
+	LEASE UNASSIGNED;
+	LEASEUNKNOWN;
+	LEASEACTIVE;
+	BULKLEASEQUERY;
+	LEASEQUERYDONE;
+
+//---------------------------------------------------------------------------------------------------------------------
+void DHCPv6()
+{
+	LABL 0 0 0 b1 DHCPv6 - Dynamic Host Configuration Protocol for IPv6\DHCPv6:;
+	DBYT 0 41 90 c2 Message Type:;
+	CST# 0 41 0 14 DHCPv6::MessageTypes;
+	if( l[1] <= 11 )
+	{
+		// 1-11 are client/server messages.
+		HEX# 3 0 90 c2 Transaction ID:;
+	}
+
+	if( l[1] >= 12 ) 
+	{
+		// 12 and 13 are relay messages.
+		DBYT 0 0 90 c2 Hop Count:;
+		IPV6 0 0 90 c2 Link Address:;
+		IPV6 0 0 90 c2 Peer Address:;
+	}
+
+	BREM 0 41 0 0;
+	while( l[1] > 4 )
+	{
+		DHCPv6::Option();
+		BREM 0 41 0 0;
+	}
+}
+
+void DHCPv6::Option()
+{
+	
+	GWRD 0 41;
+	CST# 0 41 0 b7 DHCPv6::OptionCodes;
+	LABL( 0, 0, 0, 0x07, " - Option" );
+	DWRD 0 41 90 c2 Code:;
+	CST# 0 41 0 14 DHCPv6::OptionCodes;
+	DWRD 0 4 90 c2 Length:;
+	TSB# 0 41 0 0 DHCPv6::OptionCodeFuncs;
+	SKIP 1;
+	HEX# 0 4 90 c2 Data:;
+	LABL 0 0 0 b8;
+}
+
+void DHCPv6::ClientIdentifier()
+{
+	LABL 0 0 0 b7 DUID;
+	DWRD 0 42 90 c2 Type:;
+	CST# 0 42 0 14 DHCPv6::DUIDTypes;
+	TSB# 0 42 0 0 DHCPv6::DUIDTypeFuncs;
+	SKIP 1;
+	HEX# 0 4 90 c2 DUID:;
+	LABL 0 0 0 b8;
+}
+
+void DHCPv6::ServerIdentifier()
+{
+	DHCPv6::ClientIdentifier();	// Format identical to Client.
+}
+
+void DHCPv6::IAAddress()
+{
+	l[1] = g[4];	// G4 has length.
+	IPV6 0 0 90 c2 Address:;
+	DLNG 0 5 90 c2 Preferred Lifetime:;
+	DHCPv6::DisplayDuration();
+	DLNG 0 5 90 c2 Valid Lifetime:;
+	DHCPv6::DisplayDuration();
+	l[1] -= 24;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OptionRequest()
+{
+	l[1] = g[4];	// G4 has option length.
+	LABL 0 0 0 b7 Requested Options;
+	while( l[1] > 0 )
+	{
+		DWRD 0 42 90 c2 Option:;
+		CST# 0 42 0 14 DHCPv6::OptionCodes;
+		l[1] -= 2;
+	}
+	LABL 0 0 0 b8;
+}
+
+void DHCPv6::IdentityAssociationForNonTemporaryAddress()
+{
+	l[1] = g[4];	// G4 has length.
+	HLNG 0 0 90 c2 IAID:;
+	DLNG 0 5 90 c2 T1:;
+	DHCPv6::DisplayDuration();
+	DLNG 0 5 90 c2 T2:;
+	DHCPv6::DisplayDuration();
+	l[1] -= 12;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::ElapsedTime()
+{
+	DWRD 0 41 90 c2 Elapsed Time:;
+	l[2] = l[1];
+	DIVG 64 42;
+	DGLB 0 42 4 4 " (";
+	LABL 0 0 4 4 ".";
+	l[2] = l[1];
+	MODG 64 42;
+	if( l[2] < 10 )
+	{
+		LABL 0 0 4 4 "0";
+	}
+	DGLB 0 42 4 4;
+	LABL 0 0 0 4 " seconds)";
+}
+
+void DHCPv6::RelayMessage()
+{
+	// Relay message body is the exact packet to be relayed.
+	// Take it from the top.
+	DHCPv6();
+}
+
+void DHCPv6::StatusCode()
+{
+	l[1] = g[4];	// G4 has length.
+	DWRD 0 42 90 c2 Status Code:;
+	CST# 0 42 00 14 DHCPv6::StatusCodes;
+	l[1] -= 2;
+	if( l[1] > 0 )
+	{
+		CHR# 0 41 90 c2 Status Message:;
+	}
+}
+
+void DHCPv6::RapidCommit()
+{
+	// This message has no data.
+}
+
+void DHCPv6::VendorClass()
+{
+	l[1] = g[4];	// G4 has length.
+	DLNG 0 42 90 c2 Enterprise ID:;
+	CST# 0 42 0 14 OIDS_Prv;
+	l[1] -= 4;
+	if( l[2] ==4491 )
+	{
+		DWRD 0 43 90 c2 Option:;		
+		l[1] -= 2;	
+		CHR# 0 41 90 c2 Data:;
+	}
+	if( l[2] != 4491 )
+	{
+		CHR# 0 41 90 c2 Data:;
+	}
+}
+
+void DHCPv6::InterfaceID()
+{
+	// G4 has length.
+	CHR# 0 04 90 c2 Interface ID:;
+}
+
+void DHCPv6::FullyQualifiedDomainName
+{
+	l[1] = g[4];	// G4 has length.
+	HBYT 0 0 90 c2 Flags:;
+	l[1] -= 1;
+	CHR# 0 41 90 c2 Domain Name:;
+}
+
+void DHCPv6::DNSServers()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 Recursive Name Server:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::DomainSearchList()
+{
+	l[1] = g[4];	// G4 has length.
+	HBYT 0 0 90 c2 Flags:;
+	l[1] -= 1;
+	CHR# 0 41 90 c2 Domain Name:;	
+}
+
+void DHCPv6::DUID-LLT()
+{
+	DWRD 0 41 90 c2 Hardware Type:;
+	CST# 0 41 0 14 DHCPv6::HardwareTypes;
+	TIME 1 41 90 c2 Time:;	// Time is seconds since midnight January 1, 2000 - same as AFP time.
+	ETHR 0 0 90 c2 Link-layer Address:;
+}
+
+void DHCPv6::DUID-LL()
+{
+	DWRD 0 41 90 c2 Hardware Type:;
+	CST# 0 41 0 14 DHCPv6::HardwareTypes;
+	ETHR 0 0 90 c2 Link-layer Address:;
+}
+
+void DHCPv6::DisplayDuration()
+{
+	// This is called a "punt".
+	// Displaying in days, hours, and minutes would rock.
+	LABL 0 0 0 14 "seconds";
+}
+
+void DHCPv6::ServerUnicast()
+{
+	IPV6 0 0 90 c2 Address:;
+}
+
+void DHCPv6::Authentication()
+{
+	HBYT 0 0 90 c2 protocol:;
+	HBYT 0 0 90 c2 algorithm:;
+	HBYT 0 0 90 c2 RDM:;
+	D64B 0 0 90 c2 Replay detection:;
+	l[1] = g[4];
+	l[1] -= 11;
+	HEX# 0 41 90 c2 authentication information:;
+}
+
+void DHCPv6::IdentityAssociationForTemporaryAddresses()
+{
+	l[1] = g[4];	// G4 has length.
+	HLNG 0 0 90 c2 IAID:;	
+	l[1] -= 4;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::UserClass()
+{
+	l[1] = g[4];
+	while (l[1] != 0)
+	{
+		DWRD 0 42 90 c2 user-class-len:;
+		HEX# 0 42 90 c2 opaque-datae:;
+		l[1] -= l[2];
+		l[1] -= 2;
+	}
+}
+
+void DHCPv6::ReconfigureMessage()
+{
+	DBYT 0 41 90 c2  msg-type:;
+		CEQU 5 41 00 14 Renew message;
+		CEQU 11 41 00 14 Information-request message;
+}
+
+void DHCPv6::ReconfigureAccept()
+{
+	// This message has no data.
+}
+
+void DHCPv6::OPTION_SIP_SERVER_D()
+{
+	CHR# 0 4 90 c2 SIP Server Domain Name List:;	
+}
+
+void DHCPv6::OPTION_SIP_SERVER_A()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 SIP server:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_IA_PD()
+{
+	l[1] = g[4];	// G4 has length.
+	HLNG 0 0 90 c2 IAID:;
+	DLNG 0 5 90 c2 T1:;
+	DHCPv6::DisplayDuration();
+	DLNG 0 5 90 c2 T2:;
+	DHCPv6::DisplayDuration();
+	l[1] -= 12;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_IAPREFIX()
+{
+	l[1] = g[4];
+	DLNG 0 5 90 c2 preferred-lifetime:;
+	DHCPv6::DisplayDuration();
+	DLNG 0 5 90 c2 valid-lifetime:;
+	DHCPv6::DisplayDuration();
+	DBYT 0 5 90 c2 prefix-length:;
+	IPV6 10 0 90 c2 IPv6 prefix:;
+	l[1] -= 26;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void  DHCPv6::OPTION_NIS_SERVERS()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 NIS server:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_NISP_SERVERS()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 NIS+ server:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_NIS_DOMAIN_NAME()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 nis-domain-name:;
+}
+
+void DHCPv6::OPTION_NISP_DOMAIN_NAME()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 nisp-domain-name:;
+}
+
+void DHCPv6::OPTION_SNTP_SERVERS()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 SNTP server:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_INFORMATION_REFRESH_TIME()
+{
+	DLNG 0 5 90 c2 information-refresh-time:;
+	DHCPv6::DisplayDuration();
+}
+
+void DHCPv6::OPTION_BCMCS_SERVER_D()
+{
+	CHR# 0 41 90 c2 BCMCS Control Server Domain Name List:;
+}
+
+void DHCPv6::OPTION_BCMCS_SERVER_A()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 BCMCS Control server address:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_GEOCONF_CIVIC()
+{
+
+}
+
+void DHCPv6::OPTION_REMOTE_ID()
+{
+	l[1] = g[4];	// G4 has length.
+	DLNG 0 42 90 c2 Enterprise ID:;
+	CST# 0 42 0 14 OIDS_Prv;
+	l[1] -= 4;
+	if( l[1] > 0 )
+	{		
+		CHR# 0 41 90 c2 remote-id:;
+		l[1] -= l[1];
+	}
+}
+
+void DHCPv6::OPTION_SUBSCRIBER_ID()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 subscriber-id:;
+}
+
+void DHCPv6::OPTION_PANA_AGENT()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 PAA IPv6 Address:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_NEW_POSIX_TIMEZONE()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 TZ POSIX String:;
+}
+
+void DHCPv6::OPTION_NEW_TZDB_TIMEZONE()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 TZ Name:;
+}
+
+void DHCPv6::OPTION_ERO()
+{
+	l[1] = g[4];
+	l[2] = 1;
+	while( l[1] >= 2 ) 
+	{
+		DWRD 0 0 90 c2 requested-option-code:;
+		DGLB( 0, 0x42, 0x02, 0x02, " " );
+		LABL 0 0 0 02 :;
+		l[1] -= 2;
+	}
+}
+
+void DHCPv6::OPTION_LQ_QUERY()
+{
+	l[1] = g[4];
+	DBYT 0 41 90 c2 query-type:;
+		CEQU 1 41 00 14 QUERY_BY_ADDRESS;
+		CEQU 2 41 00 14 QUERY_BY_CLIENTID;
+	IPV6 0 0 90 c2 link-address:;
+	l[1] -= 17;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_CLIENT_DATA()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_CLT_TIME()
+{
+	DLNG 0 0 90 c2 client-last-transaction-time:;
+	DHCPv6::DisplayDuration();
+}
+
+void DHCPv6::OPTION_LQ_RELAY_DATA()
+{
+	IPV6 0 0 90 c2 peer-address:;
+	l[1] -= 16;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_LQ_CLIENT_LINK()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 link-address:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_MIP6_HNIDF()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 Home Network Identifier FQDN:;
+}
+
+void DHCPv6::OPTION_MIP6_VDINF()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_V6_LOST()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 LoST Server Domain Name:;
+}
+
+void DHCPv6::OPTION_CAPWAP_AC_V6()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		IPV6 0 0 90 c2 AC IPv6 Address:;
+		l[1] -= 16;
+	}
+}
+
+void DHCPv6::OPTION_RELAY_ID()
+{
+	l[1] = g[4];
+	DWRD 0 0 90 c2 requested-option-code:;
+	l[1] -= 2;
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+
+}
+
+void DHCPv6::OPTION-IPv6_Address-MoS()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION-IPv6_FQDN-MoS()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_NTP_SERVER()
+{
+	GWRD 0 41;
+	CST# 0 41 0 b7 DHCPv6::OptionCodes;
+	LABL( 0, 0, 0, 0x07, " - Suboption" );
+	DWRD 0 41 90 c2 Code:;
+	CST# 0 41 0 14 DHCPv6::OPTION_NTP_SERVER::SO;
+	DWRD 0 5 90 c2 Length:;
+	TSB# 0 41 0 0 DHCPv6::OPTION_NTP_SERVER::SO::Funcs;
+	SKIP 1;
+	HEX# 0 5 90 c2 Data:;
+	LABL 0 0 0 b8;
+}
+
+str# DHCPv6::OPTION_NTP_SERVER::SO;
+1	|	NTP_SUBOPTION_SRV_ADDR;
+2	|	NTP_SUBOPTION_MC_ADDR;
+3	|	NTP_SUBOPTION_SRV_FQDN;
+
+str# DHCPv6::OPTION_NTP_SERVER::SO::Funcs;
+1	|	DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_SRV_ADDR;
+2	|	DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_MC_ADDR;
+3	|	DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_SRV_FQDN;
+
+void DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_SRV_ADDR()
+{
+	IPV6 0 0 90 c2 IPv6 address of NTP server:;
+}
+
+void DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_MC_ADDR()
+{
+	IPV6 0 0 90 c2 Multicast IPv6 address:;
+}
+
+void DHCPv6::OPTION_NTP_SERVER::NTP_SUBOPTION_SRV_FQDN()
+{
+	CHR# 0 5 90 c2 FQDN of NTP server:;
+}
+
+void DHCPv6::OPTION_V6_ACCESS_DOMAIN()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 Access Network Domain Name:;
+}
+
+void DHCPv6::OPTION_SIP_UA_CS_LIST()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 SIP_UA_CS_LIST:;
+}
+
+void  DHCPv6::OPT_BOOTFILE_URL()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 boot-file-url:;
+}
+
+void DHCPv6::OPT_BOOTFILE_PARAM()
+{
+	l[1] = g[4];	// G4 has length.
+	while( l[1] >= 16 ) 
+	{
+		DWRD 0 41 90 c2 Parameter length:;
+		HEX# 0 41 90 c2 Data:;
+		l[1] -= l[1];
+		l[1] -= 2;
+	}
+}
+
+void DHCPv6::OPTION_CLIENT_ARCH_TYPE()
+{
+	DWRD 0 41 90 c2 requested-option-code:; 
+	CST# 0 41 0 14 DHCP Type 9::Architecture Name;
+}
+
+void DHCPv6::OPTION_NII()
+{
+	DBYT 0 41 90 c2 Type:;
+	DBYT 0 42 90 c2 Major:;
+	DBYT 0 43 90 c2 Minor:;
+	SHFL 8 42;
+	l[2] += l[3];
+	if (l[2] < 131072)
+	{
+		LABL 0 0 0 14 LANDesk service agent boot ROMs, No PXE APIs;
+	}
+	if (l[2] == 131072)
+	{
+		LABL 0 0 0 14 First generation PXE boot ROMs. (PXENV+);
+	}
+	if (l[2] == 131073)
+	{
+		LABL 0 0 0 14 Second generation PXE boot ROMs. (!PXE);
+	}
+		if (l[2] == 196608)
+	{
+		LABL 0 0 0 14 32/64-bit UNDI specification. (Alpha);
+	}
+    if (l[2] == 196618)
+	{
+		LABL 0 0 0 14 32/64-bit UNDI specification. (Beta);
+	}
+	if (l[2] == 196628)
+	{
+		LABL 0 0 0 14 32/64-bit UNDI specification. (Release);
+	}
+}
+
+void DHCPv6::OPTION_GEOLOCATION()
+{
+	DBIT( 6, l[1], 0x90, 0xc2, "LatUnc:" );
+	HBIT( 25, l[2], 0x90, 0xc2, "Latitude Fraction:" );
+	DBIT( 9, l[3], 0x90, 0xc2, "Latitude Integer:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "LongUnc:" );
+	HBIT( 25, l[5], 0x90, 0xc2, "Longitude Fraction:" );
+	DBIT( 9, l[6], 0x90, 0xc2, "Longitude Integer:" );
+	DBIT( 4, l[7], 0x90, 0xc2, "AType:" );
+	DBIT( 6, l[4], 0x90, 0xc2, "AltUnc  :" );
+	HBIT( 30, l[8], 0x90, 0xc2, "Altitude:" );
+	DBIT( 2, l[9], 0x90, 0xc2, "Ver:" );
+	DBIT( 3, l[9], 0x90, 0xc2, "Res:" );
+	DBIT( 3, l[10], 0x90, 0xc2, "Datum:" );
+}
+
+void DHCPv6::OPTION_AFTR_NAME()
+{
+	CHR# 0 4 90 c2 tunnel-endpoint-name (FQDN):;
+}
+
+void DHCPv6::OPTION_ERP_LOCAL_DOMAIN_NAME()
+{
+	CHR# 0 4 90 c2 erp-local-domain-name:;
+}
+
+void DHCPv6::OPTION_RSOO()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_PD_EXCLUDE()
+{
+	DBYT 0 41 90 c2 Length of subnet ID:;
+	HEX# 0 41 90 c2 IPv6 subnet ID:;
+}
+
+void DHCPv6::OPTION_VSS()
+{
+	DBYT 0 41 90 c2 Type:;
+		CST# 0 41 0 14 DHCPv6::OPTION_VSS::STR;
+	HEX# 0 41 90 c2 VSS Information:;
+}
+
+str# DHCPv6::OPTION_VSS::STR;
+0	|	Network Virtual Terminal (NVT) ASCII VPN identifier;
+1	|	RFC 2685 VPN-ID;
+255	|	Global, default VPN;
+
+void DHCPv6::OPTION_MIP6_IDINF()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_MIP6_UDINF()
+{
+	l[1] = g[4];
+	if( l[1] > 0 ) 
+	{
+		DHCPv6::Option();
+	}
+}
+
+void DHCPv6::OPTION_MIP6_HNP()
+{
+	DBYT 0 5 90 c2 prefix-length:;
+	HEX# 0 5 90 c2 prefix:;	
+}
+
+void DHCPv6::OPTION_MIP6_HAA()
+{
+	IPV6 0 0 90 c2 Address:;	
+}
+
+void DHCPv6::OPTION_MIP6_HAF()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 FQDN:;
+}
+
+void DHCPv6::OPTION_RDNSS_SELECTION()
+{
+	l[1] = g[4];
+	IPV6 0 0 90 c2 DNS-recursive-name-server:;
+	BBIT 6 0 90 c2 Reserved;
+	BBIT 2 42 90 c2 prf:;
+		CEQU 0 42 0 14 Medium;
+		CEQU 1 42 0 14 High;
+		CEQU 2 42 0 14 Reserved;
+		CEQU 3 42 0 14 Low;
+	l[1] -= 17;
+	if( l[1] > 0 ) 
+	{
+		CHR# 0 41 90 c2 Domains and networks:;
+	}
+}
+
+void DHCPv6::OPTION_KRB_PRINCIPAL_NAME()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 principal-name:;
+}
+
+void DHCPv6::OPTION_KRB_REALM_NAME()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 realm-name:;
+}
+
+void DHCPv6::OPTION_KRB_DEFAULT_REALM_NAME()
+{
+	l[1] = g[4];
+	CHR# 0 41 90 c2 realm-name:;
+}
+
+void DHCPv6::OPTION_KRB_KDC()
+{
+	l[1] = g[4];
+	DWRD 0 42 90 c2 Priority:;
+	DWRD 0 43 90 c2 Weight:;
+	DBYT 0 44 90 c2 Transport Type:;
+		CEQU 0 42 0 14 Reserved;
+		CEQU 1 42 0 14 UDP;
+		CEQU 2 42 0 14 TCP;
+		CEQU 3 42 0 14 TLS;
+		CEQU ff 42 0 14 Reserved;
+		CLSE 0 0 0 14 Unassigned;
+	DWRD 0 45 90 c2 Port Number:;
+	IPV6 0 0 90 c2 KDC IPv6 address:;
+	l[1] -= 23;
+	CHR# 0 41 90 c2 realm-name:;
+}
+
+void DHCPv6::OPTION_CLIENT_LINKLAYER_ADDR()
+{
+	l[1] = g[4];
+	DWRD 0 0 90 c2 link-layer type:;
+	l[1] -= 2;
+	HEX# 0 41 90 c2 link-layer address:;
+}
+
+void DHCPv6::OPTION_LINK_ADDRESS()
+{
+	IPV6 0 0 90 c2 link-address:;
+}
+
+void DHCPv6::OPTION_RADIUS()
+{
+	HEX# 0 4 90 c2 option-data:;
+}
+
+void DHCPv6::OPTION_SOL_MAX_RT()
+{
+	DLNG 0 0 90 c2 SOL_MAX_RT:;
+}
+
+void DHCPv6::OPTION_INF_MAX_RT()
+{
+	DLNG 0 0 90 c2 INF_MAX_RT:;
+}
+
+void DHCPv6::OPTION_ADDRSEL()
+{
+	l[1] = g[4];
+	BBIT 6 0 90 c2 Reserved;
+	BBIT 1 42 90 c2 A:;
+		CEQU 1 42 0 14 Automatic Row Addition flag is set;
+		CEQU 0 42 0 14 Automatic Row Addition flag not set;
+	BBIT 1 42 90 c2 P:;
+		CEQU 1 42 0 14 Privacy Preference flag is set;
+		CEQU 0 42 0 14 Privacy Preference flag not set;
+	l[1] -= 1;
+	HEX# 0 41 90 c2 option-data:;
+}
+
+void DHCPv6::OPTION_ADDRSEL_TABLE()
+{
+	l[1] = g[4];
+	DBYT 0 41 90 c2 label:;
+	DBYT 0 42 90 c2 precedence:;
+	DBYT 0 43 90 c2 prefix-len:;
+	l[1] -= 3;
+	HEX# 0 41 90 c2 Prefix:;
+}
+
+str# DHCPv6::MessageTypes;
+	1 | Solicit;
+	2 | Advertise;
+	3 | Request;
+	4 | Confirm;
+	5 | Renew;
+	6 | Rebind;
+	7 | Reply;
+	8 | Release;
+	9 | Decline;
+	10 | Reconfigure;
+	11 | Information Request;
+	12 | Relay Forward;
+	13 | Relay Reply;		// Here and above: RFC 3315
+	14 | LEASEQUERY;
+	15 | LEASEQUERY-REPLY;
+	16 | LEASEQUERY-DONE;
+	17 | LEASEQUERY-DATA;
+	18 | RECONFIGURE-REQUEST;
+	19 | RECONFIGURE-REPLY;
+
+str# DHCPv6::OptionCodes;
+	1 | Client Identifier;
+	2 | Server Identifier;
+	3 | Identity Association for Non-temporary Address;
+	4 | Identity Association for Temporary Addresses;
+	5 | IA Address;
+	6 | Option Request;
+	7 | Option Preference;
+	8 | Elapsed Time;
+	9 | Relay Message;
+	11 | Authentication;
+	12 | Server Unicast;
+	13 | Status Code;
+	14 | Rapid Commit;
+	15 | User Class;
+	16 | Vendor Class;
+	17 | Vendor Specific Information;
+	18 | Interface ID;
+	19 | Reconfigure Message;
+	20 | Reconfigure Accept;
+	21 | OPTION_SIP_SERVER_D;
+	22 | OPTION_SIP_SERVER_A;	
+	23 | DNS Recursive Name Server;
+	24 | Domain Search List;
+	25 | OPTION_IA_PD;
+	26 | OPTION_IAPREFIX;
+	27 | OPTION_NIS_SERVERS;
+	28 | OPTION_NISP_SERVERS;
+	29 | OPTION_NIS_DOMAIN_NAME;
+	30 | OPTION_NISP_DOMAIN_NAME;
+	31 | OPTION_SNTP_SERVERS;
+	32 | OPTION_INFORMATION_REFRESH_TIME;
+	33 | OPTION_BCMCS_SERVER_D;
+	34 | OPTION_BCMCS_SERVER_A;
+	35 | Unassigned;
+	36 | OPTION_GEOCONF_CIVIC;
+	37 | OPTION_REMOTE_ID;
+	38 | OPTION_SUBSCRIBER_ID;
+	39 | Fully Qualified Domain Name;
+	40 | OPTION_PANA_AGENT;
+	41 | OPTION_NEW_POSIX_TIMEZONE;
+	42 | OPTION_NEW_TZDB_TIMEZONE;
+	43 | OPTION_ERO;
+	44 | OPTION_LQ_QUERY;
+	45 | OPTION_CLIENT_DATA;
+	46 | OPTION_CLT_TIME;
+	47 | OPTION_LQ_RELAY_DATA;
+	48 | OPTION_LQ_CLIENT_LINK;
+	49 | OPTION_MIP6_HNIDF;
+	50 | OPTION_MIP6_VDINF;
+	51 | OPTION_V6_LOST;
+	52 | OPTION_CAPWAP_AC_V6;
+	53 | OPTION_RELAY_ID;
+	54 | OPTION-IPv6_Address-MoS;
+	55 | OPTION-IPv6_FQDN-MoS;
+	56 | OPTION_NTP_SERVER;
+	57 | OPTION_V6_ACCESS_DOMAIN;
+	58 | OPTION_SIP_UA_CS_LIST;
+	59 | OPT_BOOTFILE_URL;
+	60 | OPT_BOOTFILE_PARAM;
+	61 | OPTION_CLIENT_ARCH_TYPE;
+	62 | OPTION_NII;
+	63 | OPTION_GEOLOCATION;
+	64 | OPTION_AFTR_NAME;
+	65 | OPTION_ERP_LOCAL_DOMAIN_NAME;
+	66 | OPTION_RSOO;
+	67 | OPTION_PD_EXCLUDE;
+	68 | OPTION_VSS;
+	69 | OPTION_MIP6_IDINF;
+	70 | OPTION_MIP6_UDINF;
+	71 | OPTION_MIP6_HNP;
+	72 | OPTION_MIP6_HAA;
+	73 | OPTION_MIP6_HAF;
+	74 | OPTION_RDNSS_SELECTION;
+	75 | OPTION_KRB_PRINCIPAL_NAME;
+	76 | OPTION_KRB_REALM_NAME;
+	77 | OPTION_KRB_DEFAULT_REALM_NAME;
+	78 | OPTION_KRB_KDC;
+	79 | OPTION_CLIENT_LINKLAYER_ADDR;
+	80 | OPTION_LINK_ADDRESS;
+	81 | OPTION_RADIUS;
+	82 | OPTION_SOL_MAX_RT;
+	83 | OPTION_INF_MAX_RT;
+	84 | OPTION_ADDRSEL;
+	85 | OPTION_ADDRSEL_TABLE;
+	
+str# DHCPv6::OptionCodeFuncs;
+	1 | DHCPv6::ClientIdentifier;
+	2 | DHCPv6::ServerIdentifier;
+	3 | DHCPv6::IdentityAssociationForNonTemporaryAddress;
+	4 | DHCPv6::IdentityAssociationForTemporaryAddresses;
+	5 | DHCPv6::IAAddress;
+	6 | DHCPv6::OptionRequest;
+//	7 | DHCPv6::OptionPreference;
+	8 | DHCPv6::ElapsedTime;
+	9 | DHCPv6::RelayMessage;
+	11 | DHCPv6::Authentication;
+	12 | DHCPv6::ServerUnicast;
+	13 | DHCPv6::StatusCode;
+	14 | DHCPv6::RapidCommit;
+	15 | DHCPv6::UserClass;
+	16 | DHCPv6::VendorClass;
+	17 | DHCPv6::VendorClass;
+	18 | DHCPv6::InterfaceID;
+	19 | DHCPv6::ReconfigureMessage;
+	20 | DHCPv6::ReconfigureAccept;		// Here and above: RFC 3315
+	21 | DHCPv6::OPTION_SIP_SERVER_D;
+	22 | DHCPv6::OPTION_SIP_SERVER_A;	
+	23 | DHCPv6::DNSServers;			// RFC 3646
+	24 | DHCPv6::DomainSearchList;		// RFC 3646
+	25 | DHCPv6::OPTION_IA_PD;
+	26 | DHCPv6::OPTION_IAPREFIX;
+	27 | DHCPv6::OPTION_NIS_SERVERS;
+	28 | DHCPv6::OPTION_NISP_SERVERS;
+	29 | DHCPv6::OPTION_NIS_DOMAIN_NAME;
+	30 | DHCPv6::OPTION_NISP_DOMAIN_NAME;
+	31 | DHCPv6::OPTION_SNTP_SERVERS;
+	32 | DHCPv6::OPTION_INFORMATION_REFRESH_TIME;
+	33 | DHCPv6::OPTION_BCMCS_SERVER_D;
+	34 | DHCPv6::OPTION_BCMCS_SERVER_A;
+//	35 | Unassigned;
+//	36 | DHCPv6::OPTION_GEOCONF_CIVIC;
+	37 | DHCPv6::OPTION_REMOTE_ID;
+	38 | DHCPv6::OPTION_SUBSCRIBER_ID;
+	39 | DHCPv6::FullyQualifiedDomainName;	// RFC 4704
+	40 | DHCPv6::OPTION_PANA_AGENT;
+	41 | DHCPv6::OPTION_NEW_POSIX_TIMEZONE;
+	42 | DHCPv6::OPTION_NEW_TZDB_TIMEZONE;
+	43 | DHCPv6::OPTION_ERO;
+	44 | DHCPv6::OPTION_LQ_QUERY;
+	45 | DHCPv6::OPTION_CLIENT_DATA;
+	46 | DHCPv6::OPTION_CLT_TIME;
+	47 | DHCPv6::OPTION_LQ_RELAY_DATA;
+	48 | DHCPv6::OPTION_LQ_CLIENT_LINK;
+	49 | DHCPv6::OPTION_MIP6_HNIDF;
+	50 | DHCPv6::OPTION_MIP6_VDINF;
+	51 | DHCPv6::OPTION_V6_LOST;
+	52 | DHCPv6::OPTION_CAPWAP_AC_V6;
+	53 | DHCPv6::OPTION_RELAY_ID;
+	54 | DHCPv6::OPTION-IPv6_Address-MoS;
+	55 | DHCPv6::OPTION-IPv6_FQDN-MoS;
+	56 | DHCPv6::OPTION_NTP_SERVER;
+	57 | DHCPv6::OPTION_V6_ACCESS_DOMAIN;
+	58 | DHCPv6::OPTION_SIP_UA_CS_LIST;
+	59 | DHCPv6::OPT_BOOTFILE_URL;
+	60 | DHCPv6::OPT_BOOTFILE_PARAM;
+	61 | DHCPv6::OPTION_CLIENT_ARCH_TYPE;
+	62 | DHCPv6::OPTION_NII;
+	63 | DHCPv6::OPTION_GEOLOCATION;
+	64 | DHCPv6::OPTION_AFTR_NAME;
+	65 | DHCPv6::OPTION_ERP_LOCAL_DOMAIN_NAME;
+	66 | DHCPv6::OPTION_RSOO;
+	67 | DHCPv6::OPTION_PD_EXCLUDE;
+	68 | DHCPv6::OPTION_VSS;
+	69 | DHCPv6::OPTION_MIP6_IDINF;
+	70 | DHCPv6::OPTION_MIP6_UDINF;
+	71 | DHCPv6::OPTION_MIP6_HNP;
+	72 | DHCPv6::OPTION_MIP6_HAA;
+	73 | DHCPv6::OPTION_MIP6_HAF;
+	74 | DHCPv6::OPTION_RDNSS_SELECTION;
+	75 | DHCPv6::OPTION_KRB_PRINCIPAL_NAME;
+	76 | DHCPv6::OPTION_KRB_REALM_NAME;
+	77 | DHCPv6::OPTION_KRB_DEFAULT_REALM_NAME;
+	78 | DHCPv6::OPTION_KRB_KDC;
+	79 | DHCPv6::OPTION_CLIENT_LINKLAYER_ADDR;
+	80 | DHCPv6::OPTION_LINK_ADDRESS;
+	81 | DHCPv6::OPTION_RADIUS;
+	82 | DHCPv6::OPTION_SOL_MAX_RT;
+	83 | DHCPv6::OPTION_INF_MAX_RT;
+	84 | DHCPv6::OPTION_ADDRSEL;
+	85 | DHCPv6::OPTION_ADDRSEL_TABLE;
+
+str# DHCPv6::DUIDTypes;
+	1 | Link-layer address plus time (DUID-LLT);
+	2 | Vendor-assigned ID (DUID-EN);
+	3 | Link-layer address (DUID-LL);
+	4 | DUID-UUID;
+	
+str# DHCPv6::DUIDTypeFuncs;
+	1 | DHCPv6::DUID-LLT;
+//	2 | DHCPv6::DUID-EN;
+	3 | DHCPv6::DUID-LL;
+
+str# DHCPv6::HardwareTypes;
+	1 | Ethernet;
+	
+str# DHCPv6::StatusCodes;
+	0 | Success;
+	1 | UnspecFail;
+	2 | NoAddrsAvail;
+	3 | NoBinding;
+	4 | NotOnLink;
+	5 | UseMulticast;
+	6 |	NoPrefixAvail;
+	7 | UnknownQueryType;
+	8 | MalformedQuery;
+	9 | NotConfigured;
+	10 | NotAllowed;
+	11 | QueryTerminated;

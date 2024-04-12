@@ -1,0 +1,337 @@
+// Avaya CCMS Message
+// 6/15/2007
+
+void h225_H323_CCMS_Message()
+{
+	LABL( 0, 0, 0x90, 0xc9, "Avaya CCMS Message");
+	BREM 0 43 5 5;	//we will use this to keep track of how many bytes we have read
+	DBYT( 0, l[1], 0x90, 0xc2, "Count:");
+	LABL 0 0 0 14 bytes;
+	HBYT( 0, l[2], 0x90, 0xc2, "Port Network:");
+	HBYT( 0, l[2], 0x90, 0xc2, "Header:");
+
+	if( l[2] == 0x11 )
+	{
+		HBYT( 0, l[2], 0x90, 0xc2, "Port Number:");
+	}
+		
+	Avaya::DCPMessageTest;
+	
+	BREM 0 44 5 5;
+	l[3] -= l[4];	//l[3] now contains the number of bytes read
+	
+	//compare the number of bytes read to the number of bytes in the message
+	if( l[1] > l[3] )
+	{
+		//dump the extra data
+		l[1] -= l[3];
+		HEX# 0 41 90 c2 Message Data:;
+	}
+	
+	TRTS;
+}
+
+// Direction - Downlink Non Trans
+str# h225_H323_CCMS_Message_Type_Str;
+	0x40	|	Ringer Off;
+	0x4b	|	Ringer On;
+	0x60	|	Lamp Update;
+	0x80	|	Destructive Reset;
+	0x82	|	Activate Terminal;
+	0x83	|	Deactivate Terminal;
+	0x84	|	Disconnect;
+	0x88	|	Switchhook Query;
+	0x89	|	Off-Hook Alert;
+	0x95	|	IP Emergency Call Denied;
+	0xa3	|	Display Control Messages;
+	0xa4	|	Enable Programming;
+	0xc9	|	Ringing Application Test;
+	0xcb	|	Battery Feed Test;
+	0xce	|	Power Feed Inquiry;
+	0xd1	|	Bad Scan Inquiry;
+
+str# h225_h323_CCMS_Ringer_Update_Str;
+	0x40	|	Off;
+	0x41	|	Manual Signal;
+	0x44	|	Attendant Incoming Call;
+	0x45	|	Attendant Timed Reminder;
+	0x46	|	Attendant Call Waiting Ringing;
+	0x49	|	Intercom Ringing;
+	0x4a	|	Test Ring Once?;
+	0x4b	|	Standard ring;
+	0x4c	|	DID/Attendant Ring?;
+	0x4d	|	Priority Ring;
+	0x4e	|	Ring Ping;
+	0x4f	|	Test Ring Repetitive?;
+
+// Direction - Downlink Transp.
+str# h225_h323_CCMS_Message_Type_Str;
+	0x80	|	Destructive Reset;
+	0x82	|	Activate Terminal;
+	0x83	|	Deactivate Terminal;
+	0x84	|	Disconnect;
+	0x88	|	Switchhook Query;
+	0x89	|	Off-Hook Alert;
+	0x95	|	IP Emergency Call Denied;
+	0xa3	|	Display Control Messages;
+	0xa4	|	Enable Programming;
+	0xc9	|	Ringing Application Test;
+	0xcb	|	Battery Feed Test;
+	0xce	|	Power Feed Inquiry;
+	0xd1	|	Bad Scan Inquiry;
+	
+str# Avaya::MessageFunc;
+	0x60 | Avaya::ButtonPressMessage;
+	0x70 | Avaya::KeypadMessage;
+	0x80 | Avaya::HookMessage;
+	0xa0 | Avaya::DCPMessage;
+	0xb0 | Avaya::ExtDCPMessage;
+
+void Avaya::KeypadMessage()
+{
+	GBYT 0 41 0 0;
+	if( l[1] != 0x7f )
+	{
+		Avaya::OtherMessage;
+		TRTS;
+	}
+	
+	LABL 0 0 0 c9 Keypad Message;
+	INCR 1;
+	DBYT 0 41 5 5;
+	l[2] = l[1];
+	l[2] &= 0x80;
+	CEQU 00 42 90 c2 Keypad Press:;
+	CEQU 80 42 90 c2 Keypad Release:;
+	
+	l[1] &= 0xf;
+	
+	if( l[1] <= 0x09 )
+	{
+		DGLB 0 41 90 0;
+	}
+	
+	if( l[1] > 0x09 )
+	{
+		CEQU 0a 41 0 50 0;
+		CEQU 0b 41 0 50 Asterisk;
+		CEQU 0c 41 0 50 #;
+	}
+	
+	LABL 0 0 0 c8;
+	
+	TRTS;
+}
+
+void Avaya::HookMessage()
+{
+	GBYT 0 41 5 5;
+	if( l[1] != 0x80 )
+	{
+		Avaya::OtherMessage;
+		TRTS;
+	}
+	
+	INCR 1;
+	LABL 0 0 0 c9 Hook Message;
+	
+	HBYT 0 41 90 c2 Message Body:;
+	CEQU 1 41 0 14 On Hook;
+	CEQU 2 41 0 14 Off Hook;
+	
+	LABL 0 0 0 c8;
+	TRTS;
+}
+
+void Avaya::ButtonPressMessage()
+{
+	GBYT 0 41 5 5;
+	l[2] = l[1];
+	l[2] &= 0xf0;
+	if( l[2] != 0x60 )
+	{
+		Avaya::OtherMessage;
+		TRTS;
+	}
+	
+	INCR 1;
+	
+	LABL 0 0 0 c9 Button Press Message;
+	l[1] &= 0x0f;
+	DGLB 0 41 90 c2 Module:;
+	
+	DBYT 0 41 90 c2 Button:;
+	LABL 0 0 0 c8;
+	TRTS;
+}
+
+void Avaya::DCPMessageTest()
+{
+	BREM 0 41 5 5;
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	l[1] = pb[0];
+	l[1] &= 0xf0;
+	
+	if( l[1] == 0 )
+	{
+		//INCR 1;
+		TRTS;
+	}
+	
+	TSB# 0 41 0 0 Avaya::MessageFunc;
+	SKIP 1;
+	Avaya::OtherMessage;
+	
+	Avaya::DCPMessageTest;
+}
+
+void Avaya::DCPMessage()
+{
+	BREM 0 41 5 5;
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	GBYT 0 41 0 0;
+	l[2] = l[1];
+	l[2] &= 0xf0;
+	if( l[2] != 0xa0 )
+	{
+		TRTS;
+	}
+	
+	LABL 0 0 90 c9 DCP Message;
+	
+	l[1] &= 0x0f;	//the lower 4 bits are the message length
+	INCR 1;
+	
+	DGLB 0 41 90 c2 Message Length:;
+	LABL 0 0 0 14 bytes;
+	LABL 0 0 90 c2 Message Type:;
+	DBYT 0 42 5 5;
+	
+	l[3] = 0;
+	if( l[2] == 0xe3 )
+	{
+		l[3] = 1;
+		LABL 0 0 0 54 display update;
+		l[1] -= 1;
+		HEX# 0 41 90 c2 Display Data:;
+	}
+	
+	if( l[3] == 0 )
+	{
+		DECR 1;
+		GWRD 0 42 5 5;
+		l[4] = l[2];
+		l[4] &= 0xf000;
+		
+		if( l[1] == 3 )
+		{
+			//lamp updates are a 3 byte sequence
+			if( l[4] == 0x8000 )
+			{
+				//the calls view lists every message that has 0xa38yyyyy as a lamp update
+				//we do that to for consistancy
+				l[3] = 1;
+				LABL 0 0 0 54 lamp update;
+				
+				l[4] = l[2];
+				l[4] &= 0x00f0;
+				
+				if( l[4] != 0x0020 )
+				{
+					HEX# 0 41 90 c2 Message Data:;
+				}
+				
+				if( l[4] == 0x0020 )
+				{
+					//we have some information about the format of messages 
+					//with the format 0xa38y2yyy
+					DBYT 0 44 5 5;
+					l[4] &= 0x0f;
+					DGLB 0 44 90 c2 Module:;
+					DBYT 0 44 5 5;
+					l[4] &= 0x0f;
+					DGLB 0 44 90 c2 Update Type:;
+					CEQU 0 44 0 14 lamp off;
+					CEQU f 44 0 14 lamp steady;
+					DBYT 0 0 90 c2 Lamp Number:;
+				}
+			}
+		}
+	}
+	
+	if( l[3] == 0 )
+	{
+		LABL 0 0 0 54 unknown;
+		HEX# 0 41 90 c2 Message Data:;
+	}
+	
+	LABL 0 0 0 c8;	
+}
+
+//Extended DCP Message
+void Avaya::ExtDCPMessage()
+{
+	BREM 0 41 5 5;
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	GBYT 0 41 0 0;
+	if( l[1] != 0xbf )
+	{
+		TRTS;
+	}
+	
+	INCR 1;
+
+	LABL 0 0 90 c9 Extended DCP Message;
+	
+	DBYT 0 41 90 c2 Message Length:;
+	LABL 0 0 0 14 bytes;
+	
+	//it appears that in the extended display update message the byte-count byte is included in the byte-count.
+	//this isn't the case in the normal display update.
+	l[1] -= 1;
+	
+	GBYT 0 42 0 0;
+	
+	if( l[2] == 0xe3 )
+	{
+		LABL 0 0 90 c2 Message Type:;
+		LABL 0 0 0 54 display update;
+		INCR 1;
+		l[1] -= 1;	//don't include the 0xe3 in the message body
+	}
+	
+	HEX# 0 41 90 c2 Message Data:;
+	LABL 0 0 0 c8;	
+}
+
+void Avaya::OtherMessage()
+{
+	BREM 0 41 5 5;
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	GBYT 0 41 0 0;
+	if( l[1] == 0 )
+	{
+		TRTS;
+	}
+	
+	LABL 0 0 90 c9 Message;
+	HBYT 0 0 90 c2 Message Body;
+	CST# 0 41 0 14 h225_H323_CCMS_Message_Type_Str;
+	LABL 0 0 0 c8; 	
+}

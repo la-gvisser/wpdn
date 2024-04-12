@@ -1,0 +1,569 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body, input, label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+    }
+
+    .info-div {
+      display: table;
+      min-width: 63em;
+      max-width: 63em;
+    }
+
+    .info-left {
+      display: table-cell;
+      width: 35%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .info-right {
+      display: table-cell;
+      width: 65%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .info-label {
+      display: inline-block;
+      vertical-align: baseline;
+      width: 8em;
+      text-align: right;
+    }
+
+    .info-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 28em;
+    }
+
+    .monitor-browse {
+      display: inline;
+      vertical-align: baseline;
+    }
+
+    .path-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 98%;
+    }
+
+    .save-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 96%;
+    }
+
+    .save-browse {
+      display: inline;
+      vertical-align: baseline;
+    }
+
+    .status-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 75%;
+    }
+  </style>
+  <!-- After this page loads, the title of the dialog box is set to  -->
+  <!-- the title of the web page by SendDisplayProperties. -->
+  <title>Folder Adapter-OE Options</title>
+  <script type="text/javascript">
+    // Optional XML Functions - very simplistic XML Parser.
+    // Get the XML's Preamble.
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    // Return the Tag of the element provided.
+    // Returns 'tag' for the element <tag>value</tag>
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      var space = xml.indexOf(' ', begin);
+      if (space > 0 && space < end) end = space;
+
+      return xml.substring(begin, end);
+    }
+
+    // Return the value of an attribute of a element.
+    // Returns 'value' when attrib is 'v' for element <tag v='value />
+    function xmlGetAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>');
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf('"', sep + 2);
+        if (next == -1) return '';
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next);
+        }
+        begin = next + 2;
+      }
+      return '';
+    }
+
+    // Return the value of a element.
+    // Returns 'value' for the element <tag>value</tag>
+    function xmlGetValue(xml, tag, opt) {
+      // opt is used to iterate through a list of tags with the same name.
+      // var opt = {'offset' : 0}
+      // var value1 = xmlGetValue(xml, 'item', opt)
+      // var value2 = xmlGetValue(xml, 'item', opt)
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) return '';
+      }
+      begin++;
+
+      begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      if (typeof opt != 'undefined') opt['offset'] = xml.indexOf('>', end);
+      return xml.substring(begin, end);
+    }
+
+    // Returns the element with Tag 'tag'.
+    // Returns '<tag>value</tag> for xml <root><tag>value</tag></root>
+    function xmlGetElement(xml, tag, opt) {
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+      }
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, begin + 1);
+      if (end == -1) {
+        if (typeof opt != 'undefined') opt['offset'] = -1;
+        return '';
+      }
+      end += tagEnd.length;
+
+      if (typeof opt != 'undefined') opt['offset'] = end;
+      return xml.substring(begin, end);
+    }
+
+    // Returns the text of the xml with the escape sequences replaced
+    // with their character equivients.
+    // Returns <tag>value&value</tag> for <tag>value&amp;value</tag>
+    function xmlEscape(xml) {
+      xml = xml.split('&quot;').join('\"');
+      xml = xml.split('&apos;').join('\'');
+      xml = xml.split('&lt;').join('<');
+      xml = xml.split('&gt;').join('>');
+      xml = xml.split('&amp;').join('&');
+      xml = xml.split('&#0009;').join('\t');
+      xml = xml.split('&#x0009;').join('\t');
+      xml = xml.split('&#0010;').join('\n');
+      xml = xml.split('&#x000a;').join('\n');
+      xml = xml.split('&#x000A;').join('\n');
+      xml = xml.split('&#0013;').join('\r');
+      xml = xml.split('&#x000d;').join('\r');
+      xml = xml.split('&#x000D;').join('\r');
+      return xml;
+    }
+  </script>
+  <script type="text/javascript">
+    // Local Functions
+
+    // The documents OnLoad action.
+    // Optional
+    function DoOnLoad() {
+      DoSendDisplayProperties();
+      SaveToggle();
+      SendGetPreferences();      
+    }
+
+    // function ReadyToCose() {
+    //   document.getElementById('activity_status').value = "Ready to close.";
+    // }
+  </script>
+  <script type="text/javascript">
+    // Functions that issue commands to the browser.
+
+    // Send a command to Peek.
+    //   The content of the command must be text only.
+    // Optional - Peek Commands
+    function DoSendCommand(msg) {
+      // var msg = ''; // Set the command message.
+
+      window.cefQuery({
+        request: "SendCommand:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    function ConfigAdapter(cmd) {
+      var adapter_id = document.getElementById('adapter_id').value;
+      var monitor = document.getElementById('monitor_folder').value;
+
+      var tl = document.getElementById('type_list');
+      var mask = tl.options[tl.selectedIndex].value;
+
+      var rl = document.getElementById('rate_list');
+      var rl_value = rl.options[rl.selectedIndex].value;
+      var speed = '-1'; // Max Speed
+      if (rl_value == 'pps') {
+        speed = document.getElementById('packet_rate').value;
+      }
+      else if (rl_value == 'recorded') {
+        speed = 0;
+      }
+
+      var save = ""
+      if (document.getElementById('save_files').checked) {
+        save = document.getElementById('save_folder').value;
+        if (save.length == 0) {
+          window.alert("A Save Folder must be specified if Save is checked.");
+          return;
+        }
+      }
+
+      // Build the AdapterConfig XML.
+      var configadapter =
+        '<' + cmd + '>' +
+          '<FolderAdapter>' +
+            '<Id>' + adapter_id + '</Id>' +
+            '<Monitor>' + monitor + '</Monitor>' +
+            '<Mask>' + mask + '</Mask>' +
+            '<Speed>' + speed + '</Speed>' +
+            '<Save>' + save + '</Save>' +
+          '</FolderAdapter>' +
+        '</' + cmd + '>';
+
+        // window.alert("Create Adapter: " + configadapter);
+
+        // OnSuccess indicates the message was successfully sent.
+        // PutMessageResponse will receive the actual result of
+        // processing the message.
+        window.cefQuery({
+          request: "SendMessage:" + configadapter,
+          onSuccess: function (response) { },
+          onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    function CreateAdapter() {
+      ConfigAdapter("CreateAdapter");
+    }
+
+    function ModifyAdapter() {
+      ConfigAdapter("ModifyAdapter");
+    }
+
+    // Send the Display Properties to the browser.
+    //   Display Properties are the desired width and height of the browser window,
+    //   and the title of the window.
+    // Optional
+    function DoSendDisplayProperties() {
+      window.cefQuery({
+        request: "SendDisplayProperties:570 270 " + document.title,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to display the Remote File Browser.
+    //   msg is the path that the browser should open to.
+    //   response the path the user selected.
+    // Optional - Remote Browser
+    function DoRemoteFileBrowser(folder) {
+      // flags:
+      //   0x0000 : Only display the folder pane.
+      //   0x0002 : Hide the 'Show Hidden' control.
+      //   0x0004 : Initially show hidden files.
+      //   0x0008 : Show the files pane. User must select a file.
+      var flags = 0
+      var path = '';  // Set the path.
+      var msg = flags.toString() + ' ' + path;
+
+      window.cefQuery({
+        request: "RemoteFileBrowser:" + msg,
+        onSuccess: function (response) {
+          document.getElementById(folder).value = response;
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a message to the plugin on the engine.
+    //   The content of the message must be text only.
+    //   The transport between the 'here' and the plugin does not interpret or inspect
+    //     the contents of the message. Use window.btoa() to send binary data.
+    // The response from the plugin is received by PutMessageResponse() below.
+    // Optional - Plugin Message
+    function DoSendMessage(msg) {
+      window.cefQuery({
+        request: "SendMessage:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+  </script>
+  <script type="text/javascript">
+    // Functions called by the browser.
+    // The browser Puts information into the browser.
+    // Do not modify the names of these functions.
+
+    // Called by the browser with the response from a SendCommand.
+    // Optional - Peek Commands
+    // Do not modify this function name.
+    function PutCommandResponse(response) {
+      // Process the response.
+      window.alert("Received Command response: " + response);
+    }
+
+    // Called by the browser with the response from a SendMessage.
+    // Optional - Plugin Commands
+    // Do not modify this function name.
+    function PutMessageResponse(xml) {
+      // Process the response.
+      var tagRoot = xmlGetTag(xml);
+      if (tagRoot == "CreateAdapter") {
+          ProcessCreateAdapter(xml);
+          SendReadyToClose(true);
+      }
+      else if (tagRoot == "GetAdapter") {
+          ProcessGetAdapter(xml);
+          SendReadyToClose(false);
+      }
+      else if (tagRoot == "ModifyAdapter") {
+          ProcessModifyAdapter(xml);
+          SendReadyToClose(true);
+      }
+    }
+
+    function ProcessCreateAdapter(xml) {
+      // Message Response:
+      // <CreateAdapter>
+      //   <FolderAdapter>
+      //     <Result>0</Result>
+      //   </FolderAdapter>
+      // </CreateAdapter>
+      var valResult = xmlGetValue(xml, "Result");
+      var monitor = document.getElementById('monitor_folder').value;
+      if (valResult == "0") {
+        document.getElementById('activity_status').value = "Created adapter: " + monitor;
+        document.getElementById('adapter_id').value = "";
+        document.getElementById('monitor_folder').value = "";
+        document.getElementById('save_folder').value = "";
+        document.getElementById('save_files').checked = false;
+        SaveToggle();
+      }
+      else {
+        document.getElementById('activity_status').value = "The folder is already being monitored. Only one adapter per folder is allowed.";
+      }
+    }
+
+    function ProcessGetAdapter(xml) {
+      // <GetAdapter>
+      //   <FolderAdapter>
+      //     <Id>{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</Id>
+      //     <Monitor>/home/monitor</Monitor>
+      //     <Mask>*.pcap</Mask>
+      //     <Speed>-1</Speed>
+      //     <Save>/home/saved</Save>
+      //   </FolderAdapter>
+      // </GetAdapter> 
+      var valId = xmlGetValue(xml, "Id");
+      var valMonitor = xmlGetValue(xml, "Monitor");
+      var valMask = xmlGetValue(xml, "Mask");
+      var valSpeed = xmlGetValue(xml, "Speed");
+      var valSave = xmlGetValue(xml, "Save");
+
+      var tl = document.getElementById('type_list');
+      tl.options = valMask;
+
+      if (valSpeed == "-1") {
+        valSpeed = 100;
+      }
+
+      document.getElementById('adapter_id').value = valId;
+      document.getElementById('monitor_folder').value = valMonitor;
+      document.getElementById("packet_rate").value = valSpeed;
+      document.getElementById('save_files').checked = (valSave.length > 0);
+      document.getElementById('save_folder').value = valSave;
+      document.getElementById('activity_status').value = "";
+      // Hide the create button, show the modify button.
+      document.getElementById("create_button").style.display = "none";
+      document.getElementById("modify_button").style.display = "inline";
+      SaveToggle();
+    }
+
+    function ProcessModifyAdapter(xml) {
+      var valResult = xmlGetValue(xml, "Result");
+      var monitor = document.getElementById('monitor_folder').value;
+      if (valResult == "0") {
+        document.getElementById('activity_status').value = "Modified adapter: " + monitor;
+        document.getElementById('adapter_id').value = "";
+        document.getElementById('monitor_folder').value = "";
+        document.getElementById('save_folder').value = "";
+        document.getElementById('save_files').checked = false;
+        SaveToggle();
+      }
+      else {
+        document.getElementById('activity_status').value = "Failed to update the settings of adapter: " + monitor;
+      }
+    }
+
+    function PutSendPutPreferences() {
+      // The user clicked Ok, but the Options dialog will not close unless Put Preferences is sent.
+      msg = document.getElementById('activity_status').value;
+      document.getElementById('activity_status').value = " PutSendPutPreferences." + msg;
+      SendPutPreferences();
+    }
+
+    function SaveToggle() {
+      var browse = document.getElementById('browse_button');
+      if (document.getElementById('save_files').checked) {
+        browse.style.display = '';
+      }
+      else {
+        browse.style.display = 'none';
+      }
+    }
+
+    function SendGetAdapter(id) {
+        var getadapter =
+            "<GetAdapter>" +
+              "<FolderAdapter>" +
+                "<Id>" + id + "</Id>" +
+              "</FolderAdapter>" +
+            "</GetAdapter>";
+
+        // send the message to the plugin
+        DoSendMessage(getadapter);
+    }
+
+    function SendGetPreferences() {
+      var xml = '';
+      var cmd = "GetPreferences:";
+      window.cefQuery({
+        request: cmd + xml,
+        onSuccess: function (response) {
+          var tagRoot = xmlGetTag(response);
+          if (tagRoot == "configure") {
+            valId = xmlGetValue(response, "id");
+            if ((valId.length > 0) && (valId != "{00000000-0000-0000-0000-000000000000}")) {
+              SendGetAdapter(valId);
+            }
+          }
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    function SendPutPreferences() {
+      // User clicked OK, but the Options dialog will not close unless Put Preferences is sent.
+      var xml = '';
+      var cmd = "PutPreferences:";
+
+      window.cefQuery({
+        request: cmd + xml,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+  </script>
+</head>
+<body onload="DoOnLoad()">
+  <div>
+    <p>
+      <form id="browse_form" name="browser" action="">
+        <label class="path-label" for="monitor_folder">Folder to Monitor:&nbsp;</label>
+        <a class="monitor_browse" href="javascript:DoRemoteFileBrowser('monitor_folder');">Browse</a>
+        <br />
+        <input class="path-input" type="text" id="monitor_folder" name="folder" readonly />
+      </form>
+    </p>
+    <p>
+      <label class="path-label">File Type:</label>
+      <select id="type_list">
+          <option value="*.pcap">*.pcap</option>
+          <option value="*.pcap.gz">*.pcap.gz</option>
+          <option value="*.pcapng">*.pcapng</option>
+          <option value="*.pcapng.gz">*.pcapng.gz</option>
+          <option value="*.pcap, *.pcap.gz, *.pcapng, *.pcapng.gz">*.pcap, *.pcap.gz, *.pcapng, *.pcapng.gz</option>
+          <option value="*.pkt">*.pkt</option>
+          <option value="*.*">*.*</option>
+      </select>
+    </p>
+    <p>
+      <label class="rate-label" for="packet_rate">Packet Rate:&nbsp;</label>
+      <select id="rate_list" onchange="RateChange()">
+        <option value="full">Maximum Speed</option>
+        <!-- <option value="recorded">Recorded</option> -->
+        <!-- <option value="pps">Packets Per Second</option> -->
+      </select>
+      <input class="rate-input" type="text" id="packet_rate" name="rate" style="display: none"/>
+    </p>
+    <form>
+      <fieldset>
+        <legend>Save Processed Files</legend>
+        <input class="browse-checkbox" type="checkbox" id="save_files" name="savefiles" onchange="SaveToggle()">
+        <label class="browse-label" for="save_folder">Save Folder:</label>
+        <a class="save-browse" id="browse_button" href="javascript:DoRemoteFileBrowser('save_folder');">Browse</a>
+        <br />
+        <input class="save-input" type="text" id="save_folder" name="savefolder" readonly />
+      </fieldset>
+    </form>
+    <br />
+    <button id="create_button" type="button" onclick="CreateAdapter()">Create Adapter</button>
+    <button id="modify_button" type="button" onclick="ModifyAdapter()" style="display: none">Modify Adapter</button>
+    &nbsp;&nbsp;
+    <input class="status-input" type="text" id="activity_status" name="activity_status" readonly />
+    <br />
+    <br />
+    <i>Version</i> 1.12.0.0 - FolderAdapterOE
+  </div>
+  <div style="display: none">
+    <!-- Hidden controls for Browse remote file system. -->
+    <a style="display:none" href="app:browse" id="appbrowse" name="appbrowse">Browse</a>
+    <!-- Hidden controls for Plugin Messaging. -->
+    <a style="display:none" href="app:message" id="appmessage" name="appmessage">Message</a>
+    <input type="text" id="pluginmessage" name="pluginmessage" size="75" value="" class="text-input" readonly />
+    <!-- Hidden control to hold Adpater Id. -->
+    <input type="text" id="adapter_id" name="adapter_id" size="75" value="" class="text-input" readonly />
+  </div>
+</body>
+</html>

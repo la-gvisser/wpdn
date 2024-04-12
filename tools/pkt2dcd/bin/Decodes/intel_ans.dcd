@@ -1,0 +1,13 @@
+// Intel ANS - Intel Advanced Network Services Probe
+//	uses 0x886d as the protocol type
+
+
+void Intel_ANS;
+	LABL 0 0 0 b1 Intel Advanced Network Services Probe\Intel ANS;
+	HWRD 0 1 90 c2 Application ID:;
+	HWRD 0 1 90 c2 Revision ID:;
+	DLNG 0 1 90 c2 Sequence Number:;
+	DWRD 0 1 90 c2 Sender ID:;
+	ETHR 0 1 90 c2 Team ID:;
+	TRTS;
+

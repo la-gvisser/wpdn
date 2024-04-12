@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly>
+  <file name="AdapterSample">
+    <comClass catid="{D8A51BAC-0297-4247-BF9A-9C956262ABD5}" clsid="{A2502F1A-6912-4EEC-A267-E9639B3A6866}" progid="ThirdPartyPlugins.AdapterSample" />
+    <comClass catid="{CCF7D60E-46ED-4323-AC9A-03B854D17D4E}" clsid="{A2502F1A-6912-4EEC-A267-E9639B3A6866}" progid="ThirdPartyPlugins.AdapterSample" />
+    <comClass catid="{4C116C92-7B4C-4C93-B586-B87570862337}" clsid="{A2502F1A-6912-4EEC-A267-E9639B3A6866}" progid="AdapterSample.AdapterManager" />
+  </file>
+</assembly>

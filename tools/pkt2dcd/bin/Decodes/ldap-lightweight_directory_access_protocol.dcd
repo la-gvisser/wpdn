@@ -1,0 +1,641 @@
+* LDAP - Lightweight Directory Access Protocol
+
+void LDAP;
+	TEQU 0   10 0   0 RETURN;
+	GWRD 0	 1;
+	TEQU 0	 1	0	0 GSS::Others;
+	GBYT 0   1;
+	TEQU 0   1  0   0 RETURN;
+	LABL 0   0  0  b1 LDAP - Lightweight Directory Access Protocol\LDAP:;
+	
+	* BD: if less than 3 bytes left than just dump data
+	SLTE 3 10;
+	SKIP 2;
+		DUMP 0 10 90 c2 LDAP Data:;
+		TRTS;
+	
+	INCR 1;
+	GBYT 0 1;
+	DECR 1;
+	SBIT 7 1;
+	SKIP 1;
+		MOVE 0 1;
+	ANDG 7F 1;
+	ADDG 2 1;
+	INCR 0 1;
+	GBYT 0 31;
+	DECR 0 1;
+	SEQU 2 31;
+	SKIP 3;
+		LABL 0 0 0 c4 LDAP continuation data;  * BD: changed from bad LDAP data to LDAP Continuation Data
+		DUMP 0 10 90 c2 LDAP Data:;
+		TRTS;
+	
+	ASN1_Init;
+	ASN1_DisableEnum;
+	ASN1_SkipValue;  *skip sequence
+
+
+	LABL 0 0 90 c2 Message ID\ID;
+	ASN1_Value;
+
+	LDAP_Commands;
+	
+	BREM 0 31;
+	SLTE 5 31;
+	SKIP 1;
+		TRTS;
+	
+	* BD: checks for more LDAP pkts
+	INCR 1;
+	GBYT 0 31;
+	DECR 1;
+	SBIT 7 31;
+	SKIP 1;
+		MOVE 0 31;
+	ANDG 7F 31;
+	ADDG 2 31;
+	INCR 0 31;
+	GBYT 0 30;
+	DECR 0 31;
+	SEQU 2 30;
+	SKIP 80000001;
+		LDAP;
+	TGTE 0 10 0 0 RETURN;     
+	DUMP 0 10 90 c2 Remaining LDAP Data:;
+
+
+void LDAP_Commands;
+	LABL 0 0 90 c2 Protocol Op:\Op:;
+	GBYT 0 3;
+	DBYT 0 4 5; *invis
+	ANDG 1f 3;
+	DGLB 0 3 90;
+	ADDG 1 3;
+	CST# 0 3 0 14 LDAP_CommandNames;
+
+	GBYT 0 41;
+	ANDG 80 41;
+	if (l[1] == 0x80)
+	{
+		GBYT 0 1;
+		ANDG 7f 1;
+		g[2] = 1;				//si: use g[2] as a boolean
+		if (g[1] == 2)
+		{
+			INCR 1;
+			DWRD 0 0 90 c2 Message Length:;
+			g[2] = 0;
+		}
+		if (g[1] == 4)
+		{
+			INCR 1;
+			DLNG 0 0 90 c2 Message Length:;
+			g[2] = 0;
+		}
+		if (g[2] == 1)
+		{
+			HEX# 1 0 5;							// si: skip past the 0x8X
+			HEX# 0 1 90 c2 Message Length:;		// si: skip past whatever the length is
+		}
+	}
+	if (l[1] != 0x80)
+	{
+		DBYT 0 1 90 c2 Message Length:;
+	}
+
+	/*
+	GBYT 0 1;
+	if (g[1] == 0x84)					*si: 0x8Y is message length
+	{
+	 INCR 1;
+	 DLNG 0 0 90 c2 Message Length:;
+	}
+	if (g[1] != 0x84)
+	{
+	 LDAP_Align;
+	}
+	*/
+	
+    TST# 0 3 0 14 LDAP_CommandOps;
+	SKIP 1;
+	LABL 0 0 0 14 Unknown Op; 
+
+
+void LDAP_Align;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	MOVE 1 93;
+	ANDG f0 13;
+	INCR 1;
+	SEQU 80 13;
+	SKIP 1;
+	TRTS;
+	ANDG f 1;
+	INCR 0 1;
+
+str# LDAP_CommandNames;
+	Bind Request;
+	Bind Response;
+	Unbind Request;
+	Search Request;
+	Search Response;
+	Search Response Done;
+	Modify Request;
+	Modify Response;
+	Add Request;
+	Add Response;
+	Del Request;
+	Del Response;
+	Modify RDN Request;
+	Modify RDN Response;
+	Compare Request;
+	Compare Response;
+	Abandon Request;
+
+str# LDAP_CommandOps;
+	LDAP_BindRequest;
+	LDAP_BindResponse;
+	LDAP_UnbindRequest;
+	LDAP_SearchRequest;
+	LDAP_SearchResponse;
+	LDAP_SearchResponseDone;
+	LDAP_ModifyRequest;
+	LDAP_ModifyResponse;
+	LDAP_AddRequest;
+	LDAP_AddResponse;
+	LDAP_DelRequest;
+	LDAP_DelResponse;
+	LDAP_ModifyRDNRequest;
+	LDAP_ModifyRDNResponse;
+	LDAP_CompareRequest;
+	LDAP_CompareResponse;
+	LDAP_AbandonRequest;
+
+
+void LDAP_BindRequest;
+	LABL 0 0 90 c2 Version\Ver;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Name;
+	ASN1_Value;
+
+	LABL 0 3 90 c2 Authentication:\Auth:;
+	DBYT 0 3 5; *invis
+	ANDG f 3;
+	DGLB 0 3 90;
+	CEQU 0 3 0 14 simple;
+	CEQU 1 3 0 14 krbv42LDAP;
+	CEQU 2 3 0 14 krbv42DSA;
+	CEQU 3 3 0 14 sasl;
+
+	TEQU 0 3 0 0 LDAP_Auth_simple;       
+	TEQU 1 3 0 0 LDAP_Auth_krbv42LDAP;
+	TEQU 2 3 0 0 LDAP_Auth_krbv42DSA;
+	TEQU 3 3 0 0 GSS::SaslCredentials;
+
+void LDAP_Auth_simple; 
+     LABL 0 0 90 c2 Password;
+	 ASN1_Value;
+	   
+void LDAP_Auth_krbv42LDAP;
+
+void LDAP_Auth_krbv42DSA;
+
+void LDAP_Result;
+	LABL 0 0 90 c2 Result code;
+	DBYT 0 3 5;
+	DBYT 0 3 5;
+	DBYT 0 3 90;
+
+	CEQU 0 3 0 14 success;        *(0)
+	CEQU 1 3 0 14 operationsError;       *(1)
+	CEQU 2 3 0 14 protocolError;  *(2)
+	CEQU 3 3 0 14 timeLimitExceeded;     *(3)
+	CEQU 4 3 0 14 sizeLimitExceeded;     *(4)
+	CEQU 5 3 0 14 compareFalse;   *(5)
+	CEQU 6 3 0 14 compareTrue;    *(6)
+	CEQU 7 3 0 14 authMethodNotSupported;       *(7)
+	CEQU 8 3 0 14 strongAuthRequired ;   *(8)
+	CEQU 10 3 0 14 noSuchAttribute;       *(16)
+	CEQU 11 3 0 14 undefinedAttributeType;       *(17)
+	CEQU 12 3 0 14 inappropriateMatching; *(18)
+	CEQU 13 3 0 14 constraintViolation;   *(19)
+	CEQU 14 3 0 14 attributeOrValueExists;       *(20)
+	CEQU 15 3 0 14 invalidAttributeSyntax;       *(21)
+	CEQU 20 3 0 14 noSuchObject;   *(32)
+	CEQU 21 3 0 14 aliasProblem;   *(33)
+	CEQU 22 3 0 14 invalidDNSyntax;       *(34)
+	CEQU 23 3 0 14 isLeaf;         *(35)
+	CEQU 24 3 0 14 aliasDereferencingProblem;    *(36)
+	CEQU 30 3 0 14 inappropriateAuthentication;  *(48)
+	CEQU 31 3 0 14 invalidCredentials;    *(49)
+	CEQU 32 3 0 14 insufficientAccessRights;     *(50)
+	CEQU 33 3 0 14 busy;    *(51)
+	CEQU 34 3 0 14 unavailable;    *(52)
+	CEQU 35 3 0 14 unwillingToPerform;    *(53)
+	CEQU 36 3 0 14 loopDetect;     *(54)
+	CEQU 40 3 0 14 namingViolation;       *(64)
+	CEQU 41 3 0 14 objectClassViolation;  *(65)
+	CEQU 42 3 0 14 notAllowedOnNonLeaf;   *(66)
+	CEQU 43 3 0 14 notAllowedOnRDN;       *(67)
+	CEQU 44 3 0 14 entryAlreadyExists;    *(68)
+	CEQU 45 3 0 14 objectClassModsProhibited;    *(69)
+	CEQU 50 3 0 14 other;   *(80)
+
+	LABL 0 0 90 c2 Matched DN;
+	ASN1_Value;
+
+    LABL 0 0 90 c2 Error message;
+	ASN1_Value;
+
+
+void LDAP_BindResponse;
+	LDAP_Result;
+	GSS::ServerSaslCreds;
+
+void LDAP_UnbindRequest;
+
+void LDAP_SearchRequest;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	SEQU 4 1;
+	SKIP 2;
+	INCR 1;
+	TNXT -LDAP_SearchRequest;
+
+	LABL 0 0 90 c2 Base object\Base;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Scope:;
+	DWRD 0 3 5;
+	DBYT 0 3 90;
+	CEQU 0 3 0 14 Base object;
+	CEQU 1 3 0 14 Single level;
+	CEQU 2 3 0 14 Whole subtree;
+
+    LABL 0 0 90 c2 Dereference aliases:\DerefAliases:;  
+	DWRD 0 3 5;
+	DBYT 0 3 90;
+	CEQU 0 3 0 14 Never Dereference Aliases;
+	CEQU 1 3 0 14 Dereference In Searching;
+	CEQU 2 3 0 14 Dereference Finding Base Object;
+	CEQU 3 3 0 14 Dereference Always;
+        
+	LABL 0 0 90 c2 Size limit;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Time limit;
+	ASN1_Value;
+
+	LABL 0 0 90 c2 Attrs only;
+	ASN1_Value;
+	
+	//mb: not sure why we were skipping over the filter processing, it seems to work fine.
+//	GBYT 0 1;
+//	SNEQ 87 1;
+//	SKIP 2;
+//	LDAP_String_Filter;
+
+	LDAP_FilterType;
+//	ASN1_SkipValue;
+	TEQU 0 2 0 0 RETURN;
+	TLTE 0 10 0 0 LDAP_AttributeList;
+
+void LDAP_String_Filter;		*si: dunno if this is correct thing to do...seems janky tt6303
+	INCR 1;
+	GBYT 0 1;
+	INCR 1;
+	CHR# 0 1 90 c2 Filter:;
+	TRTS;
+
+void LDAP_FilterType;
+	GBYT 0 1;
+	ANDG c0 1;
+	TNEQ 80 1 0 0 RETURN;  *test for filter
+
+	LABL 0 0 90 c2 Filter type:;
+	DBYT 0 3 5;
+	ANDG f 3;
+	DGLB 0 3 90;
+ 	CEQU 0 3 0 14 And;
+    CEQU 1 3 0 14 Or;
+    CEQU 2 3 0 14 Not;
+    CEQU 3 3 0 14 Equality Match;
+    CEQU 4 3 0 14 Substrings;
+    CEQU 5 3 0 14 Greater Or Equal;
+    CEQU 6 3 0 14 Less Or Equal;
+    CEQU 7 3 0 14 Present;
+    CEQU 8 3 0 14 Approximate Match;
+       
+	TGTE 0 10 0 0 RETURN;
+	LDAP_FilterType2;
+	TGTE 0 10 0 0 RETURN;
+	TNXT -LDAP_FilterType;
+
+void LDAP_FilterType2;
+	TEQU 0 3 0 0 LDAP_FilterTypeAnd;
+    TEQU 1 3 0 0 LDAP_FilterTypeOr;
+    TEQU 2 3 0 0 LDAP_FilterTypeNot;
+    TEQU 3 3 0 0 LDAP_FilterTypeEqualityMatch;
+    TEQU 4 3 0 0 LDAP_FilterTypeSubstrings;
+    TEQU 5 3 0 0 LDAP_FilterTypeGreaterOrEqual;
+    TEQU 6 3 0 0 LDAP_FilterTypeLessOrEqual;
+    TEQU 7 3 0 0 LDAP_FilterTypePresent;
+	TEQU 8 3 0 0 LDAP_FilterTypeApproximateMatch;
+
+
+void LDAP_AttributeValueAssertion;
+	LDAP_Align;
+	LABL 0 0 0 b7 Value Assertion;
+	LABL 0 0 90 c2 Type;
+	ASN1_Value;
+	LABL 0 0 90 c2 Value;
+	ASN1_Value;
+	LABL 0 0 0 b8;
+
+void LDAP_FilterTypeAnd;
+	LDAP_Align;
+	TRTS;
+
+void LDAP_FilterTypeOr;
+	LDAP_Align;
+	TRTS;
+
+void LDAP_FilterTypeNot;
+	LDAP_Align;
+	TRTS;
+
+void LDAP_FilterTypeEqualityMatch;
+	LDAP_AttributeValueAssertion;
+
+void LDAP_FilterTypeSubstrings;
+	LDAP_Align;
+	LABL 0 0 90 c2 Type;
+	ASN1_Value;
+
+	INCR 1;  *skip sequence
+	LDAP_Align;  
+
+	GBYT 0 1;
+	ANDG f 1;
+    CEQU 0  1 90 c2 Initial:;
+    CEQU 1  1 90 c2 Any:;
+    CEQU 2  1 90 c2 Final:;
+	DBYT 0 1 5;
+
+	ASN1_Length;
+	ASN1_OctetString;
+  
+
+void LDAP_FilterTypeGreaterOrEqual;
+	LDAP_AttributeValueAssertion;
+
+void LDAP_FilterTypeLessOrEqual;
+	LDAP_AttributeValueAssertion;
+
+void LDAP_FilterTypePresent;
+	DBYT 0 3 5;
+	CHR# 0 3 90 c2 Present Type:;
+
+void LDAP_FilterTypeApproximateMatch;
+	LDAP_AttributeValueAssertion;
+
+	
+void LDAP_AttributeList;			*SI
+	LABL 0 0 90 c7 Attribute Descriptions;
+	TSUB -LDAP_Attribute_Print;
+	LABL 0 0 0 c8;
+	TGTE 0 10 0 0 RETURN;
+
+void LDAP_Attribute_Print;			*SI
+	TGTE 0 10 0 0 RETURN;
+	GBYT  0 1;
+
+	SLTE 40 1;		* hex41 == dec65 == A
+	SKIP 2;
+	 LABL 0 0 90 c2 Attribute:;
+	 TNXT -LDAP_Attribute_Clean;
+
+	SGTE 7b 1;		* hex7a == dec122 == z
+	SKIP 2;
+	 LABL 0 0 90 c2 Attribute:;
+	 TNXT -LDAP_Attribute_Clean;
+	
+	CHR#  1 0 90 0;
+	TNXT -LDAP_Attribute_Print;
+
+void LDAP_Attribute_Clean;			*SI
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+	
+	SLTE 40 1;		* hex41 == dec65 == A  [40 is one down]
+	SKIP 2;
+	 INCR 1;
+	 TNXT -LDAP_Attribute_Clean;
+	
+	SGTE 7b 1;		* hex7a == dec122 == z  [76b is one up]
+	SKIP 2;
+	 INCR 1;
+	 TNXT -LDAP_Attribute_Clean;
+
+	TNXT -LDAP_Attribute_Print;
+
+
+*SI: these are the obj types that ldap uses.... 
+*    so for those screwed up looking attributes, this is what it is...
+*	 yes, i should probably fix this!!!
+* LDAPv3 
+*CN      commonName
+*L       localityName
+*ST      stateOrProvinceName
+*O       organizationName
+*OU      organizationalUnitName
+*C       countryName
+*STREET  streetAddress
+*DC      domainComponent
+*UID     userid
+
+
+void LDAP_SearchResponseDone;
+	LDAP_Result;
+		         
+void LDAP_SearchResponse;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+
+	*check for embedded sequence
+	SNEQ 30 1;
+	SKIP 3;
+	INCR 1;
+	ASN1_Length;
+	TNXT -LDAP_SearchResponse;
+
+	TEQU 4 1 0 0 LDAP_SearchResponseName;
+	TLTE 0 10 0 0 LDAP_SearchResponse;
+	ASN1_Type;
+	DECR 1;
+	TEQU 10 1 0 0 LDAP_SearchResponseNameList;
+
+void LDAP_SearchResponseNameList;
+	ASN1_SkipValue;
+	MOVE 2 92;
+	LDAP_SearchResponseNameListLoop;
+
+void LDAP_SearchResponseNameListLoop;
+	TEQU 0 12 0 0 RETURN;
+	LDAP_SearchResponseName;
+	TNXT -LDAP_SearchResponseNameListLoop;
+
+void  LDAP_SearchResponseName;
+	LABL 0 0 90 c2 Object Name;
+	ASN1_Value;
+	TGTE 0 10 0 0 RETURN;
+	ASN1_SkipValue;
+	TGTE 0 10 0 0 RETURN;
+	ASN1_SkipValue;
+	TGTE 0 10 0 0 RETURN;
+	MOVE 2 92;  * move g[2] into g[12];
+	LDAP_SearchResponseAttributeList;
+	LABL 0 0 0 b8;
+
+* g[12]=length of attribute list
+* g[12]=length of attribute value list
+
+void LDAP_SearchResponseAttributeList;
+	TGTE 0 10 0 0 RETURN;
+	TEQU 0 12 0 0 RETURN;
+	LABL 0 0 0 b7 Attribute\Name:;
+
+	LABL 0 0 90 c2 Name\;
+	ASN1_Value;
+	SUBG 2 92;
+
+	ASN1_SkipValue;
+	SUBG 2 12;
+	MOVE 2 93;  * move g[2] into g[13];
+	LDAP_SearchResponseAttributeValueList;
+	LABL 0 0 0 b8;
+
+	TGTE 0 10 0 0 RETURN;
+	
+	INCR 1;
+	GBYT 0 31;
+	DECR 1;
+	SBIT 7 31;
+	SKIP 1;
+		MOVE 0 31;
+	ANDG 7F 31;
+	ADDG 2 31;
+	INCR 0 31;
+	GBYT 0 30;
+	DECR 0 31;
+	SEQU 2 30;
+	SKIP 80000001;
+		TRTS;
+	
+	ASN1_SkipValue;
+	TNXT -LDAP_SearchResponseAttributeList;
+
+
+void LDAP_SearchResponseAttributeValueList;
+	TGTE 0 10 0 0 RETURN;	
+	TGTE 0 13 0 0 RETURN;
+	LABL 0 0 90 c2 Value;
+	ASN1_Value;
+	SUBG 2 12;  *track the length/type
+	SUBG 2 13;  *track the length/type
+	SUBG 2 92;  *track the string
+	SUBG 2 93;  *track the string
+	TNXT -LDAP_SearchResponseAttributeValueList;
+
+
+void LDAP_ModifyRequest;
+	LABL 0 0 90 c2 LDAP DN;
+	ASN1_Value;
+	ASN1_SkipValue;
+	LABL 0 0 90 c2 Operation:;
+	GBYT 0 1;
+	ANDG f 1;
+	DGLB 0 1 90;
+	LDAP_AttributeList;
+
+void LDAP_ModifyResponse;
+	LDAP_Result;
+
+void LDAP_AddRequest;
+	LABL 0 0 90 c2 LDAP DN;
+	ASN1_Value;
+	LDAP_AttributeList;
+
+void LDAP_AddResponse;
+	LDAP_Result;
+
+void LDAP_DelRequest;
+	LABL 0 0 90 c2 LDAP DN;
+	ASN1_Value;
+
+void LDAP_DelResponse;
+	LDAP_Result;
+
+void LDAP_ModifyRDNRequest;
+	LABL 0 0 90 c2 Entry;
+	ASN1_Value;
+	LABL 0 0 90 c2 New RDN;
+	ASN1_Value;
+	LABL 0 0 90 c2 Delete old RDN;
+	ASN1_Value;
+
+void LDAP_ModifyRDNResponse;
+	LDAP_Result;
+
+void LDAP_CompareRequest;
+	LABL 0 0 90 c2 Entry;
+	ASN1_Value;
+	LDAP_AttributeValueAssertion;
+	TRTS;
+
+void LDAP_CompareResponse;
+	LDAP_Result;
+
+void LDAP_AbandonRequest;
+	DBYT 0 0 90 c2 Abandon Message ID:;
+	TRTS;
+
+// ---------------------------------------------------------------------------------
+// LDAPS - Secure Lightweight Directory Access Protocol
+
+
+void LDAPS;
+	LABL 0 0 0 b1 LDAPS - Lightweight Directory Access Protocol [Secure]:\LDAPS:;
+	g[1] = pb[1];
+	if (g[1] > 5)
+	{
+		DUMP 0 10 90 c2 Continuation Data:;
+		TRTS;
+	}
+	DBYT 0 1 90 c2 Content Type:\CT:;
+	 CEQU 14 1 0 14 Change Cipher Spec;
+	 CEQU 15 1 0 14 Alert;
+	 CEQU 16 1 0 14 Handshake;
+	 CEQU 17 1 0 14 Application Data;
+	DBYT 0 3 90 c2 Version:\V:;
+	DBYT 0 4 90  0 .;
+	
+	SEQU 3 3;
+		SKIP 80000003;
+		SEQU 1 4;
+		SKIP 80000002;
+			LABL 0 0 0 14 TLS 1.0;
+			SKIP 1;
+		LABL 0 0 0 14 SSL 3.0;
+	
+	DWRD  0 2 90 c2 Length:\Len:;
+
+	SLTE 2 90;
+	SKIP 2;
+	MOVE 10 82;
+	LABL 0 0 0 14 (length is larger than remaining size of packet);
+	TRTS;
+
+

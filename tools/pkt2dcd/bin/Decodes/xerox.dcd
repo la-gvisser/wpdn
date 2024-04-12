@@ -1,0 +1,159 @@
+* Decoder version: 5.0.1.0
+
+void XNS;
+	LABL 0 0 0 b1 XNS - Xerox Network Protocol\XNS:;
+	HWRD 0 0 90 c2 Checksum:;
+	DWRD 0 1 90 c2 Length:;
+	DBYT 0 0 90 c2 Transport Control:;
+	DBYT 0 2 90 c2 Packet Type:\Type:;
+	TLTE 6 2 0 0 XNS TGT5;
+	ADDG 1 2;
+	CST# 0 2 0 14 XNS Types;
+	TNXT -XNS Dest;
+
+void XNS TGT5;
+	TLTE 20 2 0 0 XNS Undef;
+	TGTE f 2 0 0 XNS Undef;
+	LABL 0 0 0 14 Experimental;
+	TNXT -XNS Dest;
+
+void XNS Undef;
+	LABL 0 0 0 14 Undefined;
+	TNXT -XNS Dest;
+
+void XNS Dest;
+	HLNG 0 0 90 c2 Destination Network:;
+	ETHR 0 0 90 c2 Destination Node:;
+	HWRD 0 3 90 c2 Destination Socket:;
+	TLTE 4 3 0 0 XNS DSGT3;
+	TGTE 0 3 0 0 XNS Src;
+	CST# 0 3 0 14 XNS Sockets;
+	TNXT -XNS Src;
+
+void XNS DSGT3;
+	TLTE 40 3 0 0 XNS Src;
+	TGTE 1f 3 0 0 XNS Src;
+	LABL 0 0 0 14 XNS Experimental;
+	TNXT -XNS Src;
+
+void XNS Src;
+	HLNG 0 0 90 c2 Source Network:;
+	ETHR 0 0 90 c2 Source Node:;
+	HWRD 0 3 90 c2 Source Socket:;
+	TLTE 4 3 0 0 XNS SSGT3;
+	TGTE 0 3 0 0 XNS Common;
+	CST# 0 3 0 14 XNS Sockets;
+	TNXT -XNS Common;
+
+void XNS SSGT3;
+	TLTE 40 3 0 0 XNS Common;
+	TGTE 1f 3 0 0 XNS Common;
+	LABL 0 0 0 14 Experimental;
+	TNXT -XNS Common;
+
+void XNS Common;
+	ADDG ffffffff 2;
+	TEQU 1 2 0 0 RIP-XNS;
+	TEQU 2 2 0 0 ECHO-XNS;
+	TEQU 3 2 0 0 ERROR-XNS;
+	TEQU 4 2 0 0 PEP-XNS;
+	TEQU 5 2 0 0 SPP-XNS;
+	LABL 0 0 0 c2 XNS Data Area:;
+	ADDG ffffffe2 1;
+	DUMP 0 1 90 40;
+
+void RIP-XNS;
+	LABL 0 0 0 b1 RIP - Routing Information Protocol\RIP:;
+	DWRD 0 4 90 c2 Operation:;
+	CEQU 1 4 0 14 Request;
+	CEQU 2 4 0 14 Response;
+	ADDG ffffffe0 1;
+	TGTE 0 1 0 0 XNS Done;
+	TNXT -RIP Loop;
+
+void RIP Loop;
+	LSTS 0 1 0 b1 Routing Set #;
+	HLNG 0 0 90 c2 Object Network:;
+	DWRD 0 0 90 c2 Internetwork Delay:;
+	ADDG fffffffa 1;
+	LSTZ 0 1 0 80;
+
+void ECHO-XNS;
+	LABL 0 0 0 b1 Echo Protocol;
+	DWRD 0 4 90 c2 Operation:;
+	CEQU 1 4 0 14 Request;
+	CEQU 2 4 0 14 Response;
+	DUMP 1 0 90 c2 Echo Data Area:;
+
+void ERROR-XNS;
+	LABL 0 0 0 b1 Error Protocol;
+	DWRD 0 4 90 c2 Error Number:;
+	TLTE 4 4 0 0 Errors GT3;
+	ADDG 1 4;
+	CST# 0 4 0 14 Errors LT4;
+	TNXT -Error End;
+
+void Errors GT3;
+	TLTE 205 4 0 0 Error End;
+	TGTE 1ff 4 0 0 Error End;
+	ADDG fffffe01 4;
+	CST# 0 4 0 14 Errors GT512;
+	TNXT -Error End;
+
+void Error End;
+	DWRD 0 0 90 c2 Error Parameter:;
+	LABL 0 0 0 b2 Offending packet that caused error follows.;
+	TNXT -XNS;
+
+void PEP-XNS;
+	LABL 0 0 0 b1 PEP - Packet Exchange Protocol\PEP:;
+	DLNG 0 0 90 c2 Transaction ID:;
+	DWRD 0 0 90 c2 Client Type:;
+	DUMP 1 0 90 c2 PEP Data Area:;
+
+void SPP-XNS;
+	LABL 0 0 0 b1 SPP - Sequenced Packet Protocol\SPP:;
+	DBYT 0 4 90 c2 Connection Control:;
+	CBIT 4 4 0 14 SPX End of Message;
+	CBIT 5 4 0 14 SPX Attention;
+	CBIT 6 4 0 14 SPX Ack Required;
+	CBIT 7 4 0 14 SPX System Packet;
+	DBYT 0 4 90 c2 Data Stream Type:;
+	CEQU fe 4 0 14 SPX End of Connection;
+	CEQU ff 4 0 14 SPX End of Connection Acknowledge;
+	DWRD 0 0 90 c2 Source Connection ID:;
+	DWRD 0 0 90 c2 Dest. Connection ID:;
+	DWRD 0 0 90 c2 Sequence Number:;
+	DWRD 0 0 90 c2 Acknowledge Number:;
+	DWRD 0 0 90 c2 Allocation Number:;
+	GLNG 0 4;
+	TEQU ff534d42 4 0 0 SMB File Share;
+	DUMP 1 0 90 c2 SPP Data Area:;
+
+void XNS Done;
+
+str# XNS Types;
+	Unknown;
+	RIP;
+	Echo;
+	Error;
+	PEP;
+	SPP;
+
+str# XNS Sockets;
+	Routing Information;
+	Echo Protocol;
+	Error Handler;
+
+str# Errors LT4;
+	Unspecified Error at Destination;
+	Checksum Error at Destination;
+	Socket Does Not Exist;
+	Packet Lost Due to No Resources;
+
+str# Errors GT512;
+	Unspecified Error Before Reaching Destination;
+	Checksum Error Before Reaching Destination;
+	Host Cannot Be Reached;
+	Packet Exceeded Maximum Hops;
+	Packet Too Large for Intermediate Network;

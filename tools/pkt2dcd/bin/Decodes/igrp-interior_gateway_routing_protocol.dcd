@@ -1,0 +1,598 @@
+* IGRP - Interior Gateway Routing Protocol;
+* EIGRP - Enhanced Interior Gateway Routing Protocol
+
+void IGP/IGRP;
+	LABL 0 0 0 b1 IGRP - Interior Gateway Routing Protocol\IGRP:;
+	DBIT 4 0 90 c2 Protocol Version:;
+	DBIT 4 c 90 c2 Opcode:;
+	CEQU 1 c 0 14 Update;
+	CEQU 2 c 0 14 Request;
+	DBYT 0 d 90 c2 Edition:;
+	DWRD 0 0 90 c2 Autonomous System #:;
+	DWRD 0 9 90 c2 Interior Routes:;
+	DWRD 0 a 90 c2 System Routes:;
+	DWRD 0 b 90 c2 Exterior Routes:;
+	HWRD 0 0 90 c2 Checksum:;
+	CKSM 3 0 24 14 Checksum invalid. Should be: ;
+	TEQU 1 c 0 0 IGRP Update;
+
+void IGRP Parameters;
+	TEQU  0 10  0  0 RETURN;
+	LABL  0  0  0 b1 Parameter Block\Parameters:;
+
+	DBYT  0  1 90 c2 Protocol ID:;
+	CEQU  0  1  0 24 General TLV;
+	CEQU  1  1  0 24 IP;
+
+	DBYT  0  4 90 c2 Type Code:;
+	CEQU  1  4  0 24 EIGRP Parameters;
+	CEQU  2  4  0 24 IP Internal Routes;
+	CEQU  3  4  0 24 Sequence;
+	CEQU  4  4  0 24 Software Version;
+	DWRD  0  1 90 c2 Field Length:;
+	MOVE  1 82;
+	SUBG  4  2;
+	MOVE  2 8a;  * prepare a for possible call to IGRP Destination Loop
+
+	SNEQ  1  4;
+	SKIP  6;
+	MOVE  5  5;  * there are five k values
+	MOVE  0  3;
+	Display K Values;
+	DBYT  0  1 90 c2 Reserved:;
+	DWRD  0  1 90 c2 Hold Time:;
+	LABL  0  0  0 24 second(s);
+
+	SNEQ  2  4;
+	SKIP  1;
+	IGRP Internal Route;
+
+	SNEQ  3  4;
+	SKIP  9;
+	DBYT  0  1 90 c2 Address Length:;
+	SNEQ  4  1;
+	SKIP  3;
+	IPLG  0  2 90 c2 Source Address:;
+	SEQU  4  1;
+	SKIP  3;
+	LABL  0  0 90 c2 Source Address:;
+	MOVE  1 83;
+	Display Bytes;
+
+	SNEQ  4  4;
+	SKIP  4;
+	DBYT  0  1 90 c2 Cisco Major Version:;
+	DBYT  0  1 90 c2 Cisco Minor Version:;
+	DBYT  0  1 90 c2 EIGRP Major Version:;
+	DBYT  0  1 90 c2 EIGRP Minor Version:;
+
+	SGTE  5  4;
+	SKIP  1;
+	DUMP  0  2 90 c2 Field Data:;   * TBD: decode this field
+
+	TNXT -IGRP Parameters;
+
+void IGRP Internal Route;
+	IPLG  0  1 90 c2 Next Hop Address:;
+	DLNG  0  1 90 c2 Time Delay:;
+	LABL  0  0  0 24 (10 msec/256);
+	DLNG  0  1 90 c2 Path Bandwidth:;
+	LABL  0  0  0 24 (2,560,000,000 /kbps);
+	GBYT  0  1;
+	INCR  1;
+	MULG  1000 1;
+	GBYT  0  2;
+	INCR  1;
+	MULG  100 2;
+	GBYT  0  3;
+	INCR  1;
+	ADDG  3 82;
+	ADDG  2 81;
+	DGLB  0  1 90 c2 MTU:;
+	LABL  0  0  0 24 (min/max transmission unit);
+	DBYT  0  1 90 c2 Hop Count:;
+	DBYT  0  1 90 c2 Reliability:;
+	LABL  0  0  0 24 (error percentage);
+	DBYT  0  1 90 c2 Load Utilization:;
+	LABL -%;
+	DWRD  0  1 90 c2 Reserved:;
+	SUBG 14  a;
+	IGRP Destination Loop;
+
+void IGRP Destination Loop;
+	TEQU  0  a  0  0 RETURN;
+	DBYT  0  1 90 c2 Prefix Length:;
+	LABL  0  0  0 24 (in bits);
+	SUBG  1  a;
+	LABL  0  0 90 c2 Destination:;
+	DIVG  8  1;
+	SUBG  1 8a;
+	Display Bytes;
+	LABL  0  0  0 24 (prefix);
+	TNXT -IGRP Destination Loop;
+
+void Display K Values;
+	TEQU  0  5  0  0 RETURN;
+	ADDG  1  3;
+	LABL  0  1 90 c2 K; 
+	DGLB  0  3  2; 
+	DBYT  0  1  90; 
+	SUBG  1  5; 
+	TNXT -Display K Values;
+
+void IGRP Update;
+	MOVE 1 8;
+	TNEQ 0 9 0 0 IGRP Interior RE;
+	TNEQ 0 a 0 0 IGRP System RE;
+	TNEQ 0 b 0 0 IGRP Exterior RE;
+
+void IGRP Interior RE;
+	IGRP Routing Entry;
+	SUBG 1 9;
+	TNEQ 0 9 0 0 IGRP Interior RE;
+	MOVE 1 8;
+	TNEQ 0 a 0 0 IGRP System RE;
+	TNEQ 0 b 0 0 IGRP Exterior RE;
+
+void IGRP System RE;
+	IGRP Routing Entry;
+	SUBG 1 a;
+	TNEQ 0 a 0 0 IGRP System RE;
+	MOVE 1 8;
+	TNEQ 0 b 0 0 IGRP Exterior RE;
+
+void IGRP Exterior RE;
+	IGRP Routing Entry;
+	SUBG 1 b;
+	TNEQ 0 b 0 0 IGRP Exterior RE;
+
+void IGRP Routing Entry;
+	CNEQ 0 9 0 b1 Interior;
+	SKIP 2;
+	CNEQ 0 a 0 b1 System;
+	CLSE 0 a 0 b1 Exterior;
+	DGLB 0 8 1 31  Routing Entry #;
+	ADDG 1 8;
+	DBYT 0 0 90 c2 Destination:;
+	DBYT -.;
+	DBYT -.;
+	GWRD 0 7;
+	INCR 2;
+	MULG 100 7;
+	GBYT 0 6;
+	INCR 1;
+	ADDG 6 87;
+	MULG a 7;
+	DGLB 0 7 90 c2 Delay (microseconds):;
+	GWRD 0 7;
+	INCR 2;
+	MULG 100 7;
+	GBYT 0 6;
+	INCR 1;
+	ADDG 6 87;
+	DGLB 0 7 90 c2 Bandwidth (Kbit/sec):;
+	DWRD 0 0 90 c2 Max. Transmission Unit:;
+	GBYT 0 7;
+	INCR 1;
+	MULG 64 7;
+	ADDG 80 7;
+	DIVG ff 7;
+	DGLB 0 7 90 c2 Reliability:;
+	LABL -%;
+	GBYT 0 7;
+	INCR 1;
+	MULG 64 7;
+	ADDG 80 7;
+	DIVG ff 7;
+	DGLB 0 7 90 c2 Load:;
+	LABL -%;
+	DBYT 0 0 90 c2 Hop Count:;
+	TRTS;
+
+// ------------------------------------------------------------------------
+
+void EIGRP;
+	LABL  0  0 0 b1 EIGRP - Enhanced Interior Gateway Routing Protocol\EIGRP:;
+	DBYT  0  c 90 c2 Version:;
+	DBYT  0  c 90 c2 Opcode:;
+
+	// if op is Hello then check ACK Number and set c=0 if ACK is not 0
+	SNEQ  5  c;
+	SKIP  6;
+	INCR  a;			// skip 10
+	GLNG  0  d;			// get the ACK value
+	DECR  a;			// go back 10
+	SEQU  0  d;			// if it is 0 then skip 1
+	SKIP  1;
+	MOVE  0  c;
+
+	  CEQU 0 c 0 14 ACK;
+	  CEQU 1 c 0 14 Update;
+	  CEQU 3 c 0 14 Query;
+	  CEQU 4 c 0 14 Reply;
+	  CEQU 5 c 0 14 Hello;
+	  CEQU 6 c 0 14 IPX SAP;
+	HWRD 0 0 90 c2 Checksum:;
+	CKSM 3 0 24 14 Checksum invalid. Should be: ;
+	HLNG 0 d 90 c9 Flags:;
+		CBIT 0 d 0 d4 .... .... .... ...1 Initial Update Packet;
+		CLSE 0 0 0 d4 .... .... .... ...0 Not Initial Update Packet;
+		CBIT 1 d 0 d4 .... .... .... ..1. Conditional Receive;
+		CLSE 0 0 0 d4 .... .... .... ..0. Not Conditional Receive;
+		LABL 0 0 0 b8;
+	DLNG 0 d 90 c2 Sequence Number:;
+	DLNG 0 d 90 c2 Ack Number:;
+	DLNG 0 0 90 c2 Autonomous System #:;
+	TNXT -EIGRP::TLV;
+
+void EIGRP::TLV;
+	while (g[16] > 0)
+	{
+		g[1] = pw[0];
+		l[1] = g[16];
+		TSB# 0 1 0 b7 EIGRP::TLV::Func;
+		
+		//si: no match case:
+		if (l[1] == g[16])
+		{
+			LABL 0 0 00 b7 Unknown TLV;
+			DBYT 0 0 90 c2 Protocol ID:;
+			DBYT 0 0 90 c2 Type Code:;
+			DWRD 0 5 90 c2 Length:;
+			g[5] -= 4;
+			if (g[5] > 0)
+			{
+				DUMP 0 5 90 c2 Value:;
+			}
+			LABL 0 0 00 b8;
+		}
+	}
+
+str# EIGRP::TLV::Func;
+	0x0001 | EIGRP::TLV::General::Parameter;
+	0x0003 | EIGRP::TLV::General::Sequence;
+	0x0004 | EIGRP::TLV::General::SoftVers;
+	0x0005 | EIGRP::TLV::General::NextMulticastSeq;
+	0x0102 | EIGRP::TLV::IP::Int;
+	0x0103 | EIGRP::TLV::IP::Ext;
+	0x0202 | EIGRP::TLV::AppleTalk::Int;
+	0x0203 | EIGRP::TLV::AppleTalk::Ext;
+	0x0204 | EIGRP::TLV::AppleTalk::Cable;
+	0x0302 | EIGRP::TLV::IPX::Int;
+	0x0303 | EIGRP::TLV::IPX::Ext;
+
+// -----------------------------------------
+
+void EIGRP::TLV::General::Parameter;
+	LABL 0 0 00 b7 General TLV - Parameter\General TLV;
+	DBYT 0 1 90 c2 Protocol ID:;
+	LABL 0 0 00 14 General TLV;
+	DBYT 0 4 90 c2 Type Code:;
+	LABL 0 0 00 14 General Parameter;
+	DWRD 0 0 90 c2 Length:;
+	MOVE 5 5;								// there are five k values
+	MOVE 0 3;
+	Display K Values;
+	DBYT 0 1 90 c2 Reserved:;
+	DWRD 0 1 90 c2 Hold Time:;
+	LABL 0 0 00 14 second(s);
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::General::Sequence;
+	LABL 0 0 00 b7 General TLV - Sequence\General TLV;
+	DBYT 0 1 90 c2 Protocol ID:;
+	LABL 0 0 00 14 General TLV;
+	DBYT 0 4 90 c2 Type Code:;
+	LABL 0 0 00 14 Sequence;
+	DWRD 0 0 90 c2 Length:;
+	DBYT 0 1 90 c2 Address Length:;
+	if (g[1] == 4)
+	{
+		IPLG 0 0 90 c2 Address:;
+	}
+	if (g[1] != 4)
+	{
+		while (g[1] > 0)
+		{
+			if (g[1] > 0)
+			{
+				DBYT 0 0 90 00;
+				if (g[1] != 1)
+				{
+					LABL 0 0 00 00 .;
+				}
+			}
+			g[1] -= 1;
+		}
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::General::SoftVers;
+	LABL 0 0 00 b7 General TLV - Software Version\General TLV;
+	DBYT 0 1 90 c2 Protocol ID:;
+	LABL 0 0 00 14 General TLV;
+	DBYT 0 4 90 c2 Type Code:;
+	LABL 0 0 00 14 Software Version;
+	DWRD 0 0 90 c2 Length:;
+	DBYT 0 1 90 c2 Cisco Major Vers:;
+	DBYT 0 1 90 c2 Cisco Minor Vers:;
+	DBYT 0 1 90 c2 EIGRP Major Vers:;
+	DBYT 0 1 90 c2 EIGRP Minor Vers:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::General::NextMulticastSeq;
+	LABL 0 0 00 b7 General TLV - Next Multicast Sequence\General TLV;
+	DBYT 0 0 90 c2 Protocol ID:;
+	LABL 0 0 00 14 General TLV;
+	DBYT 0 0 90 c2 Type Code:;
+	LABL 0 0 00 14 Next Multicast Sequence;
+	DWRD 0 5 90 c2 Length:;
+	DLNG 0 0 90 c2 Next Mulitcast Seq:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -----------------------------------------
+
+void EIGRP::TLV::IP::Int;					// 0x0102
+	LABL 0 0 00 b7 IP TLV - Internal Routes\IP TLV;
+	DBYT 0 0 90 c2 Protocol ID:;
+	LABL 0 0 00 14 IP TLV;
+	DBYT 0 0 90 c2 Type Code:;
+	LABL 0 0 00 14 Internal Routes;
+	DWRD 0 5 90 c2 Length:;
+	IPLG 0 0 90 c2 Next Hop:;
+	DLNG 0 0 90 c2 Delay:;
+	DLNG 0 0 90 c2 Bandwidth:;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:;
+	DBYT 0 0 90 c2 Reliability:;
+	DBYT 0 0 90 c2 Load:;
+	HWRD 0 0 90 c2 Reserved:;
+	DBYT 0 1 90 c2 Prefix Length:;
+	LABL 0 0 00 14 bits;
+	g[2] = g[1];
+	MODG 8 2;
+	g[1] /= 8;
+	l[1] = g[1];
+	LABL 0 0 90 c2 Destination:;
+	while (g[1] > 0)
+	{
+		if (g[1] > 0)
+		{
+			DBYT 0 0 90 00;
+			if (g[1] != 1)
+			{
+				LABL 0 0 00 00 .;
+			}
+		}
+		g[1] -= 1;
+	}
+	if (g[2] > 0)
+	{
+		LABL 0 0 90 00 .;
+		DBYT 0 0 90 00;				//si: !@#!@#!@#!@ ergh ergh ergh!?
+		l[1] += 1;
+	}
+	while (l[1] < 4)
+	{
+		LABL 0 0 90 00 .0;
+		l[1] += 1;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::IP::Ext;					// 0x0103
+	LABL 0 0 00 b7 IP TLV - External Routes\IP-Ext=;
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 IP TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 External Routes;
+	DWRD 0 5 90 c2 Length:\;
+	IPLG 0 0 90 c2 Next Hop:\;
+	IPLG 0 0 90 c2 Original Router:\;
+	DLNG 0 0 90 c2 Original AS:\;
+	DLNG 0 0 90 c2 Tag:\;
+	DLNG 0 0 90 c2 Ext Protocol Metric:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	DBYT 0 1 90 c2 Ext Protocol ID:\;
+	CST# 0 1 00 14 EIGRP::TLV::IP::Ext::Protocol_ID;
+	BBYT 0 0 90 c2 Flags:\;
+	DLNG 0 0 90 c2 Delay:\;
+	DLNG 0 0 90 c2 Bandwidth:\;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:\;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:\;
+	DBYT 0 0 90 c2 Reliability:\;
+	DBYT 0 0 90 c2 Load:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	DBYT 0 1 90 c2 Prefix Length:\;
+	LABL 0 0 00 14 bits;
+	g[1] /= 8;
+	LABL 0 0 90 c2 Destination:\Dest=;
+	g[2] = g[1];
+	MODG 8 2;
+	while (g[1] > 0)
+	{
+		if (g[1] > 0)
+		{
+			DBYT 0 0 90 00;
+			if (g[1] != 1)
+			{
+				LABL 0 0 00 00 .;
+			}
+		}
+		g[1] -= 1;
+	}
+	if (g[2] > 0)
+	{
+		LABL 0 0 90 00 .;
+		DBYT 0 0 90 00;				//si: !@#!@#!@#!@ ergh ergh ergh!?
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# EIGRP::TLV::IP::Ext::Protocol_ID;
+	IGRP;
+	EIGRP;
+	Static Route;
+	RIP;
+	Hello;
+	OSPF;
+	IS-IS;
+	EGP;
+	BGP;
+	IDRP;
+	Connected Link;
+
+// -----------------------------------------
+
+void EIGRP::TLV::AppleTalk::Int;			// 0x0202
+	LABL 0 0 00 b7 AppleTalk TLV - Internal Routes;
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 AppleTalk TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 Internal Routes;
+	DWRD 0 5 90 c2 Length:\;
+	IPLG 0 0 90 c2 Next Hop:\;
+	DLNG 0 0 90 c2 Delay:\;
+	DLNG 0 0 90 c2 Bandwidth:\;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:\;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:\;
+	DBYT 0 0 90 c2 Reliability:\;
+	DBYT 0 0 90 c2 Load:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	DWRD 0 0 90 c2 Cable Range:;
+	DWRD 0 0 90 c2 Cable Range:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::AppleTalk::Ext;			// 0x0203
+	LABL 0 0 00 b7 AppleTalk TLV - External Routes;
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 AppleTalk TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 External Routes;
+	DWRD 0 5 90 c2 Length:\;
+	IPLG 0 0 90 c2 Next Hop:\;
+	IPLG 0 0 90 c2 Original Router:\;
+	DLNG 0 0 90 c2 Original AS:\;
+	DLNG 0 0 90 c2 Tag:\;
+	DLNG 0 0 90 c2 Ext Protocol ID:\;
+	BBYT 0 0 90 c2 Flags:\;
+	DWRD 0 1 90 c2 Ext Protocol Metric:\;
+	DLNG 0 0 90 c2 Delay:\;
+	DLNG 0 0 90 c2 Bandwidth:\;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:\;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:\;
+	DBYT 0 0 90 c2 Reliability:\;
+	DBYT 0 0 90 c2 Load:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	DWRD 0 0 90 c2 Cable Range:;
+	DWRD 0 0 90 c2 Cable Range:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::AppleTalk::Cable;			// 0x0204
+	LABL 0 0 00 b7 AppleTalk TLV - Cable Setup;
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 AppleTalk TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 Cable Setup;
+	DWRD 0 5 90 c2 Length:\;
+	DWRD 0 0 90 c2 Cable Range:;
+	DWRD 0 0 90 c2 Cable Range:;
+	IPLG 0 0 90 c2 Router ID:;
+	LABL 0 0 00 b8;
+	TRTS;
+	
+// -----------------------------------------
+
+void EIGRP::TLV::IPX::Int;					// 0x0302
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 IPX TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 Internal Routes;
+	DWRD 0 5 90 c2 Length:\;
+	IPLG 0 0 90 c2 Next Hop Addr:\;
+	ETHR 0 0 90 c2 Next Hop ID:\;
+	DLNG 0 0 90 c2 Delay:\;
+	DLNG 0 0 90 c2 Bandwidth:\;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:\;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:\;
+	DBYT 0 0 90 c2 Reliability:\;
+	DBYT 0 0 90 c2 Load:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	IPLG 0 0 90 c2 Destinaion Addr:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void EIGRP::TLV::IPX::Ext;					// 0x0303
+	DBYT 0 1 90 c2 Protocol ID:\;
+	LABL 0 0 00 14 IPX TLV;
+	DBYT 0 4 90 c2 Type Code:\;
+	LABL 0 0 00 14 External Routes;
+	DWRD 0 5 90 c2 Length:\;
+	IPLG 0 0 90 c2 Next Hop Addr:\;
+	ETHR 0 0 90 c2 Next Hop ID:\;
+	ETHR 0 0 90 c2 Originating Router ID:\;
+	DLNG 0 0 90 c2 Originating AS:\;
+	DBYT 0 0 90 c2 Ext Protocol:\;
+	HBYT 0 0 90 c2 Reserved:\;
+	DWRD 0 0 90 c2 External Metric:\;
+	DWRD 0 0 90 c2 External Delay:\;
+	DLNG 0 0 90 c2 Delay:\;
+	DLNG 0 0 90 c2 Bandwidth:\;
+	LABL 0 0 00 14 256 x IGRP Bandwidth;
+	l[1] = pb[0];
+	SHFL 10 41;
+	l[2] = pw[1];
+	l[2] += l[1];
+	DGLB 0 42 90 c2 MTU:\;
+	LABL 0 0 00 14 Min Transmission Unit;
+	HEX# 3 0 05 05;
+	DBYT 0 0 90 c2 Hop Count:\;
+	DBYT 0 0 90 c2 Reliability:\;
+	DBYT 0 0 90 c2 Load:\;
+	HWRD 0 0 90 c2 Reserved:\;
+	IPLG 0 0 90 c2 Destinaion Addr:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+

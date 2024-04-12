@@ -1,0 +1,161 @@
+//No documentation from AEROHIVE
+//So this code tries to find 0x0800 followed by 0x45(0x06) followed by the right packet length to determine if it's ipv4
+//we don't care about the data between the next IP Level.
+//
+
+
+str# Ether::Branching_3_Str;
+0xFEAE	| UnknownTunneling;
+0xFFFF	| UnknownTunneling;
+
+void TunnelFinder_for_IPv4_v6()
+{
+	UnknownTunneling;
+}
+
+void UnknownTunneling()
+{
+	LABL( 0, 0, 0, 0x14, "Unknown Tunneling Protocol" );
+	LABL( 0, 0, 0, 0xb1, "Unknown Tunneling Protocol" );
+		//find the next possible EthertypeII/IPv4 Combination
+		//First: find IPv4 Protocol Type
+		BREM( 0, l[1] );
+		l[2] = l[1];
+		//DGLB 0 41 90 c2 l1:;
+		l[4] = 0;
+		while (l[1] >= 4)
+		{
+			GWRD( 0, l[3] );
+			l[4] += 2;
+			l[1] -= 2;
+			//Check for Ethertype IPv4
+			if (l[3] == 0x0800)
+			{
+				INCR( 0, 2 );
+				GBYT( 0, l[5] );
+				l[5] &= 0xf0;
+				SHFR( 4, l[5] );
+				if (l[5] == 0x4)
+				{
+					BREM( 0, l[6] );
+					l[2] -= l[6];
+					DECR( 0, l[2] );
+					if (l[2] == 22)
+					{
+						DWRD( 0, 0, 0x90, 0xc2, "Unknown(ID):" );
+						ETHR( 0, 0, 0x90, 0xc2, "Adress 1:" );
+						ETHR( 0, 0, 0x90, 0xc2, "Adress 2:" );
+						ETHR( 0, 0, 0x90, 0xc2, "Adress 3:" );
+						PRTO( 0, l[6], 0x90, 0xc2, "Protocol Type:" );						
+						l[2] = 2;
+					}
+					if (l[2] != 2)
+					{					
+						DUMP( 0, l[2], 0x90, 0xc2, "Unknown Tunneling Data:" );
+					}
+					//check the length in IPv4
+					//if left length == g[16] it should be IPv4
+					if (l[6] == 0x0800)
+					{
+						GWRD( 2, l[7] );
+						LABL( 0, 0, 0, 0xc8 );
+						if (l[7] == g[16])
+						{
+							IP;
+						}
+					}
+					if (l[6] != 0x0800)
+					{
+						GWRD( 2, l[7] );
+						LABL( 0, 0, 0, 0xc8 );
+						if (l[7] == g[16])
+						{
+							IP;
+						}
+					}
+				}
+			}
+			//Check for Ethertype IPv6
+			if (l[3] == 0x86DD)
+			{
+				INCR( 0, 2 );
+				GBYT( 0, l[5] );
+				l[5] &= 0xf0;
+				SHFR( 4, l[5] );
+				if (l[5] == 0x6)
+				{
+					BREM( 0, l[6] );
+					l[2] -= l[6];
+					DECR( 0, l[2] );
+					DUMP( 0, l[2], 0x90, 0xc2, "Unknown Tunneling Data:" );
+					//check the length in IPv6
+					//if left length == g[16] it should be IPv6
+					GWRD( 4, l[7] );
+					LABL( 0, 0, 0, 0xc8 );
+					if (l[7] == g[16])
+					{
+						IPV6;
+					}
+				}
+			}
+			INCR( 0, 2 );
+			if (l[1] <= 4)
+			{
+				BREM( 0, l[6] );
+				l[2] -= l[6];
+				DECR( 0, l[2] );
+				HEX#( 0, l[2], 0x90, 0xc2, "Unknown Tunneling Data:");
+				LABL( 0, 0, 0, 0xb8);
+			}
+		}
+	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void AEROHIVE_Tunneling_2()
+{
+	LABL( 0, 0, 0, 0x14, "AEROHIVE Tunneling" );
+	LABL( 0, 0, 0, 0xb1, "AEROHIVE Tunneling" );
+		GBYT( 0, l[1] );
+		DWRD( 0, 0, 0x90, 0xc2, "Unknown:" );
+		BREM( 0, l[1] );
+			DGLB( 0, l[1], 0x90, 0xc2, "Bytes Left:" );
+			
+		//DBYT( 0, 0, 0x90, 0xc2, "Version:" );
+		//DBYT( 0, l[2], 0x90, 0xc2, "Type:" );
+		//DBYT( 0,0 0x90, 0xc2, "Type:" );
+		//DBYT( 0, 0, 0x90, 0xc2, "Type:" );
+		//l[2] = 11;
+		if (l[2] == 11)
+		{
+			BREM( 0, l[1] );
+			DGLB( 0, l[1], 0x90, 0xc2, "Bytes Left:" );
+			ETHR( 0, 0, 0x90, 0xc2, "Adress 1:" );
+			ETHR( 0, 0, 0x90, 0xc2, "Consume:" );
+			ETHR( 0, 0, 0x90, 0xc2, "Consume:" );
+			TNXT -Ether::Branching_2;
+		}
+		if (l[2] == 7)
+		{
+			BREM( 0, l[1] );
+			DGLB( 0, l[1], 0x90, 0xc2, "Bytes Left:" );
+			//DWRD( 0, 0, 0x90, 0xc2, "Consume:" );
+			//DWRD( 0, 0, 0x90, 0xc2, "Consume:" );
+			//DWRD( 0, 0, 0x90, 0xc2, "Consume:" );
+			//ETHR( 0, 0, 0x90, 0xc2, "Consume:" );
+			//ETHR( 0, 0, 0x90, 0xc2, "Consume:" );
+			HEX#( 12, 0, 0x90, 0xc2, "DUMP:" );
+			while (g[16] > 0)
+			{
+				ETHR( 0, 0, 0x90, 0xc2, "Consume:" );
+			//	IPLG( 0, 0, 0x90, 0xc2, "Consume:" );
+			//DWRD( 0, l[1], 0x90, 0xc2, "Consume:" );
+			HEX#( 24, 0, 0x90, 0xc2, "DUMP:" );	
+			
+			}
+			//802_11::Main2;
+			//TNXT -Ether::Branching_2;
+		}
+		
+	LABL( 0, 0, 0, 0xc8);
+}

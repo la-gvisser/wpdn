@@ -1,0 +1,925 @@
+// ICAP - Internet Content Adaptation Protocol
+// Date: 4/30/2006
+// From: Netis
+// Need to clean up code and make decoder more efficient
+
+str# TCP::Ports_Str;
+	1344  | ICAP;
+
+void ICAP()
+{
+	TEQU 0  10  0  0 RETURN;
+	LABL( 0, 0, 0, 0xb1, "ICAP - Internet Content Adaptation Protocol\ICAP:");
+	Init Line Variables;
+	ICAP::Parse_Header();
+	SEQU 1   2;											* Did we find a header
+	SKIP 3;
+	LABL 0 0 90 c4 Continuation of existing ICAP stream;
+	ICAP Display All Lines No Init;						*Display All Lines No Init
+	TRTS;
+	ICAP Display Fields And Lines No Init;				*ICAP Display Fields And Lines No Init
+}
+
+void ICAP::Parse_Header()
+{
+	ICAP::Parse_Request();
+	SEQU 1   2;
+	SKIP 80000005;
+      ICAP Print Request;
+	ICAP Parse URI;
+	ICAP Parse Version;
+	MOVE 1   2;
+	TRTS;
+	ICAP Parse Response;
+	TEQU 0   2  0  0  RETURN;
+	ICAP Parse Version Response;
+	ICAP Parse Status;
+	ICAP Parse Reason;
+	MOVE 1   2;
+}
+
+						
+void ICAP Parse Version;
+	CHR# 0   0  2  c2 ICAP Version:\;
+	Skip Spaces;
+	Parse Value;
+	Print Value;
+	TRTS;
+
+void ICAP Print Request;
+	CHR# 0   0  2  c2 ICAP Command:\C:;
+	ICAP Parse Value2; 
+	ICAP Print Value2; 
+	TRTS;
+
+void ICAP::Parse_Request()
+{
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 5245514d 1 0 0 RETURN;  * REQMOD
+	TEQU 52455350 1 0 0 RETURN;  * RESPMOD
+	TEQU 4f505449 1 0 0 RETURN;  * OPTIONS
+	MOVE 0   2;
+}
+
+void ICAP Parse Response;
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 49434150 1 0 0 RETURN; 	* ICAP
+	MOVE 0   2;
+	TRTS;
+
+void ICAP Parse Version Response;
+	CHR# 0   0  2  c2 ICAP Version:\;
+	Skip Spaces;
+	ICAP Parse Value2;
+	ICAP Print Value2; 
+	TRTS;
+
+void ICAP Parse Value2;
+	Skip Spaces;
+	MOVE 0  1e;
+	GSTR 20000020  1e; 
+	TRTS;
+
+void ICAP Parse Value2 Loop;
+	TEQU 0   10 0  0  RETURN;
+	GBYT 1   1;
+	TEQU a   1  0  0  RETURN;  *CR
+	TEQU 20  1  0  0  RETURN;  *space
+	INCR 1;
+	ADDG 1   1e;
+	TNXT -ICAP Parse Value2 Loop;
+
+void ICAP Print Value2;
+	MOVE 1   b;  			*set printed a line flag
+	l[1] = g[0x1e];
+	if (l[1] > 200)
+	{
+		CHR# c8 0 90;
+		l[1] -= 200;
+		CHR# 0 41 90 c0;				//si: i'm not going to expect the lines to be >200...ergh, hopefully
+		TRTS;
+	}
+	CHR# 0   1e 90;
+	TRTS;
+
+
+
+void ICAP Parse Status;
+	CHR# 0   0  2  c2 ICAP Status:\S:;
+	Skip Spaces;
+	ICAP Parse Value2;
+	ICAP Print Value2; 
+	TRTS;
+
+
+void ICAP Parse Reason;
+	CHR# 0   0  2  c2 ICAP Reason:\R:;
+	Skip Spaces;
+	MOVE 0 1e;
+	GSTR 2000000d 1e;
+	ICAP Print Value2;
+	TRTS;
+
+
+void ICAP Parse URI;
+	CHR# 0   0  2  c2 URI:;
+	Skip Spaces;
+	ICAP Parse Value2;
+	ICAP Print Value2; 
+	TRTS;
+
+*-------------------------UTILITY  FUNCTIONS-------------------------------
+
+void ICAP Display Fields And Lines No Init;						* Display Fields And Lines No Init
+	TGTE 0   10   0    0  RETURN;
+
+	ICAP Blank Line;
+
+	ICAP Parse Fields;
+	ICAP Message Parse Lines Loop;
+	SNEQ 1    8;					* binary?
+	SKIP 1;
+	DUMP 0   10   90   c2 Binary Data:;
+	TRTS;
+	
+
+
+void ICAP Display All Lines No Init;						* Display All Lines No Init
+	Parse Lines Only Loop;
+	SEQU 1    8;					* binary?
+	SKIP 1;
+	TRTS;
+	BREM 0    1;
+	SGTE 4    1;
+	SKIP 2;
+	DUMP 0   10   90   c2 Binary Data:;
+	SUBG 4    1;     * subg FCS from g1
+	TRTS;
+
+
+
+
+* registers:
+*
+* g[0]  subroutine return value
+* g[1]  used to read bytes into
+* g[2]  boolean used to tell whether the subroutine succeeded
+* g[3]  boolean used to tell whether the subroutine succeeded
+* g[4]  last line was a field
+* g[5]  used to test for line wrap
+* g[6]  is the line counter
+* g[7]  used to test for line wrap
+* g[8]  used to test for binary
+* g[9]  used as Esc sequence state
+* g[a]  dot character flag
+* g[b]  printed a line flag
+* g[c]  loop counter
+* g[10] what is left in packet
+* g[11] ASCII code lookup index
+* g[12] skip delimiter flag
+* g[1e] number of bytes to print 
+* g[0x1f] used for checking end of ICAP
+* g[0x33] used for HTTP checking
+
+* 52 global used across encapsulated header checking
+
+
+
+void ICAP Parse Fields;
+	MOVE 0    4;       * boolean: previous line was a label
+	MOVE 0    2;       * Init end of proto marker
+	ICAP Parse Fields Loop;
+	LABL 0 0 0 c8;
+	TRTS;
+
+void ICAP Parse Fields Loop;
+	TEQU 0   10 0  0  RETURN;
+	TEQU 1   2  0  0  RETURN;
+	ICAP Parse Field;
+	SEQU 1   3  0  0  RETURN;				* Found a label?
+	SKIP 3;
+	SEQU 1   4;								* last line was a field?
+	SKIP 1;
+	TRTS;
+	MOVE 1   4;
+
+	ADDG 1   c;								* incr loop counter
+	SNEQ ff  c;								* loop counter goes to 255
+	SKIP 2;
+	DUMP 0 10 90 c2 Remaining Data:;
+	TRTS;
+
+	TNXT -ICAP Parse Fields Loop;
+
+void ICAP Parse Field;
+	MOVE 0 33;
+	Find End;
+	TEQU 1   2  0  0  RETURN;
+	ICAP Message Skip Delimiters;
+	Parse Label;
+	SEQU 0   3;								* Did not find a label
+	SKIP 6;
+	Print Field;
+	ICAP Blank Line;
+	SEQU 0 33;
+	SKIP 1;
+	ICAP message;
+	TRTS;
+	SEQU 1   4; *if last line was a field
+	SKIP 3;
+	ICAP Blank Line;
+	SEQU 0 33;
+	SKIP 1;
+	ICAP message;
+	TRTS;
+	Parse Line;
+	Print Line Continued;
+	ICAP Blank Line;
+	SEQU 0 33;
+	SKIP 1;
+	ICAP message;
+	TRTS;
+
+* g[55] used for no of bits traversed
+* g[56] used for position
+* g[53] used as RQH etc
+
+void ICAP Blank Line;				
+	MOVE 0 1f;
+	MOVE 0 37;
+	GLNG 0 1f;			*g[31] used for checking end of ICAP
+	SNEQ 0d0a0d0a 1f;
+	SKIP 3;
+	MOVE 1 33;			* g[51] when set means HTTP follows
+	INCR 4;
+	Skip Spaces;
+	MOVE 0 1f;
+	ICAP Message Skip Delimiters;
+	GLNG 0 34;
+	SNEQ 456e6361 34;		*check if encapsulated is the next header g[52] used
+	SKIP 12;
+	MOVE 0 35;
+	INCR e;
+	MOVE e 37;		* g[55] = e	
+	MOVE 1 38;		* g[56] = 1
+	GLNG 0 34;
+	
+
+	SNEQ 6e756c6c 34;
+	SKIP 4;
+	LABL 0   0  0 c2 Encapsulated:;
+	g[55] -= 14;
+	*DECR 0 37;
+	*g[55] += 9;
+	CHR# b 0 90;
+	TRTS;
+
+	*if (	g[52] == 0x6e756c6c )			*TEQU 6e756c6c 1 0 0 RETURN;			* null-body
+	*{
+	*	LABL 0   0  0 c2 Encapsulated:;
+	*	g[55] -= 14;
+	*	DECR 0 37;
+	*	CHR# 0 37 90;
+	*	TRTS;
+	*}	
+			
+	ICAP Check;
+	GBYT(0, l[1]);					* GBYT 0 l[1];
+	SNEQ (0x0d, l[1]);
+	SKIP 2;
+	DECR 0 37;
+	TRTS;
+	ICAP Encapsulated Loop;
+	if( g[55] != 0 )
+	{
+		LABL 0   0  0 c2 Encapsulated:;
+		g[55] -= 14;
+		DECR 0 37;
+		CHR# 0 37 90;
+		MOVE 0 1f;
+		GLNG 0 1f;			*g[31] used for checking end of ICAP
+		SNEQ 0d0a0d0a 1f;
+		SKIP 3;
+		MOVE 1 33;			* g[51] when set means HTTP follows
+		INCR 4;
+		Skip Spaces;
+		TRTS;
+	}
+	MOVE 0 1f;
+	GLNG 0 1f;			*g[31] used for checking end of ICAP
+	SNEQ 0d0a0d0a 1f;
+	SKIP 3;
+	MOVE 1 33;			* g[51] when set means HTTP follows
+	INCR 4;
+	Skip Spaces;
+	TRTS;
+
+void ICAP Check;
+	GLNG 0 34;
+	TEQU 7265712d 34 0 0 ICAP Req;
+	TEQU 7265732d 34 0 0 ICAP Res;
+	TEQU 6f70742d 34 0 0 ICAP Opt;
+	TRTS;
+
+void ICAP Req;
+	INCR 4;
+	g[55] += 4;
+	GLNG 0 34;				* g[52] used as temp check
+	SEQU 626f6479 34;
+	SKIP 5;
+	ORRG 1 35;				* req-hdr
+	l[2] = g[56];
+	SHFL( 1, l[2]);
+	g[53] |= l[2];
+	TRTS;
+	ORRG 10 35;				* req-body
+	l[2] = g[56];
+	SHFL( 5, l[2]);
+	g[53] |= l[2];
+	TRTS;
+	
+void ICAP Res;
+	INCR 4;
+	g[55] += 4;
+	GLNG 0 34;					* g[52] used as temp check
+	SEQU 626f6479 34;
+	SKIP 5;
+	ORRG (0x100, g[53]);			* res-hdr
+	l[2] = g[56];
+	SHFL (0x9, l[2]);
+	g[53] |= l[2];
+	TRTS;
+	ORRG (0x1000, g[53]);			*res-body
+	l[2] = g[56];
+	SHFL( 0x0d, l[2]);
+	g[53] |= l[2];
+	TRTS;
+
+void ICAP Opt;
+	ORRG (0x10000, g[53]);			* opt-body
+	l[2] = g[56];
+	SHFL( 0x11, l[2]);
+	g[53] |= l[2];
+	TRTS;	
+
+void ICAP Encapsulated Loop;
+	GBYT ( 0, l[1]);
+	while( l[1] != 44 )
+	{
+		INCR 1;
+		g[55] += 1;
+		GBYT ( 0, l[1]);
+		SNEQ(13, l[1]);
+		SKIP 1;
+		TRTS;
+	}
+	INCR 2;
+	g[55] += 2;
+	g[56] += 1;
+	ICAP Check;
+	GBYT( 0, l[3]);
+	SNEQ (0x0d, l[3]);
+	SKIP 2;
+	DECR( 0 ,g[55]);
+	TRTS;
+	ICAP Encapsulated Loop;
+	TRTS;
+	
+*---------------------------------NOT USED-----------------------------
+void ICAP Encapsulated;
+	GLNG 0 19;
+	SNEQ 456e6361 19;			*check if encapsulated is the next header g[25] used
+	SKIP 12;
+	LABL 0   0  0 b1 encapsulated:;
+	MOVE 0 35;
+	INCR e;
+	MOVE e 19;				* g[25] = e	
+	MOVE 1 38;				* g[56] = 1
+	TEQU 6e756c6c 1 0 0 RETURN;	* null-body
+	ICAP Check;
+	GBYT(0, l[1]);			* GBYT 0 l[1];
+	SNEQ (0x0d, l[1]);
+	SKIP 2;
+	DECR 0 19;
+	TRTS;
+	ICAP Encapsulated Loop;
+	TRTS;
+	
+*----------------------------------------------------------------------
+
+void ICAP message;
+	if( g[53] == 0)
+	{
+		HTTP;
+		TRTS;
+	}
+	l[6] = g[53];
+	l[1] = g[53];
+	l[2] = g[53];
+	l[3] = g[53];
+	l[4] = g[53];
+	l[5] = g[53];
+	l[1] &= 0x0e ;
+	SHFR(1, l[1]);
+	l[2] &= 0xe0 ;
+	SHFR(5, l[2]);
+	l[3] &= 0xe00 ;
+	SHFR(9, l[3]);
+	l[4] &= 0xe000 ;
+	SHFR(13, l[4]);
+	l[5] &= 0xe0000;
+	SHFR(17, l[5]);
+
+	if( l[1] == 1)
+	{
+		LABL 0   0  90 c9 ICAP message- HTTP request header:;
+		ICAP http;
+		g[53] &= 0xfff0;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+
+	if( l[3] == 1)
+	{
+		LABL 0   0  90 c9 ICAP message- HTTP response header:;
+		ICAP http;
+		g[53] &= 0xff0ff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[2] == 1)
+	{
+		LABL 0   0  90 c9 ICAP message- HTTP request body:;
+		ICAP Lines;
+		g[53] &= 0xfff0f;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[4] == 1)
+	{
+		LABL 0   0 90 c9 ICAP message- HTTP response body:;
+		ICAP Lines;
+		g[53] &= 0xf0fff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[5] == 1)
+	{
+		LABL 0   0  90 c9 ICAP message- HTTP options body:;
+		ICAP Lines;
+		g[53] &= 0x0ffff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	
+	
+	if( l[1] == 2)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request header:;
+		ICAP http;
+		g[53] &= 0xfff0;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+
+	if( l[3] == 2)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0 90 c9 ICAP message- HTTP response header:;
+		ICAP http;
+		g[53] &= 0xff0ff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[2] == 2)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request body:;
+		ICAP Lines;
+		g[53] &= 0xfff0f;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[4] == 2)
+	{	
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response body:;
+		ICAP Lines;
+		g[53] &= 0xf0fff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[5] == 2)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP options body:;
+		ICAP Lines;
+		g[53] &= 0x0ffff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	
+	if( l[1] == 3)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request header:;
+		ICAP http;
+		g[53] &= 0xfff0;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+
+	if( l[3] == 3)
+	{
+
+		LABL 0 0 0 b8;
+		LABL 0   0 90 c9 ICAP message- HTTP response header:;
+		ICAP http;
+		g[53] &= 0xff0ff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[2] == 3)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request body:;
+		ICAP Lines;
+		g[53] &= 0xfff0f;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[4] == 3)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response body:;
+		ICAP Lines;
+		g[53] &= 0xf0fff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[5] == 3)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0 90 c9 ICAP message- HTTP options body:;
+		ICAP Lines;
+		g[53] &= 0x0ffff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[1] == 4)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0 90 c9 ICAP message- HTTP request header:;
+		ICAP http;
+		g[53] &= 0xfff0;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+
+	if( l[3] == 4)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response header:;
+		ICAP http;
+		g[53] &= 0xff0ff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[2] == 4)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request body:;
+		ICAP Lines;
+		g[53] &= 0xfff0f;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[4] == 4)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response body:;
+		ICAP Lines;
+		g[53] &= 0xf0fff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[5] == 4)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP options body:;
+		ICAP Lines;
+		g[53] &= 0x0ffff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[1] == 5)
+	{
+
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request header:;
+		ICAP http;
+		g[53] &= 0xfff0;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+
+	if( l[3] == 5)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response header:;
+		ICAP http;
+		g[53] &= 0xff0ff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[2] == 5)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP request body:;
+		ICAP Lines;
+		g[53] &= 0xfff0f;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[4] == 5)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP response body:;
+		ICAP Lines;
+		g[53] &= 0xf0fff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	if( l[5] == 5)
+	{
+		LABL 0 0 0 b8;
+		LABL 0   0  90 c9 ICAP message- HTTP options body:;
+		ICAP Lines;
+		g[53] &= 0x0ffff;	
+		if( g[53] == 0)
+		{
+			TRTS;
+		}
+	}
+	TRTS;
+	
+void ICAP http;
+	TEQU 0  10  0  0 RETURN;
+	MOVE 0 37;
+	GBYT( 0, l[1]);
+	while( l[1] == 0x20)
+	{
+		INCR 1;
+		GBYT(0, l[1]);
+	}
+	Init Line Variables;
+	HTTP Parse Header;
+	ICAP Message Display Fields And Lines No Init;
+	TRTS;
+
+		
+void ICAP Lines;
+	MOVE 0 37;
+	GBYT( 0, l[1]);
+	while( l[1] == 0x20)
+	{
+		INCR 1;
+		GBYT(0, l[1]);
+	}
+	ICAP Message Display All Lines No Init;
+	TRTS;	
+
+*-------------------------------------IETF_main functions--------------
+
+
+
+void ICAP Message Display Fields And Lines;
+	TGTE 0   10   0    0  RETURN;
+	Test Referrer;
+	Display Fields And Lines No Init;
+	TRTS;
+
+void ICAP Message Display Fields And Lines No Init;
+	TGTE 0   10   0    0  RETURN;
+	ICAP Message Parse Fields;
+
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+
+
+	ICAP Message Parse Lines Loop;
+	SNEQ 1    8;					* binary?
+	SKIP 1;
+	DUMP 0   10   90   c2 Binary Data:;
+	TRTS;
+
+
+void ICAP Message Display All Lines;
+	Test Referrer;
+	Init Line Variables;
+	ICAP Message Display All Lines No Init;
+
+void ICAP Message Display All Lines No Init;
+	ICAP Message Parse Lines Only Loop;
+	SEQU 1    8;					* binary?
+	SKIP 1;
+	TRTS;
+	BREM 0    1;
+	SGTE 4    1;
+	SKIP 2;
+	DUMP 0   10   90   c2 Binary Data:;
+	SUBG 4    1;     * subg FCS from g1
+	TRTS;
+
+void ICAP Message Parse Lines Only Loop;
+	TGTE 0   10   0    0  RETURN;
+	ICAP Message Skip Delimiters;
+	
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+
+
+	TGTE 0   10   0    0  RETURN;
+	Parse Line;
+	TEQU 1    8   0    0  RETURN;
+	TEQU 0    2   0    0  RETURN; * 0
+	Print Line;
+	TNXT -ICAP Message Parse Lines Only Loop;
+
+void ICAP Message Skip Delimiters;
+	TEQU  0  10   0    0  RETURN;	*make sure we have enough left
+
+	GBYT 0 39;					*GBYT( 0, l[1]);		
+	SNEQ d 39;					*SNEQ( 0x0d, l[1]);			
+	SKIP 5;
+	INCR 2;
+	GLNG 0 39;					*GLNG(0, l[1]);
+	SNEQ 20202020 39;				*SNEQ(0x20202020, l[1]);
+	SKIP 2;
+	MOVE 1 37;			*g[55] = 1
+	TRTS;
+
+	MOVE  0  1e;
+
+	SNEQ  0   b;					* test printed a line flag
+	SKIP  a;
+	GBYT  0   1;
+	SEQU  0   1;
+	SKIP  4;
+	SGTE  0   1;
+	SKIP  5;
+	SLTE 20   1;
+	SKIP  3;
+	LABL  0   0   90 c2 Line  1:;
+	DGLB  0   1   c5;        *put ourselves on column 36
+	ADDG  1   6;
+
+	Skip Delimiters Loop;
+	SEQU 0   1e;
+	SKIP 3;
+	DECR 0   1e;
+	CHR# 0   1e   5;
+	MOVE 0   1e;
+	TRTS;
+
+void ICAP Message Parse Fields;
+	MOVE 0    4;       * boolean: previous line was a label
+	MOVE 0    2;       * Init end of proto marker
+	ICAP Message Parse Fields Loop;
+	TRTS;
+
+void ICAP Message Parse Field;
+	Find End;
+	TEQU 1   2  0  0  RETURN;
+	ICAP Message Skip Delimiters;
+
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+
+
+	Parse Label;
+	SEQU 0   3;								* Did not find a label
+	SKIP 2;
+	Print Field;
+	TRTS;
+	SEQU 1   4; *if last line was a field
+	SKIP 1;
+	TRTS;
+	Parse Line;
+	Print Line Continued;
+	*MOVE 0   4;
+	TRTS;
+
+void ICAP Message Print Field;
+	TEQU 0   3  0  0  RETURN;  * there is no field to print
+	MOVE 1   b;  * set print line flag
+	MOVE 0   6;  * reset line counter to 0
+	Print Label;
+	ICAP Message Skip Delimiters;
+
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+
+
+
+	Skip Spaces;
+	Parse Value;
+	Print Value;
+	TRTS;
+
+void ICAP Message Parse Lines Loop;
+	TGTE 0   10   0    0  RETURN;
+	ICAP Message Skip Delimiters;
+
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+	
+	TGTE 0   10   0    0  RETURN;
+	Parse Line;
+	TEQU 1    8   0    0  RETURN;
+	Print Line;
+	TEQU 0    2   0    0  RETURN; * 0
+	TNXT -ICAP Message Parse Lines Loop;
+
+void ICAP Message Parse Fields Loop;
+	TEQU 0   10 0  0  RETURN;
+	TEQU 1   2  0  0  RETURN;
+	ICAP Message Parse Field;
+
+	SNEQ 1 37;
+	SKIP 1;
+	TRTS;
+
+
+	
+	SEQU 1   3  0  0  RETURN;				* Found a label?
+	SKIP 3;
+	SEQU 1   4;								* last line was a field?
+	SKIP 1;
+	TRTS;
+	MOVE 1   4;
+
+	ADDG 1   c;								* incr loop counter
+	SNEQ ff  c;								* loop counter goes to 255
+	SKIP 2;
+	DUMP 0 10 90 c2 Remaining Data:;
+	TRTS;
+
+	TNXT -ICAP Message Parse Fields Loop;
+

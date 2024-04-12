@@ -1,0 +1,658 @@
+// ------------------------------------------------------------------
+//	802.1x - EAP
+//	
+//	 g[3] = packet type
+//	 g[4] = body length
+//	 g[0xa] = Auth Packet Code
+// ------------------------------------------------------------------
+
+void 802.1x Authentication;				// SI: TT1675 EAP initialization and login
+	LABL 0 0 0 b1 802.1x Authentication;
+	DBYT 0 4 90 c2 Protocol Version:;
+	DBYT 0 3 90 c2 Packet Type:;
+	CST# 0 3 00 14 802.1x_Auth::PacketType::List;
+	DWRD 0 4 90 c2 Body Length:;
+	if (g[4] <= 0)
+	{
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+	TST# 0 3 0 0 802.1x_Auth::PacketType::Func;
+	TRTS;
+	
+str# 802.1x_Auth::PacketType::List;
+	0 | EAP - Packet;
+	1 | EAPOL - Start;
+	2 | EAPOL - Logoff;
+	3 | EAPOL - Key;
+	4 | EAPOL - Encapsulated-ASF-Alert;	
+
+str# 802.1x_Auth::PacketType::Func;
+	0 | 802.1x_Auth::Packet;
+	3 | 802.1x_Auth_Key;
+	4 | 802.1x_Auth_EAA;
+
+void 802.1x_Auth::Packet;
+	LABL 0  0  0 b7 Extensible Authentication Protocol\EAP;
+	DBYT 0  2 90 c2 Code:;
+	 CEQU 1 2 0 14 Request;
+	 CEQU 2 2 0 14 Response;
+	 CEQU 3 2 0 14 Success;
+	 CEQU 4 2 0 14 Failure;
+	MOVE 2 A;										//SI: SAVE THIS FOR OTHER FUNCTIONS
+	DBYT 0  1 90 c2 Identifier:;
+	DWRD 0  5 90 c2 Length:;						//SI: save this global
+	TEQU 1  2  0  0 802.1x_Auth::Packet_Req/Res;
+	TEQU 2  2  0  0 802.1x_Auth::Packet_Req/Res;
+	SEQU 3  4;
+	SKIP 3;
+	SEQU 4  4;
+	SKIP 1;
+	DUMP 0 10 90 c2 Data:;
+	LABL 0  0  0 b8;
+	TRTS;
+
+void 802.1x_Auth::Packet_Req/Res;
+	DBYT 0  1 90 c2 Type:;							//SI: save...need for next function
+	 TEQU 1 1 0 14 802.1x_Auth_Packet_Req/Res_Display;
+	 TEQU 2 1 0 14 802.1x_Auth_Packet_Req/Res_Display;
+	 TEQU 3 1 0  0 802.1x_Auth_Packet_Req/Res_Nak;
+	 TEQU 4 1 0 14 802.1x_Auth_Packet_Req/Res_MD5-Challenge;
+	 TEQU 5 1 0 14 802.1x_Auth_Packet_Req/Res_Display;
+	 TEQU 6 1 0 14 802.1x_Auth_Packet_Req/Res_Display;
+	CEQU  9  1 0 14 RSA Public Key Authentication;
+	CEQU  a  1 0 14 DSS Unilateral;
+	CEQU  b  1 0 14 KEA;
+	CEQU  c  1 0 14 KEA-VALIDATE;
+	 TEQU  d  1 0 14 802.1x_Auth_Packet_Req/Res_EAP-TLS;		//RFC 2716
+	CEQU  e  1 0 14 Defender Token (AXENT);
+	CEQU  f  1 0 14 Windows 2000 EAP;
+	CEQU 10  1 0 14 Arcot Systems EAP;
+	CEQU 11  1 0 14 EAP-Cisco Wireless (LEAP);
+	CEQU 12  1 0 14 Nokia IP smart card authentication;
+	CEQU 13  1 0 14 SRP-SHA1 Part 1;
+	CEQU 14  1 0 14 SRP-SHA1 Part 2;
+	 TEQU 15  1 0 14 802.1x_Auth_Packet_Req/Res_EAP-TTLS;
+	CEQU 18  1 0 14 EAP-3Com Wireless;
+	 TEQU 19  1 0 14 802.1x_Auth_Packet_Req/Res_PEAP;
+	CEQU 2b 1 0 14 EAP-FAST;
+	 TEQU 2b 1 0 0 802.1x_EAP_FAST;
+	CEQU FE  1 0 14 Wi-Fi Protected Setup;
+	 TEQU FE 1 0 0 802.1x_WPS;
+
+	//SI: if it doesn't equal any of those...then it is unknown
+	LABL 0 0 0 b8;
+	TRTS;
+	 
+void 802.1x_Auth_Packet_Req/Res_Display;
+	CEQU 1 1 0 14 Identity;
+	CEQU 2 1 0 14 Notification;
+	CEQU 5 1 0 14 One-Time Password (OTP);
+	CEQU 6 1 0 14 Generic Token Card;
+	SUBG 5 5;
+	if (g[5] > 0)
+	{
+		CHR# 0 5 90 c2 Type-Data:;
+	}
+	LABL 0 0  0 b8;
+	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_Nak;
+	LABL 0 0 00 14 Nak (Response Only);
+	DBYT 0 1 90 c2 Auth Type:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_MD5-Challenge;
+	LABL 0 0 00 14 MD5-Challenge;
+	DBYT 0 1 90 c2 Value Size:;
+	DUMP 0 1 90 c2 Value:;
+	g[5] -= 6;								//si: g[5] holds the length of the packet
+	g[5] -= g[1];							//si: 6 = code, identifier, length, type, value size
+	CHR# 0 5 90 c2 Name:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_EAP-TLS;
+	LABL 0 0  0 14 EAP-TLS;
+	GBIT 1 2;								// SI: SAVE for message length use
+	HBYT 0 1 90 c9 Flags:;
+	 CBIT 7 1 0 d4 1... .... Length Included;
+	 CLSE 0 0 0 d4 0... .... Length Not Included;
+	 CBIT 6 1 0 d4 .1.. .... More Fragments;
+	 CLSE 0 0 0 d4 .0.. .... No More Fragments;
+	 CBIT 5 1 0 d4 ..1. .... EAP-TLS Start;
+	 CLSE 0 0 0 d4 ..0. .... Not EAP-TLS Start;
+	 CBIT 4 1 0 d4 ...x .... Reserved;
+	 CLSE 0 0 0 d4 ...x .... Reserved;
+	 CBIT 3 1 0 d4 .... x... Reserved;
+	 CLSE 0 0 0 d4 .... x... Reserved;
+	 CBIT 2 1 0 d4 .... .x.. Reserved;
+	 CLSE 0 0 0 d4 .... .x.. Reserved;
+	 CBIT 1 1 0 d4 .... ..x. Reserved;
+	 CLSE 0 0 0 d4 .... ..x. Reserved;
+	 CBIT 0 1 0 d4 .... ...x Reserved;
+	 CLSE 0 0 0 d4 .... ...x Reserved;
+	LABL 0 0 0 b8;
+	SNEQ 1 2;
+	 SKIP 1;
+	 DLNG 0 1 90 c2 TLS Message Length:;
+	if (g[16] > 0) 
+	{
+		l[1] = pw[1];
+		if (l[1] == 0x0301)
+		{
+			LABL 0 0 0 b7 Secure Socket Layer;
+			SSLv3;
+			LABL 0 0 0 b8;
+		}
+		if (l[1] != 0x0301)
+		{
+			DUMP 0 10 90 c2 TLS Data:;
+		}
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_EAP-TTLS;
+	LABL 0 0  0 14 EAP-TTLS (Funk);
+	SUBG 5  5;
+	
+	DBIT 1 2 5 5;
+	INCR 1;
+	DECR 1;
+	HBYT 0 1 90 c9 Flags:;
+	 CBIT 7 1 0 d4 1... .... Length Included;
+	 CLSE 0 0 0 d4 0... .... Length Not Included;
+	 CBIT 6 1 0 d4 .1.. .... More Fragments;
+	 CLSE 0 0 0 d4 .0.. .... No More Fragments;
+	 CBIT 5 1 0 d4 ..1. .... EAP-TLS Start;
+	 CLSE 0 0 0 d4 ..0. .... Not EAP-TLS Start;
+	 CBIT 4 1 0 d4 ...x .... Reserved;
+	 CLSE 0 0 0 d4 ...x .... Reserved;
+	 CBIT 3 1 0 d4 .... x... Reserved;
+	 CLSE 0 0 0 d4 .... x... Reserved;
+	 CBIT 2 1 0 d4 .... .x.. Reserved;
+	 CLSE 0 0 0 d4 .... .x.. Reserved;
+	 CBIT 1 1 0 d4 .... ..x. Reserved;
+	 CLSE 0 0 0 d4 .... ..x. Reserved;
+	 CBIT 0 1 0 d4 .... ...x Reserved;
+	 CLSE 0 0 0 d4 .... ...x Reserved;
+	LABL 0 0 0 b8;
+	g[5] -= 1;
+	if (g[2] == 1)
+	{
+		DLNG 0 1 90 c2 TLS Message Length:;
+		g[5] -= 4;
+		g[5] -= g[1];
+		SSL;							// si: not sure if this is right..but what the heck...seems to be!
+	}
+	if (g[16] > 0) 
+	{
+		if (g[5] > 0) 
+		{
+			DUMP 0 5 90 c2 Type Data:;
+		}
+	}
+	LABL 0 0  0 b8; 
+	TRTS;
+
+//void 802.1x_Auth_Packet_Req/Res_EAP-TTLS;
+//	LABL 0 0  0 14 EAP-TTLS (Funk);
+//	*SI: type data length = length - 5
+//	SUBG 5  5;
+//	DUMP 0 5 90 c2 Type Data:;
+//	LABL 0 0  0 b8; 
+//	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_EAP-TTLS_AVP;		// SI: nothing calls into this yet...
+	LABL 0 0 0 b7 AVP;
+	HEX# 3 0 90 c2 AVP Code:;
+	GBIT 0 2;									// SI: save for later use
+	HBYT 0 1 90 c9 Flags:;
+	 CBIT 7 1 0 d4 1... .... Present;
+	 CLSE 0 0 0 d4 0... .... Not Present;
+	 CBIT 6 1 0 d4 .1.. .... AVP May Be Ignored;
+	 CLSE 0 0 0 d4 .0.. .... Must Understand AVP;
+	 CBIT 5 1 0 d4 ..x. .... Reserved;
+	 CLSE 0 0 0 d4 ..x. .... Reserved;
+	 CBIT 4 1 0 d4 ...x .... Reserved;
+	 CLSE 0 0 0 d4 ...x .... Reserved;
+	 CBIT 3 1 0 d4 .... x... Reserved;
+	 CLSE 0 0 0 d4 .... x... Reserved;
+	 CBIT 2 1 0 d4 .... .x.. Reserved;
+	 CLSE 0 0 0 d4 .... .x.. Reserved;
+	 CBIT 1 1 0 d4 .... ..x. Reserved;
+	 CLSE 0 0 0 d4 .... ..x. Reserved;
+	 CBIT 0 1 0 d4 .... ...x Reserved;
+	 CLSE 0 0 0 d4 .... ...x Reserved;
+	LABL 0 0  0 b8;								// BD: unindents flags
+	DWRD 0 1 90 c2 AVP Length:;
+	SEQU 0 2;
+	 SKIP 1;
+	 HEX# 2 0 90 c2 Vendor-ID:;
+	DUMP 0 10 90 c2 Data:;
+	LABL 0 0 0 b8;								// BD: unindents other stuff
+	TRTS;
+
+void 802.1x_Auth_Packet_Req/Res_PEAP;
+	LABL 0 0 0 14 PEAP;
+	GBIT 1 2;									// SI: SAVE for message length use
+	HBYT 0 1 90 c9 Flags & Version:;
+	DECR 1;
+	BBIT 6 1 90 c2 Flags:;
+	LABL 0 0 0 14 First 6 bits;
+	 CBIT 5 1 0 d4 1... .... Length Included;
+	 CLSE 0 0 0 d4 0... .... Length Not Specified;
+	 CBIT 4 1 0 d4 .1.. .... More Fragments;
+	 CLSE 0 0 0 d4 .0.. .... No More Fragments;
+	 CBIT 3 1 0 d4 ..1. .... PEAP Start;
+	 CLSE 0 0 0 d4 ..0. .... Not PEAP Start;
+	 CBIT 2 1 0 d4 ...x .... Reserved;
+	 CLSE 0 0 0 d4 ...x .... Reserved;
+	 CBIT 1 1 0 d4 .... x... Reserved;
+	 CLSE 0 0 0 d4 .... x... Reserved;
+	 CBIT 0 1 0 d4 .... .x.. Reserved;
+	 CLSE 0 0 0 d4 .... .x.. Reserved;
+	 DBIT 2 0 90 c2 Version:;
+	LABL 0 0 0 b8;
+	if (g[2] == 1)
+	{
+		DLNG 0 5 90 c2 Length:;
+	}
+	if (g[16] > 0)
+	{
+		SSL;
+	}
+	 
+	if (g[16] > 0) 
+	{
+		DUMP 0 10 90 c2 TLS Data:;				// SI: it's not supposed to be this...supposed to specify length
+	}
+	LABL 0 0 0 b8;
+	TRTS;
+	
+void 802.1x_EAP_FAST()
+{
+	BBIT 5 1 90 c2 Flags:;
+	g[2] = g[1];
+	 CBIT 4 1 0 d4 1.... Length Included;
+	 CLSE 0 0 0 d4 0.... Length Not Specified;
+	 CBIT 3 1 0 d4 .1... More fragments;
+	 CLSE 0 0 0 d4 .0... No More fragments;
+	 CBIT 2 1 0 d4 ..1.. EAP-FAST Start;
+	 CLSE 0 0 0 d4 ..0.. Not EAP-FAST Start;
+	 CBIT 1 1 0 d4 ...x. Reserved;
+	 CLSE 0 0 0 d4 ...x. Reserved;
+	 CBIT 0 1 0 d4 ....x Reserved;
+	 CLSE 0 0 0 d4 ....x Reserved;
+	DBIT 3 41 90 c2 FAST Version:;
+	ANDG 10 2;
+	SHFR 4 2;
+	if (g[2] == 1)
+	{
+		DLNG 0 1 90 c2 Length:;
+	}
+	if (g[16] > 0)
+	{
+		SSL;
+	}
+	//TBIT 2 1 0 0 802.1x_EAP_FAST_Data;
+}
+
+void 802.1x_EAP_FAST_Data()
+{
+	LABL 0 0 00 b7 Authority ID Data;
+	HBYT 0 1 90 c2 Type:;
+	 CEQU 4 1 00 14 Authority ID;
+	DBYT 0 1 90 c2 Length:;
+	DBYT 0 1 90 c2 ID:;
+	802.1x_EAP_FAST_TLV();
+	LABL 0 0 0 b8;
+}
+
+void 802.1x_EAP_FAST_TLV()
+{
+	BBIT 1 1 90 c2 M:;
+		CEQU 0 1 0 14 Optional TLV;
+		CEQU 1 1 0 14 Mandatory TLV;
+	BBIT 1 1 90 c2 R:;
+		LABL 0 0 0 14 Reserved;
+	BBIT E 1 90 c2 TLV Type:;
+		CST# 0 1 0 14 802.1x_EAP_FAST_TLV_Type_Str;
+	DWRD 0 1 90 c2 Length:;
+	HEX# 0 1 90 c2 Value:;
+}
+
+str# 802.1x_EAP_FAST_TLV_Type_Str;
+	0	| Reserved;
+	1	| Reserved;
+	2	| Reserved;
+	3	| Result TLV;
+	4	| NAK TLV;
+	5	| Error TLV;
+	7	| Vendor-Specific TLV;
+	9	| EAP-Payload TLV;
+	10	| Intermediate-Result TLV;
+	11	| PAC TLV;
+	12	| Crypto-Binding TLV;
+	18	| Server-Trusted-Root TLV;
+	19	| Request-Action TLV;
+	20	| PKCS#7 TLV;
+
+// --------------------------------
+void 802.1x_Auth_Key;
+	LABL 0 0 00 b7 EAPOL - Key;
+	DBYT 0 1 90 c2 Type:; 
+	 CEQU  0 1 0 14 Reserved;
+	 CEQU  1 1 0 14 RC4 key descriptor;
+	 CEQU  2 1 0 14 RSN key descriptor;
+	 CEQU fe 1 0 14 WPA key descriptor;
+	TEQU  1 1 0 14 802.1x::RC4Descriptor;
+	TEQU  2 1 0 14 802.1x::RSNDescriptor;
+	TEQU fe 1 0 14 802.1x::WPADescriptor;
+
+	DUMP 0 10 90 c2 Packet body:;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void 802.1x::RC4Descriptor;
+	DWRD  0 2 90 c2 Key Length:;		// SI: this needs to be saved for use for the KEY field
+	D64B  0 1 90 c2 Replay Counter:;
+	HEX# 10 0 90 c2 Key IV:;
+	DBIT  1 1 90 c2 Key Flag:;			// BD: 1 added to value column
+	 CEQU 0 1 0 14 Broadcast (default key);
+	 CEQU 1 1 0 14 Unicast (key mapping key);
+	DBIT  7 0 90 c2 Key Index:;
+	HEX# 10 0 90 c2 Key Signature:;
+	
+	//SUBG 2D 2;		//SI: according to spec, we've eaten through 45 bytes, so g2 = g2 - 45
+	//SGTE 1 2;
+	//SKIP 1;
+
+	// BD: Dynmaically figures out if key exists then determines length
+	// BD: got length information from IEEE standard
+	
+	BREM 0 31;				// gets bytes remaining
+	SUBG 4 31;				// subtracts 4 from bytes remaining
+	MOVE 2 32;				// Move the total length to g[50]
+	SGTE 1 31;				// is 1 >= g[49]
+	SKIP 8000005;			// if true then		
+		SGTE 2 31;			// is g[2] >= g[49]
+		SKIP 8000002;		// if true then (aka. then just dump what is left and leave room for FCS)
+			BREM 0 2;
+			SUBG 4 2;
+	HEX# 0 2 90 c2 Key:;	// SI: the key field is optional
+	MOVE 32 2;				// BD: reset key length
+	LABL 0 0  0 b8;
+	TRTS;
+
+void 802.1x::RSNDescriptor;
+	BWRD 0 1 90 c9 Key Information:;
+	LABL 0 0 00 d4 xx...... ........ Reserved;
+	CBIT d 1 00 d4 ..1..... ........ SMK Handshake is supported;
+	CLSE 0 0 00 d4 ..0..... ........ SMK Handshake is not supported;
+	CBIT c 1 00 d4 ...1.... ........ Key Data Encrypted;
+	CLSE 0 0 00 d4 ...0.... ........ Key Data Not Encrypted;
+	CBIT b 1 00 d4 ....1... ........ Request Handshake;
+	CLSE 0 0 00 d4 ....0... ........ No Request to initiate Handshake;
+	CBIT a 1 00 d4 .....1.. ........ Error;
+	CLSE 0 0 00 d4 .....0.. ........ No Error;
+	CBIT 9 1 00 d4 ......1. ........ Secure;
+	CLSE 0 0 00 d4 ......0. ........ Not Secure;
+	CBIT 8 1 00 d4 .......1 ........ Message contains Key MIC;
+	CLSE 0 0 00 d4 .......0 ........ Message does NOT contain Key MIC;
+	CBIT 7 1 00 d4 ........ 1....... Key ACK;
+	CLSE 0 0 00 d4 ........ 0....... No Key ACK;
+	CBIT 6 1 00 d4 ........ .1...... Install: 802.1X component shall configure the temporal key;
+	CLSE 0 0 00 d4 ........ .0...... Install: 802.1X component shall not configure the temporal key;
+	LABL 0 0 00 d4 ........ ..xx.... Reserved;
+	CBIT 3 1 00 d4 ........ ....1... Key Type: Pairwise Key;
+	CLSE 0 0 00 d4 ........ ....0... Key Type: Group/STA Key;
+	l[1] = g[1];
+	l[1] &= 7;
+	CST# 0 41 0 d4 802.1x::RSNDescriptor::KeyInfo;
+	LABL 0 0 00 c8;
+	DWRD 0 2 90 c2 Key Length:;
+	CEQU 10 2 00 14 CCMP;
+	CEQU 20 2 00 14 TKIP;
+	CEQU 5  2 00 14 WEP-40;
+	CEQU d  2 00 14 WEP-104;
+	D64B 0 1 90 c2 Replay Counter:;
+	HEX# 20 0 90 c2 Key Nonce:;
+	HEX# 10 0 90 c2 EAPOL-Key IV:;
+	HEX# 8 0 90 c2 Key RSC:;
+	HEX# 8 0 90 c2 Key ID:;
+	HEX# 10 0 90 c2 Key MIC:;
+	DWRD 0 41 90 c2 Key Data Len:;
+	
+	while (l[1] > 0)
+	{
+		l[2] = pb[0];
+		
+		BREM 0 43 0 0;
+		
+		if (l[2] == 0xdd)
+		{
+			if( l[1] > 1 )
+			{
+				l[5] = pb[1];
+				
+				if( l[5] == 0 )
+				{
+					//this is a bit of a hack
+					//if the encryption scheme is aes keywrap
+					//then there will be padding if the data is not a multiple of 8
+					//if we encounter a vendor specific ie (0xdd) and it has a length of 0
+					//then it is probably padding
+					
+					DUMP 0 41 90 c2 Padding:;
+				}
+				
+				if( l[5] > 0 )
+				{
+					802_11::Information_Element;
+				}
+			}
+		}
+		if (l[2] == 0x30)
+		{
+			802_11::Information_Element;
+			l[2] = 0xdd;	// set l[2] to 0xdd so we dont dump the data
+		}
+		if (l[2] != 0xdd)
+		{
+			DUMP 0 41 90 c2 Key Data:;
+		}
+		
+		BREM 0 44 0 0;
+		l[3] -= l[4];
+		l[1] -= l[3];
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# 802.1x::RSNDescriptor::KeyInfo;
+	1 | ........ .....001 Vers: HMAC-MD5 is the EAPOL-Key MIC / RC4 is the EPOL-Key enc algorithm;
+	2 | ........ .....010 Vers: HMAC-SHA1-128 is the EAPOL-Key MIC / NIST AES key wrap is the EAPOL-key enc algorithm;
+    3 | ........ .....011 Vers: AES-128-CMAC is the EAPOL-Key MIC / NIST AES key wrap is the EAPOL-key enc algorithm;
+
+void 802.1x::WPADescriptor;
+	BBIT 20000010 4 90 c9 Key Information:;
+	g[5] = g[4];
+	g[5] &= 0xe000;
+	SHFR d 5;
+	CST# 0 5 0 d4 WPADescriptor::Reserved;
+	CBIT c 4 0 d4 ...1 .... .... .... Key Data is Encrypted;
+	CLSE 0 0 0 d4 ...0 .... .... .... Key Data is Not Encrypted;
+	CBIT b 4 0 d4 .... 1... .... .... Handshake Requested;
+	CLSE 0 0 0 d4 .... 0... .... .... Handshake Not Requested;
+	CBIT a 4 0 d4 .... .1.. .... .... Error: MIC Failure in TKIP MSDU;
+	CLSE 0 0 0 d4 .... .0.. .... .... No Error;
+	CBIT 9 4 0 d4 .... ..1. .... .... Initial Key Exchange Complete;
+	CLSE 0 0 0 d4 .... ..0. .... .... Initial Key Exchange Not Complete;
+	CBIT 8 4 0 d4 .... ...1 .... .... MIC Included in Frame;
+	CLSE 0 0 0 d4 .... ...0 .... .... MIC Not Included in Frame;
+	CBIT 7 4 0 d4 .... .... 1... .... ACK Set;
+	CLSE 0 0 0 d4 .... .... 0... .... ACK Not Set;
+	g[5] = g[4];
+	g[5] &= 0x08;
+	if (g[5] != 0)
+	{
+		CBIT 6 4 0 d4 .... .... .1.. .... IEEE 802.1X Component shall Configure Temporal Key into IEEE 802.11 STA;
+		CLSE 0 0 0 d4 .... .... .0.. .... IEEE 802.1X Component shall Not Configure Temporal Key into IEEE 802.11 STA;
+	}
+	if (g[5] == 0)
+	{
+		CBIT 6 4 0 d4 .... .... .1.. .... Install Flag: Ignored;
+		CLSE 0 0 0 d4 .... .... .0.. .... Install Flag: Ignored;
+	}
+	l[1] = g[4];
+	SHFR 4 41 5 5;
+	l[1] &= 0x03;
+	CEQU 0 41 0 d4 .... .... ..00 .... Key Id 0;
+	CEQU 1 41 0 d4 .... .... ..01 .... Key Id 1;
+	CEQU 2 41 0 d4 .... .... ..10 .... Key Id 2;
+	CEQU 3 41 0 d4 .... .... ..11 .... Key Id 3;
+
+	CBIT 3 4 0 d4 .... .... .... 1... Pairwise Key;
+	CLSE 0 0 0 d4 .... .... .... 0... Group STA Key;
+	//store the key type for later
+	l[2] = g[4];
+	SHFR 3 42 5 5;
+	l[2] &= 0x01;
+	
+	g[5] = g[4];
+	g[5] &= 7;
+	CST# 0 5 0 d4 WPADescriptor::KeyInfo;
+	LABL  0 0 0 c8;
+
+	SBIT 3 4;
+	SKIP 1;
+	MOVE 1 5;
+	DWRD 0  4 90 c2 Key Length:;
+	CEQU 10 4 00 14 CCMP;
+	CEQU 20 4 00 14 TKIP;
+	CEQU 5  4 00 14 WEP-40;
+	CEQU d  4 00 14 WEP-104;
+	D64B 0  4 90 c2 Replay Counter:;
+	HEX# 20 0 90 c2 Key nOnce:;
+	HEX# 10 0 90 c2 EAPOL-Key IV:;
+	HEX# 8  0 90 c2 Key RSC:;
+	HEX# 8  0 90 c2 Key ID:;
+	HEX# 10 0 90 c2 Key MIC:;
+	DWRD 0  4 90 c2 Key Data Length:;
+	if (g[16] <= 0)
+	{
+		LABL 0 0 0 b8;
+		TRTS;
+	}
+	if (g[4] == 0)
+	{
+		TRTS;
+	}
+	g[8] = g[4];
+	
+	//is this a group key or a pairwise key?
+	if (l[2] == 0)
+	{
+		//this is group key data, just dump it
+		if( g[4] < 33 )
+		{
+			HEX# 0 4 90 c2 Key Data:;
+		}
+		if( g[4] > 32 )
+		{
+			DUMP 0 4 90 c2 Key Data:;
+		}
+	}
+	
+	if (l[2] == 1)
+	{
+		//this is pair key data (probably a wpa element)
+		l[1] = pb[0];
+		
+		if( l[1] == 0xdd )
+		{
+			802_11::Information_Element();
+		}
+		if( l[1] != 0xdd )
+		{
+			HEX# 0 8 90 c2 Key Data:;
+		}
+	}
+
+	
+	LABL 0 0 0 b8;
+	TRTS;
+
+str# WPADescriptor::Reserved;
+	0 | 000. .... .... .... Reserved;
+	1 | 001. .... .... .... Reserved;
+	2 | 010. .... .... .... Reserved;
+	3 | 011. .... .... .... Reserved;
+	4 | 100. .... .... .... Reserved;
+	5 | 101. .... .... .... Reserved;
+	6 | 110. .... .... .... Reserved;
+	7 | 111. .... .... .... Reserved;
+
+str# WPADescriptor::KeyInfo;
+	0 | .... .... .... .000 Key Descriptor Vers: Group & Pairwise Ciphers are not CCMP for Key Descriptor 1;
+	1 | .... .... .... .001 Key Descriptor Vers: HMAC-MD5 is the EAPOL-Key MIC and RC4 is the EAPOL-KEY encryption;
+	2 | .... .... .... .010 Key Descriptor Vers: HMAC-SHA1-128 is the EAPOL-Key MIC and NIST AES Key Wrap is the EAPOL-Key encryption;
+	3 | .... .... .... .011 Key Descriptor Vers: Reserved;
+	4 | .... .... .... .100 Key Descriptor Vers: Reserved;
+	5 | .... .... .... .101 Key Descriptor Vers: Reserved;
+	6 | .... .... .... .110 Key Descriptor Vers: Reserved;
+	7 | .... .... .... .111 Key Descriptor Vers: Reserved;
+
+str# WPADescriptor::KDE::List;
+	0 | Reserved;
+	1 | GTK Key Data Encapsulation;
+	2 | STAKey Key Data Encapsulation;
+	3 | MAC Address Key Data Encapsulation;
+	4 | PMKID Key Data Encapsulation;
+
+str# WPADescriptor::KDE::FuncList;
+	1 | WPADescriptor::KDE::GTK;
+	2 | WPADescriptor::KDE::STAKey;
+	3 | WPADescriptor::KDE::MAC;
+	4 | WPADescriptor::KDE::PMKID;
+
+void WPADescriptor::KDE::GTK;
+	BBYT 0 1 90 c9 GTK KDE:;
+	LABL 0 0 00 d4 xxxx x... Reserved:;
+	CBIT 2 1 00 d4 .... .1.. Tx: Transmission & Reception;
+	CLSE 0 0 00 d4 .... .0.. Tx: Reception Only;
+	g[1] &= 3;
+	CEQU 3 1 00 d4 .... ..11 Key ID: 3;
+	CEQU 2 1 00 d4 .... ..10 Key ID: 2;
+	CEQU 1 1 00 d4 .... ..01 Key ID: 1;
+	CEQU 0 1 00 d4 .... ..00 Key ID: 0;
+	LABL 0 0 00 c8;
+	HBYT 0 0 90 c2 Reserved:;
+	g[2] -= 2;
+	TRTS;
+
+void WPADescriptor::KDE::STAKey;
+	HWRD 0 0 90 c2 Reserved:;
+	ETHR 0 0 90 c2 STAKey MAC Addr:;
+	g[2] -= 8;
+	TRTS;
+
+void WPADescriptor::KDE::MAC;
+	ETHR 0 0 90 c2 MAC Address:;
+	g[2] -= 6;
+	TRTS;
+
+void WPADescriptor::KDE::PMKID;
+	HEX# 10 0 90 c2 PMKID:;
+	g[2] -= 16;
+	TRTS;
+
+void 802.1x_Auth_EAA;				//SI: NO PACKETS ... spec does not supply info on it...
+	LABL 0 0 0 b1 EAPOL - Encapsulated-ASF-Alert;
+	DUMP 0 10 90 c2 Packet Data:;
+	TRTS;
+
+	

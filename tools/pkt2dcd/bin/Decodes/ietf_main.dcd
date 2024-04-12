@@ -1,0 +1,2754 @@
+
+*IETF_main
+* Utility Subroutines Begin
+
+* subroutines
+*
+* Display Bytes
+* Print Command;
+* Print Response;
+* Display Fields And Lines;
+* Parse Lines Loop;
+* Display All Lines;
+* Parse Line;
+* Parse Line Loop;
+* Print Line;
+* Print Line Continued;
+* Skip Delimiters;
+* Skip Delimiters Incr;
+* Skip ESC;						
+* Parse Fields;
+* Parse Fields Loop;
+* Parse Field;
+* Print Field;
+* Parse Label;
+* Parse Label Loop;
+* Print Label;
+* Parse Value;
+* Parse Value Loop;
+* Print Value; 
+* Find End;
+* Find End Loop;
+* Parse Line Loop;
+* Print Line;
+* Skip Spaces;
+
+* registers:
+*
+* g[0]  subroutine return value
+* g[1]  used to read bytes into
+* g[2]  boolean used to tell whether the subroutine succeeded
+* g[3]  boolean used to tell whether the subroutine succeeded
+* g[4]  last line was a field
+* g[5]  used to test for line wrap
+* g[6]  is the line counter
+* g[7]  used to test for line wrap
+* g[8]  used to test for binary
+* g[9]  used as Esc sequence state
+* g[a]  dot character flag
+* g[b]  printed a line flag
+* g[c]  loop counter
+* g[10] what is left in packet
+* g[11] ASCII code lookup index
+* g[12] skip delimiter flag
+* g[1e] number of bytes to print 
+
+void Init Line Variables;
+	MOVE 0  1;
+	MOVE 0  2;
+	MOVE 0  3;
+	MOVE 0  4;
+	MOVE 0  5;
+	MOVE 0  6;
+	MOVE 0  7;
+	MOVE 0  8;
+	MOVE 0  9;
+	MOVE 0  a;
+	MOVE 0  b;
+	MOVE 0  c;
+	MOVE 0  1e;
+	MOVE 0  11;
+	MOVE 0  12;
+	TRTS;
+
+void Display Bytes;
+	MOVE 0 3;
+	Display Bytes Loop;
+
+void Display Bytes Loop;
+	TEQU 0 1 0 0 RETURN;
+
+	SEQU 0 3;
+	SKIP 1;
+	DBYT 1;
+
+	SNEQ 0 3;
+	SKIP 1;
+	DBYT 1 0 90;
+
+	LABL -.;
+	SUBG 1 1;
+	ADDG 1 3;
+	TNXT -Display Bytes Loop;
+	 
+void Print Command;
+	MOVE 1    b;
+	TNEQ 1    3   0    0  RETURN;
+	CHR# 0   1e  90   c2  Command:;
+	TRTS;
+
+void Print Response;
+	MOVE 1    b;
+	TNEQ 1    3   0    0  RETURN;
+	CHR# 0   1e  90   c2  Response:;
+	TRTS;
+
+void Display Fields And Lines;
+	TGTE 0   10   0    0  RETURN;
+	Test Referrer;
+	Init Line Variables;
+	Display Fields And Lines No Init;
+	TRTS;
+
+void Display Fields And Lines No Init;
+	TGTE 0   10   0    0  RETURN;
+	Parse Fields;
+	Parse Lines Loop;
+	SNEQ 1    8;					* binary?
+	SKIP 1;
+	DUMP 0   10   90   c2 Binary Data:;
+	TRTS;
+
+void Parse Lines Loop;
+	TGTE 0   10   0    0  RETURN;
+	Skip Delimiters;
+
+	l[1] = g[1];
+	XML::Test;
+	if (g[1] != 0)
+	{
+		XML;
+		g[1] = l[1];
+		TRTS;
+	}
+
+	TGTE 0   10   0    0  RETURN;
+	Parse Line;
+	TEQU 1    8   0    0  RETURN;
+	Print Line;
+	TEQU 0    2   0    0  RETURN; * 0
+	TNXT -Parse Lines Loop;
+
+void Display Text Lines Only;
+	Test Referrer;
+	Init Line Variables;
+	Parse Text Lines Only Loop;
+	TRTS;
+ 
+void Parse Text Lines Only Loop;
+	TGTE 0   10   0    0  RETURN;
+	Skip Delimiters And Binary;
+	TGTE 0   10   0    0  RETURN;
+	Parse Text Line;
+	TEQU 0    2   0    0  RETURN;	* 0
+	Print Line;
+	TNXT -Parse Text Lines Only Loop;
+
+void Parse Text Line;
+	GBYT 0    1;
+	MOVE 0    2;
+	MOVE 0    8;					* assume it is not binary
+	MOVE 0   1e;
+	Parse Text Line Loop;
+	TEQU 0    2   0    0  RETURN;
+	DECR 0   1e;
+	TRTS;
+
+void Parse Text Line Loop;
+	MOVE  0   2;
+	GBYT  0   1;
+	MOVE  1   2;					* assume we are going to find one of the following
+	TGTE  0  10   0    0  RETURN;
+	SEQU  1   8;					* test for binary mode
+	SKIP  5;
+	SEQU  9   1;					* TAB
+	SKIP  11;
+	TEQU  a   1   0    0  RETURN;	* LF
+	TEQU  d   1   0    0  RETURN;	* CR
+	TEQU 1B   1   0    0  RETURN;	* ESC
+	SEQU  1   8;					* test for binary mode
+	SKIP  4;
+	MOVE  1   8;					* assume it is binary
+	NSTR  0;						* test for binary value
+	SKIP  1;
+	MOVE  0   8;					* it is not binary
+	TEQU  1   8   0    0  RETURN;
+	MOVE  0   2;					* if got past the tests above then it is not a line yet
+	INCR  1;
+	ADDG  1  1e;
+	TNXT  -Parse Text Line Loop;
+	TRTS;
+
+void Display Dotted Names Only;
+	Test Referrer;
+	Init Line Variables;
+	Parse Dotted Names Only Loop;
+	TRTS;
+
+void Parse Dotted Names Only Loop;
+	MOVE 0    a; 
+	TGTE 0   10   0    0  RETURN;
+	Skip Delimiters And Binary;
+	TGTE 0   10   0    0  RETURN;
+	Parse Dotted Names;
+	TEQU 0    2   0    0  RETURN; * 0
+	SEQU 1    a   0   ;  * was there a dot
+	SKIP 1;
+	MOVE 0   1e;
+	Print Line;
+	TNXT -Parse Dotted Names Only Loop;
+
+void Parse Dotted Names;
+	GBYT 0    1;
+	MOVE 0    2;
+	*TEQU 0    1   0    0  RETURN;	* 0
+	MOVE 0    8;					* assume it is not binary
+	MOVE 0   1e;
+	Parse Dotted Names Loop;
+	TEQU 0    a   0    0  RETURN; * there was no dot
+	TEQU 0    2   0    0  RETURN;
+	DECR 0   1e;
+	TRTS;
+
+void Parse Dotted Names Loop;
+	MOVE  0   2;
+	GBYT  0   1;
+	MOVE  1   2;					* assume we are going to find one of the following
+	TGTE  0  10   0    0  RETURN;
+	SNEQ  2e  1;      * .  (a dot)
+	SKIP  1;
+	MOVE  1   a;
+	SEQU  1   8;					* test for binary mode
+	SKIP  5;
+	SEQU  9   1; * TAB
+	SKIP  11;
+	TEQU  a   1   0    0  RETURN;	* LF
+	TEQU  d   1   0    0  RETURN;	* CR
+	TEQU 1B   1   0    0  RETURN;	* ESC
+	SEQU  1   8;					* test for binary mode
+	SKIP  4;
+	MOVE  1   8;					* assume it is binary
+	NSTR  0;						* test for binary value
+	SKIP  1;
+	MOVE  0   8;					* it is not binary
+	TEQU  1   8   0    0  RETURN;
+	MOVE  0   2;					* if got past the tests above then it is not a line yet
+	INCR  1;
+	ADDG  1  1e;
+	TNXT  -Parse Dotted Names Loop;
+	TRTS;
+
+void Display Text And Binary;
+	Test Referrer;
+	Init Line Variables;
+	Parse Binary Lines Loop;
+	TRTS;
+
+void Test Referrer;
+	SEQU 1    9;
+	SKIP 1;
+	LABL 0    0   0   b1  Application Data:;
+	TRTS;
+
+void Display All Lines;
+	Test Referrer;
+	Init Line Variables;
+	Display All Lines No Init;
+
+void Display All Lines No Init;
+	Parse Lines Only Loop;
+	SEQU 1    8;					* binary?
+	SKIP 1;
+	TRTS;
+	BREM 0    1;
+	SGTE 4    1;
+	SKIP 2;
+	g[9] = 1;
+	DUMP 1   0    90   c2 Binary Data:;  * dump to FCS
+	SUBG 4    1;     * subg FCS from g1
+	TRTS;
+
+void Parse Binary Lines Loop;
+	TGTE 0   10   0    0  RETURN;
+	Skip Delimiters;
+	TGTE 0   10   0    0  RETURN;
+	Parse Binary Line;
+	TEQU 1    8   0    0  RETURN;
+	TEQU 0    2   0    0  RETURN; * 0
+	Print Line;
+	TNXT -Parse Binary Lines Loop;
+
+void Parse Lines Only Loop;
+	TGTE 0   10   0    0  RETURN;
+	Skip Delimiters;
+
+	l[1] = g[1];
+	XML::Test;
+	if (g[1] != 0)
+	{
+		XML;
+		g[1] = l[1];
+		TRTS;
+	}
+
+	TGTE 0   10   0    0  RETURN;
+	Parse Line;
+	TEQU 1    8   0    0  RETURN;
+	TEQU 0    2   0    0  RETURN; * 0
+	Print Line;
+	*Skip Delimiters;
+	TNXT -Parse Lines Only Loop;
+
+void Parse Line;
+	GBYT 0    1;
+	MOVE 0    2;	* assume it is not a line
+	MOVE 0    8;	* assume it is not binary
+	MOVE 0    5;    * assume no wrap
+	MOVE 0   1e;	* init line line length to 0
+	GSTR 0   1e;
+
+	SKIP 2;			* if the test was false then it is binary
+	MOVE 1 8;
+	TRTS;
+
+	SGTE 50  1e;	* wrap at 80 chars
+	SKIP 2;
+	MOVE 1    5;	* it wrapped
+	MOVE 50  1e;	* force value to 120
+
+	SEQU 0  1e;
+	SKIP 1;
+	MOVE 1   2;		* it is a line
+	
+	*Parse Line Loop;
+	*DECR 0   1e;
+	TRTS;
+
+void Parse Line Loop;
+	GBYT  0   1;
+	TGTE  0  10   0    0  RETURN;
+	TGTE  0   1   0    0  RETURN;	* 0
+	TEQU  a   1   0    0  RETURN;   * LF
+	TEQU  d   1   0    0  RETURN;   * CR
+
+	SEQU  9   1;					* allow TAB
+	SKIP  8;
+
+	MOVE  1   8;					* assume it is binary
+	SLTE 20   1;					* test for binary value
+	SKIP  1;
+	TRTS;
+	NSTR  0;						* test for binary value
+	SKIP  1;
+	TRTS;
+	MOVE  0   8;					* it is not binary
+
+	MOVE  1   5;					* assume wrap
+	TEQU 78  1e   0    0  RETURN;	* wrap at 120 chars
+	MOVE  0   5;					* did not wrap
+
+	MOVE  1   2;					* it is a line
+	INCR  1;
+	ADDG  1  1e;
+
+	TNXT  -Parse Line Loop;
+	TRTS;
+
+void Parse Binary Line;
+	GBYT 0    1;
+	MOVE 0    2;
+	MOVE 0    8;					* assume it is not binary
+	MOVE 0   1e;
+	Parse Binary Line Loop;
+	TEQU 0    2   0    0  RETURN;
+	DECR 0   1e;
+	TRTS;
+
+void Parse Binary Line Loop;
+	MOVE  0   2;
+	GBYT  0   1;
+	MOVE  1   2;					* assume we are going to find one of the following
+	TGTE  0  10   0    0  RETURN;
+	SEQU  9   1; * TAB
+	SKIP  6;
+
+	TEQU  0   1   0    0  RETURN;	* 0
+	SGTE  0   1;
+	SKIP  3;
+	SLTE 20   1;
+	SKIP  1;
+	TRTS;
+
+	MOVE  1   5;					* assume wrap
+	TEQU 78  1e   0    0  RETURN;	* wrap at 120 chars
+	MOVE  0   5;					* did not wrap
+	MOVE  0   2;					* if got past the tests above then it is not a line yet
+	INCR  1;
+	ADDG  1  1e;
+	TNXT  -Parse Binary Line Loop;
+	TRTS;
+
+void Print Line;
+	TEQU 0   1e   0   0  RETURN;	* nothing to print
+	MOVE 1    b;					* set print line flag
+	SEQU 1    9;      * test for ESC we want to ignore
+	SKIP c;
+	CHR# 0    0   2  c2  Line;
+	SEQU 1    8;					* test for binary
+	SKIP 2;
+	SEQU 1    7;					* test for wrap
+	SKIP 3;
+	ADDG 1    6;
+	DGLB 0    6  22;
+	CHR# 0    0   2  02  :;
+	MOVE 0    7;
+	SEQU 0    5;					* test for not wrap
+	SKIP 1;
+	MOVE 1    7;
+	CHR# 0   1e  90;
+	MOVE 0    9;      *init special Esc to false
+	TRTS;
+
+void Print Line Continued;
+	TEQU 0   1e   0   0  RETURN;	* nothing to print
+	CHR# 0   1e  90   c2;
+	TRTS;
+
+void Skip Spaces;
+	MOVE 0   1e;
+	GSTR 30000020 1e;  * string of spaces only   
+	*Skip Spaces Loop;
+	SEQU 0   1e;
+	SKIP 2;
+	*DECR 0   1e;
+	CHR# 0   1e   5;  *invisible entry
+	MOVE 0   1e;
+	TRTS;
+
+void Skip Spaces Loop;
+	GBYT 0    1;
+	TEQU 20   1   0    0  Skip Spaces Incr;	*SP
+	TRTS;
+
+void Skip Spaces Incr;
+	INCR 1;
+	ADDG 1   1e;
+	*LABL 0    0   0 4 <SP>;
+	Skip Spaces Loop;
+	TRTS;
+
+void Skip Delimiters;
+	TEQU  0  10   0    0  RETURN;	*make sure we have enough left
+	MOVE  0  1e;
+
+	SNEQ  0   b;					* test printed a line flag
+	SKIP  a;
+	GBYT  0   1;
+	SEQU  0   1;
+	SKIP  4;
+	SGTE  0   1;
+	SKIP  5;
+	SLTE 20   1;
+	SKIP  3;
+	LABL  0   0   90 c2 Line  1:;
+	DGLB  0   1   c5;        *put ourselves on column 36
+	ADDG  1   6;
+
+	Skip Delimiters Loop;
+	SEQU 0   1e;
+	SKIP 3;
+	DECR 0   1e;
+	CHR# 0   1e   5;
+	MOVE 0   1e;
+	TRTS;
+
+void Skip Delimiters Loop;
+	TEQU  0   10   0    0  RETURN;  *make sure we have enough left
+	MOVE  0   12;
+	
+	//check how many bytes are remaining, excluding FCS
+	BREM 1 45;
+	
+	if ( l[5] > 0 )
+	{
+		g[1] = pb[0];	
+
+		*TEQU  0    1 0 0 RETURN;  * NULL
+
+		SNEQ 1b    1;
+		SKIP  2;
+		TEQU 1B    1   0    0  Skip ESC;				* ESC
+		SKIP  9;
+
+		SEQU  0    1;									* check delimiter range
+		SKIP  6;
+		SGTE  0    1;									
+		SKIP  6;
+
+		SGTE 20    1;
+		SKIP  2;
+		ESTR  0;
+		SKIP  2;
+
+		Skip Delimiters Incr;
+		TEQU  1   12   0    0  Skip Delimiters Loop;
+	}
+	TRTS;
+
+void Skip Delimiters Incr;
+	MOVE 0   12;					* don't loop
+	TEQU 0   10   0    0  RETURN;	* make sure we have enough left
+	INCR 1;
+	ADDG 1   1e;
+
+	MOVE 1   91;					* move g[1] in into g[17] (0x11)
+	ADDG 1   11;
+	CST# 0   11   0    54  ASCII Codes;
+
+	MOVE 1   12;					* do loop
+	*Skip Delimiters Loop;
+	TRTS;
+
+str# ASCII Codes;
+	<NUL>;
+	<SOH>;
+	<STX>;
+	<ETX>;
+	<EOT>;
+	<ENQ>;
+	<ACK>;
+	<BEL>;
+	<BS>;
+	<TAB>;
+	<LF>;
+	<VT>;
+	<FF>;
+	<CR>;
+	<SO>;
+	<SI>;
+	<DLE>;
+	<DC1>;
+	<DC2>;
+	<DC3>;
+	<DC4>;
+	<NAK>;
+	<SYN>;
+	<ETB>;
+	<CAN>;
+	<EM>;
+	<SUB>;
+	<ESC>;
+	<FS>;
+	<GS>;
+	<RS>;
+	<US>;
+
+void Skip Delimiters And Binary;
+	TEQU 0   10   0    0  RETURN;  *make sure we have enough left
+	MOVE 0   1e;
+	Skip Delimiters And Binary Loop;
+	SEQU 0    1e;
+	SKIP 3;
+	DECR 0   1e;
+	CHR# 0   1e   5;  *invisible entry
+	MOVE 0   1e;
+	TRTS;
+
+void Skip Delimiters And Binary Loop;
+	TEQU 0   10   0    0  RETURN;  *make sure we have enough left
+	GBYT 0    1;
+	TEQU d    1   0    0  Skip Delimiters And Binary Incr;	*LF
+	TEQU a    1   0    0  Skip Delimiters And Binary Incr;	*CR
+	MOVE 1    8;					* assume it is binary
+	NSTR 0; 						* test for binary value
+	SKIP 1;
+	MOVE  0   8;					* it is not binary
+	TEQU  1   8   0    0  Skip Delimiters And Binary Incr;
+	*TEQU 20   1   0    0  Skip Delimiters And Binary Incr;	*SP
+	*TEQU 9    1   0    0  Skip Delimiters And Binary Incr;	*TAB
+	TEQU 1B   1   0    0  Skip ESC;				*ESC
+	TRTS;
+
+void Skip Delimiters And Binary Incr;
+	TEQU 0   10   0    0  RETURN;  *make sure we have enough left
+	INCR 1;
+	ADDG 1   1e;
+	TNXT -Skip Delimiters And Binary Loop;
+	TRTS;
+
+void Skip ESC;
+	MOVE 1   12;			* init loop flag to 1
+	MOVE 0   1d;			* init counter to 0
+	ADDG 1    9;
+	Skip ESC Loop;
+	TRTS;
+
+void Skip ESC Loop;
+	TEQU  0   10   0    0  RETURN;  *make sure we have enough left
+	GBYT  0    1;
+	INCR  1;
+	ADDG  1   1e;
+	ADDG  1   1d;
+	TLTE 10   1d   0    0  RETURN;
+	TEQU 48    1   0    0  RETURN;  *H is end of ESC
+	TEQU 6D    1   0    0  RETURN;  *m is end of ESC
+
+	Skip ESC Loop;
+
+void Parse Fields;
+	MOVE 0    4;       * boolean: previous line was a label
+	MOVE 0    2;       * Init end of proto marker
+	Parse Fields Loop;
+	TRTS;
+
+void Parse Fields Loop;
+	TEQU 0   10 0  0  RETURN;
+	TEQU 1   2  0  0  RETURN;
+	Parse Field;
+	SEQU 1   3  0  0  RETURN;				* Found a label?
+	SKIP 3;
+	SEQU 1   4;								* last line was a field?
+	SKIP 1;
+	TRTS;
+	MOVE 1   4;
+
+	ADDG 1   c;								* incr loop counter
+	SNEQ ff  c;								* loop counter goes to 255
+	SKIP 2;
+	DUMP 0 10 90 c2 Remaining Data:;
+	TRTS;
+
+	TNXT -Parse Fields Loop;
+
+
+void Parse Field;
+	Find End;
+	TEQU 1   2  0  0  RETURN;
+	Skip Delimiters;
+	Parse Label;
+	SEQU 0   3;								* Did not find a label
+	SKIP 2;
+	Print Field;
+	TRTS;
+	SEQU 1   4; *if last line was a field
+	SKIP 1;
+	TRTS;
+	Parse Line;
+	Print Line Continued;
+	*MOVE 0   4;
+	TRTS;
+
+void Print Field;
+	TEQU 0   3  0  0  RETURN;  * there is no field to print
+	MOVE 1   b;  * set print line flag
+	MOVE 0   6;  * reset line counter to 0
+	Print Label;
+	Skip Delimiters;
+	Skip Spaces;
+	Parse Value;
+	Print Value;
+	TRTS;
+
+void Parse Label;
+	MOVE 0  1e;
+	MOVE 0   3;
+	Parse Label Loop;
+	DECR 0  1e;
+
+	* test for label length of 1 which means we 
+	* just got the ":" and that is not a label
+	SNEQ 1 1e;
+	SKIP 2;
+	MOVE 0 3;
+	MOVE 1 1e;
+
+	TRTS;
+
+*void Parse Label Loop ;
+*	TEQU 0  10  0  0  RETURN;
+*	GSTR 2000003a 1e;
+*	MOVE 1   3;        * say that we found the colon
+*	ADDG 2 1e;
+*	INCR 0 1e;
+*	TRTS;
+
+void Parse Label Loop;
+	TEQU 0  10  0  0  RETURN;
+	GBYT 0   1;
+	SNEQ 0   1e;
+	SKIP 1;
+	TEQU 20  1  0  0  RETURN; * SP is not allowed as first char of label
+	SEQU 20  1; * SP is allowed
+	SKIP 1;
+	TGTE 2c  1  0  0  RETURN; *less than 31
+	TLTE 7f  1  0  0  RETURN; *greater than 127
+	TST# 0 1 -Parse_Label_Loop_Str;
+	INCR 1;
+	ADDG 1  1e;
+	MOVE 1   3;        * say that we found the colon
+	TEQU 3a  1  0  0  RETURN; * found a colon
+	MOVE 0   3;        * still here? say that we DID NOT found the colon
+	TNXT -Parse Label Loop;
+	TRTS;
+	
+
+
+
+str# Parse_Label_Loop_Str;
+	0x0d | RETURN; * CR
+	0x3B | RETURN; * ;
+	0x3C | RETURN; * <
+	0x3D | RETURN; * =
+	0x3E | RETURN; * >
+	0x3F | RETURN; * ?
+	0x40 | RETURN; * @
+	0x9  | RETURN; * TAB
+	
+	
+void Print Label;
+	CHR# 0   1e  2  C2 "\";  // do not show for summary
+	TRTS;
+
+void Parse Value;
+	MOVE 0  1e;
+	GSTR 0  1e;
+	*Parse Value Loop;
+	*DECR 0  1e;
+	TRTS;
+
+void Parse Value Loop;
+	TEQU 0   10 0  0 RETURN;
+	GBYT 0   1;
+	TEQU d   1  0  0 RETURN;	*CR
+	TEQU a   1  0  0 RETURN;	*LF
+	INCR 1;
+	ADDG 1   1e;
+	TNXT -Parse Value Loop;
+	TRTS;
+
+void Print Value; 
+	MOVE 1   b;  *set printed a line flag
+	l[1] = g[0x1e];
+	if (l[1] > 200)
+	{
+		CHR# c8 0 90;
+		l[1] -= 200;
+		CHR# 0 41 90 c0;				//si: i'm not going to expect the lines to be >200...ergh, hopefully
+		TRTS;
+	}
+	CHR# 0   1e 90;
+	TRTS;
+
+void Find End;
+	MOVE 0   1e;
+	MOVE 0   2;
+	GSTR 80000000 1e;
+	*Find End Loop;
+
+	MDIA 0 b;
+	if (g[11] == 4)
+	{
+		if (2 <= g[0x1e])
+		{
+			MOVE 1   2;			//si: wan type
+		}
+	}
+	if (g[11] != 4)
+	{
+		if (4 <= g[0x1e])
+		{
+			MOVE 1   2;			//si: not wan!
+		}
+	}
+
+	*DECR 0   1e;
+	MOVE 0   1e;
+	TRTS;
+
+void Find End Loop;
+	GBYT 0   1;
+	SEQU d   1;		*CR
+	SKIP 3;
+	SEQU a   1;		*LF
+	SKIP 1;
+	TRTS;
+	INCR 1 ;
+	ADDG 1   1e;
+	TNXT -Find End Loop;
+
+* Utility Subroutines End
+	
+
+//---------------------------------
+
+
+
+void Echo;
+	LABL 0 0 0 b1 Echo Protocol;
+	DUMP 0 10 90 c2 Echo Data:;
+
+void Echo Request;
+	TNXT -Echo Reply;
+
+void WS-Discovery;
+	LABL 0 0 0 b1  WS-Discovery - Web Services Dynamic Discovery\WS-Discovery:;
+	TNXT -Display All Lines;
+
+//------------------------
+// IP
+//------------------------
+
+//g5 is used to store the remaining bytes so we can pass it to CKSM
+
+// g[28] = src ip addr
+// g[29] = dsp ip addr
+
+void IP()
+{
+	g[2] = pb[0];
+	g[2] /= 16;
+	if (g[2] == 6) { IPv6; TRTS; }
+	
+	BREM 0 5;			* store remaining bytes for CKSM
+	LABL 0 0 0 b1 IP Version 4 Header - Internet Protocol Datagram\IPv4:;
+	DBIT 4 0 90 c2 Version:\;
+	DBIT 4 2 90 c2 Header Length:\;
+	g[2] *= 4;
+	DGLB 0 2 4 14 "(";
+	g[2] /= 4;
+	LABL 0 0 0 4 " bytes)";
+	HBIT 8 3 90 c9 Diff. Services:;			//TT26445
+	g[4] = g[3];
+	g[3] /= 4;		
+	HGLB 0 3 04 14  (DSCP:;
+	LABL 0 0 0 4 " / ";
+	g[3] = g[4];
+	g[3] &= 0x3;
+	HGLB 0 3 04 4 ECN:;
+	LABL 0 0 0 4 ")";
+	LABL 0 0 0 d4 DSCP: ;	
+	g[3] = g[4];
+	g[3] /= 4;	
+	CST# 0 3 0 04 IP::DSF;	
+	SKIP;
+	l[2] = g[4];
+	l[2] /= 16;
+	CST#( 0, l[2], 0, 0x54, IP::DSF_IP_BITS_MSB );
+	LABL 0 0 0 4 " ";
+	l[2] = g[4];
+	l[2] /= 4;
+	l[2] &= 0x3;
+	CST#( 0, l[2], 0, 0x4, IP::DSF_IP_BITS_LSB );
+	l[2] = g[4];
+	l[2] /= 32;
+	CST#( 0, l[2], 0, 0x4, IP::DSF_IP );
+	CLSE 0 0 0 4 .. Unknown;
+	ENDS;
+	LABL( 0, 0, 0, 0x4, "  -  (" );
+	HGLB 0 3 4 4;
+	LABL( 0, 0, 0, 0x04,  ")" );	
+	g[3] = g[4];
+	g[3] &= 0x3;
+	LABL 0 0 0 d4 ECN:  ;
+	CST# 0 3 0 04 IP::ECN;		// RFC 3168
+	CLSE 0 0 0 4 .. Unknown;
+	LABL( 0, 0, 0, 0x4, "  -  (" );
+	HGLB 0 3 4 4;
+	LABL( 0, 0, 0, 0x04,  ")" );
+		
+	LABL 0 0 0 b8;
+	
+	g[17] = g[16];
+	DWRD( 0, g[18], 0x90, 0xc2, "Total Length:\");		*SI: TT6179 - testing to make sure that length in field is long enough
+	
+	if (g[18] <= g[16])
+	{
+		if (g[18] != 0)  //prevent the case of length being 0, in which case clearly the packet is wrong
+		{
+			g[16] = g[18];
+		
+			MDIA 0 b;
+			if (g[11] == 4)
+			{
+				g[16] -= 2;			//si: MediaType is wan
+			}
+			if (g[11] != 4)
+			{
+				g[16] -= 4;			//si: MediaType is not wan
+			}
+		}
+	}
+
+	g[20] = g[18];
+    *following block ensures that for CRC errors g10 is not bigger 
+	*than the actual packet.  if it is bigger we try to fix it.
+	*this helps to do a better job of decoding CRC errors
+	
+	PRV2 0 1 5;		   *get the flags with the invisible style;
+	SBIT 1 1;   *test for CRC Error;
+	SKIP 80000005;
+	PRV4 0 1 5; *get packet length into g1
+	g[1] -= g[16];	*subtract the total length (g10) from the packet length (g1)
+	SLTE 11 1;  *is the result <= 17
+	SKIP 1;
+	PRV4 0 10 5;       *put packet size in g10 and
+
+	*SI & CBB ... there used to be wacked out code here... that checked for pkt slicing...
+	* we took it out on rev22
+
+	DWRD  0  0 90 c2 Identifier:\;
+
+	BBIT  3  3 90 c9 Fragmentation Flags:;
+	BST#  0  3  0 d4 IP::FragmentationBitsStr;
+	LABL  0  0  0 b8;
+
+	DBIT  d  d 90 c2 Fragment Offset:\;
+	g[13] *= 8; 
+	DGLB  0  d  4 14 "(\";
+	g[13] /= 8; 
+	LABL  0  0  0 4 " bytes)\";
+	DBYT  0  1e 90 c2 Time To Live:\;		//si: save for RGMP test in IP Common
+	DBYT  0  3 90 c2 Protocol:\;
+	MOVE  3 b2;							*si: save this for rtp taste...holds the protocol type g32[hex]
+	CST#  0  3  0 14 IP Protocols;
+	CLTE 85  3  0 14 RESERVED; *133+ is reserved
+	HWRD  0  0 90 c2 Header Checksum:\;
+	CKSM  2  5 24 14 Checksum invalid. Should be: \;
+	
+	IPLG(  0,  g[28], 0x90, 0xc2, "Source IP Address:\S:");
+	g[31] = pw[0];								//si: lame... do this for RGMP test in IP COMMON
+	g[32] = pw[2];
+	IPLG(  0,  g[29], 0x90, 0xc2, "Dest. IP Address:\D:");
+	
+	g[2] -= 5;
+	g[2] *= 4;
+	TEQU( 0, g[2], 0, 0, IP::No_Options );
+	TLSE -IP Options g2;
+}
+
+str# IP::DSF;
+	0x00 | 0000 00.. Default;
+	0x08 | 0010 00.. Class Selector 1;
+	0x10 | 0100 00.. Class Selector 2;
+	0x18 | 0110 00.. Class Selector 3;
+	0x20 | 1000 00.. Class Selector 4;
+	0x28 | 1010 00.. Class Selector 5;
+	0x30 | 1100 00.. Class Selector 6;
+	0x38 | 1110 00.. Class Selector 7;
+	0x0A | 0010 10.. Assured Forwarding 11;
+	0x0C | 0011 00.. Assured Forwarding 12;
+	0x0E | 0011 10.. Assured Forwarding 13;
+	0x12 | 0100 10.. Assured Forwarding 21;
+	0x14 | 0101 00.. Assured Forwarding 22;
+	0x16 | 0101 10.. Assured Forwarding 23;
+	0x1A | 0110 10.. Assured Forwarding 31;
+	0x1C | 0111 00.. Assured Forwarding 32;
+	0x1E | 0111 10.. Assured Forwarding 33;
+	0x22 | 1000 10.. Assured Forwarding 41;
+	0x24 | 1001 00.. Assured Forwarding 42;
+	0x26 | 1001 10.. Assured Forwarding 43;
+	0x2E | 1011 10.. Expedited Forwarding;
+
+str# IP::DSF_IP;
+	0x00 | .. Default (Other);
+	0x01 | .. Class Selector 1 (Other);
+	0x02 | .. Class Selector 2 (Other);
+	0x03 | .. Class Selector 3 (Other);
+	0x04 | .. Class Selector 4 (Other);
+	0x05 | .. Class Selector 5 (Other);
+	0x06 | .. Class Selector 6 (Other);
+	0x07 | .. Class Selector 7 (Other);
+
+str# IP::DSF_IP_BITS_MSB;
+	0x00 | 0000;
+	0x01 | 0001;
+	0x02 | 0010;
+	0x03 | 0011;
+	0x04 | 0100;
+	0x05 | 0101;
+	0x06 | 0110;
+	0x07 | 0111;
+	0x08 | 1000;
+	0x09 | 1001;
+	0x0A | 1010;
+	0x0B | 1011;
+	0x0C | 1100;
+	0x0D | 1101;
+	0x0E | 1110;
+	0x0F | 1111;
+
+str# IP::DSF_IP_BITS_LSB;
+	0x00 | 00;
+	0x01 | 01;
+	0x02 | 10;
+	0x03 | 11;
+
+str# IP::ECN;
+	0x00 | .... ..00 Not-ECT;
+	0x01 | .... ..01 ECT(1);
+	0x02 | .... ..10 ECT(0);
+	0x03 | .... ..11 CE;
+
+//si: no longer needed due to diff services field
+str# IP::PrecedenceBitsStr;
+	000. .... Precedence: Routine;
+	001. .... Precedence: Priority;
+	010. .... Precedence: Immediate;
+	011. .... Precedence: Flash;
+	100. .... Precedence: Flash Override;
+	101. .... Precedence: CRITIC/ECP;
+	110. .... Precedence: Internetwork Control;
+	111. .... Precedence: Network Control;
+
+//si: no longer needed due to diff services field	
+str# IP::TypeOfServiceBitsStr;
+	4 | ...1 .... Low Delay;
+	    ...0 .... Normal Delay;
+	3 | .... 1... High Throughput;
+		.... 0... Normal Throughput;
+	2 | .... .1.. High Reliability;
+		.... .0.. Normal Reliability;
+	1 | .... ..1. ECT bit - transport protocol will use the CE bit;
+		.... ..0. ECT bit - transport protocol will ignore the CE bit;
+	0 | .... ...1 CE bit - congestion;
+		.... ...0 CE bit - no congestion;
+	
+str# IP::FragmentationBitsStr;
+	2 | 1.. Reserved;
+		0.. Reserved;
+	1 | .1. Do Not Fragment;
+		.0. May Fragment;
+	0 | ..1 More Fragments;
+		..0 Last Fragment;
+	
+	
+void IP::No_Options()
+{
+	//LABL( 0, 0, 0, 0xc4, "No IP Options" );
+	IP::Common();
+}
+
+
+void IP Options g2;
+	TEQU 0 2 0 0 IP::Common;
+	LABL 0 0 0 b7 IP Options:;
+
+	BBIT 1 8 90 c2 Copy Flag:;
+	CEQU 0 8  0 24 Do not copy;
+	CEQU 1 8  0 24 Copy;
+
+	BBIT 2 8 90 c2 Class:;
+	CEQU 0 8  0 24 Control;
+	CEQU 1 8  0 24 Reserved;
+	CEQU 2 8  0 24 Debugging and measurement;
+	CEQU 3 8  0 24 Reserved;
+
+	BBIT 5 8 90 c2 Option Number:;
+	SUBG 1 2;
+	CEQU 0 8 0 24 End of Option List;
+	CEQU 1 8 0 24 No Operation;
+	CEQU 2 8 0 24 Security;
+	TEQU 2 8 0 24 IP Option Security g2;
+	CEQU 3 8 0 24 Loose Source Routing;
+	TEQU 3 8 0 24 IP Option Loose Source Routing g2;
+	CEQU 4 8 0 24 Internet Timestamp;
+	TEQU 4 8 0 24 IP Option Internet Timestamp g2;
+	CEQU 5 8 0 24 Extended Security;
+	CEQU 6 8 0 24 Commercial Security;
+	CEQU 7 8 0 24 Record Route;
+	TEQU 7 8 0 24 IP Option Record Route g2;
+	CEQU 8 8 0 24 Stream Id;
+	TEQU 8 8 0 24 IP Option Stream Id g2;
+	CEQU 9 8 0 24 Strict Source Routing;
+	TEQU 9 8 0 24 IP Option Strict Source Routing g2;
+	CEQU a 8 0 24 Experimental Measurement;
+	CEQU b 8 0 24 MTU Probe;
+	CEQU c 8 0 24 MTU Reply;
+	CEQU d 8 0 24 Experimental Flow Control;
+	CEQU e 8 0 24 Experimental Access Control;
+	CEQU 10 8 0 24 IMI Traffic Descriptor;
+	CEQU 11 8 0 24 Extended Internet Proto;
+	CEQU 12 8 0 24 Tracerfoute;
+	CEQU 13 8 0 24 Address Extension;
+	CEQU 14 8 0 24 Router Alert Option;
+	TEQU 14 8 0 24 IP Option Router Alert g2;
+	CEQU 15 8 0 24 Selective Directed Broadcast Mode;
+	CEQU 16 8 0 24 NSAP Addresses;
+	CEQU 17 8 0 24 Dynamic Packet State;
+	CEQU 18 8 0 24 Upstream Multicast Packet;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Router Alert g2;
+	DBYT 0 0 90 c2 Length Field:  ;
+	DWRD 0 8 90 c2 Value:;
+	CEQU 0 8  0 14 Router shall examine packet;
+	CLSE 0 0  0 14 Reserved;
+	SUBG 3 2 ;
+	LABL 0 0 0 b8;
+	TEQU 0 2  0 0 IP::Common;
+	TLSE 0 0  0 0 IP Options g2;
+
+void IP Option Security g2;
+	DBYT  0 0 90 c2 Length Field:  ;
+	BBIT 10 8 90 c2 Security Field:  ;
+	CEQU  0 8 0 14  unclassified;
+	CEQU f135 8 0 14  confidential;
+	CEQU 789a 8 0 14  EFTO;
+	CEQU bc4d 8 0 14  MMMM;
+	CEQU 5e26 8 0 14  PROG;
+	CEQU af13 8 0 14  restricted;
+	CEQU d788 8 0 14  secret;
+	CEQU 6bc5 8 0 14  top secret;
+	BBIT 10 8 90 c2 Compartments Field:  ;
+	LABL 0 8 0 14  (DIA);
+	BBIT 10 8 90 c2 Handling Restrictions Field:  ;
+	LABL 0 8 0 14  (DIAM 65-19);
+	BBIT 18 8 90 c2 Transmission Control Code Field:  ;
+	LABL 0 8 0 14  (HQ DCA Code 530);
+	SUBG a 2;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Loose Source Routing g2;
+	DBYT 0 8 90 c2 Length Field:  ;
+	DBYT 0 0 90 c2 Pointer:  ;
+	SUBG 3 8;
+	HEX# 0 8 90 c2 Route Data:  ;
+	SUBG 2 2;
+	SUBG 8 82;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Internet Timestamp g2;
+	DBYT 0 8 90 c2 Length Field:  ;
+	DBYT 0 0 90 c2 Pointer:  ;
+	DBIT 4 0 90 c2 Overflow:  ;
+	DBIT 4 0 90 c2 Flag:  ;
+	IPLG 0 0 90 c2 Address:  ;
+	SUBG 8 8;
+	HEX# 0 8 90 c2 Timestamp Data:  ;
+	SUBG 7 2;
+	SUBG 8 82;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Record Route g2;
+	DBYT 0 8 90 c2 Length Field:  ;
+	DBYT 0 0 90 c2 Pointer:  ;
+	SUBG 3 8;
+	HEX# 0 8 90 c2 Route Data:  ;
+	SUBG 2 2;
+	SUBG 8 82;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Stream Id g2;
+	DBYT 0 0 90 c2 Length Field:  ;
+	HWRD 0 8 90 c2 Stream Id:  ;
+	SUBG 3 2;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+void IP Option Strict Source Routing g2;
+	DBYT 0 8 90 c2 Length Field:  ;
+	DBYT 0 0 90 c2 Pointer:  ;
+	SUBG 3 8;
+	HEX# 0 8 90 c2 Route Data:  ;
+	SUBG 2 2;
+	SUBG 8 82;
+	LABL 0 0 0 b8;
+	TEQU 0 2 0 0 IP::Common;
+	TLSE -IP Options g2;
+
+
+* g[3] = IP type
+
+void IP::Common()
+{ 
+	* check the fragment offset, if it is not 0 then skip everything
+	* !! actually let's not worry about this and show it anwyway !!
+	if( g[13] == 0 )
+	{
+		MOVE 3  8e 0 ;
+
+		//si: to be rgmp these 2 conditions must be met...
+		if (g[30] == 1)						//si: if ttl == 1
+		{
+			if (g[31] == 0xe000)		//si: if the dst ip == 224.0.0.25
+			{
+				if (g[32] == 0x0019)
+				{
+					RGMP();
+					TRTS;
+		}	}	}
+		
+		TST# 0 3 -IP::Common_Str;
+		CST# 0  3  0 c2 IP Protocols;
+	}
+	
+	DUMP 0  10 90 c2 IP Fragment:;
+}
+
+str# IP::Common_Str;
+	0x01  | ICMP-IP;
+	0x02  | IGMP;
+	0x04  | IP;
+	0x06  | TCP;
+	0x08  | EGP;
+	0x09  | IGP/IGRP;
+	0x11 | UDP;
+	0x29 | IPv6;
+	0x2e | RSVP;
+	0x2f | GRE;
+	0x32 | ESP;
+	0x33 | Authent Header;
+	0x3a | IPv6-ICMP;
+	0x50 | ESP;
+	0x51 | AH;
+	0x58 | EIGRP;
+	0x59 | OSPF;
+	0x67 | PIM;
+	0x70 | VRRP;
+	0x84 | SCTP;
+	0x88 | UDPLite;
+	
+void MacIP ConfigQuery;
+	LABL 0 0 0 b1 MacIP Configuration Packet;
+	MARK 9 e 0 0 ATP TResp Opt;
+	DWRD 0 0 90 c2 Version Number:;
+	HWRD 0 0 90 c2 Always Zero:;
+	DLNG 0 1 90 c2 Config Request Code:;
+	CST# 0 1 0 14 MacIP Request Codes;
+	TGTE 3 1 0 0 IP Null;
+	TLTE 6 1 0 0 IP Null;
+	IPLG 0 0 90 c2 IP Address:;
+
+void MacIP ConfigReply;
+	LABL 0 0 0 b1 MacIP Configuration Packet;
+	DWRD 0 0 90 c2 Version Number:;
+	HWRD 0 0 90 c2 Always Zero:;
+	DLNG 80000000 1 90 c2 Config Response Code:;
+	TBIT 1f 1 0 0 IP Config Error;
+	CST# 0 1 0 14 MacIP Request Codes;
+	TNXT -IP Config Common;
+
+void IP Config Error;
+	MULG ffffffff 1;
+	CST# 0 1 0 14 IP Config Errors;
+	TNXT -IP Config Common;
+
+void IP Config Common;
+	IPLG 0 0 90 c2 Assigned IP Address:;
+	IPLG 0 0 90 c2 Name Server Address:;
+	IPLG 0 0 90 c2 Broadcast Address:;
+	HLNG 0 0 90 c2 Always Zero:;
+	HLNG 0 0 90 c2 Subnet Mask:;
+	HLNG 0 0 90 c2 Always Zero:;
+	HLNG 0 0 90 c2 Always Zero:;
+	HLNG 0 0 90 c2 Always Zero:;
+	DUMP 0 10 90 c2 IP Config Data:;
+
+void IP Null;
+
+* g[3] = Next Header (protocol type)
+
+void IPv6;
+	GBYT  0  2  0 80;
+	DIVG 10  2  0 80;
+	TEQU  4  2  0  0 IP;
+	LABL  0  0  0 b1 IP Version 6 Header - Internet Protocol Datagram\IPv6:;
+	DBIT  4  2 90 c2 Version:;
+	DBIT  8  1 90 c2 Traffic Class:;
+	CBIT  3  1  0 14 Non-congestion-controlled Traffic;
+	CST# ffffffff 1 0 14 IPv6 Priorities;
+	HEX#  3  0 90 c2 Flow Label:;
+	DWRD  0 10 90 c2 Payload Length:;
+	ADDG  24 10;  * because g10 is TRAK'd
+	CEQU  0 10  0 14 (See Jumbo Payload Length);
+	HBYT  0  3 90 c2 Next Header:;  * g[3] is used by IP Common to determine protocol type
+	MOVE  3 84;       * copy g[3] to g[4] to preserve [3]
+	CEQU  0  4  0 14 Hop-by-Hop Options;
+	TEQU  0  4  0  0 IPv6 Addrs;
+	CST#  0  4  0 14 IP Protocols;
+	TNXT -IPv6 Addrs;
+
+void IPv6 Addrs;
+	DBYT  0  0 90 c2 Hop Limit:;
+	IPV6  0  0 90 c2 Source Address:;
+	IPV6  0  0 90 c2 Destination Address:;
+	TNXT -IPv6 Branching;
+
+void IPv6 Branching;
+	TEQU  0  4  0  0 Hop-by-Hop Opt;
+	TEQU 2b  4  0  0 Routing Hdr Opt;
+	TEQU 2c  4  0  0 Frag Hdr Opt;
+	TEQU 32  4  0  0 ESP;
+	TEQU 33  4  0  0 Authent Header;
+	TEQU 3a  4  0  0 IPv6-ICMP;
+	
+	TEQU 3b  4  0  0 No Next Hdr Opt;
+	TEQU 3c  4  0  0 Dest Hdr Opt;
+	MOVE  0  d;
+	IP::Common();
+
+void IPv6Options()
+{
+	// On entry, g[15] must be the number of 8-byte units worth of options, 
+	// not including the first 8.  Convert it to bytes.
+	g[15]++;
+	g[15] *= 8;
+
+	// Because we already consumed Next Header and Header Ext Len,
+	// we've got 2 fewer bytes left.
+	g[15] -= 2;
+
+	while( g[15] > 0 )
+	{
+		IPv6Option();
+	}
+
+	TNXT  -IPv6 Branching;
+}
+
+void IPv6Option()
+{
+	GBYT  0  5;
+	TST#  0  5 0 0 IPv6OptionFuncs;
+	TLSE  -IPv6UnknownOption;
+}
+
+str# IPv6OptionFuncs;
+	0x00 | Pad1 Opt;
+	0x01 | PadN Opt;
+	0x05 | Router Alert;
+	0xc2 | Jumbo Payload Opt;
+
+void IPv6UnknownOption()
+{
+	INCR 1;
+	GBYT 0 5;
+	INCR 0 5;
+	g[15] -= g[5];
+}
+
+void Pad1 Opt;
+	LABL 0 0 90 c2 Pad1;
+	LABL 0 0 0 14 1 byte;
+	INCR 1;
+	g[15]--;
+
+void PadN Opt;
+	LABL 0 0 90 c2 PadN:;
+	INCR 1;
+	GBYT 0 5;
+	g[5]++;
+	INCR 0 5;
+	g[5]++;
+	DGLB 0 5 90 14;
+	LABL 0 0 90 14 " bytes";
+	g[15] -= g[5];
+
+void Router Alert;
+	g[15] -= 2;		// Type, len
+	LABL 0 0 00 b7 Router Alert Option;
+	DBYT 0 0 90 c2 Router Alert:;
+	DBYT 0 5 90 c2 Length:;
+	g[15] -= g[5];
+	DWRD 0 1 90 c2 Value:;
+	CEQU 0 1 00 14 Multicast Listener Discovery message;
+	CEQU 1 1 00 14 RSVP message;
+	CEQU 2 1 00 14 Active Networks message;
+	CLTE 3 1 00 14 Reserved to IANA for future use;
+	LABL 0 0 00 b8;	
+ 
+void Jumbo Payload Opt;
+	g[15] -= 2;		// Type, len
+	LABL  0  0  0 b1 Jumbo Payload Option Header;
+	BWRD  0  4 90 c2 Option Number:;
+	Opt Num Info;
+	DWRD  0  5 90 c2 Option Data Len:;
+	g[15] -= g[5];
+	SEQU  4  5;
+	SKIP  3  0;
+	DUMP  0  5 90 c2 Information:;
+	SNEQ  4  5;
+	SKIP  1  0;
+	DLNG  0 10 90 c2 Jumbo Payload Length:;
+
+void Opt Num Info;
+	MOVE  4  5;
+
+	* process highest order two bits
+	ANDG c0  5;
+	CEQU  0  5 0 d4 00...... Skip Option and Continue;
+	CEQU 40  5 0 d4 01...... Discard Packet;
+	CEQU 80  5 0 d4 10...... Discard Packet and ICMP Code 2;
+	CEQU c0  5 0 d4 11...... Discard Packet and Non-Multicast ICMP Code 2;
+
+	* process third-highest-order bit of the Option Type 
+	CBIT  5  4 0 d4 ..1..... Option Data may change en-route;
+	CLSE  0  0 0 d4 ..0..... Option Data does not change en-route;
+	TRTS;
+
+void Hop-by-Hop Opt;
+	LABL 0 0 0 b1 IPv6 Hop-by-Hop Options Header;
+	HBYT 0 3 90 c2 Next Header:;
+	MOVE 3 84;
+	CEQU 0 3 0 14 Hop-by-Hop Options;
+	CST# 0 3 0 14 IP Protocols;
+	DBYT 0 f 90 c2 Header Extension Len:;
+	IPv6Options();
+
+void Routing Hdr Opt;
+	LABL 0 0 0 b1 IPv6 Routing Header;
+	HBYT 0 3 90 c2 Next Header:;
+	CEQU 0 3 0 14 Hop-by-Hop Options;
+	MOVE 3 84;
+	CST# 0 3 0 14 IP Protocols;
+	DBYT 0 f 90 c2 Header Extension Len:;
+	DBYT 0 5 90 c2 Routing Type:;
+	DBYT 0 6 90 c2 Segments Left:;
+	TEQU 0 5 0 0 Type 0 Rtg Hdr;
+	TNXT -IPv6 Branching;
+
+void Type 0 Rtg Hdr;
+	LABL 0 0 0 b1 IPv6 Type 0 Routing Header;
+	INCR 1;
+	HBYT 0 0 90 c2 Strict/Loose Bit Map:;
+	HWRD 80000000;
+	DIVG 2 f;
+	TNXT -IPv6 Addr List;
+
+void IPv6 Addr List;
+	TEQU 0 f 0 0 IPv6 Branching;
+	DGLB 0 f 2 b2 Routing Address #;
+	IPV6 0 0 90 42;
+	SUBG 1 f;
+	TNXT -IPv6 Addr List;
+
+void Frag Hdr Opt;
+	LABL 0 0 0 b1 IPv6 Fragment Header;
+	HBYT 0 3 90 c2 Next Header:;
+	MOVE 3 84;
+	CEQU 0 3 0 14 Hop-by-Hop Options;
+	CST# 0 3 0 14 IP Protocols;
+	HBYT 0 f 90 c2 Reserved:;
+	HWRD 0 5 5 5;
+	MOVE 5 6;
+	DIVG 8 6;
+	DGLB 0 6 90 c2 Fragment Offset:;
+	ANDG 1 5;
+	DGLB 0 5 90 c2 More Fragments:;
+	CEQU 0 5 0 14 Last Fragment;
+	CLSE 0 0 0 14 More Fragments;
+	HLNG 0 0 90 c2 Identification:;
+	TNXT -IPv6 Branching;
+
+void No Next Hdr Opt;
+	LABL 0 0 0 b1 IPv6 No Next Header;
+	DUMP 1 0 90 c2 IP Data Area:;
+
+void Dest Hdr Opt;
+	LABL 0 0 0 b1 IPv6 Destination Options Header;
+	HBYT 0 3 90 c2 Next Header:;
+	MOVE 3 84;
+	CEQU 0 3 0 14 Hop-by-Hop Options;
+	CST# 0 3 0 14 IP Protocols;
+	DBYT 0 f 90 c2 Header Extension Len:;
+	IPv6Options();
+
+void Authent Header;
+	LABL 0 0 0 b1 IP Authentication Header\IP Auth:;
+	SEQU 4 2;
+	SKIP 4;
+	HBYT 0 3 90 c2 Next Header:;
+	MOVE 3 84;
+	CEQU 0 3 0 14 Hop-by-Hop Options;
+	CST# 0 3 0 14 IP Protocols;
+	DBYT 0 f 90 c2 Header Extension Len:;
+	HWRD 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Security Param Index:;
+	MULG 4 f;
+	SEQU 0 f;
+	SKIP 5;
+	SGTE 3 f;		*SI: tt4171 ... if f < 4 then you can't do this
+	SKIP 2;
+	HLNG 0 0 90 c2 Sequence:;			*SI: tt4171
+	SUBG 4 f;
+	DUMP 0 f 90 c2 Authentication Data:;
+	TST# 0 3 -IP::Common_Str;
+
+void TCP RSH;
+	TEQU 0 10 0  0 No rsh data;
+
+	// si: there's a check for udp here
+	if (g[20] == 0x554450)
+	{
+		l[1] = pb[4];
+		l[2] = pb[5];
+		l[3] = pb[6];
+		l[5] = pb[0];
+		if (l[1] == 0x3e)
+		{
+			g[1] = pb[5];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+			g[1] = pb[21];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+		}
+		if (l[2] == 0x3e)
+		{
+			g[1] = pb[6];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+			g[1] = pb[22];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+		}
+		if (l[3] == 0x3e)
+		{
+			g[1] = pb[7];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+			g[1] = pb[23];
+			if (g[1] == 0x20)
+			{
+				TNXT -Syslog;
+			}
+		}
+		if (l[5] == 0x3c)
+		{
+			if (l[1] == 0x3e)
+			{
+				g[20] = 1;
+				TNXT -Syslog;
+			}
+			if (l[2] == 0x3e)
+			{
+				g[20] = 1;
+				TNXT -Syslog;
+			}
+			if (l[3] == 0x3e)
+			{
+				g[20] = 1;
+				TNXT -Syslog;
+			}
+		}
+	}
+	LABL 0 0  0 b1 rsh - Remote Shell Command\RSH:;
+	Display All Lines;
+
+void TCP RLOGIN;
+	TEQU 0 10 0 14 No rlogin data;		*si: tt4101 changed label to 14
+	LABL 0 0 0 b1 rlogin - Remote Login\rlogin:;
+	DBYT 0 1 90 c2 Version:\;
+	DBYT 0 1 90 c2 Type:;
+	INCR 2; // ??
+	TIME 0 1 90 c2 Send Time:\;
+	TIME 0 1 90 c2 Receive Time:\;
+	CHR# 20 0 90 c2 Hostname:;
+	DLNG 0 1 90 c2 Load average over past 5 minutes:\;
+	DLNG 0 1 90 c2 Load average over past 10 minutes:\;
+	DLNG 0 1 90 c2 Load average over past 15 minutes:\;
+	TIME 0 1 90 c2 Boot Time:;
+	//Display All Lines;
+	TRTS;
+
+void No rsh data;
+	LABL 0 0 0 b4 No rsh Data Expected;
+
+void No rlogin data;
+	LABL 0 0 0 b4 No rlogin Data Expected;
+
+void Count IP Addr g[20];
+	SUBG 1 14 90 42;
+	IPLG 1 0 90 c2 IP Address:;
+	SEQU 0 14;
+	SKIP 1 14;
+	Count IP Addr g[20];
+	TRTS;
+
+* globals for TCP
+* g[1]  = source
+* g[2]  = dest
+* g[a]  = sequence
+* g[b]  = ack number
+* g[c]  = offset
+* g[d]  = flags
+* g[e]  = AFP uses this for MARK/WHOA
+* g[11] = window
+* g[f]  = checksum
+* g[9]  = did we get past the whoa?
+
+void TCP()
+{
+	LABL(    0,     0,    0, 0xb1, "TCP - Transport Control Protocol\TCP:");
+	PORT(    0,  g[1], 0x90, 0xc2, "Source Port:\S:");
+	PORT(    0,  g[2], 0x90, 0xc2, "Destination Port:\D:");
+	DLNG(    0, g[10], 0x90, 0xc2, "Sequence Number:\SEQ:");
+
+	TCP::Calc_SeqNum();
+	
+	g[26] = g[1];		//srcPort
+	g[27] = g[2];		//dstPort
+	DLNG(    0, g[11], 0x90, 0xc2, "Ack Number:\ACK:");
+	
+	DBIT(    4, g[12], 0x90, 0xc2, "TCP Offset:\");
+	g[12] *= 4;
+	DGLB(    0, g[12],  0x4, 0x14, "(" );
+	g[12] /= 4;
+	LABL(    0,     0,    0,  0x4, " bytes)" );
+
+	BBIT(    3, g[13], 0x90, 0xc2, "Reserved:");
+	
+	BBIT(    9, g[13], 0x90, 0xc9, "TCP Flags:\F:" );
+	CBIT( 8, g[13], 0, 0x14, "N");
+	CLSE( 0,0,0,0x14,".");
+	CBIT( 7, g[13], 0, 0x14, "C");
+	CLSE( 0,0,0,0x14,".");
+	CBIT( 6, g[13], 0, 0x14, "E");
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 5, g[13], 0, 0x14, "U" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 4, g[13], 0, 0x04, "A" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 3, g[13], 0, 0x14, "P" );
+	CLSE( 0,0,0,0x14,".");
+	CBIT( 2, g[13], 0, 0x04, "R" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 1, g[13], 0, 0x04, "S" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 0, g[13], 0, 0x04, "F" );	
+	CLSE( 0,0,0,0x04,".");
+	BST#(    0, g[13],    0, 0xd4, TCP::FlagsStr );
+	LABL(    0,     0,    0, 0xb8 );
+			  
+	DWRD(    0, g[17], 0x90, 0xc2, "Window:\W:" );
+	HWRD(    0, g[15], 0x90, 0xc2, "TCP Checksum:\" );
+	CKSM(    3,     0, 0x24, 0x14, "Checksum invalid. Should be: " );
+	DWRD(    0,     0, 0x90, 0xc2, "Urgent Pointer:\" );
+	CGTE(    5, g[12],    0, 0xc4, "No TCP Options" );					// uses g[c] (offset)
+	
+	// test for reset
+//	if (g[16] > 0)
+//	{
+//		SBIT 2 d;
+//		SKIP 80000001;
+//		CHR# 0 10 90 c2 "Reset Cause:";
+//	}
+	
+	if (g[12] > 5)
+	{
+		TCP::Opt_Base();
+	}
+	
+	TCP::Data();
+}
+
+str# TCP::FlagsStr;
+	8 | 1 .... .... Nonce Sum;
+		0 .... .... (No Nonce Sum);
+	7 | . 1... .... Congestion Window Reduced;
+		. 0... .... (No Congestion Window Reduction);
+	6 | . .1.. .... ECN-Echo;
+		. .0.. .... (No ECN-Echo);
+	5 | . ..1. .... Urgent;
+		. ..0. .... (No Urgent pointer);
+	4 | . ...1 .... Ack;
+		. ...0 .... (No Ack);
+	3 | . .... 1... Push;
+		. .... 0... (No Push);
+	2 | . .... .1.. Reset;
+		. .... .0.. (No Reset);
+	1 | . .... ..1. SYN;
+		. .... ..0. (No SYN);
+	0 | . .... ...1 FIN;
+		. .... ...0 (No FIN);
+
+void TCP::Calc_SeqNum()
+{
+	//g[16] bytes left
+	//g[10] sequence number
+	
+	INCR 4; //past ack number
+	GBIT ( 4, l[1] ); //grab tcp offset
+	l[1] *= 4; //calculate the number of bytes
+	INCR 1; //get past tcp offset and reserved fields
+	l[4]  = g[16];
+	l[4] += 1;  //assume SYN
+	GBYT ( 0, l[2] );  //load the TCP flags
+    SBIT(1, l[2]);  //check SYN bit
+	SKIP 1;   //if the SYN is set keep the adjustment
+	l[4] -= 1;  //otherwise correct your assumption
+
+	l[4] += 13; // add the rest of the tcp  header we just read
+	l[4] -= l[1] //subtract total tcp header size
+	l[4] -= 4; // compensate for checksum
+	
+	l[4] +=  g[10];
+	
+	DGLB(    0, l[4], 0x90, 0xc2, "Next Sequence #:\C-SEQ:");
+	LABL 0 0 0 14 "Calculated";
+	
+	DECR 5;
+	
+}
+
+void TCP::Opt_Base()
+{
+	// test for reset
+	
+	SBIT 2 13;
+	SKIP 80000001;
+	CHR#( 0, 16, 0x90, 0xc2, "Reset Cause:" );
+		
+	g[12] -= 5;
+	g[12] *= 4;
+
+	LABL(    0,  0, 0x90, 0xb7, "TCP Options:\Options:" );
+	
+	while (g[12] > 0)
+	{
+		if (g[16] == 0) 
+		{ 
+			TRTS; 
+		}
+	
+		DBYT( 0,  g[8], 0x90, 0xc9, "Option Type:" );
+		
+		// for some reason the following line does 
+		// not worrk with the new syntax
+		// CST# ffffffff 8 0 14 TCP::Option_Types;
+		CST#( 0, g[8],0, 0x14, "TCP::Option_Types");	
+		if (g[8] != 0)
+		{
+			// value 0 does not work with TSB#
+			TSB# 0 8 0 0 TCP::Options::Type_Func;
+			
+			SKIP;			
+				DBYT 0  9 90 c2 Length:;
+				
+				g[12] -= g[9];
+				g[9] -= 2;
+				
+				if (g[16] != 0)
+				{
+					HBIT( 0, 16, 0x90, 0xc9, Transparency Options: );
+					IPLG( 0, l[5], 0x90, 0xc2, "Source SH IP Address:" );
+					IPLG( 0, l[5], 0x90, 0xc2, "Destination SH IP Address:" );
+					DBIT(0, 16, 0x90, 0xc2, "Source SH Inner Port: ");
+					DBIT(0, 16, 0x90, 0xc2, "Destination SH Inner Port: ");
+					LABL( 0, 0, 0, 0xb8 );
+				}
+			ENDS;
+			
+		}
+		
+		// value 0 does not work with TSB#
+		// so test 0 seperately
+		if (g[8] == 0)
+		{
+			TCP::Options::0();
+		}
+	
+	}
+	
+	LABL( 0, 0, 0, 0xb8 );
+
+}
+
+
+str# TCP::Option_Types;
+0x0	|	End Of Option List;
+0x1	|	No Operation;
+0x2	|	Maximum Segment Size;
+0x3	|	Window Scale Factor;
+0x4	|	Sack Supported;
+0x5	|	Selective Acknowledgement;
+0x6	|	Echo;
+0x7	|	Echo Reply;
+0x8	|	Timestamp;
+0x9	|	Partial Order Connection Permitted;
+0xa	|	Partial Order Service Profile;
+0xb	|	Connection Count;
+0xc	|	Connection Count New;
+0xd	|	Connection Count Echo;
+0xe	|	Alternate Checksum Request;
+0xf	|	Alternate Checksum Data;
+0x10	|	Skeeter;
+0x11	|	Bubba;
+0x12	|	Trailer Checksum Option;
+0x13	|	MD5 Signature;
+0x14	|	SCPS Capabilities;
+0x15	|	Selective Negative Acknowledgements;
+0x16	|	Record Boundaries;
+0x17	|	Corruption experienced;
+0x18	|	SNAP;
+0x19	|	;
+0x1a	|	Compression Filter;
+0x20	|	Quick-Start Response;
+0x21	|	User Timeout Option;
+0x22	|	TCP Authentication Option (TCP-AO);
+0x23	|	Multipath TCP (MPTCP);
+0xFD	|	RFC3692-style Experiment 1;
+0xFE	|	RFC3692-style Experiment 2;
+0x4C	|	Riverbed Steelhead Probe;
+0x4E	|	Riverbed Steelhead Transparency Option;
+	
+str# TCP::Options::Type_Func;
+	0x0 | TCP::Options::0;
+	0x1 | TCP::Options::1;
+	0x2 | TCP::Options::2;
+	0x3 | TCP::Options::3;
+	0x4 | TCP::Options::4;
+	0x5 | TCP::Options::5;
+	0x8 | TCP::Options::8;
+	0xa | TCP::Options::10;
+	0xb | TCP::Options::11-13;
+	0xc | TCP::Options::11-13;
+	0xd | TCP::Options::11-13;
+	0xe | TCP::Options::14;
+	0x23 | TCP::Options::23;
+	0x4C |TCP::Options::76;
+	//0x4E | TCP::Options::78;
+	
+void TCP::Options::0;
+	LABL 0 0 0 c8;
+	SUBG 1 c;
+
+void TCP::Options::1;
+	LABL 0 0 0 c8;
+	SUBG 1 c;
+	
+void TCP::Options::2;
+	DBYT 0 9 90 c2 Length:;
+	DWRD 0 0 90 c2 MSS:;
+	LABL 0 0 0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::3;
+	DBYT 0 9 90 c2 Length:;
+	DBYT 0 0 90 c2 Shift Count:;
+	LABL 0 0 0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::4;
+	DBYT 0 9 90 c2 Length:;
+	LABL 0 0 0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::5;
+	DBYT 0 9 90 c2 Length:;			*si: save this for use in helper!!!!
+	SUBG 9 8c;
+	SUBG 2 9;						*si:  the option type and length take 2 bytes
+	TCP::Options::5_helper;
+
+void TCP::Options::5_helper;
+	SLTE 1 9;
+	SKIP 2;
+	 LABL 0 0 0 c8;
+	 TRTS;
+	DLNG 0 0 90 c2 SACK From:;	
+	DLNG 0 0 90 c2 SACK To:;
+	SUBG 8 9;						*si:  sack takes 4 each
+	TNXT -TCP::Options::5_helper;
+
+void TCP::Options::8;
+	DBYT 0 9 90 c2 Length:;	
+	TIME 2 0 90 c2 TS Value:;
+	//HLNG 0 0 90 c2 Time:;
+	HLNG 0 0 90 c2 Echo Reply:;
+	LABL 0 0  0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::10;
+	DBYT 0 9 90 c2 Length:;
+	BBYT 0 1 90 c2 Flags:;
+	 CBIT 0 1 0 14 Start Flag;
+	 CBIT 0 1 0 14 End Flag;
+	LABL 0 0  0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::11-13;
+	DBYT 0 9 90 c2 Length:;
+	DLNG 0 1 90 c2 Connection Count:;
+	LABL 0 0  0 c8;
+	SUBG 9 8c;
+
+void TCP::Options::14;
+	DBYT 0 9 90 c2 Length:;
+	HBYT 0 1 90 c2 Checksum Algorithm:;
+	 CEQU 0 1 0 14 TCP checksum;
+	 CEQU 1 1 0 14 8-bit  Fletcher's algorithm;
+	 CEQU 2 1 0 14 16-bit Fletcher's algorithm;
+	 CEQU 3 1 0 14 Redundant Checksum Avoidance;
+	SUBG 9 8c;
+
+void TCP::Options::23()
+{
+	DBYT 0 9 90 c2 Length:;
+	BBIT( 4, l[1], 0x90, 0xc2, "Subtype" );
+		CST#( 0, l[1], 0, 0x14, TCP::Options::23::Subtype );
+		CLSE( 0, l[1], 0, 0x14, "Reserved" );
+	if (l[1] == 0)
+	{
+		BBIT( 4, l[2], 0x90,0xc2, "Version" );
+		BBYT( 0, l[3], 0x90,0xc2, "Flags:" );
+			CBIT( 7, l[3], 0, 0xd4, "1....... A:" );
+			CLSE( 0, l[3], 0, 0xd4, "0....... A:" );
+			CBIT( 6, l[3], 0, 0xd4, ".1...... B:" );
+			CBIT( 0, l[3], 0, 0xd4, ".0...... B:" );
+			CBIT( 5, l[3], 0, 0xd4, "..1..... C:" );
+			CBIT( 0, l[3], 0, 0xd4, "..0..... C:" );
+			CBIT( 4, l[3], 0, 0xd4, "...1.... D:" );
+			CBIT( 0, l[3], 0, 0xd4, "...0.... D:" );
+			CBIT( 3, l[3], 0, 0xd4, "....1... E:" );
+			CBIT( 0, l[3], 0, 0xd4, "....0... E:" );
+			CBIT( 2, l[3], 0, 0xd4, ".....1.. F:" );
+			CBIT( 0, l[3], 0, 0xd4, ".....0.. F:" );
+			CBIT( 1, l[3], 0, 0xd4, "......1. G:" );
+			CBIT( 0, l[3], 0, 0xd4, "......0. G:" );
+			CBIT( 0, l[3], 0, 0xd4, ".......1 H:" );
+			CBIT( 0, l[3], 0, 0xd4, ".......0 H:" );
+		D64B( 4, l[4], 0x90,0xc2, "Option Sender's Key:" );
+		if (g[9] == 20)
+		{
+			D64B( 4, l[5], 0x90,0xc2, "Option Receiver's Key:" );
+		}
+	}
+	if (l[1] == 1)
+	{
+		if ( g[9] == 12 )
+		{
+			BBIT( 3, l[4], 0x90, 0xc2, "Version" );
+			BBIT( 1, l[5], 0x90, 0xc2, "B" );
+			BBYT( 0, l[6], 0x90, 0xc2, "Address ID" );
+			DLNG( 0, l[7], 0x90, 0xc2, "Receiver's Token:" );
+			DLNG( 0, l[8], 0x90, 0xc2, "Sender's Random Number:" );
+		}
+		if ( g[9] == 20 )
+		{
+			HEX#( 20, l[4], 0x90, 0xc2, "Sender's HMAC:" );
+		}
+	}
+	if (l[1] == 2)
+	{
+		BBIT( 4, l[2], 0x90, 0xc2, "Reserved:" );
+		BBYT( 0, l[3], 0x90, 0xc2, "Flags:" );
+			CBIT( 7, l[3], 0, 0xd4, "1....... res:" );
+			CLSE( 0, l[3], 0, 0xd4, "0....... res:" );
+			CBIT( 6, l[3], 0, 0xd4, ".1...... res:" );
+			CBIT( 0, l[3], 0, 0xd4, ".0...... res:" );
+			CBIT( 5, l[3], 0, 0xd4, "..1..... res:" );
+			CBIT( 0, l[3], 0, 0xd4, "..0..... res:" );
+			CBIT( 4, l[3], 0, 0xd4, "...1.... F: DATA_FIN yes" );
+			CBIT( 0, l[3], 0, 0xd4, "...0.... F: DATA_FIN no" );
+			CBIT( 3, l[3], 0, 0xd4, "....1... m: Data sequence number is 8 octets" );
+			CBIT( 0, l[3], 0, 0xd4, "....0... m: Data sequence number is 4 octets" );
+			CBIT( 2, l[3], 0, 0xd4, ".....1.. M: DSN, SSN, Data-Level Length and Checksum present" );
+			CBIT( 0, l[3], 0, 0xd4, ".....0.. M: DSN, SSN, Data-Level Length and Checksum present" );
+			CBIT( 1, l[3], 0, 0xd4, "......1. a: Data ACK is 8 octets" );
+			CBIT( 0, l[3], 0, 0xd4, "......0. a: Data ACK is 4 octets" );
+			CBIT( 0, l[3], 0, 0xd4, ".......1 A: Data ACK present" );
+			CBIT( 0, l[3], 0, 0xd4, ".......0 A: Data ACK is not present" );
+		l[4] = l[3];
+		l[4] &= 0x01;
+		l[5] = l[3];
+		l[5] &= 0x02;
+		SHFR( 1, l[5]);
+		if (l[4] == 1)
+		{
+			if (l[5] == 1)
+			{
+				D64B( 0, l[30], 0x90, 0xc2, "Data ACK:" );
+			}
+			if (l[5] != 1)
+			{
+				DLNG( 0, l[30], 0x90, 0xc2, "Data ACK:" );
+			}
+		}
+		l[6] = l[3];
+		l[6] &= 0x04;
+		SHFR( 2, l[5]);
+		l[7] = l[3];
+		l[7] &= 0x08;
+		SHFR( 3, l[5]);
+		l[8] = l[3];
+		l[8] &= 0x10;
+		SHFR( 4, l[5]);
+		l[9] = l[3];
+		l[9] &= 0x20;
+		SHFR( 5, l[5]);
+		if (l[6] == 1)
+		{
+			if (l[7] == 1)
+			{
+				D64B( 0, l[30], 0x90, 0xc2, "Data sequence number:" );
+			}
+			if (l[7] != 1)
+			{
+				DLNG( 0, l[30], 0x90, 0xc2, "Data sequence number:" );
+			}
+		}
+		DLNG( 0, l[30], 0x90,0xc2, "Subflow sequence number:" );
+		if (l[6] == 1)
+		{
+			DWRD( 0, l[30], 0x90, 0xc2, "Data-Level Length:" );
+			DWRD( 0, l[30], 0x90, 0xc2, "Checksum:" );
+		}
+		
+	}
+	if (l[1] == 3)
+	{
+		l[32] = g[9];
+		BBIT( 4, l[30], 0x90, 0xc2, "Version:" );
+		BBYT( 0, l[31], 0x90, 0xc2, "Address ID:" );
+		l[32] -= 3;
+		if (l[30] == 4)
+		{
+			IPLG 0 0 90 c2 Address:;
+			l[32] -= 4;
+		}
+		if (l[30] == 6)
+		{
+			IPV6 0 0 90 c2 Address:;
+			l[32] -= 8;
+		}
+		if (l[32] == 2)
+		{
+			DWRD( 0, l[31], 0x90, 0xc2, "Port:" );
+		}
+	}
+	if (l[1] == 4)
+	{
+		l[32] = g[9];
+		BBIT( 4, l[30], 0x90, 0xc2, "resvd:" );
+		BBYT( 0, l[31], 0x90, 0xc2, "Address ID:" );
+		l[32] -= 3;
+		if (l[32] > 1)
+		{
+			while (l[32] > 0)
+			{
+				BBYT( 0, l[31], 0x90, 0xc2, "Port:" );
+				l[32] -= 1;
+			}
+		}		
+	}
+	if (l[1] == 5)
+	{
+		BBIT( 12, l[30], 0x90, 0xc2, "resvd:" );
+		D64B( 0, l[30], 0x90, 0xc2, "Option Receiver's Key:" );
+	}
+	if (l[1] == 6)
+	{
+		BBIT( 12, l[30], 0x90, 0xc2, "resvd:" );
+		D64B( 0, l[30], 0x90, 0xc2, "Data Sequence Number:" );
+	}
+	if (l[1] == 7)
+	{
+		D64B( 0, g[9], 0x90, 0xc2, "Data:" );
+	}
+	SUBG 9 8c;
+}
+
+str# TCP::Options::23::Subtype;
+0x0  |   MP_CAPABLE: Multipath Capable;
+0x1  |   MP_JOIN: Join Connection;
+0x2  |   DSS: Data Sequence Signal (Data ACK and Data Sequence Mapping);
+0x3  |   ADD_ADDR: Add Address;
+0x4  |   REMOVE_ADDR: Remove Address;
+0x5  |   MP_PRIO: Change Subflow Priority;
+0x6  |   MP_FAIL: Fallback;
+0x7  |   MP_FASTCLOSE: Fast Close;
+
+void TCP::Options::76()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Length:" );
+	GBYT( 0 , l[4] );
+	ANDG( 0x01, l[4] );
+	//DGLB( 4, l[4], 0x90, 0xc2, "VersionSelector:" );
+	if (l[4] == 1)
+	{
+		BBIT( 4, l[2], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[2], 0, 0x14, TCP::Options::76::Type );
+			CLSE( 0, l[2], 0, 0x14, "Not specified" );
+		BBIT( 4, l[3], 0x90, 0xc2, "Version:" );	
+			CEQU( 0, l[3], 0, 0x14, "Version 2" );
+			CEQU( 1, l[3], 0, 0x14, "Version 1" );
+			CEQU( 2, l[3], 0, 0x14, "Version 2" );
+	}
+	if (l[4] != 1)
+	{
+		BBIT( 7, l[2], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[2], 0, 0x14, TCP::Options::76::Type );
+			CLSE( 0, l[2], 0, 0x14, "Not specified" );
+		BBIT( 1, l[3], 0x90, 0xc2, "Version:" );	
+			CEQU( 0, l[3], 0, 0x14, "Version 2" );
+			CEQU( 1, l[3], 0, 0x14, "Version 1" );
+			CEQU( 2, l[3], 0, 0x14, "Version 2" );
+			l[3] = 2;
+	}	
+	l[1] -= 3;
+	if (l[3] == 1)
+	{
+		if (l[2] == 2)
+		{
+			DBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );
+			IPLG( 0, l[5], 0x90, 0xc2, "CSH IP:" );
+			l[1] -= 5;
+			TRTS;
+		}
+		if (l[2] == 0)
+		{
+			DBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );
+			IPLG( 0, l[5], 0x90, 0xc2, "CSH IP:" );
+			DWRD( 0, l[6], 0x90, 0xc2, "Application Type:" );
+			l[1] -= 7;
+			TRTS;
+		}
+		if (l[2] == 1)
+		{
+			DBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );		
+			IPLG( 0, l[5], 0x90, 0xc2, "CSH IP:" );
+			IPLG( 0, l[6], 0x90, 0xc2, "SSH IP:" );
+			DWRD( 0, l[7], 0x90, 0xc2, "SSH Port:" );
+			l[1] -= 11;
+			TRTS;
+		}
+		if (l[2] == 5)
+		{
+			DBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );		
+			IPLG( 0, l[5], 0x90, 0xc2, "CSH IP:" );
+			IPLG( 0, l[6], 0x90, 0xc2, "SSH IP:" );
+			DWRD( 0, l[7], 0x90, 0xc2, "SSH Port:" );
+			l[1] -= 11;
+			TRTS;
+		}
+	}
+	if (l[3] == 2)
+	{
+		if ((l(2] == 6) || (l(2] == 8) || (l(2] == 9))
+		{
+			//TRTS;
+		}
+		if (l[2] == 7)
+		{
+			BBYT( 0, l[11], 0x90, 0xc9, "Probe Flags:" );
+				CBIT( 7, l[11], 0, 0xd4, "1... .... unknown: set" );
+				CLSE( 0, l[11], 0, 0xd4, "0... .... unknown: not set" );
+				CBIT( 6, l[11], 0, 0xd4, ".1.. .... unknown: set" );
+				CLSE( 0, l[11], 0, 0xd4, ".0.. .... unknown: not set" );
+				CBIT( 5, l[11], 0, 0xd4, "..1. .... unknown: set" );
+				CLSE( 0, l[11], 0, 0xd4, "..0. .... unknown: not set" );
+				CBIT( 4, l[11], 0, 0xd4, "...1 .... Disable Probe Cache on CSH: set" );
+				CLSE( 0, l[11], 0, 0xd4, "...0 .... Disable Probe Cache on CSH: not set" );
+				CBIT( 3, l[11], 0, 0xd4, ".... 1... unknown: set" );
+				CLSE( 0, l[11], 0, 0xd4, ".... 0... unknown: not set" );
+				CBIT( 2, l[11], 0, 0xd4, ".... .1.. unknown: set" );
+				CLSE( 0, l[11], 0, 0xd4, ".... .0.. unknown: not set" );				
+				CBIT( 1, l[11], 0, 0xd4, ".... ..1. SSL Enabled: set" );
+				CLSE( 0, l[11], 0, 0xd4, ".... ..0. SSL Enabled: not set" );
+				CBIT( 0, l[11], 0, 0xd4, ".... ...1 SSH outer to server established: set" );
+				CLSE( 0, l[11], 0, 0xd4, ".... ...0 SSH outer to server established: not set" );
+			LABL 0 0 0 c8;
+			l[1] -= 1;
+			TRTS;
+		}
+		if (l[2] == 10)
+		{
+			BBYT( 0, l[11], 0x90, 0xc9, "Probe Flags:" );
+			l[1] -= 1;
+			TRTS;
+		}
+	}	
+	DUMP( 0, l[1], 0x90, 0xc2, "Data:" );
+	SUBG 41 8c;
+}
+
+str# TCP::Options::76::Type;
+0	|	Probe Query;
+1	|	Probe Response;
+2	|	Probe Internal;
+3	|	Probe Trace;
+4	|	Probe Query SH;
+5	|	Probe Response SH;
+6	|	Probe Query Info;
+7	|	Probe Response Info;
+8	|	Probe Query Info SH;
+9	|	Probe Query Info Store ID;
+10	|	Probe Reset;
+
+void TCP::Data()
+{
+	TEQU  0  10 0 0 RETURN;
+
+	MOVE  1  84;					* sucky way to find the smaller number
+	SUBG  2  84;			
+	SLTE  0   4;
+	SKIP  1;
+	TCP::Swap_1_And_2;	* test the smaller port number first
+
+
+	// 	UInt32 iKey = ((((srcIP | dstIP)) + (srcPort + dstPort)));
+
+	//UInt32 nKey;
+	l[62]  = g[28];		//srcIP
+	l[62]  |= g[29];	//dstIP
+	l[62]  += g[1];		//srcPort
+	l[62]  += g[2];		//dstPort
+	//l[62] = nKey;
+	GETG( 0, l[62] );
+
+	g[17] = g[1];
+	g[18] = g[2];
+	
+	// Test for FIX
+	l[1] = pw[0];
+	if (l[1] == 0x383D)	 // 8=
+	{		    
+		l[1] = pl[2];
+		if (l[1] == 0x4649582E) // FIX.
+		{
+			FIX();
+			RETURN;
+		}
+	}
+	if (l[1] == 0x46495854) // FIXT => FIX Version >= 5.0
+	{
+		FIX();
+		RETURN;
+	}		
+	
+	//Fix for TT31543: 0 IP Length causes problems because it's not normal
+	BREM( 0, l[1] );
+	//g[16] should be same as BREM, if not something is wrong and needs correction
+	if (g[16] < l[1])
+	{
+		BREM( 0, g[16] ); 	//Correction of g[16]
+		//maybe some length correction left here
+	}
+	
+	//Test for RTPS
+	if (g[16] > 4)
+	{
+		l[1] = pl[0];
+		if (l[1] == 0x52545053) // RTPS
+		{
+				RTPS();
+				RETURN;
+		}
+
+		// Test for BitTorrent
+		l[1] = pb[0];
+		if (l[1] == 0x13)
+		{
+			l[1] = pl[1];
+			if(l[1] == 0x42697454) //BitT
+			{
+				BitTorrent();
+				RETURN;
+			}
+		}
+
+		// Test for IBM MQ Series
+		l[1] = pl[0];
+		if(l[1] == 0x54534820) //TSH
+		{
+			MQSeries();
+			RETURN;
+		}
+		TCP::Ports();
+
+		if (g[9] == 2)	// make sure that we exhausted the list the first time
+		{
+			// if we did not find a match
+			// then try these heuristics
+
+			// Test for HSRP
+			if( g[20] == 0x554450 ) // UDP
+			{
+				if( g[1] == 1985 )
+				{
+					if( g[2] == 1985 )
+					{
+						HSRP();
+					}
+				}
+			}
+
+			// Test for Megaco
+			l[1] = pl[0];
+			if (l[1] == 0x4D454741) // MEGA
+			{
+				l[1] = pl[4];
+				if (l[1] == 0x434F2F31) // CO/1
+				{
+					MegacoText();
+				}
+			}
+
+			// Test for MS DCE
+			l[1] = pw[0];
+			if (l[1] == 0x0500) // major minor
+			{
+				l[1] = pb[2];
+				if (l[1] < 20) // packet type
+				{
+					DCE();
+				}
+			}
+
+			// test for RTP/RTCP
+			RTP::Test();
+			SGTE 0 10;
+			SKIP 1;
+			RTP/RTCP;
+
+			// Test for RPC
+			TGTE 0 10 0 0 RETURN;
+			Test_RPC;
+			TGTE 0 10 0 0 RETURN;
+			Test_RPC2;
+			TGTE 0 10 0 0 RETURN;
+
+			NTLM::Check;		//si: tt9041 - NTLM
+
+			Test_TALI;	
+
+			TPKT::Test;			//si: test for tpkt
+
+			// si: are you a tpkt? if so, are you now a q931 pkt?
+			if (g[2] == 0x54504b54)
+			{
+				Q931::Test;
+			}		
+		}
+
+		H222::MPEG_OverUDPTest;
+	}
+	// save the super stream
+	PUTG( 0, l[62] );
+	
+	Dump Data;
+	TRTS;
+}
+
+//inputs: 
+//g[1] = tpkt length
+void Q931::Test;
+	l[1] = pb[0];
+	if (l[1] == 8)
+	{
+		l[1] = pb[1];
+		if (l[1] > g[16])
+		{
+			TRTS;
+		}
+		INCR 2;			// protocol discriminator + call ref val length
+		INCR 0 41;		// call ref value
+		l[2] = pb[0];
+		DECR 0 41;
+		DECR 2;
+		l[2] &= 0xe0;
+		SHFR 5 42;
+		// si: test message values - we have 0-3
+		if (l[2] >= 0)
+		{
+			if (l[2] <= 3)
+			{
+				//g[1] needs to contain the tpkt length
+				h323hostcall;
+			}
+		}
+	}
+	TRTS;
+
+void Test_RPC;
+	TGTE 10 10 0 0 RETURN;	*if value is greater than or equal to global then branch
+	INCR c;						* rpc data is supposedly 16 bytes ahead!
+	GLNG 0  2;					* we want from 100000 [186A0] - 100039 [186C7]
+	SLTE 1869f 2;			* if value [99999]  <= g2 then it's not rpc
+	 SKIP 2;
+	 DECR c;
+	 TNXT -RETURN;
+	SGTE 186c8 2;			* if value [100040] >= g2 then it's not rpc
+	 SKIP 2;
+	 DECR c;
+	 TNXT -RETURN;
+
+	* hmmm...need a mark to say that we're in rpc!
+	*MARK 1 22 0 0 You_are_RPC;			*SI: TT5833
+	DECR c;
+	TNXT -RPC;
+
+str# You_are_RPC;
+	RPC;
+
+void Test_RPC2;						*SI: test for sun rpc header
+	GBYT  0  1;
+	TNEQ 80  1 0 0 RETURN;			*si: first byte must be 0x80 - ok...this i'm not positive on... but all our packets have it
+	TGTE 10 10 0 0 RETURN;			*si: if value is greater than or equal to global then branch
+	g[1] = pl[8];					*si: get the type
+	
+	SNEQ 0 1;						*si: type == call
+	SKIP;
+	 g[1] = pl[12];					*si: get version num [must be 2]
+	 SEQU 2 1;
+	 SKIP 1;
+	  TRTS;
+	 TNXT -RPC;	 
+	ENDS;
+	
+	SNEQ  1 1;						*si: type == reply
+	SKIP;
+	 g[1] = pl[12];					*si: get status [must be 0 or 1]
+	 SNEQ 0 1;
+	 SKIP 1;
+	  TNXT -RPC;
+	 SNEQ 1 1;
+	 SKIP 1;
+	  TNXT -RPC;
+	 TRTS;
+	ENDS;
+
+	TRTS;
+
+
+* g[1] swap var 1
+* g[2] swap var 2
+* g[4] temp var for swapping
+
+void TCP::Swap_1_And_2;
+	MOVE 1 84;
+	MOVE 2 81;
+	MOVE 4 82;
+	TRTS;
+
+
+void SQL;
+	LABL 0 0 0 b1 SQL;
+	Display Text And Binary;
+	TRTS;
+
+void Finger;
+	LABL  0  0  0 b1 Finger;
+	Display All Lines;
+
+void WatchPoint;
+	LABL  0  0  0 b1 WatchPoint;
+	Display All Lines;
+
+void FileMaker;
+	LABL  0  0  0 b1 FileMaker;
+	Display Text And Binary;
+
+void Retrospect;
+	LABL  0  0  0 b1 Retrospect;
+	DUMP  1  0 90 c2 Data Area:;
+
+void Quake;
+	LABL  0  0  0 b1 Quake;
+	DUMP  1  0 90 c2 Data Area:;
+
+void Display Number Of Bytes;
+	TEQU 0 10  0  0 RETURN;
+	Test Referrer;
+	DUMP 1  0 90 c2 Data Area:;
+
+void Dump Data;
+	TGTE  0 10  0  0 RETURN;
+	MDIA 0 b;
+	//SEQU  1  9;  * if we already found a protocol then skip 4
+	if (g[9] == 1)
+	{
+		BREM  0  1;		* get remaining bytes
+		if (g[11] == 4)
+		{
+			//SI: WAN Type
+			if (2 >= g[1])
+			{
+				TRTS;
+			}
+		}
+		if (g[11] != 4)
+		{
+			//si: non wan types
+			if (4 >= g[1])
+			{
+				TRTS;
+			}
+		}
+	}
+	if (g[9] != 1)
+	{
+		if (g[16] < 4)
+		{
+			LABL  0  0  0 b1 Application Layer\App Layer:;
+		}
+		DUMP  1 0 90 c2 Data Area:;  * dump to FCS
+	}
+	if (g[9] == 1)
+	{
+		DUMP  0 10 90 c2 Data Area:;  * dump to FCS
+	}	
+
+* globals
+* g[1] = source
+* g[2] = dest
+* g[3] = IP Type (set in IP)
+* g[17] = length
+* g[0] = checksum
+* g[23] = length 
+void UDP()
+{
+	LABL    0   0  0 b1 "UDP - User Datagram Protocol\UDP:";
+	PORT    0   1 90 c2 "Source Port:\Src:";
+	PORT    0   2 90 c2 "Destination Port:\Dst:";
+	DWRD    0  11 90 c2 "Length:\";
+	SUBG    6  11;  * subtract source/dest ports
+	g[23] = g[17]; //DW: Done for getting UDP sublength
+
+	* verify length
+	SEQU   11  90;
+	SKIP    1;
+	LABL    0   0 0 24 length is suspicious;
+	
+	HWRD    0   4 90 c2 UDP Checksum:\;
+	if( g[4] != 0 )
+	{
+		CKSM    3   0 24 14 Checksum invalid. Should be: ;
+	}
+	TEQU    0  10 0 0 RETURN;
+	g[20] = 0x554450;					//si: let's mark this as udp
+	TCP::Data;
+}
+
+
+* STR Arrays
+
+str# IGMP Types;
+	Host Membership Query;
+	Host Membership Report;
+
+str# IP Protocols;
+1  |  ICMP - Internet Control Message Protocol;
+2  |  IGMP - Internet Group Management Protocol;
+3  |  GGP - Gateway to Gateway Protocol;
+4  |  IP - IP in IP encapsulation;
+5  |  ST - Internet Stream Protocol;
+6  |  TCP - Transmission Control Protocol;
+7  |  UCL - CBT;
+8  |  EGP - Exterior Gateway Protocol;
+9  |  IGRP;
+10  |  BBN RCC Monitoring;
+11  |  NVP - Network Voice Protocol;
+12  |  PUP;
+13  |  ARGUS;
+14  |  EMCON - Emission Control Protocol;
+15  |  Cross Net Debugger;
+16  |  Chaos;
+17  |  UDP;
+18  |  TMux - Transport Multiplexing Protocol;
+19  |  DCN Measurement Subsystems;
+20  |  HMP - Host Monitoring Protocol;
+21  |  Packet Radio Measurement;
+22  |  XEROX NS IDP;
+23  |  Trunk-1;
+24  |  Trunk-2;
+25  |  Leaf-1;
+26  |  Leaf-2;
+27  |  RDP - Reliable Data Protocol;
+28  |  IRTP - Internet Reliable Transaction Protocol;
+29  |  ISO Transport Protocol Class 4;
+30  |  NETBLT - Network Block Transfer;
+31  |  MFE Network Services Protocol;
+32  |  MERIT Internodal Protocol;
+33  |  Sequential Exchange Protocol;
+34  |  Third Party Connect Protocol;
+35  |  IDPR - Inter-Domain Policy Routing Protocol;
+36  |  XTP;
+37  |  Datagram Delivery Protocol;
+38  |  IDPR - Control Message Transport Protocol;
+39  |  TP++ Transport Protocol;
+40  |  IL Transport Protocol;
+41  |  IPv6 over IPv4;
+42  |  SDRP - Source Demand Routing Protocol;
+43  |  IPv6 Routing header;
+44  |  IPv6 Fragment header;
+45  |  IDRP - Inter-Domain Routing Protocol;
+46  |  RSVP - Reservation Protocol;
+47  |  GRE - Generic Routing Encapsulation;
+48  |  MHRP - Mobile Host Routing Protocol;
+49  |  BNA;
+50  |  ESP - Encapsulating Security Payload;
+51  |  AH - Authentication Header;
+52  |  Integrated Net Layer Security TUBA;
+53  |  IP with Encryption;
+54  |  NARP - NBMA Address Resolution Protocol;
+55  |  Minimal Encapsulation Protocol;
+56  |  TLSP - Transport Layer Security Protocol using Kryptonet key management;
+57  |  SKIP;
+58  |  ICMPv6 - Internet Control Message Protocol for IPv6;
+59  |  IPv6 No Next Header;
+60  |  Destination Options for IPv6;
+61  |  Any host internal protocol;
+62  |  CFTP;
+63  |  Any local network;
+64  |  SATNET and Backroom EXPAK;
+65  |  Kryptolan;
+66  |  MIT Remote Virtual Disk Protocol;
+67  |  Internet Pluribus Packet Core;
+68  |  Any distributed file system;
+69  |  SATNET Monitoring;
+70  |  VISA Protocol;
+71  |  Internet Packet Core Utility;
+72  |  Computer Protocol Network Executive;
+73  |  Computer Protocol Heart Beat;
+74  |  Wang Span Network;
+75  |  Packet Video Protocol;
+76  |  Backroom SATNET Monitoring;
+77  |  SUN ND PROTOCOL-Temporary;
+78  |  WIDEBAND Monitoring;
+79  |  WIDEBAND EXPAK;
+80  |  ISO Internet Protocol;
+81  |  VMTP - Versatile Message Transaction Protocol;
+82  |  SECURE-VMTP;
+83  |  VINES;
+84  |  TTP;
+85  |  NSFNET-IGP;
+86  |  Dissimilar Gateway Protocol;
+87  |  TCF;
+88  |  EIGRP;
+89  |  OSPF - Open Shortest Path First Routing Protocol;
+90  |  Sprite RPC Protocol;
+91  |  Locus Address Resolution Protocol;
+92  |  MTP - Multicast Transport Protocol;
+93  |  AX.25 Frames;
+94  |  IP-within-IP Encapsulation Protocol;
+95  |  Mobile Internetworking Control Protocol;
+96  |  Semaphore Communications Sec. Pro;
+97  |  Ethernet-within-IP Encapsulation;
+98  |  Encapsulation Header;
+99  |  Any private encryption scheme;
+100  |  GMTP;
+101  |  IFMP - Ipsilon Flow Management Protocol;
+102  |  PNNI over IP;
+103  |  PIM - Protocol Independent Multicast;
+104  |  ARIS;
+105  |  SCPS;
+106  |  QNX;
+107  |  Active Networks;
+108  |  IPPCP - IP Payload Compression Protocol;
+109  |  SNP - Sitara Networks Protocol;
+110  |  Compaq Peer Protocol;
+111  |  IPX in IP;
+112  |  VRRP - Virtual Router Redundancy Protocol;
+113  |  PGM - Pragmatic General Multicast;
+114  |  any 0-hop protocol;
+115  |  L2TP - Level 2 Tunneling Protocol;
+116  |  DDX - D-II Data Exchange;
+117  |  IATP - Interactive Agent Transfer Protocol;
+118  |  ST - Schedule Transfer;
+119  |  SRP - SpectraLink Radio Protocol;
+120  |  UTI;
+121  |  SMP - Simple Message Protocol;
+122  |  SM;
+123  |  PTP - Performance Transparency Protocol;
+124  |  ISIS over IPv4;
+125  |  FIRE;
+126  |  CRTP - Combat Radio Transport Protocol;
+127  |  CRUDP - Combat Radio User Datagram;
+128  |  SSCOPMCE;
+129  |  IPLT;
+130  |  SPS - Secure Packet Shield;
+131  |  PIPE - Private IP Encapsulation within IP;
+132  |  SCTP - Stream Control Transmission Protocol;
+133  |  Fibre Channel;
+134  |  RSVP-E2E-IGNORE;
+135  |  Mobility Header;
+136  |  UDP-Lite;
+137  |  MPLS-in-IP;
+138  |  manet - MANET Protocols;
+139  |  HIP - Host Identity Protocol;
+140  |  Shim6 - Shim6 Protocol;
+141  |  WESP - Wrapped Encapsulating Security Payload;
+142  |  ROHC - Robust Header Compression;
+253  |  Use for experimentation and testing;
+254  |  Use for experimentation and testing;
+
+str# MacIP Request Codes;
+	Assign;
+	Name (obsolete);
+	Server;
+	Release;
+	Static;
+
+str# IP Config Errors;
+	See Error Message Below;
+	Command Out of Range;
+	No Addresses Available;
+	Address Already Assigned;
+	Address Not Currently Assigned To You;
+
+str# IPv6 Priorities;
+	Uncharacterized Traffic;
+	Filler Traffic;
+	Unattended Data Transfer;
+	Reserved;
+	Attended Bulk Transfer;
+	Reserved;
+	Interactive Traffic;
+	Internet Control Traffic;
+
+str# SMTP Msg Opt;
+	SMTP Command;
+	SMTP Message Data;
+
+str# H323_Decoders;
+	H245;
+
+str# HTTP Request Fields;
+	Command;
+	URI;
+	Version;
+
+str# HTTP Response Fields;
+	Version;
+	Status;
+	Reason;
+
+
+
+void TestTrack()
+{
+	LABL(0,0,0,0xb1, "TestTrack" );
+	DUMP(0,g[16],0x90,0xc2,"Data:");
+}

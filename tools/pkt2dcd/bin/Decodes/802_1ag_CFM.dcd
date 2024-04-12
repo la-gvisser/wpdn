@@ -1,0 +1,1062 @@
+//Ethertype 0x8902 - IEEE 802.1ag Connectivity Fault Management (CFM) Protocol / ITU-T Recommendation Y.1731 (OAM)
+//
+//based on 802.1ag-2007.pdf
+//based on Y.1731
+//
+
+str# Ether::Branching_3_Str;
+0x8902	| 8021agCFM;
+//----------------------------------------------------------------------------------------------------
+void 8021agCFM()
+{
+	LABL( 0, 0, 0, 0x14, "IEEE 802.1ag Connectivity Fault Management (CFM) Protocol" );
+	LABL( 0, 0, 0, 0xb1, "IEEE 802.1ag Connectivity Fault Management (CFM) Protocol" );
+	GBYT( 1, l[10] );
+	//Regular Header	
+	CST#( 0, l[10], 0, 0xb7, 8021agCFM::OpCode::Names );
+	LABL( 0, 0, 0, 0x07, " - Header");
+		TSB#( 0, l[10], 0, 0x14, 8021agCFM::OpCode::Ldr );
+		XLSE( 0, l[10], 0, 0x14, 8021agCFM::OpCode::Fail );
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::Fail()
+{
+	LABL( 0, 0, 0, 0xc8);
+	DUMP( 0, g[16], 0x90, 0xc2, "Undecoded Content:" );
+}
+
+//----------------------------------------------------------------------------------------------------
+
+void 8021agCFM::OpCode::ContinuityCheckMessage()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "CCM MD Level:");
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "CCM Version:");
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - CCM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "CCM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 1, l[5], 0x90, 0xc2, "RDI:" );
+			CEQU( 0, l[5], 0, 0x14, "MEP’s presentRDI variable is not set" );
+			CEQU( 1, l[5], 0, 0x14, "MEP’s presentRDI variable is  set" );
+		BBIT( 4, l[5], 0x90, 0xc2, "Reserved:" );
+		DBIT( 3, l[7], 0x90, 0xc2, "Interval Field:" );
+			CST#( 0, l[3], 0, 0x14, 8021agCFM::CCM::CCMInterval );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[8], 0x90, 0xc2, "Sequence Number:");
+	DWRD( 0, l[9], 0x90, 0xc2, "Maintenance association End Point Identifier(MEP ID):" );
+	g[6] -= 5;
+	//MAID - Maintenance Association Identifier
+	LABL( 0, 0, 0, 0xb7, "CFM - CCM - PDU" );
+		LABL( 0, 0, 0, 0xb7, "Maintenance Assoc. ID:" );
+			DBYT( 0, l[10], 0x90, 0xc2, "MD Name Format:" );
+			DBYT( 0, l[11], 0x90, 0xc2, "Short MA Name Format:" );
+			DBYT( 0, l[12], 0x90, 0xc2, "Short MA Name Length:" );
+			CHR#( 0, l[12], 0x90, 0xc2, "Short MA Name:" );
+			l[12] += 3;
+			l[19] = 48;
+			l[19] -= l[12];
+			HEX#( 0, l[19], 0x90, 0xc2, "Padding 0s:" );
+		LABL( 0, 0, 0, 0xc8);
+		if (g[16] > 0)
+		{	
+			LABL( 0, 0, 0, 0xb7, Defined by ITU-T Y.1731: );
+				DLNG( 0, l[13], 0x90, 0xc2, "TXFCf:" );
+				DLNG( 0, l[14], 0x90, 0xc2, "RXFCb:" );
+				DLNG( 0, l[15], 0x90, 0xc2, "TXFCb:" );
+				DLNG( 0, l[16], 0x90, 0xc2, "Reserved:" );
+			LABL( 0, 0, 0, 0xc8);
+		}
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - CCM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::LoopbackReply()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:");
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:");
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - Loopback - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Loopback Flags:" );
+		DECR( 1, 0 );		
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );		
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[8], 0x90, 0xc2, "Loopback Transaction Identifier:");
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - Loopback - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::LoopbackMessage()
+{
+	8021agCFM::OpCode::LoopbackReply;
+}
+
+void 8021agCFM::OpCode::LinktraceReply()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:");
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:");
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - Loopback - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Loopback Flags:" );
+		DECR( 1, 0 );
+		 BBIT( 5, l[5], 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "TerminalMEP:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "FwdYes:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "UseFDBonly:" );
+	LABL( 0, 0, 0, 0xc8);
+	DLNG( 0, l[8], 0x90, 0xc2, "LTR Transaction Identifier:");
+	DBYT( 0, l[9], 0x90, 0xc2, "Reply TTL:" );
+	DBYT( 0, l[10], 0x90, 0xc2, "Relay Action:" );
+		CST#( 0, l[10], 0, 0x14, 8021agCFM::OpCode::LinktraceReply::Relay_Action );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - Loopback - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str# 8021agCFM::OpCode::LinktraceReply::Relay_Action;
+1	|	The LTM reached an MP whose MAC address matches the target MAC address (RlyHit);
+2	|	The Egress Port was determined by consulting the Filtering Database (RlyFDB);
+3	|	The Egress Port was determined by consulting the MIP CCM Database (RlyMPDB);
+
+void 8021agCFM::OpCode::LinktraceMessage()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "LTM MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "LTM Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - LTM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "LTM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 1, l[5], 0x90, 0xc2, "UseFDBonly:" );
+			CEQU( 0, l[5], 0, 0x14, "information saved in the MIP CCM Database, is to be used to determine the Egress Port" );
+			CEQU( 1, l[5], 0, 0x14, "only MAC addresses learned in a Bridges Filtering Database" );
+		BBIT( 7, l[5], 0x90, 0xc2, "Reserved:" );
+		
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[8], 0x90, 0xc2, "LTM Transaction Identifier:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "LTM TTL:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Original MAC Address:" );
+	ETHR( 0, 0, 0x90, 0xc2, "Target MAC Address:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - LTM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::GNM()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "first:" );
+	//tbc
+}
+
+void 8021agCFM::OpCode::AISMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - AIS - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "AIS Flags:" );
+		DECR( 1, 0 );
+		BBIT( 5, l[5], 0x90, 0xc2, "Reserved:" );
+		BBIT( 3, l[6], 0x90, 0xc2, "Period:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 0
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - AIS - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+str# 8021agCFM::OpCode::AISMEPs::Period;
+0	|	Invalid value for AIS/LCK PDUs;
+1	|	Invalid value for AIS/LCK PDUs;
+2	|	Invalid value for AIS/LCK PDUs;
+3	|	Invalid value for AIS/LCK PDUs;
+4	|	1s 1 frame per second;
+5	|	Invalid value Invalid value for AIS/LCK PDUs;
+6	|	1 min 1 frame per minute;
+7	|	Invalid value Invalid value for AIS/LCK PDUs;
+
+void 8021agCFM::OpCode::LCKMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - LCK - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "LCK Flags:" );
+		DECR( 1, 0 );
+		BBIT( 5, l[5], 0x90, 0xc2, "Reserved:" );
+		BBIT( 3, l[6], 0x90, 0xc2, "Period:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 0
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - LCK - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::TSTMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - LCK - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "LCK Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 4
+	DLNG( 0, l[6], 0x90, 0xc2, "Sequence Number:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - LCK - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::LinearAPSReferto()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "first:" );
+	//tbc
+}
+
+void 8021agCFM::OpCode::RingAPSReferto()
+{
+	DBYT( 0, 0, 0x90, 0xc2, "first:" );
+	//tbc
+}
+
+void 8021agCFM::OpCode::MCCMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - MCC - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "MCC Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 4
+	802_11::Print_OUI;
+	DBYT( 0, l[6], 0x90, 0xc2, "SubOpCode:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - MCC - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::LMMMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - LMM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "LMM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 7, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Type:" );
+			CEQU( 0, l[5], 0, 0x14, "on-demand operation" );
+			CEQU( 1, l[5], 0, 0x14, "proactive operation" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 12
+	DLNG( 0, l[6], 0x90, 0xc2, "TXFCf:" );	
+	DLNG( 0, l[7], 0x90, 0xc2, "RXFCf:" );
+	DLNG( 0, l[8], 0x90, 0xc2, "TXFCb:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - LMM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+	
+}
+void 8021agCFM::OpCode::LMRMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - LMR - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "LMR Flags:" );
+		DECR( 1, 0 );
+		BBIT( 7, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Type:" );
+			CEQU( 0, l[5], 0, 0x14, "on-demand operation" );
+			CEQU( 1, l[5], 0, 0x14, "proactive operation" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 12
+	DLNG( 0, l[6], 0x90, 0xc2, "TXFCf:" );	
+	DLNG( 0, l[7], 0x90, 0xc2, "RXFCf:" );
+	DLNG( 0, l[8], 0x90, 0xc2, "TXFCb:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - LMR - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+void 8021agCFM::OpCode::1DMMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - 1DM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "1DM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 7, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Type:" );
+			CEQU( 0, l[5], 0, 0x14, "on-demand operation" );
+			CEQU( 1, l[5], 0, 0x14, "proactive operation" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 16
+	D64B( 0, l[6], 0x90, 0xc2, "TxTimeStamp:" );
+	D64B( 0, l[7], 0x90, 0xc2, "Reserved for 1DM receiving equipment(RxTimeStamp):" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - 1DM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+void 8021agCFM::OpCode::DMMMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - DMM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "DMM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 7, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Type:" );
+			CEQU( 0, l[5], 0, 0x14, "on-demand operation" );
+			CEQU( 1, l[5], 0, 0x14, "proactive operation" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 32
+	D64B( 0, l[6], 0x90, 0xc2, "TxTimeStamp:" );
+	D64B( 0, l[7], 0x90, 0xc2, "Reserved for DMM receiving equipment (RxTimeStamp):" );
+	D64B( 0, l[8], 0x90, 0xc2, "Reserved for DMR (TxTimeStampb):" );
+	D64B( 0, l[9], 0x90, 0xc2, "Reserved for DMR receiving equipment:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - DMM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::DMRMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - DMR - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "DMR Flags:" );
+		DECR( 1, 0 );
+		BBIT( 7, 0, 0x90, 0xc2, "Reserved:" );
+		BBIT( 1, l[5], 0x90, 0xc2, "Type:" );
+			CEQU( 0, l[5], 0, 0x14, "on-demand operation" );
+			CEQU( 1, l[5], 0, 0x14, "proactive operation" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 32
+	D64B( 0, l[6], 0x90, 0xc2, "TxTimeStampf:" );
+	D64B( 0, l[7], 0x90, 0xc2, "RxTimeStampf:" );
+	D64B( 0, l[8], 0x90, 0xc2, "TxTimeStampb:" );
+	D64B( 0, l[9], 0x90, 0xc2, "RxTimeStampb:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - DMR - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::EXM()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - EXM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "EXM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	802_11::Print_OUI;
+	DBYT( 0, l[6], 0x90, 0xc2, "SubOpCode:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - EXM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::EXR()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - EXR - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	802_11::Print_OUI;
+	DBYT( 0, l[6], 0x90, 0xc2, "SubOpCode:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - EXR - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::VSM()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - VSM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	802_11::Print_OUI;
+	DBYT( 0, l[6], 0x90, 0xc2, "SubOpCode:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - VSM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::VSR()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		//CQUE( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - VSR - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	802_11::Print_OUI;
+	DBYT( 0, l[6], 0x90, 0xc2, "SubOpCode:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - VSR - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::CSFMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - Client signal fail - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Flags:" );
+		DECR( 1, 0 );
+		BBIT( 2, l[5], 0x90, 0xc2, "Reserved:" );
+		BBIT( 3, l[6], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[6], 0, 0x14, 8021agCFM::OpCode::CSFMEPs::Type );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+		BBIT( 3, l[7], 0x90, 0xc2, "Period:" );
+			CST#( 0, l[7], 0, 0x14, 8021agCFM::OpCode::CSFMEPs::Period );
+			CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );		//should be 0
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - Client signal fail - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+str#  8021agCFM::OpCode::CSFMEPs::Type;
+0	|	Client loss of signal (LOS);
+1	|	Client forward defect indication (FDI/AIS);
+2	|	Client reverse defect indication (RDI);
+3	|	Client defect clear indication (DCI);
+
+str#  8021agCFM::OpCode::CSFMEPs::Period;
+0	|	Invalid value for CSF PDUs;
+1	|	For further study;
+2	|	For further study;
+3	|	For further study;
+4	|	1 frame per second (1s);
+5	|	For further study;
+6	|	1 frame per minute (1 min);
+7	|	For further study;
+
+void 8021agCFM::OpCode::1SLMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - 1SL - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[6], 0x90, 0xc2, "Test ID:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "TxFCf:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - 1SL - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::SLMMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - SLM - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "SLM Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[6], 0x90, 0xc2, "Test ID:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "TxFCf:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "TxFCb:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - SLM - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+void 8021agCFM::OpCode::SLRMEPs()
+{
+	//Regular Header
+	DBIT( 3, l[1], 0x90, 0xc2, "MD Level:" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBIT( 5, l[2], 0x90, 0xc2, "Version:" );
+		CEQU( 0, 0, 0, 0x14, "Rec. ITU-T G.8013/Y.1731 (08/2015)" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	DBYT( 0, l[3], 0x90, 0xc2, "OpCode:" );
+		CST#( 0, l[3], 0, 0x14, 8021agCFM::OpCode::Names );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	LABL( 0, 0, 0, 0xc8);
+	//CCM Header
+	LABL( 0, 0, 0, 0xb7, "CFM - SLR - PDU" );
+	BBYT( 0, l[4], 0x90, 0xc9, "SLR Flags:" );
+		DECR( 1, 0 );
+		BBIT( 8, l[5], 0x90, 0xc2, "Reserved:" );
+	LABL( 0, 0, 0, 0xc8);
+	DBYT( 0, g[6], 0x90, 0xc2, "First TLV Offset:" );
+	DLNG( 0, l[6], 0x90, 0xc2, "Test ID:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "TxFCf:" );
+	DLNG( 0, l[7], 0x90, 0xc2, "TxFCb:" );
+	LABL( 0, 0, 0, 0xc8);
+	if (g[6] != 0)
+	{
+		LABL( 0, 0, 0, 0xb7, "CFM - SLR - TLVs" );
+		8021agCFM::TLVs;	
+	}	
+	LABL( 0, 0, 0, 0xc8);
+}
+
+//----------------------------------------------------------------------------------------------------
+
+void 8021agCFM::TLVs()
+{
+	g[20] = 0;
+	while (g[20] != 0x9999)
+	{
+		
+		GBYT( 0, g[22] );
+		if (g[22] != 0)
+		{
+			GWRD( 1, l[2] );
+		}
+		CST#( 0, g[22], 0, 0xb7, 8021agCFM::TLV::Names );
+			if (g[22] != 0)
+			{
+				DBYT( 0, 0, 0x90, 0xc2, "TLV Type:" );
+					CST#( 0, g[22], 0, 0x14, 8021agCFM::TLV::Names );
+					CLSE( 0, 0, 0, 0x14, "Reserved" );
+				DWRD( 0, g[21], 0x90, 0xc2, "TLV Length:" );
+				
+				TSB#( 0, g[22], 0, 0, 8021agCFM::TLV::Ldr );
+				//g[21] -= 3;
+				if (g[21] != 0)
+				{
+					HEX#( 0, g[21], 0x90, 0xc2, "TLV-Value:" );
+				}
+			}
+			if (g[22] == 0)
+			{
+				DBYT( 0, 0, 0x90, 0xc2, "TLV Type:" );
+					CST#( 0, g[22], 0, 0x14, 8021agCFM::TLV::Names );
+					CLSE( 0, 0, 0, 0x14, "Reserved" );
+					g[20] = 0x9999;
+				TRTS;
+			}
+		LABL( 0, 0, 0, 0xc8 );
+		
+	}
+	//DUMP( 0, g[16], 0x90, 0xc2, "CFM TLVs:" );
+}
+
+void 8021agCFM::TLV::SenderIDTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Chassis ID Length:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Chassis ID Subtype:" );
+	CHR#( 0, l[1], 0x90, 0xc2, "Chassis ID:" );
+	l[4] = l[1];
+	DBYT( 0, l[1], 0x90, 0xc2, "Management Address Domain Length:" );
+	l[4] += l[1];
+	CHR#( 0, l[1], 0x90, 0xc2, "Management Address Domain:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Management Address Length:" );
+	l[4] += l[1];
+	CHR#( 0, l[1], 0x90, 0xc2, "Management Address:" );
+	l[4] += 4;
+	g[21] -= l[4];
+}
+
+void 8021agCFM::TLV::PortStatusTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Port Status:" );
+		CST#( 0, l[1], 0, 0x14, 8021agCFM::TLV::PortStatusTLV::Status );
+	g[21] -= 1;
+}
+
+void 8021agCFM::TLV::DataTLV()
+{
+	HEX#( 0, g[21], 0x90, 0xc2, "Data:" );
+	g[21] -= g[21];
+}
+
+void 8021agCFM::TLV::InterfaceStatusTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Status:" );
+		CST#( 0, l[1], 0, 0x14, 8021agCFM::TLV::InterfaceStatusTLV::Status );
+	g[21] -= 1;
+}
+
+void 8021agCFM::TLV::ReplyIngressTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Ingress Action:" );
+		CEQU( 0, l[1], 0, 0x14, "Reserved" );
+		CEQU( 1, l[1], 0, 0x14, "IngOK" );
+		CEQU( 2, l[1], 0, 0x14, "IngDown" );
+		CEQU( 3, l[1], 0, 0x14, "IngBlocked" );
+		CEQU( 4, l[1], 0, 0x14, "IngVID" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	ETHR( 0, 0, 0x90, 0xc2, "Ingress MAC Address:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Ingress Port ID Length:" );	
+	DBYT( 0, l[3], 0x90, 0xc2, "Ingress Port ID Subtype:" );
+	HEX#( 0, l[2], 0x90, 0xc2, "Ingress Port ID:" );	
+	g[21] -= g[21];
+}
+
+void 8021agCFM::TLV::ReplyEgressTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Egress Action:" );
+		CEQU( 0, l[1], 0, 0x14, "Reserved" );
+		CEQU( 1, l[1], 0, 0x14, "IngOK" );
+		CEQU( 2, l[1], 0, 0x14, "IngDown" );
+		CEQU( 3, l[1], 0, 0x14, "IngBlocked" );
+		CEQU( 4, l[1], 0, 0x14, "IngVID" );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+	ETHR( 0, 0, 0x90, 0xc2, "Egress MAC Address:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Egress Port ID Length:" );	
+	DBYT( 0, l[3], 0x90, 0xc2, "Egress Port ID Subtype:" );
+	HEX#( 0, l[2], 0x90, 0xc2, "Egress Port ID:" );	
+	g[21] -= g[21];
+}
+
+void 8021agCFM::TLV::LTMEgressIdentifierTLV()
+{
+	D64B( 0, g[21], 0x90, 0xc2, "Egress Identifier:" );
+	g[21] -= 8;
+}
+
+void 8021agCFM::TLV::LTREgressIdentifierTLV()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Last Egress Identifier:" );
+	D64B( 0, 0, 0x90, 0xc2, "Next Egress Identifier:" );
+	g[21] -= 16;	
+}
+
+void 8021agCFM::TLV::Organisation-SpecificTLV()
+{
+	HEX#( 0, g[21], 0x90, 0xc2, "Organisation - Spec.:" );
+	g[21] -= g[21];
+	//tbc
+}
+
+void 8021agCFM::TLV::TestTLV()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Pattern Type:" );
+		CST#( 0, l[1], 0, 0x14, 8021agCFM::TLV::TestTLV::Type );
+		//Reserved for future standardization
+		g[21] -= 1;
+		if (l[1] == 1)
+		{
+			g[21] -= 4;
+		}
+		if (l[1] == 3)
+		{
+			g[21] -= 4;
+		}
+		HEX#( 0, g[21], 0x90, 0xc2, "Test Pattern:" );
+		if (l[1] == 1)
+		{
+			HEX#( 4, 0, 0x90, 0xc2, "CRC-32:" );
+		}
+		if (l[1] == 3)
+		{
+			HEX#( 4, 0, 0x90, 0xc2, "CRC-32:" );
+		}
+	g[21] -= g[21];
+}
+
+str# 8021agCFM::TLV::TestTLV::Type;
+0	|	Null signal without CRC-32;
+1	|	Null signal with CRC-32;
+2	|	PRBS (2x^31) - 1 without CRC-32;
+3	|	PRBS (2x^31) - 1 with CRC-32;
+
+void 8021agCFM::TLV::TestIDTLV()
+{
+	HEX#( 3, 0, 0x90, 0xc2, "Test ID:" );
+	g[21] -= 3;
+}
+
+//----------------------------------------------------------------------------------------------------
+str# 8021agCFM::TLV::PortStatusTLV::Status;
+1	|	No: enableRmepDefect = false (psBlocked);
+2	|	Yes: enableRmepDefect = true (psUp);
+
+str# 8021agCFM::TLV::InterfaceStatusTLV::Status;
+1	|	isUp(up);
+2	|	isDown(down);
+3	|	isTesting(testing);
+4	|	isUnknown(unknown);
+5	|	isDormant(dormant);
+6	|	isNotPresent(notPresent);
+7	|	isLowerLayerDown(lowerLayerDown);
+
+str# 8021agCFM::CCM::CCMInterval;
+0	|	invalid;
+1	|	Transmission Interval: 3 1/3 ms (300 Hz), max. CCM Lifetime: 11 2/3 ms, min. CCM Lifetime: 10 5/6 ms;
+2	|	Transmission Interval: 10 ms, max. CCM Lifetime: 35 ms, min. CCM Lifetime: 32.5 ms;
+3	|	Transmission Interval: 100 ms, max. CCM Lifetime:350 ms, min. CCM Lifetime: 325 ms;
+4	|	Transmission Interval: 1 s, max. CCM Lifetime: 3.5 s, min. CCM Lifetime: 3.25 s;
+5	|	Transmission Interval: 10 s, max. CCM Lifetime: 35 s, min. CCM Lifetime: 32.5 s;
+6	|	Transmission Interval: 1 min, max. CCM Lifetime: 3.5 min, min. CCM Lifetime: 3.25 min;
+7	|	Transmission Interval: 10 min, max. CCM Lifetime: 35 min, min. CCM Lifetime: 32.5 min;
+
+str# 8021agCFM::OpCode::Names;
+0	|	Reserved for IEEE 802.1;
+1	|	Continuity Check Message (CCM);
+2	|	Loopback Reply (LBR);
+3	|	Loopback Message (LBM);
+4	|	Linktrace Reply (LTR);
+5	|	Linktrace Message (LTM);
+32	|	GNM (Note 4) MEPs;
+33	|	AIS MEPs;
+35	|	LCK MEPs;
+37	|	TST MEPs;
+39	|	Linear APS Refer to [ITU-T G.8031];
+40	|	Ring APS Refer to [ITU-T G.8032];
+41	|	MCC MEPs;
+43	|	LMM MEPs;
+42	|	LMR MEPs;
+45	|	1DM MEPs;
+47	|	DMM MEPs;
+46	|	DMR MEPs;
+49	|	EXM Outside the scope of Rec. ITU-T G.8013/Y.1731 (08/2015);
+48	|	EXR Outside the scope of Rec. ITU-T G.8013/Y.1731 (08/2015);
+51	|	VSM Outside the scope of Rec. ITU-T G.8013/Y.1731 (08/2015);
+50	|	VSR Outside the scope of Rec. ITU-T G.8013/Y.1731 (08/2015);
+52	|	CSF MEPs;
+53	|	1SL MEPs;
+55	|	SLM MEPs;
+54	|	SLR MEPs;
+56	|	Reserved for definition by MEF;
+57	|	Reserved for definition by MEF;
+58	|	Reserved for definition by MEF;
+59	|	Reserved for definition by MEF;
+
+str# 8021agCFM::OpCode::Ldr;
+//0	|	8021agCFM::OpCode::ReservedforIEEE 802.1;
+1	|	8021agCFM::OpCode::ContinuityCheckMessage;
+2	|	8021agCFM::OpCode::LoopbackReply;
+3	|	8021agCFM::OpCode::LoopbackMessage;
+4	|	8021agCFM::OpCode::LinktraceReply;
+5	|	8021agCFM::OpCode::LinktraceMessage;
+//32	|	8021agCFM::OpCode::GNM;
+33	|	8021agCFM::OpCode::AISMEPs;
+35	|	8021agCFM::OpCode::LCKMEPs;
+37	|	8021agCFM::OpCode::TSTMEPs;
+//39	|	8021agCFM::OpCode::LinearAPSReferto[ITU-T G.8031];
+//40	|	8021agCFM::OpCode::RingAPSReferto[ITU-T G.8032];
+41	|	8021agCFM::OpCode::MCCMEPs;
+43	|	8021agCFM::OpCode::LMMMEPs;
+42	|	8021agCFM::OpCode::LMRMEPs;
+45	|	8021agCFM::OpCode::1DMMEPs;
+47	|	8021agCFM::OpCode::DMMMEPs;
+46	|	8021agCFM::OpCode::DMRMEPs;
+49	|	8021agCFM::OpCode::EXM;
+48	|	8021agCFM::OpCode::EXR;
+51	|	8021agCFM::OpCode::VSM;
+50	|	8021agCFM::OpCode::VSR;
+52	|	8021agCFM::OpCode::CSFMEPs;
+53	|	8021agCFM::OpCode::1SLMEPs;
+55	|	8021agCFM::OpCode::SLMMEPs;
+54	|	8021agCFM::OpCode::SLRMEPs;
+//56	|	8021agCFM::OpCode::Reserved for definition by MEF;
+//57	|	8021agCFM::OpCode::Reserved for definition by MEF;
+//58	|	8021agCFM::OpCode::Reserved for definition by MEF;
+//59	|	8021agCFM::OpCode::Reserved for definition by MEF;
+
+str# 8021agCFM::TLV::Names;
+0	|	End TLV;
+1	|	Sender ID TLV;
+2	|	Port Status TLV;
+3	|	Data TLV;
+4	|	Interface Status TLV;
+5	|	Reply Ingress TLV;
+6	|	Reply Egress TLV;
+7	|	LTM Egress Identifier TLV;
+8	|	LTR Egress Identifier TLV;
+9	|	Reserved;
+31	|	Organisation-Specific TLV;
+32	|	Test TLV;
+33	|	Reserved;
+34	|	Reserved;
+35	|	Reserved;
+36	|	Test ID TLV;
+37	|	Reserved;
+38	|	Reserved;
+//39 -63	|	Reserved;
+
+str# 8021agCFM::TLV::Ldr;
+1	|	8021agCFM::TLV::SenderIDTLV;
+2	|	8021agCFM::TLV::PortStatusTLV;
+3	|	8021agCFM::TLV::DataTLV;
+4	|	8021agCFM::TLV::InterfaceStatusTLV;
+5	|	8021agCFM::TLV::ReplyIngressTLV;
+6	|	8021agCFM::TLV::ReplyEgressTLV;
+7	|	8021agCFM::TLV::LTMEgressIdentifierTLV;
+8	|	8021agCFM::TLV::LTREgressIdentifierTLV;
+31	|	8021agCFM::TLV::Organisation-SpecificTLV;
+32	|	8021agCFM::TLV::TestTLV;
+36	|	8021agCFM::TLV::TestIDTLV;

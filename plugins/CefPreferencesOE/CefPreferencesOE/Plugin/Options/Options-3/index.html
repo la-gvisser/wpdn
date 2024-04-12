@@ -1,0 +1,722 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body, input, label {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+    }
+
+    .info-div {
+      display: table;
+      min-width: 63em;
+      max-width: 63em;
+    }
+
+    .info-left {
+      display: table-cell;
+      width: 35%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .info-right {
+      display: table-cell;
+      width: 65%;
+      padding: 1em;
+      border-width: 0.1em;
+      border-style: solid;
+    }
+
+    .info-label {
+      display: inline-block;
+      vertical-align: baseline;
+      width: 8em;
+      text-align: right;
+    }
+
+    .info-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 28em;
+    }
+
+    .case-div {
+      display: table;
+      vertical-align: top;
+      border-width: 0.1em;
+      border-style: solid;
+      min-width: 62.6em;
+      max-width: 62.6em;
+    }
+
+    .case-left {
+      display: table-cell;
+      vertical-align: top;
+      width: 50%;
+      padding: 1em;
+    }
+
+    .case-right {
+      display: table-cell;
+      width: 50%;
+      padding: 1em;
+    }
+
+    .case-label {
+      display: inline-block;
+      vertical-align: baseline;
+      width: 4em;
+      text-align: left;
+    }
+
+    .case-input {
+      display: inline;
+      vertical-align: baseline;
+    }
+
+    .note-label {
+      display: inline-block;
+      vertical-align: top;
+      width: 4em;
+      text-align: left;
+    }
+
+    .note-input {
+      display: inline;
+      vertical-align: baseline;
+    }
+
+    .encode-label {
+      vertical-align: middle;
+    }
+
+    .encode-checkbox {
+      vertical-align: middle;
+    }
+
+    .message-div {
+      min-width: 63em;
+      max-width: 63em;
+    }
+
+    .message-label {
+      display: inline-block;
+      vertical-align: baseline;
+      width: 6em;
+      text-align: right;
+    }
+
+    .message-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 53em;
+    }
+
+    .command-div {
+      min-width: 63em;
+      max-width: 63em;
+    }
+
+    .browse-div {
+      min-width: 63em;
+      max-width: 63em;
+    }
+
+    .path-label {
+      display: inline-block;
+      vertical-align: baseline;
+      width: 6em;
+      text-align: right;
+    }
+
+    .path-input {
+      display: inline;
+      vertical-align: baseline;
+      width: 53em;
+    }
+
+    .browse-label {
+      vertical-align: middle;
+    }
+
+    .browse-checkbox {
+      vertical-align: middle;
+    }
+  </style>
+  <!-- After this page load, the title of the dialog box is set to  -->
+  <!-- the title of the web page by SendDisplayProperties. -->
+  <title>Cef Prefs OE - 3 Options</title>
+  <script type="text/javascript">
+    function xmlGetPreamble(xml) {
+      var begin = xml.indexOf('<?');
+      if (begin == -1) return '';
+
+      var end = xml.indexOf('?>', (begin + 2));
+      if (end == -1) return '';
+
+      return xml.substring(begin, (end + 2));
+    }
+
+    function xmlGetTag(xml) {
+      var begin = xml.indexOf('<');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>', begin);
+      if (end == -1) return '';
+
+      var space = xml.indexOf(' ', begin);
+      if (space > 0 && space < end) end = space;
+
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetAttribute(xml, attrib) {
+      var begin = xml.indexOf(' ');
+      if (begin == -1) return '';
+      begin++;
+
+      var end = xml.indexOf('>');
+      if (end < 0) return '';
+
+      while (begin < end) {
+        var sep = xml.indexOf('=', begin)
+        if (sep == -1) return '';
+
+        var token = xml.substring(begin, sep);
+        var next = xml.indexOf('"', sep + 2);
+        if (next == -1) return '';
+        if (token == attrib) {
+          // Don't include the double-quotes.
+          return xml.substring(sep + 2, next);
+        }
+        begin = next + 2;
+      }
+      return '';
+    }
+
+    function xmlGetValue(xml, tag, opt) {
+      // opt is used to iterate through a list of tags with the same name.
+      // var opt = {'offset' : 0}
+      // var value1 = xmlGetValue(xml, 'item', opt)
+      // var value2 = xmlGetValue(xml, 'item', opt)
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) return '';
+      }
+      begin++;
+
+      begin = xml.indexOf('>', begin);
+      if (begin == -1) return '';
+      begin++;
+
+      var tagEnd = '</' + tag;
+      end = xml.indexOf(tagEnd, begin);
+      if (end == -1) return '';
+
+      if (typeof opt != 'undefined') opt['offset'] = xml.indexOf('>', end);
+      return xml.substring(begin, end);
+    }
+
+    function xmlGetElement(xml, tag, opt) {
+      var offset = (typeof opt == 'undefined') ? 0 : opt['offset'];
+
+      var begin = xml.indexOf('<' + tag + '>', offset);
+      if (begin == -1) {
+        begin = xml.indexOf('<' + tag + ' ', offset);
+        if (begin == -1) {
+          if (typeof opt != 'undefined') opt['offset'] = -1;
+          return '';
+        }
+      }
+
+      var tagEnd = '</' + tag + '>';
+      end = xml.indexOf(tagEnd, begin + 1);
+      if (end == -1) {
+        if (typeof opt != 'undefined') opt['offset'] = -1;
+        return '';
+      }
+      end += tagEnd.length;
+
+      if (typeof opt != 'undefined') opt['offset'] = end;
+      return xml.substring(begin, end);
+    }
+
+    function xmlEscape(xml) {
+      xml = xml.split('&quot;').join('\"');
+      xml = xml.split('&apos;').join('\'');
+      xml = xml.split('&lt;').join('<');
+      xml = xml.split('&gt;').join('>');
+      xml = xml.split('&amp;').join('&');
+      xml = xml.split('&#0009;').join('\t');
+      xml = xml.split('&#x0009;').join('\t');
+      xml = xml.split('&#0010;').join('\n');
+      xml = xml.split('&#x000a;').join('\n');
+      xml = xml.split('&#x000A;').join('\n');
+      xml = xml.split('&#0013;').join('\r');
+      xml = xml.split('&#x000d;').join('\r');
+      xml = xml.split('&#x000D;').join('\r');
+      return xml;
+    }
+  </script>
+  <script type="text/javascript">
+    // Functions that communicate with the browser.
+    //  Put functions are called by the browser.
+    //  Send function call the browser.
+
+    // The Context Id (UUID/GUID), in text, of the Capture.
+    // A new capture has a NULL context Id:
+    // "{00000000-0000-0000-0000-000000000000}"
+    function PutContextId(id) {
+      var idContext = id;
+      var bNewCapture = idContext == "{00000000-0000-0000-0000-000000000000}";
+      var indicator = "";
+      if (bNewCapture) {
+        indicator = " *";
+      }
+      document.getElementById('captureid').value = idContext + indicator;
+    }
+
+    // Called with Engine Information in XML.
+    function PutEngineInfo(xml) {
+      // Preamble
+      var pre = xmlGetPreamble(xml);
+      var root = xml.substring(pre.length);
+
+      // Root node: engineinfo
+      var tagRoot = xmlGetTag(root);
+      var valRoot = xmlGetValue(root, tagRoot);
+
+      var valName = xmlGetValue(valRoot, 'name');
+      document.getElementById('enginename').value = xmlEscape(valName);
+
+      var valAddress = xmlGetValue(valRoot, 'address');
+      var valPort = xmlGetValue(valRoot, 'port');
+      document.getElementById('engineaddress').value = valAddress + ':' + valPort;
+
+      var valAuth = xmlGetValue(valRoot, 'auth');
+      var valDomain = xmlGetValue(valRoot, 'domain');
+      var valUser = xmlGetValue(valRoot, 'user');
+      document.getElementById('engineuser').value = valDomain + '\\' + valUser + ' (' + valAuth + ')';
+
+      var valType = xmlGetValue(valRoot, 'enginetype');
+      document.getElementById('enginetype').value = xmlEscape(valType);
+
+      var valOS = xmlGetValue(valRoot, 'operatingsystem');
+      document.getElementById('engineos').value = xmlEscape(valOS);
+
+      var valFolder = xmlGetValue(valRoot, 'datafolder');
+      document.getElementById('enginefolder').value = xmlEscape(valFolder);
+    }
+
+    // Called after get remote file transfer has been completed.
+    //   inContent : the base-64 encoded Unicode String contents of the file retrieved.
+    function PutGetFileComplete(inContent) {
+      var content = window.atob(inContent);
+      document.getElementById('filetext').value = content;
+      document.getElementById('pcfile').checked = content.match(/\r/g);
+    }
+
+    // Called with the plugin's response to the message.
+    // The response is Xml.
+    function PutMessageResponse(xml) {
+      // Root node: Tag
+      var tagRoot = xmlGetTag(xml);
+      var valRoot = xmlGetValue(xml, tagRoot);
+
+      if (tagRoot == 'GetOptions') {
+        ProcessGetOptions(xml);
+      }
+      else if (tagRoot == 'Tab') {
+        ProcessTabMessage(xml);
+      }
+    }
+
+    // Called with Plugin Settings in XML.
+    function PutPreferences(xml) {
+      // Preamble
+      var pre = xmlGetPreamble(xml);
+      var root = xml.substring(pre.length);
+
+      // Case elements
+      var caseIndex = 1;
+      var optCase = { 'offset': 0 }
+      while (optCase['offset'] >= 0) {
+        var kase = xmlGetElement(root, 'Case', optCase);
+        if (optCase['offset'] >= 0) {
+          var id = 'casename' + caseIndex;
+          var value = xmlGetValue(kase, 'Case');
+          document.getElementById(id).value = value;
+          caseIndex++;
+        }
+      }
+
+      document.getElementById('casenotes').value = xmlGetValue(root, 'Notes');
+    }
+
+    // Called when closing asking for the current Preferences.
+    function PutSendPutPreferences() {
+      SendPutPreferences();
+    }
+
+    // Send the Display Properties to the browser.
+    //   Display Properties are the desired width and height of the browser window.
+    function SendDisplayProperties() {
+      window.cefQuery({
+        request: "SendDisplayProperties:680 735 " + document.title,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to get the Capture Context Id.
+    function SendGetContextId() {
+      var msg = "";
+
+      window.cefQuery({
+        request: "GetContextId:" + msg,
+        onSuccess: function (response) {
+          PutContextId(response);
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to get the engine info.
+    function SendGetEngineInfo() {
+      var msg = "";
+
+      window.cefQuery({
+        request: "GetEngineInfo:" + msg,
+        onSuccess: function (response) {
+          PutEngineInfo(response);
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a message to the plugin on the engine to return the settings for this capture.
+    function SendGetOptions() {
+      var msg = '<GetOptions/>';
+
+      window.cefQuery({
+        request: "SendMessage:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to get the plugin settings.
+    function SendGetPreferences() {
+      var msg = "";
+
+      var cmd = "GetPreferences:"
+      if (document.getElementById('encode').checked) {
+        cmd = "GetPreferencesEncoded:";
+      }
+
+      window.cefQuery({
+        request: cmd + msg,
+        onSuccess: function (response) {
+          if (document.getElementById('encode').checked) {
+            response = atob(response);
+          }
+          PutPreferences(response);
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to get the contents of a remote file.
+    //   Text only.
+    //   msg is the name of the file to retrieve.
+    //   response is the result of making the request.
+    //   PutGetFileComplete() will be called with the contents of the file.
+    function SendGetRemoteFile() {
+      var msg = document.getElementById('path').value;
+
+      window.cefQuery({
+        request: "GetRemoteFile:" + msg,
+        onSuccess: function (response) {
+          document.getElementById('filetext').value = response;
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to display the Remote File Browser.
+    //   msg is the path that the browser should open to.
+    //   response the path the user selected.
+    function SendOpenRemoteBrowser() {
+      var flags = GetRemoteBrowserFlags();
+      var path = document.getElementById('path').value;
+      var msg = flags.toString() + ' ' + path;
+
+      window.cefQuery({
+        request: "RemoteFileBrowser:" + msg,
+        onSuccess: function (response) {
+          document.getElementById('path').value = response;
+        },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a request to send a file to the remote syste.
+    //   Text only.
+    //   path is the fully qualified path of the file.
+    //   content is the new contents of the file.
+    function SendSendLocalFile() {
+      var path = document.getElementById('path').value;
+      var filetext = document.getElementById('filetext').value;
+      var content;
+      if (document.getElementById('pcfile').checked) {
+        content = filetext.replace(/\n/g, '\r\n');
+      }
+      else {
+        content = filetext;
+      }
+      var msg = path + '\n' + content;
+
+      window.cefQuery({
+        request: "SendLocalFile:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    //
+    function SendPutPreferences() {
+      var xml =
+        '<Case>' + document.getElementById('casename1').value + '</Case>' +
+        '<Case>' + document.getElementById('casename2').value + '</Case>' +
+        '<Case>' + document.getElementById('casename3').value + '</Case>' +
+        '<Notes>' + document.getElementById('casenotes').value + '</Notes>';
+
+      var cmd = "PutPreferences:";
+      var msg = xml.replace(/\n/g, '\r\n');
+      if (document.getElementById('encode').checked) {
+        cmd = "PutPreferencesEncoded:";
+        msg = btoa(msg)
+      }
+
+      window.cefQuery({
+        request: cmd + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a message to the plugin on the engine.
+    //   The content of the message must be text only.
+    //   The transport between the 'here' and the plugin does not interpret or inspect
+    //     the contents of the message. Use window.btoa() to send binary data.
+    function SendTabMessage() {
+      var msg =
+        '<Tab>' +
+          '<Message>' +
+            document.getElementById('msg_message').value +
+          '</Message>' +
+        '</Tab>';
+
+      window.cefQuery({
+        request: "SendMessage:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // Send a command to Peek.
+    //   The content of the command must be text only.
+    function SendCommand() {
+      var msg = document.getElementById('cmd-command').value;
+
+      window.cefQuery({
+        request: "SendCommand:" + msg,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+  </script>
+  <script type="text/javascript">
+    // Local Functions
+
+    // Return unsigned integer with flags:
+    //   0x0002 : Hide the 'Show Hidden' control.
+    //   0x0004 : Initially show hidden files.
+    //   0x0008 : Show the files pane. User must select a file.
+    function GetRemoteBrowserFlags() {
+      // If the Path has a file name, then set show files.
+      var oForm = document.forms['browse_form'];
+
+      var flags = 0;
+      if (oForm.elements['hidehiddenctrl'].checked) {
+        flags = flags | 0x02;
+      }
+      if (oForm.elements['showhiddenfiles'].checked) {
+        flags = flags | 0x04;
+      }
+      if (oForm.elements['showfiles'].checked) {
+        flags = flags | 0x08;
+      }
+      flags = flags | 0x10;
+      return flags;
+    }
+
+    function ProcessGetOptions(xml) {
+      // Case elements
+      var caseIndex = 1;
+      var optCase = { 'offset': 0 }
+      while (optCase['offset'] >= 0) {
+        var kase = xmlGetElement(xml, 'Case', optCase);
+        if (optCase['offset'] >= 0) {
+          var id = 'casename' + caseIndex;
+          var value = xmlGetValue(kase, 'Case');
+          document.getElementById(id).value = value;
+          caseIndex++;
+        }
+      }
+    }
+
+    function ProcessTabMessage(xml) {
+      // Message node: Message
+      var valRoot = xmlGetValue(xml, xmlGetTag(xml));
+      var valMessage = xmlGetValue(valRoot, xmlGetTag(valRoot));
+      document.getElementById('msg_response').value = valMessage;
+    }
+
+    function SetDefaults() {
+      SendDisplayProperties();
+      SendGetEngineInfo();
+      SendGetContextId();
+      SendGetPreferences();
+    }
+  </script>
+</head>
+<body onload="SetDefaults()">
+  <div class="info-div">
+    <div class="info-left" id="about" style="text-align:center">
+      <b>CEF Preferences OE Options</b><br><br>
+      Copyright 2024 LiveAction<br>
+      Version 2.1.0.0<br>
+      All Rights Reserved.<br>
+    </div>
+    <div>
+      &nbsp;
+    </div>
+    <div class="info-right" id="info">
+      <form>
+        <label class="info-label" for="enginename">Engine Name:</label>
+        <input class="info-input" type="text" id="enginename" readonly />
+        <label class="info-label" for="engineaddress">Address:</label>
+        <input class="info-input" type="text" id="engineaddress" readonly />
+        <label class="info-label" for="engineuser">User:</label>
+        <input class="info-input" type="text" id="engineuser" readonly />
+        <label class="info-label" for="enginetype">Type:</label>
+        <input class="info-input" type="text" id="enginetype" readonly />
+        <label class="info-label" for="engineos">OS:</label>
+        <input class="info-input" type="text" id="engineos" readonly />
+        <label class="info-label" for="enginefolder">Folder:</label>
+        <input class="info-input" type="text" id="enginefolder" readonly />
+        <br><br>
+        <label class="info-label" for="captureid">Capture Id:</label>
+        <input class="info-input" type="text" id="captureid" readonly />
+      </form>
+    </div>
+  </div>
+  <br>
+  <div class="case-div">
+    <div class="case-left">
+      <form id="prefs_form" name="preferences" action="">
+        <fieldset style="border:0">
+          <label class="case-label" for="casename1">Case 1:</label>
+          <input class="case-input" type="text" id="casename1" name="casename1" size="30"/>
+          <label class="case-label" for="casename2">Case 2:</label>
+          <input class="case-input" type="text" id="casename2" name="casename2" size="30"/>
+          <label class="case-label" for="casename3">Case 3:</label>
+          <input class="case-input" type="text" id="casename3" name="casename3" size="30"/>
+        </fieldset>
+      </form>
+      <a href="javascript:SendGetPreferences();">Refresh</a>
+      &nbsp;&nbsp;
+      <input class="encode-checkbox" type="checkbox" id="encode" name="encode" checked>
+      <label class="encode-label" for="encode">Encode Preferences</label>
+    </div>
+    <div>
+      &nbsp;<br>
+    </div>
+    <div class="case-right">
+      <label class="note-label" for="casenotes">Notes:</label>
+      <textarea id="casenotes" name="casenotes" cols="30" rows="4"></textarea>
+    </div>
+  </div>
+  <br>
+  <div class="message-div">
+    <form id="message_form" action="">
+      <fieldset>
+        <label class="message-label" for="msg_message">Message:</label>
+        <input class="message-input" type="text" id="msg_message" name="message" size="100"/>
+        <label class="message-label">Response:</label>
+        <input class="message-input" type="text" id="msg_response" name="response" size="100"/>
+        <a href="javascript:SendTabMessage();">Message</a>
+      </fieldset>
+    </form>
+  </div>
+  <br>
+  <div class="command-div">
+    <form id="command_form" action="">
+      <fieldset>
+        <span>
+          <input type="radio" id="select-related" name="command-type" value="selectrelated" checked> Select Related
+          &nbsp;&nbsp;&nbsp;
+          <input type="radio" id="forensic-search" name="command-type" value="forensicsearch"> Forensic Search
+          &nbsp;&nbsp;&nbsp;
+          <input type="radio" id="display-message" name="command-type" value="displaymessage"> Display Message
+          <br>
+        </span>
+        <input class="command-command" type="text" id="cmd-command" name="cmd-command" size="100"/>
+        <br>
+        <a href="javascript:SendCommand();">Command</a>
+      </fieldset>
+    </form>
+  </div>
+  <br>
+  <div class="browse-div">
+    <form id="browse_form" name="browser" action="">
+      <fieldset>
+        <span>
+          <label class="path-label" for="path">Path:</label>
+          <input class="path-input" type="text" id="path" name="path" />
+          <br>
+        </span>
+        <span>
+          <input class="browse-checkbox" type="checkbox" id="showfiles" name="showfiles" checked>
+          <label class="browse-label" for="showfiles">Show Files</label>
+          &nbsp;&nbsp;
+          <input class="browse-checkbox" type="checkbox" id="showhiddenfiles" name="showhiddenfiles">
+          <label class="browse-label" for="showhiddenfiles">Show hidden files</label>
+          &nbsp;&nbsp;
+          <input class="browse-checkbox" type="checkbox" id="hidehiddenctrl" name="hidehiddenctrl">
+          <label class="browse-label" for="hidehiddenctrl">Hide 'Hidden Files' control</label>
+          <br>
+        </span>
+        <br>
+        <textarea id="filetext" name="filetext" cols="85" rows="10"></textarea>
+        <br>
+        <a href="javascript:SendOpenRemoteBrowser();">Browse</a>
+        &nbsp;&nbsp;
+        <a href="javascript:SendGetRemoteFile();">Get File</a>
+        &nbsp;&nbsp;
+        <a href="javascript:SendSendLocalFile();">Send File</a>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <input class="browse-checkbox" type="checkbox" id="pcfile" name="pcfile">
+        <label class="browse-label" for="pcfile">PC File Format</label>
+      </fieldset>
+    </form>
+  </div>
+</body>
+</html>

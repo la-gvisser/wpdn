@@ -1,0 +1,937 @@
+//SGSAP
+//based on http://www.3gpp.org/DynaReport/29118.htm
+//Version 12.4.0
+// Globals used:
+// g[21] : Length of SCTP Payload
+// g[0xa/10] : Inner Length of whole SGSAP
+// g[20] : Length of a Information Element in the inner loop
+
+str# SCTP::Ports;
+29118	|	SGSAP;
+
+str# SCTP::Ports::Str;
+29118	|	SGs Application Part;
+
+void SGSAP()
+{
+	g[21] = g[0xa];
+	LABL( 0, 0, 0, 0xb1, "SGSAP - SGs Application Part - ");
+	GBYT( 0, l[1]);
+		CST#( 0, l[1], 0, 0x01, SGSAP::MessageType );
+		DBYT( 0, l[1], 0x90, 0xc2, "SGSAP Message Type:" );
+		g[0xa] -= 1;
+		CST#( 0, l[1], 0, 0x14, SGSAP::MessageType );
+		//TSB#( 0, l[1], 0, 0, SGSAP::MessageType );
+		SGSAP::IEs;
+		
+	LABL( 0, 0, 0, 0xb8);
+	//g[0xa] = g[21];
+	//TRTS;
+}
+
+
+
+str# SGSAP::MessageType;
+0	|	Unknown Message Type;
+1	|	SGsAP-PAGING-REQUEST;
+2	|	SGsAP-PAGING-REJECT;
+3	|	Unknown Message Type;
+4	|	Unknown Message Type;
+5	|	Unknown Message Type;
+6	|	SGsAP-SERVICE-REQUEST;
+7	|	SGsAP-DOWNLINK-UNITDATA;
+8	|	SGsAP-UPLINK-UNITDATA;
+9	|	SGsAP-LOCATION-UPDATE-REQUEST;
+10	|	SGsAP-LOCATION-UPDATE-ACCEPT;
+11	|	SGsAP-LOCATION-UPDATE-REJECT;
+12	|	SGsAP-TMSI-REALLOCATION-COMPLETE;
+13	|	SGsAP-ALERT-REQUEST;
+14	|	SGsAP-ALERT-ACK;
+15	|	SGsAP-ALERT-REJECT;
+16	|	SGsAP-UE-ACTIVITY-INDICATION;
+17	|	SGsAP-EPS-DETACH-INDICATION;
+18	|	SGsAP-EPS-DETACH-ACK;
+19	|	SGsAP-IMSI-DETACH-INDICATION;
+20	|	SGsAP-IMSI-DETACH-ACK;
+21	|	SGsAP-RESET-INDICATION;
+22	|	SGsAP-RESET-ACK;
+23	|	SGsAP-SERVICE-ABORT-REQUEST;
+24	|	SGsAP-MO-CSFB-INDICATION;
+25	|	Unknown Message Type;
+26	|	SGsAP-MM-INFORMATION-REQUEST;
+27	|	SGsAP-RELEASE-REQUEST;
+28	|	Unknown Message Type;
+29	|	SGsAP-STATUS;
+30	|	Unknown Message Type;
+31	|	SGsAP-UE-UNREACHABLE;
+
+
+str# SGSAP::IEI;
+1	|	IMSI;
+2	|	VLR name;
+3	|	TMSI;
+4	|	Location area identifier;
+5	|	Channel Needed;
+6	|	eMLPP Priority;
+7	|	TMSI status;
+8	|	SGs cause;
+9	|	MME name;
+10	|	EPS location update type;
+11	|	Global CN-Id;
+14	|	Mobile identity;
+15	|	Reject cause;
+16	|	IMSI detach from EPS service type;
+17	|	IMSI detach from non-EPS service type;
+21	|	IMEISV;
+22	|	NAS message container;
+23	|	MM information;
+27	|	Erroneous message;
+28	|	CLI;
+29	|	LCS client identity;
+30	|	LCS indicator;
+31	|	SS code;
+32	|	Service indicator;
+33	|	UE Time Zone;
+34	|	Mobile Station Classmark 2;
+35	|	Tracking Area Identity;
+36	|	E-UTRAN Cell Global Identity;
+37	|	UE EMM mode;
+38	|	Additional paging indicators;
+39	|	TMSI based NRI container;
+
+
+str# SGSAP::IEI::LDR;
+1	|	SGSAP::IEI::IMSI;
+2	|	SGSAP::IEI::VLR_name;
+3	|	SGSAP::IEI::TMSI;
+4	|	SGSAP::IEI::Location_area_identifier;
+5	|	SGSAP::IEI::Channel_Needed;
+6	|	SGSAP::IEI::eMLPP_Priority;
+7	|	SGSAP::IEI::TMSI_status;
+8	|	SGSAP::IEI::SGs_cause;
+9	|	SGSAP::IEI::MME_name;
+10	|	SGSAP::IEI::EPS_location_update_type;
+11	|	SGSAP::IEI::Global_CN-Id;
+
+14	|	SGSAP::IEI::Mobile_identity;
+15	|	SGSAP::IEI::Reject_cause;
+16	|	SGSAP::IEI::IMSI_detach_from_EPS_service_type;
+17	|	SGSAP::IEI::IMSI_detach_from_non-EPS_service_type;
+21	|	SGSAP::IEI::IMEISV;
+22	|	SGSAP::IEI::NAS_message_container;
+//23	|	SGSAP::IEI::MM_information;
+
+27	|	SGSAP::IEI::Erroneous_message;
+28	|	SGSAP::IEI::CLI;
+//29	|	SGSAP::IEI::LCS_client_identity;
+30	|	SGSAP::IEI::LCS_indicator;
+31	|	SGSAP::IEI::SS_code;
+32	|	SGSAP::IEI::Service_indicator;
+33	|	SGSAP::IEI::UE_Time_Zone;
+34	|	SGSAP::IEI::Mobile_Station_Classmark_2;
+35	|	SGSAP::IEI::Tracking_Area_Identity;
+36	|	SGSAP::IEI::E-UTRAN_Cell_Global_Identity;
+37	|	SGSAP::IEI::UE_EMM_mode;
+38	|	SGSAP::IEI::Additional_paging_indicators;
+39	|	SGSAP::IEI::TMSI_based_NRI_container;
+
+void SGSAP::IEs()
+{
+	while (g[0xa] != 0)
+	{
+		//DGLB( 0, g[0xa], 0x90, 0xc2, "left length:" );
+		//DGLB( 0, g[20], 0x90, 0xc2, "left lengthg20:" );
+		//DGLB( 0, g[16], 0x90, 0xc2, "left lengthg16:" );
+		GBYT ( 0, l[1] );
+		CST#( 0, l[1], 0, 0xb7, SGSAP::IEI  );
+		DBYT( 0, l[1], 0x90, 0xc2, "IEI:" );
+			CST#( 0, l[1], 0, 0x14, SGSAP::IEI  );
+			CLSE( 0, 0, 0, 0x14, "Unknown" );
+	//	if (l[1] != 14) 
+		//{
+			DBYT( 0, l[2], 0x90, 0xc2, "Length:" );
+		//}
+		g[20] = l[2];
+		g[0xa] -= 2;
+		TSB#( 0, l[1], 0, 0, SGSAP::IEI::LDR  );		
+		XLSE( 0, 0, 0, 0, SGSAP::DUMP  );
+		LABL( 0, 0, 0, 0xb8);
+	}
+}
+
+void SGSAP::IEI::IMSI()
+{
+	l[5] = g[20];
+	DBIT( 4, l[4], 0x90, 0xc2, "IMSI digit 1:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Parity:" );
+		CEQU 0 41 0 14 Even Number of Digits;
+		CEQU 1 41 0 14 Odd Number of Digits;
+	BBIT( 3, l[2], 0x90, 0xc2, "Mobile Identity Type:" );
+		CST# 0 42 00 14 SGSAP::IEI::Mobile_identity::ID;
+		CLSE 0 0 0 14 Unknown;
+	g[20] -= 1;
+	LABL( 0, 0, 0x90, 0xc2, "BCD Digits:           ");
+	DGLB( 0, l[4], 0, 0x2 );
+	while (g[20] != 0)
+	{
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+		g[20] -= 1;
+	}
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::VLR_name()
+{
+	CHR#( 0, g[20], 0x90, 0xc2, "VLR name:" );
+	g[0xa] -= g[20];
+}
+
+void SGSAP::IEI::TMSI()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "TMSI" );
+	g[0xa] -= 4;
+}
+
+void SGSAP::IEI::Location_area_identifier()
+{
+	l[5] = g[20];
+	BBIT 4 1 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 1:;
+	g[59] = g[3];
+	g[59] *= 100;
+	DGLB 0 1 05 05 MCC digit 2:;
+	g[1] *= 10;
+	g[59] += g[1];
+	BBIT 4 4 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 3:;
+	g[59] += g[3];
+	DGLB 0 3b 90 c2 MCC:;
+	CST# 0 3b 90 14 GTP::MobileCountryCode;
+	CLSE 0 0 0 14 Unknown;
+	BBIT 4 2 05 05 Holder;
+	DBIT 4 1 05 05 MNC digit 1:;
+	DGLB 0 2 05 05 MNC digit 2:;
+	DGLB 0 4 05 05 MNC digit 3:;
+		if (g[4] == 15)
+		{
+			//LABL 0 0 90 14 Spare;
+			g[58] = g[1];
+			g[58] *= 10;
+			g[58] += g[2];
+			DGLB 0 3a 90 c2 MNC:;
+			g[59] *= 100;
+			g[59] += g[58];
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+		if (g[4] <= 14)
+		{
+			g[58] = g[1];
+			g[58] *= 100;
+			g[2] *= 10;
+			g[58] += g[2];
+			g[58] += g[3];
+			g[59] *= 100;
+			g[59] + = g[58];
+			DGLB 0 3a 90 c2 MNC:;
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+	DWRD( 0, 0, 0x90, 0xc2, "LAC:" );
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::eMLPP_Priority()
+{
+	BBIT( 5, 0, 0x90, 0xc2, "Spare:");
+	BBIT( 3, 0, 0x90, 0xc2, "call priority:");
+	g[0xa] -= 1;
+}
+
+void SGSAP::IEI::TMSI_status()
+{
+	BBIT( 7, 0, 0x90, 0xc2, "Spare:");
+	BBIT( 1, l[1], 0x90, 0xc2, "TMSI flag:");
+		CEQU( 0, l[1], 0, 0x14, "no valid TMSI available");
+		CEQU( 1, l[1], 0, 0x14, "valid TMSI available");
+	g[0xa] -= 1;
+}
+
+void SGSAP::IEI::SGs_cause()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "SGs cause value" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::SGs_cause::Values );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::SGs_cause::Values;
+0  |  Normal, unspecified in this version of the protocol.;
+1  |  IMSI detached for EPS services ;
+2  |  IMSI detached for EPS and non-EPS services;
+3  |  IMSI unknown;
+4  |  IMSI detached for non-EPS services;
+5  |  IMSI implicitly detached for non-EPS services;
+6  |  UE unreachable;
+7  |  Message not compatible with the protocol state;
+8  |  Missing mandatory information element;
+9  |  Invalid mandatory information;
+10  |  Conditional information element error;
+11  |  Semantically incorrect message;
+12  |  Message unknown;
+13  |  Mobile terminating CS fallback call rejected by the user;
+
+void SGSAP::IEI::MME_name()
+{
+	CHR#( 0, g[20], 0x90, 0xc2, "MME name:" );
+	g[0xa] -= g[20];
+}
+
+void SGSAP::IEI::EPS_location_update_type()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "EPS location update type:" );
+		CEQU( 0, l[1], 0, 0x14, "Shall not be sent in this version of the protocol" );
+		CEQU( 1, l[1], 0, 0x14, "IMSI attach" );
+		CEQU( 2, l[1], 0, 0x14, "Normal location update" );
+		g[0xa] -= 1;
+	TRTS;	
+}
+
+void SGSAP::IEI::Global_CN-Id()
+{
+	l[5] = g[20];
+	BBIT 4 1 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 1:;
+	g[59] = g[3];
+	g[59] *= 100;
+	DGLB 0 1 05 05 MCC digit 2:;
+	g[1] *= 10;
+	g[59] += g[1];
+	BBIT 4 4 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 3:;
+	g[59] += g[3];
+	DGLB 0 3b 90 c2 MCC:;
+	CST# 0 3b 90 14 GTP::MobileCountryCode;
+	CLSE 0 0 0 14 Unknown;
+	BBIT 4 2 05 05 Holder;
+	DBIT 4 1 05 05 MNC digit 1:;
+	DGLB 0 2 05 05 MNC digit 2:;
+	DGLB 0 4 05 05 MNC digit 3:;
+		if (g[4] == 15)
+		{
+			//LABL 0 0 90 14 Spare;
+			g[58] = g[1];
+			g[58] *= 10;
+			g[58] += g[2];
+			DGLB 0 3a 90 c2 MNC:;
+			g[59] *= 100;
+			g[59] += g[58];
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+		if (g[4] <= 14)
+		{
+			g[58] = g[1];
+			g[58] *= 100;
+			g[2] *= 10;
+			g[58] += g[2];
+			g[58] += g[3];
+			g[59] *= 100;
+			g[59] + = g[58];
+			DGLB 0 3a 90 c2 MNC:;
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+	DWRD( 0, 0, 0x90, 0xc2, "CN-Id:" );
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::Mobile_identity()
+{
+	l[5] = g[20];
+	DBIT( 4, l[4], 0x90, 0xc2, "ID digit 1:" );
+	BBIT( 1, l[1], 0x90, 0xc2, "Odd/Even:" );
+		CEQU 0 41 0 14 Even Number of Digits;
+		CEQU 1 41 0 14 Odd Number of Digits;
+	BBIT( 3, l[2], 0x90, 0xc2, "Mobile Identity Type:" );
+		CST# 0 42 00 14 SGSAP::IEI::Mobile_identity::ID;
+		CLSE 0 0 0 14 Unknown;
+	g[20] -= 1;
+	LABL( 0, 0, 0x90, 0xc2, "Mobile ID Digits:           ");
+	DGLB( 0, l[4], 0, 0x2 );
+	while (g[20] != 0)
+	{
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+		g[20] -= 1;
+	}
+	g[0xa] -= l[5];
+}
+
+str# SGSAP::IEI::Mobile_identity::ID;
+ 0  |  No Identity;
+ 1  |  IMSI;
+ 2  |  IMEI;
+ 3  |  IMEISV;
+ 4  |  TMSI/P-TMSI/M-TMSI;
+ 5  |  TMGI and optional MBMS Session Identity;
+
+void SGSAP::IEI::Reject_cause()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Reject Cause:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::Reject_cause::Values );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::Reject_cause::Values;
+2  |  IMSI unknown in HLR;
+3  |  Illegal MS;
+4  |  IMSI unknown in VLR;
+5  |  IMEI not accepted;
+6  |  Illegal ME;
+11  |  PLMN not allowed;
+12  |  Location Area not allowed;
+13  |  Roaming not allowed in this location area;
+15  |  No Suitable Cells In Location Area;
+17  |  Network failure;
+20  |  MAC failure;
+21  |  Synch failure;
+22  |  Congestion;
+23  |  GSM authentication unacceptable;
+25  |  Not authorized for this CSG;
+32  |  Service option not supported;
+33  |  Requested service option not subscribed;
+34  |  Service option temporarily out of order;
+38  |  Call cannot be identified;
+95  |  Semantically incorrect message;
+96  |  Invalid mandatory information;
+97  |  Message type non-existent or not implemented;
+98  |  Message type not compatible with the protocol state;
+99  |  Information element non-existent or not implemented;
+100  |  Conditional IE error;
+101  |  Message not compatible with the protocol state;
+111  |  Protocol error, unspecified;
+
+void SGSAP::IEI::IMSI_detach_from_EPS_service_type()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "IMSI detach from EPS service type:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::IMSI_detach_from_EPS_service_type::Values );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::IMSI_detach_from_EPS_service_type::Values;
+1	|	Network initiated IMSI detach from EPS services;
+2	|	UE initiated IMSI detach from EPS services;
+3	|	EPS services not allowed;
+
+void SGSAP::IEI::IMSI_detach_from_non-EPS_service_type()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "IMSI detach from EPS service type:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::IMSI_detach_from_non-EPS_service_type::Values );
+		CLSE( 0, 0, 0, 0x14, "reserved" );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::IMSI_detach_from_non-EPS_service_type::Values;
+1	|	Explicit UE initiated IMSI detach from non-EPS services;
+2	|	Combined UE initiated IMSI detach from EPS and non-EPS services;
+3	|	Implicit network initiated IMSI detach from EPS and non-EPS services;
+
+void SGSAP::IEI::IMEISV()
+{
+	LABL( 0, 0, 0x90, 0xc2, "IMEISV:               ");
+	SGSAP::IEI::InverseDigits;
+}
+
+void SGSAP::IEI::InverseDigits()
+{
+	l[5] = g[20];
+	while (g[20] != 0)
+	{
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+		g[20] -= 1;
+	}
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::NAS_message_container()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Message type:" );
+		CEQU( 1, l[1], 0, 0x14, "CP-DATA" );
+		CEQU( 3, l[1], 0, 0x14, "CP-ACK" );
+		CEQU( 5, l[1], 0, 0x14, "CP-ERROR" );
+	g[0xa] -= 1;
+	if (l[1] == 1)
+	{
+		CHR#( 0, g[10], 0x90, 0xc2, "CP User data" );
+		g[0xa] -= g[0xa];
+		TRTS;
+	}
+	if (l[1] == 2)
+	{
+		TRTS;
+	}
+	if (l[1] == 2)
+	{
+		DBYT( 0, l[1], 0x90, 0xc2, "CP Cause:" );
+		CST#( 5, l[1], 0, 0x14, SGSAP::IEI::NAS_message_container::CP-Cause );
+		CLSE( 5, l[1], 0, 0x14, Protocol error, unspecified );
+		g[0xa] -= 1;
+	}
+}
+
+str# SGSAP::IEI::NAS_message_container::CP-Cause;
+17	|	Network Failure;
+22	|	Congestion;
+81	|	Invalid Transaction Identifier value;
+95	|	Semantically incorrect message;
+96	|	Invalid mandatory information;
+97	|	Message type non-existent or not implemented;	
+98	|	Message type non-existent or not implemented;
+99	|	Information element non-existent or not implemented;
+111 |	Protocol error, unspecified;
+
+//-------------------------------------------
+void SGSAP::IEI::MM_information()
+{
+	l[5] = g[20];
+	l[6] = 1;
+		DBIT( 2, l[1], 0x90,0xc2, "Spare:" );
+		DBIT( 6, l[1], 0x90,0xc2, "Message Types:" );
+			CST#( 5, l[1], 0, 0x14, SGSAP::IEI::MM_information::IETypes );
+		//DBYT( 0, l[1], 0x90, 0xc2, "Length 1st label of the MME Name:" );
+		//CHR#( 0, l[1], 0x90, 0xc2, "MME Name:" );
+	g[20] -= 1;
+	
+	
+	g[0xa] -= l[5];
+}
+
+str# SGSAP::IEI::MM_information::IETypes;
+//Registration messages:
+1	|	IMSI DETACH INDICATION;
+2	|	LOCATION UPDATING ACCEPT;
+4	|	LOCATION UPDATING REJECT;
+8	|	LOCATION UPDATING REQUEST;
+//Security messages:
+17	|	AUTHENTICATION REJECT;
+18	|	AUTHENTICATION REQUEST;
+20	|	AUTHENTICATION RESPONSE;
+28	|	AUTHENTICATION FAILURE;
+24	|	IDENTITY REQUEST;
+25	|	IDENTITY RESPONSE;
+26	|	TMSI REALLOCATION COMMAND;
+27	|	TMSI REALLOCATION COMPLETE;
+//Connection management messages:
+33	|	CM SERVICE ACCEPT;
+34	|	CM SERVICE REJECT;
+35	|	CM SERVICE ABORT;
+36	|	CM SERVICE REQUEST;
+37	|	CM SERVICE PROMPT;
+38	|	Reserved (see NOTE);
+40	|	CM RE-ESTABLISHMENT REQUEST;
+41	|	ABORT;
+//Miscellaneous messages:
+48	|	MM NULL;
+49	|	MM STATUS;
+50	|	MM INFORMATION;
+
+
+//--------------------------------------------------------
+void SGSAP::IEI::Erroneous_message()
+{
+	LABL( 0, 0, 0, 0xb1, "Erroneous Message:" );
+	SGSAP;
+	LABL( 0, 0, 0, 0xb8);
+	TRTS;
+}
+
+void SGSAP::IEI::CLI()
+{
+	l[5] = g[20];
+	LABL( 0, 0, 0x90, 0xc2, "BCD Digits:           ");
+	//DGLB( 0, l[4], 0, 0x2 );
+	while (g[20] != 0)
+	{
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+		g[20] -= 1;
+	}
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::LCS_client_identity()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "LCS Client ID:" );
+		CST#( 5, l[1], 0, 0x14, SGSAP::IEI::LCS_client_identity::ID );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	g[0xa] -= 4;
+}
+str# SGSAP::IEI::LCS_client_identity::ID;
+0	|	emergencyServices;
+1	|	valueAddedServices;
+2	|	plmnOperatorServices;
+3	|	lawfulInterceptServices;
+
+void SGSAP::IEI::LCS_indicator()
+{	
+	DBYT( 0, l[1], 0x90, 0xc2, "LCS Indicator ID:" );
+		CST#( 5, l[1], 0, 0x14, SGSAP::IEI::LCS_indicator::Type );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	g[0xa] -= 1;
+}
+str# SGSAP::IEI::LCS_indicator::Type;
+0	|	Normal;
+1	|	MT-LR;
+
+void SGSAP::IEI::SS_code()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "SS Code:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::SS_code::Type );
+		CLSE( 0, 0, 0, 0x14, "unknown" );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::SS_code::Type;
+ 0x00  |   allSS - all SS;
+ 0x10   |  allLineIdentificationSS - all line identification SS;
+ 0x11   |  clip - calling line identification presentation;
+ 0x12   |  clir - calling line identification restriction;
+ 0x13   |  colp - connected line identification presentation;
+ 0x14   |  colr - connected line identification restriction;
+ 0x15   |  mci - malicious call identification;
+ 0x18   |  allNameIdentificationSS - all name identification SS;
+ 0x19   |  cnap - calling name presentation;
+ 0x20   |  allForwardingSS - all forwarding SS;
+ 0x21   |  cfu - call forwarding unconditional;
+ 0x28   |  allCondForwardingSS - all conditional forwarding SS;
+ 0x29   |  cfb - call forwarding busy;
+ 0x2a   |  cfnry - call forwarding on no reply;
+ 0x2b   |  cfnrc - call forwarding on mobile subscriber not reachable;
+ 0x24   |  cd - call deflection;
+ 0x30   |  allCallOfferingSS - all call offering SS includes also all forwarding SS;
+ 0x31   |  ect - explicit call transfer;
+ 0x32   |  mah - mobile access hunting;
+ 0x40   |  allCallCompletionSS - all Call completion SS;
+ 0x41   |  cw - call waiting;
+ 0x42   |  hold - call hold;
+ 0x43   |  ccbs-A - completion of call to busy subscribers, originating side;
+ 0x44   |  ccbs-B - completion of call to busy subscribers, destination side;
+ 0x45   |  mc - multicall;
+ 0x50   |  allMultiPartySS - all multiparty SS;
+ 0x51   |  multiPTY - multiparty;
+ 0x60   |  allCommunityOfInterestSS - all community of interest SS;
+ 0x61   |  cug - closed user group;
+ 0x70   |  allChargingSS - all charging SS;
+ 0x71   |  aoci - advice of charge information;
+ 0x72   |  aocc - advice of charge charging;
+ 0x80   |  allAdditionalInfoTransferSS - all additional information transfer SS;
+ 0x81   |  uus1 - UUS1 user-to-user signalling;
+ 0x82   |  uus2 - UUS2 user-to-user signalling;
+ 0x83   |  uus3 - UUS3 user-to-user signalling;
+ 0x90   |  allCallRestrictionSS - all Callrestriction SS;
+ 0x91   |  barringOfOutgoingCalls;
+ 0x92   |  baoc - barring of all outgoing calls;
+ 0x93   |  boic - barring of outgoing international calls;
+ 0x94   |  boicExHC - barring of outgoing international calls except those directed to the home PLMN;
+ 0x99   |  barringOfIncomingCalls;
+ 0x9a   |  baic - barring of all incoming calls;
+ 0x9b   |  bicRoam - barring of incoming calls when roaming outside home PLMN Country;
+ 0xf0   |  allPLMN-specificSS;
+ 0xa0   |  allCallPrioritySS - all call priority SS;
+ 0xa1   |  emlpp - enhanced Multilevel Precedence Pre-emption (EMLPP) service;
+ 0xb0   |  allLCSPrivacyException - all LCS Privacy Exception Classes;
+ 0xb1   |  universal - allow location by any LCS client;
+ 0xb2   |  callrelated - allow location by any value added LCS client to which a call is established from the target MS;
+ 0xb3   |  callunrelated - allow location by designated external value added LCS clients;
+ 0xb4   |  plmnoperator - allow location by designated PLMN operator LCS clients;
+ 0xb5   |  serviceType - allow location by LCS clients of a designated LCS service type;
+ 0xc0   |  allMOLR-SS - all Mobile Originating Location Request Classes;
+ 0xc1   |  basicSelfLocation - allow an MS to request its own location;
+ 0xc2   |  autonomousSelfLocation - allow an MS to perform self location without interaction with the PLMN for a predetermined period of time;
+ 0xc3   |  transferToThirdParty - allow an MS to request transfer of its location to another LCS client;
+ 0xf1   |  plmn-specificSS-1;
+ 0xf2   |  plmn-specificSS-2;
+ 0xf3   |  plmn-specificSS-3;
+ 0xf4   |  plmn-specificSS-4;
+ 0xf5   |  plmn-specificSS-5;
+ 0xf6   |  plmn-specificSS-6;
+ 0xf7   |  plmn-specificSS-7;
+ 0xf8   |  plmn-specificSS-8;
+ 0xf9   |  plmn-specificSS-9;
+ 0xfa   |  plmn-specificSS-a;
+ 0xfb   |  plmn-specificSS-b;
+ 0xfc   |  plmn-specificSS-c;
+ 0xfd   |  plmn-specificSS-d;
+ 0xfe   |  plmn-specificSS-e;
+ 0xff   |  plmn-specificSS-f;
+
+
+void SGSAP::IEI::Service_indicator()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "LCS Indicator ID:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::Service_indicator::Type );
+		CLSE( 0, l[1], 0, 0x14, shall be treated as CS call indicator );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::Service_indicator::Type;
+0	|	shall be treated as CS call indicator;
+2	|	SMS indicator;
+
+void SGSAP::IEI::UE_Time_Zone()
+{
+	LABL( 0, l[1], 0x90, 0xc2, "Year:" );	
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Month:" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Day :" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Hour  :" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Minute   :" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Second    :" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	LABL( 0, l[1], 0x90, 0xc2, "Timezone    :" );
+		DBIT( 4, l[3], 0x5, 0 );
+		DBIT( 4, 0, 0, 0x02 );
+		DGLB( 0, l[3], 0, 0x02 );
+	g[0xa] -= 7;
+}
+
+void SGSAP::IEI::Mobile_Station_Classmark_2()
+{
+	BBIT( 1, l[1], 0x90,0xc2, "spare:" );
+	BBIT( 2, l[2], 0x90,0xc2, "Revision level:" );
+		CST#( 0, l[2], 0, 0x14, SGSAP::IEI::Mobile_Station_Classmark_2::RevLevel );
+	BBIT( 1, l[3], 0x90,0xc2, "ES IND:" );
+		CEQU( 0, l[3], 0, 0x14, "Controlled Early Classmark Sending option is not implemented in the MS" );
+		CEQU( 1, l[3], 0, 0x14, "Controlled Early Classmark Sending option not implemented in the MS" );
+	BBIT( 1, l[4], 0x90,0xc2, "A5/1:" );
+		CEQU( 0, l[4], 0, 0x14, "encryption algorithm A5/1 available" );
+		CEQU( 1, l[4], 0, 0x14, "encryption algorithm A5/1 is not available" );
+	BBIT( 3, l[5], 0x90,0xc2, "RF power capability:" );
+		CST#( 0, l[5], 0, 0x14, SGSAP::IEI::Mobile_Station_Classmark_2::RFPowerCap );
+		CLSE( 0, l[5], 0, 0x14, "reserved" );
+	BBIT( 1, l[6], 0x90,0xc2, "spare:" );
+	BBIT( 1, l[7], 0x90,0xc2, "PS capability:" );
+		CEQU( 0, l[7], 0, 0x14, "PS capability not present" );
+		CEQU( 1, l[7], 0, 0x14, "PS capability present" );
+	BBIT( 2, l[8], 0x90,0xc2, "SS Screen Indicator:" );
+		CST#( 0, l[8], 0, 0x14, SGSAP::IEI::Mobile_Station_Classmark_2::SSScreen );
+	BBIT( 1, l[9], 0x90,0xc2, "SM capability:" );
+		CEQU( 0, l[9], 0, 0x14, "Mobile station does not support mobile terminated point to point SMS" );
+		CEQU( 1, l[9], 0, 0x14, "Mobile station supports mobile terminated point to point SMS" );
+	BBIT( 1, l[10], 0x90,0xc2, "VBS:" );
+		CEQU( 0, l[10], 0, 0x14, "no VBS capability or no notifications wanted" );
+		CEQU( 1, l[10], 0, 0x14, "VBS capability or no notifications wanted" );
+	BBIT( 1, l[11], 0x90,0xc2, "VGCS:" );
+		CEQU( 0, l[11], 0, 0x14, "no VGCS capability or no notifications wanted" );
+		CEQU( 1, l[11], 0, 0x14, "VGCS capability and notifications wanted" );
+	BBIT( 1, l[12], 0x90,0xc2, "FC:" );
+		CEQU( 0, l[12], 0, 0x14, "The MS does not support the E-GSM or R-GSM band" );
+		CEQU( 1, l[12], 0, 0x14, "The MS does support the E-GSM or R-GSM" );
+	BBIT( 1, l[13], 0x90,0xc2, "CM3:" );
+		CEQU( 0, l[13], 0, 0x14, "The MS does not support any options that are indicated in CM3" );
+		CEQU( 1, l[13], 0, 0x14, "The MS supports options that are indicated in classmark 3 IE" );
+	BBIT( 1, l[14], 0x90,0xc2, "spare:" );
+	BBIT( 1, l[15], 0x90,0xc2, "LCSVA capability:" );
+		CEQU( 0, l[15], 0, 0x14, "location request notification via CS domain not supported" );
+		CEQU( 1, l[15], 0, 0x14, "location request notification via CS domain supported" );
+	BBIT( 1, l[16], 0x90,0xc2, "UCS2:" );
+		CEQU( 0, l[16], 0, 0x14, "the ME has a preference for the default alphabet over UCS2" );
+		CEQU( 1, l[16], 0, 0x14, "the ME has no preference between the use of the default alphabet and the use of UCS2" );
+	BBIT( 1, l[17], 0x90,0xc2, "SoLSA:" );
+		CEQU( 0, l[17], 0, 0x14, "The ME does not support SoLSA" );
+		CEQU( 1, l[17], 0, 0x14, "The ME support SoLSA" );
+	BBIT( 1, l[18], 0x90,0xc2, "CMSP:" );
+		CEQU( 0, l[18], 0, 0x14, "Network initiated MO CM connection request not supported" );
+		CEQU( 1, l[718, 0, 0x14, "Network initiated MO CM connection request supported for at least one CM protocol" );
+	BBIT( 1, l[19], 0x90,0xc2, "A5/3:" );
+		CEQU( 0, l[7], 0, 0x14, "encryption algorithm A5/3 not available" );
+		CEQU( 1, l[7], 0, 0x14, "encryption algorithm A5/3 available" );
+	BBIT( 1, l[20], 0x90,0xc2, "A5/2:" );
+		CEQU( 0, l[7], 0, 0x14, "encryption algorithm A5/2 not available" );
+		CEQU( 1, l[7], 0, 0x14, "encryption algorithm A5/2 available" );
+	g[0xa] -= 3;
+}
+
+str# SGSAP::IEI::Mobile_Station_Classmark_2::RevLevel;
+0	|	Reserved for GSM phase 1;
+1	|	Used by GSM phase 2 mobile stations;
+2	|	Used by mobile stations supporting R99 or later versions of the protocol;
+3	|	Reserved for future use;
+
+str# SGSAP::IEI::Mobile_Station_Classmark_2::RFPowerCap;
+0	|	class 1;
+1	|	class 2;
+2	|	class 3;
+3	|	class 4;
+4	|	class 5;
+7	|	RF Power capability is irrelevant in this ie;
+
+str# SGSAP::IEI::Mobile_Station_Classmark_2::SSScreen;
+0	|	default value of phase 1;
+1	|	capability of handling of ellipsis notation and phase 2 error handling (note 1);
+2	|	for future use (note 2);
+3	|	for future use (note 2);
+
+void SGSAP::IEI::Tracking_Area_Identity()
+{
+	l[5] = g[20];
+	BBIT 4 1 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 1:;
+	g[59] = g[3];
+	g[59] *= 100;
+	DGLB 0 1 05 05 MCC digit 2:;
+	g[1] *= 10;
+	g[59] += g[1];
+	BBIT 4 4 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 3:;
+	g[59] += g[3];
+	DGLB 0 3b 90 c2 MCC:;
+	CST# 0 3b 90 14 GTP::MobileCountryCode;
+	CLSE 0 0 0 14 Unknown;
+	BBIT 4 2 05 05 Holder;
+	DBIT 4 1 05 05 MNC digit 1:;
+	DGLB 0 2 05 05 MNC digit 2:;
+	DGLB 0 4 05 05 MNC digit 3:;
+		if (g[4] == 15)
+		{
+			//LABL 0 0 90 14 Spare;
+			g[58] = g[1];
+			g[58] *= 10;
+			g[58] += g[2];
+			DGLB 0 3a 90 c2 MNC:;
+			g[59] *= 100;
+			g[59] += g[58];
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+		if (g[4] <= 14)
+		{
+			g[58] = g[1];
+			g[58] *= 100;
+			g[2] *= 10;
+			g[58] += g[2];
+			g[58] += g[3];
+			g[59] *= 100;
+			g[59] + = g[58];
+			DGLB 0 3a 90 c2 MNC:;
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+	DWRD( 0, 0, 0x90, 0xc2, "TAC:" );
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::E-UTRAN_Cell_Global_Identity()
+{
+	l[5] = g[20];
+	BBIT 4 1 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 1:;
+	g[59] = g[3];
+	g[59] *= 100;
+	DGLB 0 1 05 05 MCC digit 2:;
+	g[1] *= 10;
+	g[59] += g[1];
+	BBIT 4 4 05 05 Holder;
+	DBIT 4 3 05 05 MCC digit 3:;
+	g[59] += g[3];
+	DGLB 0 3b 90 c2 MCC:;
+	CST# 0 3b 90 14 GTP::MobileCountryCode;
+	CLSE 0 0 0 14 Unknown;
+	BBIT 4 2 05 05 Holder;
+	DBIT 4 1 05 05 MNC digit 1:;
+	DGLB 0 2 05 05 MNC digit 2:;
+	DGLB 0 4 05 05 MNC digit 3:;
+		if (g[4] == 15)
+		{
+			//LABL 0 0 90 14 Spare;
+			g[58] = g[1];
+			g[58] *= 10;
+			g[58] += g[2];
+			DGLB 0 3a 90 c2 MNC:;
+			g[59] *= 100;
+			g[59] += g[58];
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+		if (g[4] <= 14)
+		{
+			g[58] = g[1];
+			g[58] *= 100;
+			g[2] *= 10;
+			g[58] += g[2];
+			g[58] += g[3];
+			g[59] *= 100;
+			g[59] + = g[58];
+			DGLB 0 3a 90 c2 MNC:;
+			CST# 0 3b 90 14 GTP::MobileNetworkCodes;
+			CLSE 0 0 0 14 Unknown;
+		}
+	BBIT( 4, 0, 0x90, 0xc2, "Spare:" );
+	HBIT( 12, 0, 0x90, 0xc2, "ECI:" );
+	g[0xa] -= l[5];
+}
+
+void SGSAP::IEI::UE_EMM_mode()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "UE EMM mode:" );
+		CST#( 0, l[1], 0, 0x14, SGSAP::IEI::UE_EMM_mode::Type );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	g[0xa] -= 1;
+}
+
+str# SGSAP::IEI::UE_EMM_mode::Type;
+0	|	EMM-IDLE;
+1	|	EMM-CONNECTED;
+
+void SGSAP::IEI::Additional_paging_indicators()
+{
+	DBIT( 7, 0, 0x90,0xc2, "Spare:" );
+	DBIT( 1, l[1], 0x90,0xc2, "CSRI:" );
+		CEQU( 0, l[1], 0, 0x14, "CS restoration indicator (CSRI) is not set" );
+		CEQU( 1, l[1], 0, 0x14, "CS restoration indicator (CSRI) is set" );
+	g[0xa] -= 1;
+}
+
+void SGSAP::IEI::TMSI_based_NRI_container()
+{
+	DBIT( 9, l[1], 0x90,0xc2, "NRI Container:" );
+	DBIT( 7, 0, 0x90,0xc2, "Spare:" );
+	g[0xa] -= 1;
+}
+
+void SGSAP::DUMP()
+{
+	DUMP( 0, g[20], 0x90, 0xc2, "Data:" );
+	g[0xa] -= g[20];
+}
+
+void SGSAP::IEI::Channel_Needed()
+{
+	DBIT( 4, 0, 0x90,0xc2, "CNIEI:" );
+	DBIT( 2, l[1], 0x90,0xc2, "CHANNEL (second):" );
+	DBIT( 2, l[2], 0x90,0xc2, "CHANNEL (first):" );
+	g[0xa] -= 1;
+}

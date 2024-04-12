@@ -1,0 +1,10 @@
+* IRC - Internet Relay Chat
+
+void IRC;
+	TEQU 0 10  0  0 RETURN;
+	GBYT 0  1;
+	TEQU 0  1  0  0 RETURN;
+	LABL 0  0  0 b1 IRC - Internet Relay Chat;
+	Init Line Variables;
+	Display All Lines;
+	TRTS;

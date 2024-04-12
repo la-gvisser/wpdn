@@ -1,0 +1,391 @@
+//IEC 61850
+
+
+
+str# Ether::Branching_3_Str;
+0x88BA	|	IEC61850SV;
+
+str# EProto::Names_Str;
+0x88BA	|	IEC 61850 Sampled Values;  //IEC 61850-9-2
+0x88B8	|	IEC 61850 GOOSE;  //
+0x88B9	|	IEC 61850 GSE Management;  //
+
+void IEC61850SV()
+{
+	LABL( 0, 0, 0, 0xb1, "IEC 61850 Sampled Values\61850SV" );
+	HWRD( 0, l[1], 0x90, 0xc2, "APPID:" );
+	DWRD( 0, g[4], 0x90, 0xc2, "Length:" );
+	HWRD( 0, l[3], 0x90, 0xc2, "Reserved 1:" );
+	HWRD( 0, l[4], 0x90, 0xc2, "Reserved 2:" );
+	g[4] -= 4;
+	IEC61850SV::detect;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void IEC61850SV::detect()
+{
+	l[1] = 0;
+	while (g[10] != 1111)
+	{
+		GBYT( l[1], l[2]);
+		if (l[2] == 0x60)
+		{
+			g[10] = 1;
+		}
+		if (l[2] == 0x80)
+		{
+			if (g[10]  == 1)
+			{
+				l[1] += 2;
+				GBYT( l[1] , l[15] );
+				g[10]  = 11;
+				l[1] -= 2;
+			}
+		}
+		if (l[2] == 0xa2)
+		{
+			if (g[10] == 11)
+			{
+				g[10] = 111;
+			}
+		}
+		if (l[2] == 0x30)
+		{
+			if (g[10] == 111)
+			{
+				g[10] = 1111;
+			}
+		}
+		l[1] += 1;
+	}
+	if (g[10] == 1111)
+	{
+		g[25] = l[15];
+		l[1] -= 1;
+		g[4] -= l[1];
+		DUMP( 0, l[1], 0x05, 0x05, "not used data:" );
+		if (g[16] >= 5)
+		{
+			LABL( 0, 0, 0, 0xb7, "SavPdu:");
+			DGLB( 0, g[25], 0x90, 0xc2, "noASDU:" );
+			LABL( 0, 0, 0, 0xb7, "seqASDU:");
+			IEC61850SV::Type::savPDU;
+			LABL( 0, 0, 0, 0xb8 );
+			LABL( 0, 0, 0, 0xb8 );
+		}
+	}
+}
+
+
+str# IEC61850SV::Type;
+0x60	|	savPDU;
+0x80	|	noASDU;
+0xA2	|	Sequence of ASDU;
+0x30	|	Sequence of ASDU # ;
+
+str# IEC61850SV::Type::ASDU;
+0x80	|	svID;
+0x82	|	smpCnt;
+0x83	|	confRev;
+0x85	|	smpSynch;
+0x87	|	Sequence of Samples;
+str# IEC61850SV::Type::ASDU::Ldr;
+0x80	|	IEC61850SV::Type::ASDU::svID;
+0x82	|	IEC61850SV::Type::ASDU::smpCnt;
+0x83	|	IEC61850SV::Type::ASDU::confRev;
+0x85	|	IEC61850SV::Type::ASDU::smpSynch;
+0x87	|	IEC61850SV::Type::ASDU::Sequence of Samples;
+str# IEC61850SV::Type::Ldr;
+0x60	|	IEC61850SV::Type::savPDU;
+0x80	|	IEC61850SV::Type::noASDU;
+0xA2	|	IEC61850SV::Type::Sequence of ASDU;
+0x30	|	IEC61850SV::Type::SequenceofASDU_1;
+
+void IEC61850SV::Type::noASDU()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Type:" ); g[4] -= 1;
+	CST#( 0, l[1], 0, 0x14, IEC61850SV::Type );
+	DBYT( 0, l[8], 0x90, 0xc2, "Length:" );
+	DBYT( 0, l[8], 0x90, 0xc2, "Number of ASDU:" );
+	g[4] -= 1;
+	g[4] -= 1;
+}
+
+void IEC61850SV::Type::savPDUsv()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Unknwn:" );
+	
+	HBYT( 0, l[2], 0x90, 0xc2, "Type:" );
+	CST#( 0, l[2], 0, 0x14, IEC61850SV::Type );
+	DBYT( 0, l[2], 0x90, 0xc2, "Unknwn:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Unknwn:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[2], 0, 0x14, IEC61850SV::Type );
+	DBYT( 0, l[3], 0x90, 0xc2, "Number of ASDUs:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Unknwn:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Unknwn:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Type:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Unknwn:" );
+	g[4] -= 10;
+	//l[30] = l[3];
+	l[30] = 0;
+	while (l[3] != l[30] )
+	{
+			
+		HBYT( 0, l[5], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[5], 0, 0x14, IEC61850SV::Type );
+			DGLB( 0, l[30], 0x04, 0 );
+			CST#( 0, l[5], 0, 0xb7, IEC61850SV::Type );
+		DGLB( 0, l[30], 0x07, 0 );
+		DBYT( 0, l[6], 0x90, 0xc2, "Length:" );
+		l[6] -= 3;
+		if (l[5] == 0x30)
+		{
+			while (l[6] > 0)
+			{
+				//DGLB( 0, l[6], 0x90, 0xc2, "l6s:" );
+				HBYT( 0, l[7], 0x90, 0xc2, "Tag:" );
+				CST#( 0, l[7], 0, 0x14, IEC61850SV::Type::ASDU );
+				g[27] = l[7];
+					
+				DBYT( 0, l[8], 0x90, 0xc2, "Length:" );
+				g[25] = l[8];
+				if (l[7] == 0x80)
+				{
+					CHR#( 0, g[25], 0x90, 0xc2, "svID:" ); l[6] -= g[25];
+				}
+				if (l[7] == 0x82)
+				{
+					DWRD( 0, 0, 0x90, 0xc2, "smpCnt:" );l[6] -= 2;
+				}	
+				if (l[7] == 0x83)
+				{
+					DLNG( 0, 0, 0x90, 0xc2, "confRef:" );l[6] -= 4;
+				}
+				if (l[7] == 0x84)
+				{
+					DBYT( 0, 0, 0x90, 0xc2, "smpSynch:" );l[6] -= 1;
+				}
+				if (l[7] == 0x85)
+				{
+					DBYT( 0, l[9], 0x90, 0xc2, "unknown:" );
+					HBYT( 0, l[9], 0x90, 0xc2, "Tag:" );
+					DBYT( 0, l[9], 0x90, 0xc2, "Length:" );
+					l[6] -= 3;
+					DUMP( 0, l[9], 0x90, 0xc2, "seqData:" );
+					l[6] -= l[9];
+				}
+				
+				//DUMP( 0, l[8], 0x90, 0xc2, "Data:" );
+				g[4] -= 4; l[6] -= 4;
+				g[4] -= l[8]; l[6] -= 8;
+				//DGLB( 0, l[6], 0x90, 0xc2, "l6:" );
+			}
+		}
+			LABL( 0, 0, 0, 0xb8 );
+		g[4] -= 2;
+		g[4] -= l[6];
+		//l[3] -= 1;
+		l[30] += 1;
+	}
+}
+
+void IEC61850SV::Type::savPDU()
+{
+	l[30] = 0;
+	l[3] = g[25];
+	while (l[3] != l[30] )
+	{
+			
+		HBYT( 0, l[5], 0x90, 0xc2, "Type:" );
+			CST#( 0, l[5], 0, 0x14, IEC61850SV::Type );
+			DGLB( 0, l[30], 0x04, 0 );
+			CST#( 0, l[5], 0, 0xb7, IEC61850SV::Type );
+		DGLB( 0, l[30], 0x07, 0 );
+		DBYT( 0, l[6], 0x90, 0xc2, "Length:" );
+		l[40] = l[6];
+		l[6] -= 3;
+		if (l[5] == 0x30)
+		{
+			while (l[6] > 0)
+			{
+				GBYT( 0 , l[7] );
+				CST#( 0, l[7], 0, 0xb7, IEC61850SV::Type::ASDU );
+				HBYT( 0, l[7], 0x90, 0xc2, "Tag:" );
+				CST#( 0, l[7], 0, 0x14, IEC61850SV::Type::ASDU );
+				g[27] = l[7];
+					
+				DBYT( 0, l[8], 0x90, 0xc2, "Length:" );
+				g[25] = l[8];
+				if (l[7] == 0x80)
+				{
+					CHR#( 0, g[25], 0x90, 0xc2, "svID:" ); l[6] -= g[25];
+				}
+				if (l[7] == 0x82)
+				{
+					DWRD( 0, 0, 0x90, 0xc2, "smpCnt:" );l[6] -= 2;
+				}	
+				if (l[7] == 0x83)
+				{
+					DLNG( 0, 0, 0x90, 0xc2, "confRef:" );l[6] -= 4;
+				}
+				if (l[7] == 0x84)
+				{
+					DBYT( 0, 0, 0x90, 0xc2, "smpSynch:" );l[6] -= 1;
+				}
+				if (l[7] == 0x85)
+				{
+					DBYT( 0, l[9], 0x90, 0xc2, "smpSynch:" );
+					l[6] -= 1;
+				}
+				if (l[7] == 0x87)
+				{
+					IEC61850SV::Type::PhsMeas1;
+					l[6] -= l[9];
+				}
+				//DUMP( 0, l[8], 0x90, 0xc2, "Data:" );
+				g[4] -= 4; l[6] -= 4;
+				g[4] -= l[8]; l[6] -= 8;
+				//DGLB( 0, l[6], 0x90, 0xc2, "l6:" );
+				LABL( 0, 0, 0, 0xb8 );
+			}
+		}
+			LABL( 0, 0, 0, 0xb8 );
+		g[4] -= 2;
+		g[4] -= l[40];
+		//l[3] -= 1;
+		l[30] += 1;
+	}
+}
+
+void IEC61850SV::Type::Sequence of ASDU()
+{
+		HBYT( 0, l[5], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[5], 0, 0x14, IEC61850SV::Type );
+		DBYT( 0, l[6], 0x90, 0xc2, "Length:" );
+		HBYT( 0, l[5], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[5], 0, 0x14, IEC61850SV::Type );
+		
+		DBYT( 0, l[6], 0x90, 0xc2, "Length:" );
+		if (l[5] == 0x30)
+		{
+			while (l[6] > 0)
+			{
+				HBYT( 0, l[7], 0x90, 0xc2, "Tag:" );
+				CST#( 0, l[7], 0, 0x14, IEC61850SV::Type::ASDU );
+				g[27] = l[7];
+					
+				DBYT( 0, l[8], 0x90, 0xc2, "Length:" );
+				g[25] = l[8];
+				if (l[7] == 0x80)
+				{
+					CHR#( 0, g[25], 0x90, 0xc2, "svID:" ); l[6] -= g[25];
+				}
+				if (l[7] == 0x82)
+				{
+					DWRD( 0, 0, 0x90, 0xc2, "smpCnt:" );l[6] -= 2;
+				}	
+				if (l[7] == 0x83)
+				{
+					DLNG( 0, 0, 0x90, 0xc2, "confRef:" );l[6] -= 4;
+				}
+				if (l[7] == 0x84)
+				{
+					DBYT( 0, 0, 0x90, 0xc2, "smpSynch:" );l[6] -= 1;
+				}
+				if (l[7] == 0x85)
+				{
+					DBYT( 0, l[9], 0x90, 0xc2, "unknown:" );
+					HBYT( 0, l[9], 0x90, 0xc2, "Tag:" );
+					CST#( 0, l[9], 0, 0x14, IEC61850SV::Type::ASDU );
+					DBYT( 0, l[9], 0x90, 0xc2, "Length:" );
+					l[6] -= 3;
+					IEC61850SV::Type::PhsMeas1;
+					l[6] -= l[9];
+				}
+				g[4] -= 4; l[6] -= 4;
+				g[4] -= l[8]; l[6] -= 8;
+			}
+		}
+}
+
+void IEC61850SV::Type::PhsMeas1()
+{
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentATCTR1_Amp_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Ampere" );
+	
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentATCTR1_Amp_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentBTCTR2_Amp_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Ampere" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentBTCTR2_Amp_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentCTCTR1_Amp_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Ampere" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentCTCTR1_Amp_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentNTCTR1_Amp_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Ampere" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentNTCTR1_Amp_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentATCTR1_Vol_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Volts" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentATCTR1_Vol_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentBTCTR2_Vol_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Volts" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentBTCTR2_Vol_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentCTCTR1_Vol_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Volts" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentCTCTR1_Vol_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;
+	DLNG( 0, g[20], 0x90, 0xc2, "CurrentNTCTR1_Vol_instMag_i:" );
+	LABL( 0, 0, 0, 0x14, "Volts" );
+	BLNG( 0, g[20], 0x90, 0xc9, "CurrentNTCTR1_Vol_q:" );
+	IEC61850SV::Type::PhsMeas1::QI;	
+}
+
+void IEC61850SV::Type::PhsMeas1::QI()
+{
+	l[1] = g[20];
+	l[1] &= 0x3;
+	LABL( 0, l[1], 0, 0xd4,  "xxxxxxxx xxxxxxxx ........ ........ Reserved" );
+	CEQU( 0, l[1], 0, 0xd4,  "........ ........ ........ ......00 Validty: 0" );
+	CEQU( 1, l[1], 0, 0xd4,  "........ ........ ........ ......01 Validty: 1" );
+	CEQU( 2, l[1], 0, 0xd4,  "........ ........ ........ ......10 Validty: 2" );
+	CEQU( 3, l[1], 0, 0xd4,  "........ ........ ........ ......11 Validty: 3" );
+	CBIT( 2, g[20], 0, 0xd4, "........ ........ ........ .....1.. Overflow: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ .....0.. Overflow: false" );
+	CBIT( 3, g[20], 0, 0xd4, "........ ........ ........ ....1... Out of range: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ ....0... Out of range: false" );
+	CBIT( 4, g[20], 0, 0xd4, "........ ........ ........ ...1.... Bad reference: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ ...0.... Bad reference: false" );
+	CBIT( 5, g[20], 0, 0xd4, "........ ........ ........ ..1..... Oscillatory: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ ..0..... Oscillatory: false" );
+	CBIT( 6, g[20], 0, 0xd4, "........ ........ ........ .1...... Failure: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ .0...... Failure: false" );
+	CBIT( 7, g[20], 0, 0xd4, "........ ........ ........ 1....... Old Data: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ........ 0....... Old Data: false" );
+	CBIT( 8, g[20], 0, 0xd4, "........ ........ .......1 ........ Inconsistent: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ .......0 ........ Inconsistent: false" );
+	CBIT( 9, g[20], 0, 0xd4, "........ ........ ......1. ........ Inaccurate: true" );
+	CLSE( 0, g[20], 0, 0xd4, "........ ........ ......0. ........ Inaccurate: false" );
+	CBIT( 10, g[20], 0, 0xd4, "........ ........ ....1... ........ Source: true" );
+	 CLSE( 0, g[20], 0, 0xd4, "........ ........ ....0... ........ Source: false" );
+	CBIT( 11, g[20], 0, 0xd4, "........ ........ ...1.... ........ Test: true" );
+	 CLSE( 0, g[20], 0, 0xd4, "........ ........ ...0.... ........ Test: false" );
+	CBIT( 12, g[20], 0, 0xd4, "........ ........ ..1..... ........ Operator Blocked: true" );
+	 CLSE( 0, g[20], 0, 0xd4, "........ ........ ..0..... ........ Operator Blocked: false" );
+	CBIT( 13, g[20], 0, 0xd4, "........ ........ .1...... ........ Derived: true" );
+	 CLSE( 0, g[20], 0, 0xd4, "........ ........ .0...... ........ Derived: false" );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void IEC61850SV::Type::SequenceofASDU_1()
+{
+	HBYT( 0, l[10], 0x90, 0xc2, "Length:" );
+	DUMP( 0, l[10], 0x90, 0xc2, "Data:" );
+	g[4] -= 1;
+	g[4] -= l[10];
+}

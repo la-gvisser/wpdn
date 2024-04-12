@@ -1,0 +1,46 @@
+<!doctype HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <style>
+    body {
+      font-family: verdana,arial,helvetica,sans-serif;
+      font-size: 8pt;
+    }
+  </style>
+  <!-- After this page load, the title of the dialog box is set to  -->
+  <!-- the title of the web page by SendDisplayProperties. -->
+  <title>About [!output SAFE_PROJECT_NAME]</title>
+  <script type="text/javascript">
+    // The document's OnLoad action.
+    // Optional
+    function DoOnLoad() {
+      SendDisplayProperties();
+    }
+
+    // Send the Display Properties to the browser.
+    //   Display Properties are the desired width and height in pixels 
+    //   of the browser window and the title of the dialog.
+    // Optional
+    function SendDisplayProperties() {
+      window.cefQuery({
+        request: "SendDisplayProperties:320 120 " + document.title,
+        onSuccess: function (response) { },
+        onFailure: function (error_code, error_message) { }
+      });
+    }
+
+    // The only other command that is supported is GetEngineInfo().
+    // See the other webpages for examples of:
+    //  SendGetEngineInfo() and SetEngineInfo()
+  </script>
+</head>
+<body onload="DoOnLoad()">
+  <div align=center>
+    <br>
+    <b>About [!output SAFE_PROJECT_NAME]</b><br><br>
+    Copyright 2017 Savvius, Inc.<br>
+    Version 1.0.0.0<br>
+    All Rights Reserved.<br>
+  </div>
+</body>
+</html>

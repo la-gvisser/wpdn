@@ -1,0 +1,43 @@
+WildPackets, Inc.
+CMIFilter SOFTWARE LICENSE AGREEMENT
+Please read this license carefully.
+
+You are purchasing a license to use WildPackets' Software. The Software is owned by and remains the property of WildPackets, Inc., is protected by international copyrights, and is transferred to the original purchaser and any subsequent owner of the Software media for his/her use only according to the license terms set forth below. OPENING THE PACKAGING AND/OR USING THE SOFTWARE INDICATES YOUR ACCEPTANCE OF THESE TERMS.  If you do not agree to all of the terms and conditions herein, return the unopened packaging items, including Software and manuals, within thirty days of purchase to the party from whom you purchased it for a refund, subject to any restocking fee.
+
+1. Grant of License:  WildPackets, Inc. grants the original purchaser (Licensee) the limited rights to possess and use WildPackets CMIFilter Software (CMIFilter) and User Manual on the terms and conditions specifically set out in this License.
+
+2. Term:  This License is effective as of the time Licensee receives and opens CMIFilter, and shall continue in effect in perpetuity until Licensee ceases all use of CMIFilter and returns or destroys all copies thereof, or until automatically terminated upon the failure of Licensee to comply with any of the terms of this License.
+
+3. Your Agreement: 
+SINGLE USER LICENSE
+-CMIFilter is provided under a Single User License. That is, one specific individual is licensed to install and use CMIFilter from his/her computer hardware platform. No simultaneous use of CMIFilter by more than one person is permitted under the terms of this single user license agreement.
+
+-If CMIFilter is installed on a networked system, or on a computer connected to a file server or other system that physically allows shared access to software, Licensee agrees to prevent use of CMIFilter by more than one user.
+
+-One machine-readable copy of CMIFilter may be made for BACK-UP PURPOSES ONLY, and the copy shall display all proprietary notices, and be labeled externally to show that the back-up copy is the property of WildPackets, and that its use is subject to this License. If CMIFilter is delivered electronically, then one copy of the .pdf version of the documentation supplied may be printed for each single user license of the software purchased. If a hard copy deliverable of the documentation is supplied with the software, or purchased separately, that  documentation in whole or part may not be copied.
+
+-Licensee may transfer its rights under this License, PROVIDED that the party to whom such rights are transferred agrees to the terms and conditions of this License, and written notice is provided to WildPackets. Upon such transfer, Licensee must destroy all current and previous release copies of CMIFilter.
+
+-Licensee agrees and certifies that CMIFilter (a) is not being nor will be shipped, transferred or re-exported, directly or indirectly, into any country prohibited by the United States Export Administration Act and the regulations thereunder, or (b) will not be used for any purpose prohibited by same.
+
+-Except as expressly provided in this License, Licensee may not use, copy disseminate, modify, distribute, sub-license, sell, rent, lease, lend, give, or in any other way transfer, by any means or by any medium, including electronic, CMIFilter.  This license is for machine readable object code only, and Licensee will use its best efforts and take all reasonable steps to protect CMIFilter  from unauthorized use, copying or dissemination, and will maintain all proprietary notices intact.
+
+MULTIPLE USER LICENSE
+If you want to install CMIFilter on a network and provide access for more than one user, you can either purchase additional single-user licenses or purchase a site license.  Each additional single-user license allows one other specific individual to install and use CMIFilter.  There is no limit to the number of additional single-user licenses that may be purchased.  Site licenses allow for simultaneous use of CMIFilter on multiple machines by multiple users.
+
+4. Limited Warranty
+WildPackets, Inc. warrants CMIFilter media to be free of defects in workmanship for a period of ninety days from purchase.  During this period, WildPackets, Inc. will replace at no cost any such media returned to WILDPACKETS, INC., postage prepaid.  This service is WildPacket's sole liability under this warranty.  
+
+LICENSE FEES FOR CMIFilter DO NOT INCLUDE ANY CONSIDERATION FOR ASSUMPTION OF RISK BY WILDPACKETS, INC. OR ITS LICENSOR, AND WILDPACKETS AND ITS LICENSOR DISCLAIM ANY AND ALL LIABILITY FOR INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR OPERATION OR INABILITY TO USE CMIFilter, OR ARISING FROM THE NEGLIGENCE OF WILDPACKETS AND ITS LICENSOR, OR THEIR EMPLOYEES, OFFICERS, DIRECTORS CONSULTANTS OR DEALERS, EVEN IF ANY OF THESE PARTIES HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.  FURTHERMORE, LICENSEE INDEMNIFIES AND AGREES TO HOLD WILDPACKETS AND ITS LICENSOR HARMLESS FROM SUCH CLAIMS.  THE ENTIRE RISK AS TO THE RESULTS AND PERFORMANCE OF CMIFilter IS ASSUMED BY THE LICENSEE.  
+
+THE WARRANTIES EXPRESSED IN THIS LICENSE ARE THE ONLY WARRANTIES MADE BY WILDPACKETS AND ITS LICENSOR, AND ARE IN LIEU OF ALL OTHER WARRANTIES, EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY AND OF FITNESS FOR A PARTICULAR PURPOSE.  THIS WARRANTY GIVES YOU SPECIFIED LEGAL RIGHTS, AND YOU MAY ALSO HAVE OTHER RIGHTS WHICH VARY FROM JURISDICTION TO JURISDICTION.  SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR LIMITATION OF WARRANTIES, SO THE ABOVE LIMITATIONS OR EXCLUSIONS MAY NOT APPLY TO YOU.
+
+5. General
+This license is the complete and exclusive statement of the agreement of the parties.  Should any provision of this License be held to be invalid by any court of competent jurisdiction, that provision will be enforced to the maximum extent permissible, and the remainder of the License shall nonetheless remain in full force and effect.  This License shall be controlled by the laws of the State of California, and the United States of America.
+
+6. United States Government Restricted Rights
+Use of CMIFilter by any department, agency or other entity of the United States Federal Government is limited as follows:
+
+-CMIFilter and the CMIFilter User Manual are provided with RESTRICTED RIGHTS, and are trade secrets of WildPackets for all purposes of the Freedom of Information Act.
+
+-(Use, duplication or disclosure is subject to restrictions set forth in subparagraph (c)(I)(ii) of the Rights in Technical Data and Computer Software clause at 252.227-7013 or in subparagraphs (c)(1) and (2) of the Commercial Computer Software - Restricted Rights at 48 CFR 52.227-19, as applicable.  Manufacturer: WildPackets Inc., 1340 Treat Boulevard, Suite 500, Walnut Creek, California, 94597.

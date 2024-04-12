@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly>
+  <file name="FTPCaptureOE">
+    <comClass catid="{D8A51BAC-0297-4247-BF9A-9C956262ABD5}" clsid="{1DB0C9D7-0928-4E9D-B94D-85318C546401}" progid="ThirdPartyPlugins.FTPCaptureOE" />
+    <comClass catid="{CCF7D60E-46ED-4323-AC9A-03B854D17D4E}" clsid="{1DB0C9D7-0928-4E9D-B94D-85318C546401}" progid="ThirdPartyPlugins.FTPCaptureOE" />
+    <comClass catid="{4C116C92-7B4C-4C93-B586-B87570862337}" clsid="{1DB0C9D7-0928-4E9D-B94D-85318C546401}" progid="ThirdPartyPlugins.FTPCaptureOE" />
+  </file>
+</assembly>

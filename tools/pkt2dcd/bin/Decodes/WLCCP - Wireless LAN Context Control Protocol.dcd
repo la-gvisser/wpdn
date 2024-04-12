@@ -1,0 +1,28 @@
+// Cisco Wireless LAN Context Control Protocol - WLCCP
+// Vendor Id: 0x004096
+// Protocol Type: 0x0000
+
+void WLCCP()
+{
+	LABL( 0, 0, 0, 0xb1 "Cisco Wireless LAN Context Control Protocol\WLCCP");
+	HBYT( 0, l[1], 0x90, 0xc2, "Version:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Length:");
+	HWRD( 0, l[1], 0x90, 0xc2, "Message Type:");
+	ETHR( 0, l[1], 0x90, 0xc2, "Dst Address:");
+	ETHR( 0, l[1], 0x90, 0xc2, "Src Address:");
+	l[2] -= 12;
+	DUMP( 0, l[2], 0x90, 0xc2, "WLCCP Data:");
+}
+
+/*
+Need spec
+void WLCCP::TLV()
+{
+// Field Name 2202, 
+// Offset 2204, 
+// size (in bytes) 2206
+// description 2208.
+// TLV "Type" contains a Container Flag, an Encrypted Flag, a Request Flag, a Group ID and a Type ID 2210
+// "request TLV" has the Request Flag set ON in the Type ID field.
+}
+*/

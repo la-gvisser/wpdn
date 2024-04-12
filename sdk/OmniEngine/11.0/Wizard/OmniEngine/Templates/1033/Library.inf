@@ -1,0 +1,6 @@
+libheruntime.32.lib
+libheruntime.64.lib
+libheruntime.so
+peekcore.so
+Protospecs.32.lib
+Protospecs.64.lib

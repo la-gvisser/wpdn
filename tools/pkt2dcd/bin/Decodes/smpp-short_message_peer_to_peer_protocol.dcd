@@ -1,0 +1,470 @@
+* SMPP - Short Message Peer to Peer v.3.4
+* default port number is 2775
+
+void SMPP::Source()
+{
+	LABL( 0, 0, 0, 0xb7, "Source");
+	SMPP::TON();
+	SMPP::NPI();
+	CHR#( 0x0D, 0, 0x90, 0xc2, "Address:");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP()
+{
+	LABL( 0, 0, 0, 0xb1, "SMPP - Short Message Peer to Peer Protocol");
+	l[3] = pl[4];
+	SMPP::Header();
+	TSB#( 0, l[3], 0, 0, SMPP::Operation_Type);
+}
+
+void SMPP::Header()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Command Length:");
+	HLNG( 0, l[1], 0x90, 0xc2, "Command ID:");
+	CST#( 0, l[1], 0, 0x14, "SMPP::Command_ID_Str");
+	DLNG( 0, l[1], 0x90, 0xc2, "Command Status:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Command_Status_Str);
+	DLNG( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+}
+
+void SMPP::sm()
+{
+	SMPP::Service_Type();
+	SMPP::Source();
+	SMPP::Destination();
+	SMPP::ESM_Class();
+	HBYT( 0, l[1], 0x90, 0xc2, "Protocol Id:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Priority Level:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Priority_Level_Str);
+	SMPP::Scheduled_Delivery_Time();
+	SMPP::Validity_Period();
+	SMPP::Registered_Delivery();
+	HBYT( 0, l[1], 0x90, 0xc2, "Replace if Present Flag:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Replace_if_present_flag);
+	SMPP::Data_Coding();
+	SMPP::Message();
+}
+
+void SMPP::Alert_Notification()
+{
+	SMPP::Source();
+	SMPP::ESME();
+}
+
+
+void SMPP::ESME()
+{
+	LABL( 0, 0, 0, 0xb7, "ESME");
+	SMPP::TON();
+	SMPP::NPI();
+	CHR#( 0x0D, 0, 0x90, 0xc2, "Address:");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP::TON()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Type Of Number:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Type_Of_Number_Str);
+}
+
+void SMPP::NPI()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "NPI:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Numbering_Plan_Indicator_Str);
+}
+
+void SMPP::Scheduled_Delivery_Time()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Scheduled Delivery Time:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Scheduled_Delivery_Time_Str);
+}
+
+void SMPP::Validity_Period()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Validity Period:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Validity_Period_Str);
+}
+
+void SMPP::Registered_Delivery()
+{
+	BBIT 8 4 90 c9 Registered Delivery:;
+	DECR 1;
+	BBIT 3 4 5 c9;
+	 CEQU 0 4 0 54 xxx. .... Reserved;
+	BBIT 1 4 5 c9;
+	 CEQU 0 4 0 54 ...0 .... Intermediate Notify: No Intermediate notification requested;
+	 CEQU 1 4 0 54 ...1 .... Intermediate Notify: Intermediate notification requested;
+	BBIT 2 4 5 c9;
+	 CEQU 0 4 0 54 .... 00.. Message Type: No recipient SME acknowledgment requested;
+	 CEQU 1 4 0 54 .... 01.. Message Type: SME Delivery Acknowledgement requested;
+	 CEQU 2 4 0 54 .... 10.. Message Type: SME Manual/User Acknowledgment requested;
+	 CEQU 3 4 0 54 .... 11.. Message Type: Both Delivery and Manual/User Acknowledgment requested;
+	BBIT 2 4 5 c9;
+	 CEQU 0 4 0 54 .... ..00 Delivery Receipt: No SMSC Delivery Receipt requested;
+	 CEQU 1 4 0 54 .... ..01 Delivery Receipt: SMSC Delivery Receipt requested where final delivery outcome is delivery success or failure;
+	 CEQU 2 4 0 54 .... ..10 Delivery Receipt: SMSC Delivery Receipt requested where the final delivery outcome is delivery failure;
+	 CEQU 3 4 0 54 .... ..11 Delivery Receipt: Reserved;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP::ESM_Class()
+{
+	BBIT 8 4 90 c9 ESM Class:;
+	DECR 1;
+	BBIT 2 4 5 c9;
+	 CEQU 0 4 0 54 00.. .... GSM Network Specific Features: No specific features selected;
+	 CEQU 1 4 0 54 01.. .... GSM Network Specific Features: UDHI Indicator Set;
+	 CEQU 2 4 0 54 10.. .... GSM Network Specific Features: Reply Path;
+	 CEQU 3 4 0 54 11.. .... GSM Network Specific Features: UDHI and Reply Path;
+	BBIT 4 4 5 c9;
+	 CEQU 0 4 0 54 ..00 00.. Message Type: Default message Type;
+	 CEQU 1 4 0 54 ..00 01.. Message Type: Short Message contains SMSC Delivery Receipt;
+	 CEQU 2 4 0 54 ..00 10.. Message Type: Short Message contains SME Delivery Acknowledgement;
+	 CEQU 3 4 0 54 ..00 11.. Message Type: Reserved;
+	 CEQU 4 4 0 54 ..01 00.. Message Type: Short Message contains SME Manual/User Acknowledgment;
+	 CEQU 5 4 0 54 ..01 01.. Message Type: Reserved;
+	 CEQU 6 4 0 54 ..01 10.. Message Type: Short Message contains Conversation Abort;
+	 CEQU 7 4 0 54 ..01 11.. Message Type: Reserved;
+	 CEQU 8 4 0 54 ..10 00.. Message Type: Short Message contains Intermediate Delivery Notification;
+	BBIT 2 4 5 c9;
+	 CEQU 0 4 0 54 .... ..00 Messaging Mode: Default SMSC Mode;
+	 CEQU 1 4 0 54 .... ..01 Messaging Mode: Datagram mode;
+	 CEQU 2 4 0 54 .... ..10 Messaging Mode: Forward mode;
+	 CEQU 3 4 0 54 .... ..11 Messaging Mode: Store and Forward mode;
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP::Data_Coding()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Data Coding:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Data_Coding_str);
+}
+
+void SMPP::Message()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Id:");
+	DBYT( 0, l[1], 0x90, 0xc2, "Message Length:");
+	LABL( 0, 0, 0, 0xb7, "Message");
+	while (l[1] != 0)
+		{
+			l[2] = g[16];
+			l[4] = pw[0];
+			if (l[4] == 0x5465)
+			{
+				SMPP::00_Byte_Loop();
+				DECR 0 4;
+				CHR#( 0, g[4], 0x10, 0);
+				SKIP 3;
+			}
+			SMPP::Parse_Value;
+			CHR# 0 4 10 0;
+			INCR 1;
+			l[3] = g[16];
+			l[2] -= l[3];
+			l[1] -= l[2];
+		}
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP::Parse_Value()
+{
+	MOVE 0  4;
+	GSTR 20000020  4;
+}
+
+void SMPP::00_Byte_Loop;
+	MOVE 0 4;
+	TNXT -SMPP::00_Byte_Loop_Helper;
+
+void SMPP::00_Byte_Loop_Helper;
+	GBYT 0 1;
+	TEQU 0 1 0 0 RETURN;
+	INCR 1;
+	ADDG 1 4;
+	TNXT -SMPP::00_Byte_Loop_Helper;	
+
+str# SMPP::Operation_Type;
+	0x00000001 | SMPP::Bind;
+	0x00000002 | SMPP::Bind;
+	0x00000003 | SMPP::Query_sm;
+	0x00000004 | SMPP::sm;
+	0x00000005 | SMPP::sm;
+	0x00000007 | SMPP::Replace_sm;
+	0x00000008 | SMPP::Cancel_sm;
+	0x00000009 | SMPP::Bind;
+	0x0000000B | SMPP::Outbind;
+	0x00000021 | SMPP::sm;
+	0x00000102 | SMPP::Alert_Notification;
+	0x00000103 | SMPP::Data_sm;
+	0x80000001 | SMPP::Bind_resp;
+	0x80000002 | SMPP::Bind_resp;
+	0x80000003 | SMPP::Query_sm_resp;
+	0x80000004 | SMPP::sm_resp;
+	0x80000005 | SMPP::sm_resp;
+	0x80000009 | SMPP::Bind_resp;
+	0x80000021 | SMPP::Submit_Multi_resp;
+	0x80000103 | SMPP::sm_resp;
+
+str# SMPP::Command_ID_Str;
+	0x00000001 | Bind Receiver;
+	0x00000002 | Bind Transmitter;
+	0x00000003 | Query_sm;
+	0x00000004 | Submit_sm;
+	0x00000005 | Deliver_sm;
+	0x00000006 | Unbind;
+	0x00000007 | Replace_sm;
+	0x00000008 | Cancel_sm;
+	0x00000009 | Bind Transceiver;
+	0x0000000B | Outbind;
+	0x00000015 | Enquire Link;
+	0x00000021 | Submit_multi;
+	0x00000102 | Alert Notification;
+	0x00000103 | Data_sm;
+	0x80000000 | Generic Nack;
+	0x80000001 | Bind Receiver - response;
+	0x80000002 | Bind Transmitter - response;
+	0x80000003 | Query_sm - response;
+	0x80000004 | Submit_sm - response;
+	0x80000005 | Deliver_sm - response;
+	0x80000006 | Unbind - response;
+	0x80000007 | Replace_sm - response;
+	0x80000008 | Cancel_sm - response;
+	0x80000009 | Bind Transceiver - response;
+	0x80000015 | Enquire_link - response;
+	0x80000021 | Submit_multi - response;
+	0x80000103 | Data_sm - response;
+
+str# SMPP::Service_Type_Str;
+	0 | Default;
+	1 | CMT - Cellular Messaging;
+	2 | CPT - Cellular Paging;
+	3 | VMN - Voice Mail Notification;
+	4 | VMA - Voice Mail Alerting;
+	5 | WAP - Wireless Application Protocol;
+	6 | USSD - Unstructured Supplementary Services Data;
+
+str# SMPP::Type_Of_Number_Str;
+	0x00 | Unknown;
+	0x01 | International;
+	0x02 | National;
+	0x03 | Network Specific;
+	0x04 | Subscriber;
+	0x05 | Alphanumeric;
+	0x06 | Abbreviated;
+
+str# SMPP::Numbering_Plan_Indicator_Str;
+	0x00 | Unknown;
+	0x01 | ISDN (E163/E164);
+	0x02 | Data (X.121);
+	0x03 | Telex (F.69);
+	0x04 | Land Mobile (E.212);
+	0x05 | National;
+	0x06 | Private;
+	0x07 | ERMES;
+	0x08 | Internet (IP);
+	0x09 | WAP Client Id;
+
+str# SMPP::Priority_Level_Str;
+	0 | GSM (Non-Priority)  ANSI-136(Bulk)  IS-95(Normal);
+	1 | GSM (Priority)  ANSI-136(Normal)  IS-95(Interactive);
+	2 | GSM (Priority)  ANSI-136(Urgent)  IS-95(Urgent);
+	3 | GSM (Priority)  ANSI-136(Very Urgent)  IS-95(Emergency);
+
+str# SMPP::Scheduled_Delivery_Time_Str;
+	0 | Immediate Delivery;
+
+str# SMPP::Validity_Period_Str;
+	0 | SMSC Default Validity Period;
+
+str# SMPP::Command_Status_Str;
+	0x00000000 | No Error;
+	0x00000001 | Message Length is invalid;
+	0x00000002 | Command Length is invalid;
+	0x00000003 | Invalid Command ID;
+	0x00000004 | Incorrect BIND Status for given command;
+	0x00000005 | ESME Already in Bound State;
+	0x00000006 | Invalid Priority Flag;
+	0x00000007 | Invalid Registered Delivery Flag;
+	0x00000008 | System Error;
+	0x00000009 | Reserved;
+	0x0000000A | Invalid Source Address;
+	0x0000000B | Invalid Dest Addr;
+	0x0000000C | Message ID is invalid;
+	0x0000000D | Bind Failed;
+	0x0000000E | Invalid Password;
+	0x0000000F | Invalid System ID;
+	0x00000010 | Reserved;
+	0x00000011 | Cancel SM Failed;
+	0x00000012 | Reserved;
+	0x00000013 | Replace SM Failed;
+	0x00000014 | Message Queue Full;
+	0x00000015 | Invalid Service Type;
+	0x00000016 | Reserved;
+	0x00000033 | Invalid Number of Destinations;
+	0x00000034 | Invalid Distribution List Name;
+	0x00000043 | Invalid esm_class field data;
+	0x00000044 | Cannot Submit to Distribution List;
+	0x00000045 | submit_sm or submit_multi failed;
+	0x00000048 | Invalid Source address TON;
+	0x00000049 | Invalid Source address NPI;
+	0x00000050 | Invalid Destination address TON;
+	0x00000051 | Invalid Destination address NPI;
+	0x00000053 | Invalid system_type field;
+	0x00000054 | Invalid replace_if_present flag;
+	0x00000055 | Invalid number of messages;
+	0x00000058 | Throttling error (ESME has exceeded allowed message limits);
+	0x00000061 | Invalid Scheduled Delivery Time;
+	0x00000062 | Invalid message validity period (Expiry time);
+	0x00000063 | Predefined Message Invalid or Not Found;
+	0x00000064 | ESME Receiver Temporary App Error Code;
+	0x00000065 | ESME Receiver Permanent App Error Code;
+	0x00000066 | ESME Receiver Reject Message Error Code;
+	0x00000067 | Query_sm request failed;
+	0x000000C0 | Error in the optional part of the PDU Body;
+	0x000000C1 | Optional Parameter not allowed;
+	0x000000C2 | Invalid Parameter Length;
+	0x000000C3 | Expected Optional Parameter missing;
+	0x000000c4 | Invalid Optional Parameter Value;
+	0x000000FE | Delivery Failure (used for data_sm_resp);
+	0x000000FF | Unknown Error;
+
+str# SMPP::Replace_if_present_flag;
+	0 | Do not replace;
+	1 | Replace;
+
+str# SMPP::Data_Coding_str;
+	0x00 | SMPP Data Coding Scheme: SMSC Default Alphabet;
+	0x01 | SMPP Data Coding Scheme: IA5 (CCITT T.50)/ASCII (ANSI X3.4);
+	0x02 | SMPP Data Coding Scheme: Octet unspecified (8-bit binary);
+	0x03 | SMPP Data Coding Scheme: Latin 1 (ISO-8859-1);
+	0x04 | SMPP Data Coding Scheme: Octet unspecified (8-bit binary);
+	0x05 | SMPP Data Coding Scheme: JIS (X 0208-1990);
+	0x06 | SMPP Data Coding Scheme: Cyrllic (ISO-8859-5);
+	0x07 | SMPP Data Coding Scheme: Latin/Hebrew (ISO-8859-8);
+	0x08 | SMPP Data Coding Scheme: UCS2 (ISO/IEC-10646);
+	0x09 | SMPP Data Coding Scheme: Pictogram Encoding;
+	0x0A | SMPP Data Coding Scheme: ISO-2022-JP (Music Codes);
+	0x0B | SMPP Data Coding Scheme: Reserved;
+	0x0C | SMPP Data Coding Scheme: Reserved;
+	0x0D | SMPP Data Coding Scheme: Extended Kanji JIS(X 0212-1990);
+	0x0E | SMPP Data Coding Scheme: KS C 5601;
+	0x0F | SMPP Data Coding Scheme: Reserved;
+
+str# SMPP::Message_State_Str;
+	1 | Enroute;
+	2 | Delivered;
+	3 | Expired;
+	4 | Deleted;
+	5 | Undeliverable;
+	6 | Accepted;
+	7 | Unknown;
+	8 | Rejected;
+
+
+void SMPP::Message_Id()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Message ID:");
+}
+
+void SMPP::System_Id()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "System ID:");
+}
+
+void SMPP::Service_Type()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Service Type:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Service_Type_Str);
+}
+
+void SMPP::Destination()
+{
+	LABL( 0, 0, 0, 0xb7, "Destination");
+	SMPP::TON();
+	SMPP::NPI();
+	CHR#( 0x0D, 0, 0x90, 0xc2, "Address:");
+	LABL( 0, 0, 0, 0xb8);
+}
+
+void SMPP::sm_resp()
+{
+	TRTS;
+}
+
+void SMPP::Bind()
+{
+	SMPP::System_Id();
+	CHR#( 9, 0, 0x90, 0xc2, "Password");
+	CHR#( 13, 0, 0x90, 0xc2, "System Type");
+	HBYT( 0, l[1], 0x90, 0xc2, "Interface Version");
+	SMPP::ESME();
+}
+
+void SMPP::Bind_resp()
+{
+	SMPP::System_Id();
+}
+
+void SMPP::Cancel_sm()
+{
+	SMPP::Source();
+	SMPP::Destination();
+}
+
+void SMPP::Data_sm()
+{
+	SMPP::Service_Type();
+	SMPP::Source();
+	SMPP::Destination();
+	SMPP::ESM_Class();
+	SMPP::Registered_Delivery();
+	SMPP::Data_Coding();
+}
+
+void SMPP::Outbind()
+{
+	SMPP::System_Id();
+	CHR#( 9, 0, 0x90, 0xc2, "Password");
+}
+
+void SMPP::Query_sm()
+{
+	SMPP::Message_Id();
+	SMPP::Source();
+}
+
+void SMPP::Query_sm_resp()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Final:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Message State:");
+	CST#( 0, l[1], 0, 0x14, SMPP::Message_State_Str);
+	HBYT( 0, l[1], 0x90, 0xc2, "Error Code:");
+}
+
+void SMPP::Replace_sm()
+{
+	SMPP::Message_Id();
+	SMPP::Source();
+	SMPP::Scheduled_Delivery_Time();
+	SMPP::Validity_Period();
+	SMPP::Registered_Delivery();
+	SMPP::Message();
+}
+
+	
+void SMPP::Submit_Multi_resp()
+{
+	SMPP::Message_Id();
+	HBYT( 0, l[2], 0x90, 0xc2, "Number of Messages:");
+	while (l[2] != 0)
+	{
+		l[2] -= 1;
+		LABL( 0, 0, 0, 0xb7, "Unsuccessful Deliveries");
+		SMPP::Destination();
+		HLNG( 0, l[1], 0x90, 0xc2, "Error Status Code:");
+		CST#( 0, l[1], 0, 0x14, SMPP::Command_Status_Str);
+		LABL( 0, 0, 0, 0xb8);
+	}
+}
+

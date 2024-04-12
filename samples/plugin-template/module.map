@@ -1,0 +1,4 @@
+{
+    global: HeModuleGetClassObject; HeModuleCanUnloadNow; HeModuleGetVersion;
+    local:  *;
+};

@@ -1,0 +1,48 @@
+//PPP - Ping Pong Protocol
+//
+//
+//
+
+
+str# UDP::Ports_Str;
+	9899 | SCTP;
+	
+str# TCP::Ports_Str;
+	9899 | SCTP;
+	
+str# SCTP::Ports::Str;
+34513	|	PPP - Ping Pong Protocol;
+
+str# SCTP::Ports;
+34513	|	PINGPONGPROTOCOL;
+
+str# SCTP::Payload_Prot_ID::Func;
+688485890	|	PINGPONGPROTOCOL;
+
+str# SCTP::Payload_Prot_ID;
+688485890	|	PPP - Ping Pong Protocol;
+
+void PINGPONGPROTOCOL()
+{
+	if (g[40] == 688485890)
+	{
+		LABL( 0, 0, 0, 0xb1, "PPP - Ping Pong Protocol" );
+		DBYT( 0, l[1], 0x90, 0xc2, "Type:" );
+			CEQU( 1, l[1], 0, 0x14, "PingPongProtokol Pong" );
+			CEQU( 2, l[1], 0, 0x14, "PingPongProtokol Ping" );
+		BBYT( 0, l[2], 0x90, 0xc2, "Flags:" );
+		DWRD( 0, l[3], 0x90, 0xc2, "Length:" );
+		if (l[1] == 2)
+		{
+			D64B( 0, l[4], 0x90, 0xc2, "Reply Number:" );
+		}
+		D64B( 0, l[4], 0x90, 0xc2, "Message Number:" );
+			CHR#( 0, l[3], 0x90, 0xc2, "Ping Data:" );
+		LABL 0 0 0 b8;
+	}
+	if (g[40] != 688485890)
+	{
+		CST#( 0, g[40], 0, 0 ,SCTP::Payload_Prot_ID );
+		g[40] = l[1];
+	}
+}

@@ -1,0 +1,383 @@
+// ------------------------------------------------------
+// ISO Transport Service on top of the TCP 
+// Version 3
+//
+// notes:
+// Updated 12-01-2006, Added ISO 8823
+// rfc1006 [newer version], rfc983 [older version]
+// g[0xa] = header length
+// g[0xb] = code
+// ------------------------------------------------------
+
+void ISO_Transport_Service()
+{
+	l[1] = g[16];
+	TPKT::Test;
+	
+	// si: means we didn't do tpkt
+	// ISO should always go through TPKT
+	if (l[1] == g[16])
+	{
+		LABL( 0, 0, 0, 0xb1, "TPKT");
+		LABL( 0, 0, 0, 0xc4, "Possibly Continuation Data...");
+	}
+	ISO_TS::Main;
+	TRTS;
+}
+
+void ISO_TS::Main()
+{
+	LABL( 0, 0,			0,		0xb1, "ISO Transport Service\ISO-TS:");
+	DBYT( 0, g[0xa],	0x90,	0xc2, "Header Length:\HLen:");
+	HBIT( 4, g[0xb],	0x90,	0xc2, "Code:");
+	CST#( 0, g[0xb],	0,		0x14, "ISO_TS::str::codes");
+	CLSE( 0, 0,			0,		0x14, "Reserved");
+	DBIT( 4, 0,			0x90,	0xc2, "Credit:");
+	LABL( 0, 0,			0,		0x14, "always zero");
+	l[1] = g[16];
+	
+	TST#( 0, g[0xb], 0, 0, "ISO_TS::str::codes_func");
+	
+	//si: if we go into this, means nothing matched
+	if (l[1] == g[16])
+	{
+		DBIT( 7, 0, 5, 5);
+		DBIT( 1, g[2], 5, 5);									//si: grab the 7th bit to see if it's the end of the tsdu
+		DECR( 1 );
+		BBYT( 0, g[1], 0x90, 0xc2, "TPDU-NR and EOT:");
+		CEQU( 1, g[2], 0, 0x14, "End of TSDU");
+		g[0xa] -= 2;
+		if (g[0xa] > 0)
+		{
+			DUMP( 0, g[0xa], 0x90, 0xc2, "User Data:");			//si: so this is supposed to be something... but...
+		}
+	}
+	TRTS;
+}
+
+// ------------------------------------------------------
+//  sub-functions
+
+void ISO_TS::ED_DT()
+{
+	HBYT( 0, g[1], 0x90, 0xc2, "TPDU-NR and EOT:");
+	CEQU( 128, g[1], 0, 0x14, "End of TSDU");
+	g[0xa] -= 2;
+	if (g[0xa] > 0)
+	{
+		DUMP( 0, g[0xa], 0x90, 0xc2, "User Data:");				//si: so this is supposed to be something... but...
+	}
+	TNXT -ISO_8327::Main;
+	TRTS;
+}
+
+void ISO_TS::DR()
+{
+	HWRD( 0, g[1], 0x90, 0xc2, "Dest Reference:");
+	HWRD( 0, g[1], 0x90, 0xc2, "Srce Reference:");
+	HBYT( 0, g[1], 0x90, 0xc2, "Reason:");
+	 CEQU( 1, g[1], 0, 0x14, "Congestion at TSAP");
+	 CEQU( 2, g[1], 0, 0x14, "Session entity not attached to TSAP");
+	 CEQU( 3, g[1], 0, 0x14, "Address unknown (at TCP connect time)");
+	g[0xa] -= 6;
+	if (g[0xa] > 0)
+	{
+		DUMP( 0, g[0xa], 0x90, 0xc2, "Variable Data:");
+	}
+	TRTS;
+}
+
+void ISO_TS::CC_CR()
+{
+	HWRD( 0, g[1], 0x90, 0xc2, "Dest Reference:");
+	HWRD( 0, g[1], 0x90, 0xc2, "Srce Reference:");
+	HBYT( 0, 0, 0x90, 0xc2, "Class Option:");
+	g[0xa] -= 6;
+	while (g[0xa] > 0)
+	{
+		HBYT( 0, g[1], 0x90, 0xc9, "Param Code:\C:");
+		CST#( 0, g[1], 0x00, 0x14, "ISO_TS::str::Params");
+		CLSE( 0, 0x00, 0x00, 0x14, "Unknown");
+		DBYT( 0, g[2], 0x90, 0xc2, "Param Length:\L:");
+		g[0xa] -= 2;
+		
+		l[1] = g[16];
+		TSB#( 0, g[1], 0x00, 0x00, "ISO_TS::str::Params_Func");
+		if (l[1] == g[16])
+		{
+			TSUB( 0, 0, 0, 0, "ISO_TS::CC_CR::Params");
+		}
+		LABL( 0, 0, 0, 0xc8);
+	}
+	TRTS;
+}
+
+void ISO_TS::CC_CR::Params;
+	//HBYT( 0, l[1], 0x90, 0xc2, "Param Code:");
+	//CST#( 0, l[1], 0x00, 0x14, "ISO_TS::str::Params");
+	//CLSE( 0, 0x00, 0x00, 0x14, "Unknown");
+	//DBYT( 0, l[2], 0x90, 0xc2, "Param Length:");
+	DUMP( 0, g[2], 0x90, 0xc2, "Param Value:");
+	g[0xa] -= g[2];
+	TRTS;
+
+void ISO_TS::CC_CR::Params::TPDU_size()
+{
+	if (g[2] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "TPDU Size:");
+	}
+	if (g[2] != 1)
+	{
+		DUMP( 0, g[2], 0x90, 0xc2, "Called TSAP:");
+	}
+	g[0xa] -= g[2];
+	TRTS;
+}
+
+void ISO_TS::CC_CR::Params::TSAP_src()
+{
+	HEX#( 0, g[2], 0x90, 0xc2, "Calling TSAP:");
+	g[0xa] -= g[2];
+	TRTS;
+}
+
+void ISO_TS::CC_CR::Params::TSAP_dst()
+{
+	HEX#( 0, g[2], 0x90, 0xc2, "Called TSAP:");
+	g[0xa] -= g[2];
+	TRTS;
+}
+
+void ISO_TS::CC_CR::Params::alt_prot_classes()
+{
+	TRTS;
+}
+
+void ISO_TS::CC_CR::Params::max_pdu_size()
+{
+	if (g[2] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "TPDU Size:");
+	}
+	if (g[2] != 1)
+	{
+		DUMP( 0, g[2], 0x90, 0xc2, "Called TSAP:");
+	}
+	g[0xa] -= g[2];
+	TRTS;
+}
+
+// ------------------------------------------------------
+//  strings
+
+str# ISO_TS::str::codes;
+	 1 | ED: expedited data;
+	 8 | DR: disconnect request;
+	13 | CC: connection confirm;
+	14 | CR: connection request;
+	15 | DT: data;
+
+str# ISO_TS::str::codes_func;
+	 1 | ISO_TS::ED_DT;
+	 8 | ISO_TS::DR;
+	13 | ISO_TS::CC_CR;
+	14 | ISO_TS::CC_CR;
+	15 | ISO_TS::ED_DT;
+
+str# ISO_TS::str::Params;
+	0xc0 | TPDU-Size;
+	0xc1 | TSAP-SRC;
+	0xc2 | TSAP-DST;
+	0xc7 | Alternative Protocol Classes;
+	0xf0 | Preferred MAX TPDU Size;
+
+str# ISO_TS::str::Params_Func;
+	0xc0 | ISO_TS::CC_CR::Params::TPDU_size;
+	0xc1 | ISO_TS::CC_CR::Params::TSAP_src;
+	0xc2 | ISO_TS::CC_CR::Params::TSAP_dst;
+	0xc7 | ISO_TS::CC_CR::Params::alt_prot_classes;
+	0xf0 | ISO_TS::CC_CR::Params::max_pdu_size;
+
+
+// ------------------------------------------------------
+// ISO 8823
+// ------------------------------------------------------
+
+void ISO_8823::Main()
+{
+	LABL 0 0 0 b1 ISO 8823 OSI Presentation Protocol;
+	INCR  1;
+	DBYT 0 2 90 c2 Length:;
+	DUMP 0 2 90 c2 User Data:;
+	TRTS;
+}
+
+// ------------------------------------------------------
+// ISO 8327-1
+//
+// notes: 
+//  
+// g[0x1] = SPDU Type
+// g[0x2] = Length
+// g[0x3] = Param Type
+// g[0x4] = Param Length
+// ------------------------------------------------------
+
+
+void ISO_8327::Main()
+{
+	while (g[16] > 0)
+	{
+		GBYT 0 1;
+		if (g[1] == 0x61) //am: check for ISO_8823
+		{
+			TNXT -ISO_8823::Main;
+		}
+		//am: check if not SPDU type, then user data
+		if (g[1] != 0x01) && (g[1] != 0x00) && (g[1] != 0x02) && (g[1] != 0x05) && (g[1] != 0x07) && (g[1] != 0x08) && (g[1] != 0x09) && (g[1] != 0x0a) && (g[1] != 0x0c) && (g[1] != 0x0d) && (g[1] != 0x0e) && (g[1] != 0x0f)
+		{
+			if (g[1] != 0x10) && (g[1] != 0x15) && (g[1] != 0x16) && (g[1] != 0x19) && (g[1] != 0x1a) && (g[1] != 0x1d) 
+			{
+				if (g[1] != 0x21) && (g[1] != 0x22) && (g[1] != 0x29) && (g[1] != 0x2a)  && (g[1] != 0x2d)  && (g[1] != 0x30)  && (g[1] != 0x31)  && (g[1] != 0x32) && (g[1] != 0x35) && (g[1] != 0x39) && (g[1] != 0x3d) && (g[1] != 0x3e)
+				{
+					DUMP( 0, 0, 0x90, 0xc2, "User Data:");
+					TRTS;
+				}
+			}
+		}
+	
+		ISO_8327::First;
+	}
+}
+
+void ISO_8327::First()
+{
+	LABL 0 0 0 b1 ISO 8327 Session Protocol;
+	HBYT 0 1 90 c2 SPDU Type:;
+	CST# 0 1 00 14 ISO_8327::SPDU_Type;
+	CLSE 0 0 00 14 Unknown Type;
+	DBYT 0 2 90 c2 Length:;
+	if (g[2] > 0)
+	{
+		LABL 0 0 0 b7 Parameters;
+		while (g[2] > 0)
+		{
+			ISO_8327::Parameters;
+		}
+		LABL 0 0 0 b8;
+	}
+}
+
+void ISO_8327::Parameters()
+{
+	GBYT 0 3;
+	CST# 0 3 00 b9 ISO_8327::Param_Type;
+	CLSE 0 0 00 b9 Unknown Parameter Type;
+	HBYT 0 3 90 c2 Parameter Type:;
+	CST# 0 3 00 14 ISO_8327::Param_Type;
+	CLSE 0 0 00 14 Unknown Parameter Type;
+	g[2] -= 2;
+	DBYT 0 4 90 c2 Parameter Length:;
+	if (g[4] > 0)
+	{
+		if (g[2] > g[4])
+		{
+			DUMP 0 4 90 c2 Parameter Data:;
+			g[2] -= g[4];
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		if (g[2] < g[4])
+		{
+			DUMP 0 2 90 c2 Parameter Data:;
+			LABL 0 0 00 14 Length is greater than allowed;
+			g[2] -= g[2];
+			LABL 0 0 0 b8;
+			TRTS;
+		}
+		if (g[2] == g[4])
+		{
+			DUMP 0 4 90 c2 Parameter Data:;
+			g[2] -= g[4];
+			LABL 0 0 0 b8;
+			TRTS;
+		}		
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+}
+
+// ------------------------------------------------------
+//	strings
+
+str# ISO_8327::SPDU_Type;
+	0x00	| NULL;
+	0x01	| Data Transfer PDU;
+	0x02	| Please Tokens PDU;
+	0x05	| Expedited PDU;
+	0x07	| Prepare PDU;
+	0x08	| Not Finished PDU;
+	0x09	| Finish PDU;
+	0x0a	| Disconnect PDU;
+	0x0c	| Refuse PDU;
+	0x0d	| Connection Request PDU;
+	0x0e	| Connection Accept PDU;
+	0x0f	| Data Overflow PDU;
+	0x10	| Overflow Accept PDU;
+	0x15	| Tokens Confirm PDU;
+	0x16	| Give Tokens ACK PDU;
+	0x19	| Abort PDU;
+	0x1a	| Abort Accept PDU;
+	0x1d	| Activity Resume PDU;
+	0x21	| Typed Data PDU;
+	0x22	| Resynchronize ACK PDU;
+	0x29	| Session Major Sync Point PDU;
+	0x2a	| Session Major Sync ACK PDU;
+	0x2d	| Activity Start PDU;
+	0x30	| Exception Data PDU;
+	0x31	| Minor Sync Point PDU;
+	0x32	| Minor Sync ACK PDU;
+	0x35	| Resynchronize PDU;
+	0x39	| Activity Discard PDU;
+	0x3a	| Activity Discard ACK PDU;
+	0x3d	| Capability PDU;
+	0x3e	| Capability Data ACK PDU;
+	0x2000	| Exception Report PDU;
+
+str# ISO_8327::Param_Type;
+	0	| Null;
+	1	| Connection Identifier;
+	5	| Connect Accept Item;
+	9	| Called SS User Reference;
+	10	| Calling SS User Reference;
+	11	| Common Reference;
+	12	| Additional Reference Information;
+	15	| Sync Type Item;
+	16	| Token Item;
+	17	| Transport Disconnect;
+	19	| Protocol Options;
+	20	| Session Requirement;
+	21	| TSDU Maximum Size;
+	22	| Version Number;
+	23	| Initial Serial Number;
+	24	| Prepare Type;
+	25	| Enclosure Item;
+	26	| Token Setting Item;
+	27	| Resync Type;
+	33	| Linking Information;
+	42	| Serial Number;
+	49	| Reflect Parameter;
+	50	| Reason Code;
+	51	| Calling Session Selector;
+	52	| Called Session Selector;
+	53	| Second Resync Type;
+	54	| Second Serial Number;
+	55	| Second Initial Serial Number;
+	56	| Upper Limit Serial Number;
+	57	| Large Initial Serial Number;
+	58	| Large Second Initial Serial Number;
+	60	| Data Overflow;
+	193	| Session User Data;
+	194	| Session Extended User Data;
+

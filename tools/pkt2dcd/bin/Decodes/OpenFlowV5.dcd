@@ -1,0 +1,2002 @@
+//open network foundation Openflow
+//coded from https://www.opennetworking.org/images/stories/downloads/sdn-resources/onf-specifications/openflow/openflow-switch-v1.5.0.noipr.pdf
+//Version 5
+//ports config in Openflow.dcd
+//g[7] hold the OpenFlowMSGType
+//g[8] hold the OpenFlowLengthinHeader
+//g[42] holds the length of a inner length
+
+
+str# OpenFlow::Versions::Ldr;
+06	|	OpenFlow::V5;
+
+void OpenFlow::V5()
+{
+	DBYT 0 41 90 c2 Version:;
+		CEQU 06 41 0 14 OpenFlow 1.5;
+		CLSE 0 0 0 14 Not supported;
+	DBYT 0 7 90 c2 Type:;
+		CST# 0 7 0 14 OpenFlow::V5::Type;
+	DWRD 0 8 90 c2 Length(with Header):;
+	DLNG 0 9 90 c2 xid:;
+		CST#( 0, g[7], 0, 0xb7, OpenFlow::V5::Type );
+		TSB#( 0, g[7], 0, 0, OpenFlow::V5::Type::Ldr );
+		XLSE( 0, 0, 0, 0, OpenFlow::V3::DUMP );
+	LABL( 0, 0, 0, 0xb8 );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# OpenFlow::V5::Type;
+0	|	OFPT_HELLO;	*Immutablemessages
+1	|	OFPT_ERROR;	*Immutablemessages
+2	|	OFPT_ECHO_REQUEST;	*Immutablemessages
+3	|	OFPT_ECHO_REPLY;	*Immutablemessages
+4	|	OFPT_EXPERIMENTER;	*Immutablemessages
+5	|	OFPT_FEATURES_REQUEST;	*Switchconfigurationmessages.
+6	|	OFPT_FEATURES_REPLY;	*Switchconfigurationmessages
+7	|	OFPT_GET_CONFIG_REQUEST;	*Switchconfigurationmessages
+8	|	OFPT_GET_CONFIG_REPLY;	*Switchconfigurationmessages
+9	|	OFPT_SET_CONFIG;	*Switchconfiguraionmessages
+10	|	OFPT_PACKET_IN;	*Asynchronousmessages
+11	|	OFPT_FLOW_REMOVED;	*Asynchronousmessages
+12	|	OFPT_PORT_STATUS;	*Asynchronousmessages
+13	|	OFPT_PACKET_OUT;	*Controllercommandmessages
+14	|	OFPT_FLOW_MOD;	*Controllercommandmessages
+15	|	OFPT_GROUP_MOD;	*Controllercommandmessages
+16	|	OFPT_PORT_MOD;	*Controllercommandmessages
+17	|	OFPT_TABLE_MOD;	*Controllercommandmessages
+18	|	OFPT_MULTIPART_REQUEST;	*Statisticsmessages
+19	|	OFPT_MULTIPART_REPLY;	*Statisticsmessages
+20	|	OFPT_BARRIER_REQUEST;	*Barriermessages
+21	|	OFPT_BARRIER_REPLY;	*Barriermessages
+22	|	OFPT_QUEUE_GET_CONFIG_REQUEST;	*QueueConfigurationmessages
+23	|	OFPT_QUEUE_GET_CONFIG_REPLY;	*QueueConfigurationmessages
+24	|	OFPT_ROLE_REQUEST;	*Controllerrolechangerequestmessages
+25	|	OFPT_ROLE_REPLY;	*Controllerrolechangerequestmessages
+26	|	OFPT_GET_ASYNC_REQUEST;	*Asynchronousmessageconfiguration
+27	|	OFPT_GET_ASYNC_REPLY;	*Asynchronousmessageconfiguration
+28	|	OFPT_SET_ASYNC;	*Asynchronousmessageconfiguration
+29	|	OFPT_METER_MOD;	*Metersandratelimitersconfigurationmessages
+30	|	OFPT_ROLE_STATUS;	/* Controller role change event messages.  Async message */
+31	|	OFPT_TABLE_STATUS; /* Asynchronous messages. */ /* Async message */
+32	|	OFPT_REQUESTFORWARD; /* Request forwarding by the switch. */ /* Async message */
+33	|	OFPT_BUNDLE_CONTROL; /* Bundle operations (multiple messages as a single operation). *//* Controller/switch message */
+34	|	OFPT_BUNDLE_ADD_MESSAGE; /* Controller/switch message */
+35	|	OFPT_CONTROLLER_STATUS; /* Controller Status async message. *//* Async message */
+
+str# OpenFlow::V5::Type::Ldr;
+//0	|	OpenFlow::V5::Type::OFPT_HELLO;							*Immutablemessages -> is empty
+1	|	OpenFlow::V5::Type::OFPT_ERROR;							*Immutablemessages
+//2	|	OpenFlow::V5::Type::OFPT_ECHO_REQUEST;					*Immutablemessages -> is empty
+//3	|	OpenFlow::V5::Type::OFPT_ECHO_REPLY;					*Immutablemessages -> is empty
+//4	|	OpenFlow::V5::Type::OFPT_EXPERIMENTER;					*Immutablemessages
+5	|	OpenFlow::V5::Type::OFPT_FEATURES_REQUEST;				*Switchconfigurationmessages.
+6	|	OpenFlow::V5::Type::OFPT_FEATURES_REQUEST;				*=OFPT_FEATURES_REPLY
+//7	|	OpenFlow::V5::Type::OFPT_GET_CONFIG_REQUEST;			*Switchconfigurationmessages -> is empty
+8	|	OpenFlow::V5::Type::OFPT_GET_CONFIG_REPLY;				*Switchconfigurationmessages
+9	|	OpenFlow::V5::Type::OFPT_GET_CONFIG_REPLY;				*OFPT_SET_CONFIG same as OFPT_GET_CONFIG_REPLY
+10	|	OpenFlow::V5::Type::OFPT_PACKET_IN;						*Asynchronousmessages
+11	|	OpenFlow::V5::Type::OFPT_FLOW_REMOVED;					*Asynchronousmessages
+12	|	OpenFlow::V5::Type::OFPT_PORT_STATUS;					*Asynchronousmessages
+13	|	OpenFlow::V5::Type::OFPT_PACKET_OUT;					*Controllercommandmessages
+14	|	OpenFlow::V5::Type::OFPT_FLOW_MOD;						*Controllercommandmessages
+15	|	OpenFlow::V5::Type::OFPT_GROUP_MOD;						*Controllercommandmessages
+16	|	OpenFlow::V5::Type::OFPT_PORT_MOD;						*Controllercommandmessages
+17	|	OpenFlow::V5::Type::OFPT_TABLE_MOD;					*Controllercommandmessages
+//18	|	OpenFlow::V5::Type::OFPT_MULTIPART_REQUEST;			*Statisticsmessages
+//19	|	OpenFlow::V5::Type::OFPT_MULTIPART_REPLY;			*Statisticsmessages
+//20	|	OpenFlow::V5::Type::OFPT_BARRIER_REQUEST;			*Barriermessages -> is empty
+//21	|	OpenFlow::V5::Type::OFPT_BARRIER_REPLY;				*Barriermessages -> is empty
+//22	|	OpenFlow::V5::Type::OFPT_QUEUE_GET_CONFIG_REQUEST;	*QueueConfigurationmessages
+//23	|	OpenFlow::V5::Type::OFPT_QUEUE_GET_CONFIG_REPLY;	*QueueConfigurationmessages
+24	|	OpenFlow::V5::Type::OFPT_ROLE_REQUEST;				*Controllerrolechangerequestmessages
+25	|	OpenFlow::V5::Type::OFPT_ROLE_REQUEST;				*Controllerrolechangerequestmessages OFPT_ROLE_REPLY same as OFPT_ROLE_REQUEST
+26	|	OpenFlow::V5::Type::OFPT_GET_ASYNC_REQUEST;				*Asynchronousmessageconfiguration  -> is empty
+27	|	OpenFlow::V5::Type::OFPT_GET_ASYNC_REPLY;				*Asynchronousmessageconfiguration same as OFPT_GET_ASYNC_REPLY
+28	|	OpenFlow::V5::Type::OFPT_GET_ASYNC_REPLY;				*Asynchronousmessageconfiguration
+29	|	OpenFlow::V5::Type::OFPT_METER_MOD;					*Metersandratelimitersconfigurationmessages
+30	|	OpenFlow::V5::Type::OFPT_ROLE_STATUS;				/* Controller role change event messages.  Async message */
+//31	|	OpenFlow::V5::Type::OFPT_TABLE_STATUS;				/* Asynchronous messages. */ /* Async message */
+//32	|	OpenFlow::V5::Type::OFPT_REQUESTFORWARD;			/* Request forwarding by the switch. */ /* Async message */
+//33	|	OpenFlow::V5::Type::OFPT_BUNDLE_CONTROL;			/* Bundle operations (multiple messages as a single operation). *//* Controller/switch message */
+//34	|	OpenFlow::V5::Type::OFPT_BUNDLE_ADD_MESSAGE;		/* Controller/switch message */
+//35	|	OpenFlow::V5::Type::OFPT_CONTROLLER_STATUS;			/* Controller Status async message. *//* Async message */
+
+str# OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type;
+0x0		|	OFPPDPT_ETHERNET;
+0x1		|	OFPPDPT_OPTICAL;
+0x2		|	OFPPDPT_PIPELINE_INPUT;
+0x3		|	OFPPDPT_PIPELINE_OUTPUT;
+0x4		|	OFPPDPT_RECIRCULATE;
+0xffff	|	OFPPDPT_EXPERIMENTER;
+str# OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type::ldr;
+0x0		|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_ETHERNET;
+0x1		|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_OPTICAL;
+0x2		|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_PIPELINE_INPUT;
+0x3		|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_PIPELINE_OUTPUT;
+0x4		|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_RECIRCULATE;
+0xffff	|	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_EXPERIMENTER;
+str# OpenFlow::V5::Portresvalues;
+0xff00	|	OFPP_MAX;
+0xfff7	|	OFPP_UNSET;
+0xfff8	|	OFPP_IN_PORT;
+0xfff9	|	OFPP_TABLE;
+0xfffa	|	OFPP_NORMAL;
+0xfffb	|	OFPP_FLOOD;
+0xfffc	|	OFPP_ALL;
+0xfffd	|	OFPP_CONTROLLER;
+0xfffe	|	OFPP_LOCAL;
+0xffff	|	OFPP_ANY;
+
+str# OpenFlow::V5::Match::OXM::class;
+0x0000	|	OFPXMC_NMX_0;
+0x0001	|	OFPXMC_NXM_1;
+0x8000	|	OFPXMC_OPENFLOW_BASIC;
+0x8001	|	OFPXMC_PACKET_REGS;
+0xffff	|	OFPXMC_EXPERIMENTER;
+
+str# OpenFlow::V5::OXM::oxm_ofb_match_fields;
+0	|	OFPXMT_OFB_IN_PORT;
+1	|	OFPXMT_OFB_IN_PHY_PORT;
+2	|	OFPXMT_OFB_METADATA;
+3	|	OFPXMT_OFB_ETH_DST;
+4	|	OFPXMT_OFB_ETH_SRC;
+5	|	OFPXMT_OFB_ETH_TYPE;
+6	|	OFPXMT_OFB_VLAN_VID;
+7	|	OFPXMT_OFB_VLAN_PCP;
+8	|	OFPXMT_OFB_IP_DSCP;
+9	|	OFPXMT_OFB_IP_ECN;
+10	|	OFPXMT_OFB_IP_PROTO;
+11	|	OFPXMT_OFB_IPV4_SRC;
+12	|	OFPXMT_OFB_IPV4_DST;
+13	|	OFPXMT_OFB_TCP_SRC;
+14	|	OFPXMT_OFB_TCP_DST;
+15	|	OFPXMT_OFB_UDP_SRC;
+16	|	OFPXMT_OFB_UDP_DST;
+17	|	OFPXMT_OFB_SCTP_SRC;
+18	|	OFPXMT_OFB_SCTP_DST;
+19	|	OFPXMT_OFB_ICMPV4_TYPE;
+20	|	OFPXMT_OFB_ICMPV4_CODE;
+21	|	OFPXMT_OFB_ARP_OP;
+22	|	OFPXMT_OFB_ARP_SPA;
+23	|	OFPXMT_OFB_ARP_TPA;
+24	|	OFPXMT_OFB_ARP_SHA;
+25	|	OFPXMT_OFB_ARP_THA;
+26	|	OFPXMT_OFB_IPV6_SRC;
+27	|	OFPXMT_OFB_IPV6_DST;
+28	|	OFPXMT_OFB_IPV6_FLABEL;
+29	|	OFPXMT_OFB_ICMPV6_TYPE;
+30	|	OFPXMT_OFB_ICMPV6_CODE;
+31	|	OFPXMT_OFB_IPV6_ND_TARGET;
+32	|	OFPXMT_OFB_IPV6_ND_SLL;
+33	|	OFPXMT_OFB_IPV6_ND_TLL;
+34	|	OFPXMT_OFB_MPLS_LABEL;
+35	|	OFPXMT_OFB_MPLS_TC;
+36	|	OFPXMT_OFP_MPLS_BOS;
+37	|	OFPXMT_OFB_PBB_ISID;
+38	|	OFPXMT_OFB_TUNNEL_ID;
+39	|	OFPXMT_OFB_IPV6_EXTHDR;
+41	|	OFPXMT_OFB_PBB_UCA;
+42	|	OFPXMT_OFB_TCP_FLAGS;
+43	|	OFPXMT_OFB_ACTSET_OUTPUT;
+44	|	OFPXMT_OFB_PACKET_TYPE;
+
+//--------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_ERROR()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::type );
+	DWRD( 0, l[2], 0x90, 0xc2, "Code:" );
+	if (l[1] == 0)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::HELLO_FAILED::code );
+		CHR#( 0, g[16], 0x90, 0xc2, "Data:" );
+		
+	}
+	if (l[1] == 1)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::BAD_REQUEST::code );
+	}
+	if (l[1] == 2)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::BAD_ACTION::code );
+	}
+	if (l[1] == 3)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::BAD_INSTRUCTION::code );
+	}
+	if (l[1] == 4)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::BAD_MATCH::code );
+	}
+	if (l[1] == 5)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::FLOW_MOD_FAILED::code );
+	}
+	if (l[1] == 6)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::GROUP_MOD_FAILED::code );
+	}
+	if (l[1] == 7)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_PORT_MOD_FAILED::code );
+	}
+	if (l[1] == 8)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_TABLE_MOD_FAILED::code );
+	}
+	if (l[1] == 9)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_QUEUE_OP_FAILED::code );
+	}
+	if (l[1] == 10)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_SWITCH_CONFIG_FAILED::code );
+	}
+	if (l[1] == 11)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_ROLE_REQUEST_FAILED::code );
+	}
+	if (l[1] == 12)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_METER_MOD_FAILED::code );
+	}
+	if (l[1] == 13)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_TABLE_FEATURES_FAILED::code );
+	}
+	if (l[1] == 14)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_BAD_PROPERTY::code );	
+	}
+	if (l[1] == 15)
+	{
+	CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_ASYNC_CONFIG_FAILED::code );
+	}
+	if (l[1] == 16)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_FLOW_MONITOR_FAILED::code );
+	}
+	if (l[1] == 17)
+	{
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_ERROR::OFPET_BUNDLE_FAILED::code );
+	}
+	LABL( 0, 0, 0x90, 0xc9, "Data:" );
+	if (g[9] != 0)
+	{	
+		OpenFlow::V5;
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+str# OpenFlow::V5::Type::OFPT_ERROR::type;
+0	|	OFPET_HELLO_FAILED;
+1	|	OFPET_BAD_REQUEST;
+2	|	OFPET_BAD_ACTION;
+3	|	OFPET_BAD_INSTRUCTION;
+4	|	OFPET_BAD_MATCH;
+5	|	OFPET_FLOW_MOD_FAILED;
+6	|	OFPET_GROUP_MOD_FAILED;
+7	|	OFPET_PORT_MOD_FAILED;
+8	|	OFPET_TABLE_MOD_FAILED;
+9	|	OFPET_QUEUE_OP_FAILED;
+10	|	OFPET_SWITCH_CONFIG_FAILED;
+11	|	OFPET_ROLE_REQUEST_FAILED;
+12	|	OFPET_METER_MOD_FAILED;
+13	|	OFPET_TABLE_FEATURES_FAILED;
+14	|	OFPET_BAD_PROPERTY;					/* Some property is invalid. */
+15	|	OFPET_ASYNC_CONFIG_FAILED; 			/* Asynchronous config request failed. */
+16	|	OFPET_FLOW_MONITOR_FAILED; 			/* Setting flow monitor failed. */
+17	|	OFPET_BUNDLE_FAILED;				/* Bundle operation failed. */
+0xffff	|	OFPET_EXPERIMENTER;
+str# OpenFlow::V5::Type::OFPT_ERROR::HELLO_FAILED::code;
+0	|	OFPHFC_INCOMPATIBLE;
+1	|	OFPHFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::BAD_REQUEST::code;
+0	|	OFPBRC_BAD_VERSION;
+1	|	OFPBRC_BAD_TYPE;
+2	|	OFPBRC_BAD_MULTIPART;
+3	|	OFPBRC_BAD_EXPERIMENTER;
+4	|	OFPBRC_BAD_EXP_TYPE;
+5	|	OFPBRC_EPERM;
+6	|	OFPBRC_BAD_LEN;
+7	|	OFPBRC_BUFFER_EMPTY;
+8	|	OFPBRC_BUFFER_UNKNOWN;
+9	|	OFPBRC_BAD_TABLE_ID;
+10	|	OFPBRC_IS_SLAVE;
+11	|	OFPBRC_BAD_PORT;
+12	|	OFPBRC_BAD_PACKET;
+13	|	OFPBRC_MULTIPART_BUFFER_OVERFLOW;
+14	|	OFPBRC_MULTIPART_REQUEST_TIMEOUT;
+15	|	OFPBRC_MULTIPART_REPLY_TIMEOUT;
+16	|	OFPBRC_MULTIPART_BAD_SCHED;
+17	|	OFPBRC_PIPELINE_FIELDS_ONLY;
+18	|	OFPBRC_UNKNOWN;
+str# OpenFlow::V5::Type::OFPT_ERROR::BAD_ACTION::code;
+0	|	OFPBAC_BAD_TYPE;
+1	|	OFPBAC_BAD_LEN;
+2	|	OFPBAC_BAD_EXPERIMENTER;
+3	|	OFPBAC_BAD_EXP_TYPE;
+4	|	OFPBAC_BAD_OUT_PORT;
+5	|	OFPBAC_BAD_ARGUMENT;
+6	|	OFPBAC_EPERM;
+7	|	OFPBAC_TOO_MANY;
+8	|	OFPBAC_BAD_QUEUE;
+9	|	OFPBAC_BAD_OUT_GROUP;
+10	|	OFPBAC_MATCH_INCONSISTENT;
+11	|	OFPBAC_UNSUPPORTED_ORDER;
+12	|	OFPBAC_BAD_TAG;
+13	|	OFPBAC_BAD_SET_TYPE;
+14	|	OFPBAC_BAD_SET_LEN;
+15	|	OFPBAC_BAD_SET_ARGUMENT;
+16	|	OFPBAC_BAD_SET_MASK;
+str# OpenFlow::V5::Type::OFPT_ERROR::BAD_INSTRUCTION::code;
+0	|	OFPBIC_UNKNOWN_INST;
+1	|	OFPBIC_UNSUP_INST;
+2	|	OFPBIC_BAD_TABLE_ID;
+3	|	OFPBIC_UNSUP_METADATA;
+4	|	OFPBIC_UNSUP_METADATA_MASK;
+5	|	OFPBIC_BAD_EXPERIMENTER;
+6	|	OFPBIC_BAD_EXP_TYPE;
+7	|	OFPBIC_BAD_LEN;
+8	|	OFPBIC_EPERM;
+9	|	OFPBIC_DUP_INST;
+str# OpenFlow::V5::Type::OFPT_ERROR::BAD_MATCH::code;
+0	|	OFPBMC_BAD_TYPE;
+1	|	OFPBMC_BAD_LEN;
+2	|	OFPBMC_BAD_TAG;
+3	|	OFPBMC_BAD_DL_ADDR_MASK;
+4	|	OFPBMC_BAD_NW_ADDR_MASK;
+5	|	OFPBMC_BAD_WILDCARDS;
+6	|	OFPBMC_BAD_FIELD;
+7	|	OFPBMC_BAD_VALUE;
+8	|	OFPBMC_BAD_MASK;
+9	|	OFPBMC_BAD_PREREQ;
+10	|	OFPBMC_DUP_FIELD;
+11	|	OFPBMC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::FLOW_MOD_FAILED::code;
+0	|	OFPFMFC_UNKNOWN;
+1	|	OFPFMFC_TABLE_FULL;
+2	|	OFPFMFC_BAD_TABLE_ID;
+3	|	OFPFMFC_OVERLAP;
+4	|	OFPFMFC_EPERM;
+5	|	OFPFMFC_BAD_TIMEOUT;
+6	|	OFPFMFC_BAD_COMMAND;
+7	|	OFPFMFC_BAD_FLAGS;
+8	|	OFPFMFC_CANT_SYNC;
+9	|	OFPFMFC_BAD_PRIORITY;
+10	|	OFPFMFC_IS_SYNC;
+str# OpenFlow::V5::Type::OFPT_ERROR::GROUP_MOD_FAILED::code;
+0	|	OFPGMFC_GROUP_EXISTS;
+1	|	OFPGMFC_INVALID_GROUP;
+2	|	OFPGMFC_WEIGHT_UNSUPPORTED;
+3	|	OFPGMFC_OUT_OF_GROUPS;
+4	|	OFPGMFC_OUT_OF_BUCKETS;
+5	|	OFPGMFC_CHAINING_UNSUPPORTED;
+6	|	OFPGMFC_WATCH_UNSUPPORTED;
+7	|	OFPGMFC_LOOP;
+8	|	OFPGMFC_UNKNOWN_GROUP;
+9	|	OFPGMFC_CHAINED_GROUP;
+10	|	OFPGMFC_BAD_TYPE;
+11	|	OFPGMFC_BAD_COMMAND;
+12	|	OFPGMFC_BAD_BUCKET;
+13	|	OFPGMFC_BAD_WATCH;
+14	|	OFPGMFC_EPERM;
+15	|	OFPGMFC_UNKNOWN_BUCKET;
+16	|	OFPGMFC_BUCKET_EXISTS;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_PORT_MOD_FAILED::code;
+0	|	OFPPMFC_BAD_PORT;
+1	|	OFPPMFC_BAD_HW_ADDR;
+2	|	OFPPMFC_BAD_CONFIG;
+3	|	OFPPMFC_BAD_ADVERTISE;
+4	|	OFPPMFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_TABLE_MOD_FAILED::code;
+0	|	OFPTMFC_BAD_TABLE;
+1	|	OFPTMFC_BAD_CONFIG;
+2	|	OFPTMFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_QUEUE_OP_FAILED::code;
+0	|	OFPQOFC_BAD_PORT;
+1	|	OFPQOFC_BAD_QUEUE;
+2	|	OFPQOFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_SWITCH_CONFIG_FAILED::code;
+0	|	OFPSCFC_BAD_FLAGS;
+1	|	OFPSCFC_BAD_LEN;
+2	|	OFPQCFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_ROLE_REQUEST_FAILED::code;
+0	|	OFPRRFC_STALE;
+1	|	OFPRRFC_UNSUP;
+2	|	OFPRRFC_BAD_ROLE;
+3	|	OFPRRFC_ID_UNSUP;
+4	|	OFPRRFC_ID_IN_USE;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_METER_MOD_FAILED::code;
+0	|	OFPMMFC_UNKNOWN;
+1	|	OFPMMFC_METER_EXISTS;
+2	|	OFPMMFC_INVALID_METER;
+3	|	OFPMMFC_UNKNOWN_METER;
+4	|	OFPMMFC_BAD_COMMAND;
+5	|	OFPMMFC_BAD_FLAGS;
+6	|	OFPMMFC_BAD_RATE;
+7	|	OFPMMFC_BAD_BURST;
+8	|	OFPMMFC_BAD_BAND;
+9	|	OFPMMFC_BAD_BAND_VALUE;
+10	|	OFPMMFC_OUT_OF_METERS;
+11	|	OFPMMFC_OUT_OF_BANDS;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_TABLE_FEATURES_FAILED::code;
+0	|	OFPTFFC_BAD_TABLE;
+//1	|	OFPTFFC_BAD_METADATA;
+//2	|	OFPTFFC_BAD_TYPE;
+//3	|	OFPTFFC_BAD_LEN;
+//4	|	OFPTFFC_BAD_ARGUMENT;
+5	|	OFPTFFC_EPERM;
+6	|	OFPTFFC_BAD_CAPA;
+7	|	OFPTFFC_BAD_MAX_ENT;
+8	|	OFPTFFC_BAD_FEATURES;
+9	|	OFPTFFC_BAD_COMMAND;
+10	|	OFPTFFC_TOO_MANY;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_BAD_PROPERTY::code;
+0	|	OFPBPC_BAD_TYPE;
+1	|	OFPBPC_BAD_LEN;
+2	|	OFPBPC_BAD_VALUE;
+3	|	OFPBPC_TOO_MANY;
+4	|	OFPBPC_DUP_TYPE;
+5	|	OFPBPC_BAD_EXPERIMENTER;
+6	|	OFPBPC_BAD_EXP_TYPE;
+7	|	OFPBPC_BAD_EXP_VALUE;
+8	|	OFPBPC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_ASYNC_CONFIG_FAILED::code;
+0	|	OFPACFC_INVALID;
+1	|	OFPACFC_UNSUPPORTED;
+2	|	OFPACFC_EPERM;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_FLOW_MONITOR_FAILED::code;
+0	|	OFPMOFC_UNKNOWN;
+1	|	OFPMOFC_MONITOR_EXISTS;
+2	|	OFPMOFC_INVALID_MONITOR;
+3	|	OFPBPC_BAD_VALUE;
+4	|	OFPMOFC_UNKNOWN_MONITOR;
+5	|	OFPMOFC_BAD_COMMAND;
+6	|	OFPMOFC_BAD_FLAGS;
+7	|	OFPMOFC_BAD_TABLE_ID;
+8	|	OFPMOFC_BAD_OUT;
+str# OpenFlow::V5::Type::OFPT_ERROR::OFPET_BUNDLE_FAILED::code;
+0	|	OFPBFC_UNKNOWN;
+1	|	OFPBFC_EPERM;
+2	|	OFPBFC_BAD_ID;
+3	|	OFPBPC_BAD_VALUE;
+4	|	OFPBFC_BUNDLE_EXIST;
+5	|	OFPBFC_BUNDLE_CLOSED;
+6	|	OFPBFC_OUT_OF_BUNDLES;
+7	|	OFPBFC_BAD_TYPE;
+8	|	OFPBFC_BAD_FLAGS;
+9	|	OFPBFC_MSG_BAD_LEN;
+10	|	OFPBFC_MSG_BAD_XID;
+11	|	OFPBFC_MSG_UNSUP;
+12	|	OFPBFC_MSG_CONFLICT;
+13	|	OFPBFC_MSG_TOO_MANY;
+14	|	OFPBFC_MSG_FAILED;
+15	|	OFPBFC_TIMEOUT;
+16	|	OFPBFC_BUNDLE_IN_PROGRESS;
+17	|	OFPBFC_SCHED_NOT_SUPPORTED;
+18	|	OFPBFC_SCHED_FUTURE;
+19	|	OFPBFC_SCHED_PAST;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_FEATURES_REQUEST()
+{	
+	D64B( 0, l[1], 0x90, 0xc2, "Datapath_id:" );
+	DLNG( 0, l[2], 0x90, 0xc2, "Buffers:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Tables:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Auxiliary_id:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Padding[2]:" );
+	BLNG( 0, l[6], 0x90, 0xc9, "Capabilities:" );
+		LABL 0 0  0  d4 xxxxxxxx xxxxxxxx xxxxx... x..x.... reserved;
+		CBIT 0 46 00 d4 ........ ........ ........ .......1 OFPC_FLOW_STATS: set;
+		CLSE 0  0 00 d4 ........ ........ ........ .......0 OFPC_FLOW_STATS: not set;
+		CBIT 1 46 00 d4 ........ ........ ........ ......1. OFPC_TABLE_STATS: set;
+		CLSE 0  0 00 d4 ........ ........ ........ ......0. OFPC_TABLE_STATS: not set;
+		CBIT 2 46 00 d4 ........ ........ ........ .....1.. OFPC_PORT_STATS: set;
+		CLSE 0  0 00 d4 ........ ........ ........ .....0.. OFPC_PORT_STATS: not set;
+		CBIT 3 46 00 d4 ........ ........ ........ ....1... OFPC_GROUP_STATS: set;
+		CLSE 0  0 00 d4 ........ ........ ........ ....0... OFPC_GROUP_STATS: not set;
+		CBIT 5 46 00 d4 ........ ........ ........ ..1..... OFPC_IP_REASM: set;
+		CLSE 0  0 00 d4 ........ ........ ........ ..0..... OFPC_IP_REASM: not set;
+		CBIT 6 46 00 d4 ........ ........ ........ .1...... OFPC_QUEUE_STATS: set;
+		CLSE 0  0 00 d4 ........ ........ ........ .0...... OFPC_QUEUE_STATS: not set;
+		CBIT 8 46 00 d4 ........ ........ .......1 ........ OFPC_PORT_BLOCKED: set;
+		CLSE 0  0 00 d4 ........ ........ .......0 ........ OFPC_PORT_BLOCKED: not set;
+		CBIT 9 46 00 d4 ........ ........ ......1. ........ OFPC_BUNDLES: set;
+		CLSE 0  0 00 d4 ........ ........ ......0. ........ OFPC_BUNDLES: not set;
+		CBIT 10 46 00 d4 ........ ........ .....1.. ........ OFPC_FLOW_MONITORING: set;
+		CLSE 0  0  00 d4 ........ ........ .....0.. ........ OFPC_FLOW_MONITORING: not set;
+	LABL 0 0 0 c8;
+	HLNG( 0, l[7], 0x90, 0xc2, "Reserved:" );
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_GET_CONFIG_REPLY()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Flags:" );
+		LABL 0 0  0  d4 xxxxx... x..x.... reserved;
+		CBIT 0 46 00 d4 ........ .......1 OFPC_FRAG_NORMAL: set;
+		CLSE 0  0 00 d4 ........ .......0 OFPC_FRAG_NORMAL: not set;
+		CBIT 1 46 00 d4 ........ ......1. OFPC_FRAG_DROP: set;
+		CLSE 0  0 00 d4 ........ ......0. OFPC_FRAG_DROP: not set;
+		CBIT 2 46 00 d4 ........ .....1.. OFPC_FRAG_REASM: set;
+		CLSE 0  0 00 d4 ........ .....0.. OFPC_FRAG_REASM: not set;
+		CBIT 3 46 00 d4 ........ ....1... OFPC_FRAG_MASK: set;
+		CLSE 0  0 00 d4 ........ ....0... OFPC_FRAG_MASK: not set;
+	DWRD( 0, l[2], 0x90, 0xc2, "Miss_send_len:" );
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_PACKET_IN()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "Buffer ID:" );
+	DWRD( 0, l[5], 0x90, 0xc2, "Total length:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Reason:" );
+		CST#( 0, l[6], 0, 0x14, OpenFlow::V5::Type::OFPT_PACKET_IN::Reason );
+		CLSE( 0, l[6], 0, 0x14, "Unknown" );
+	DBYT( 0, l[7], 0x90, 0xc2, "Table ID:" );
+	D64B( 0, 0, 0x90, 0xc2, "Cookie:" );
+	LABL 0 0 00 b1 Match:;
+	DWRD( 0, l[1], 0x90, 0xc2, "match-type:" );
+		CEQU( 0, l[1], 0, 0x14, "OFPMT_STANDARD" );
+		CEQU( 1, l[1], 0, 0x14, "OFPMT_OXM" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Length:" );
+		g[9] = l[2];		
+		g[12] = g[9];
+		g[9] -= 4;
+		//DGLB( 0, g[9], 0x90, 0xc2, "lengthg9:" );	
+		while (g[9] > 4)
+		{
+			GBYT( 2, l[2]);
+			SHFR( 1, l[2]);
+			GWRD( 0, l[1]);
+			if (l[1] == 0x8000)
+			{
+			CST#( 0, l[2], 0, 0xb7, OpenFlow::V5::Match::OXM::field );
+			HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+				CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Match::OXM::class );
+				
+			DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+				CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Match::OXM::field );
+			DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+				CEQU( 0, g[43], 0, 0x14, "no" );
+				CEQU( 1, g[43], 0, 0x14, "yes" );
+			DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+			g[42] = l[4];
+			OpenFlow::V3::DUMP2;
+			g[9] -= 4;
+			g[9] -= g[42];
+			LABL( 0, 0, 0, 0xb8 );
+			}
+		}
+		if (g[9] != 0)
+		{
+			HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		}
+		if (g[12] < 16)
+		{
+			l[30] = 16;
+			l[30] -= g[12];
+			HEX#( 0, l[30], 0x90, 0xc2, "Padding:" );
+		}
+		if (g[12] > 16)
+		{
+			MODG( 8, g[12] );
+			HEX#( 0, g[12], 0x90, 0xc2, "Padding:" );
+		}
+	LABL( 0, 0, 0, 0xb8 );
+	
+	if (g[16] > 0)
+	{
+		LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+		ETHR 0 0 90 c2 Destination:\D:;
+		ETHR 0 0 90 c2 Source:\S:;
+		g[1] = pw[0];
+		if (g[1] <= 0x5dc)
+		{
+			802_2();				//SI: so this used to tsub into 802_2 but now if you go to 802_2, you are it
+			TRTS;					//		because it would go into ether::Branching_2 ... which would show a protocol type... and that's no good!
+		}
+		if (g[1] == 0x8808)			//ethernet PAUSE frame - for gig
+		{
+			802.3::MAC_Control;
+			TRTS;
+		}
+		TGTE 0 10 0 0 RETURN;		*si: stop if there's no data left!!!!
+		if (g[1] == 0x886F)			
+		{
+			TRTS;
+		}
+		Ether::Branching_2();
+	}
+}
+
+str# OpenFlow::V5::Type::OFPT_PACKET_IN::Reason;
+0	|	OFPR_TABLE_MISS;
+1	|	OFPR_APPLY_ACTION;
+2	|	OFPR_INVALID_TTL;
+3	|	OFPR_ACTION_SET;
+4	|	OFPR_GROUP;
+5	|	OFPR_PACKET_OUT;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_FLOW_REMOVED()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Cookie:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "Priority:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Reason:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_FLOW_REMOVED::Reason );
+		CLSE( 0, l[2], 0, 0x14, "Unknown" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Table ID:" );
+	DLNG( 0, l[4], 0x90, 0xc2, "Duration sec:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "Duration nsec:" );
+	DWRD( 0, 0, 0x90, 0xc2, "IDLE_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "HARD_timeout:" );
+	D64B( 0, 0, 0x90, 0xc2, "Packet count:" );
+	D64B( 0, 0, 0x90, 0xc2, "Byte Count:" );
+	OpenFlow::V5::Match;
+}
+
+str# OpenFlow::V5::Type::OFPT_FLOW_REMOVED::Reason;
+0	|	OFPRR_IDLE_TIMEOUT;
+1	|	OFPRR_HARD_TIMEOUT;
+2	|	OFPRR_DELETE;
+3	|	OFPRR_GROUP_DELETE;
+4	|	OFPRR_METER_DELETE;
+5	|	OFPRR_EVICTION;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_PORT_STATUS()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Reason:" );			
+		CEQU( 0, l[1], 0, 0x14, "OFPPR_ADD" );
+		CEQU( 0, l[1], 0, 0x14, "OFPPR_DELETE" );
+		CEQU( 0, l[1], 0, 0x14, "OFPPR_MODIFY" );
+		CLSE( 0, l[1], 0, 0x14, "reserved" );
+	HEX#( 0, 7, 0x90, 0xc2, "Padding:" );
+	while (g[16] > 4)
+	{
+		LABL 0 0 0 b7 Port # - ;
+		GLNG( 0, l[5] );
+		DGLB( 0, l[5], 0x07, 0x07 );
+			HLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+				ANDG( 0xffff, l[5]);
+				CST#( 0, l[5], 0, 0x14, OpenFlow::V5::Portresvalues );
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			ETHR( 0, 0, 0x90, 0xc2, "HW Adress:" );
+			HEX#( 2, 0, 0x90, 0xc2, "Padding:" );
+			CHR#( 0, 16, 0x90, 0xc2, "Name:" );
+			BLNG( 0, l[8], 0x90, 0xc9, "Config:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[8], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx x..xx.x. reserved" );
+				CBIT( 0, l[8], 0, 0xd4, "........ ........ ........ .......1 OFPPC_PORT_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPC_PORT_DOWN: False");
+				CBIT( 2, l[8], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_NO_RECV: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_NO_RECV: False");
+				CBIT( 5, l[8], 0, 0xd4, "........ ........ ........ ..1..... OFPPC_NO_FWD: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ..0..... OFPPC_NO_FWD: False");
+				CBIT( 6, l[8], 0, 0xd4, "........ ........ ........ .1...... OFPPC_NO_PACKET_IN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .0...... OFPPC_NO_PACKET_IN: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[9], 0x90, 0xc9, "State:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[9], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+				CBIT( 0, l[9], 0, 0xd4, "........ ........ ........ .......1 OFPPS_LINK_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPS_LINK_DOWN: False");
+				CBIT( 1, l[9], 0, 0xd4, "........ ........ ........ ......1. OFPPS_BLOCKED: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPPS_BLOCKED: False");
+				CBIT( 2, l[9], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_LIVE: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_LIVE: False");
+				LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		while (g[16] > 4)
+		{
+			HWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+				CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type );
+				CLSE( 0, l[1], 0, 0x14, "Reserved" );
+			HWRD( 0, g[42], 0x90, 0xc2, "Length:" );
+			TSB#( 0, l[1], 0, 0, OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type::ldr );
+			LABL( 0, 0, 0, 0xb8 );
+			SKIP 1;
+			DUMP( 0, g[42], 0x90, 0xc2, "Data:" );
+		}
+	}
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_PACKET_OUT()
+{
+	HLNG( 0, 0, 0x90, 0xc2, "Buffer ID:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "In Port:" );
+		ANDG( 0xffff, l[5]);
+		CST#( 0, l[5], 0, 0x14, OpenFlow::V5::Portresvalues );
+	DWRD( 0, l[5], 0x90, 0xc2, "Actions length:" );
+	HEX#( 0, 6, 0x90, 0xc2, "Padding:" );
+	while (l[5] > 0)
+	{
+		DGLB 0 45 90 c2 l5:;
+		GWRD( 0, l[6]);
+		LABL( 0, 0, 0, 0xb7, "Action - " );
+		CST#( 0, l[6], 0, 0x07, OpenFlow::V5::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		g[42] = l[9];
+		g[42] -= 4;
+		g[9] -= 4;
+		l[11]  = g[16];
+		//DGLB( 0, g[42], 0x90, 0xc2, " g42:" );
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field::ldr );
+		//XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= g[42];
+		l[5] -= l[9];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );
+		}		
+		LABL( 0, 0, 0, 0xb8 );
+	}	
+		if (g[16] > 0)
+		{
+			LABL 0 0 0 b1 Ethernet Type 2\Ethernet 2:;
+			ETHR 0 0 90 c2 Destination:\D:;
+			ETHR 0 0 90 c2 Source:\S:;
+			g[1] = pw[0];
+			if (g[1] <= 0x5dc)
+			{
+				802_2();
+				TRTS;
+			}
+			if (g[1] == 0x8808)
+			{
+				802.3::MAC_Control;
+				TRTS;
+			}
+			TGTE 0 10 0 0 RETURN;
+			if (g[1] == 0x886F)
+			{
+				TRTS;
+			}
+			Ether::Branching_2();
+		}
+}
+
+
+str# OpenFlow::V5::Instruction::field;
+0	|	OFPAT_OUTPUT;
+11	|	OFPAT_COPY_TTL_OUT;
+12	|	OFPAT_COPY_TTL_IN;
+15	|	OFPAT_SET_MPLS_TTL;
+16	|	OFPAT_DEC_MPLS_TTL;
+17	|	OFPAT_PUSH_VLAN;
+18	|	OFPAT_POP_VLAN;
+19	|	OFPAT_PUSH_MPLS;
+20	|	OFPAT_POP_MPLS;
+21	|	OFPAT_SET_QUEUE;
+22	|	OFPAT_GROUP;
+23	|	OFPAT_SET_NW_TTL;
+24	|	OFPAT_DEC_NW_TTL;
+25	|	OFPAT_SET_FIELD;
+26	|	OFPAT_PUSH_PBB;
+27	|	OFPAT_POP_PBB;
+28	|	OFPAT_COPY_FIELD;
+29	|	OFPAT_METER;
+0xffff	|	OFPAT_EXPERIMENTER;
+str# OpenFlow::V5::Instruction::field::ldr;
+0	|	OpenFlow::V5::Instruction::OFPAT_OUTPUT;
+11	|	OpenFlow::V5::Instruction::OFPAT_COPY_TTL_OUT;
+12	|	OpenFlow::V5::Instruction::OFPAT_COPY_TTL_IN;
+15	|	OpenFlow::V5::Instruction::OFPAT_SET_MPLS_TTL;
+16	|	OpenFlow::V5::Instruction::OFPAT_DEC_MPLS_TTL;
+17	|	OpenFlow::V5::Instruction::OFPAT_PUSH_VLAN;
+18	|	OpenFlow::V5::Instruction::OFPAT_POP_VLAN;
+19	|	OpenFlow::V5::Instruction::OFPAT_PUSH_MPLS;
+20	|	OpenFlow::V5::Instruction::OFPAT_POP_MPLS;
+21	|	OpenFlow::V5::Instruction::OFPAT_SET_QUEUE;
+22	|	OpenFlow::V5::Instruction::OFPAT_GROUP;
+23	|	OpenFlow::V5::Instruction::OFPAT_SET_NW_TTL;
+24	|	OpenFlow::V5::Instruction::OFPAT_DEC_NW_TTL;
+25	|	OpenFlow::V5::Instruction::OFPAT_SET_FIELD;
+26	|	OpenFlow::V5::Instruction::OFPAT_PUSH_PBB;
+27	|	OpenFlow::V5::Instruction::OFPAT_POP_PBB;
+28	|	OpenFlow::V5::Instruction::OFPAT_COPY_FIELD;
+29	|	OpenFlow::V5::Instruction::OFPAT_METER;
+0xffff	|	OpenFlow::V5::Instruction::OFPAT_EXPERIMENTER;
+
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_FLOW_MOD()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Cookie:" );
+	D64B( 0, 0, 0x90, 0xc2, "Cookie_mask:" );
+	//flow actions
+	DBYT( 0, 0, 0x90, 0xc2, "Table_id:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Command:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::commands );
+	DWRD( 0, 0, 0x90, 0xc2, "IDLE_timeout:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Hard_timeout:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Priority:" );
+	HLNG( 0, l[3], 0x90, 0xc2, "Buffer_id:" );
+		CEQU( 0xffffffff, l[3], 0, 0x14, "OFP_NO_BUFFER" );
+	HLNG( 0, l[4], 0x90, 0xc2, "Out_port:" );
+		ANDG( 0xffff, l[4]);
+		CST#( 0, l[4], 0, 0x14, OpenFlow::V5::Portresvalues );
+	HLNG( 0, l[5], 0x90, 0xc2, "Out_group:" );
+		ANDG( 0xffff, l[5]);
+		CST#( 0, l[5], 0, 0x14, OpenFlow::V5::Portresvalues );
+	BWRD( 0, l[6], 0x90, 0xc9, "Flags:" );
+		CBIT( 0, l[6], 0, 0xd4, "........ .......1 Send flow removed: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ .......0 Send flow removed: no" );
+		CBIT( 1, l[6], 0, 0xd4, "........ ......1. Check overlap: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ......0. Check overlap: no" );
+		CBIT( 2, l[6], 0, 0xd4, "........ .....1.. Reset counts: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ .....0.. Reset counts: no" );
+		CBIT( 3, l[6], 0, 0xd4, "........ ....1... Don't keep track of packet count: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ....0... Don't keep track of packet count: no" );
+		CBIT( 4, l[6], 0, 0xd4, "........ ...1.... Don't keep track of byte count: yes" );
+		CLSE( 0, l[6], 0, 0xd4, "........ ...0.... Don't keep track of byte count: no" );		
+	LABL( 0, 0, 0, 0xb8 );
+	DWRD( 0, 0, 0x90, 0xc2, "Importance:" );
+	OpenFlow::V5::Match;
+	while ( g[16] > 0 )
+	{
+		OpenFlow::V5::Instruction;
+	}
+}
+
+str# OpenFlow::V5::commands;
+0	|	OFPFC_ADD;
+1	|	OFPFC_MODIFY;
+2	|	OFPFC_MODIFY_STRICT;
+3	|	OFPFC_DELETE;
+4	|	OFPFC_DELETE_STRICT;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_GROUP_MOD()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Command:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::OFPT_GROUP_MOD_commands );
+	DBYT( 0, l[2], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Type::OFPT_GROUP_MOD::Type );
+	DBYT( 0, 0, 0x90, 0xc2, "Padding:" );
+	DLNG( 0, l[3], 0x90, 0xc2, "Group_id:" );
+	DWRD( 0, l[4], 0x90, 0xc2, "Bucket_array_len:" );
+	DWRD( 0, 0, 0x90, 0xc2, "Padding:" );
+	DLNG( 0, l[5], 0x90, 0xc2, "Command_bucket_id:" );	
+	while( g[16] > 0)
+	{
+		LABL 0 0 0 b7 Bucket:;
+		OpenFlow::V5::Bucket;
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+str# OpenFlow::V5::Type::OFPT_GROUP_MOD::Type;
+0	|	OFPGT_ALL;
+1	|	OFPGT_SELECT;
+2	|	OFPGT_INDIRECT;
+3	|	OFPGT_FF;
+str# OpenFlow::V5::OFPT_GROUP_MOD_commands;
+0	|	OFPGC_ADD;
+1	|	OFPGC_MODIFY;
+2	|	OFPGC_DELETE;
+3	|	OFPGC_INSERT_BUCKET;
+4	|	OFPGC_REMOVE_BUCKET;
+
+
+void OpenFlow::V5::Bucket()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Weight:" );
+	HLNG( 0, l[4], 0x90, 0xc2, "watch_port:" );
+		ANDG( 0xffff, l[4]);
+		CST#( 0, l[4], 0, 0x14, OpenFlow::V5::Portresvalues );		
+	HLNG( 0, l[5], 0x90, 0xc2, "watch_group:" );
+		ANDG( 0xffff, l[5]);
+		CST#( 0, l[5], 0, 0x14, OpenFlow::V5::Portresvalues );	
+	HEX# ( 0, 4, 0x90, 0xc2, "Padding:" );
+	l[1] -= 16;
+	while( l[1] != 0)
+	{
+		GWRD( 0, l[6]);
+		CST#( 0, l[6], 0, 0xb7, OpenFlow::V5::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		l[9] -= 4;
+		
+		g[42] = l[9];
+		g[9] -= 4;
+		l[11]  = g[16];
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field::ldr );
+		g[9] -= g[42];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );	
+		}
+		l[1] -= l[9]; l[1] -= 4;	
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------
+
+str# OpenFlow::V5::Instruction::field;
+0	|	OFPAT_OUTPUT;
+11	|	OFPAT_COPY_TTL_OUT;
+12	|	OFPAT_COPY_TTL_IN;
+15	|	OFPAT_SET_MPLS_TTL;
+16	|	OFPAT_DEC_MPLS_TTL;
+17	|	OFPAT_PUSH_VLAN;
+18	|	OFPAT_POP_VLAN;
+19	|	OFPAT_PUSH_MPLS;
+20	|	OFPAT_POP_MPLS;
+21	|	OFPAT_SET_QUEUE;
+22	|	OFPAT_GROUP;
+23	|	OFPAT_SET_NW_TTL;
+24	|	OFPAT_DEC_NW_TTL;
+25	|	OFPAT_SET_FIELD;
+26	|	OFPAT_PUSH_PBB;
+27	|	OFPAT_POP_PBB;
+0xffff	|	OFPAT_EXPERIMENTER;
+
+str# OpenFlow::V5::Instruction::field::ldr;
+0	|	OpenFlow::V5::Instruction::OFPAT_OUTPUT;
+11	|	OpenFlow::V5::Instruction::OFPAT_COPY_TTL_OUT;
+12	|	OpenFlow::V5::Instruction::OFPAT_COPY_TTL_IN;
+15	|	OpenFlow::V5::Instruction::OFPAT_SET_MPLS_TTL;
+16	|	OpenFlow::V5::Instruction::OFPAT_DEC_MPLS_TTL;
+17	|	OpenFlow::V5::Instruction::OFPAT_PUSH_VLAN;
+18	|	OpenFlow::V5::Instruction::OFPAT_POP_VLAN;
+19	|	OpenFlow::V5::Instruction::OFPAT_PUSH_MPLS;
+20	|	OpenFlow::V5::Instruction::OFPAT_POP_MPLS;
+21	|	OpenFlow::V5::Instruction::OFPAT_SET_QUEUE;
+22	|	OpenFlow::V5::Instruction::OFPAT_GROUP;
+23	|	OpenFlow::V5::Instruction::OFPAT_SET_NW_TTL;
+24	|	OpenFlow::V5::Instruction::OFPAT_DEC_NW_TTL;
+25	|	OpenFlow::V5::Instruction::OFPAT_SET_FIELD;
+26	|	OpenFlow::V5::Instruction::OFPAT_PUSH_PBB;
+27	|	OpenFlow::V5::Instruction::OFPAT_POP_PBB;
+0xffff	|	OpenFlow::V5::Instruction::OFPAT_EXPERIMENTER;
+
+str# OpenFlow::V5::Match::OXM::class;
+0x0000	|	OFPXMC_NMX_0;
+0x0001	|	OFPXMC_NXM_1;
+0x8000	|	OFPXMC_OPENFLOW_BASIC;
+0xFFFF	|	OFPXMC_EXPERIMENTER;
+
+str# OpenFlow::V5::Match::OXM::field;
+0	|	OFPXMT_OFB_IN_PORT;
+1	|	OFPXMT_OFB_IN_PHY_PORT;
+2	|	OFPXMT_OFB_METADATA;
+3	|	OFPXMT_OFB_ETH_DST;
+4	|	OFPXMT_OFB_ETH_SRC;
+5	|	OFPXMT_OFB_ETH_TYPE;
+6	|	OFPXMT_OFB_VLAN_VID;
+7	|	OFPXMT_OFB_VLAN_PCP;
+8	|	OFPXMT_OFB_IP_DSCP;
+9	|	OFPXMT_OFB_IP_ECN;
+10	|	OFPXMT_OFB_IP_PROTO;
+11	|	OFPXMT_OFB_IPV4_SRC;
+12	|	OFPXMT_OFB_IPV4_DST;
+13	|	OFPXMT_OFB_TCP_SRC;
+14	|	OFPXMT_OFB_TCP_DST;
+15	|	OFPXMT_OFB_UDP_SRC;
+16	|	OFPXMT_OFB_UDP_DST;
+17	|	OFPXMT_OFB_SCTP_SRC;
+18	|	OFPXMT_OFB_SCTP_DST;
+19	|	OFPXMT_OFB_ICMPV4_TYPE;
+20	|	OFPXMT_OFB_ICMPV4_CODE;
+21	|	OFPXMT_OFB_ARP_OP;
+22	|	OFPXMT_OFB_ARP_SPA;
+23	|	OFPXMT_OFB_ARP_TPA;
+24	|	OFPXMT_OFB_ARP_SHA;
+25	|	OFPXMT_OFB_ARP_THA;
+26	|	OFPXMT_OFB_IPV6_SRC;
+27	|	OFPXMT_OFB_IPV6_DST;
+28	|	OFPXMT_OFB_IPV6_FLABEL;
+29	|	OFPXMT_OFB_ICMPV6_TYPE;
+30	|	OFPXMT_OFB_ICMPV6_CODE;
+31	|	OFPXMT_OFB_IPV6_ND_TARGET;
+32	|	OFPXMT_OFB_IPV6_ND_SLL;
+33	|	OFPXMT_OFB_IPV6_ND_TLL;
+34	|	OFPXMT_OFB_MPLS_LABEL;
+35	|	OFPXMT_OFB_MPLS_TC;
+36	|	OFPXMT_OFP_MPLS_BOS;
+37	|	OFPXMT_OFB_PBB_ISID;
+38	|	OFPXMT_OFB_TUNNEL_ID;
+39	|	OFPXMT_OFB_IPV6_EXTHDR;
+ 
+str# OpenFlow::V5::Match::OXM::field::Ldr;
+0	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IN_PORT;
+1	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IN_PHY_PORT;
+2	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_METADATA;
+3	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_DST;
+4	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_SRC;
+5	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_TYPE;
+6	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_VLAN_VID;
+7	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_VLAN_PCP;
+8	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_DSCP;
+9	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_ECN;
+10	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_PROTO;
+11	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV4_SRC;
+12	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV4_DST;
+13	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TCP_SRC;
+14	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TCP_DST;
+15	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_UDP_SRC;
+16	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_UDP_DST;
+17	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_SCTP_SRC;
+18	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_SCTP_DST;
+19	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV4_TYPE;
+20	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV4_CODE;
+21	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_OP;
+22	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_SPA;
+23	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_TPA;
+24	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_SHA;
+25	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_THA;
+26	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_SRC;
+27	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_DST;
+28	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_FLABEL;
+29	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV6_TYPE;
+30	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV6_CODE;
+31	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TARGET;
+32	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_SLL;
+33	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TLL;
+34	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_MPLS_LABEL;
+35	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_MPLS_TC;
+36	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFP_MPLS_BOS;
+37	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_PBB_ISID;
+38	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TUNNEL_ID;
+39	|	OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_EXTHDR;
+ 
+str# OpenFlow::V5::Matchtypes::LDR;
+0	|	OpenFlow::V5::Match::Standard;
+1	|	OpenFlow::V5::Match::OXM;
+
+
+void OpenFlow::V5::Instruction()
+{
+	LABL 0 0 00 b7 Instruction;
+	DWRD( 0, l[1], 0x90, 0xc2, "type:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Instructions );
+	DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+		l[2] -= 4;
+		g[9] = l[2];
+	if (l[1] == 1)
+	{
+		DBYT( 0, 0, 0x90, 0xc2, "Table ID:" );
+		g[9] -= 1;
+	}
+	if (l[1] == 2)
+	{
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+		HEX#( 0, 0x8, 0x90, 0xc2, "Value:" );
+		HEX#( 0, 0x8, 0x90, 0xc2, "Mask:" );
+		g[9] -= 20;
+	}
+	if (l[1] == 3)
+	{
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );g[9] -= 4;
+		OpenFlow::V5::Instruction::Loop;
+	}
+	if (l[1] == 4)
+	{
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );g[9] -= 4;
+		OpenFlow::V5::Instruction::Loop;
+	}
+	if (l[1] == 5)
+	{
+		HEX#( 0, 4, 0x90, 0xc2, "Padding:" );g[9] -= 4;
+		OpenFlow::V5::Instruction::Loop;
+	}
+	if (g[9] != 0)
+	{
+		HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# OpenFlow::V5::Instructions;
+0x0001	|	OFPIT_GOTO_TABLE;
+0x0002	|	OFPIT_WRITE_METADATA;
+0x0003	|	OFPIT_WRITE_ACTIONS;
+0x0004	|	OFPIT_APPLY_ACTIONS;
+0x0005	|	OFPIT_CLEAR_ACTIONS;
+0x0006	|	OFPIT_METER;
+0xffff	|	OFPIT_EXPERIMENTER = 0xFFFF;
+str# OpenFlow::V5::Instruction::LDR;
+0x0001	|	OFPIT_GOTO_TABLE;
+0x0002	|	OpenFlow::V5::Instruction::OFPIT_WRITE_METADATA;
+0x0003	|	OFPIT_WRITE_ACTIONS;
+0x0004	|	OFPIT_APPLY_ACTIONS;
+0x0005	|	OFPIT_CLEAR_ACTIONS;
+0x0006	|	OFPIT_METER;
+0xffff	|	OFPIT_EXPERIMENTER = 0xFFFF;
+void OpenFlow::V5::Instruction::OFPIT_WRITE_METADATA()
+{
+	
+}
+
+void OpenFlow::V5::Instruction::Loop()
+{
+	while (g[9] > 4)
+	{	
+		GWRD( 0, l[6]);
+		CST#( 0, l[6], 0, 0xb7, OpenFlow::V5::Instruction::field );
+		HWRD( 0, l[8], 0x90, 0xc2, "class:" );
+			CST#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field );
+		DWRD( 0, l[9], 0x90, 0xc2, "length:" );
+		l[9] -= 4;
+		g[42] = l[9];
+		g[9] -= 4;
+		l[11]  = g[16];
+		TSB#( 0, l[8], 0, 0x14, OpenFlow::V5::Instruction::field::ldr );
+		g[9] -= g[42];
+		if( g[16] == l[11])
+		{
+			HEX#( 0, l[9], 0x90, 0xc2, "Value:" );	
+		}
+		l[1] -= l[9]; l[1] -= 4;	
+		LABL( 0, 0, 0, 0xb8 );		
+	}
+	if (g[9] != 0)
+	{
+		HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+		g[9] -= g[9];
+	}
+}
+
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Match()
+{
+	LABL 0 0 00 b1 Match;
+	DWRD( 0, l[1], 0x90, 0xc2, "match-type:" );
+		CEQU( 0, l[1], 0, 0x14, "OFPMT_STANDARD(not valid anymore)" );
+		CEQU( 1, l[1], 0, 0x14, "OFPMT_OXM" );
+	DWRD( 0, l[2], 0x90, 0xc2, "length:" );
+		l[2] -= 1;
+		g[9] = l[2];		
+		g[12] = g[9];
+		g[12] += 4;
+		
+	TSB#( 0, l[1], 0, 0, OpenFlow::V5::Matchtypes::LDR );
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void OpenFlow::V5::Match::OXM()
+{
+	while (g[9] > 4)
+	{
+		GBYT( 2, l[2]);
+		SHFR( 1, l[2]);
+		CST#( 0, l[2], 0, 0xb7, OpenFlow::V5::Match::OXM::field );
+		HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+			CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Match::OXM::class );
+		DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+			CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Match::OXM::field );
+		DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+			CEQU( 0, g[43], 0, 0x14, "no" );
+			CEQU( 1, g[43], 0, 0x14, "yes" );
+		DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+		g[42] = l[4];
+		g[9] -= 4;
+		TSB#( 0, l[2], 0, 0x14, OpenFlow::V5::Match::OXM::field::Ldr );
+		XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+		g[9] -= l[4];
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	if (g[9] != 0)
+	{
+		HEX#( 0, g[9], 0x90, 0xc2, "Padding:" );
+	}
+	if (g[12] < 16)
+	{
+		l[30] = 16;
+		l[30] -= g[12];
+		HEX#( 0, l[30], 0x90, 0xc2, "Padding:" );
+	}
+	if (g[12] > 16)
+	{
+		MODG( 2, g[12] );
+		HEX#( 0, g[12], 0x90, 0xc2, "Padding:" );
+	}
+	
+}
+
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IN_PORT()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Port:" );
+		ANDG( 0xffff, l[1]);
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Portresvalues );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IN_PHY_PORT()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Port:" );
+		ANDG( 0xffff, l[1]);
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Portresvalues );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_METADATA()
+{
+	HEX#( 0, 0x8, 0x90, 0xc2, "Value:" );
+	HEX#( 0, 0x8, 0x90, 0xc2, "Mask:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_DST()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Destination:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_SRC()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Source:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ETH_TYPE()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertpye:" );
+		CST#( 0, l[1], 0, 0x14, Ether::Branching_3_Str );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_VLAN_VID()
+{	
+	BWRD( 0, l[1], 0x90, 0xc2, "Flags:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_VLAN_PCP()
+{
+	BBIT( 3, 0, 0x90, 0xc2, "VLAN-PCP from 802.1Q:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_DSCP()
+{
+	BBIT( 6, 0, 0x90, 0xc2, "Diff Serv Code Point :" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_ECN()
+{
+	BBIT( 2, 0, 0x90, 0xc2, "VLAN-PCP from 802.1Q:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IP_PROTO()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Protocol:" );
+	
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV4_SRC()
+{
+	IPLG( 0, l[1], 0x90, 0xc2, "Source:" );
+	if (g[43] == 1)
+	{
+		IPLG( 0, l[1], 0x90, 0xc2, "Mask:" );
+	}
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV4_DST()
+{
+	IPLG( 0, l[1], 0x90, 0xc2, "Destination:" );
+	if (g[43] == 1)
+	{
+		IPLG( 0, l[1], 0x90, 0xc2, "Mask:" );
+	}
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TCP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "TCP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TCP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "TCP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_UDP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "UDP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_UDP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "UDP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_SCTP_SRC()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "SCTP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_SCTP_DST()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "SCTP Port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV4_TYPE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Type:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV4_CODE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Code:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_OP()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "ARP opcode:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_SPA()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "ARP Source IPv4:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_TPA()
+{
+	IPLG( 0, 0, 0x90, 0xc2, "ARP Target IPv4:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_SHA()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "ARP Source Ethernet addres:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ARP_THA()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "ARP Target Ethernet addres:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_SRC()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "ARP Source IPv6:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_DST()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "ARP Target IPv6:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_FLABEL()
+{
+	BBIT( 20, 0, 0x90, 0xc2, "IPv6 Flow label:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV6_TYPE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Type:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_ICMPV6_CODE()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "ICMPv4 Code:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TARGET()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 Neighbor Discovery Target:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_SLL()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Source link-layer address:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_ND_TLL()
+{
+	ETHR( 0, 0, 0x90, 0xc2, "Target link-layer address:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_MPLS_LABEL()
+{
+	BBIT( 20, 0, 0x90, 0xc2, "First MPLS shim header Label:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_MPLS_TC()
+{
+	BBIT( 3, 0, 0x90, 0xc2, "First MPLS shim header TC:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFP_MPLS_BOS()
+{
+	BBIT( 1, 0, 0x90, 0xc2, "First MPLS shim header BoS bit:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_PBB_ISID()
+{
+	DWRD( 0, 0, 0x90, 0xc2, "I-SID:" );
+	DBYT( 0, 0, 0x90, 0xc2, "I-SID:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_TUNNEL_ID()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Metadata associated with a logical port:" );
+}
+void OpenFlow::V5::Match::OXM::field::OFPXMT_OFB_IPV6_EXTHDR()
+{
+	BBIT( 9, 0, 0x90, 0xc2, "IPv6 Extension Header pseudo-field:" );
+}
+void OpenFlow::V5::Match::OXM::field::OXM_OF_PBB_UCA()
+{
+	BBIT( 1, 0, 0x90, 0xc2, "UCA Field in the First PBB service instance tag:" );
+}
+void OpenFlow::V5::Match::Standard;
+{
+	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_PORT_MOD()
+{
+	while (g[16] > 4)
+	{
+		LABL 0 0 0 b7 Port # - ;
+		GLNG( 0, l[5] );
+		DGLB( 0, l[5], 0x07, 0x07 );
+			HLNG( 0, l[5], 0x90, 0xc2, "Port Number:" );
+				ANDG( 0xffff, l[5]);
+				CST#( 0, l[5], 0, 0x14, OpenFlow::V5::Portresvalues );
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			ETHR( 0, 0, 0x90, 0xc2, "HW Adress:" );
+			HEX#( 2, 0, 0x90, 0xc2, "Padding:" );
+			CHR#( 0, 16, 0x90, 0xc2, "Name:" );
+			BLNG( 0, l[8], 0x90, 0xc9, "Config:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[8], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx x..xx.x. reserved" );
+				CBIT( 0, l[8], 0, 0xd4, "........ ........ ........ .......1 OFPPC_PORT_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPC_PORT_DOWN: False");
+				CBIT( 2, l[8], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_NO_RECV: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_NO_RECV: False");
+				CBIT( 5, l[8], 0, 0xd4, "........ ........ ........ ..1..... OFPPC_NO_FWD: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ..0..... OFPPC_NO_FWD: False");
+				CBIT( 6, l[8], 0, 0xd4, "........ ........ ........ .1...... OFPPC_NO_PACKET_IN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .0...... OFPPC_NO_PACKET_IN: False");
+				LABL( 0, 0, 0, 0xb8 );
+			BLNG( 0, l[9], 0x90, 0xc9, "State:" );
+				LABL( 0, 0, 0, 0x09, " (" );
+				HGLB( 0, l[9], 0, 0x09 );
+				LABL( 0, 0, 0, 0x09, ")" );
+				LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+				CBIT( 0, l[9], 0, 0xd4, "........ ........ ........ .......1 OFPPS_LINK_DOWN: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPPS_LINK_DOWN: False");
+				CBIT( 1, l[9], 0, 0xd4, "........ ........ ........ ......1. OFPPS_BLOCKED: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPPS_BLOCKED: False");
+				CBIT( 2, l[9], 0, 0xd4, "........ ........ ........ .....1.. OFPPC_LIVE: True");
+				CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPPC_LIVE: False");
+				LABL( 0, 0, 0, 0xb8 );
+		LABL( 0, 0, 0, 0xb8 );
+		while (g[16] > 4)
+		{
+			HWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+				CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type );
+				CLSE( 0, l[1], 0, 0x14, "Reserved" );
+			HWRD( 0, g[42], 0x90, 0xc2, "Length:" );
+			TSB#( 0, l[1], 0, 0, OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_desc_prop_type::ldr );
+			LABL( 0, 0, 0, 0xb8 );
+			SKIP 1;
+			DUMP( 0, g[42], 0x90, 0xc2, "Data:" );
+		}
+	}
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_ETHERNET()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	BLNG( 0, g[44], 0x90, 0xc9, "Current:" );
+		LABL( 0, 0, 0, 0x09, " (" );
+		HGLB( 0, g[44], 0, 0x09 );
+		LABL( 0, 0, 0, 0x09, ")" );
+	OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_features;
+	BLNG( 0, g[44], 0x90, 0xc9, "advertised:" );
+		LABL( 0, 0, 0, 0x09, " (" );
+		HGLB( 0, g[44], 0, 0x09 );
+		LABL( 0, 0, 0, 0x09, ")" );
+	OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_features;
+	BLNG( 0, g[44], 0x90, 0xc9, "supported:" );
+		LABL( 0, 0, 0, 0x09, " (" );
+		HGLB( 0, g[44], 0, 0x09 );
+		LABL( 0, 0, 0, 0x09, ")" );
+	OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_features;
+	BLNG( 0, g[44], 0x90, 0xc9, "peer:" );
+		LABL( 0, 0, 0, 0x09, " (" );
+		HGLB( 0, g[44], 0, 0x09 );
+		LABL( 0, 0, 0, 0x09, ")" );
+	OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_features;
+	DLNG( 0, 0, 0x90, 0xc2, "Current Speed:" );
+	DLNG( 0, 0, 0x90, 0xc2, "Maximal Speed:" );
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::ofp_port_features()
+{
+	LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx x....... ......... reserved" );
+	CBIT( 0, g[44], 0, 0xd4, "........ ........ ........ .......1 OFPPF_10MB_HD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .......0 OFPPF_10MB_HD: False");
+	CBIT( 1, g[44], 0, 0xd4, "........ ........ ........ ......1. OFPPF_10MB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ......0. OFPPF_10MB_FD: False");
+	CBIT( 2, g[44], 0, 0xd4, "........ ........ ........ .....1.. OFPPF_100MB_HD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .....0.. OFPPF_100MB_HD: False");
+	CBIT( 3, g[44], 0, 0xd4, "........ ........ ........ ....1... OFPPF_100MB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPPF_100MB_FD: False");
+	CBIT( 4, g[44], 0, 0xd4, "........ ........ ........ ...1.... OFPPF_1GB_HD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ...0.... OFPPF_1GB_HD: False");
+	CBIT( 5, g[44], 0, 0xd4, "........ ........ ........ ..1..... OFPPF_1GB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ..0..... OFPPF_1GB_FD: False");
+	CBIT( 6, g[44], 0, 0xd4, "........ ........ ........ .1...... OFPPF_10GB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ .0...... OFPPF_10GB_FD: False");
+	CBIT( 7, g[44], 0, 0xd4, "........ ........ ........ 1....... OFPPF_40GB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ........ 0....... OFPPF_40GB_FD: False");
+	CBIT( 8, g[44], 0, 0xd4, "........ ........ .......1 ........ OFPPF_100GB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ .......0 ........ OFPPF_100GB_FD: False");
+	CBIT( 9, g[44], 0, 0xd4, "........ ........ ......1. ........ OFPPF_1TB_FD: True");
+	CLSE( 0,     0, 0, 0xd4, "........ ........ ......0. ........ OFPPF_1TB_FD: False");
+	CBIT( 10, g[44], 0, 0xd4, "........ ........ .....1.. ........ OFPPF_COPPER: True");
+	CLSE(  0,     0, 0, 0xd4, "........ ........ .....0.. ........ OFPPF_COPPER: False");
+	CBIT( 11, g[44], 0, 0xd4, "........ ........ ....1... ........ OFPPF_FIBER: True");
+	CLSE( 0,      0, 0, 0xd4, "........ ........ ....0... ........ OFPPF_FIBER: False");
+	CBIT( 12, g[44], 0, 0xd4, "........ ........ ...1.... ........ OFPPF_AUTONEG: True");
+	CLSE( 0,      0, 0, 0xd4, "........ ........ ...0.... ........ OFPPF_AUTONEG: False");
+	CBIT( 13, g[44], 0, 0xd4, "........ ........ ..1..... ........ OFPPF_PAUSE: True");
+	CLSE( 0,      0, 0, 0xd4, "........ ........ ..0..... ........ OFPPF_PAUSE: False");
+	CBIT( 14, g[44], 0, 0xd4, "........ ........ .1...... ........ OFPPF_PAUSE_ASYM: True");
+	CLSE( 0,      0, 0, 0xd4, "........ ........ .0...... ........ OFPPF_PAUSE_ASYM: False");
+	LABL( 0, 0, 0, 0xb8 );
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_OPTICAL()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+	BLNG( 0, l[1], 0x90, 0xc9, "supported:" );
+		LABL( 0, 0, 0, 0x09, " (" );
+		HGLB( 0, l[1], 0, 0x09 );
+		LABL( 0, 0, 0, 0x09, ")" );
+		LABL( 0,     0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxx.... reserved" );
+		CBIT( 0, l[1], 0, 0xd4, "........ ........ ........ .......1 OFPOPF_RX_TUNE: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPOPF_RX_TUNE: False");
+		CBIT( 1, l[1], 0, 0xd4, "........ ........ ........ ......1. OFPOPF_TX_TUNE: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPOPF_TX_TUNE: False");
+		CBIT( 2, l[1], 0, 0xd4, "........ ........ ........ .....1.. OFPOPF_TX_PWR: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPOPF_TX_PWR: False");
+		CBIT( 2, l[1], 0, 0xd4, "........ ........ ........ ....1... OFPOPF_USE_FREQ: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ....0... OFPOPF_USE_FREQ: False");
+	LABL( 0, 0, 0, 0xb8 );
+	DLNG( 0, l[2], 0x90, 0xc2, "tx_min_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "tx_max_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "tx_grid_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "rx_min_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "rx_max_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "rx_grid_freq_lmda:" );
+	LABL( 0, 0, 0, 0x14, "nm * 100" );
+	DLNG( 0, 0, 0x90, 0xc2, "tx_pwr_min:" );
+		LABL( 0, 0, 0, 0x14, "dBm * 10" );
+	DLNG( 0, 0, 0x90, 0xc2, "tx_pwr_max:" );
+		LABL( 0, 0, 0, 0x14, "dBm * 10" );
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_PIPELINE_INPUT()
+{
+	while (g[16] > 4)
+	{
+		GBYT( 2, l[2]);
+		SHFR( 1, l[2]);
+		CST#( 0, l[2], 0, 0xb7, OpenFlow::V5::OXM::oxm_ofb_match_fields );
+		HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+			CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Match::OXM::class );
+		DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+			CST#( 0, l[2], 0, 0x14, OpenFlow::V5::OXM::oxm_ofb_match_fields );
+		DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+			CEQU( 0, g[43], 0, 0x14, "no" );
+			CEQU( 1, g[43], 0, 0x14, "yes" );
+		DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_PIPELINE_OUTPUT()
+{
+	OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_PIPELINE_INPUT;
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_RECIRCULATE()
+{
+	while (g[16] > 4)
+	{
+		HLNG( 0, l[1], 0x90, 0xc2, "Port_nos:" );
+			ANDG( 0xffff, l[1]);
+			CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Portresvalues );
+	}
+}
+void OpenFlow::V5::Type::OFPT_PORT_MOD::OFPPDPT_EXPERIMENTER()
+{
+	LABL( 0, l[1], 0x90, 0xc2, "Experimenter:" );
+	GLNG( 0 ,l[1] );
+	l[1] &= 0xff000000;
+	HEX# 80000001 0 05 05 ;
+	HEX# 80000001 0 90 00 ;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	CST# 0 41 0 14 802_11::OUI_Strings;
+	HLNG( 0, l[1], 0x90, 0xc2, "Experimenter Type:" );
+	g[42] -= 12;
+	DUMP( 0, g[42], 0x90, 0xc2, "Experimenter Data:" );	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_TABLE_MOD()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Table ID:" );
+		CEQU( 0xff, l[1], 0, 0x14, "OFPTT_ALL" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+	HLNG( 0, l[2],0x90, 0xc2, "Config:" );
+	while ( g[8] > 0)
+	{
+		GWRD( 0 , l[3] );
+		CST#( 0, l[3], 0x90, 0xb7, OpenFlow::V5::Type::ofp_table_mod_prop_type );
+		CLSE( 0, 0, 0x90, 0xb7, "Unknown" );
+		DWRD( 0, l[3],0x90, 0xc2, "Type:" );
+		DWRD( 0, g[42],0x90, 0xc2, "Length:" );
+		TSB#( 0, l[3], 0x90, 0xb7, OpenFlow::V5::Type::ofp_table_mod_prop_type::Ldr );
+		SKIP 1;
+		DUMP( 0, g[42], 0x90, 0xc2, "Data:" );
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	
+}
+str# OpenFlow::V5::Type::ofp_table_mod_prop_type;
+0x02	|	OFPTMPT_EVICTION;
+0x03	|	OFPTMPT_VACANCY;
+0xffff	|	OFPTMPT_EXPERIMENTER;
+str# OpenFlow::V5::Type::ofp_table_mod_prop_type::Ldr;
+0x02	|	OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_EVICTION;
+0x03	|	OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_VACANCY;
+0xffff	|	OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_EXPERIMENTER;
+
+void OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_EVICTION()
+{
+	BLNG( 0, l[1],0x90, 0xc2, "Flags:" );
+	LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+		CBIT( 0, l[1], 0, 0xd4, "........ ........ ........ .......1 OFPTMPEF_OTHER: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPTMPEF_OTHER: False");
+		CBIT( 1, l[1], 0, 0xd4, "........ ........ ........ ......1. OFPTMPEF_IMPORTANCE: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPTMPEF_IMPORTANCE: False");
+		CBIT( 2, l[1], 0, 0xd4, "........ ........ ........ .....1.. OFPTMPEF_LIFETIME: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPTMPEF_LIFETIME: False");
+}
+void OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_VACANCY()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Vacancy_down:" );
+		LABL( 0, 0, 0, 0x14, "%" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Vacancy_up:" );
+		LABL( 0, 0, 0, 0x14, "%" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Vacancy:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Type::ofp_table_mod_prop_type:OFPTMPT_EXPERIMENTER()
+{
+	LABL( 0, l[1], 0x90, 0xc2, "Experimenter:" );
+	GLNG( 0 ,l[1] );
+	l[1] &= 0xff000000;
+	HEX# 80000001 0 05 05 ;
+	HEX# 80000001 0 90 00 ;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	CST# 0 41 0 14 802_11::OUI_Strings;
+	HLNG( 0, l[1], 0x90, 0xc2, "Experimenter Type:" );
+	g[42] -= 12;
+	DUMP( 0, g[42], 0x90, 0xc2, "Experimenter Data:" );	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_ROLE_REQUEST()
+{
+	HLNG( 0, l[1],0x90, 0xc2, "Role:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Type::OFPT_ROLE_REPLY::Role );
+	DWRD( 0, l[1],0x90, 0xc2, "Short ID:" );
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+	D64B( 0, 8, 0x90, 0xc2, "Generation ID:" );
+}
+
+str# OpenFlow::V5::Type::OFPT_ROLE_REPLY::Role;
+0	|	OFPCR_ROLE_NOCHANGE;
+1	|	OFPCR_ROLE_EQUAL;
+2	|	OFPCR_ROLE_MASTER;
+3	|	OFPCR_ROLE_SLAVE;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_GET_ASYNC_REPLY()
+{
+	g[8] -= 8;
+	while ( g[8] > 0)
+	{
+		GWRD( 0, l[1] );
+		CST#( 0, l[1], 0x90, 0xb7, OpenFlow::V5::Type::OFPT_GET_ASYNC_REPLY::PROP );
+		CLSE( 0, 0, 0x90, 0xb7, "Unknown" );
+		LABL( 0, 0, 0, 0x07, ": ");
+		DWRD( 0, l[1], 0x90, 0xc2, "Type:" );
+		DWRD( 0, g[42], 0x90, 0xc2, "Length:" );
+		if (l[1] != 0xffff)
+		{
+			BLNG( 0, l[3], 0x90, 0xc2, "Bitmask:" );
+			g[8] -= 8;
+		}
+		if (l[1] == 0xffff)
+		{
+			LABL( 0, l[3], 0x90, 0xc2, "Experimenter:" );
+			GLNG( 0 ,l[3] );
+			l[3] &= 0xff000000;
+			HEX# 80000001 0 05 05 ;
+			HEX# 80000001 0 90 00 ;
+			HEX# 80000001 0 90 00 -;
+			HEX# 80000001 0 90 00 -;
+			CST# 0 41 0 14 802_11::OUI_Strings;
+			HLNG( 0, l[4], 0x90, 0xc2, "Experimenter Type:" );
+			g[42] -= 12;
+			DUMP( 0, g[42], 0x90, 0xc2, "Experimenter Data:" );
+			g[42] += 12;
+			g[8] -= g[42];
+		}
+		LABL( 0, 0, 0, 0xb8 );		
+	}
+}
+
+str# OpenFlow::V5::Type::OFPT_GET_ASYNC_REPLY::PROP;
+0	|	OFPACPT_PACKET_IN_SLAVE;
+1	|	OFPACPT_PACKET_IN_MASTER;
+2	|	OFPACPT_PORT_STATUS_SLAVE;
+3	|	OFPACPT_PORT_STATUS_MASTER;
+4	|	OFPACPT_FLOW_REMOVED_SLAVE;
+5	|	OFPACPT_FLOW_REMOVED_MASTER;
+6	|	OFPACPT_ROLE_STATUS_SLAVE;
+7	|	OFPACPT_ROLE_STATUS_MASTER;
+8	|	OFPACPT_TABLE_STATUS_SLAVE;
+9	|	OFPACPT_TABLE_STATUS_MASTER;
+10	|	OFPACPT_REQUESTFORWARD_SLAVE;
+11	|	OFPACPT_REQUESTFORWARD_MASTER;
+12	|	OFPACPT_FLOW_STATS_SLAVE;
+13	|	OFPACPT_FLOW_STATS_MASTER;
+14	|	OFPACPT_CONT_STATUS_SLAVE;
+15	|	OFPACPT_CONT_STATUS_MASTER;
+0xfffe	|	OFPTFPT_EXPERIMENTER_SLAVE;
+0xffff	|	OFPTFPT_EXPERIMENTER_MASTER;
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_METER_MOD()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Command:" );
+	BWRD( 0, l[2], 0x90, 0xc2, "Flags:" );
+		LABL( 0,    0, 0, 0xd4, "xxxxxxxx xxxxxxxx xxxxxxxx xxxxx... reserved" );
+		CBIT( 0, l[2], 0, 0xd4, "........ ........ ........ .......1 OFPMF_KBPS: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .......0 OFPMF_KBPS: False");
+		CBIT( 1, l[2], 0, 0xd4, "........ ........ ........ ......1. OFPMF_PKTPS: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ ......0. OFPMF_PKTPS: False");
+		CBIT( 2, l[2], 0, 0xd4, "........ ........ ........ .....1.. OFPMF_BURST: True");
+		CLSE( 0,    0, 0, 0xd4, "........ ........ ........ .....0.. OFPMF_BURST: False");
+		CBIT( 3, l[2], 0, 0xd4, "........ ........ ........ ....1... OFPMF_STATS: True");
+		CLSE( 0,     0, 0, 0xd4, "........ ........ ........ ....0... OFPMF_STATS: False");
+	DLNG( 0, l[3], 0x90, 0xc2, "Meter ID:" );
+		CEQU( 0xffff0000, l[3], 0, 0x14, "OFPM_MAX" );
+		CEQU( 0xfffffffd, l[3], 0, 0x14, "OFPM_SLOWPATH" );
+		CEQU( 0xfffffffe, l[3], 0, 0x14, "OFPM_CONTROLLER" );
+		CEQU( 0xffffffff, l[3], 0, 0x14, "OFPM_ALL" );
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Meter band:;
+		DWRD( 0, l[7], 0x90, 0xc2, "Type:" );
+			CEQU( 1, l[7], 0, 0x14, "OFPMBT_DROP" );
+			CEQU( 2, l[7], 0, 0x14, "OFPMBT_DSCP_REMARK" );
+			CEQU( 0xffff, l[7], 0, 0x14, "OFPMBT_EXPERIMENTER" );
+		DWRD( 0, l[8], 0x90, 0xc2, "Length:" );
+		DLNG( 0, l[9], 0x90, 0xc2, "Rate:" );
+		DLNG( 0, l[10], 0x90, 0xc2, "Burst Size:" );
+		if (l[7] == 1)
+		{
+			HLNG( 0, 0, 0x90, 0xc2, "Padding:" );
+			l[8] -= 4;
+		}
+		if (l[7] == 2)
+		{
+			DBYT( 0, l[12], 0x90, 0xc2, "Precedence Level:" );
+			HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+			l[8] -= 4;
+		}
+		if (l[7] == 0xffff)
+		{
+			DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+		}
+		if (l[8] > 0)
+		{
+			DUMP( 0, l[8], 0x90, 0xc2, "Value:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_ROLE_STATUS()
+{
+	HLNG( 0, l[1], 0x90, 0xc2, "Role:" );
+		CEQU( 0, l[1], 0, 0x14, "OFPCR_ROLE_NOCHANGE" );
+		CEQU( 1, l[1], 0, 0x14, "OFPCR_ROLE_EQUAL" );
+		CEQU( 2, l[1], 0, 0x14, "OFPCR_ROLE_MASTER" );
+		CEQU( 3, l[1], 0, 0x14, "OFPCR_ROLE_SLAVE" );		
+	DBYT( 0, l[2], 0x90, 0xc2, "Reason:" );
+		CEQU( 0, l[2], 0, 0x14, "OFPCRR_MASTER_REQUEST" );
+		CEQU( 1, l[2], 0, 0x14, "OFPCRR_CONFIG" );
+		CEQU( 2, l[2], 0, 0x14, "OFPCRR_EXPERIMENTER" );
+	HEX#( 3, 0, 0x90, 0xc2, "Padding:" );
+	D64B( 0, 8, 0x90, 0xc2, "Generation ID:" );
+	while (g[16] > 0)
+	{
+		LABL 0 0 0 b7 Meter band:;
+		DWRD( 0, l[7], 0x90, 0xc2, "Type:" );
+			CEQU( 0xffff, l[7], 0, 0x14, "OFPMBT_EXPERIMENTER" );
+		DWRD( 0, g[42], 0x90, 0xc2, "Length:" );
+		if (l[7] != 0xffff)
+		{
+			DUMP( 0, l[8], 0x90, 0xc2, "Data:" );
+		}
+		if (l[7] == 0xffff)
+		{
+			LABL( 0, l[1], 0x90, 0xc2, "Experimenter:" );
+			GLNG( 0 ,l[1] );
+			l[1] &= 0xff000000;
+			HEX# 80000001 0 05 05 ;
+			HEX# 80000001 0 90 00 ;
+			HEX# 80000001 0 90 00 -;
+			HEX# 80000001 0 90 00 -;
+			CST# 0 41 0 14 802_11::OUI_Strings;
+			HLNG( 0, l[1], 0x90, 0xc2, "Experimenter Type:" );
+			g[42] -= 12;
+			DUMP( 0, g[42], 0x90, 0xc2, "Experimenter Data:" );
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_TABLE_STATUS()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Reason:" );
+		CEQU( 3, l[1], 0, 0x14, "OFPTR_VACANCY_DOWN" );
+		CEQU( 4, l[1], 0, 0x14, "OFPTR_VACANCY_UP" );		
+	HEX#( 7, 0, 0x90, 0xc2, "Padding:" );
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_REQUESTFORWARD()
+{
+	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_BUNDLE_CONTROL()
+{
+	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_BUNDLE_ADD_MESSAGE()
+{
+	
+}
+
+//--------------------------------------------------------------------------------------------------------
+
+void OpenFlow::V5::Type::OFPT_CONTROLLER_STATUS()
+{
+	
+}
+//--------------------------------------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------------------------------------
+void OpenFlow::V5::Instruction::OFPAT_OUTPUT()
+{
+	HLNG( 0, l[1], 0x90, 0xc2, "Output Port:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Max. length:" );
+	HEX#( 0, 6, 0x90, 0xc2, "Padding:" );	
+}
+void OpenFlow::V5::Instruction::OFPAT_COPY_TTL_OUT()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_COPY_TTL_IN()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_SET_MPLS_TTL()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "TTL:" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_DEC_MPLS_TTL()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_PUSH_VLAN()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_POP_VLAN()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_PUSH_MPLS()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_POP_MPLS()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_SET_QUEUE()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Group ID:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_GROUP()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "Group ID:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_SET_NW_TTL()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "TTL:" );
+	HEX#( 0, 3, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_DEC_NW_TTL()
+{
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_SET_FIELD()
+{
+	GBYT( 2, l[2]);
+	SHFR( 1, l[2]);
+	CST#( 0, l[2], 0, 0xb7, OpenFlow::V5::Match::OXM::field );
+	HWRD( 0, l[1], 0x90, 0xc2, "class:" );
+		CST#( 0, l[1], 0, 0x14, OpenFlow::V5::Match::OXM::class );
+	DBIT( 7, l[2], 0x90, 0xc2, "field:" );
+		CST#( 0, l[2], 0, 0x14, OpenFlow::V5::Match::OXM::field );
+	DBIT( 1, g[43], 0x90, 0xc2, "has mask:" );
+		CEQU( 0, g[43], 0, 0x14, "no" );
+		CEQU( 1, g[43], 0, 0x14, "yes" );
+	DBYT( 0, l[4], 0x90, 0xc2, "length:" );
+	g[42] = l[4];
+	g[9] -= 4;
+	TSB#( 0, l[2], 0, 0x14, OpenFlow::V5::Match::OXM::field::Ldr );
+	XLSE 0 0 0 0 OpenFlow::V3::DUMP2;
+	g[9] -= l[4];
+	//DGLB( 0, g[9], 0x90, 0xc2, "g[9]:" );
+	LABL( 0, 0, 0, 0xb8 );
+	HEX#( 0, 4, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_PUSH_PBB()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_POP_PBB()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Ethertype:" );
+		CST# 0 41 0 14 EProto::Names_Str;
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_EXPERIMENTER()
+{
+	//HLNG( 0, l[1], 0x90, 0xc2, "Experimeter:" );
+}
+void OpenFlow::V5::Instruction::OFPAT_COPY_FIELD()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "n_bits:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "src_offset:" );
+	DWRD( 0, l[1], 0x90, 0xc2, "dst_offset:" );
+	HEX#( 0, 2, 0x90, 0xc2, "Padding:" );
+	while (g[16] != 0)
+	{
+		DLNG( 0, l[1], 0x90, 0xc2, "oxm_id:" );
+	}
+}
+void OpenFlow::V5::Instruction::OFPAT_METER()
+{
+	DLNG( 0, l[1], 0x90, 0xc2, "meter_id:" );
+}
+
+//--------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------

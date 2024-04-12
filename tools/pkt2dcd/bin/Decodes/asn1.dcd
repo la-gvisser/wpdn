@@ -1,0 +1,3000 @@
+// Decoder version: 5.0.1.0
+
+// ASN1 Routines
+
+
+// out params: g1=type, g2=length, g3=value, g4=enum, g5=class, g6=return, g7=use functable
+// g11=enum testing;
+
+void ASN1_Init;
+	MOVE 0 7;
+	MOVE 0 8;
+	MOVE 0 6;
+	MOVE 0 4;
+	MOVE 1 11;  //turn on enum testing
+
+void ASN1_ValueFuncOn;
+	MOVE 1 7;
+	MOVE 1 8;
+
+void ASN1_DisableEnum;
+	MOVE 0 11;  //turn off enum testing
+
+void ASN1_Value;
+	//feature to just return in case somebody else handled it
+	SEQU 0 6;
+	SKIP 2;
+	MOVE 0 6;
+	TRTS;
+	
+	ASN1_Value2;
+
+	SEQU 1 8;
+	SKIP 6;
+	SEQU 6 2;  //not for OIDS
+	SKIP 4;
+	SEQU 0 7;
+	SKIP 2;
+	ASN1_ValueFunc;
+	MOVE 0 7;  //only do it once
+	MOVE 0 8;  //only do it once
+
+	TEQU 0 11 0 0 RETURN;  //enum testing is off
+	INCR 2;  // skip the next enum
+	ASN1_EnumTest;
+
+void ASN1_ValueFunc;
+	TST# 0 7 0 0 ASN1_ValueFuncStr;
+
+// these are functions that output a special message after the value
+
+str# ASN1_ValueFuncStr;
+	OID_ifTypeFunc;
+	OID_ifStatusFunc;
+	OID_probeCapabilitiesFunc;
+	OID_ipRouteProtoFunc;
+	OID_tcpConnStateFunc;
+	OID_egpNeighStateFunc;
+	OID_SystemServicesFunc;
+
+void ASN1_Value2;
+	ASN1_Enum;
+	LABL 0 0 0 2 :;
+
+	ASN1_Type;
+
+	SNEQ 5 1;					// could be OPTIONAL / NULL
+	SKIP 3;
+	LABL 0 0 0 54 NULL;
+	DBYT 0 2 5;
+	TRTS;
+
+	SNEQ 0 5;					// could be OPTIONAL / NULL
+	SKIP 2;
+	LABL 0 0 0 54 NULL;
+	TRTS;
+
+	// TAG part of TLV format
+	// test for contex-specific class
+	// Nothing for Universal or Private class
+	SBIT 6 5;						// APPLICATION class if true
+	SKIP 4;
+	//TBIT 7 5 0 0 RETURN;			// context-specific class if true
+	SBIT 7 5;
+		SKIP 80000002;
+		ASN1_ValueDisplayContextSpecific;	
+		TRTS;
+	
+	// LENGTH part of TLV format
+	ASN1_Length;
+
+	SNEQ 0 2;					// could be OPTIONAL / NULL
+	SKIP 2;
+	LABL 0 0 0 54 NULL;
+	TRTS;
+
+	//do we have enough bytes
+	SLTE 2 90;
+	SKIP 2;
+	// HEX# 0 10 5;
+	// BD: Do not know why HEX was used, left in beacuase there might be 
+	// BD: Another protocol I don't know that needs it
+	DUMP 0 10 90 5;
+	TRTS;
+
+	// Value part of TLV format
+	ASN1_ValueDisplay;
+
+	TRTS;
+
+
+void ASN1_ValueDisplay;
+	// test for application Class
+	SBIT 7 5;
+	SKIP 1;
+	TBIT 6 5 0 0 ASN1_Application;
+
+	TEQU  1  1 0 0 ASN1_Boolean;
+	TEQU  2  1 0 0 ASN1_Integer;
+	TEQU  3  1 0 0 ASN1_BitString;
+	TEQU  4  1 0 0 ASN1_OctetString;
+	TEQU  6  1 0 0 ASN1_OID;
+	TEQU 13  1 0 0 ASN1_PrintableString;
+	// BD: Actually Teletex String
+	TEQU 14  1 0 0 ASN1_PrintableString;
+	// BD: Actually IA5String
+	TEQU 16  1 0 0 ASN1_PrintableString;
+	TEQU 17  1 0 0 ASN1_UTCTime;
+	TEQU 18  1 0 0 ASN1_GeneralizedTime;
+	TEQU 1b  1 0 0 ASN1_GeneralString;
+	// BD: Actually BMPString
+	TEQU 1e  1 0 0 ASN1_PrintableString;
+	
+
+	// if the length is less then 5 then integer
+	TGTE 5 1 0 0 ASN1_Integer;
+
+	// otherwise
+	DUMP 0 2 90 5;
+
+// BD: dumps data for display for context specific classes in ASN1
+void ASN1_ValueDisplayContextSpecific;	
+	DECR 2;									// BD: Some funky offset some where, fixing it will need to find		
+	ASN1_TypeLength;
+	BREM 0 36;
+	SLTE 36 82;								// BD: Deals with some Kerberos packets that fragmented, should help other
+	SKIP 80000006;							// BD: fragmented packets
+		MOVE 2 B7;
+		SUBG 36 B7; 
+		SEQU 0 37;							// BD: if packet data croses over length of packet, for fragmented packets
+		SKIP 2;								// BD: Dump data and account for FCS
+			SUBG 37 82;
+			SUBG 4 2;
+	DUMP 0 2 90 5;
+	TRTS;
+
+
+//out params: g[1]=low 5 bits g[5]=whole byte
+
+void ASN1_Type;
+	DBYT 0 1 5;
+	MOVE 1 85;  	// save class
+	ANDG  1f 1;  	// only interested in the 5 low bits (for now
+
+
+void ASN1_TypeLength;
+	ASN1_Type;
+	ASN1_Length;
+
+void ASN1_SkipValue;
+	ASN1_Type;
+
+	TEQU 5 1 0 0 RETURN;
+	ASN1_Length;
+
+	// do not skip a whole sequence or set
+	TEQU 10 1 0 0 RETURN;
+	TEQU 11 1 0 0 RETURN;
+
+	INCR 0 2;
+
+void ASN1_SkipTag;
+	ASN1_Type;
+	TEQU 5 1 0 0 RETURN;
+	ASN1_Length;
+
+void ASN1_IPAddress;
+	IPLG 0 0 90;
+
+void ASN1_Counter;
+	ASN1_Integer;
+	LABL 0 0 0 14 Counter;
+
+void ASN1_Gauge32;
+	ASN1_Integer;
+	LABL 0 0 0 14 Gauge32;
+
+void ASN1_TimeTicks;
+	ASN1_Integer;
+	LABL 0 0 0 14 TimeTicks (hundredths of seconds since an epoch);
+
+void ASN1_Opaque;
+	ASN1_OctetString;
+	LABL 0 0 0 14 Opaque;
+
+void ASN1_Counter64;
+	ASN1_Integer;
+	LABL 0 0 0 14 Counter64;
+
+void ASN1_Application;
+	TEQU 0 1 0 0 ASN1_IPAddress;
+	TEQU 1 1 0 0 ASN1_Counter;
+	TEQU 2 1 0 0 ASN1_Gauge32;
+	TEQU 3 1 0 0 ASN1_TimeTicks;
+	TEQU 4 1 0 0 ASN1_Opaque;
+	TEQU 6 1 0 0 ASN1_Counter64;
+
+	// test for application class
+	SBIT 7 5;
+	SKIP 5;
+	SBIT 6 5;
+	SKIP 80000003;
+	HEX# 0 2 90;
+	LABL 0 0 0 14 Unknown application class;
+	TRTS;
+
+// This function does the same things as parse length except it just stores the amount
+// of length octets in g3
+// WARNING: This depends on caller to put packet pointer in proper place, put packet pointer
+// over length
+// out params: g[51]=number of length octets
+void ASN1_ParseLengthOctets;
+	GBYT 0 33 5;
+	ANDG 80 33;
+	SNEQ 80 33;
+	SKIP 2;
+		GBYT 0 33 5;
+		ANDG 7f 33;		// if long form then bits 7 to 1 is the number subsequent octets
+	TRTS;
+
+
+void ASN1_ParseLength;
+	DBYT 0 2 5;
+
+	SBIT 7 2;	// test for long form in bit 8
+	SKIP 80000004;
+	MOVE  2 83; // if long form then bits 7 to 1 is the number subsequent octets
+	ANDG  7f 3;
+	MOVE  0 2;
+	ASN1_LengthLoop;
+	
+
+void ASN1_Length;
+	ASN1_ParseLength;
+	TRTS;
+
+// in  params: g3=number of octets
+// out params: g2=length
+// loc params: g5=current byte
+
+void ASN1_LengthLoop;
+	GBYT  0  5;
+	ANDG f0  5;
+	DIVG 10  5;
+	MULG 10  2;	// shift left
+	ADDG  5 82;	// add new nibble	
+
+	GBYT  0  5;
+	ANDG  f  5;
+	MULG 10  2;	// shift left
+	ADDG  5 82;	// add new nibble	
+  
+	INCR  1;
+
+	SUBG 1 3; 
+	TEQU 0 3 0 0 RETURN; // are we done?
+
+	TNXT -ASN1_LengthLoop;
+	
+	TRTS; 
+
+
+void ASN1_EnumTest;
+	TEQU 0 11 0 0 RETURN;  //enum testing is off
+	DECR  2;   // go back because we usually skip it
+	GBYT  0 4; // get the id
+	ANDG 1f 4; // we only look at the low 5 bits
+	GBYT  0 2;
+	ANDG e0 2;
+	SEQU a0 2;
+	SKIP 1;
+	MOVE ff 4;
+	INCR  2;   // go back to where we came from
+
+
+void ASN1_Enum;
+	TEQU 0 11 0 0 RETURN;  //enum testing is off
+	ASN1_EnumTest;
+	ASN1_EnumDisplay;
+
+
+void ASN1_EnumDisplay;
+	TEQU 0 11 0 0 RETURN;  //enum testing is off
+	TEQU ff 4 0 0 RETURN;
+	LABL  0 0 0 0 [;
+	DGLB  0 4 0 0;
+	LABL  0 0 0 0 ];
+	TRTS;
+
+void ASN1_ParseIdentifier;
+	TLTE  1   2  0 30 ASN1_IdentifierLine;
+	TRTS;
+
+void ASN1_IdentifierLine;
+	MOVE 0 5;
+	ASN1_SubIDLoop;
+	TEQU 0 8 0 30 ASN1_FirstSubID;
+	DGLB 0 5 0 0 .;
+	TNXT -ASN1_ParseIdentifier;
+
+void ASN1_FirstSubID;
+	MOVE  1  8  0 30;
+	MOVE  5 89  0 30;
+	DIVG 28  9  0 30;
+	DGLB  0  9 90;
+	MULG ffffffd8 9 0 30;
+	ADDG  9 85  0 30;
+	DGLB  0  5  0  0 .;
+	TNXT -ASN1_ParseIdentifier;
+
+void ASN1_SubIDLoop;
+	TLTE  1  2  0 30 ASN1_SubIDNextLoop;
+	ADDG  4 85;
+	TRTS;
+
+void ASN1_SubIDNextLoop;
+	GBYT  0  4;
+	INCR  1  0;
+	SUBG  1  2; 
+	SNEQ  0  2;
+	SKIP  2;
+	ADDG  4 85;
+	TRTS;
+	TBIT  7  4  0 30 ASN1_SubIDStrip7Loop;
+	ADDG  4 85;
+	TRTS;
+
+void ASN1_SubIDStrip7Loop;
+	ANDG 7f  4;
+	ADDG  4 85;
+	MULG 80  5;
+	TNXT -ASN1_SubIDLoop;
+
+void ASN1_SubIDNext;
+	MOVE  0  5;
+	TNXT -ASN1_SubIDNext2;
+
+void ASN1_SubIDNext2;
+	GBYT  0  4;
+	INCR  1  0;
+	SUBG  1  2;
+//	TGTE  0  2  0  0 RETURN;
+	TBIT  7  4  0 30 ASN1_SubIDStrip7;
+	ADDG  4 85;
+	TRTS;
+
+void ASN1_SubIDStrip7;
+	ANDG 7f  4;
+	ADDG  4 85;
+	MULG 80  5;
+	TNXT -ASN1_SubIDNext2;
+
+void ASN1_OctetString()
+{
+	l[1] = g[2];
+	l[2] = 1;
+	if (g[2] <= 0x50)
+	{
+		CHR# 0 2 90 0;
+	}
+	if (g[2] > 0x50)
+	{
+		while (l[1] > 0)
+		{
+			if (l[1] >= 0x50)
+			{
+				LABL( 0, 0, 0, 0xc2, "Line " );
+				DGLB 0 42 2 0;
+				LABL 0 0 0 2 :;
+				CHR# 50 0 90 0;
+				l[1] -= 0x50;
+				l[2] += 1;
+			}
+			if (l[1] <= 0x50)
+			{
+				LABL( 0, 0, 0, 0xc2, "Line " );
+				DGLB 0 42 2 0;
+				LABL 0 0 0 2 :;
+				CHR# 0 41 90 0;
+				l[1] = 0;
+				l[2] += 1;
+			}
+		}
+	}
+	g[2] = 0;
+}
+
+void ASN1_GeneralizedTime;
+	CHR# 4 0 90;
+	LABL 0 0 0 0 "-";
+	CHR# 2 0 90;
+	LABL 0 0 0 0 "-";
+	CHR# 2 0 90;
+	
+	CHR# 2 0 20; // skip 2 spaces
+	LABL 0 0 0 0 :;
+	CHR# 2 0 90;
+	LABL 0 0 0 0 :;
+	CHR# 2 0 90;
+
+	LABL 0 0 0 20 "(";
+	CHR# 1; // skip 2 spaces
+	LABL 0 0 0 0 ")";
+
+	TRTS;
+	
+void ASN1_UTCTime;
+
+	CHR# 0 2 90;
+	DECR 0 2;
+
+	// BD: Date
+	INCR 2;
+	CHR# 2 0 34;
+	DECR 4;
+	CLTE 1 2 0 4 -;
+	INCR 4;
+	CHR# 2 0 4;
+	DECR 6;
+	CLTE 1 2 0 4 -;
+	CHR# 2 0 4;
+	INCR 4;
+
+	// BD: Time
+	CHR# 2 0 34;
+	CLTE 1 2 0 4 :;
+	CHR# 2 0 4;
+
+	SEQU D 2;
+	SKIP 80000003;	
+	  CLTE 1 2 0 4 :;
+	  CHR# 2 0 4;
+	  GBYT 0 31;
+
+	SEQU 11 2;
+	SKIP 80000003;
+	   CLTE 1 2 0 4 :;
+	   CHR# 2 0 4;
+	   GBYT 0 31;
+
+	SGTE D 31;
+	SKIP 1;
+	   CHR# 1 0 4;	
+	   
+	TRTS;
+
+
+void ASN1_GeneralString;
+	GSTR 2e 3;
+	CHR#  0 3 90;
+	TRTS;
+	
+void ASN1_PrintableString;
+	CHR# 0 2 90 0;
+	TRTS;
+
+void ASN1_BitString;
+	SLTE 15 2;
+	SKIP 80000008;
+	   BREM 0 30;
+	   SUBG 4 30;
+	   SLTE 30 82;
+	   SKIP 80000002;
+	     DUMP 1 0 90;
+	     TRTS;
+	   DUMP 0 2 90;
+	   TRTS;
+	MOVE 0 32;
+	ASN1_BitStringLoop;
+	TRTS;
+
+void ASN1_BitStringLoop;
+	SUBG 1 2;
+	BBYT 80000000 3 90 5;
+	ADDG 1 32;					// BD: stop looping if gets infinite loop for some bad Kerberos packets
+	SEQU 0 2;
+	SKIP 4;						
+	LABL 0 0 0 0 -;
+	SLTE 15 32;					// BD: check to make sure not gone past 15 recursive calls
+		SKIP 1;					// BD: skip if has
+	ASN1_BitStringLoop;
+	TRTS;
+
+void ASN1_Boolean;
+	GBYT 0 3;     // put the boolean into 3
+	INCR 1;
+	SNEQ 0 3;
+	SKIP 2;
+	LABL 0 0 0 54 FALSE;
+	TRTS;
+	LABL 0 0 0 54 TRUE;
+	TRTS;
+
+
+// in params : g1=type, g2=length
+// out params: g3=value
+
+void ASN1_Integer;
+	// 0 byte integer
+	SNEQ  0 2;
+	SKIP  2;
+	LABL 0 0 90 5 NULL;
+	TRTS;
+
+	// 1 byte integer
+	SNEQ  1 2;
+	SKIP  2;
+	DBYT  1 3 90 5;
+	TRTS;
+
+	// 2 byte integer
+	SNEQ  2 2;
+	SKIP  2;
+	DWRD  1 3 90 5;
+	TRTS;
+
+	// 3 byte integer
+	SNEQ  3 2;
+	SKIP  2;
+	DBIT  18 3 90 5;
+	TRTS;
+
+	// 4 byte integer
+	SNEQ  4 2;
+	SKIP  2;
+	DLNG  0 3 90 5;
+	TRTS;
+
+	// 5+ byte integer
+	HEX#  0 2 90 5;
+	MOVE  2 83;      // move g2 to g3
+	TRTS;
+
+
+
+void ASN1_FindNextValue;
+	ASN1_Value;
+	SNEQ 0 1;
+	SKIP 2;
+	INCR 0 2;  // incr length
+	TNXT -ASN1_FindNextValue;
+	TRTS; 
+
+void ASN1_FindNextOID;
+	GBYT 0 1;
+	TEQU 6 1 0 0 RETURN;	// test the type for OID
+	INCR 1;  // incr length
+	TNXT -ASN1_FindNextOID;
+	TRTS; 
+
+void ASN1_FindNextInteger;
+	GBYT 0 1;
+	TEQU 2 1 0 0 RETURN;	// test the type for integer
+	INCR 1;  // incr length
+	TNXT -ASN1_FindNextInteger;
+	TRTS; 
+
+void ASN1_FindNextSmallInteger;
+	GBYT 0 1;
+	INCR 1;
+	SNEQ 2 1;	// test the type for a 1 byte integer
+	SKIP 6;
+
+	GBYT 0 1;
+	INCR 1;
+	SNEQ 1 1;  // test for 1 octet length
+	SKIP 2;
+
+	DECR 2;
+	TRTS;
+
+	TNXT -ASN1_FindNextSmallInteger;
+	TRTS; 
+
+void ASN1_OID;
+	MOVE 0 8;
+	MOVE 2 94; // save OID length
+	LABL 0 0 0 50 {;
+	ASN1_ParseIdentifier;
+	LABL 0 0 0 0 };
+	DECR 0 14;
+	HEX# 0 14 5;
+
+	MOVE 10 95;  //save remaining
+	ASN1_OID2; 
+	MOVE 10 96;  //save remaining
+	SUBG 15 96;  //how many to get back to end of OID
+	INCR 0 16;   //inr to end of OID
+	MOVE 14 82;  //put back OID length
+
+void ASN1_OID2;
+	LABL 0 0 90 c2 Description:\;
+	MOVE 0 5;
+	DECR 0 14;   //goto beginning of OID
+	DECR 2;
+	HEX# 2 0 5;
+	MOVE 14 82;  //put back OID length
+	ASN1_SubIDNext;
+	MOVE  5 89;
+	DIVG 28  9;
+	TEQU 0 9 0 0 OID_itu;
+	TEQU 1 9 0 0 OID_iso;
+	TEQU 2 9 0 0 OID_itu-iso;
+
+void OID_itu;
+	LABL 0 0 0 54 itu;
+	MULG ffffffd8 9 0 30;
+	ADDG 9 85  0 30;
+	ADDG 1 5;  //CST# is zerobased
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_ituStr;
+	ASN1_SubIDNext;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_lettersStr;
+	ASN1_SubIDNext;
+	DGLB 0 5 4 4 .;
+	
+str# OID_ituStr;
+0x00	|	recommendation; 
+0x01	|	question;
+0x02	|	administration; 
+0x03	|	network Operator; 
+0x04	|	identified organization;
+0x09	|	data; 
+
+str# OID_lettersStr;
+	A;
+	B;
+	C;
+	D;
+	E;
+	F;
+	G;
+	H;
+	I;
+	J;
+	K;
+	L;
+	M;
+	N;
+	O;
+	P;
+	Q;
+	R;
+	S;
+	T;
+	U;
+	V;
+	W;
+	X;
+	Y;
+	Z;
+
+void OID_iso;
+	LABL 0 0 0 54 iso;
+	MULG ffffffd8 9 0 30;
+	ADDG  9 85  0 30;
+	TEQU 2 5 0 0 OID_iso_mem_b;
+	TEQU 3 5 0 0 OID_org;
+
+void OID_itu-iso;
+	LABL 0 0 0 54 itu-iso;
+	MULG ffffffd8 9 0 30;
+	ADDG  9 85  0 30;
+
+void OID_iso_mem_b;
+	LABL 0 0 0 4 .member-party.;
+	ASN1_SubIDNext;
+	CST# 0 5 0 4 OID_iso_mem_body;
+	TST# 0 5 0 0 OID_iso_mem_body::Call;
+
+str# OID_iso_mem_body::Call;
+840	|	OID_iso_mem_body::USA;
+
+void OID_iso_mem_body::USA;
+	LABL 0 0 0 4 .;
+	ASN1_SubIDNext;
+	CST# 0 5 0 4 OID_iso_mem_body::USAt;
+	
+str# OID_iso_mem_body::USAt;
+1	|	US organizations;
+10003	|	ANSI-standard-Z39.50 (10003);
+10004	|	ISO/IEEE 11073 Health informatics - Point-of-care medical device communication;
+10005	|	ANSI T1;
+10006	|	ieee802dot3;
+10008	|	DICOM Standard;
+10017	|	IEEE-1224;
+10022	|	IEEE802Dot10;
+10036	|	IEEE802Dot11;
+10040	|	X9-57;
+10045	|	ansi-x9-62;
+10065	|	ASTM International, Subcommittee E31.20 Data and System Security for Health Information;
+10066	|	ANSI C12.19 Application context;
+11359	|	RSA;
+113533	|	Nortel Networks;
+113536	|	Sun Microsystem;
+113548	|	cisco;
+113549	|	RSADSI;
+113554	|	MIT;
+113556	|	Microsoft;
+113560	|	COLUMBIA UNIVERSITY;
+113572	|	Unisys Corp.;
+113612	|	ESnet;
+113618	|	The University of Texas System;
+113658	|	XAPIA;
+113669	|	Merge Technologies;
+113699	|	WordPerfect;
+113741	|	Intel Corporation;
+114021	|	Identrus;
+114050	|	Cognos;
+114191	|	Sorna Corp.;
+114222	|	Centers for Disease Control;
+114283	|	globalPlatform;
+
+str# OID_iso_mem_body;
+36 	|	Australia;
+40 	|	Austria (Öenorm Institut);
+110	|	 Vietnam;
+156	|	 China;
+158	|	 Taiwan;
+203	|	 Czech Republic;
+246	|	 Finland;
+250	|	 France;
+276	|	 Germany (DIN);
+344	|	 Hong Kong;
+372	|	 Ireland (NSAI);
+392	|	 Japan;
+398	|	 Kazakhstan;
+410	|	 Korea;
+444	|	 India (Encryption);
+528	|	 Nederlands Normalisatie Instituut;
+578	|	 Norway ISO member;
+616	|	 Poland (National Registration Authority, KRIO);
+643	|	 Russian federation;
+702	|	 Singapore;
+752	|	 Sweden;
+777	|	 India;
+804	|	 Ukraine;
+826	|	 Great Britain (GB/UK);
+840	|	 USA;
+860	|	 Uzbekistan;
+862	|	 Venezuela - via standards Venezuela;
+886	|	 Taiwan;
+void OID_org;
+	LABL 0 0 0 4 .org;
+	ASN1_SubIDNext;
+	CEQU  2 5 0 4 .SIRENE;
+	CEQU  6 5 0 4 .dod;
+	CEQU  c 5 0 4 .ECMA;
+	CEQU  e 5 0 4 .OIW;
+	CEQU 10 5 0 4 .EWOS;
+	CEQU 11 5 0 4 .Bellcore;
+	CEQU 12 5 0 4 .IBM;
+	CEQU 16 5 0 4 .Open_Software_Foundation;
+	CEQU 17 5 0 4 .NORDUnet;
+	CEQU 18 5 0 4 .Digital_Equipment_Corporation;
+	CEQU 1a 5 0 4 .Nato_Identified_Organisation;
+	CEQU 24 5 0 4 .TeleTrusT;
+	CEQU 45 5 0 4 .SITA; 
+	TEQU  6 5 0 0 OID_dod;
+	
+void OID_dod;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_internet;
+
+void OID_internet;
+	LABL 0 0 0 4 .internet;
+	ASN1_SubIDNext;
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_internetStr;
+	TST# 0 5 0 0 OID_internetFunc;
+
+str# OID_internetStr;
+	dir;
+	mgmt;
+	exp;
+	prv;
+	sec;
+	SNMPv2;
+	mail;
+
+str# OID_internetFunc;
+	OID_dir;
+	OID_mgmt;
+	OID_exp;
+	OID_prv;
+	OID_sec;
+	OID_SNMPv2;
+	OID_mail;
+
+void OID_dir;
+void OID_exp;
+	ASN1_SubIDNext;
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_expStr;
+		
+str# OID_expStr;
+	86	| IPV6-TCP-MIB;
+	87	| IPV6-UDP-MIB;
+
+void OID_sec;
+	ASN1_SubIDNext;
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_secStr;
+	TST# 0 5 0 0 OID_secFunc;
+
+str# OID_secStr;
+	0	|	Reserved;
+	1	|	kerberosV4;
+	2	|	kerberosV5;
+	5	|	Mechanisms;
+	6	|	nametypes;
+
+str# OID_secFunc;
+	5	|	OID_Mechanisms;
+	6	|	OID_nametypes;
+
+void OID_mail;
+
+void OID_prv;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_enterprise;
+
+void OID_Mechanisms;
+	ASN1_SubIDNext;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_MechanismsStr;
+	
+str# OID_MechanismsStr;
+1	|	Simple Public Key GSS-API Mechanism (SPKM);
+2	|	SPNEGO pseudo-mechanism (RFC2478);
+5	|	SpnegoNegotiationToken;
+7	|	PKIX;
+
+void OID_SPNEGO;
+	LABL 0 0 0 4 .SPNEGO;
+	
+void OID_nametypes;
+str# OID_nametypesStr;
+1	|	SPKM-1;
+2	|	SPKM-2;
+3	|	spkm-3;
+void OID_enterprise;
+	LABL 0 0 0 4 .enterprise.;
+	ASN1_SubIDNext;
+	if (g[5] != 12733)
+	{
+		CST# 0 5  0 4 OIDS_Prv;
+		//	ADDG 1 5;
+		LABL 0 0 90 c2 Enterprise:;
+		CST# 0 5  0 54 OIDS_Prv;
+		//DGLB 0 5 90 c2 1:;
+		TEQU 137 5  0 54 OID::Micros;
+	
+	}
+	if (g[5] == 12733)
+	{
+		LABL 0 5 0 4 Savvius, Inc.;
+		//a "SAVVIUS" flagh could be set here to get more detailed data later TT33122
+		ASN1_SubIDNext;
+		if (g[5] == 2)
+		{
+			CEQU 2 5  0 54 2.;
+			ASN1_SubIDNext;
+			if (g[5] == 1)
+			{
+				CEQU 1 5  0 54 1.;
+				ASN1_SubIDNext;
+				if (g[5] == 1)
+				{
+					CEQU 1 5  0 54 1.;
+					ASN1_SubIDNext;
+					if (g[5] == 1)
+					{
+						LABL 0 0 0 54 WPOmni3EventSeverities;
+					}
+					if (g[5] == 2)
+					{
+						LABL 0 0 0 54 wpNotifyTime (OctectStringData);
+					}
+					if (g[5] == 3)
+					{
+						LABL 0 0 0 54 wpNotifyDescription;
+					}
+				}
+			}
+		}
+		g[5] = 12733;
+		LABL 0 0 90 c2 Enterprise:;
+		CST# 0 5  0 54 OIDS_Prv;
+		//g[1] = 0x1e;
+	}
+	
+void OID::Micros;
+void OID_SNMPv2;
+	LABL 0 0 0 4 .SNMPv2;
+	ASN1_SubIDNext;
+	LABL 0 0 0 4 .snmp;
+	CST# 0 5 0 4 OID_SNMPv2Str;
+	TEQU 3 5 0 0 OID_SNMPModules;
+
+str# OID_SNMPv2Str;
+	Domains;
+	Proxys;
+	Modules;
+	
+void OID_SNMPModules;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SNMPMib;
+
+void OID_SNMPMib;
+	LABL 0 0 0 4 .SNMPMib;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SNMPMibObjects;
+	TEQU 2 5 0 0 OID_SNMPMibConformance;
+
+void OID_SNMPMibObjects;
+	LABL 0 0 0 4 .SNMPMibObjects;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SNMPTrap;
+	TEQU 5 5 0 0 OID_SNMPTraps;
+	TEQU 6 5 0 0 OID_SNMPSet;
+
+void OID_SNMPTrap;
+	LABL 0 0 0 4 .SNMPTrap;
+	ASN1_SubIDNext;
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .snmpTrap;
+	CST# 0 5 0 4 OID_SNMPTrapStr;
+
+str# OID_SNMPTrapStr;
+	OID;
+	Enterprise;
+	
+void OID_SNMPTraps;
+	LABL 0 0 0 4 .SNMPTraps;
+	ASN1_SubIDNext;
+	TLTE 6 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_SNMPTrapsStr;
+	
+str# OID_SNMPTrapsStr;
+	coldStart;
+	warmStart;
+	linkDown;
+	linkUp;
+	authenticationFalure;
+
+void OID_SNMPSet;
+	LABL 0 0 0 4 .SNMPSet;
+	ASN1_SubIDNext;
+	CEQU 1 5 0 5 .snmpSetSerialNo;
+
+	
+void OID_SNMPMibConformance;
+	LABL 0 0 0 4 .snmpMibConformance;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SNMPMibCompliances;
+	TEQU 2 5 0 0 OID_SNMPMibGroups;
+
+void OID_SNMPMibCompliances;
+	LABL 0 0 0 4 .snmpMIBCompliances;
+	ASN1_SubIDNext;
+	CEQU 2 5 0 5 .snmpBasicCompliance;	
+
+void OID_SNMPMibGroups;
+	LABL 0 0 0 4 .snmpMIBGroups;
+	ASN1_SubIDNext;
+	CEQU 5 5 0 4 .snmpSetGroup;
+	CEQU 6 5 0 4 .systemGroup;
+	CEQU 7 5 0 4 .snmpBasicNotificationsGroup ;
+	CEQU 8 5 0 4 .snmpGroup;
+	CEQU 9 5 0 4 .snmpCommunityGroup;
+
+
+// mgmt
+
+void OID_mgmt;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SNMPMIB2;
+
+void OID_SNMPMIB2;
+	LABL 0 0 0 4 .mib-2;
+	ASN1_SubIDNext;
+	TLTE 4f 5 0 0 RETURN;
+	LABL  0 0 0 4 .;
+	CST#  0 5 0 4 OID_SNMPMIB2Str;
+	TEQU  1 5 0 0 OID_System;
+	TEQU  2 5  0 0 OID_Interfaces;
+	TEQU  3 5  0 0 OID_at;
+	TEQU  4 5  0 0 OID_ip;
+	TEQU  5 5  0 0 OID_icmp;
+	TEQU  6 5  0 0 OID_tcp;
+	TEQU  7 5  0 0 OID_udp;
+	TEQU  8 5  0 0 OID_egp;
+	TEQU  b 5  0 0 OID_snmp;
+	TEQU 10 5  0 0 OID_rmon;
+	TEQU 1f 5 0 0 OID_ifMIB;
+
+
+str# OID_SNMPMIB2Str;
+	1	| system;
+	2	| interfaces;
+	3	| at; 
+	4	| ip;
+	5	| icmp; 
+	6	| tcp; 
+	7	| udp; 
+	8	| egp; 
+	9	| cmot; 
+	10	| transmission; 
+	11	| snmp; 
+	14	| OSPF Version 2 MIB; 
+	15	| BGPv4; 
+	16	| rmon;
+	17	| Bridge MIB;
+	30	| IANAifType-MIB;
+	31	| ifMIB;
+	48	| IP-MIB;
+	55	| IPV6-MIB;
+	56	| IPV6-ICMP-MIB;
+	63	| DISMAN-SCHEDULE-MIB;
+	64	| DISMAN-SCRIPT-MIB;
+	72	| IANA-ADDRESS-FAMILY-NUMBERS-MIB;
+	73	| IANA-LANGUAGE-MIB;
+	74	| AGENTX-MIB;
+	76	| INET-ADDRESS-MIB;
+	77	| IF-INVERTED-STACK-MIB;
+	78	| HCNUM-TC;
+
+void OID_Interfaces;
+	ASN1_SubIDNext;
+	CEQU 1 5 0 4 .ifNumber; 
+	TEQU 2 5 0 0 OID_ifTable;
+
+void OID_ifTable;
+	LABL 0 0 0 4 .ifTable;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_ifEntry;
+
+void OID_ifEntry;
+	LABL 0 0 0 4 .ifEntry;
+	ASN1_SubIDNext;
+	TLTE 17 5 0 0 RETURN;
+
+	*ifType: tell ASN1_Value to use index 1 in the function table
+	*which is used if g7 > 0
+	SNEQ 3 5;
+	SKIP 1;
+	MOVE 1 7;
+
+	*ifAdminStatus: tell ASN1_Value to use index 2 in the function table
+	*which is used if g7 > 0
+	SNEQ 7 5;
+	SKIP 1;
+	MOVE 2 7;
+
+	*ifOperStatus: tell ASN1_Value to use index 2 in the function table
+	*which is used if g7 > 0
+	SNEQ 8 5;
+	SKIP 1;
+	MOVE 2 7;
+
+	LABL 0 0 0 4 .if;
+	CST# 0 5 0 4 OID_ifTableStr;
+
+str# OID_ifTableStr;
+	Index;
+	Descr;
+	Type;
+	Mtu;
+	Speed;
+	PhysAddress;
+	AdminStatus;
+	OperStatus;
+	LastChange;
+	InOctets;
+	InUcastPkts;
+	InNUcastPkts;
+	InDiscards;
+	InErrors;
+	InUnknownProtos;
+	OutOctets;
+	OutUcastPkts;
+	OutNUcastPkts;
+	OutDiscards;
+	OutErrors;
+	OutQLen;
+	Specific;
+
+void OID_ifTypeFunc;
+	CST# 0 3 0 14 OID_ifTypeStr;
+
+str# OID_ifTypeStr;
+	other;
+	regular1822;
+	hdh1822;
+	ddn-x25;
+	rfc877-x25;
+	ethernet-csmacd;
+	iso88023-csmacd;
+	iso88024-tokenBus;
+	iso88025-tokenRing;
+	iso88026-man;
+	starLan;
+	proteon-10Mbit;
+	proteon-80Mbit;
+	hyperchannel;
+	fddi;
+	lapb;
+	sdlc;
+	ds1;
+	e1;
+	basicISDN;
+	primaryISDN;
+	propPointToPointSerial;
+	ppp;
+	softwareLoopback;
+	eon;
+	ethernet-3Mbit;
+	nsip;
+	slip;
+	ultra;
+	ds3;
+	sip;
+	frame-relay;
+
+void OID_ifStatusFunc;
+	CST# 0 3 0 14 OID_ifStatusFuncStr;
+
+str# OID_ifStatusFuncStr;
+	up;
+	down;
+	testing;
+                                   
+void OID_System;
+	ASN1_SubIDNext;
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .sys;
+	CST# 0 5 0 4 OID_SystemStr;
+	TEQU 9 5 0 0 OID_SystemOrTable;
+
+	//set valueFunc
+	SNEQ 7 5;
+	SKIP 1;
+	MOVE 7 7;
+
+str# OID_SystemStr;
+	Descr; 
+	ObjectID;
+	UpTime; 
+	Contact; 
+	Name; 
+	Location; 
+	Services; 
+	OrTable;
+
+void OID_SystemServicesFunc;
+	//CLTE 1 3 0 d4 physical (e.g., repeaters);
+	//CLTE 2 3 0 d4 datalink/subnetwork (e.g., bridges);
+	//CLTE 3 3 0 d4 internet (e.g., supports the IP);
+	//CLTE 4 3 0 d4 end-to-end  (e.g., supports the TCP);
+	//CLTE 7 3 0 d4 applications (e.g., supports the SMTP);
+
+void OID_SystemOrTable;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_SystemOrEntry;
+
+void OID_SystemOrEntry;
+	LABL 0 0 0 4 .sysOrEntry;
+	ASN1_SubIDNext;
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0 0 4 .sysOR;
+	CST# 0 5 0 4 OID_SystemOrEntryStr;
+
+str# OID_SystemOrEntryStr;
+    Index;
+    ID;
+    Descr;
+    UpTime;
+
+// at
+
+void OID_at;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_atTable;
+
+void OID_atTable;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_atEntry;
+
+void OID_atEntry;
+	LABL 0 0 0 4 .atEntry;
+	ASN1_SubIDNext;
+	TLTE 4 5 0 0 RETURN;
+	LABL 0 0 0 4 .at;
+	CST# 0 5 0 4 OID_atEntryStr;
+
+str# OID_atEntryStr;
+	Index;
+	PhysAddress;
+	NetAddress;
+      
+// ip  (RFC 1213)
+  
+void OID_ip;
+	ASN1_SubIDNext;
+	TLTE 18 5 0 0 RETURN;
+	LABL  0 0 0 4 .ip;
+	CST#  0 5 0 4 OID_ipStr;
+	TEQU 14 4 0 0 OID_ipAddrTable;
+	TEQU 15 4 0 0 OID_ipRouteTable;
+	TEQU 16 4 0 0 OID_ipNetToMediaTable;
+
+str# OID_ipStr;
+	Forwarding;
+	DefaultTTL;
+	InReceives;
+	InHdrErrors;
+	InAddrErrors;
+	ForwDatagrams;
+	InUnknownProtos;
+	InDiscards;
+	InDelivers;
+	OutRequests;
+	OutDiscards;
+	OutNoRoutes;
+	ReasmTimeout;
+	ReasmReqds;
+	ReasmOKs;
+	ReasmFails;
+	FragOKs;
+	FragFails;
+	FragCreates;
+	AddrTable;
+	RouteTable;
+	NetToMediaTable;
+	RoutingDiscards;
+
+// ipAddrTable
+
+void OID_ipAddrTable;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_ipAddrEntry;
+
+void OID_ipAddrEntry;
+	LABL 0 0 0 4 .ipAddrEntry;
+	ASN1_SubIDNext;
+	TLTE 6 5 0 0 RETURN;
+	LABL 0 0 0 4 .ipAdEnt;
+	CST# 0 5 0 4 OID_ipAddrEntryStr;
+
+str# OID_ipAddrEntryStr;
+	Addr;
+	IfIndex;
+	NetMask;
+	BcastAddr;
+	ReasmMaxSize;     
+	
+// ipRouteTable
+
+void OID_ipRouteTable;
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_ipRouteEntry;
+
+void OID_ipRouteEntry;
+	LABL 0 0 0 4 .ipRouteEntry;
+	ASN1_SubIDNext;
+	TLTE f 5 0 0 RETURN;
+	LABL 0 0 0 4 .ipRoute;
+	CST# 0 5 0 4 OID_ipRouteEntryStr;
+
+	SNEQ 9 5;
+	SKIP 1;
+	MOVE 4 7;
+
+str# OID_ipRouteEntryStr;
+	Dest;
+	IfIndex;
+	Metric1;
+	Metric2;
+	Metric3;
+	Metric4;
+	NextHop;
+	Type;
+	Proto;
+	Age;
+	Mask;
+	Metric5;
+	Info;
+	
+void OID_ipRouteProtoFunc;
+	CST# 0 3 0 4  OID_ipRouteProtoStr;
+
+str# OID_ipRouteProtoStr;
+	other;
+	local;
+	netmgmt;
+	icmp;
+	egp;
+	ggp;
+	hello;
+	rip;
+	is-is;
+	es-is;
+	ciscoIgrp;
+	bbnSpfIgp;
+	ospf;
+	bgp;
+     
+void OID_ipNetToMediaTable;	 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_ipNetToMediaEntry;
+
+void OID_ipNetToMediaEntry;
+	LABL 0 0 0 4 .ipNetToMediaEntry;
+	ASN1_SubIDNext;
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0 0 4 .ipNetToMedia;
+	CST# 0 5 0 4 OID_ipNetToMediaEntryStr;
+
+str# OID_ipNetToMediaEntryStr;	 
+	IfIndex;
+	PhysAddress;
+	NetAddress;
+	Type;
+                      	 
+	                  	
+// icmp
+  
+void OID_icmp;
+	ASN1_SubIDNext;
+	TLTE 1b 5 0 0 RETURN;
+	LABL 0 0 0 4 .icmp;
+	CST# 0 5 0 4 OID_icmpStr;
+		   
+str# OID_icmpStr;
+	InMsgs;
+	InErrors;
+	InDestUnreachs;
+	InTimeExcds;
+	InParmProbs;
+	InSrcQuenchs;
+	InRedirects;
+	InEchos;
+	InEchoReps;
+	InTimestamps;
+	InTimestampReps;
+	InAddrMasks;
+	InAddrMaskReps;
+	OutMsgs;
+	OutErrors;
+	OutDestUnreachs;
+	OutTimeExcds;
+	OutParmProbs;
+	OutSrcQuenchs;
+	OutRedirects;
+	OutEchos;
+	OutEchoReps;
+	OutTimestamps;
+	OutTimestampReps;
+	OutAddrMasks;
+	OutAddrMaskReps;
+	   
+	    
+// tcp
+
+void OID_tcp;
+	ASN1_SubIDNext;
+	TLTE 10 5 0 0 RETURN;
+	LABL 0 0 0 4 .tcp;
+	CST# 0 5 0 4 OID_tcpStr;
+	TEQU d 5 0 0 OID_tcpConnTable;
+	
+str# OID_tcpStr;	   
+	RtoAlgorithm;
+	RtoMin;
+	RtoMax;
+	MaxConn;
+	ActiveOpens;
+	PassiveOpens;
+	AttemptFails;
+	EstabResets;
+	CurrEstab;
+	InSegs;
+	OutSegs;
+	RetransSegs;
+	ConnTable;
+	InErrs; 
+	OutRsts;
+		
+void OID_tcpConnTable;	 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_tcpConnEntry;
+
+void OID_tcpConnEntry;
+	LABL 0 0 0 4 .tcpConnEntry;
+	ASN1_SubIDNext;
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0 0 4 .tcpConn;
+	CST# 0 5 0 4 OID_tcpConnEntryStr;
+
+	// set value func;
+	SNEQ 1 5;
+	SKIP 1;
+	MOVE 5 7;
+
+
+str# OID_tcpConnEntryStr;	 
+	State;
+	LocalAddress;
+	LocalPort;
+	RemAddress;
+	RemPort;
+   
+void OID_tcpConnStateFunc;
+	CST# 0 3 0 4 OID_tcpConnStateStr;
+
+str# OID_tcpConnStateStr;
+	closed;
+	listen;
+	synSent;
+	synReceived;
+	established;
+	finWait1;
+	finWait2;
+	closeWait;
+	lastAck;
+	closing;
+	timeWait;
+	deleteTCB;
+     
+	              
+// udp
+
+void OID_udp;
+	ASN1_SubIDNext;
+	TLTE 10 5 0 0 RETURN;
+	LABL 0 0 0 4 .udp;
+	CST# 0 5 0 4 OID_udpStr;
+	TEQU 5 5 0 0 OID_udpTable;
+	    
+str# OID_udpStr;
+	InDatagrams; 
+	NoPorts; 
+	InErrors; 
+	OutDatagrams; 
+	Table;
+ 
+void OID_udpTable;	 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_udpEntry;
+
+void OID_udpEntry;
+	LABL 0 0 0 4 .udpEntry;
+	ASN1_SubIDNext;
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0 0 4 .udp;
+	CST# 0 5 0 4 OID_udpEntryStr;
+
+str# OID_udpEntryStr;
+	LocalAddress;
+	LocalPort;
+
+	 
+// egp
+
+void OID_egp;
+	ASN1_SubIDNext;
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .egp;
+	CST# 0 5 0 4 OID_egpStr;
+	TEQU 5 5 0 0 OID_egpNeighTable;
+	   
+str# OID_egpStr; 
+	InMsgs; 
+	InErrors;
+	OutMsgs; 
+	OutErrors;
+	NeighTable;
+	As;
+
+ 
+void OID_egpNeighTable;	 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_egpNeighEntry;
+
+void OID_egpNeighEntry;
+	LABL 0 0 0 4 .egpNeighEntry;
+	ASN1_SubIDNext;
+	TLTE 10 5 0 0 RETURN;
+	LABL 0 0 0 4 .egpNeigh;
+	CST# 0 5 0 4 OID_egpNeighEntryStr;
+	SNEQ 1 5;
+	SKIP 1;
+	MOVE 6 7;
+
+
+str# OID_egpNeighEntryStr;
+	State;
+	Addr;
+	As;
+	InMsgs;
+	InErrs;
+	OutMsgs;
+	OutErrs;
+	InErrMsgs;
+	OutErrMsgs;
+	StateUps;
+	StateDowns;
+	IntervalHello;
+	IntervalPoll;
+	Mode;
+	EventTrigger;
+                      
+void OID_egpNeighStateFunc;
+	CST# 0 5 0 4 OID_egpNeighStateStr;
+
+str# OID_egpNeighStateStr;
+	idle;
+	acquisition;
+	down;
+	up;
+	cease;
+
+
+// snmp
+
+void OID_snmp;
+	ASN1_SubIDNext;
+	TLTE 21 5 0 0 RETURN;
+	LABL 0 0 0 4 .snmp;
+	CST# 0 5 0 4 OID_snmpStr;
+	
+str# OID_snmpStr;   
+	InPkts;
+	OutPkts;
+	InBadVersions;
+	InBadCommunityNames;
+	InBadCommunityUses;
+	InASNParseErrs;
+	InTooBigs;
+	InNoSuchNames;
+	InBadValues;
+	InReadOnlys;
+	InGenErrs;
+	InTotalReqVars;
+	InTotalSetVars;
+	InGetRequests;
+	InGetNexts;
+	InSetRequests;
+	InGetResponses;
+	InTraps;
+	OutTooBigs;
+	OutNoSuchNames;
+	OutBadValues;
+	OutGenErrs;
+	OutGetRequests;
+	OutGetNexts;
+	OutSetRequests;
+	OutGetResponses;
+	OutTraps;
+	EnableAuthenTraps;
+
+// rmon
+
+void OID_rmon;
+	ASN1_SubIDNext;
+	TST# 0 5 0 0 OID_rmonFuncs;
+
+str# OID_rmonFuncs;
+    OID_statistics; 
+    OID_history;
+    OID_alarm;
+    OID_host;
+    OID_hostTopN;
+    OID_matrix;
+    OID_filter;
+    OID_capture;
+    OID_event;
+	OID_tokenring;
+    OID_protocolDir;
+    OID_protocolDist;
+    OID_addressMap;
+    OID_nlHost;
+    OID_nlMatrix;
+    OID_alHost;
+    OID_alMatrix;
+    OID_usrHistory;
+    OID_probeConfig;
+    OID_rmonConformance;
+
+
+// ifMIB
+
+void OID_ifMIB;
+	INCR 3;
+	ASN1_SubIDNext;
+	LABL 0 0  0 4 ::;
+	CST# 0 5 0 4 OID_ifMIBStr;
+
+str# OID_ifMIBStr;
+	6	| ifHCInOctets;
+	7	| ifHCInUcastPkts;
+	8	| ifHCInMulticastPkts;
+	9	| ifHCInBroadcastPkts;
+	10	| ifHCOutOctets;
+	11	| ifHCOutUcastPkts;
+	12	| ifHCOutMulticastPkts;
+	13	| ifHCOutBroadcastPkts;
+	19	| ifCounterDiscontinuityTime;
+
+// tokenring
+
+void OID_tokenring;
+	LABL 0 0  0 4 .tokenring; 
+	ASN1_SubIDNext;
+	TEQU 7 5 0 0 OID_ringStationControl2Table;
+	TEQU 8 5 0 0 OID_sourceRoutingStats2Table;
+
+// ringStationControl2 (RFC2021)
+
+void OID_ringStationControl2Table;
+	LABL 0 0  0 4 .ringStationControl2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_ringStationControl2Entry;
+
+void OID_ringStationControl2Entry;
+	LABL 10 5  0 4 .ringStationControl2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .ringStationControl;
+	CST# 0 5 0 4 OID_ringStationControl2EntryStr;
+		  
+str# OID_ringStationControl2EntryStr;
+    DroppedFrames;
+    CreateTime;  
+	
+	
+// sourceRoutingStats2 (RFC2021)
+
+void OID_sourceRoutingStats2Table;
+	LABL 0 0  0 4 .sourceRoutingStats2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_sourceRoutingStats2Entry;
+
+void OID_sourceRoutingStats2Entry;
+	LABL 10 5  0 4 .sourceRoutingStats2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .sourceRoutingStats2;
+	CST# 0 5 0 4 OID_sourceRoutingStats2EntryStr;
+		  
+str# OID_sourceRoutingStats2EntryStr;
+    DroppedFrames;
+    CreateTime;  
+	
+	     
+// matrix
+
+void OID_matrix;
+	LABL 0 0  0 4 .matrix; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_matrixControlTable;
+	TEQU 2 5 0 0 OID_matrixDSTable;
+	TEQU 4 5 0 0 OID_matrixControl2Table;
+
+// matrixControlTable
+
+void OID_matrixControlTable;
+	LABL 0 0  0 4 .matrixControlTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_matrixControlEntry;
+
+void OID_matrixControlEntry;
+	LABL 10 5  0 4 .matrixControlEntry; 
+	ASN1_SubIDNext;
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .matrixControl;
+	CST# 0 5 0 4 OID_matrixControlEntryStr;
+
+str# OID_matrixControlEntryStr;
+	Index;
+	DataSource;
+	TableSize;
+	LastDeleteTime;
+	Owner;
+	Status;
+
+// matrixDSTable
+
+void OID_matrixDSTable;
+	LABL 0 0  0 4 .matrixDSTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_matrixDSEntry;
+
+void OID_matrixDSEntry;
+	LABL 10 5  0 4 .matrixDSEntry; 
+	ASN1_SubIDNext;
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .matrixDS;
+	CST# 0 5 0 4 OID_matrixDSEntryStr;
+
+str# OID_matrixDSEntryStr;
+	SourceAddress;
+	DestAddress;
+	Index;
+	Pkts;
+	Octets;
+	Errors;
+
+
+// matrixControl2 (RFC2021)
+
+void OID_matrixControl2Table;
+	LABL 0 0  0 4 .matrixControl2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_matrixControl2Entry;
+
+void OID_matrixControl2Entry;
+	LABL 10 5  0 4 .matrixControl2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .matrixControl;
+	CST# 0 5 0 4 OID_matrixControl2EntryStr;
+		  
+str# OID_matrixControl2EntryStr;
+    DroppedFrames;
+    CreateTime;  
+	     
+
+// event
+
+void OID_event;
+	LABL 0 0  0 4 .event; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_eventTable;
+	TEQU 2 5 0 0 OID_logTable;
+
+void OID_eventTable;
+	LABL 0 0  0 4 .eventTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_eventEntry;
+
+void OID_eventEntry;
+	LABL 10 5  0 4 .eventEntry; 
+	ASN1_SubIDNext;
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .event;
+	CST# 0 5 0 4 OID_eventEntryStr;
+
+str# OID_eventEntryStr;
+	Index;
+	Description;
+	Type;
+	Community;
+	LastTimeSent;
+	Owner;
+	Status;
+
+void OID_logTable;
+	LABL 0 0  0 4 .logTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_logEntry;
+
+void OID_logEntry;
+	LABL 10 5  0 4 .logEntry; 
+	ASN1_SubIDNext;
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0  0 4 .log; 
+	CST# 0 5 0 4 OID_logEntryStr;
+
+str# OID_logEntryStr;
+	EventIndex;
+	Index;
+	Time;
+	Description;
+
+// hostTopN
+
+void OID_hostTopN;
+	LABL 10 5  0 4 .hostTopN; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_hostTopNControlTable;
+	TEQU 2 5 0 0 OID_hostTopNTable;
+
+void OID_hostTopNControlTable;
+	LABL 10 5  0 4 .hostTopNControlTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_hostTopNControlEntry;
+
+void OID_hostTopNControlEntry;
+	LABL 10 5  0 4 .hostTopNControlEntry; 
+	ASN1_SubIDNext;
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .hostTopN;
+	CST# 0 5 0 4 OID_hostTopNControlEntryStr;
+
+str# OID_hostTopNControlEntryStr;
+	ControlIndex;
+	HostIndex;
+	RateBase;
+	TimeRemaining;
+	Duration;
+	RequestedSize;
+	GrantedSize;
+	StartTime;
+	Owner;
+	Status;
+
+void OID_hostTopNTable;
+	LABL 10 5  0 4 .hostTopNTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_hostTopNEntry;
+
+void OID_hostTopNEntry;
+	LABL 10 5  0 4 .hostTopNEntry; 
+	ASN1_SubIDNext;
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .hostTopN;
+	CST# 0 5 0 4 OID_hostTopNEntryStr;
+
+str# OID_hostTopNEntryStr;
+	Report;
+	Index;
+	Address;
+	Rate;
+
+// alarm
+
+void OID_alarm;
+	LABL 0 0  0 4 .alarm; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_alarmTable;
+
+void OID_alarmTable;
+	LABL 0 0  0 4 .alarmTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_alarmEntry;
+
+void OID_alarmEntry;
+	LABL 10 5  0 4 .alarmEntry; 
+	ASN1_SubIDNext;
+	TLTE e 5 0 0 RETURN;
+	LABL 0 0 0 4 .alarm;
+	CST# 0 5 0 4 OID_alarmEntryStr;
+
+str# OID_alarmEntryStr;
+	Index;
+	Interval;
+	Variable;
+	SampleType;
+	Value;
+	StartupAlarm;
+	RisingThreshold;
+	FallingThreshold;
+	RisingEventIndex;
+	FallingEventIndex;
+	Owner;
+	Status;
+ 
+
+// filter
+
+void OID_filter;
+	LABL 0 0  0 4 .filter; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_filterTable;
+	TEQU 2 5 0 0 OID_channelTable;
+	TEQU 3 5 0 0 OID_channel2Table;
+	TEQU 4 5 0 0 OID_filter2Table;
+
+// filter_channelTable
+
+void OID_channelTable;
+	LABL 0 0  0 4 .channelTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 0 OID_channelEntry;
+
+void OID_channelEntry;
+	LABL 0 0  0 4 .channelEntry; 
+	ASN1_SubIDNext;
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .channel;
+	CST# 0 5 0 4 OID_channelEntryStr;
+
+str# OID_channelEntryStr;
+	Index;
+	IfIndex;
+	AcceptType;
+	DataControl;
+	TurnOnEventIndex;
+	TurnOffEventIndex;
+	EventIndex;
+	EventStatus;
+	Matches;
+	Description;
+	Owner;
+	Status;
+
+// channel2 (RFC2021)
+
+void OID_channel2Table;
+	LABL 0 0  0 4 .channel2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_channel2Entry;
+
+void OID_channel2Entry;
+	LABL 10 5  0 4 .channel2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .channel;
+	CST# 0 5 0 4 OID_channel2EntryStr;
+		  
+str# OID_channel2EntryStr;
+    DroppedFrames;
+    CreateTime;  
+
+// filterTable
+
+void OID_filterTable;
+	LABL 0 0  0 4 .filterTable; 
+	ASN1_SubIDNext;
+	TEQU 1 5 0 4 OID_filterEntry;
+
+void OID_filterEntry;
+	LABL 10 5  0 4 .filterEntry; 
+	ASN1_SubIDNext;
+	TLTE c 5 0 0 RETURN;
+	LABL 0 0 0 4 .filter;
+	CST# 0 5 0 4 OID_filterEntryStr;
+
+str# OID_filterEntryStr;
+	Index;
+	ChannelIndex;
+	PktDataOffset;
+	PktData;
+	PktDataMask;
+	PktDataNotMask;
+	PktStatus;
+	PktStatusMask;
+	PktStatusNotMask;
+	Owner;
+	Status;
+ 
+ 	
+// filter2 (RFC2021)
+
+void OID_filter2Table;
+	LABL 0 0  0 4 .filter2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_filter2Entry;
+
+void OID_filter2Entry;
+	LABL 10 5  0 4 .filter2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .filterProtocolDir;
+	CST# 0 5 0 4 OID_filter2EntryStr;
+		  
+str# OID_filter2EntryStr;
+    DataLocalIndex;
+    LocalIndex;  
+
+  
+// capture
+
+void OID_capture;
+	LABL 10 5  0 4 .capture; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_bufferControlTable;
+	TEQU 2 5 0 0 OID_captureBufferTable;
+
+void OID_bufferControlTable;
+	LABL 0 0  0 4 .bufferControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_bufferControlEntry;
+
+void OID_bufferControlEntry;
+	LABL 0 0  0 4 .bufferControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE e 5 0 0 RETURN;
+	LABL 0 0 0 4 .bufferControl;
+	CST# 0 5 0 4 OID_bufferControlEntryStr;
+
+str# OID_bufferControlEntryStr;
+	Index;
+	ChannelIndex;
+	FullStatus;
+	FullAction;
+	CaptureSliceSize;
+	DownloadSliceSize;
+	DownloadOffset;
+	MaxOctetsRequested;
+	MaxOctetsGranted;
+	CapturedPackets;
+	TurnOnTime;
+	Owner;
+	Status;
+   
+
+void OID_captureBufferTable;
+	LABL 0 0  0 4 .captureBufferTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_captureBufferEntry;
+
+void OID_captureBufferEntry;
+	LABL 0 0  0 4 .captureBufferEntry; 
+	ASN1_SubIDNext;	
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .captureBuffer;
+	CST# 0 5 0 4 OID_captureBufferEntryStr;
+
+str# OID_captureBufferEntryStr;
+	ControlIndex;
+	Index;
+	PacketID;
+	PacketData;
+	PacketLength;
+	PacketTime;
+	PacketStatus;
+     
+// statistics
+
+void OID_statistics;
+	LABL 10 5  0 4 .statistics; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_etherStatsTable;
+	TEQU 4 5 0 0 OID_etherStats2Table;
+	TEQU 5 5 0 0 OID_tokenRingMLStats2Table;
+	TEQU 6 5 0 0 OID_tokenRingPStats2Table;
+
+void OID_etherStatsTable;
+	LABL 0 0  0 4 .etherStatsTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_etherStatsEntry;
+
+void OID_etherStatsEntry;
+	LABL 10 5  0 4 .etherStatsEntry; 
+	ASN1_SubIDNext;	
+	TLTE 16 5 0 0 RETURN;
+	LABL 0 0 0 4 .etherStats;
+	CST# 0 5 0 4 OID_etherStatsEntryStr;
+
+str# OID_etherStatsEntryStr;
+	Index;
+	DataSource;
+	DropEvents;
+	Octets;
+	Pkts;
+	BroadcastPkts;
+	MulticastPkts;
+	CRCAlignErrors;
+	UndersizePkts;
+	OversizePkts;
+	Fragments;
+	Jabbers;
+	Collisions;
+	Pkts64Octets;
+	Pkts65to127Octets;
+	Pkts128to255Octets;
+	Pkts256to511Octets;
+	Pkts512to1023Octets;
+	Pkts1024to1518Octets;
+	Owner;
+	Status;
+   	
+// etherStats2 (RFC 2021)
+
+void OID_etherStats2Table;
+	LABL 0 0  0 4 .etherStats2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_etherStats2Entry;
+
+void OID_etherStats2Entry;
+	LABL 10 5  0 4 .etherStats2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .etherStats;
+	CST# 0 5 0 4 OID_etherStats2EntryStr;
+
+str# OID_etherStats2EntryStr;	
+    DroppedFrames;
+    CreateTime;
+	
+
+// tokenRingMLStats2 (RFC2021)
+
+void OID_tokenRingMLStats2Table;
+	LABL 0 0  0 4 .tokenRingMLStats2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_tokenRingMLStats2Entry;
+
+void OID_tokenRingMLStats2Entry;
+	LABL 0 0 0 4 .tokenRingMLStats2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .tokenRingMLStats;
+	CST# 0 5 0 4 OID_tokenRingMLStats2EntryStr;
+		  
+str# OID_tokenRingMLStats2EntryStr;
+    DroppedFrames;
+    CreateTime;  	
+	
+// tokenRingPStats2 (RFC2021)
+
+void OID_tokenRingPStats2Table;
+	LABL 0 0  0 4 .tokenRingPStats2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_tokenRingPStats2Entry;
+
+void OID_tokenRingPStats2Entry;
+	LABL 10 5  0 4 .tokenRingPStats2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .tokenRingPStats;
+	CST# 0 5 0 4 OID_tokenRingPStats2EntryStr;
+		  
+str# OID_tokenRingPStats2EntryStr;
+    DroppedFrames;
+    CreateTime;  	
+
+
+// history
+
+void OID_history;
+	LABL 10 5  0 4 .history; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_historyControlTable;
+	TEQU 2 5 0 0 OID_etherHistoryTable;
+	TEQU 5 5 0 0 OID_historyControl2Table;
+
+// historyControlTable
+
+void OID_historyControlTable;
+	LABL 0 0  0 4 .historyControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_historyControlEntry;
+
+void OID_historyControlEntry;
+	LABL 10 5  0 4 .historyControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .historyControl;
+	CST# 0 5 0 4 OID_historyControlEntryStr;
+
+str# OID_historyControlEntryStr;
+	Index;
+	DataSource;
+	BucketsRequested;
+	BucketsGranted;
+	Interval;
+	Owner;
+	Status;
+
+// etherHistoryTable
+
+void OID_etherHistoryTable;
+	LABL 0 0  0 4 .etherHistoryTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_etherHistoryEntry;
+
+void OID_etherHistoryEntry;
+	LABL 10 5  0 4 .etherHistoryEntry; 
+	ASN1_SubIDNext;	
+	TLTE 10 5 0 0 RETURN;
+	LABL 0 0 0 4 .etherHistory;
+	CST# 0 5 0 4 OID_etherHistoryStr;
+
+str# OID_etherHistoryStr;
+	Index;
+	SampleIndex;
+	IntervalStart;
+	DropEvents;
+	Octets;
+	Pkts;
+	BroadcastPkts;
+	MulticastPkts;		
+	CRCAlignErrors;
+	UndersizePkts;
+	OversizePkts;
+	Fragments;
+	Jabbers;
+	Collision;
+	Utilization;
+
+// historyControl2Table
+
+void OID_historyControl2Table;
+	LABL 0 0  0 4 .historyControl2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_historyControl2Entry;
+
+void OID_historyControl2Entry;
+	LABL 10 5  0 4 .historyControl2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 2 5 0 0 RETURN;
+	LABL 0 0 0 4 .historyControl;
+	CST# 0 5 0 4 OID_historyControl2Str;
+
+str# OID_historyControl2Str;
+	DroppedFrames;
+
+
+// host
+
+void OID_host;
+	LABL 10 5  0 4 .host; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_hostControlTable;
+	TEQU 2 5 0 0 OID_hostTable;
+	TEQU 4 5 0 0 OID_hostControl2Table;
+
+void OID_hostControlTable;
+	LABL 0 0  0 4 .hostControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_hostControlEntry;
+
+void OID_hostControlEntry;
+	LABL 10 5  0 4 .hostControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE 8 5 0 0 RETURN;
+	LABL 0 0 0 4 .hostControl;
+	CST# 0 5 0 4 OID_hostControlEntryStr;
+		  
+str# OID_hostControlEntryStr;
+	Index;
+	DataSource;
+	TableSize;
+	LastDeleteTime;
+	Owner;
+	Status;
+
+
+// hosts.host
+
+void OID_hostTable;
+	LABL 0 0  0 4 .hostTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_hostEntry;
+
+void OID_hostEntry;
+	LABL 10 5  0 4 .hostEntry; 
+	ASN1_SubIDNext;	
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .host;
+	CST# 0 5 0 4 OID_hostEntryStr;
+		  
+str# OID_hostEntryStr;
+	Address;
+	CreationOrder;
+	Index;
+	InPkts;
+	OutPkts;
+	InOctets;
+	OutOctets;
+	OutErrors;
+	OutBroadcastPkts;
+	OutMulticastPkts;
+
+
+void OID_hostControl2Table;
+	LABL 0 0  0 4 .hostControl2Table; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_hostControl2Entry;
+
+void OID_hostControl2Entry;
+	LABL 10 5  0 4 .hostControl2Entry; 
+	ASN1_SubIDNext;	
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .hostControl;
+	CST# 0 5 0 4 OID_hostControl2EntryStr;
+		  
+str# OID_hostControl2EntryStr;
+    DroppedFrames;
+    CreateTime;  
+	     
+// rmon2
+
+
+void OID_protocolDir;
+	LABL 0 0  0 4 .protocolDir; 
+	ASN1_SubIDNext;	
+	CEQU 1 5 0 4 .protocolDirLastChange;
+	TEQU 2 5 0 0 OID_protocolDirTable;
+
+void OID_protocolDirTable;
+	LABL 0 0  0 4 .protocolDirTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_protocolDirEntry;
+
+void OID_protocolDirEntry;
+	LABL 10 5  0 4 .protocolDirEntry; 
+	ASN1_SubIDNext;	
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .protocolDir;
+	CST# 0 5 0 4 OID_protocolDirEntryStr;
+		  
+str# OID_protocolDirEntryStr;
+	ID;
+	Parameters;
+	LocalIndex;
+	Descr;
+	Type;
+	AddressMapConfig;
+	HostConfig;
+	MatrixConfig;
+	Owner;
+	Status;
+
+
+void OID_protocolDist;
+	LABL 0 0  0 4 .protocolDist; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_protocolDistControlTable;
+	TEQU 2 5 0 0 OID_protocolDistStatsTable;
+
+void OID_protocolDistControlTable;
+	LABL 0 0  0 4 .protocolDistControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_protocolDistControlEntry;
+
+void OID_protocolDistControlEntry;
+	LABL 10 5  0 4 .protocolDistControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .protocolDistControl;
+	CST# 0 5 0 4 OID_protocolDistControlEntryStr;
+		  
+str# OID_protocolDistControlEntryStr;
+    Index;
+    DataSource;
+    DroppedFrames;
+    CreateTime;
+    Owner;
+    Status;
+
+
+void OID_protocolDistStatsTable;
+	LABL 0 0  0 4 .protocolDistStatsTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_protocolDistStatsEntry;
+
+void OID_protocolDistStatsEntry;
+	LABL 10 5  0 4 .protocolDistStatsEntry; 
+	ASN1_SubIDNext;	
+	TLTE b 5 0 0 RETURN;
+	LABL 0 0 0 4 .protocolDistStats;
+	CST# 0 5 0 4 OID_protocolDistStatsEntryStr;
+		  
+str# OID_protocolDistStatsEntryStr;
+	Pkts;
+	Octets;
+
+void OID_addressMap;
+	LABL 10 5  0 4 .addressMap; 
+	ASN1_SubIDNext;	
+	TLTE 5 5 0 0 RETURN;
+	LABL 0 0 0 4 .addressMap;
+	CST# 0 5 0 4 OID_addressMapStr;
+	TEQU 4 5 0 0 OID_addressMapControlTable;
+	TEQU 4 5 0 0 OID_addressMapTable;
+		  
+str# OID_addressMapStr;
+	Inserts;
+	Deletes;
+	MaxDesiredEntries;
+	ControlTable;
+	Table;
+
+void OID_addressMapControlTable;
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_addressMapControlEntry;
+
+void OID_addressMapControlEntry;
+	LABL 10 5  0 4 .addressMapControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE 6 5 0 0 RETURN;
+	LABL 0 0 0 4 .addressMapControl;
+	CST# 0 5 0 4 OID_addressMapControlEntryStr;
+		  
+str# OID_addressMapControlEntryStr;
+    Index;
+    DataSource;
+    DroppedFrames;
+    Owner;
+    Status;
+
+void OID_addressMapTable;
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_addressMapEntry;
+
+void OID_addressMapEntry;
+	LABL 0 0 0 4 .addressMapEntry; 
+	ASN1_SubIDNext;	
+	TLTE 6 5 0 0 RETURN;
+	LABL 0 0 0 4 .addressMap;
+	CST# 0 5 0 4 OID_addressMapEntryStr;
+		  
+str# OID_addressMapEntryStr;
+    TimeMark;
+    NetworkAddress;
+    Source;
+    PhysicalAddress;
+    LastChange;
+
+// n1Host
+
+void OID_nlHost;
+	LABL 0 0 0 4 .n1Host; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_h1HostControlTable;
+	TEQU 2 5 0 0 OID_n1HostTable;
+
+void OID_h1HostControlTable;
+	LABL 0 0 0 4 .h1HostControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_h1HostControlEntry;
+
+void OID_h1HostControlEntry;
+	LABL 0 0 0 4 .h1HostControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .h1HostControl;
+	CST# 0 5 0 4 OID_h1HostControlEntryStr;
+		  
+str# OID_h1HostControlEntryStr;
+    Index;
+    DataSource;
+    NlDroppedFrames;
+    NlInserts;
+    NlDeletes;
+    NlMaxDesiredEntries;
+    AlDroppedFrames;
+    AlInserts;
+    AlDeletes;
+    AlMaxDesiredEntries;
+    Owner;
+    Status;
+
+void OID_n1HostTable;
+	LABL 0 0 0 4 .n1HostTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_n1HostEntry;
+
+void OID_n1HostEntry;
+	LABL 0 0 0 4 .n1HostEntry; 
+	ASN1_SubIDNext;	
+	TLTE 9 5 0 0 RETURN;
+	LABL 0 0 0 4 .n1Host;
+	CST# 0 5 0 4 OID_n1HostEntryStr;
+		  
+str# OID_n1HostEntryStr;
+    TimeMark;
+    Address;
+    InPkts;
+    OutPkts;
+    InOctets;
+    OutOctets;
+    OutMacNonUnicastPkts;
+    CreateTime;
+
+void OID_nlMatrix;
+	LABL 10 5  0 4 .nlMatrix; 
+	ASN1_SubIDNext;	
+	TST# 0 5 0 0 OID_nlMatrixFuncs;
+
+str# OID_nlMatrixFuncs;
+	OID_hlMatrixControlTable;
+	OID_nlMatrixSDTable;
+	OID_nlMatrixDSTable;
+	OID_nlMatrixTopNControl;
+	OID_nlMatrixTopN;
+
+// TBD: CBB finish this !!
+
+void OID_nlMatrixTopNControl;
+	TRTS;
+
+// TBD: CBB finish this !!
+	
+void OID_nlMatrixTopN;
+	TRTS;
+
+void OID_hlMatrixControlTable;
+	LABL 0 0 0 4 .hlMatrixControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_hlMatrixControlEntry;
+
+void OID_hlMatrixControlEntry;
+	LABL 0 0 0 4 .hlMatrixControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .hlMatrixControl;
+	CST# 0 5 0 4 OID_hlMatrixControlEntryStr;
+		  
+str# OID_hlMatrixControlEntryStr;
+    Index;
+    DataSource;
+    NlDroppedFrames;
+    NlInserts;
+    NlDeletes;
+    NlMaxDesiredEntries;
+    AlDroppedFrames;
+    AlInserts;
+    AlDeletes;
+    AlMaxDesiredEntries;
+    Owner;
+    Status;
+
+void OID_nlMatrixSDTable;
+	LABL 0 0 0 4 .nlMatrixSDTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_nlMatrixSDEntry;
+
+void OID_nlMatrixSDEntry;
+	LABL 0 0 0 4 .nlMatrixSDEntry; 
+	ASN1_SubIDNext;	
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .nlMatrixSD;
+	CST# 0 5 0 4 OID_nlMatrixSDEntryStr;
+		  
+str# OID_nlMatrixSDEntryStr;
+    TimeMark;
+    SourceAddress;
+    DestAddress;
+    Pkts;
+    Octets;
+    CreateTime;
+
+void OID_nlMatrixDSTable;
+	LABL 0 0 0 4 .nlMatrixDSTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_nlMatrixDSEntry;
+
+void OID_nlMatrixDSEntry;
+	LABL 0 0 0 4 .nlMatrixDSEntry; 
+	ASN1_SubIDNext;	
+	TLTE 7 5 0 0 RETURN;
+	LABL 0 0 0 4 .nlMatrixDS;
+	CST# 0 5 0 4 OID_nlMatrixDSEntryStr;
+		  
+str# OID_nlMatrixDSEntryStr;
+	TimeMark;
+    SourceAddress;
+    DestAddress;
+    Pkts;
+    Octets;
+    CreateTime;
+
+void OID_nlMatrixTopNControlTable;
+	LABL 0 0 0 4 .nlMatrixTopNControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_nlMatrixTopNControlEntry;
+
+void OID_nlMatrixTopNControlEntry;
+	LABL 0 0 0 4 .nlMatrixTopNControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE c 5 0 0 RETURN;
+	LABL 0 0 0 4 .n1MatrixTopNControl;
+	CST# 0 5 0 4 OID_nlMatrixTopNControlEntryStr;
+		  
+str# OID_nlMatrixTopNControlEntryStr;
+    Index;
+    MatrixIndex;
+    RateBase;
+    TimeRemaining;
+    GeneratedReports;
+    Duration;
+    RequestedSize;
+    GrantedSize;
+    StartTime;
+    Owner;
+    Status;
+
+void OID_nlMatrixTopNTable;
+	LABL 0 0 0 4 .nlMatrixTopNTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_nlMatrixTopNEntry;
+
+void OID_nlMatrixTopNEntry;
+	LABL 0 0 0 4 .nlMatrixTopNEntry; 
+	ASN1_SubIDNext;	
+	TLTE 9 5 0 0 RETURN;
+	LABL 0 0 0 4 .n1MatrixTopN;
+	CST# 0 5 0 4 OID_nlMatrixTopNEntryStr;
+		  
+str# OID_nlMatrixTopNEntryStr;
+    Index;
+    ProtocolDirLocalIndex;
+    SourceAddress;
+    DestAddress;
+    PktRate;
+    ReversePktRate;
+    OctetRate;
+    ReverseOctetRate;
+
+// a1host
+
+void OID_alHost;
+	LABL 0 0 0 4 .alHost; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alHostTable;
+
+void OID_alHostTable;
+	LABL 0 0 0 4 .alHostTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alHostEntry;
+
+void OID_alHostEntry;
+	LABL 0 0 0 4 .alHostEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .alHost;
+	CST# 0 5 0 4 OID_alHostEntryStr;
+		  
+str# OID_alHostEntryStr;
+    TimeMark;
+    InPkts;
+    utPkts;
+    InOctets;
+    OutOctets;
+    CreateTime;
+
+
+void OID_alMatrix;
+	LABL 0 0 0 4 .alMatrix; 
+	ASN1_SubIDNext;	
+	TLTE 5 5 0 0 RETURN;
+	TST# 0 5 0 4 OID_alMatrixFunc;
+
+str# OID_alMatrixFunc;
+	OID_alMatrixSDTable;
+	OID_alMatrixDSTable;
+	OID_alMatrixTopNControlTable;
+	OID_alMatrixTopNTable;
+
+void OID_alMatrixSDTable;
+	LABL 0 0 0 4 .alMatrixSDTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alMatrixSDEntry;
+
+void OID_alMatrixSDEntry;
+	LABL 0 0 0 4 .alMatrixSDEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .alMatrixSD;
+	CST# 0 5 0 4 OID_alMatrixSDEntryStr;
+		  
+str# OID_alMatrixSDEntryStr;
+    TimeMark;
+    Pkts;
+    Octets;
+    CreateTime;
+
+void OID_alMatrixDSTable;
+	LABL 0 0 0 4 .alMatrixDSTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alMatrixDSEntry;
+
+void OID_alMatrixDSEntry;
+	LABL 0 0 0 4 .alMatrixDSEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .alMatrixDS;
+	CST# 0 5 0 4 OID_alMatrixDSEntryStr;
+		  
+str# OID_alMatrixDSEntryStr;
+    TimeMark;
+    Pkts;
+    Octets;
+    CreateTime;
+
+void OID_alMatrixTopNControlTable;
+	LABL 0 0 0 4 .alMatrixTopNControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alMatrixTopNControlEntry;
+
+void OID_alMatrixTopNControlEntry;
+	LABL 0 0 0 4 .alMatrixTopNControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE d 5 0 0 RETURN;
+	LABL 0 0 0 4 .alMatrixTopNControl;
+	CST# 0 5 0 4 OID_alMatrixTopNControlEntryStr;
+		  
+str# OID_alMatrixTopNControlEntryStr;
+    Index;
+    MatrixIndex;
+    RateBase;
+    TimeRemaining;
+    GeneratedReports;
+    Duration;
+    RequestedSize;
+    GrantedSize;
+    StartTime;
+    Owner;
+    Status;
+
+void OID_alMatrixTopNTable;
+	LABL 0 0 0 4 .alMatrixTopNTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_alMatrixTopNEntry;
+
+void OID_alMatrixTopNEntry;
+	LABL 0 0 0 4 .alMatrixTopNEntry; 
+	ASN1_SubIDNext;	
+	TLTE a 5 0 0 RETURN;
+	LABL 0 0 0 4 .alMatrixTopN;
+	CST# 0 5 0 4 OID_alMatrixTopNEntryStr;
+		  
+str# OID_alMatrixTopNEntryStr;
+    Index;
+    ProtocolDirLocalIndex;
+    SourceAddress;
+    DestAddress;
+    AppProtocolDirLocalIndex;
+    PktRate;
+    ReversePktRate;
+    OctetRate;
+    ReverseOctetRate;
+  
+
+void OID_usrHistory;
+	LABL 0 0 0 4 .usrHistory; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_usrHistoryControlTable;
+	TEQU 2 5 0 0 OID_usrHistoryObjectTable;
+	TEQU 3 5 0 0 OID_usrHistoryTable;
+
+void OID_usrHistoryControlTable;
+	LABL 0 0 0 4 .usrHistoryControlTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_usrHistoryControlEntry;
+
+void OID_usrHistoryControlEntry;
+	LABL 0 0 0 4 .usrHistoryControlEntry; 
+	ASN1_SubIDNext;	
+	TLTE a 5 0 0 RETURN;
+	LABL 0 0 0 4 .usrHistoryControl;
+	CST# 0 5 0 4 OID_usrHistoryControlEntryStr;
+		  
+str# OID_usrHistoryControlEntryStr;
+    Index;
+    Objects;
+    BucketsRequested;
+    BucketsGranted;
+    Interval;
+    Owner;
+    Status;
+
+void OID_usrHistoryObjectTable;
+	LABL 0 0 0 4 .usrHistoryObjectTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_usrHistoryObjectEntry;
+
+void OID_usrHistoryObjectEntry;
+	LABL 0 0 0 4 .usrHistoryObjectEntry; 
+	ASN1_SubIDNext;	
+	TLTE a 5 0 0 RETURN;
+	LABL 0 0 0 4 .usrHistoryObject;
+	CST# 0 5 0 4 OID_usrHistoryObjectStr;
+		  
+str# OID_usrHistoryObjectStr;
+    Index;
+    Variable;
+    SampleType;
+
+void OID_usrHistoryTable;
+	LABL 0 0 0 4 .usrHistoryTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_usrHistoryEntry;
+
+void OID_usrHistoryEntry;
+	LABL 0 0 0 4 .usrHistoryEntry; 
+	ASN1_SubIDNext;	
+	TLTE a 5 0 0 RETURN;
+	LABL 0 0 0 4 .usrHistory;
+	CST# 0 5 0 4 OID_usrHistoryStr;
+		  
+str# OID_usrHistoryStr;
+    SampleIndex;
+    IntervalStart;
+    IntervalEnd;
+    AbsValue;
+    ValStatus;
+
+
+void OID_probeConfig;
+	LABL 0 0 0 4 .probeConfig; 
+	ASN1_SubIDNext;	
+	TLTE f 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_probeConfigStr;
+
+	// setup function to call OID_probeCapabilitiesFunc
+	SNEQ 1 5;
+	SKIP 1;
+	MOVE 3 7;
+
+	TEQU a 5 0 0 OID_serialConfigTable;
+	TEQU b 5 0 0 OID_netConfigTable;
+	TEQU d 5 0 0 OID_trapDestTable;
+	TEQU e 5 0 0 OID_serialConnectionTable;
+
+str# OID_probeConfigStr;
+	probeCapabilities;
+	probeSoftwareRev;
+	probeHardwareRev;
+	probeDateTime;
+	probeResetControl;
+	probeDownloadFile;
+	probeDownloadTFTPServer;
+	probeDownloadAction;
+	probeDownloadStatus;
+	serialConfigTable;
+	netConfigTable;
+	netDefaultGateway;
+	trapDestTable;
+	serialConnectionTable;
+
+void OID_probeCapabilitiesFunc;
+	CST# 0 3 0 14 OID_probeCapabilitiesStr;
+
+str# OID_probeCapabilitiesStr;
+	etherStats;
+	historyControl;
+	etherHistory;
+	alarm;
+	hosts;
+	hostTopN;
+	matrix;
+	filter;
+	capture;
+	event;
+	tokenRingMLStats;
+	tokenRingPStats;
+	tokenRingMLHistory;
+	tokenRingPHistory;
+	ringStation;
+	ringStationOrder;
+	ringStationConfig;
+	sourceRouting;
+	protocolDirectory;
+	protocolDistribution;
+	addressMapping;
+	nlHost;
+	nlMatrix;
+	alHost;
+	alMatrix;
+	usrHistory;
+	probeConfig;
+
+void OID_serialConfigTable;
+	LABL 0 0 0 4 .serialConfigTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_serialConfigEntry;
+
+void OID_serialConfigEntry;
+	LABL 0 0 0 4 .serialConfigEntry; 
+	ASN1_SubIDNext;	
+	TLTE a 5 0 0 RETURN;
+	LABL 0 0 0 4 .serial;
+	CST# 0 5 0 4 OID_serialConfigStr;
+		  
+str# OID_serialConfigStr;
+	Mode;
+	Protocol;
+	Timeout;
+	ModemInitString;
+	ModemHangUpString;
+	ModemConnectResp;
+	ModemNoConnectResp;
+	DialoutTimeout;
+	Status;
+
+void OID_netConfigTable;
+	LABL 0 0 0 4 .netConfigTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_netConfigEntry;
+
+void OID_netConfigEntry;
+	LABL 0 0 0 4 .netConfigEntry; 
+	ASN1_SubIDNext;	
+	TLTE 4 5 0 0 RETURN;
+	LABL 0 0 0 4 .netConfig;
+	CST# 0 5 0 4 OID_netConfigStr;
+		  
+str# OID_netConfigStr;
+	IPAddress;
+	SubnetMask;
+	Status;
+
+void OID_trapDestTable;
+	LABL 0 0 0 4 .trapDestTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_trapDestEntry;
+
+void OID_trapDestEntry;
+	LABL 0 0 0 4 .trapDestEntry; 
+	ASN1_SubIDNext;	
+	TLTE 4 5 0 0 RETURN;
+	LABL 0 0 0 4 .trapDest;
+	CST# 0 5 0 4 OID_trapDestStr;
+		  
+str# OID_trapDestStr;
+    Index;
+    Community;
+    Protocol;
+    Address;
+    Owner;
+    Status;
+
+void OID_serialConnectionTable;
+	LABL 0 0 0 4 .serialConnectionTable; 
+	ASN1_SubIDNext;	
+	TEQU 1 5 0 0 OID_serialConnectionEntry;
+
+void OID_serialConnectionEntry;
+	LABL 0 0 0 4 .serialConnectionEntry; 
+	ASN1_SubIDNext;	
+	TLTE 4 5 0 0 RETURN;
+	LABL 0 0 0 4 .serialConnection;
+	CST# 0 5 0 4 OID_serialConnectionStr;
+		  
+str# OID_serialConnectionStr;
+    Index;
+    DestIpAddress;
+    Type;
+    DialString;
+    SwitchConnectSeq;
+    SwitchDisconnectSeq;
+    SwitchResetSeq;
+    Owner;
+    Status;
+
+
+void OID_rmonConformance;
+	LABL 0 5 0 4 .rmonConformance;
+	TLTE 3 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_rmonConformanceStr;
+	TST# 0 5 0 0 OID_rmonConformanceFunc;
+
+// rmon-2  rmonConformance extenstions (RFC2021)
+
+str# OID_rmonConformanceStr;
+	rmon2MIBCompliances;
+	rmon2MIBGroups;  
+
+str# OID_rmonConformanceFunc;
+	OID_rmon2MIBCompliances;
+	OID_rmon2MIBGroups;
+
+void OID_rmon2MIBCompliances;
+	CEQU 1 5 0 4 .rmon2MIBApplicationLayerCompliance;
+
+void OID_rmon2MIBGroups;
+	TLTE e 5 0 0 RETURN;
+	LABL 0 0 0 4 .;
+	CST# 0 5 0 4 OID_rmon2MIBGroupsStr;
+
+str# OID_rmon2MIBGroupsStr;
+	protocolDirectoryGroup;
+	protocolDistributionGroup;
+	addressMapGroup;
+	nlHostGroup;
+	nlMatrixGroup;
+	alHostGroup;
+	alMatrixGroup;
+	usrHistoryGroup;
+	probeInformationGroup;
+	probeConfigurationGroup;
+	rmon1EnhancementGroup;
+	rmon1EthernetEnhancementGroup;
+	rmon1TokenRingEnhancementGroup;
+
+

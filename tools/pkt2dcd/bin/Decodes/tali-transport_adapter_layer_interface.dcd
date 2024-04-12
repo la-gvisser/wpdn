@@ -1,0 +1,446 @@
+* TALI - Transport Adapter Layer Interface
+
+* notes:
+*  g[1] = opcode
+*  g[2] = length
+*  g[3] = primitive (used in v2)
+*  g[3] = primitive OP (used in v2)
+*  g[a] = global that i use and abuse!
+
+* the diff btw v1 and v2 of TALI is the MONI OPCODE... 
+* in v2 it must specifiy that it is a v2 TALI type
+* also in the v2 pkt, where v1 turns into data, v2 has a primitive & primOP field included.
+* we obviously do both since there's basically no diff
+
+*start
+void Test_TALI;
+	SCMP 4 0 0 0 TALI;			*si: if the first 4 bytes != 'TALI' then it's not TALI
+	SKIP 1;
+	 TRTS;
+	TNXT -TALI;
+
+void TALI;						*si: header part
+	LABL 0 0  0 b1 TALI - Transport Adapter Layer Interface;
+	CHR# 4 0 90 c2 Sync:;		*si: should be 'TALI'	
+	GLNG 0 1;					*si: save this - it's the opcode
+
+								*si: ugh...this is so ugly!
+	SCMP 4 0 0 0 test;			*si: version 1 stuff
+	 SKIP 80000001;
+	 TNXT -TALI::TEST;
+	SCMP 4 0 0 0 allo;
+	 SKIP 80000001;
+	 TNXT -TALI::ALLO;
+	SCMP 4 0 0 0 proh;
+	 SKIP 80000001;
+	 TNXT -TALI::PROH;
+	SCMP 4 0 0 0 proa;
+	 SKIP 80000001;
+	 TNXT -TALI::PROA;
+	SCMP 4 0 0 0 moni;
+	 SKIP 80000001;
+	 TNXT -TALI::MONI;
+	SCMP 4 0 0 0 mona;
+	 SKIP 80000001;
+	 TNXT -TALI::MONA;
+	SCMP 4 0 0 0 sccp;
+	 SKIP 80000001;
+	 TNXT -TALI::SCCP;
+	SCMP 4 0 0 0 isot;
+	 SKIP 80000001;
+	 TNXT -TALI::ISOT;
+	SCMP 4 0 0 0 mtp3;
+	 SKIP 80000001;
+	 TNXT -TALI::MTP3;
+	SCMP 4 0 0 0 saal;
+	 SKIP 80000001;
+	 TNXT -TALI::SAAL;
+								*si: version 2 stuff
+	SCMP 4 0 0 0 mgmt;
+	 SKIP 80000001;
+	 TNXT -TALI::MGMT;
+	SCMP 4 0 0 0 xsrv;
+	 SKIP 80000001;
+	 TNXT -TALI::XSRV;
+	SCMP 4 0 0 0 spcl;
+	 SKIP 80000001;
+	 TNXT -TALI::SPCL;
+	
+	LABL 0 0 0 14 Invalid TALI pkt;		*si: if we reach here, we haven't gotten a match on the opcodes
+	TRTS;
+
+void TALI::TEST;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Test Message;
+	LABL 0 0 0 d4 Query the remote end of the TALI connection with respect to the willingness of the remote end to carry SS7 service data;
+	DWRD 40000000 2 90 c2 Length:;
+	 CNEQ 0 2 0 14 Length suspicious - should be zero;
+	TRTS;
+
+void TALI::ALLO;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Allow Message;
+	LABL 0 0 0 d4 Willing to carry SS7 service data over TALI session;
+	DWRD 40000000 2 90 c2 Length:;
+	 CNEQ 0 2 0 14 Length suspicious - should be zero;
+	TRTS;
+
+void TALI::PROH;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Prohibit Message;
+	LABL 0 0 0 d4 Not willing to carry SS7 service data over TALI session;
+	DWRD 40000000 2 90 c2 Length:;
+	 CNEQ 0 2 0 14 Length suspicious - should be zero;
+	TRTS;
+
+void TALI::PROA;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Prohibit Acknowledgement Message;
+	LABL 0 0 0 d4 Indicates to the far end that proh message was received correctly and will be acted on accordingly;
+	DWRD 40000000 2 90 c2 Length:;
+	 CNEQ 0 2 0 14 Length suspicious - should be zero;
+	TRTS;
+
+void TALI::MONI;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Monitor Message;
+	LABL 0 0 0 d4 Generic ECHO capability;
+	DWRD 40000000 2 90 c2 Length:;
+	 CLTE c9 2 0 14 Length suspicious - should be 0-200 bytes;
+	GBYT 0 a;
+	SNEQ 76 a;		*si: lower case 'v' - it should say "vers 002.000"
+	SKIP 2;
+	 CHR# c 0 90 c2 Version Number:;
+	 SUBG c 2;
+	DUMP 0 2 90 c2 Data Payload:;				*si: dunno if this is correct
+	TRTS;
+
+void TALI::MONA;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Monitor Acknowledge Message;
+	LABL 0 0 0 d4 Response to Monitor message;
+	DWRD 40000000 2 90 c2 Length:;
+	 CLTE c9 2 0 14 Length suspicious - should be 0-200 bytes;
+	DUMP 0 2 90 c2 Data Payload:;				*SI: dunno if this is correct
+	TRTS;
+
+void TALI::SCCP;						*SI: there's a lot more to this one
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Service Message;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE   b 2 0 14 Length suspicious - should be 12-265 bytes;
+	 CLTE 10a 2 0 14 Length suspicious - should be 12-265 bytes;
+	DUMP 0 2 90 c2 Data Payload:;				*SI: dunno if this is correct
+	TRTS;
+
+void TALI::ISOT;						*SI: there's a lot more to this one
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 ISUP Service Message;
+	LABL 0 0 0 d4 Delivers SS7 MSUs with a Service Indicator of 5 (ISUP) over a TALI connection;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE   7 2 0 14 Length suspicious - should be 8-273 bytes;
+	 CLTE 111 2 0 14 Length suspicious - should be 8-273 bytes;
+	DUMP 0 2 90 c2 ISUP Data:;
+	TRTS;
+
+void TALI::MTP3;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 MTP3 Service Message;
+	LABL 0 0 0 d4 Delivers SS7 MSUs with a Service Indicator over a TALI connection;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE   4 2 0 14 Length suspicious - should be 5-280 bytes;
+	 CLTE 119 2 0 14 Length suspicious - should be 5-280 bytes;
+	DUMP 0 2 90 c2 Layer 3 MSU Data:;
+	TRTS;
+
+void TALI::SAAL;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 SAAL Service Message;
+	LABL 0 0 0 d4 Delivers SS7 MSUs with any Service Indicator over a TALI connection;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE   a 2 0 14 Length suspicious - should be 11-280 bytes;
+	 CLTE 119 2 0 14 Length suspicious - should be 11-280 bytes;
+	DUMP 0 10 90 c2 SAAL Data:;
+	* !?!?!?!?!!?!?!?!?    research! there's more here
+	TRTS;
+
+* version 2 stuff
+
+void TALI::MGMT;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Management Message;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE    3 2 0 14 Length suspicious - should be 4-4096 bytes;
+	 CLTE 1000 2 0 14 Length suspicious - should be 4-4096 bytes;
+	GLNG 0 3;			*si: this is the primitive!
+
+	SCMP 4 0 0 0 rkrp;
+	 SKIP 80000001;
+	 TNXT -TALI::MGMT::RKRP;
+	SCMP 4 0 0 0 mtpp;
+	 SKIP 80000001;
+	 TNXT -TALI::MGMT::MTPP;
+	SCMP 4 0 0 0 sorp;
+	 SKIP 80000001;
+	 TNXT -TALI::MGMT::SORP;
+
+void TALI::MGMT::RKRP;
+	CHR# 4 0 90 c2 Primitive:;
+	LABL 0 0 0 14 Routing Key Registration Primitive;
+	HWRD 0 4 90 c2 Primitive OP:;
+	 CST# 0 a 0 14 TALI::MGMT::RKRP_OP_String;
+	HWRD 0 a 90 c2 Req/Reply:;
+	 CEQU 0 a 0 14 Request;
+	 CEQU 1 a 0 14 Reply;
+	SNEQ 1 a;
+	SKIP 2;
+	 HWRD 0 a 90 c2 Succ/Failure:;
+	 CST# 0 a  0 14 TALI::Succ_Fail_Codes;
+	TST# 0 4 0 0 TALI::MGMT::RKRP_OP_Func;
+
+void TALI::MGMT::RKRP_MSU;				*rfc3094 - 4.5.1.1.1.2
+	TALI::MGMT::RKRP_Flags;
+	TALI::MGMT::RKRP_Serv_Ind;
+	HLNG 0 a 90 c2 Dest Point Code:;
+	HLNG 0 a 90 c2 Orig Point Code:;
+	DLNG 0 a 90 c2 Circuit ID Code Start:;
+	DLNG 0 a 90 c2 Circuit ID Code End:;
+	DLNG 0 a 90 c2 SPLIT Field:;
+	DLNG 0 a 90 c2 NCICS:;
+	DLNG 0 a 90 c2 NCICE:;
+	TRTS;
+
+void TALI::MGMT::RKRP_SCCP;				*rfc3094 - 4.5.1.1.1.3
+	TALI::MGMT::RKRP_Flags;
+	TALI::MGMT::RKRP_Serv_Ind;
+	HLNG 0 a 90 c2 Dest Point Code:;
+	DBYT 0 a 90 c2 SubSystem Num:;
+	TRTS;
+
+void TALI::MGMT::RKRP_DPC-SI-OPC;		*rfc3094 - 4.5.1.1.1.4
+	TALI::MGMT::RKRP_Flags;
+	TALI::MGMT::RKRP_Serv_Ind;
+	HLNG 0 a 90 c2 Dest Point Code:;
+	TRTS;
+
+void TALI::MGMT::RKRP_DEFAULT;			*rfc3094 - 4.5.1.1.1.5
+	TALI::MGMT::RKRP_Flags;
+	TRTS;
+
+void TALI::MGMT::RKRP_REG;				*rfc3094 - 4.5.1.1.1.6.1 
+	DLNG 0 a 90 c2 Opers/Message:;
+	TRTS;
+
+void TALI::MGMT::RKRP_Flags;
+	BWRD 0 a 90 c9 RKRP Flags:;
+	 CBIT 0 a 0 d4 ........ .......1 Override Mode;
+	 CLSE 0 a 0 d4 ........ .......0 Load Sharing Mode;
+	 LABL 0 0 0 c8;
+	TRTS;
+
+void TALI::MGMT::RKRP_Serv_Ind;
+	DBYT 0 a 90 c2 Service Indicator:;
+	 CEQU 0 a 0 14 SNM;
+	 CEQU 3 a 0 14 SCCP;
+	 CEQU 4 a 0 14 TUP keys;
+	 CEQU 5 a 0 14 ISUP keys;
+	 CEQU c a 0 14 Q.BICC ISUP keys;
+	TRTS;
+
+str# TALI::MGMT::RKRP_OP_String;
+	ENTER ISUP KEY;					*1
+	DELETE ISUP KEY;
+	SPLIT ISUP KEY;
+	RESIZE ISUP KEY;
+	ENTER Q.BICC ISUP KEY;			*5
+	DELETE Q.BICC ISUP KEY;
+	SPLIT Q.BICC ISUP KEY;
+	RESIZE Q.BICC ISUP KEY;
+	ENTER SCCP KEY;
+	DELETE SCCP KEY;				*a
+	ENTER OTHER-MTP3-SI KEY;
+	DELETE OTHER-MTP3-SI KEY;
+	ENTER TUP KEY (ITU only);
+	DELETE TUP KEY (ITU only);
+	SPLIT TUP KEY (ITU only);
+	RESIZE TUP KEY (ITU only);		*10
+	ENTER DPC-SI-OPC PARTIAL KEY;
+	DELETE DPC-SI-OPC PARTIAL KEY;
+	ENTER DPC-SI PARTIAL KEY;
+	DELETE DPC-SI PARTIAL KEY;
+	ENTER DPC PARTIAL KEY;			*15
+	DELETE DPC PARTIAL KEY;
+	ENTER SI PARTIAL KEY;
+	DELETE SI PARTIAL KEY;
+	ENTER DEFAULT;
+	DELETE DEFAULT KEY;				*1a
+	MULTIPLE REGISTRATION SUPPORT;
+
+str# TALI::MGMT::RKRP_OP_Func;
+	TALI::MGMT::RKRP_MSU;				*1
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;				*5
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_SCCP;
+	TALI::MGMT::RKRP_SCCP;				*a
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;
+	TALI::MGMT::RKRP_MSU;				*10
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;		*15
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DPC-SI-OPC;
+	TALI::MGMT::RKRP_DEFAULT;
+	TALI::MGMT::RKRP_DEFAULT;			*1a
+	TALI::MGMT::RKRP_REG;
+
+void TALI::MGMT::MTPP;
+	CHR# 4 0 90 c2 Primitive:;
+	LABL 0 0 0 14 MTP3 Primitives;
+	HWRD 0 b 90 c2 MTTP Operation:;
+	 CST# 0 b  0 14 TALI::MGMT::MTPP_OP_String;
+	HLNG 0 a 90 c2 Concerned Point Code:;
+	SNEQ 7 b;
+	SKIP 1;
+	 TALI::MGMT::MTPP_congest;
+	SNEQ 8 b;
+	SKIP 1;
+	 TALI::MGMT::MTPP_congest;
+	SNEQ 9 b;
+	SKIP 1;
+	 TALI::MGMT::MTPP_upu;
+	
+void TALI::MGMT::MTPP_congest;
+	SNEQ 7 b;
+	SKIP 2;
+	 IPLG 0 a 90 c2 Soure Point Code:;		*si: only used on operation 7&8
+	 LABL 0 0  0 14 Source of the traffic that was experiencing congestion;
+	SNEQ 8 b;
+	SKIP 2;
+	 IPLG 0 a 90 c2 Soure Point Code:;		*si: only used on operation 7&8
+	 LABL 0 0  0 14 Which port is trying to abate the congestion;
+	HWRD 0 a 90 c2 Congestion Level:;
+	 CEQU 0 a 0 14 Level 0;
+	 CEQU 1 a 0 14 Level 1;
+	 CEQU 2 a 0 14 Level 2;
+	 CEQU 3 a 0 14 Level 3;
+	TRTS;
+
+void TALI::MGMT::MTPP_upu;
+	HWRD 0 a 90 c2 Cause Code:;
+	 CEQU 0 a 0 14 Cause Unknown;
+	 CEQU 1 a 0 14 User Part Unequipped;
+	 CEQU 2 a 0 14 User Part Inaccessible;
+	DWRD 0 a 90 c2 User ID:;
+	 CEQU 0 a 0 14 SNM;
+	 CEQU 3 a 0 14 SCCP;
+	 CEQU 5 a 0 14 ISUP;
+
+str# TALI::MGMT::MTPP_OP_String;
+	PC Unavailable;							*1
+	PC Available;
+	Request for PC Status;
+	Cluster Unavailable;
+	Cluster Available;						*5
+	Request for Cluster Status;
+	Congested Destination, w/Cong Level;
+	Request for Congestion Status;
+	User Part Unavailable;
+
+void TALI::MGMT::SORP;
+	CHR# 4 0 90 c2 Primitive:;
+	LABL 0 0 0 14 Socket Options Registration Primitive;
+	HWRD 0 a 90 c2 SORP Operation:;
+	 CEQU 0 a 0 14 Set SORP Flags;
+	 CEQU 0 a 0 14 Request Current SORP Flags Settings;
+	 CEQU 0 a 0 14 Reply with Current SORP Flag Settings;
+	BWRD 0 a 90 c2 SORP Flags:;
+	 CBIT 0 a 0 d4 Broadcast Phase MTPP Primitives;
+	 CBIT 1 a 0 d4 Response Method MTPP Primitives;
+	 CBIT 2 a 0 d4 Normalized SCCP;
+	 CBIT 3 a 0 d4 Normalized ISUP;
+	TRTS;
+
+void TALI::XSRV;				*si: rfc3094 - [spec says TBD]
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Extended Service Message;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE    3 2 0 14 Length suspicious - should be 4-4096 bytes;
+	 CLTE 1000 2 0 14 Length suspicious - should be 4-4096 bytes;
+	GLNG 0 3;
+	CHR# 4 0 90 c2 Primitive:;
+	SUBG 4 2;
+	DUMP 0 2 90 c2 Message Data:;
+	TRTS;
+
+void TALI::SPCL;
+	CHR# 4 0 90 c2 OpCode:;
+	LABL 0 0 0 14 Special Message;
+	DWRD 40000000 2 90 c2 Length:;
+	 CGTE    3 2 0 14 Length suspicious - should be 4-4096 bytes;
+	 CLTE 1000 2 0 14 Length suspicious - should be 4-4096 bytes;
+	GLNG 0 3;
+	CHR# 4 0 90 c2 Primitive:;											*!@#!@#!@#!@#!@#!@#
+
+	SCMP 4 0 0 0 rply;		*si: no data
+	SKIP 80000002;
+	 LABL 0 0 0 14 Special Messages Not Supported;
+	 TRTS;
+	SCMP 4 0 0 0 qury;		*si: no data
+	SKIP 80000002;
+	 LABL 0 0 0 14 Query;
+	 TRTS;
+	SCMP 4 0 0 0 rply;
+	SKIP 80000002;
+	 LABL 0 0 0 14 Reply;
+	 TNXT -TALI::SPCL::RPLY_USIM;
+	SCMP 4 0 0 0 usim;
+	SKIP 80000002;
+	 LABL 0 0 0 14 UnSolicited Information Message;
+	 TNXT -TALI::SPCL::RPLY_USIM;
+	TRTS;
+
+void TALI::SPCL::RPLY_USIM;
+	HWRD 0 1 90 c2 Priv Ent Code:;
+	CHR# c 0 90 c2 Version Label:;
+	SUBG 12 2;
+	DUMP 0 2 90 c2 Vendor Specific Data:;
+	TRTS;
+
+str# TALI::Succ_Fail_Codes;
+	Transaction successfully completed;									*1
+	Length of TALI msg is insufficient to contain all required information for rkrp operation;
+	Unsupported 'rkrp' operation;
+	Invalid SI. SI must be in range 0..15;
+	Invalid SI/operation combination. Split and resize only supported for SI=4,5,13. Enter, delete and override supported for all SI;		*5
+	Invalid DPC. Point code cannot be zero, and must be full point code;
+	Invalid SSN. SSN must be in range 0..255;
+	Invalid OPC. Point code cannot be zero, and must be full point code;
+	Invalid CICS. Must be in range appropriate for SI and PC type;
+	Invalid CICE. Must be in range appropriate for SI and PC type;		*10
+	Invalid CIC range. CICS must be less than or equal to CICE. On a split operation, CICS must be strictly less than than CICE (cannot split an range with only one entry);
+	Invalid NCICS. Must be in range appropriate for SI and PC type;
+	Invalid NCICE. Must be in range appropriate for SI and PC type;
+	Invalid new CIC range. NCICS must be less than or equal to NCICE;
+	Invalid SPLIT value. Must be in range appropriate for SI and PC type. Must be greater than CICS and less than or equal to CICE;		*15
+	No free entries in table;
+	CIC range overlaps but does not match existing entry;
+	Entry already has 16 associations;
+	Entry to be changed not found in table;
+	New entry would overlap another entry (allowed to overlap the entry being changed, but no others);		*20
+	Entry to be deleted not found in table;
+	TUP routing keys are not supported for ANSI networks;
+
+*end
+

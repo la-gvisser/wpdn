@@ -1,0 +1,176 @@
+//ENRP - Enpoint Handlespace Redundancy Protocol
+//source: https://tools.ietf.org/html/rfc5353
+//integration from https://www.iana.org/assignments/rserpool-parameters/rserpool-parameters.txt
+
+
+
+str# SCTP::Payload_Prot_ID;
+12	|	ENRP - Enpoint Handlespace Redundancy Protocol;
+str# SCTP::Payload_Prot_ID::Func;
+12 |  ENRP;
+
+
+void ENRP()
+{
+	LABL( 0, 0, 0, 0xb1, "ENRP - Enpoint Handlespace Redundancy Protocol" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Type:" );
+		CST#( 0, l[1], 0, 0x14, ENRP::MessageType );
+		CLSE( 0, 0, 0, 0x14, "Reserved by IETF" );
+	BBYT( 0, l[2], 0x90, 0xc2, "Flags:" );
+		if (l[1] == 2)
+		{
+			CBIT( 0, l[2], 0x0, 0xd4, ".......0 oWn-children-only Bit: not set" );
+			CLSE( 0, l[2], 0x0, 0xd4, ".......1 oWn-children-only Bit: set" );
+		}
+		if (l[1] == 3)
+		{
+			CBIT( 0, l[2], 0x0, 0xd4, ".......0 R (Reject) Flag Bit: not set" );
+			CLSE( 0, l[2], 0x0, 0xd4, ".......1 R (Reject) Flag: set" );
+			CBIT( 1, l[2], 0x0, 0xd4, "......0. M (More_to_send) Flag Bit: not set" );
+			CLSE( 0, l[2], 0x0, 0xd4, "......1. M (More_to_send) Flag: set" );
+			
+		}
+		if (l[1] == 6)
+		{
+			CBIT( 0, l[2], 0x0, 0xd4, ".......0 R (Reject) Flag Bit: not set" );
+			CLSE( 0, l[2], 0x0, 0xd4, ".......1 R (Reject) Flag: set" );
+		}
+		if (l[1] == 7)
+		{
+			CBIT( 0, l[2], 0x0, 0xd4, ".......0 H Bit: not set" );
+			CLSE( 0, l[2], 0x0, 0xd4, ".......1 H Bit: set" );
+		}
+
+	DWRD( 0, l[3], 0x90, 0xc2, "Length:" );
+	if (l[1] == 1)
+	{
+		while (l[3] > 0)
+		{
+			DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+			DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+			DLNG( 0, l[6], 0x90, 0xc2, "PE Checksum Param:" );
+			l[3] -= 12;
+			if (l[3] > 12)
+			{
+				DLNG( 0, l[7], 0x90, 0xc2, "Receiving Server's ID:" );
+				l[3] -= 4;
+			}
+			
+		}
+	}
+	if (l[1] == 2)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+	}
+	if (l[1] == 3)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		l[3] -= 8;
+		if (l[3] > 4)
+		{
+			DLNG( 0, l[6], 0x90, 0xc2, "Pool Handle:" );
+			l[3] -= 4;
+		}
+	}
+	if (l[1] == 4)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		DWRD( 0, l[6], 0x90, 0xc2, "Update Action:" );
+		DWRD( 0, l[7], 0x90, 0xc2, "Reserved:" );
+		DLNG( 0, l[8], 0x90, 0xc2, "Pool Handle Parameter:" );
+		DLNG( 0, l[9], 0x90, 0xc2, "Pool Element Parameter:" );
+	}
+	if (l[1] == 5)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+	}
+	if (l[1] == 6)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		l[3] -= 8;
+		if (l[3] > 4)
+		{
+			DLNG( 0, l[6], 0x90, 0xc2, "Server Information Parameter:" );
+			l[3] -= 4;
+		}
+	}
+	if (l[1] == 7)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		DLNG( 0, l[6], 0x90, 0xc2, "Targeting Server's ID:" );
+	}
+	if (l[1] == 8)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		DLNG( 0, l[6], 0x90, 0xc2, "Targeting Server's ID:" );
+	}
+	if (l[1] == 7)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		DLNG( 0, l[6], 0x90, 0xc2, "Targeting Server's ID:" );
+	}
+	if (l[1] == 8)
+	{
+		DLNG( 0, l[4], 0x90, 0xc2, "Sending Server's ID:" );
+		DLNG( 0, l[5], 0x90, 0xc2, "Receiving Server's ID:" );
+		l[3] -= 8;
+		if (l[3] > 4)
+		{
+			DLNG( 0, l[6], 0x90, 0xc2, "Operational Error Parameter:" );
+			l[3] -= 4;
+		}
+	}
+		LABL 0 0 0 b8;
+}
+str# ENRP::MessageType;
+0x01	|	ENRP_PRESENCE;
+0x02	|	ENRP_HANDLE_TABLE_REQUEST;
+0x03	|	ENRP_HANDLE_TABLE_RESPONSE;
+0x04	|	ENRP_HANDLE_UPDATE;
+0x05	|	ENRP_LIST_REQUEST;
+0x06	|	ENRP_LIST_RESPONSE;
+0x07	|	ENRP_INIT_TAKEOVER;
+0x08	|	ENRP_INIT_TAKEOVER_ACK;
+0x09	|	ENRP_TAKEOVER_SERVER;
+0x0a	|	ENRP_ERROR;
+
+str# ENRP::Parameters;
+0x01	|	IPV4_ADDRESS_PARAMETER_TYPE;
+0x02	|	IPV6_ADDRESS_PARAMETER_TYPE;
+0x03	|	DCCP_TRANSPORT_PARAMETER_TYPE;
+0x04	|	SCTP_TRANSPORT_PARAMETER_TYPE;
+0x05	|	TCP_TRANSPORT_PARAMETER_TYPE;
+0x06	|	UDP_TRANSPORT_PARAMETER_TYPE;
+0x07	|	UDP_LITE_TRANSPORT_PARAMETER_TYPE;
+0x08	|	POOL_MEMBER_SELECTION_POLICY_PARAMETER_TYPE;
+0x09	|	POOL_HANDLE_PARAMETER_TYPE;
+0x0a	|	POOL_ELEMENT_PARAMETER_TYPE;
+0x0b	|	SERVER_INFORMATION_PARAMETER_TYPE;
+0x0c	|	OPERATION_ERROR_PARAMETER_TYPE;
+0x0d	|	COOKIE_PARAMETER_TYPE;
+0x0e	|	PE_IDENTIFIER_PARAMETER_TYPE;
+0x0f	|	PE_CHECKSUM_PARAMETER_TYPE;
+0x10	|	Opaque Transport;
+0xffffffff	|	IETF-defined extensions;
+
+str# ENRP::CauseCodes;
+0x0	|	Unspecified Error;
+0x1	|	Unrecognized Parameter;
+0x2	|	Unrecognized Message;
+0x3	|	Invalid Values;
+0x4	|	Non-Unique PE Identifier;
+0x5	|	Inconsistent Pooling Policy;
+0x6	|	Lack of Resources;
+0x7	|	Inconsistent Transport Type;
+0x8	|	Inconsistent Data/Control Configuration;
+0x9	|	Unknown Pool Handle;
+0xa	|	Rejected Due to Security Considerations;
+    

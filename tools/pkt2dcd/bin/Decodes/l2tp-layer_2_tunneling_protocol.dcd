@@ -1,0 +1,468 @@
+
+void Ether::Branching_3::Tagged;
+	TST# 0 1 -Ether::Branching_3::Tagged::Str;
+
+str# Ether::Branching_3::Tagged::Str;
+//	0x010b	| 802.1;						// si: tt6869
+//	0x0600  | XNS;
+//	0x0800  | IP;
+//	0x0806  | ARP;
+//	0x0807  | XNS;
+//	0x0bad  | VINES Internet;
+//	0x0baf  | VINES Echo;
+//	0x2003	| Cisco::VTP;
+//	0x2004	| Cisco::DISL;					//SI: TT7734
+//	0x6001  | DECnet MOP Dump/Load;
+//	0x6002  | DECnet MOP Remote Console;
+//	0x6003 	| DECnet Phase IV;
+//	0x6004 	| DECnet LAT;
+//	0x6005 	| DECnet Diagnostic Protocol;
+//	0x6007 	| DECnet Phase IV;
+//	0x8021 	| PPP-IPCP;						//SI: tt2715
+//	0x8035 	| RARP;
+//	0x809b 	| EtherTalk;
+//	0x80c4 	| VINES Internet;
+//	0x80c5 	| VINES Echo;
+//	0x80f3 	| AARP;
+	0x80fd 	| PPP-CCP::Tagged;						//SI: tt4347
+//	0x8100 	| 802_1q;
+//	0x8137 	| IPX Top;
+//	0x8138 	| XNS;
+//	0x81fd	| ISMP;
+//	0x86dd 	| IPv6;
+//	0x8809 	| LACP;							//TD: TT5187
+//	0x880b 	| PPP;
+//	0x8847 	| MPLS::Unicast;
+//	0x8848 	| MPLS::Multicast;
+//	0x8863 	| PPPoE Discovery;
+//	0x8864 	| PPPoE Session;
+//	0x886d	| Intel_ANS;					//SI: TT6867
+//	0x8881	| PPP;
+//	0x888E 	| 802.1x Authentication;		//SI: TT1675
+//	0x88ae	| Boardwalk;					//SI: FC Encapsulation
+//	0x88bb	| LWAPP;						//SI: TT9900
+//	0x9000 	| Loopback;
+//	0xbbbb	| LWAPP;
+	0xc021 	| PPP-LCP::Tagged;						//SI: TT4351
+//	0xc023 	| PAP;
+//	0xc223 	| PPP-CHAP;						//SI
+
+
+void PPP-LCP::Tagged;
+	LABL 0 0 0 b1 PPP Link Control Protocol;
+	PPP::LCP_CILV::Tagged;
+	TRTS;
+
+void PPP-CCP::Tagged;
+	LABL 0 0 0 b1 PPP Compression Control Protocol;
+	PPP::LCP_CILV::Tagged;
+	TRTS;
+
+void PPP::LCP_CILV::Tagged::Check;
+	g[1] = pb[0];
+	if (g[1] == 0x7d)
+	{
+		INCR 1;
+	}
+	TRTS;
+
+void PPP::LCP_CILV::Tagged;
+	DBYT 0 1c 05 05;
+	XORG 20 1c;
+	DGLB 0 1c 90 c2 LCP Code:;
+	SUBG 1 19;
+	CST# 0 1c 00 14 PPP::LCP_CILV::Tagged::List;
+	TST# 0 1c 00 00 PPP::LCP_CILV::Tagged::Func;
+
+str# PPP::LCP_CILV::Tagged::Func;
+	PPP::LCP_CILV::Tagged::Codes1-4;
+	PPP::LCP_CILV::Tagged::Codes1-4;
+	PPP::LCP_CILV::Tagged::Codes1-4;
+	PPP::LCP_CILV::Tagged::Codes1-4;
+	PPP::LCP_CILV::Tagged::Codes5-6;
+	PPP::LCP_CILV::Tagged::Codes5-6;
+	PPP::LCP_CILV::Tagged::Codes7;
+	PPP::LCP_CILV::Tagged::Codes8;
+	PPP::LCP_CILV::Tagged::Codes9-11;
+	PPP::LCP_CILV::Tagged::Codes9-11;
+	PPP::LCP_CILV::Tagged::Codes9-11;
+	PPP::LCP_CILV::Tagged::Codes9-11;
+	PPP::LCP_CILV::Tagged::Codes9-11;
+
+str# PPP::LCP_CILV::Tagged::List;
+	Configure Request;
+	Configure Ack;
+	Configure Nak;
+	Configure Reject;
+	Terminate Request;
+	Terminate Ack;
+	Code Reject;
+	Protocol Reject;
+	Echo Request;
+	Echo Reply;
+	Discard Request;
+	Identification;
+	Time-Remaining;
+
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	PPP::LCP_CILV::Tagged::Check;
+	if (g[1] == 0x7d)
+	{
+		DBYT 0 1c 05 05;
+		XORG 20 1c;
+		HGLB 0 1c 90 c2 Identifier:;
+		
+	}
+	if (g[1] != 0x7d)
+	{
+		HBYT 0 1c 90 c2 Identifier:;
+	}
+	
+	PPP::LCP_CILV::Tagged::Check;
+	if (g[1] == 0x7d)
+	{
+		DBYT 0 41 05 05;
+		XORG 20 41;
+		SHFL 8 41;
+		PPP::LCP_CILV::Tagged::Check;
+		DBYT 0 42 05 05;
+		if (g[1] == 0x7d)
+		{
+			XORG 20 42;
+		}
+		l[1] |= l[2];
+		g[0x1c] = l[1];
+		g[1] = 0x7d;
+	}
+	if (g[1] != 0x7d)
+	{
+		DWRD 0 1c 05 05;
+		XORG 2000 1c;
+	}
+	DGLB 0 1c 90 c2 Length:;
+	g[0x1c] -= 4;
+	TRTS;
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes1-4;
+	MOVE 0 1d;			//init CHAP checker
+	
+	PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	
+	if (g[0x1c] > 0)
+	{
+		TNXT -PPP::LCP_CILV::Tagged::Codes1-4::Options_g28;
+	}
+
+// 0x1c = whole ppp length
+// 0x1d = option length      ... what a burnout... track them
+void PPP::LCP_CILV::Tagged::Codes1-4::Options_g28;
+	PPP::LCP_CILV::Tagged::Check;
+	g[0x1e] = pb[0];
+	XORG 20 1e;
+	CST# 0 1e 0 b7 PPP::LCP_CILV::Tagged::Options_List;
+	CLSE 0 00 0 b7 Option;
+	
+	PPP::LCP_CILV::Tagged::Check;
+	DBYT 0 1e 05 05;
+	XORG 20 1e;
+	g[0x1d] = g[0x1e];
+	DGLB 0 1e 90 c2 Type:;
+	CST# 0 1e 0 14 PPP::LCP_CILV::Tagged::Options_List;
+	
+	PPP::LCP_CILV::Tagged::Check;
+	DBYT 0 1d 05 05;
+	XORG 20 1d;
+	DGLB 0 1d 90 c2 Length:;
+	
+	SUBG 2 1d;
+	SUBG 2 1c;
+
+	TSB# 0 1e 0 0 PPP::LCP_CILV::Tagged::Options_Func;
+
+	if (g[0x1d] != 0)
+	{
+		SUBG 1d 9c;
+
+		PPP::LCP_CILV::Tagged::Check;
+		if (g[1] == 0x7d)
+		{
+			HBYT 0 2 05 05;
+			XORG 20 2;
+		}
+		if (g[1] != 0x7d)
+		{
+			HBYT 0 2 05 05;
+		}
+		HGLB 0 2 90 c2 Data:;
+		g[0x1d] -= 1;
+		
+		while (g[0x1d] > 0)
+		{
+			PPP::LCP_CILV::Tagged::Check;
+			if (g[1] == 0x7d)
+			{
+				HBYT 0 2 05 05;
+				XORG 20 2;
+			}
+			if (g[1] != 0x7d)
+			{
+				HBYT 0 2 05 05;
+			}
+			HGLB 40 2 90 c2 data:;
+			
+			g[0x1d] -= 1;
+		}
+	}
+
+	LABL 0 0 0 b8;
+	TNEQ 0 1c 0 0 PPP::LCP_CILV::Tagged::Codes1-4::Options_g28;
+	TRTS;
+
+str# PPP::LCP_CILV::Tagged::Options_List;
+	 1 | Maximum Receive Unit;
+	 2 | Async Control Character Map;
+	 3 | Authentication Protocol;
+	 4 | Quality Protocol;
+	 5 | Magic Number;
+	 7 | Protocol Field Compression;
+	 8 | Address and Control Field Compression;
+	 9 | FCS-Alternatives;
+	10 | Self-Describing-Padding;
+	13 | Callback;
+	15 | Compound-Frames;
+	17 | Stac Electronics LZS;
+	18 | Microsoft PPC;
+	19 | Multilink Endpoint Discriminator;
+	21 | DCE-Identifier;
+	22 | MP+ Procedure Option;
+	23 | Link Discriminator for BACP;
+	24 | LCP-Authentication-Option;
+	25 | Consistent Overhead Byte Stuffing;
+	27 | Multilink header format;
+	28 | Internationalization;
+	29 | Simple Data Link on SONET/SDH;
+
+str# PPP::LCP_CILV::Tagged::Options_Func;
+	 1 | PPP::LCP::Tagged::Option::01;
+	 3 | PPP::LCP::Tagged::Option::03;
+	 4 | PPP::LCP::Tagged::Option::04;
+	 5 | PPP::LCP::Tagged::Option::05;
+	 9 | PPP::LCP::Tagged::Option::09;
+	10 | PPP::LCP::Tagged::Option::10;
+	13 | PPP::LCP::Tagged::Option::13;
+	17 | PPP::LCP::Tagged::Option::17;
+	18 | PPP::LCP::Tagged::Option::18;
+	19 | PPP::LCP::Tagged::Option::19;
+	23 | PPP::LCP::Tagged::Option::23;
+
+void PPP::LCP::Tagged::Option::01;
+	PPP::LCP_CILV::Tagged::Check;
+	if (g[1] != 0x7d)
+	{
+		DWRD 0 a 90 c2 Max Receive Unit:;
+	}
+	if (g[1] == 0x7d)
+	{
+		DBYT 0 a 05 05 one:;
+		XORG 20 a;
+		SHFL 8 a;
+		PPP::LCP_CILV::Tagged::Check;
+		if (g[1] == 0x7d)
+		{
+			DBYT 0 b 05 05 two:;
+			XORG 20 b;
+			g[0xa] |= g[0xb];
+		}
+		if (g[1] != 0x7d)
+		{
+			DBYT 0 b 05 05 twotwo;
+			g[0xa] |= g[0xb];
+		}
+		DGLB 0 a 90 c2 Max Receive Unit:;
+	}
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::03;
+	HWRD 0 1 90 c2 Auth Protocol:;
+	 CEQU c023 1 0 14 Password Authentication Protocol;
+	 CEQU c223 1 0 14 Challenge Handshake Authentication;
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::04;
+	HWRD 0 1 90 c2 Quality Protocol:;
+	 CEQU c025 1 0 14 Link Quality Report;
+	g[0x1d] -= 2;
+	g[0x1c] -= 2;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::05;
+	l[1] = pb[1];
+	if (l[1] != 0x7d)
+	{
+		HLNG 0 1 90 c2 Magic Number:;
+	}
+	if (l[1] == 0x7d)
+	{
+		l[1] = 4;
+		g[1] = 0;
+		while (l[1] > 0)
+		{
+			g[1] = pb[0];
+			SHFL 8 1;
+			DBYT 0 0 05 05;
+			INCR 1;
+			
+			l[1] -= 1;
+		}
+		HGLB 0 1 90 c2 Magic Number:;
+	}
+	l[1] = pb[0];
+	if (l[1] == 0x7d)
+	{
+		INCR 1;
+	}
+	g[0x1d] -= 4;
+	g[0x1c] -= 4;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::09;
+	LABL 0 0 0 b9 Options;
+	while (g[0x1d] > 0)
+	{
+	 DBYT 0 a 90 c2 Option:;
+	  CEQU 1 a 0 14 Null FCS;
+	  CEQU 2 a 0 14 CCITT 16-bit FCS;
+	  CEQU 4 a 0 14 CCITT 32-bit FCS;
+	 g[0x1d] -= 1;
+	 g[0x1c] -= 1;
+	} 
+	LABL 0 0 0 b8;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::10;
+	DBYT 0 a 05 05;
+	XORG 20 a;
+	DGLB 0 a 90 c2 Maximum:;
+	INCR 1;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::13;
+	DBYT 0 a 05 05;
+	XORG 20 a;
+	DGLB 0 a 90 c2 Operation:;
+	 CEQU 0 a 0 14 location is determined by user authentication;
+	 CEQU 1 a 0 14 dialing string;
+	 CEQU 2 a 0 14 location identifier;
+     CEQU 3 a 0 14 E.164 number;
+     CEQU 4 a 0 14 X.500 distinguished name;
+     CEQU 5 a 0 14 unassigned;
+     CEQU 6 a 0 14 location is determined during CBCP negotiation;
+    INCR 1;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::17; 		//LCP::Options::MRRU;	???	*si: option 0x11
+	DWRD 0 1 05 05;
+	XORG 2000 1;
+	DGLB 0 1 90 c2 Max Num Octets:;
+	INCR 1;
+	SUBG 2 1c;
+	SUBG 2 1d;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::18;
+	HLNG 0 a 90 c2 Supported Bits:;
+	g[0x1d] -= 4;
+	g[0x1c] -= 4;
+	TRTS;
+
+void PPP::LCP::Tagged::Option::19; 		//LCP::Options::MED;	*si: option 0x13
+	DBYT 0 1 05 05;
+	XORG 20 1;
+	DGLB 0 1 90 c2 Class:;
+	CST# 0 1  0 14 PPP::LCP::Option::19::Class_List;
+	SUBG 1 1d;
+	SUBG 1 1c;
+	if (g[1] == 1)
+	{
+		DUMP 0 1d 90 c2 Content:;
+		SUBG 1d 9c;
+		MOVE  0 1d;
+	}
+	if (g[1] == 2)
+	{
+		IPLG 0 2 90 c2 IP Address:;
+		SUBG 4 1d;
+		SUBG 4 1c;
+	}
+	if (g[1] == 3)
+	{
+		ETHR 0 2 90 c2 MAC Address:;
+		SUBG 6 1d;
+		SUBG 6 1c;
+	}
+	if (g[1] == 4)
+	{
+		HEX# 0 1d 90 c2 Magic Number:;
+		SUBG 1d 9c;
+		MOVE  0 1d;
+	}	
+	if (g[1] == 5)
+	{
+		HEX# 0 1d 90 c2 Data:;
+		SUBG 1d 9c;
+		MOVE  0 1d;
+	}
+	TRTS;
+
+str# PPP::LCP::Tagged::Option::19::Class_List;
+	0 | Null Class;
+	1 | Locally Assigned Address;
+	2 | Internet Protocol (IP) Address;
+	3 | IEEE 802.1 Globally Assigned MAC Address;
+	4 | PPP Magic-Number Block;
+	5 | Public Switched Network Directory Number;
+
+void PPP::LCP::Tagged::Option::23;
+	HWRD 0 1 90 c2 Link Discriminator:;
+	SUBG 2 1d;
+	SUBG 2 1c;
+	TRTS;
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes5-6;
+	PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	SEQU 0 1c;
+	SKIP 1;
+	DUMP 0 1c 90 c2 Data:;
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes7;
+	PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	TNXT -PPPoE Session;
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes8;
+	PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	HWRD 0 1d 90 c2 Rejected Protocol:;
+	CST# 0 1d  0 14 PPP_Protocols_List;
+	SUBG 2 1c;
+	DUMP 0 1c 90 c2 Rejected Information:;
+
+// -------------------------------------
+void PPP::LCP_CILV::Tagged::Codes9-11;
+	PPP::LCP_CILV::Tagged::Codes::ID_LEN;
+	HLNG 0 1d 90 c2 Magic Number:;
+	SUBG 4 1c;
+	DUMP 0 1c 90 c2 Data:;
+

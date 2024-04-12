@@ -1,0 +1,193 @@
+
+void ARP;
+	LABL 0 0  0 b1 ARP - Address Resolution Protocol\ARP:;
+	TNXT -ARP Common;
+
+void RARP;
+	INCR 6;      *incr to opcode
+	GWRD 0 1;
+	DECR 6;      *decr back
+	SLTE 5 1;
+	SKIP 2;
+	LABL 0 0  0 b1 RARP - Reverse Address Resolution Protocol\RARP:;
+	TNXT -ARP Common;
+	LABL 0 0  0 b1 DRARP - Dynamic Reverse Address Resolution Protocol\DRARP:;
+	TNXT -ARP Common;
+
+void ARP Common;
+	DWRD 0 1 90 c2 Hardware:\HW:;
+	CST# 0 1  0 14 Hardware Types;
+	CLSE 0 0  0 14 Unknown;
+	PRTO 1 1 90 c2 Protocol:\Proto:;
+	SKIP 1 0;
+	CEQU 800  1  0 14 IP;
+	DBYT 0 5 90 c2 Hardware Addr Length:\HAL:;
+	DBYT 0 6 90 c2 Protocol Addr Length:\PAL:;
+	DWRD 0 1 90 c2 Operation:\Op:;
+	CST# 0 1 0 14 ARP::Common::Name;
+	CLSE 0 0 0 14 Unknown;
+	TST# 0 1 0  0 ARP::Common::Func;
+
+str# ARP::Common::Name;
+	1	|	ARP Request;
+	2	|	ARP Response;
+	3	|	ARP Request Reverse;
+	4	|	ARP Response Reverse;
+	5	|	DRARP Request;
+	6	|	DRARP Response;
+	7	|	DRARP Error;
+	8	|	Inverse ARP Request;
+	9	|	Inverse ARP Reply;
+	10	|	ARP NAK;
+	11	|	MARS Request;
+	12	|	MARS Multi;
+	13	|	MARS MServ;
+	14	|	MARS Join;
+	15	|	MARS Leave;
+	16	|	MARS NAK;
+	17	|	MARS Unserv;
+	18	|	MARS SJoin;
+	19	|	MARS SLeave;
+	20	|	MARS Grouplist Request;
+	21	|	MARS Grouplist Reply;
+	22	|	MARS Redirect Map;
+	23	|	MAPOS UNARP;
+
+str# ARP::Common::Func;
+	1	|	ARP Request;
+	2	|	R/ARP Response;
+	3	|	RARP Request;
+	4	|	R/ARP Response;
+	5	|	RARP Request;
+	6	|	R/ARP Response;
+	7	|	DRARP Error;
+	8	|	ARP::Inverse_Request_Reply;
+	9	|	ARP::Inverse_Request_Reply;
+
+
+void R/ARP Response;
+	SEQU 6 5;					 *check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Sender Hardware Addr:\SHA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Sender Hardware Addr:\SHA:;
+	SEQU 4 6;					 *check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Sender Internet Addr:\SIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Sender Internet Addr:\SIA:;
+	SEQU 6 5;					 *check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Target Hardware Addr:\THA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Target Hardware Addr:\THA:;
+	SEQU 4 6;					 *check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Target Internet Addr:\TIA;
+	SKIP 1;
+	HEX# 0 6 90 c2 Target Internet Addr:\TIA;
+
+void ARP Request;
+	SEQU 6 5;					 *check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Sender Hardware Addr:\SHA;
+	SKIP 1;
+	HEX# 0 5 90 c2 Sender Hardware Addr:\SHA:;
+	SEQU 4 6;					 *check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Sender Internet Addr:\SIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Sender Internet Addr:\SIA:;
+	SEQU 6 5;					*check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Target Hardware Addr:\THA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Target Hardware Addr:\THA:;
+	LABL 0 0 0 14 (ignored);
+	SEQU 4 6;					*check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Target Internet Addr:\TIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Target Internet Addr:\TIA:;
+
+void RARP Request;
+	SEQU 6 5;					*check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Sender Hardware Addr:\SHA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Sender Hardware Addr:\SHA:;
+	SEQU 4 6;					*check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Sender Internet Addr:\SIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Sender Internet Addr:\SIA:;
+	SEQU 6 5;					*check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Target Hardware Addr:\THA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Target Hardware Addr:\THA:;
+	SEQU 4 6;					*check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Target Internet Addr:\TIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Target Internet Addr:\TIA:;
+	LABL 0 0 0 14 (ignored);
+
+void DRARP Error;
+	SEQU 6 5;					 *check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Sender Hardware Addr:\SHA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Sender Hardware Addr:\SHA:;
+	SEQU 4 6;					 *check hardware address length in g5
+	SKIP 80000002;
+	IPLG 0 0 90 c2 Sender Internet Addr:\SIA:;
+	SKIP 1;
+	HEX# 0 6 90 c2 Sender Internet Addr:;
+	SEQU 6 5;					 *check hardware address length in g5
+	SKIP 80000002;
+	ETHR 0 0 90 c2 Target Hardware Addr:\THA:;
+	SKIP 1;
+	HEX# 0 5 90 c2 Target Hardware Addr:\THA:;
+	SEQU 4 6;					 *check error length in g5;
+	SKIP 80000001;
+	DLNG 0 1 90 c2 Error Code:\Error:;
+	SEQU 2 6;					 *check internet address length in g5;
+	SKIP 80000001;
+	DWRD 0 1 90 c2 Error Code:\Error:;
+	SEQU 1 6;					 *check internet address length in g5;
+	SKIP 80000001;
+	DBYT 0 1 90 c2 Error Code:\Error:;
+	ANDG FF 1;						 *mask out everything but the first byte
+	CEQU 1 1 0 24 DRARPERR_RESTRICTED;
+	CEQU 2 1 0 24 DRARPERR_NOADDRESSES;
+	CEQU 3 1 0 24 DRARPERR_SERVERDOWN;
+	CEQU 4 1 0 24 DRARPERR_MOVED;
+	CEQU 5 1 0 24 DRARPERR_FAILURE;
+
+void ARP::Inverse_Request_Reply;
+	HWRD 0 1 90 c2 Sender Hardware Addr:;
+	IPLG 0 1 90 c2 Sender IP Addr:;
+	HWRD 0 1 90 c2 Target Hardware Addr:;
+	IPLG 0 1 90 c2 Target IP Addr:;
+	TRTS;
+
+
+str# Hardware Types;
+	Ethernet (10Mb);
+	Experimental Ethernet (3Mb);
+	Amateur Radio AX.25;
+	Proteon ProNET Token Ring;
+	Chaos;
+	IEEE 802 Network;
+	ARCNET;
+	Hyperchannel;
+	Lanstar;
+	Autonet Short Address;
+	LocalTalk;
+	IBM PCNet or SYTEK LocalNet;
+	Ultra Link;
+	SMDS;
+	Frame Relay;
+	ATM;
+

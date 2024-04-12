@@ -1,0 +1,182 @@
+// STUN - Simple Traversal of User Datagram Protocol Through Network Address Translator
+// Version: 0.1
+// 4/17/2006
+
+str# UDP::Ports_Str;
+	3478  | STUN;
+	
+void STUN;
+
+	LABL( 0, 0, 0, 0xb1, "STUN - Simple Traversal of UDP through NAT\STUN:");
+	HWRD( 0, g[1], 0x90, 0xc2, "Message Type:");
+	  CST#( 0, g[1], 0x0, 0x14, STUN::MessageType_Str);
+	DWRD( 0, 1[1], 0x90, 0xc2, "Message Length:");
+	HEX#( 0x10, 0, 0x90, 0xc2, "Transaction ID:");
+	
+	LABL 0 0 0 c9 Attributes;
+	while (g[16] > 0)
+	{
+		HWRD( 0, g[2], 0x90, 0xc9, "Attribute Type:");
+		  CST#( 0, g[2], 0x0, 0x14, STUN::Message_Attributes_Str);
+		DWRD( 0, g[3], 0x90, 0xc2, "Length:");
+		TSB#( 0, g[2], 0, 0, STUN::Message_Attributes);
+		XLSE 0 0 0 0 STUN::Unknown_Attribute;
+		LABL 0 0 0 c8;
+	}
+	LABL 0 0 0 c8;
+	TRTS;
+
+str# STUN::MessageType_Str;
+	0x0001	| Binding Request;
+	0x0101	| Binding Response;
+	0x0111	| Binding Error Response;
+	0x0002	| Shared Secret Request;
+	0x0102	| Shared Secret Response;
+	0x0112	| Shared Secret Error Response;
+
+str# STUN::Message_Attributes;
+	0x0000	| STUN::Unknown_Attribute;
+	0x0001	| STUN::Mapped_Address;
+	0x0002	| STUN::Response_Address;
+	0x0003	| STUN::Change_Request;
+	0x0004	| STUN::Source_Address;
+	0x0005	| STUN::Changed_Address;
+	0x0006	| STUN::Username;
+	0x0007	| STUN::Password;
+	0x0008	| STUN::Message_Integrity;
+	0x0009	| STUN::Error_Code;
+	0x000a	| STUN::Unknown_Attributes;
+	0x000b	| STUN::Reflected_From;
+	0x0020	| STUN::XOR_Map_Address;
+	0x0022	| STUN::Server;
+	0x8020	| STUN::XOR_Map_Address;
+	0x8022	| STUN::Server;
+	
+str# STUN::Message_Attributes_Str;
+	0x0000	| Unknown Attribute;
+	0x0001	| Mapped-Address;
+	0x0002	| Response Address;
+	0x0003	| Change Request;
+	0x0004	| Source Address;
+	0x0005	| Changed Address;
+	0x0006	| Username;
+	0x0007	| Password;
+	0x0008	| Message-Integrity;
+	0x0009	| Error Code;
+	0x000a	| Unknown Attributes;
+	0x000b	| Reflected-From;
+	0x0020	| XOR Map Address;
+	0x0022	| Server;
+	0x8020	| XOR Map Address;
+	0x8022	| Server;
+
+void STUN::Mapped_Address()
+{
+	INCR 1; //this byte is useless in header.
+	HBYT( 0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG( 0, 0, 0x90, 0xc2, "IP:");
+}
+
+void STUN::Response_Address()
+{
+	INCR 1; //this byte is useless in header.
+	HBYT( 0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG( 0, 0, 0x90, 0xc2, "IP:");
+}
+
+void STUN::Change_Request()
+{
+	g[3] = pw[0]; //store the next byte value in g[3]
+	if( g[3] == 0x0000)
+	{
+		HWRD(0, 0, 0x90, 0xc2, "Change IP: Not Set");
+	}
+	if( g[3] != 0x00)
+	{
+		HWRD( 0, 0, 0x90, 0xc2, "Change IP: Set");
+	}
+
+	g[3] = pw[0];
+	if( g[3] == 0x0000)
+	{
+		HWRD(0, 0, 0x90, 0xc2, "Change Port: Not Set");
+	}
+	if( g[3] != 0x00)
+	{
+		HWRD( 0, 0, 0x90, 0xc2, "Change IP: Set");
+	}
+}
+
+void STUN::Source_Address()
+{
+	INCR 1;
+	HBYT( 0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG( 0, 0, 0x90, 0xc2, "IP:");
+}
+
+void STUN::Changed_Address()
+{
+	INCR 1;
+	HBYT( 0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG( 0, 0, 0x90, 0xc2, "IP:");	
+}
+
+void STUN::Username()
+{
+	HEX#( 0, g[3], 0x90, 0xc2, "Username:");
+}
+
+void STUN::Password()
+{
+	HEX#( 0, g[3], 0x90, 0xc2, "Password:");
+}
+
+void STUN::Message_Integrity()
+{
+	HEX#( 0, g[3], 0x90, 0xc2, "Message Integrity:");
+}
+
+void STUN::Error_Code()
+{
+	INCR 4;
+	CHR#(0, g[3], 0x90, 0xb4, "Server Name:");
+}
+
+void STUN::Unknown_Attributes()
+{
+	while(l[13] < g[3])
+	{
+		HWRD( 0, 0,	0x90, 0xc2, "Unknown Attributes:");
+		l[13]+=2; //increment 2 bytes each as each unknown attribute is of 2 bytes.
+	}			
+}
+
+void STUN::Reflected_From()
+{
+	HBYT (0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG (0, 0, 0x90, 0xc2, "IP:");
+}
+
+void STUN::Unknown_Attribute()
+{
+	INCR( 0, g[3]);
+}
+
+void STUN::XOR_Map_Address()
+{
+	INCR 1;
+	HBYT( 0, 0, 0x90, 0xc2, "IPV4:");
+	DWRD( 0, 0,	0x90, 0xc2, "Port:");
+	IPLG( 0, 0, 0x90, 0xc2, "IP:");
+}
+
+void STUN::Server()
+{
+	CHR#(0, g[3], 0x90, 0xc2, "Server Name:");
+}
+

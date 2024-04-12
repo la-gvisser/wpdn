@@ -1,0 +1,300 @@
+// IAPP - Inter-Access Point Protocol
+// IEEE Std 802.11F-2003
+// Verison: 0.1
+// 4/19/2007
+
+str# TCP::Ports_Str;
+	3517  | IAPP;
+
+// 6.1 General IAPP packet format
+void IAPP()
+{
+	LABL( 0, 0, 0, 0xb1 "IAPP - Inter-Access Point Protocol\IAPP");
+	HBYT( 0, l[1], 0x90, 0xc2, "Version:");
+	DBYT( 0, l[2], 0x90, 0xc2, "Command:");
+	  CST#( 0, l[2], 0, 0x14, IAPP::Command_Str);
+	HWRD( 0, l[1], 0x90, 0xc2, "Identifer:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Length:");
+	TSB#( 0, l[2], 0, 0, IAPP::Command);
+}
+
+str# IAPP::Command_Str;
+	0	| ADD-Notify;
+	1	| MOVE-Notify;
+	2	| MOVE-Response;
+	3	| Send-Security-Block;
+	4	| ACK-Security-Block;
+	5	| CACHE-Notify;
+	6	| CACHE-Response;
+	
+str# IAPP::Command;
+	0	| IAPP::ADD_Notify;
+	1	| IAPP::MOVE_Notify;
+	2	| IAPP::MOVE_Response;
+	3	| IAPP::Send_Security;
+	4	| IAPP::ACK-Security-Block;
+	5	| IAPP::CACHE_Notify;
+	6	| IAPP::CACHE_Response;
+
+// 6.2 ADD-notify packet
+void IAPP::ADD_Notify()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Address Length:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	if (l[2] == 4)
+	{
+		ETHR( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	if (l[2] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+}
+
+// 6.4 MOVE-notify packet
+void IAPP::MOVE_Notify()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Address Length:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	if (l[2] == 4)
+	{
+		ETHR( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	if (l[2] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Context Block Length:");
+	HEX#( 0, l[1], 0x90, 0xc2, "Context Block");
+}
+
+// 6.5 MOVE-response packet
+void IAPP::MOVE_Response()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Address Length:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:");
+		CST#( 0, l[2], 0, 0x14, IAPP::Move_Status_Str);
+	if (l[2] == 4)
+	{
+		ETHR( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	if (l[2] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Context Block Length:");
+	HEX#( 0, l[1], 0x90, 0xc2, "Context Block");
+}
+
+str# IAPP::Move_Status_Str;
+	0	| Successful;
+	1	| Move denied;
+	2	| Stale move;
+
+// 6.6 CACHE-notify packet
+void IAPP::CACHE_Notify()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Address Length:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Reserved:");
+	if (l[2] == 4)
+	{
+		ETHR( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	if (l[2] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+	ETHR( 0, l[1], 0x90, 0xc2, "Current AP:");
+	DWRD( 0, l[1], 0x90, 0xc2, "Context Block Length:");
+	HEX#( 0, l[1], 0x90, 0xc2, "Context Block");
+	DWRD( 0, l[1], 0x90, 0xc2, "Context Timeout:");
+	LABL( 0, 0, 0, 0x14, "seconds");
+}
+
+// 6.7 CACHE-response packet
+void IAPP::CACHE_Response()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Address Length:");
+	HBYT( 0, l[1], 0x90, 0xc2, "Status:");
+	  CST#( 0, l[1], 0, 0x14, IAPP::Cache_Status_Str);
+	if (l[2] == 4)
+	{
+		ETHR( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	if (l[2] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "MAC Address:");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Sequence Number:");
+}
+
+str# IAPP::Cache_Status_Str;
+	0	| Successful;
+	1	| Stale cache;
+
+// 6.8 Send-Security-Block packet
+void IAPP::Send_Security()
+{
+	HEX#( 8, l[1], 0x90, 0xc2, "Initialization Vector:");
+	DWRD( 0, l[2], 0x90, 0xc2, "Security Block Length:");
+	LABL( 0, 0, 0, 0xc9, "Security Block:");
+	while (l[2] > 0)
+	{
+		DWRD( 0, l[3], 0x90, 0xc9, "Element ID:");
+		  CST#( 0, l[3], 0x00, 0x14, IAPP::IE_Str);
+		DWRD( 0, g[1], 0x90, 0xc2, "Length:");
+		TSB#( 0, l[3], 0, 0, IAPP::IE);
+		LABL( 0, 0, 0, 0xc8);
+	}
+	LABL( 0, 0, 0, 0xc8);
+}
+
+// 6.9 ACK-Security-Block packet
+void IAPP::ACK-Security-Block()
+{
+	HEX#( 8, l[1], 0x90, 0xc2, "Initialization Vector:");
+	HEX#( 0x30, l[1], 0x90, 0xc2, "New AP ACK Authenticator:");
+}
+
+// 6.10 Information element definitions
+str# IAPP::IE;
+	1	|	IAPP::Date_Time_Stamp;
+	2	|	IAPP::Security_Lifetime;
+	3	|	IAPP::ACK_Nonce;
+	4	|	IAPP::ESP_Transform_Number;
+	5	|	IAPP::ESP_Authentication_Number;
+	6	|	IAPP::SPI;
+	7	|	IAPP::ESP_Transform_Key;
+	8	|	IAPP::ESP_Authentication_Key;
+	9	|	IAPP::SPI;
+	10	|	IAPP::ESP_Transform_Key;
+	11	|	IAPP::ESP_Authentication_Key;
+	12	|	IAPP::Old_BSSID;
+	13	|	IAPP::New-AP-ACK-Authenticator;
+	14	|	IAPP::HMAC_Authentication_Block;
+	15	|	IAPP::New_BSSID;
+	16	|	IAPP::New_BSSID_IP;
+
+str# IAPP::IE_Str;
+	1	|	Date-Time Stamp;
+	2	|	Security Lifetime;
+	3	|	ACK nonce (32-byte);
+	4	|	ESP Transform Number;
+	5	|	ESP Authentication Number;
+	6	|	SPI from new AP;
+	7	|	ESP Transform Key from new AP;
+	8	|	ESP Authentication Key from new AP;
+	9	|	SPI to new AP;
+	10	|	ESP Transform Key to new AP;
+	11	|	ESP Authentication Key to new AP;
+	12	|	Old BSSID;
+	13	|	New-AP-ACK-Authenticator;
+	14	|	HMAC Authentication Block;
+	15	|	New BSSID;
+	16	|	New BSSID IP address;
+
+void IAPP::Date_Time_Stamp()
+{
+	// RFC 1305 format
+	HEX#( 0, g[1], 0x90, 0xc2, TimeStamp:);
+}
+
+void IAPP::Security_Lifetime()
+{
+	TIME( 5, l[1], 0x90, 0xc2, "Lifetime:");
+}
+
+void IAPP::ACK_Nonce()
+{
+	HEX#( 0, g[1], 0x90, 0xc2, ACK Nonce:);
+}
+
+void IAPP::ESP_Transform_Number()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Transform Number:");
+}
+
+void IAPP::ESP_Authentication_Number()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Auth. Number:");
+}
+
+void IAPP::SPI()
+{
+	HLNG( 0, l[1], 0x90, 0xc2, "SPI:");
+}
+
+void IAPP::ESP_Transform_Key()
+{
+	HEX#( 0, g[1], 0x90, 0xc2, ACK Nonce:);
+}
+
+void IAPP::ESP_Authentication_Key()
+{
+	HEX#( 0, g[1], 0x90, 0xc2, ACK Nonce:);
+}
+
+void IAPP::Old_BSSID()
+{
+	CHR#( 0, g[3], 0x90, 0xc2, "BSSID:");
+}
+
+void IAPP::New-AP-ACK-Authenticator()
+{
+	IAPP::Date_Time_Stamp();			//8 byte
+	IAPP::ACK_Nonce();					//32 byte
+	IAPP::HMAC_Authentication_Block();	//16 byte
+}
+
+void IAPP::HMAC_Authentication_Block()
+{
+	HEX#( 0, g[3], 0x90, 0xc2, "Auth. Block:");
+}
+
+void IAPP::New_BSSID()
+{
+	CHR#( 0, g[3], 0x90, 0xc2, "BSSID:");
+}
+
+void IAPP::New_BSSID_IP()
+{
+	if (g[3] == 4)
+	{
+		IPLG( 0, l[1], 0x90, 0xc2, "IP Address:");
+	}
+	if (g[3] == 16)
+	{
+		IPV6( 0, l[1], 0x90, 0xc2, "IP Address:");
+	}
+}
+
+// RADIUS Attribute Type (26)
+void IAPP::RADIUS_VS()
+{
+	DBYT( 0, l[2], 0x90, 0xc2, "Attribute Length:");
+	DLNG( 0, l[1], 0x90, 0xc2, "Vendor ID:");
+	DBYT( 0, l[3], 0x90, 0xc2, "Vendor Type:");
+	  CST#( 0, l[3], 0, 0x14, IAPP::RADIUS_Vendor_Type_Str);
+	DBYT( 0, l[2], 0x90, 0xc2, "Vendor Length:");
+	HEX#( 0, l[2], 0x90, 0xc2, "Attribute Data:");
+}
+
+str# IAPP::RADIUS_Vendor_Type_Str;
+	1	|	IAPP-Liveliness-Nonce;
+	2	|	New-BSSID-Security-Block;
+	3	|	Old-BSSID-Security-Block;
+	4	|	SSID;
+	5	|	Supported-ESP-Authentication-Algorithms;
+	6	|	Supported-ESP-Transforms;
+	7	|	ESS-New-ESP-Transform-Key;
+	8	|	ESS-New-ESP-Authentication-Key;
+	9	|	ESS-Old-ESP-Transform-Key;
+	10	|	ESS-Old-ESP-Authentication-Key;
+	11	|	ESS-ESP-Transform-ID;
+	12	|	ESS-ESP-Authentication-ID;
+	13	|	ESS-ESP-SPI;
+	14	|	New-BSSID-Security-Block-IV;

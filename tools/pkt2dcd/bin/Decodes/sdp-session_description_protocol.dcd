@@ -1,0 +1,700 @@
+* SDP - Session Description Protocol	[rfc2327 / tt3427]
+
+void SDP()
+{
+	SDP::Main();
+}
+
+
+void SDP::Main()
+{
+	TEQU 0 10 0 0 RETURN;
+	LABL 0 0  0 b1 "SDP - Session Description Protocol\SDP:";
+	SDP::1;
+}
+
+void SDP::1;	
+	TGTE 0 10 0 0 RETURN;
+	
+	l[1] = 1;
+	while( l[1] == 1 )
+	{
+		GBYT 0 1;
+		TSB# 0 1 0 0 SDP::DescriptionFunctions;
+		SKIP 1;
+		MOVE 0 41;	//we reach here if the byte isn't a description function
+	}
+	
+	TRTS;	*if there wasn't a case to hit, then return;
+
+str# SDP::DescriptionFunctions;
+	0x61 | SDP::a;
+	0x62 | SDP::b;
+	0x63 | SDP::c;
+	0x65 | SDP::e;
+	0x69 | SDP::i;
+	0x6b | SDP::k;
+	0x6d | SDP::m;
+	0x6f | SDP::o;
+	0x70 | SDP::p;
+	0x72 | SDP::r;
+	0x73 | SDP::s;
+	0x74 | SDP::t;
+	0x75 | SDP::u;
+	0x76 | SDP::v;
+
+
+
+/*
+void SDP::PrintLoop_no_spaces;		*SI: prints out spaces
+	TGTE 0 10 0 0 RETURN;
+	GBYT  0 1;
+	TEQU 0A 1  0  0 RETURN;
+	TEQU 0D 1  0  0 RETURN;
+	*TEQU 20 1  0  0 RETURN;		*real space
+	CHR#  1 0 90 0;
+	TNXT -SDP::PrintLoop_no_spaces;
+*/
+
+void SDP::PrintLoop_no_spaces()		
+{
+	// loop condition
+	l[1] = 1;
+	
+	// length of string
+	l[2] = 0;
+	
+	
+	while (l[1] == 1)
+	{
+		l[3] = pb[ l[2] ];
+		
+		if (l[3] == 0x0a)	//LF
+		{
+			l[1] = 0;
+		}
+		
+		if (l[3] == 0x0d)	//CR
+		{
+			l[1] = 0;
+		}
+
+		if (l[1] == 1)
+		{
+			l[2] += 1;
+		}
+	}
+	
+	if (l[2] > 0)
+	{
+		CHR#( 0, l[2], 0x90, 0 );
+	}
+}
+
+	
+/*
+void SDP::PrintLoop_colon;			*SI: stops on colons
+	TEQU 0 10 0 0 RETURN;
+	GBYT  0 1;
+	TEQU 3A 1  0  0 RETURN;		* : == 3A
+	TEQU 0A 1  0  0 RETURN;
+	TEQU 0D 1  0  0 RETURN;
+	TEQU 20 1  0  0 RETURN;		*real space
+	CHR#  1 0 90  0;
+	TNXT -SDP::PrintLoop_colon;
+*/
+
+
+void SDP::PrintLoop_colon()		
+{
+	// loop condition
+	l[1] = 1;
+	
+	// length of string
+	l[2] = 0;
+	
+	
+	while (l[1] == 1)
+	{
+		l[3] = pb[ l[2] ];
+		
+		if (l[3] == 0x0a)	//LF
+		{
+			l[1] = 0;
+		}
+		
+		if (l[3] == 0x0d)	//CR
+		{
+			l[1] = 0;
+		}
+		
+		if (l[3] == 0x3a)	//:
+		{
+			l[1] = 0;
+		}
+		
+		if (l[3] == 0x20)	//space
+		{
+			l[1] = 0;
+		}
+		
+		if (l[1] == 1)
+		{
+			l[2] += 1;
+		}
+	}
+	
+	if (l[2] > 0)
+	{
+		CHR#( 0, l[2], 0x90, 0 );
+	}
+}
+
+
+
+* SDP - subfunctions - session descriptions
+
+* subfunc notes: there are "incr 2" calls in the front of all of the functions
+* the reason for that is to get rid of the "x=" in the beginning of each function
+
+void SDP::v;
+	LABL 0 0 0 b7 Protocol Version\;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Version:\v=;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+
+void SDP::o;
+	LABL 0 0 0 b7 Origin\o=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Username:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Session ID:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Version:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Network Type:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Address Type:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Address:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+
+void SDP::s;
+	LABL 0 0 0 b7 Session Name\s=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Name:;
+	TSUB -SDP::PrintLoop_no_spaces;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SDP::i;
+	LABL 0 0 0 b7 Session and Media Information\i=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Information:;
+	TSUB -SDP::PrintLoop_no_spaces;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SDP::u;
+	LABL 0 0 0 b7 Universal Resource Identifier\u=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 URI:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;	
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SDP::e;				*SI: ??
+	LABL 0 0 0 b7 Email Address\e=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Email Address:;
+	TSUB -SDP::PrintLoop_no_spaces;
+	TSUB -MGCP::Cleanup;
+	
+	GBYT 0 1;			*SI: ??
+	SNEQ 28 1;			* ( == 28
+	SKIP 1;
+	TSUB -SDP::ep_helper;
+	SNEQ 3C 1;			* < == 3C
+	SKIP 1;
+	TSUB -SDP::ep_helper;
+	
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SDP::p;				*SI: ??
+	LABL 0 0 0 b7 Phone Number\p=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Phone Number:;
+	TSUB -SDP::PrintLoop_no_spaces;
+	TSUB -MGCP::Cleanup;
+
+	GBYT 0 1;			*SI: check to see if contact string is present
+	SNEQ 28 1;			* ( == 28
+	SKIP 1;
+	TSUB -SDP::ep_helper;
+	SNEQ 3C 1;			* < == 3C
+	SKIP 1;
+	TSUB -SDP::ep_helper;
+
+	LABL 0 0 0 b8;
+	TRTS;
+
+void SDP::ep_helper;
+	TGTE 0 10 0 0 RETURN;
+	GBYT 0 1;
+
+	SEQU 29 1;			* ) == 29	means we're done
+	SKIP 3;
+	CHR# 1 0 90 0;		* print this char out and exit!
+	TRTS;
+
+	SEQU 3E 1;			* > == 3E	means we're done
+	SKIP 3;
+	CHR# 1 0 90 0;		* print this char out and exit!
+	TRTS;
+
+	CHR# 1 0 90 0;
+	TNXT -SDP::ep_helper;
+	
+void SDP::c;
+	LABL 0 0  0 b7 Connection Information\c=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Network Type:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Address Type:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Address:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0  0 b8;
+
+void SDP::b;
+	LABL 0 0 0 b7 Bandwidth Information\b=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Modifier:;
+	TSUB -SDP::PrintLoop_colon;
+	TSUB -MGCP::Cleanup;
+	INCR 1;							*SI: this gets rid of the colon
+	LABL 0 0 90 c2 Bandwidth Value:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 14 kilobits/s;
+	LABL 0 0 0 b8;
+
+void SDP::z;							*SI: ??????????????????????????
+	LABL 0 0 0 b7 Time Zone Adjustments\z=;
+	LABL 0 0 0 b8;
+
+void SDP::k;
+	LABL 0 0 0 b7 Encryption Key\k=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	GBYT 0 2;
+	DECR 2;
+	LABL 0 0 90 c2 Method:;
+	TSUB -SDP::PrintLoop_colon;
+	TSUB -MGCP::Cleanup;
+	
+	SNEQ 70 2;						*SI: if the key is "prompt" then there's no key so return!
+	SKIP 2;
+	LABL 0 0 0 b8;
+	TRTS;
+	
+	INCR 1;							*SI: this gets rid of the colon
+	LABL 0 0 90 c2 Key:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+
+void SDP::a;
+	LABL 0 0 0 b7 Session Attributes\a=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Attribute:;
+	TSUB -SDP::PrintLoop_no_spaces;
+	*TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+
+* SDP - subfunctions - time descriptions
+
+void SDP::t;
+	LABL 0 0 0 b7 Time Session is Active\t=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	LABL 0 0 90 c2 Start Time:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 90 c2 Stop Time:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	LABL 0 0 0 b8;
+
+void SDP::r;							*SI:.....hmmmm....this is MESSED UP...could be hms
+	LABL 0 0 0 b7 Zero of More Repeat Times\r=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	
+	LABL 0 0 90 c2 Repeat Interval:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	
+	LABL 0 0 90 c2 Active Duration:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	
+	LABL 0 0 90 c2 Offsets:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	
+	LABL 0 0 0 b8;
+
+* SDP - subfunctions - media descriptions
+
+void SDP::m;
+	LABL 0 0  0 b7 Media Description\m=;
+	CHR# 2 0 5 5; //increase the pointer by 2 but still count it towards the size for display purposes
+	
+	LABL 0 0 90 c2 Type:;
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	
+	LABL 0 0 90 c2 Port:;
+	l[1] = g[16];
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	l[2] = g[16];
+	l[1] -= l[2];
+	g[2] = l[1];
+	SDP::GetPortNum;
+	l[3] = g[1];		//save the port num
+	
+	LABL 0 0 90 c2 Protocol:;
+	l[1] = g[16];
+	TSUB -MGCP::PrintLoop;
+	TSUB -MGCP::Cleanup;
+	l[2] = g[16];
+	l[1] -= l[2];
+	g[2] = l[1];
+	g[3] = l[3];
+	SDP::CheckRDP;
+	
+	//LABL 0 0 90 c2 Format:;
+	l[1] = pb[0];
+	SDP::PrintMediaFormats();
+	TSUB -MGCP::Cleanup;
+	//CST# 0 41 0 14 SDP::m::Format;
+	//LABL 0 0  0 b8;
+	//TRTS;
+
+void SDP::PrintMediaFormats()		
+{
+
+	// loop condition
+	l[1] = 1;
+	
+	// length of string
+	l[2] = 0;
+	
+	while (l[1] == 1)
+	{
+		l[3] = pb[ l[2] ];
+		
+		if (l[3] == 0x0a)	//LF
+		{
+			l[1] = 0;
+		}
+		
+		if (l[3] == 0x0d)	//CR
+		{
+			l[1] = 0;
+			l[5] = 1; 
+			l[4] = 0;
+			l[6] = 0;
+			//DECR(l[2]);
+			l[8] = l[2];
+			//Convert Ascii to Decimal
+			while (l[2] > 0)
+			{
+				l[2] -= 1;
+				l[4] = pb[ l[2] ];
+				l[4] -= 48;
+				l[4] *= l[5];
+				l[5] *= 10;
+				l[6] += l[4];
+				g[10] = l[6];
+				//DGLB(0, g[10], 0x90, 0xc2, "Number: "); 
+			}
+			l[8] += 1;
+			//INCR(0, l[8]);
+			//HEX#( 0, l[8], 0x5, 0);
+			if (g[10] <= 34)
+			{
+				LABL 0, 0, 90, c2, "Format:";
+				CHR#( 0, 0, 0x90, 0 );
+				CST#(0, g[10], 0, 0, SDP::MediaFormats);
+			}
+			if (g[10] > 96)
+			{
+				if (g[10] <= 127)
+				{
+					LABL 0, 0, 90, c2, "Format:";
+					CHR#( 0, 0, 0x90, 0 );
+					CHR#( 0, 0, 0x90, 0, DynamicRTP);
+				}
+			}
+			HEX#( 0, l[8], 0x5, 0);
+		}
+		
+		if (l[3] == 0x20)   //SP
+		{				
+			l[5] = 1; 
+			l[4] = 0;
+			l[6] = 0;
+			//DECR(l[2]);
+			l[8] = l[2];
+			//Convert Ascii to Decimal
+			while (l[2] > 0)
+			{
+				l[2] -= 1;
+				l[4] = pb[ l[2] ];
+				l[4] -= 48;
+				l[4] *= l[5];
+				l[5] *= 10;
+				l[6] += l[4];
+				g[10] = l[6];
+				//DGLB(0, g[10], 0x90, 0xc2, "Number:"); 
+			}
+			l[8] += 1;
+			//INCR(0, l[8]);
+			//HEX#( 0, l[8], 0x5, 0);
+			if (g[10] <= 34)
+			{
+				LABL 0, 0, 90, c2, "Format:";
+				CHR#( 0, 0, 0x90, 0 );
+				CST#(0, g[10], 0, 0, SDP::MediaFormats);
+			}
+			if (g[10] > 34)
+			{
+				if (g[10] <= 127)
+				{
+					LABL 0, 0, 90, c2, "Format:";
+					CHR#( 0, 0, 0x90, 0 );
+					CHR#( 0, 0, 0x90, 0, DynamicRTP);
+				}
+			}
+			HEX#( 0, l[8], 0x5, 0);
+		}
+
+		if (l[3] != 0x20)
+		{
+			l[2] += 1;
+		}
+	}
+
+	/*
+	if (l[2] > 0)
+	{
+		CHR#( 0, l[2], 0x90, 0 );
+	}
+	*/
+}
+
+str# SDP::MediaFormats;
+	0    | ITU-T G.711 PCM U-Law audio 64 kbit/s;
+	1    | Reserved;
+	2    | Reserved;
+	3    | European GSM Full Rate audio 13 kbit/s;
+	4    | ITU-T G.723.1 audio;
+	5    | IMA ADPCM audio 32 kbit/s;
+	6    | IMA ADPCM 64 64 kbit/s;
+	7    | Experimental Linear Predictive Coding audio 5.6 kbit/s;
+	8    | ITU-T G.711 PCM A-Law audio 64 kbit/s;
+	9    | ITU-T G.722 64 kbit/s;
+	10   | Linear PCM 16-bit audio 1411.2 kbit/s uncompressed;
+	11   | Linear PCM 16-bit audio 705.6 kbit/s uncompressed;
+	12   | Qualcomm Code Excited Linear Prediction;
+	13   | Comfort noise;
+	14   | MPEG-1 or MPEG-2 audio;
+	15   | ITU-T G.728 audio 16 kbit/s;
+	16   | IMA ADPCM audio 44.1 kbit/s;
+	17   | IMA ADPCM audio 88.2 kbit/s;
+	18   | ITU-T G.729 and G.729a audio 8 kbit/s;
+	25   | Sun CellB video;
+	26   | JPEG video;
+	28   | Xerox PARC's Network Video;
+	31   | ITU-T H.261 video;
+	32   | MPEG-1 or MPEG-2 video;
+	33   | MPEG-2 transport stream;
+	34   | H.263 video, first version;
+	101  | DynamicRTP-Type-101;
+
+void SDP::GetPortNum;
+	DECR 0 2;
+	l[1] = 0;
+	l[2] = 0;
+	
+	//	XXXXX_
+	if (g[2] == 6)
+	{
+		g[1] = pb[0];		// Xxxxx
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 10000;
+		l[2] += l[1];
+
+		g[1] = pb[1];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 1000;
+		l[2] += l[1];
+		
+		g[1] = pb[2];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 100;
+		l[2] += l[1];
+
+		g[1] = pb[3];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 10;
+		l[2] += l[1];
+
+		g[1] = pb[4];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[2] += l[1];
+		g[1] = l[2];
+	}
+	
+	//	XXXX_
+	if (g[2] == 5)
+	{
+		g[1] = pb[0];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 1000;
+		l[2] += l[1];
+
+		g[1] = pb[1];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 100;
+		l[2] += l[1];
+		
+		g[1] = pb[2];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 10;
+		l[2] += l[1];
+
+		g[1] = pb[3];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[2] += l[1];
+		g[1] = l[2];
+	}
+	
+	//	XXX_
+	if (g[2] == 4)
+	{
+		g[1] = pb[0];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 100;
+		l[2] += l[1];
+
+		g[1] = pb[1];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 10;
+		l[2] += l[1];
+		
+		g[1] = pb[2];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[2] += l[1];
+		g[1] = l[2];
+	}
+
+	//	XX_
+	if (g[2] == 3)
+	{
+		g[1] = pb[0];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[1] *= 10;
+		l[2] += l[1];
+
+		g[1] = pb[1];
+		CUPS::AtoH;
+		l[1] = g[1];
+		l[2] += l[1];
+		g[1] = l[2];
+	}
+
+	//	X_
+	if (g[2] == 2)
+	{
+		g[1] = pb[0];
+		CUPS::AtoH;
+	}
+	
+	INCR 0 2;
+	// g[1] is your port num
+	TRTS;
+	
+void SDP::CheckRDP;
+	DECR 0 2;
+	
+	if (g[2] > 3)
+	{
+		l[3] = pb[0];
+		if (l[3] == 0x52)
+		{
+			l[3] = pb[1];
+			if (l[3] == 0x54)
+			{
+				l[3] = pb[2];
+				if (l[3] == 0x50)
+				{
+					MARK 1 3 0 0 SDP::RTP_Port;
+				}
+			}
+		}
+	}
+	INCR 0 2;
+	TRTS;
+
+str# SDP::RTP_Port;
+	RTP;
+
+str# SDP::m::Format;
+	0x30	| ITU-T G.711 PCMU;
+	0x38	| ITU-T G.711 PCMA;
+	0x31	| ITU-T G.729 and G.729a audio 8 kbit/s
+
+
+
+
+
+
+
+
+
+
+
+
+// SDP -- END
+

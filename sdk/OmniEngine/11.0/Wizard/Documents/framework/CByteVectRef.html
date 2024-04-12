@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CByteVectRef Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CByteVectRef Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        The CByteVectRef class contains a pointer to an array of bytes
+        and a count of how many bytes are in the buffer. The inMin argument to the
+        GetData member helps ensure that the array contains at least the number
+        of bytes needed.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CByteVectRef
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::CByteVectRef">CByteVectRef</a>
+            </td>
+            <td>
+                Constructs a CByteVectRef object.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Operators</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::operator_CString">operator CString</a>
+            </td>
+            <td>
+                Returns a copy of the buffer as a CString.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Public Member Functions</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::GetCount">GetCount</a>
+            </td>
+            <td>
+                Returns number of bytes in data.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::GetData">GetData</a>
+            </td>
+            <td>
+                Returns a pointer to the data.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::IsEmpty">IsEmpty</a>
+            </td>
+            <td>
+                Test if the object is empty.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::Reset">Reset</a>
+            </td>
+            <td>
+                Sets the number of bytes to zero and the pointer to the data to NULL.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::Set">Set</a>
+            </td>
+            <td>
+                Sets the number of bytes and the pointer to the data.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CByteVectRef::Test">Test</a>
+            </td>
+            <td>
+                Checks the validity of the object.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CByteVectRef Public Member Functions</h2>
+
+    <!-- CByteVectRef constructor details -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;">
+        <a name="CByteVectRef::CByteVectRef"></a>CByteVectRef::CByteVectRef
+    </h3>
+    <p class="onlyP">Constructs a CByteVectRef object.</p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">CByteVectRef(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inCount</em> = 0,</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const UInt8*</td>
+            <td><em>inData</em> = NULL</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inCount</em></dt>
+        <dd>The number of bytes in the buffer. The default is zero.</dd>
+        <dt><em>inData</em></dt>
+        <dd>A pointer to the buffer. The default is NULL.</dd>
+    </dl>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::operator_CString"></a>CByteVectRef::operator CString()</h3>
+    <p>
+        Returns a copy of the buffer as a CString.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">operator CString() const;</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The CString operator copies the entire contents of the buffer into a
+        CStringA object and returns a CString object created from the CStringA object.
+        The length of the string will be the number of bytes in the data or the offset
+        of the first null character, whichever is smaller.
+    </p>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::GetCount"></a>CByteVectRef::GetCount</h3>
+    <p>
+        Obtains the number of bytes in the buffer.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">UInt32 GetCount() const;</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Return Value</b>
+    </p>
+    <p class="onlyP">
+        The number of bytes of data.
+    </p>
+    <!--	-->
+    <hr style="color:#4d92a8; margin-left: 0px;" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::GetData"></a>CByteVectRef::GetData</h3>
+    <p>
+        Returns a pointer to the data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">const UInt8* GetData(</td>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inMin</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inMin</em></dt>
+        <dd>The minimum number of bytes that must be in the buffer.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        If there are at least inMin bytes in the buffer, then the function returns
+        a pointer to the buffer. Otherwise it returns NULL.
+    </p>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::IsEmpty"></a></h3>
+    <h3 style="margin-top:10px;">CByteVectRef::IsEmpty</h3>
+    <p>
+        Returns true if the object is empty.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td>bool IsEmpty();</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The object is empty when the pointer is NULL and the count is zero..
+    </p>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::Reset"></a></h3>
+    <h3 style="margin-top:10px;">CByteVectRef::Reset</h3>
+    <p>
+        Sets the number of bytes to zero and the pointer to the data to NULL.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Reset();</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The m_nCount member is set to zero and the m_pData member is set to NULL.
+    </p>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::Set"></a>CByteVectRef::Set</h3>
+    <p>
+        Sets the number of bytes and the pointer to the data.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Set(</td>
+        </tr>
+        <tr>
+            <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inCount</em> = 0,</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>const UInt8*</td>
+            <td><em>inData</em> = NULL</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inCount</em></dt>
+        <dd>the number of bytes in the data.</dd>
+        <dt><em>inData</em></dt>
+        <dd>pointer to the data.</dd>
+    </dl>
+    <!--	-->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;"><a name="CByteVectRef::Test"></a>CByteVectRef::Test</h3>
+    <p>
+        Verifies the validity of the object.
+    </p>
+    <table class="codeP" style="margin-left:25px;">
+        <tr>
+            <td colspan="3">void Test(</td>
+        </tr>
+        <tr>
+            <td>&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inMax</em> = 0xFFFFFFFF</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p style="color:#000000">
+        <b>Parameters</b>
+    </p>
+    <dl style="margin-left:25px;">
+        <dt><em>inMax</em></dt>
+        <dd>The maximum number of bytes that the object should reference.</dd>
+    </dl>
+    <p style="color:#000000">
+        <b>Remarks</b>
+    </p>
+    <p class="onlyP">
+        The object is reset if the object is not in a consistent state, or if the count
+        is zero, the pointer is NULL or the count is greater than inMax.
+    </p>
+    <!--	-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

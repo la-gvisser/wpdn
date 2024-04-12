@@ -1,0 +1,1720 @@
+// -----------------------------------------------------------
+// LWAPP - Light Weight Access Point Protocol
+//	ethertype: 0x88bb & 0xbbbb
+//	using draft-ohara-capwap-lwapp-03.txt
+//	dcd version 1.0.0.1
+//
+//	port 12222 & 12223
+//	reserved globals:
+//		g[5]: whole length
+//		g[6]: total message element length
+//		g[7]: each message element length
+//		g[8]: control message type
+// -----------------------------------------------------------
+
+// -----------------------------------------------------------
+//	main
+
+void LWAPP()
+{
+	LABL 0 0 0 b1 Light Weight Access Point Protocol\LWAPP:;
+	l[1] = pb[0];
+	l[2] = pb[0x6];
+	l[1] &= 0x4;
+	SHFR 2 41;
+	l[2] &= 0x4;
+	SHFR 2 42;
+	if (l[2] == 1)
+	{
+		l[3] = pb[0xC];
+		TSB#( 0, l[3], 0, 0, LWAPP::APIdentity_Check);
+	}
+	LWAPP::Header;
+	
+	//control or data
+	TEQU 0 4 0 0 802_11::Main2;				// ???
+	TEQU 1 4 0 0 LWAPP::Message::ControlMessage;
+	
+	TRTS;
+}
+// -----------------------------------------------------------
+//	AP Identity Check
+
+str# LWAPP::APIdentity_Check;
+	1	| LWAPP::APIdentity;
+	3	| LWAPP::APIdentity;
+	10	| LWAPP::APIdentity;
+	12	| LWAPP::APIdentity;
+	14	| LWAPP::APIdentity;
+	16	| LWAPP::APIdentity;
+	20	| LWAPP::APIdentity;
+	22	| LWAPP::APIdentity;
+	24	| LWAPP::APIdentity;
+	26	| LWAPP::APIdentity;
+	30	| LWAPP::APIdentity;
+	32	| LWAPP::APIdentity;
+	34	| LWAPP::APIdentity;
+	37	| LWAPP::APIdentity;
+	39	| LWAPP::APIdentity;
+	
+void LWAPP::APIdentity;
+	ETHR 0 0 90 c2 AP Identity:;
+	TRTS;
+
+// -----------------------------------------------------------
+//	Header
+
+void LWAPP::Header;
+	BBYT 0 1 90 c9 Flags:;
+		l[1] = g[1];
+		l[1] &= 0xc0;
+		SHFR 6 41;
+		CST# 0 41 00 d4 LWAPP::Header::Flags::Version;
+		l[1] = g[1];
+		l[1] &= 0x38;
+		SHFR 3 41;
+		CST# 0 41 00 d4 LWAPP::Header::Flags::RID;
+		CBIT 2 1 00 d4 .... .1.. C: Control message;
+		CLSE 0 0 00 d4 .... .0.. C: Data message;
+		CBIT 1 1 00 d4 .... ..1. F: Not a fragmented packet;
+		CLSE 0 0 00 d4 .... ..0. F: Fragmented packet;
+		CBIT 0 1 00 d4 .... ...1 L: Not the last fragment;
+		CLSE 0 0 00 d4 .... ...0 L: Last fragment;
+		LABL 0 0 00 c8;
+		g[4] = g[1];			// this is to know if it's a control or data message
+		g[4] &= 4;
+		SHFR 2 4;
+	HBYT 0 1 90 c2 Fragment ID:;
+	DWRD 0 5 90 c2 Length:;
+	//status:
+	DBYT 0 1 90 c2 RSSI:\RSSI:;
+	LABL 0 0 00 14 dBm;
+	DBYT 0 1 90 c2 SNR:\SNR:;
+	LABL 0 0 00 14 dB;
+	TRTS;
+
+str# LWAPP::Header::Flags::Version;
+	0 | 00.. .... Version: 0;
+	1 | 01.. .... Version: 1;
+	2 | 10.. .... Version: 2;
+	3 | 11.. .... Version: 3;
+
+str# LWAPP::Header::Flags::RID;
+	0 | ..00 0... Radio ID: 0;
+	1 | ..00 1... Radio ID: 1;
+	2 | ..01 0... Radio ID: 2;
+	3 | ..01 1... Radio ID: 3;
+	4 | ..10 0... Radio ID: 4;
+	5 | ..10 1... Radio ID: 5;
+	6 | ..11 0... Radio ID: 6;
+	7 | ..11 1... Radio ID: 7;
+
+// -----------------------------------------------------------
+//	Message Elements
+
+void LWAPP::Message::Element;
+	while (g[6] > 0)
+	{
+		l[1] = g[16];
+		GBYT 0 1;
+		
+		CST# 0 1 00 b7 LWAPP::Message::Elements::Name;
+		CLSE 0 0 00 b7 Unknown Element;
+		
+		DBYT 0 1 90 c2 Msg Element Type:;
+			CST# 0 1 00 14 LWAPP::Message::Elements::Name;
+		CLSE 0 0 00 14 Unknown Element;
+		
+		DWRD 0 7 90 c2 Message Length:;
+		l[2] = g[16];
+		
+		TSB# 0 1 00 00 LWAPP::Message::Elements::Func;
+		
+		if (l[2] == g[16])
+		{
+			if (g[7] > 0)
+			{
+				DUMP 0 7 90 c2 Data:;
+			}
+		}
+
+		LABL 0 0 00 b8;
+		
+		l[1] -= g[16];
+		g[6] -= l[1];
+		if (g[6] <= 0)
+		{
+			TRTS;
+		}
+	}
+	TRTS;
+
+/*
+void LWAPP::Message::Elements;
+	while (g[6] > 0)
+	{
+		l[1] = g[16];
+		GBYT 0 1;
+		LWAPP::Message::Elements::MessageType1;
+		//CST# 0 1 00 b7 LWAPP::Message::Elements::Name;
+		//CLSE 0 0 00 b7 Unknown Element;
+		
+		DBYT 0 1 90 c2 Msg Element Type:;
+		LWAPP::Message::Elements::MessageType2;
+		//  CST# 0 1 00 14 LWAPP::Message::Elements::Name;
+		//  CLSE 0 0 00 14 Unknown Element;
+		
+		DWRD 0 7 90 c2 Message Length:;
+		l[2] = g[16];
+		
+		// message data
+		if (g[8] == 1)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::DiscoveryRequest::Func;				// 5.1
+		}
+		if (g[8] == 2)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::DiscoveryResponse::Func;				// 5.2
+		}
+		if (g[8] == 32)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::PrimaryDiscoveryRequest::Func;			// 5.3
+		}
+		if (g[8] == 33)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::PrimaryDiscoveryResponse::Func;		// 5.4
+		}
+		if (g[8] == 3)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::JoinRequest::Func;						// 6.1
+		}
+		if (g[8] == 4)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::JoinResponse::Func;					// 6.2
+		}
+		if (g[8] == 5)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::JoinAck::Func;							// 6.3
+		}
+		if (g[8] == 6)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::JoinConfirm::Func;						// 6.4
+		}
+		if (g[8] == 30)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::KeyUpdateRequest::Func;				// 6.7
+		}
+		if (g[8] == 31)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::KeyUpdateResponse::Func;				// 6.8
+		}
+	/*
+		if (g[8] == )
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::KeyUpdateTrigger::Func;				// 6.11
+		}
+	*/
+		if (g[8] == 10)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ConfigureRequest::Func;				// 7.2
+		}
+		if (g[8] == 11)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ConfigureResponse::Func;				// 7.3
+		}
+		if (g[8] == 12)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ConfigurationUpdateRequest::Func;		// 7.4
+		}
+		if (g[8] == 13)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ConfigurationUpdateResponse::Func;		// 7.5
+		}
+		if (g[8] == 16)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ChangeStateEventRequest::Func;			// 7.6
+		}
+		if (g[8] == 24)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::ImageDataRequest::Func;				// 8.1
+		}
+		if (g[8] == 14)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::WTPEventRequest::Func;					// 8.5
+		}
+		if (g[8] == 34)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::DataTransferRequest::Func;				// 8.7
+		}
+		if (g[8] == 39)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::MobileConfigRequest::Func;				// 9.1
+		}
+		if (g[8] == 40)
+		{
+			TSB# 0 1 00 00 LWAPP::Message::Elements::MobileConfigResponse::Func;			// 9.2
+		}
+		
+		if (l[2] == g[16])
+		{
+			if (g[7] > 0)
+			{
+				DUMP 0 7 90 c2 Data:;
+			}
+		}
+		//TSB# 0 1 00 00 LWAPP::Message::Elements::Func;
+		LABL 0 0 00 b8;
+		
+		l[1] -= g[16];
+		g[6] -= l[1];
+		if (g[6] <= 0)
+		{
+			TRTS;
+		}
+	}
+	TRTS;
+*/
+/*
+void LWAPP::Message::Elements::MessageType1;
+	if (g[8] == 1)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::DiscoveryRequest::List;				// 5.1
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 2)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::DiscoveryResponse::List;				// 5.2
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 32)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::PrimaryDiscoveryRequest::List;			// 5.3
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 33)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::PrimaryDiscoveryResponse::List;		// 5.4
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 3)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinRequest::List;						// 6.1
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 4)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinResponse::List;					// 6.2
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 5)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinAck::List;							// 6.3
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 6)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinConfirm::List;						// 6.4
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 30)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::KeyUpdateRequest::List;				// 6.5
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 31)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::KeyUpdateResponse::List;				// 6.6
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+/*
+	if (g[8] == )
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::KeyUpdateTrigger::List;				// 6.7
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+*/
+	if (g[8] == 10)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::ConfigureRequest::List;				// 7.1
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 11)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::ConfigureResponse::List;				// 7.2
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 12)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::ConfigurationUpdateRequest::List;		// 7.3
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 13)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::ConfigurationUpdateResponse::List;		// 7.4
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	TRTS;
+*/
+/*
+void LWAPP::Message::Elements::MessageType2;
+	if (g[8] == 1)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::DiscoveryRequest::List;				// 5.1
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 2)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::DiscoveryResponse::List;				// 5.2
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 32)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::PrimaryDiscoveryRequest::List;			// 5.3
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 33)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::PrimaryDiscoveryResponse::List;		// 5.4
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 3)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::JoinRequest::List;						// 6.1
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 4)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::JoinResponse::List;					// 6.2
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 5)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinAck::List;							// 6.3
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 6)
+	{
+		CST# 0 1 00 b7 LWAPP::Message::Elements::JoinConfirm::List;						// 6.4
+		CLSE 0 0 00 b7 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 30)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::KeyUpdateRequest::List;				// 6.5
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 31)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::KeyUpdateResponse::List;				// 6.6
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+/*
+	if (g[8] == )
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::KeyUpdateTrigger::List;				// 6.7
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+*/
+	if (g[8] == 10)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::ConfigureRequest::List;				// 7.2
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 11)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::ConfigureResponse::List;				// 7.3
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 12)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::ConfigurationUpdateRequest::List;		// 7.4
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	if (g[8] == 13)
+	{
+		CST# 0 1 00 14 LWAPP::Message::Elements::ConfigurationUpdateResponse::List;		// 7.5
+		CLSE 0 0 00 14 Unknown Element;
+		TRTS;
+	}
+	TRTS;
+*/	
+/*	
+str# LWAPP::Message::Elements::List;
+	1	| LWAPP::Message::Elements::DiscoveryRequest::List;				// 5.1
+	2	| LWAPP::Message::Elements::DiscoveryResponse::List;			// 5.2
+	32	| LWAPP::Message::Elements::PrimaryDiscoveryRequest::List;		// 5.3
+	33	| LWAPP::Message::Elements::PrimaryDiscoveryResponse::List;		// 5.4
+	3	| LWAPP::Message::Elements::JoinRequest::List;					// 6.1
+	4	| LWAPP::Message::Elements::JoinResponse::List;					// 6.2
+	5	| ;
+	6	| LWAPP::Message::Elements::JoinConfirm::List;					// 6.4
+	10	| LWAPP::Message::Elements::ConfigureRequest::List;				// 7.1
+	11	| LWAPP::Message::Elements::ConfigureResponse::List;			// 7.2
+	12	| LWAPP::Message::Elements::ConfigurationUpdateRequest::List;	// 7.3
+	13	| LWAPP::Message::Elements::ConfigurationUpdateResponse::List;	// 7.4
+	30	| LWAPP::Message::Elements::KeyUpdateRequest::List;				// 6.5
+	31	| LWAPP::Message::Elements::KeyUpdateResponse::List;			// 6.6
+//	TBD	| LWAPP::Message::Elements::KeyUpdateTrigger::List;				// 6.7
+*/
+
+str# LWAPP::Message::Elements::Name;
+	 1	| Result Code;
+	 2	| AC Address;			// Result Code for Join Response
+	 3	| WTP Descriptor;
+	 4	| WTP Radio Information;
+	 5	| WTP Name;
+	 6	| AC Descriptor;
+	 7	| AP WLAN Radio Configuration;
+	 8	| Rate Set;
+	10	| Multi-Domain Capability;
+	11	| MAC Operation;
+	12	| Tx Power;
+	13	| Tx Power_Level;
+	14	| Direct Sequence Control;
+	15	| OFDM Control;
+	16	| Supported Rates;
+	18	| Test;
+	26	| Change State Event;
+	27	| Administrative State;
+	28	| Delete WLAN;
+	29	| Add Mobile;
+	30	| Delete Mobile;
+	31	| AC Name;
+	33	| Image Data;
+	34	| Update WLAN;
+	35	| Location Data;
+	37	| Statistics Timer;
+	38	| Statistics;
+	39	| Decryption Error Report;
+	41	| Antenna;
+	44	| Certificate;
+	45	| Session ID;
+	48	| CFP Status;
+	50	| WTP Board Data;
+//	50	| WLAN Payload;
+	51	| Broadcast Probe Mode;
+	52	| Data Transfer Mode;
+	53	| Data Transfer Data;
+	54	| WTP Mode and Type;
+	57	| Mobile Session Key;
+	58	| Discovery Type;
+	59	| AC IPv4 List;
+	60	| Status;
+	61	| MIC Countermeasures;
+	65	| Add Blacklist Entry;
+	66	| Delete Blacklist Entry;
+	67	| WTP Reboot Statistics;
+	68	| LWAPP Timers;
+	70	| Add Static Blacklist Entry;
+	71	| Delete Static Blacklist Entry;
+	77	| Duplicate IPv4 Address;
+	77	| Duplicate IPv6 Address;
+	79	| MIC Error Report From Mobile;
+	82	| WTP Static IP Address Information;
+	90	| AC Name With Index;
+	95	| WTP Radio Fail Alarm Indication;
+	99	| WTP Manager Control IPv4 Address;
+   104	| Vendor Specific;
+   105	| Mobile Session Key;
+   106	| Update Mobile QoS;
+   107	| WNonce;
+   108	| ANonce;
+   109	| PSK-MIC;
+   139	| WTP Manager Data IPv6 Address;
+   140	| Station QoS Profile;
+   141	| AC IPv6 List;
+   142  | WTP Manager Control IPv6 Address;
+   143	| WTP Manager Data IPv4 Address;
+
+
+str# LWAPP::Message::Elements::Func;
+	 1	| LWAPP::Message::Element::ResultCode;
+	 2	| LWAPP::Message::Element::ACAddress;
+	 3	| LWAPP::Message::Element::WTPDescriptor;
+	 4	| LWAPP::Message::Element::WTPRadioInformation;
+	 5	| LWAPP::Message::Element::WTPName;
+	 6	| LWAPP::Message::Element::ACDescriptor;
+	 7	| LWAPP::Message::Element::Add_WLAN;
+//	 7	| LWAPP::Message::Element::AP_WLAN_Radio_Configuration;
+//	 8  | LWAPP::Message::Element::WTP_WLAN_Radio_Config;
+	 8	| LWAPP::Message::Element::Rate_Set;
+	10	| LWAPP::Message::Element::Multi-Domain_Capability;
+	11	| LWAPP::Message::Element::MAC_Operation;
+	12  | LWAPP::Message::Element::Tx_Power;
+	13	| LWAPP::Message::Element::Tx_Power_Level;
+	14	| LWAPP::Message::Element::Direct_Sequence_Control;
+	15	| LWAPP::Message::Element::OFDM_Control;
+	16	| LWAPP::Message::Element::Supported_Rates;
+	18	| LWAPP::Message::Element::Test;
+	26	| LWAPP::Message::Element::ChangeStateEvent;
+	27	| LWAPP::Message::Element::AdministrativeState;
+	28	| LWAPP::Message::Element::Delete_WLAN;
+	29  | LWAPP::Message::Element::AddMobile;
+	30	| LWAPP::Message::Element::DeleteMobile;
+	31	| LWAPP::Message::Element::ACName;
+	33	| LWAPP::Message::Element::ImageData;
+	34	| LWAPP::Message::Element::Update_WLAN;
+	35	| LWAPP::Message::Element::LocationData;
+	37	| LWAPP::Message::Element::StatisticsTimer;
+	38	| LWAPP::Message::Element::Statistics;
+	39  | LWAPP::Message::Element::DecryptionErrorReport;
+	41	| LWAPP::Message::Element::Antenna;
+	44	| LWAPP::Message::Element::Certificate;
+	45	| LWAPP::Message::Element::SessionID;
+	48	| LWAPP::Message::Element::CFP_Status;
+	50	| LWAPP::Message::Element::WTPBoardData;
+//	50	| LWAPP::Message::Element::WLAN_Payload;			??
+	51	| LWAPP::Message::Element::BroadcastProbeMode;
+	52	| LWAPP::Message::Element::DataTransferMode;
+	53	| LWAPP::Message::Element::DataTransferData;
+//	53	| LWAPP::Message::Element::Add_Mobile;				??
+	54	| LWAPP::Message::Element::WTP_Mode_Type;
+	57	| LWAPP::Message::Element::WTP_QoS;
+	58	| LWAPP::Message::Element::DiscoveryType;
+	59	| LWAPP::Message::Element::ACList;
+	60	| LWAPP::Message::Element::Status;
+	61	| LWAPP::Message::Element::MIC_Countermeasures;
+	65	| LWAPP::Message::Element::AddBlacklistEntry;
+	66	| LWAPP::Message::Element::DeleteBlacklistEntry;
+	67	| LWAPP::Message::Element::WTPRebootStats;
+	68	| LWAPP::Message::Element::LWAPPTimers;
+	70	| LWAPP::Message::Element::AddStaticBlacklistEntry;
+	71	| LWAPP::Message::Element::DeleteStaticBlacklistEntry;
+	77	| LWAPP::Message::Element::DuplicateIPAddress;
+//  77  | LWAPP::Message::Element::DuplicateIP6Address;		??
+	79	| LWAPP::Message::Element::MIC_Error_Report_Frm_Mobile;
+	82	| LWAPP::Message::Element::WTPStaticIPAddrInfo;
+	90	| LWAPP::Message::Element::ACNameWIndex;
+	95	| LWAPP::Message::Element::WTP_RF_Alarm_Indication;
+	99	| LWAPP::Message::Element::WTPManagerControlIPAddress;
+   104	| LWAPP::Message::Element::Vendor_Specific;
+   105	| LWAPP::Message::Element::Mobile_Session_Key;
+   106	| LWAPP::Message::Element::Update_Mobile_QoS;
+   107	| LWAPP::Message::Element::WNonce;
+   108	| LWAPP::Message::Element::ANonce;
+   109	| LWAPP::Message::Element::PSK-MIC;
+   139	| LWAPP::Message::Element::WTPManagerDataIP6Address;
+   140	| LWAPP::Message::Element::Station_QoS_Profile;
+   141	| LWAPP::Message::Element::ACIP6List;
+   142  | LWAPP::Message::Element::WTPManagerControlIP6Address;
+   143	| LWAPP::Message::Element::WTPManagerDataIPAddress;
+
+// -----------------------------------------------------------
+
+str# LWAPP::Message::Elements::DiscoveryRequest::Func;				// 5.1
+	3	| LWAPP::Message::Element::WTPDescriptor;
+	4	| LWAPP::Message::Element::WTPRadioInformation;
+	58	| LWAPP::Message::Element::DiscoveryType;
+
+str# LWAPP::Message::Elements::DiscoveryRequest::List;
+	3	| WTP Descriptor;
+	4	| WTP Radio Information;
+	58	| Discovery Type;
+
+str# LWAPP::Message::Elements::DiscoveryResponse::Func;				// 5.2
+	2	| LWAPP::Message::Element::ACAddress;
+	6	| LWAPP::Message::Element::ACDescriptor;
+	31	| LWAPP::Message::Element::ACName;
+	99	| LWAPP::Message::Element::WTPManagerControlIPAddress;
+	142 | LWAPP::Message::Element::WTPManagerControlIP6Address;
+
+str# LWAPP::Message::Elements::DiscoveryResponse::List;
+	2	| AC Address;
+	6	| AC Descriptor;
+	31	| AC Name;
+	99	| WTP Manager Control IPv4 Address;
+	142 | WTP Manager Control IPv6 Address;
+
+str# LWAPP::Message::Elements::PrimaryDiscoveryRequest::Func;		// 5.3
+	3	| LWAPP::Message::Element::WTPDescriptor;
+	4	| LWAPP::Message::Element::WTPRadioInformation;
+	58	| LWAPP::Message::Element::DiscoveryType;
+
+str# LWAPP::Message::Elements::PrimaryDiscoveryRequest::List;
+	3	| WTP Descriptor;
+	4	| WTP Radio Information;
+	58	| Discovery Type;
+
+str# LWAPP::Message::Elements::PrimaryDiscoveryResponse::Func;		// 5.4
+	6	| LWAPP::Message::Element::ACDescriptor;
+	31	| LWAPP::Message::Element::ACName;
+	99	| LWAPP::Message::Element::WTPManagerControlIPAddress;
+	142 | LWAPP::Message::Element::WTPManagerControlIP6Address;
+	
+str# LWAPP::Message::Elements::PrimaryDiscoveryResponse::List;
+	6	| AC Descriptor;
+	31	| AC Name;
+	99	| WTP Manager Control IPv4 Address;
+	142 | WTP Manager Control IPv6 Address;
+
+str# LWAPP::Message::Elements::JoinRequest::Func;					// 6.1
+	2	| LWAPP::Message::Element::ACAddress;
+	3	| LWAPP::Message::Element::WTPDescriptor;
+	4	| LWAPP::Message::Element::WTPRadioInformation;
+	5	| LWAPP::Message::Element::WTPName;
+	18	| LWAPP::Message::Element::Test;
+	35	| LWAPP::Message::Element::LocationData;
+	44	| LWAPP::Message::Element::Certificate;
+	45	| LWAPP::Message::Element::SessionID;
+	111 | LWAPP::Message::Element::XNonce;
+
+str# LWAPP::Message::Elements::JoinRequest::List;
+	2	| AC Address;
+	3	| WTP Descriptor;
+	4	| WTP Radio Information;
+	5	| WTP Name;
+	18	| Test;
+	35	| Location Data;
+	44	| Certificate;
+	45	| Session ID;
+	111 | XNonce;
+
+str# LWAPP::Message::Elements::JoinResponse::Func;					// 6.2
+	2	| LWAPP::Message::Element::ResultCode;
+	44	| LWAPP::Message::Element::Certificate;
+	46	| LWAPP::Message::Element::SessionKey;
+	59  | LWAPP::Message::Element::ACList;
+	60	| LWAPP::Message::Element::Status;
+	108 | LWAPP::Message::Element::ANonce;
+	109 | LWAPP::Message::Element::PSK-MIC;
+	139	| LWAPP::Message::Element::WTPManagerDataIP6Address;
+	141	| LWAPP::Message::Element::ACIP6List;
+	143	| LWAPP::Message::Element::WTPManagerDataIPAddress;
+
+str# LWAPP::Message::Elements::JoinResponse::List;
+	2	| Result Code;
+	44	| Certificate;
+	46	| Session Key;
+	59	| AC IPv4 List;
+	60	| Status;
+	108 | ANonce;
+	109 | PSK-MIC;
+	139	| WTP Manager Data IPv6 Address;
+	141	| AC IPv6 List;
+	143 | WTP Manager Data IPv4 Address;
+	
+str# LWAPP::Message::Elements::JoinAck::Func;						// 6.3
+	45	| LWAPP::Message::Element::SessionID;
+	107	| LWAPP::Message::Element::WNonce;
+	109 | LWAPP::Message::Element::PSK-MIC;
+	
+str# LWAPP::Message::Elements::JoinAck::List;
+	45	| Session ID;
+	107	| WNonce;
+	109	| PSK-MIC;
+
+str# LWAPP::Message::Elements::JoinConfirm::Func;					// 6.4
+	45	| LWAPP::Message::Element::SessionID;
+	109 | LWAPP::Message::Element::PSK-MIC;
+	
+str# LWAPP::Message::Elements::JoinConfirm::List;
+	45	| Session ID;
+	109	| PSK-MIC;
+
+str# LWAPP::Message::Elements::KeyUpdateRequest::Func;				// 6.7
+	45	| LWAPP::Message::Element::SessionID;
+	111	| LWAPP::Message::Element::XNonce;
+
+str# LWAPP::Message::Elements::KeyUpdateRequest::List;
+	45	| Session ID;
+	111	| XNonce;
+
+str# LWAPP::Message::Elements::KeyUpdateResponse::Func;				// 6.8
+	46	| LWAPP::Message::Element::SessionKey;
+	108 | LWAPP::Message::Element::ANonce;
+	109 | LWAPP::Message::Element::PSK-MIC;
+
+str# LWAPP::Message::Elements::KeyUpdateResponse::List;
+	46	| Session Key;
+	108	| ANonce;
+	109	| PSK-MIC;
+	
+str# LWAPP::Message::Elements::KeyUpdateACK::Func					// 6.9
+	107	| LWAPP::Message::Element::WNonce;
+	109 | LWAPP::Message::Element::PSK-MIC;
+	
+str# LWAPP::Message::Elements::KeyUpdateACK::List
+	107 | WNonce;
+	109	| PSK-MIC;
+	
+str# LWAPP::Message::Elements::KeyUpdateConfirm::Func				// 6.10
+	109 | LWAPP::Message::Element::PSK-MIC;
+	
+str# LWAPP::Message::Elements::KeyUpdateConfirm::List
+	109	| PSK-MIC;
+
+str# LWAPP::Message::Elements::KeyUpdateTrigger::Func;				// 6.11
+	45	| LWAPP::Message::Element::SessionID;
+
+str# LWAPP::Message::Elements::KeyUpdateTrigger::List;
+	45	| Session ID;
+
+str# LWAPP::Message::Elements::ConfigureRequest::Func;				// 7.2
+	27	| LWAPP::Message::Element::AdministrativeState;
+	31	| LWAPP::Message::Element::ACName;
+	37	| LWAPP::Message::Element::StatisticsTimer;
+	50	| LWAPP::Message::Element::WTPBoardData;
+	67	| LWAPP::Message::Element::WTPRebootStats;
+	82	| LWAPP::Message::Element::WTPStaticIPAddrInfo;
+	90	| LWAPP::Message::Element::ACNameWIndex;
+
+str# LWAPP::Message::Elements::ConfigureRequest::List;
+	27	| Administrative State;
+	31	| AC Name;
+	37	| Statistics Timer;
+	50	| WTP Board Data;
+	67	| WTP Reboot Stats;
+	82	| WTP Static IP Addr Info;
+	90	| AC Name With Index;
+
+str# LWAPP::Message::Elements::ConfigureResponse::Func;				// 7.3
+	26	| LWAPP::Message::Element::ChangeStateEvent;
+	38	| LWAPP::Message::Element::DecryptionErrorReportPeriod;
+	59	| LWAPP::Message::Element::ACList;
+	68	| LWAPP::Message::Element::LWAPPTimers;
+	91	| LWAPP::Message::Element::WTPFallback;
+	97	| LWAPP::Message::Element::IdleTimeout;
+	141 | LWAPP::Message::Element::ACIP6List;
+
+str# LWAPP::Message::Elements::ConfigureResponse::List;
+	26	| Change State Event;
+	38	| Decryption Error Report Period;
+	59	| AC IPv4 List;
+	68	| LWAPP Timers;
+	91	| WTP Fallback;
+	97	| Idle Timeout;
+	141 | AC IPv6 List;
+
+str# LWAPP::Message::Elements::ConfigurationUpdateRequest::Func;	// 7.4
+	5	| LWAPP::Message::Element::WTPName;
+	26	| LWAPP::Message::Element::ChangeStateEvent;
+	27	| LWAPP::Message::Element::AdministrativeState;
+	35	| LWAPP::Message::Element::LocationData;
+	37	| LWAPP::Message::Element::StatisticsTimer;
+	38	| LWAPP::Message::Element::DecryptionErrorReportPeriod;
+	59	| LWAPP::Message::Element::ACList;
+	65	| LWAPP::Message::Element::AddBlacklistEntry;
+	66	| LWAPP::Message::Element::DeleteBlacklistEntry;
+	68	| LWAPP::Message::Element::LWAPPTimers;
+	70	| LWAPP::Message::Element::AddStaticBlacklistEntry;
+	71	| LWAPP::Message::Element::DeleteStaticBlacklistEntry;
+	90	| LWAPP::Message::Element::ACNameWIndex;
+	91	| LWAPP::Message::Element::WTPFallback;
+	97	| LWAPP::Message::Element::IdleTimeout;
+	141 | LWAPP::Message::Element::ACIP6List;
+
+str# LWAPP::Message::Elements::ConfigurationUpdateRequest::List;
+	5	| WTP Name;
+	26	| Change State Event;
+	27	| Administrative State;
+	35	| Location Data;
+	37	| Statistics Timer;
+	38	| Decryption Error Report Period;
+	59	| AC IPv4 List;
+	65	| Add Blacklist Entry;
+	66	| Delete Blacklist Entry;
+	68	| LWAPP Timers;
+	70	| Add Static Blacklist Entry;
+	71	| Delete Static Blacklist Entry;
+	90	| AC Name With Index;
+	91	| WTP Fallback;
+	97	| Idle Timeout;
+	141 | AC IPv6 List;
+
+str# LWAPP::Message::Elements::ConfigurationUpdateResponse::Func;	// 7.5
+	2	| LWAPP::Message::Element::ResultCode;
+
+str# LWAPP::Message::Elements::ConfigurationUpdateResponse::List;
+	2	| Result Code;
+
+str# LWAPP::Message::Elements::ChangeStateEventRequest::Func;		// 7.6
+	26	| LWAPP::Message::Element::ChangeStateEvent;
+
+str# LWAPP::Message::Elements::ChangeStateEventRequest::List;
+	26	| Change State Event;
+
+str# LWAPP::Message::Elements::ImageDataRequest::Func;				// 8.1
+	33	| LWAPP::Message::Element::ImageData;
+
+str# LWAPP::Message::Elements::ImageDataRequest::List;
+	33	| Image Data;
+
+str# LWAPP::Message::Elements::WTPEventRequest::Func;				// 8.5
+	39	| LWAPP::Message::Element::DecryptionErrorReport;
+	77	| LWAPP::Message::Element::DuplicateIPAddress;
+//  77  | LWAPP::Message::Element::DuplicateIP6Address;	
+
+str# LWAPP::Message::Elements::WTPEventRequest::List;
+	39	| Decryption Error Report;
+	77	| Duplicate IPv4 Address;
+//  77  | Duplicate IPv6 Address;
+
+str# LWAPP::Message::Elements::DataTransferRequest::Func;			// 8.7
+	52	| LWAPP::Message::Element::DataTransferMode;
+	53	| LWAPP::Message::Element::DataTransferData;
+
+str# LWAPP::Message::Elements::DataTransferRequest::List;
+	52	| Data Transfer Mode;
+	53	| Data Transfer Data;
+
+str# LWAPP::Message::Elements::MobileConfigRequest::Func;			// 9.1
+	30	| LWAPP::Message::Element::DeleteMobile;
+
+str# LWAPP::Message::Elements::MobileConfigRequest::List;
+	30	| Delete Mobile;
+	
+str# LWAPP::Message::Elements::MobileConfigResponse::Func;			// 9.2
+	2	| LWAPP::Message::Element::ResultCode;
+
+str# LWAPP::Message::Elements::MobileConfigResponse::List;
+	2	| Result Code;
+	
+
+// -----------------------------------------------------------
+//	Message Elements
+
+void LWAPP::Message::Element::AP_WLAN_Radio_Configuration;
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Occupancy Limit:;
+	DBYT 0 0 90 c2 CFP Period:;
+	DWRD 0 0 90 c2 CFP Max Duration:;
+	ETHR 0 0 90 c2 BSS ID:;
+	DWRD 0 0 90 c2 Beacon Period:;
+	DBYT 0 0 90 c2 DTIM Period:;
+	LABL 0 0 00 b9 Country String:;
+	CHR# 2 0 90 c2 Country Code:;
+	CHR# 1 1 90 c2 Environment:;
+		CEQU 20 1 0 14 All Environments;
+		CEQU 49 1 0 14 Indoor Environment Only;
+		CEQU 4f 1 0 14 Outdoor Environment Only;
+	LABL 0 0 00 b8;
+	TRTS;
+
+void LWAPP::Message::Element::AR_Name;
+	CHR# 0 7 90 c2 AR Name:;
+	TRTS;
+
+
+void LWAPP::Message::Element::WLAN_Payload;
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 WLAN Capability:;
+	HWRD 0 0 90 c2 WLAN ID:;
+	l[7] = g[7];
+	l[7] -= 5;
+	HEX# 0 47 90 c2 SSID:;
+	TRTS;
+
+
+// ----------------------------------------------------		4.1  LWAPP Data Messages
+// ----------------------------------------------------		4.2.1  Control Message Format
+
+void LWAPP::Message::ControlMessage;
+	LABL 0 0 00 b7 Control Message;
+	DBYT 0 8 90 c2 Message Type:;
+	CST# 0 8 00 14 LWAPP::Message::ControlMessage::TypeList;
+	SKIP;
+		LABL 0 0 0 14 Unknown Control Message;
+		g[8] = 0;
+	ENDS;
+	//CLSE 0 0 00 14 Unknown Control Message;
+	DBYT 0 0 90 c2 Sequence Number:;
+	DWRD 0 6 90 c2 Msg Element Len:;
+	DLNG 0 0 90 c2 Session ID:;
+	if (g[8] != 0)
+	{
+		TSB# 0 8 0 0 LWAPP::Message::Elements_Check;
+		// LWAPP::Message::Element;
+	}
+	if (g[8] == 0)
+	{
+		DUMP 0 6 90 c2 Message Data:;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# LWAPP::Message::Elements_Check;					// Control Message with Message Elements
+	1	| LWAPP::Message::Element;
+	2	| LWAPP::Message::Element;
+	3	| LWAPP::Message::Element;
+	4	| LWAPP::Message::Element;
+	5	| LWAPP::Message::Element;
+	6	| LWAPP::Message::Element;
+	10	| LWAPP::Message::Element;
+	11	| LWAPP::Message::Element;
+	12	| LWAPP::Message::Element;
+	13	| LWAPP::Message::Element;
+	14	| LWAPP::Message::Element;
+	16	| LWAPP::Message::Element;
+	24	| LWAPP::Message::Element;
+	30	| LWAPP::Message::Element;
+	31	| LWAPP::Message::Element;
+	32	| LWAPP::Message::Element;
+	33	| LWAPP::Message::Element;
+	34	| LWAPP::Message::Element;
+	37	| LWAPP::Message::Element;
+	39	| LWAPP::Message::Element;
+	40	| LWAPP::Message::Element;
+	
+// ----------------------------------------------------		4.2.1.1  Message Type
+
+str# LWAPP::Message::ControlMessage::TypeList;
+	 1	| Discovery Request;
+	 2	| Discovery Response;
+	 3	| Join Request;
+	 4	| Join Response;
+	 5	| Join ACK;
+	 6	| Join Confirm;
+	 7	| Unused;
+	 8  | Unused;
+	 9  | Unused;
+	10	| Configure Request;
+	11	| Configure Response;
+	12	| Configuration Update Request;
+	13	| Configuration Update Response;
+	14	| WTP Event Request;
+	15	| WTP Event Response;
+	16	| Change State Event Request;
+	17	| Change State Event Response;
+	18  | Unused;
+	19  | Unused;
+	20	| RRM_DATA_REQ;
+	21	| RRM_DATA_RES;
+	22	| Echo Request;
+	23	| Echo Response;
+	24	| Image Data Request;
+	25	| Image Data Response;
+	26	| Reset Request;
+	27	| Reset Response;
+	28  | Unused;
+	29  | Unused;
+	30	| Key Update Request;
+	31	| Key Update Response;
+	32	| Primary Discovery Request;
+	33	| Primary Discovery Response;
+	34	| Data Transfer Request;
+	35	| Data Transfer Response;
+	36	| Clear Config Indication;
+	37	| WLAN Config Request;
+	38	| WLAN Config Response;
+	39	| Mobile Config Request;
+	40	| Mobile Config Response;
+
+void LWAPP::Message::Element::Vendor_Specific;				// Type 104 - Vendor Specific -  (4.2.2.1.1) - Length >= 7
+	HLNG 0 0 90 c2 Vendor ID:;
+	HWRD 0 0 90 c2 Element ID:;
+	l[7] = g[7];
+	l[7] -= 6;
+	DUMP 0 47 90 c2 Value:;
+	TRTS;
+
+// ----------------------------------------------------		5.  LWAPP Discovery Operations
+// ----------------------------------------------------		5.1  Discovery Request (1)
+
+void LWAPP::Message::Element::DiscoveryType;				// Type 58 - Discovery Type -  (5.1.1) - Length 1
+	DBYT 0 1 90 c2 Discovery Type:;
+		CEQU 0 1 00 14 Broadcast;
+		CEQU 1 1 00 14 Configured;
+	TRTS;
+
+void LWAPP::Message::Element::WTPDescriptor;				// Type 03 - WTP Descriptor - (5.1.2) - Length 16
+	DLNG 0 0 90 c2 Hardware Version:;
+	DLNG 0 0 90 c2 Software Version:;
+	DLNG 0 0 90 c2 Boot Version:;
+	DBYT 0 0 90 c2 Max Radios:;
+	DBYT 0 0 90 c2 Radios in Use:;
+	TGTE e 7 00 00 RETURN;
+	BWRD 0 1 90 c2 Encryption Capabilities:;
+	//CBIT 5 1 00 d4 ........ ..1..... Encrypt TKIP-MIC;
+	//CBIT 4 1 00 d4 ........ ...1.... Encrypt AES-OCB 128;
+	//CBIT 3 1 00 d4 ........ ....1... Encrypt WEP 128;
+	//CBIT 2 1 00 d4 ........ .....1.. Encrypt WEP 40;
+	//CBIT 1 1 00 d4 ........ ......1. Encrypt WEP 104;
+	//CBIT 0 1 00 d4 ........ .......1 Reserved;
+	TRTS;
+
+void LWAPP::Message::Element::WTPRadioInformation;			// Type 04 - WTP Radio Information - (5.1.3) - Length 2
+	DBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Radio Type:;
+		CST# 0 1 00 14 LWAPP::Message::Element::WTPRadioInformation::RadioType;
+	TRTS;
+
+str# LWAPP::Message::Element::WTPRadioInformation::RadioType;
+	1 | 802.11bg: An 802.11bg radio;
+	2 | 802.11a: An 802.11a radio;
+	3 | 802.16: An 802.16 radio;
+	4 | Ultra Wideband: An UWB radio;
+	7 | All: Used to specify all radios in the WTP;
+
+// ----------------------------------------------------		5.2  Discovery Response (2)
+
+void LWAPP::Message::Element::ACAddress;					// Type 02 - AC Address - (5.2.1) - Length 7
+	HBYT 0 1 90 c2 Reserved:;
+	ETHR 0 0 90 c2 MAC Address:;
+	TRTS;
+
+void LWAPP::Message::Element::ACDescriptor;					// Type 06 - AC Descriptor - (5.2.2) - Length 17(?)
+//	HBYT 0 0 90 c2 Reserved:;
+	DLNG 0 0 90 c2 Hardware Version:;
+	DLNG 0 0 90 c2 Software Version:;
+	DWRD 0 0 90 c2 Stations:;
+	DWRD 0 0 90 c2 Limit:;
+	DWRD 0 0 90 c2 Radios:;
+	DWRD 0 0 90 c2 Max Radio:;
+    BBIT 8 1 90 c2 Security:;				
+//		CBIT 2 1 00 d4 Pre-Shared Secret;				
+//		CBIT 1 1 00 d4 X.509 Certificate Based;
+	TRTS;
+
+void LWAPP::Message::Element::ACName;						// Type 31 - AC Name - (5.2.3) - Length > 0
+	CHR# 0 7 90 c2 AC Name:;
+	TRTS;
+
+void LWAPP::Message::Element::WTPManagerControlIPAddress;	// Type 99 - WTP Manager Control IPv4 Address - (5.2.4) - Length 6
+	IPLG 0 0 90 c2 IP Address:;
+	DWRD 0 0 90 c2 WTP Count:;
+	TRTS;
+
+void LWAPP::Message::Element::WTPManagerControlIP6Address;	// Type 142 - WTP Manager Control IPv6 Address - (5.2.5) - Length 18
+	IPV6 0 0 90 c2 IPv6 Address:;
+	DWRD 0 0 90 c2 WTP Count:;
+	TRTS;
+
+// ----------------------------------------------------		5.3  Primary Discovery Request (32)
+// ----------------------------------------------------		6.  Control Channel Management
+// ----------------------------------------------------		6.1  Join Request (3)
+
+void LWAPP::Message::Element::WTPName;						// Type 05 - WTP Name - (6.1.3) - Length > 0
+	CHR# 0 7 90 c2 WTP Name:;
+	TRTS;
+
+void LWAPP::Message::Element::LocationData;					// Type 35 - Location Data - (6.1.4) - Length > 0
+	CHR# 0 7 90 c2 Location:;
+	TRTS;
+
+void LWAPP::Message::Element::Certificate;					// Type 44 - Certificate - (6.1.6)  - Length > 0
+	CHR# 0 7 90 c2 Certificate:;
+	TRTS;
+
+void LWAPP::Message::Element::SessionID;					// Type 45 - Session ID - (6.1.7) - Length 4
+	DLNG 0 0 90 c2 Session ID:;
+	TRTS;
+
+void LWAPP::Message::Element::Test;							// Type 18 - Test - (6.1.8) - Length > 0
+	DUMP 0 7 90 c2 Test Data:;
+	TRTS;
+
+void LWAPP::Message::Element::XNonce;						// Type 111 - XNonce - (6.1.9) - Length 16
+	HEX# 10 0 90 c2 Nonce:;
+	TRTS;
+
+// ----------------------------------------------------		6.2  Join Response (4)
+
+void LWAPP::Message::Element::ResultCode;					// Type 2 - Result Code - (6.2.1) - Length 4
+	DLNG 0 1 90 c2 Result Code:;
+		CEQU 0 1 00 14 Success;
+		CEQU 0 1 00 14 Failure (AC List message element MUST be present);
+	TRTS;
+
+void LWAPP::Message::Element::Status;						// Type 60 - Status - (6.2.2) - Length 1
+	DBYT 0 1 90 c2 Status:;
+		CEQU 1 1 00 14 Reserved;
+		CEQU 2 1 00 14 Resource Depletion;
+		CEQU 3 1 00 14 Unknown Source;
+		CEQU 4 1 00 14 Incorrect Data;
+	TRTS;
+
+void LWAPP::Message::Element::WTPManagerDataIPAddress;		// Type 143 - WTP Manager Data IPv4 Address - (6.2.4) - Length 4
+	IPLG 0 0 90 c2 IP Address:;
+	TRTS;
+
+void LWAPP::Message::Element::WTPManagerDataIP6Address;		// Type 139 - WTP Manager Data IPv6 Address - (6.2.5) - Length 16
+	IPV6 0 0 90 c2 IPv6 Address:;
+	TRTS;
+	
+void LWAPP::Message::Element::ACList;						// Type 59 -  AC IPv4 List - (6.2.6) - Length >= 4
+	while (g[7] > 0)
+	{
+		IPLG 0 0 90 c2 AC IP Addr:;
+		g[7] -= 4;
+	}
+	TRTS;
+	
+void LWAPP::Message::Element::ACIP6List;					// Type 141 -  AC IPv6 List - (6.2.7) - Length >= 16
+	while (g[7] > 0)
+	{
+		IPV6 0 0 90 c2 AC IP6 Addr:;
+		g[7] -= 4;
+	}
+	TRTS;
+
+void LWAPP::Message::Element::ANonce;						// Type 108 - ANonce - (6.2.8) - Length 16
+	HEX# 10 0 90 c2 Nonce:;
+	TRTS;
+	
+void LWAPP::Message::Element::PSK-MIC;						// Type 109 - PSK-MIC - (6.2.9) - Length > 1
+	DBYT 0 1 90 c2 SPI:;
+		CEQU 0 1 0 14 Unused;
+		CEQU 1 1 0 14 HMAC-SHA-1 (RFC 2104);
+		CEQU 2 1 0 14 AES-CMAC;
+	HEX# 14 0 90 c2 MIC:;									// 20 octet Message Integrity Check
+	TRTS;
+
+// ----------------------------------------------------		6.3  Join ACK (5)
+
+void LWAPP::Message::Element::WNonce;						// Type 107 - WNonce - (6.3.2) - Length 16
+	HEX# 10 0 90 c2 Nonce:;
+	TRTS;
+
+// ----------------------------------------------------		7.  WTP Configuration Management
+// ----------------------------------------------------		7.1  Configuration Consistency	
+// ----------------------------------------------------		7.2  Configure Request (10)
+	
+void LWAPP::Message::Element::AdministrativeState;			// Type 27 - Administrative State - configureRequest (7.2.1) - Length 2
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Admin State:;
+		CEQU 1 1 00 14 Enabled;
+		CEQU 2 1 00 14 Disabled;
+	TRTS;
+	
+void LWAPP::Message::Element::ACNameWIndex;					// Type 90 - AC Name with Index - configureRequest (7.2.3) - Length 5
+	DBYT 0 0 90 c2 Index:;
+	g[7] -= 1;
+	CHR# 0 7 90 c2 AC Name:;
+	TRTS;
+
+void LWAPP::Message::Element::WTPBoardData;					// Type 50 - WTP Board Data - configureRequest (7.2.4) - Length 26
+	DWRD 0 0 90 c2 Card ID:;
+	DWRD 0 0 90 c2 Card Revision:;
+	D64B 0 0 90 c2 WTP Model:;
+	HLNG 0 0 90 c2 WTP Serial Num:;
+	HLNG 0 0 90 c2 Reserved:;
+	ETHR 0 0 90 c2 Ether MAC Addr:;
+	TRTS;
+
+void LWAPP::Message::Element::StatisticsTimer;				// Type 37 - Statistics Timer - configureRequest (7.2.5) - Length 2
+	DWRD 0 0 90 c2 Stat Timer:;
+	LABL 0 0 00 14 seconds;
+	TRTS;
+
+void LWAPP::Message::Element::WTPStaticIPAddrInfo;			// Type 82 - WTP Static IP Address Information - configureRequest (7.2.6) - Length 13
+	IPLG 0 0 90 c2 IP Address:;
+	IPLG 0 0 90 c2 Netmask:;
+	IPLG 0 0 90 c2 Gateway:;
+	DBYT 0 1 90 c2 Static:;
+		CEQU 0 1 00 14 Not Static;
+		CEQU 1 1 00 14 Static;
+	TRTS;
+
+void LWAPP::Message::Element::WTPRebootStats;				// Type 67 - WTP Reboot Statistics - configureRequest (7.2.7) - Length 7
+	DWRD 0 0 90 c2 Crash Count:;
+	DWRD 0 0 90 c2 LWAPP Initiated Cnt:;
+	DWRD 0 0 90 c2 Link Failure Cnt:;
+	DBYT 0 1 90 c2 Failure Type:;
+		CEQU 0 1 00 14 Link Failure;
+		CEQU 1 1 00 14 LWAPP Initiated;
+		CEQU 2 1 00 14 WTP Crash;
+	TRTS;
+
+// ----------------------------------------------------		7.3  Configure Response (11)
+
+void LWAPP::Message::Element::DecryptionErrorReportPeriod;	// Type 38 - Decryption Error Report Period - configurationUpdateRequest (7.3.1) - Length 3
+	DBYT 0 0 90 c2 Radio ID:;
+	DWRD 0 0 90 c2 Report Interval:;
+	LABL 0 0 00 14 seconds;
+	TRTS;
+
+void LWAPP::Message::Element::ChangeStateEvent;				// Type 26 - Change State Event - configurationUpdateRequest (7.3.2) - Length 3
+	DBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 State:;
+		CEQU 1 1 0 14 Disable Radio;
+		CEQU 2 1 0 14 Enable Radio;
+	DBYT 0 1 90 c2 Cause:;
+		CEQU 0 1 0 14 Normal;
+		CEQU 1 1 0 14 Radio Failure;
+		CEQU 2 1 0 14 Software Failure;
+	TRTS;
+
+void LWAPP::Message::Element::LWAPPTimers;					// Type 68 - LWAPP Timers - configurationUpdateRequest (7.3.3) - Length 2
+	DBYT 0 0 90 c2 Discovery:;
+	LABL 0 0 00 14 seconds;
+	DBYT 0 0 90 c2 Echo Request:;
+	LABL 0 0 00 14 seconds;
+	TRTS;	
+	
+void LWAPP::Message::Element::WTPFallback;					// Type 91 - WTP Fallback - configurationUpdateRequest (7.3.6) - Length 1
+	DBYT 0 1 90 c2 Mode:;
+		CEQU 0 1 0 14 Disabled;
+		CEQU 1 1 0 14 Enabled;
+	TRTS;
+	
+void LWAPP::Message::Element::IdleTimeout;					// Type 97 - Idle Timeout - configurationUpdateRequest (7.3.7) - Length 4
+	DLNG 0 0 90 c2 Timeout:;
+	TRTS;
+	
+void LWAPP::Message::Element::AddBlacklistEntry;			// Type 65 - Add Blacklist Entry - configurationUpdateRequest (7.4.9) - Length >= 7
+	DBYT 0 1 90 c2 Num of Entries:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 MAC Addr:;
+		g[1] -= 1;
+	}
+	TRTS;
+	
+void LWAPP::Message::Element::DeleteBlacklistEntry;			// Type 66 - Delete Blacklist Entry - configurationUpdateRequest (7.4.10) - Length >= 7 
+	DBYT 0 1 90 c2 Num of Entries:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 MAC Addr:;
+		g[1] -= 1;
+	}
+	TRTS;
+	
+void LWAPP::Message::Element::AddStaticBlacklistEntry;		// Type 70 - Add Static Blacklist Entry - configurationUpdateRequest (7.4.11) - Length >= 7
+	DBYT 0 1 90 c2 Num of Entries:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 MAC Addr:;
+		g[1] -= 1;
+	}
+	TRTS;
+
+void LWAPP::Message::Element::DeleteStaticBlacklistEntry;	// Type 71 - Delete Static Blacklist Entry - configurationUpdateRequest (7.4.12) - Length >= 7
+	DBYT 0 1 90 c2 Num of Entries:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 MAC Addr:;
+		g[1] -= 1;
+	}
+	TRTS;
+
+// ----------------------------------------------------		8.  Device Management Operations
+// ----------------------------------------------------		8.1  Image Data Request (24)
+
+void LWAPP::Message::Element::ImageData;					// Type 33 - Image Data - Image Data Request (8.1.2) - Length >= 5
+	DBYT 0 1 90 c2 Opcode:;
+		CEQU 3 1 00 14 Image data is included;
+		CEQU 5 1 00 14 Error occurred - Transfer is aborted;
+	HWRD 0 0 90 c2 Checksum:;
+	g[7] -= 3;
+	HEX# 0 7 90 c2 Image Data:;
+	TRTS;
+
+// ----------------------------------------------------		8.5  WTP Event Request (14)
+
+void LWAPP::Message::Element::DecryptionErrorReport;		// Type 39 - Decryption Error Report - WTP Event Request (8.5.1) - Length >= 8
+	DBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Num of Entries:;
+	while (g[1] > 0)
+	{
+		ETHR 0 0 90 c2 Mobile MAC Addr:;
+		g[1] -= 1;
+	}
+	TRTS;
+
+void LWAPP::Message::Element::DuplicateIPAddress;			// Type 77 - Duplicate IPv4 Address - WTP Event Request (8.5.2) - Length 10
+	IPLG 0 0 90 c2 IP Address:;
+	ETHR 0 0 90 c2 MAC Address:;
+	TRTS;
+	
+void LWAPP::Message::Element::DuplicateIP6Address;			// Type 77 - Duplicate IPv6 Address - WTP Event Request (8.5.3) - Length 10
+	IPV6 0 0 90 c2 IP Address:;
+	ETHR 0 0 90 c2 MAC Address:;
+	TRTS;
+
+// ----------------------------------------------------		8.6  WTP Event Response (15)
+// ----------------------------------------------------		8.7  Data Transfer Request 34)
+
+void LWAPP::Message::Element::DataTransferMode;				// Type 52 - Data Transfer Mode - Data Transfer Request (8.7.1) - Length 1
+	DBYT 0 1 90 c2 Data Type:;
+		CEQU 1 1 00 14 WTP Crash Data;
+		CEQU 2 1 00 14 WTP Memory Dump;
+	TRTS;
+
+void LWAPP::Message::Element::DataTransferData;				// Type 53 - Data Transfer Data - Data Transfer Request (8.7.2) - Length >= 3
+	DBYT 0 1 90 c2 Data Type:;
+		CEQU 1 1 00 14 WTP Crash Data;
+		CEQU 2 1 00 14 WTP Memory Dump;
+	DBYT 0 1 90 c2 Data Length:;
+	DUMP 0 1 90 c2 Data:;
+	TRTS;
+
+// ----------------------------------------------------		9.  Mobile Session Management
+// ----------------------------------------------------		9.1  Mobile Config Request (39)
+	
+void LWAPP::Message::Element::DeleteMobile;					// Type 30 - Delete Mobile - Mobile Config Request (9.1.1) - Length 7
+	DBYT 0 0 90 c2 Radio ID:;
+	ETHR 0 0 90 c2 MAC Address:;
+	TRTS;
+
+// ----------------------------------------------------		11.3  Transport specific bindings
+// ----------------------------------------------------		11.3.1  Status and WLANS field
+
+// ----------------------------------------------------		11.4  BSSID to WLAN ID Mapping
+// ----------------------------------------------------		11.5  Quality of Service
+// ----------------------------------------------------		11.6  Data Message bindings
+// ----------------------------------------------------		11.7  Control Message bindings
+// ----------------------------------------------------		11.7.1  Mobile Config Request
+
+
+void LWAPP::Message::Element::Add_Mobile;
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 Association ID:;
+	ETHR 0 0 90 c2 Mac Address:;
+	HBYT 0 1 90 c2 Preamble Mode:;
+		CEQU 0 1 00 14 Long Preamble;
+		CEQU 1 1 00 14 Short Preamble;
+	HWRD 0 0 90 c2 WLAN ID:;
+	HEX# 4 0 90 c2 Supported Rates:;
+	HBYT 0 0 90 c2 802.1x only:;
+	TRTS;
+
+void LWAPP::Message::Element::AddMobile;					// Type 29 - Add Mobile - Mobile Config Request (11.7.1.1) - Length 36
+	DBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 Association ID:;
+	ETHR 0 0 90 c2 MAC Address:;
+	BBIT 1 0 90 c2 E:;
+	BBIT 1 0 90 c2 C:;
+	BLNG 0 1 90 c2 Encryption Policy:;
+		CST# 0 1 0 14 LWAPP::EncryptionPolicy_Str;
+	HEX# 20 0 90 c2 Session Key:;
+// Pairwise TSC:;				// Not Defined in Spec ???
+// Pairwise RSC:;				// Not Defined in Spec ???
+	BWRD 0 0 90 c2 Capabilities:;
+	DBYT 0 0 90 c2 WLAN ID:;
+	DBYT 0 1 90 c2 WME Mode:;
+	 CEQU 0 1 0 14 Not WME capable;
+	 CEQU 1 1 0 14 WME capable;
+	DBYT 0 0 90 c2 802.11e Mode:;
+	 CEQU 0 1 0 14 Not 802.11e capable;
+	 CEQU 1 1 0 14 802.11e capable;
+	DBYT 0 1 90 c2 QoS:;
+	CST# 0 1 0 14 LWAPP::QoS_Str;
+	HWRD 0 0 90 c2 Supported Rates:;
+	TRTS;
+
+void LWAPP::Message::Element::Mobile_Session_Key;			// Type 105 - IEEE 802.11 Mobile Session Key - Mobile Config Request (11.7.1.2) - Length >= 11
+	ETHR 0 0 90 c2 Mac Address:;
+	BLNG 0 1 90 c2 Encryption Policy:;
+		CST# 0 1 0 14 LWAPP::EncryptionPolicy_Str;
+	HEX# 20 0 90 c2 Session Key:;							// 32 byte key
+	TRTS;
+
+void LWAPP::Message::Element::Station_QoS_Profile;			// Type 140 - Station QoS Profile - Mobile Config Request (11.7.1.3) - Length 12
+	ETHR 0 0 90 c2 Mac Address:;
+	DWRD 0 0 90 c2 802.1P Precedence Tag:;
+	TRTS;
+	
+void LWAPP::Message::Element::Update_Mobile_QoS;			// Type 106 - IEEE 802.11 Update Mobile QoS - Mobile Config Request (11.7.1.4) - Length 14
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 Association ID:;
+	ETHR 0 0 90 c2 Mac Address:;
+	DBYT 0 1 90 c2 QoS Profile:;
+	CST# 0 1 0 14 LWAPP::QoS_Str;
+	DWRD 0 0 90 c2 VLAN Identifier:;
+	DBYT 0 0 90 c2 DSCP Tag:;
+	DBYT 0 0 90 c2 802.1P Tag:;
+	TRTS;
+
+// ----------------------------------------------------		11.7.2  WTP Event Request Message
+
+void LWAPP::Message::Element::Statistics;					// Type 38 - IEEE 802.11 Statistics - WTP Event Request Message (11.7.2.1) - Length 57
+	HBYT 0 0 90 c2 Radio ID:;
+	DLNG 0 0 90 c2 Tx Fragment Count:;
+	DLNG 0 0 90 c2 Multicast Tx Count:;
+	DLNG 0 0 90 c2 Failed Count:;
+	DLNG 0 0 90 c2 Retry Count:;
+	DLNG 0 0 90 c2 Multiple Retry Count:;
+	DLNG 0 0 90 c2 Frame Duplicate Count:;
+	DLNG 0 0 90 c2 RTS Success Count:;
+	DLNG 0 0 90 c2 RTS Failure Count:;
+	DLNG 0 0 90 c2 ACK Failure Count:;
+	DLNG 0 0 90 c2 Rx Fragment Count:;
+	DLNG 0 0 90 c2 Multicast RX Count:;
+	DLNG 0 0 90 c2 FCS Error Count:;
+	DLNG 0 0 90 c2 Tx Frame Count:;
+	DLNG 0 0 90 c2 Decryption Errors:;
+	TRTS;
+
+// ----------------------------------------------------		11.8	802.11 Control Messages
+// ----------------------------------------------------		11.8.1  IEEE 802.11 WLAN Config Request
+
+void LWAPP::Message::Element::Add_WLAN;					// Type 07 - IEEE 802.11 Add WLAN - WLAN Config Request (11.8.1.1) - Length >= 298
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 WLAN Capability:;
+	HWRD 0 0 90 c2 WLAN ID:;
+	BLNG 0 1 90 c2 Encryption Policy:;
+		CST# 0 1 0 14 LWAPP::EncryptionPolicy_Str;
+	HEX# 20 0 90 c2 Key:;						//???  32 bytes
+	DBYT 0 0 90 c2 Key-Index:;
+	DBYT 0 0 90 c2 Shared Key:;
+		CEQU 0 1 0 14 Not A Shared WEP key;
+		CEQU 1 1 0 14 Shared WEP key;
+	DBYT 0 1 90 c2 WPA Data Len:;
+	CHR# 0 1 90 c2 WPA IE:;
+	DBYT 0 1 90 c2 RSN Data Len:;
+	CHR# 0 1 90 c2 RSN IE:;
+	HEX# 31 0 90 c2 Reserved:;					// 49 byte reserved field, which MUST be set to zero (0).
+	DBYT 0 1 90 c2 WME Data Len:;
+	CHR# 0 1 90 c2 WME IE:;
+	DBYT 0 1 90 c2 DOT11E Data Len:;
+	CHR# 0 1 90 c2 DOT11E IE:;
+	DBYT 0 1 90 c2 QoS:;
+	CST# 0 1 0 14 LWAPP::QoS_Str;
+	DBYT 0 1 90 c2 Auth Type:;
+	CST# 0 1 0 14 LWAPP::AuthType_Str;
+	DBYT 0 1 90 c2 Broadcast SSID:;
+		CEQU 0 1 0 14 Disable SSID Broadcast;
+		CEQU 1 1 0 14 Enable SSID Broadcast;
+	HEX# 0 0 90 c2 Reserved:;					// 40 byte reserved field
+	l[7] = g[7];
+	l[7] -= 5;
+	HEX# 0 47 90 c2 SSID:;
+	TRTS;
+	
+void LWAPP::Message::Element::Delete_WLAN;					// Type 28 - IEEE 802.11 Delete WLAN - WLAN Config Request (11.8.1.2) - Length 3
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 WLAN ID:;
+	TRTS;
+	
+void LWAPP::Message::Element::Update_WLAN;					// Type 34 - IEEE 802.11 Update WLAN - WLAN Config Request (11.8.1.3) - Length 43
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 WLAN ID:;
+	BLNG 0 1 90 c2 Encryption Policy:;
+	CST# 0 1 0 14 LWAPP::EncryptionPolicy_Str;
+	HEX# 20 0 90 c2 Key:;									//???  32 bytes
+	DBYT 0 1 90 c2 Shared Key:;
+	 CEQU 0 1 0 14 Not A Shared WEP key;
+	 CEQU 1 1 0 14 Shared WEP key;
+	HWRD 0 0 90 c2 WLAN Capability:;
+	TRTS;	
+	
+// ----------------------------------------------------		11.8.2  IEEE 802.11 WLAN Config Response
+// ----------------------------------------------------		11.8.3  IEEE 802.11 WTP Event
+
+void LWAPP::Message::Element::MIC_Countermeasures;			// Type 61 - IEEE 802.11 MIC Countermeasures - WTP Event (11.8.3.1) - Length 8
+	HBYT 0 0 90 c2 Radio ID:;
+	HWRD 0 0 90 c2 WLAN ID:;
+	ETHR 0 0 90 c2 Mac Address:;
+	TRTS;
+	
+void LWAPP::Message::Element::WTP_RF_Alarm_Indication;		// Type 95 - IEEE 802.11 WTP Radio Fail Alarm Indication - WTP Event (11.8.3.2) - Length 4 
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Type:;
+	 CEQU 1 1 0 14 Receiver;
+	 CEQU 2 1 0 14 Transmitter;
+	DBYT 0 1 90 c2 Status:;
+	 CEQU 0 1 0 14 Clear The Event;
+	 CEQU 1 1 0 14 Report The Event;
+	HBYT 0 0 90 c2 Pad:;
+	TRTS;
+
+// ----------------------------------------------------		11.9  Message Element Bindings
+
+void LWAPP::Message::Element::WTP_WLAN_Radio_Config;		// Type 8 - IEEE 802.11 WTP WLAN Radio Configuration -  (11.9.1) - Length 20 
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Occupancy Limit:;
+	DBYT 0 0 90 c2 CFP Per:;
+	DWRD 0 0 90 c2 CFP Max Duration:;
+	ETHR 0 0 90 c2 BSSID:;
+	DWRD 0 0 90 c2 Beacon Period:;
+	DBYT 0 0 90 c2 DTIM Period:;
+	HLNG 0 0 90 c2 Country Code:;
+	DBYT 0 0 90 c3 Num of BSSIDs:;
+	TRTS;
+	
+void LWAPP::Message::Element::Rate_Set;				// Type 16 - IEEE 802.11 Rate Set -  (11.9.2) - Length 4
+	HBYT 0 0 90 c2 Radio ID:;
+	HEX# 3 0 90 c2 Rate Set:;
+	TRTS;
+	
+void LWAPP::Message::Element::Multi-Domain_Capability;		// Type 10 - IEEE 802.11 Multi-domain Capability -  (11.9.3) - Length 8	
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 First Channel Num:;
+	DWRD 0 0 90 c2 Num of Channels:;
+	DWRD 0 0 90 c2 Max Tx Power Level:;
+	TRTS;
+	
+void LWAPP::Message::Element::MAC_Operation;				// Type 11 - IEEE 802.11 MAC Operation -  (11.9.4) - Length 16
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 RTS Threshold:;
+	DBYT 0 0 90 c2 Short Retry:;
+	DBYT 0 0 90 c2 Long Retry:;
+	DWRD 0 0 90 c2 Fragmentation Threshold:;
+	DLNG 0 0 90 c2 Tx MSDU Lifetime:;
+	DLNG 0 0 90 c2 Rx MSDU Lifetime:;
+	TRTS;
+	
+void LWAPP::Message::Element::Tx_Power;						// Type 12 - IEEE 802.11 Tx Power -  (11.9.5) - Length 4
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 0 90 c2 Current Tx Power:;
+	LABL 0 0 00 14 mW;
+	TRTS;
+
+void LWAPP::Message::Element::Tx_Power_Level;				// Type 13 - IEEE 802.11 Tx Power Level -  (11.9.6) - Length >= 4
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Num of Levels:;
+	while (g[1] > 0)
+	{
+		DWRD 0 0 90 c2 Power Level:;
+		LABL 0 0 00 14 mW;
+		g[1] -= 1;
+	}
+	TRTS;
+	
+void LWAPP::Message::Element::Direct_Sequence_Control;		// Type 14 - IEEE 802.11 Direct Sequence Control -  (11.9.7) - Length 8
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Current Channel:;
+	HBYT 0 1 90 c2 Current CCA:;
+		CEQU 1 1 00 14 Energy Detect Only (edonly);
+		CEQU 2 1 00 14 Carrier Sense Only (csonly);
+		CEQU 4 1 00 14 Carrier Sense And Energy Detect (edandcs);
+		CEQU 8 1 00 14 Carrier Sense With Timer (cswithtimer);
+		CEQU 16 1 0 14 High Rate Carrier Sense And Energy Detect (hrcsanded);
+	HLNG 0 0 90 c2 Engergy Detect Threshold:;
+	TRTS;
+
+void LWAPP::Message::Element::OFDM_Control;					// Type 15 - IEEE 802.11 OFDM Control -  (11.9.8) - Length 8
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 Reserved:;
+	DBYT 0 0 90 c2 Current Channel:;
+	BBYT 0 1 90 c9 Band Support:;
+		CBIT 0 1 00 d4 Capable of operating in the lower (5.15-5.25 GHz) U-NII band;
+		CBIT 1 1 00 d4 Capable of operating in the middle (5.25-5.35 GHz) U-NII band;
+		CBIT 2 1 00 d4 Capable of operating in the upper (5.725-5.825 GHz) U-NII band;
+		LABL 0 0 00 c8;
+	HLNG 0 0 90 c2 TI Threshold:;
+	TRTS;
+
+void LWAPP::Message::Element::Antenna;						// Type 41 - IEEE 802.11 Antenna -  (11.9.9) - Length >= 8
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Diversity:;
+		CEQU 0 1 00 14 Disabled;
+		CEQU 1 1 00 14 Enabled;
+	DBYT 0 1 90 c2 Combiner:;
+		CEQU 1 1 00 14 Sectorized (Left);
+		CEQU 2 1 00 14 Sectorized (Right);
+		CEQU 3 1 00 14 Omni;
+		CEQU 4 1 00 14 Mimo;
+	DBYT 0 1 90 c2 Antenna Count:;
+	while (g[1] > 0)
+	{
+		DLNG 0 2 90 c2 Antenna Selection:;
+			CEQU 1 2 00 14 Internal Antenna;
+			CEQU 2 2 00 14 External Antenna;
+		g[1] -= 1;
+	}
+	TRTS;
+	
+void LWAPP::Message::Element::Supported_Rates;				// Type 16 - IEEE 802.11 Supported Rates -  (11.9.10) - Length 4
+	HBYT 0 0 90 c2 Radio ID:;
+	HEX# 3 0 90 c2 Supported Rates:;
+	TRTS;
+
+void LWAPP::Message::Element::CFP_Status;						// Type 48 - IEEE 802.11 CFP Status -  (11.9.11) - Length 2
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Status:;
+		CEQU 0 1 00 14 Disabled;
+		CEQU 1 1 00 14 Enabled;
+	TRTS;
+	
+void LWAPP::Message::Element::WTP_Mode_Type;					// Type 54 - IEEE 802.11 WTP Mode and Type -  (11.9.12) - Length 2
+	DBYT 0 1 90 c2 Mode:;
+		CEQU 0 1 00 14 Split MAC;
+		CEQU 2 1 00 14 Local MAC;
+	HBYT 0 0 90 c2 Type:;
+	TRTS;
+	
+void LWAPP::Message::Element::BroadcastProbeMode;				// Type 51 - IEEE 802.11 Broadcast Probe Mode -  (11.9.13) - Length 1
+	DBYT 0 1 90 c2 Status:;
+		CEQU 0 1 00 14 Disable NULL SSID Probe Response;
+		CEQU 1 1 00 14 Enable NULL SSID Probe Response;
+	TRTS;
+	
+void LWAPP::Message::Element::WTP_QoS;							// Type 57 - IEEE 802.11 WTP Quality of Service -  (11.9.14) - Length 12
+	HBYT 0 0 90 c2 Radio ID:;
+	DBYT 0 1 90 c2 Tag Packets:;
+		CEQU 0 1 00 14 Untagged;
+		CEQU 1 1 00 14 802.1P;
+		CEQU 2 1 00 14 DSCP;
+//  Data structure - repeated five times; once for every QoS profile (Uranium, Platinum, Gold, Silver and Bronze)
+	DBYT 0 0 90 c2 Queue Depth:;
+	DWRD 0 0 90 c2 CWMin:;
+	DWRD 0 0 90 c2 CWMax:;
+	DBYT 0 0 90 c2 AIFS:;
+	DWRD 0 0 90 c2 CBR:;
+	DBYT 0 0 90 c2 Dot1P Tag:;
+	DBYT 0 0 90 c2 DSCP Tag:;
+	TRTS;
+	
+void LWAPP::Message::Element::MIC_Error_Report_Frm_Mobile;	// Type 79 - IEEE 802.11 MIC Error Report From Mobile -  (11.9.15) - Length 14
+	ETHR 0 0 90 c2 MAC Address:;
+	ETHR 0 0 90 c2 BSSID:;
+	HBYT 0 0 90 c2 Radio ID:;
+	HBYT 0 0 90 c2 WLAN ID:;
+	TRTS;
+	
+// ----------------------------------------------------		11.10  IEEE 802.11 Message Element Values
+
+
+
+	
+// -------------------------------------------------------------------
+
+void LWAPP::Message::Element::SessionKey;					// type 46 - joinResponse (6.2.4), keyUpdateResponse (6.6.1)
+	DLNG 0 0 90 c2 Session ID:;
+	HEX# 10 0 90 c2 Session Key:;
+	TRTS;
+
+str# LWAPP::EncryptionPolicy_Str;							// Type 7, 29, 105
+	0 | Encrypt WEP 104;
+	1 | Clear Text;
+	2 | Encrypt WEP 40;
+	3 | Encrypt WEP 128;
+	4 | Encrypt AES-CCMP 128;
+	5 | Encrypt TKIP-MIC;
+
+str# LWAPP::QoS_Str;										// Type 29, 106
+	0 | Silver (Best Effort);
+	1 | Gold (Video);
+	2 | Platinum (Voice);
+	3 | Bronze (Background);
+
+str# LWAPP::AuthType_Str;									// Type 7
+	0 | Open System;
+    1 | WEP Shared Key;
+    2 | WPA/WPA2 802.1X;
+    3 | WPA/WPA2 PSK;

@@ -1,0 +1,119 @@
+* HTTP - Hyper Text Transfer Protocol
+
+void HTTP;
+	TEQU 0  10  0  0 RETURN;
+	LABL 0   0  0 b1 HTTP - Hyper Text Transfer Protocol\HTTP:;
+	Init Line Variables;
+	HTTP Parse Header;
+	SEQU 1   2;			* Did we find a header
+	SKIP 3;
+	LABL 0 0 90 c4 Continuation of existing HTTP stream;
+	Display All Lines No Init;
+	TRTS;
+	Display Fields And Lines No Init;
+	TRTS;
+
+void HTTP Parse Header;
+	HTTP Parse Request;
+	SEQU 1   2;
+	SKIP 80000005;
+	HTTP Print Request;
+	HTTP Parse URI;
+	HTTP Parse Version;
+	MOVE 1   2;
+	TRTS;
+	HTTP Parse Response;
+	TEQU 0   2  0  0  RETURN;
+	HTTP Parse Version Response;
+	HTTP Parse Status;
+	HTTP Parse Reason;
+	MOVE 1   2;
+	TRTS;
+
+void HTTP Parse URI;
+	CHR# 0   0  2  c2 URI:;
+	Skip Spaces;
+	HTTP Parse Value2;
+	HTTP Print Value2; 
+	TRTS;
+
+void HTTP Parse Version;
+	CHR# 0   0  2  c2 HTTP Version:\;
+	Skip Spaces;
+	Parse Value;
+	Print Value;
+	TRTS;
+
+void HTTP Parse Version Response;
+	CHR# 0   0  2  c2 HTTP Version:\;
+	Skip Spaces;
+	HTTP Parse Value2;
+	HTTP Print Value2; 
+	TRTS;
+
+void HTTP Parse Status;
+	CHR# 0   0  2  c2 HTTP Status:\S:;
+	Skip Spaces;
+	HTTP Parse Value2;
+	HTTP Print Value2; 
+	TRTS;
+
+void HTTP Parse Reason;
+	CHR# 0   0  2  c2 HTTP Reason:\R:;
+	Skip Spaces;
+	Parse Value;
+	Print Value;
+	TRTS;
+
+void HTTP Print Request;
+	CHR# 0   0  2  c2 HTTP Command:\C:;
+	HTTP Parse Value2; 
+	HTTP Print Value2; 
+	TRTS;
+
+void HTTP Parse Request;
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 47455420 1 0 0 RETURN; * GET
+	TEQU 504f5354 1 0 0 RETURN; * POST
+	TEQU 48454144 1 0 0 RETURN; * HEAD
+	TEQU 4D2D5345 1 0 0 RETURN; * M-SE
+	MOVE 0   2;
+	TRTS;
+
+void HTTP Parse Response;
+	MOVE 1   2;
+	GLNG 0   1;
+	TEQU 48545450 1 0 0 RETURN; * HTTP
+	MOVE 0   2;
+	TRTS;
+
+void HTTP Parse Value2;
+	Skip Spaces;
+	MOVE 0  1e;
+	GSTR 20000020  1e; 
+	*HTTP Parse Value2 Loop;
+	*DECR 0  1e;
+	TRTS;
+
+void HTTP Parse Value2 Loop;
+	TEQU 0   10 0  0  RETURN;
+	GBYT 1   1;
+	TEQU a   1  0  0  RETURN;  *CR
+	TEQU 20  1  0  0  RETURN;  *space
+	INCR 1;
+	ADDG 1   1e;
+	TNXT -HTTP Parse Value2 Loop;
+
+void HTTP Print Value2;
+	MOVE 1   b;  *set printed a line flag
+	l[1] = g[0x1e];
+	if (l[1] > 200)
+	{
+		CHR# c8 0 90;
+		l[1] -= 200;
+		CHR# 0 41 90 c0;				//si: i'm not going to expect the lines to be >200...ergh, hopefully
+		TRTS;
+	}
+	CHR# 0   1e 90;
+	TRTS;

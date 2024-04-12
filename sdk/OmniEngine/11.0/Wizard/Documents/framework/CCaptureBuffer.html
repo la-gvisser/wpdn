@@ -1,0 +1,1433 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link rel="stylesheet" href="mypeek_menus.css" type="text/css" />
+    <link rel="stylesheet" href="mypeek_site_styles.css" type="text/css" />
+    <title>CCaptureBuffer Class</title>
+</head>
+<body>
+    <h1 style="margin-bottom:10px">CCaptureBuffer Class</h1>
+
+    <!-- Description -->
+    <p class="onlyP">
+        The CCaptureBuffer class is used for caching packets into a buffer for 
+        later retrieval, saving to file, and so on. The class has many methods 
+        for managing packet buffers as documented below. For a more complete 
+        guide to using this class, see
+        <a href="PacketBuffers.html#CCaptureBuffer">
+            Working With Packet Buffers and Packet Arrays
+        </a>.
+        If it is desired to buffer packets for periodic flushing to disk, the 
+        class to use is 
+        <a href="CFileCaptureBuffer.html">
+            CFileCaptureBuffer
+        </a>.
+    </p>
+
+    <!-- Code -->
+    <p class="codeP">
+        class CCaptureBuffer
+    </p>
+
+    <!-- Class Member Overview -->
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Constructors</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CCaptureBuffer::CCaptureBuffer">CCaptureBuffer</a>
+            </td>
+            <td>
+                Constructs a CCaptureBuffer object.
+            </td>
+        </tr>
+    </table>
+
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2"><h2 class="breakNone">Operators</h2></td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CCaptureBuffer::operator_assign">operator =</a>
+            </td>
+            <td>
+                Assignment operator. Replaces the contents of the calling capture buffer 
+                with those of the other capture buffer.
+            </td>
+        </tr>
+    </table>
+
+    <a name="CCaptureBuffer::PublicMemberList"></a>
+    <table cellspacing="1" cellpadding="0" style="margin-top:14px; padding-bottom:0px;">
+        <tr>
+            <td colspan="2">
+                <h2 class="breakNone">Public Member Functions</h2>
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT" width="133px">
+                <a href="#CCaptureBuffer::Copy">Copy</a>
+            </td>
+            <td>
+                Replaces the contents of the calling capture buffer with those of the 
+                other capture buffer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetBufferSize">GetBufferSize</a></td>
+            <td>Returns the number of bytes that the buffer holds.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetCapacity">GetCapacity</a></td>
+            <td>Returns the number of bytes that the buffer holds.</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::GetCapacityAvailable">GetCapacityAvailable</a>
+            </td>
+            <td>Returns the number of bytes available in the capture buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetCapacityUsed">GetCapacityUsed</a></td>
+            <td>Returns the number of bytes currently used to hold packets.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetCount">GetCount</a></td>
+            <td>Returns the number of packets in the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetCurFile">GetCurFile</a></td>
+            <td>Returns the current save to disk file name.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetDuration">GetDuration</a></td>
+            <td>Returns the length of time that the capture has been active (capturing).</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::GetFirstPacketIndex">GetFirstPacketIndex</a>
+            </td>
+            <td>Returns the index of the first packet in the capture buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::GetFirstPacketNumber">GetFirstPacketNumber</a>
+            </td>
+            <td>Returns the packet number of the first packet in the capture buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetLinkSpeed">GetLinkSpeed</a></td>
+            <td>Returns the link speed associated with the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetMediaSubType">GetMediaSubType</a></td>
+            <td>Returns the media subtype associated with the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetMediaType">GetMediaType</a></td>
+            <td>Returns the media type associated with the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetPacket">GetPacket</a></td>
+            <td>Returns an attached CPacket from the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetPacketData">GetPacketData</a></td>
+            <td>
+                Returns a pointer to the data referenced by the input packet index.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetPacketHeader">GetPacketHeader</a></td>
+            <td>Returns a pointer to the header of a packet in the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetPacketIndex">GetPacketIndex</a></td>
+            <td>Returns the packet index corresponding to a packet's number in the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::GetPacketMetaData">GetPacketMetaData</a>
+            </td>
+            <td>Returns a pointer to the meta data of a packet in the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetPacketNumber">GetPacketNumber</a></td>
+            <td>
+                Returns the packet number corresponding to the index value of a packet 
+                in the buffer.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::GetStartDateTime">GetStartDateTime</a>
+            </td>
+            <td>
+                Returns the timestamp indicating when the capture associated with a 
+                buffer started.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::GetStopDateTime">GetStopDateTime</a></td>
+            <td>
+                Returns the timestamp indicating when the capture associated with a buffer ended.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::IsDirty">IsDirty</a></td>
+            <td>
+                Returns true if a packet has been added to the buffer since the buffer was
+                saved to disk.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::IsFull">IsFull</a></td>
+            <td>Returns true if the buffer is full.</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::IsValidPacketIndex">IsValidPacketIndex</a>
+            </td>
+            <td>Returns true if an index value properly references a packet in the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::LoadFromFile">LoadFromFile</a></td>
+            <td>Loads a packet file into the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::ReadPacket">ReadPacket</a></td>
+            <td>Returns a detached packet from the buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::Reset">Reset</a></td>
+            <td>
+                Resets the buffer: deletes all packets from the buffer, clears the start and
+                stop timestamps, etc.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::Save">Save</a></td>
+            <td>Saves the buffer contents to file.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SaveSelected">SaveSelected</a></td>
+            <td>Saves a specifed range of packets to the file indicated.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SetCapacity">SetCapacity</a></td>
+            <td>
+                Sets the capacity of the buffer in bytes. This action also resets the 
+                buffer in that any current contents are destroyed.
+            </td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SetLinkSpeed">SetLinkSpeed</a></td>
+            <td>Sets the link speed. Not sure what this does to the adapter.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SetMediaSubType">SetMediaSubType</a></td>
+            <td>Sets the Media subtype associated with the capture buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SetMediaType">SetMediaType</a></td>
+            <td>Sets the Media type associated with the capture buffer.</td>
+        </tr>
+        <tr>
+            <td class="codeT">
+                <a href="#CCaptureBuffer::SetStartDateTime">SetStartDateTime</a>
+            </td>
+            <td>Sets the timestamp indicating when the capture was started.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::SetStopDateTime">SetStopDateTime</a></td>
+            <td>Sets the timestamp indicating when the capture was stopped.</td>
+        </tr>
+        <tr>
+            <td class="codeT"><a href="#CCaptureBuffer::WritePacket">WritePacket</a></td>
+            <td>
+                Adds a packet to the buffer. The packet's header and packet data are
+                written into the buffer.
+            </td>
+        </tr>
+    </table>
+
+    <!-- Class Member Details -->
+    <hr style="margin-top:25px; color:#4d92a8" />
+    <h2>CCaptureBuffer Public Member Functions</h2>
+
+    <!-- CCaptureBuffer constructor details -->
+    <hr style="color:#4d92a8" />
+    <h3 style="margin-top:10px;">
+        <a name="CCaptureBuffer::CCaptureBuffer"></a>CCaptureBuffer::CCaptureBuffer
+    </h3>
+    <p class="onlyG">Constructs a CCaptureBuffer object.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CCaptureBuffer(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inCapacity</em> = BYTES_PER_MEGABYTE</td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inCapacity</em></dt>
+        <dd>The initial size, in bytes, of the capture buffer. The default is 1 MB.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        Constructs a CCaptureBuffer object with the capacity indicated by the inCapacity parameter.
+    </p>
+
+    <!-- operator= details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::operator_assign"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::operator =</h3>
+    <p class="onlyG">
+        Replaces the contents of the calling capture buffer with those of the other 
+        capture buffer.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CCaptureBuffer& operator =(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CCaptureBuffer&</td>
+            <td><em>inOther</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inOther</em></dt>
+        <dd>A reference to the other CCaptureBuffer object to copy.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A reference to this object.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method completely replaces the contents of the calling capture buffer with 
+        those of the other capture buffer. Any current contents in this capture buffer 
+        are lost. This method is the same as the Copy method.
+    </p>
+
+    <!-- Copy details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::Copy"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::Copy</h3>
+    <p class="onlyG">
+        Replaces the contents of the calling capture buffer with those of the other 
+        capture buffer.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CCaptureBuffer& Copy(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CCaptureBuffer&</td>
+            <td><em>inOther</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inOther</em></dt>
+        <dd>A reference to the other CCaptureBuffer object to copy.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A reference to this object.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method completely replaces the contents of the calling capture buffer 
+        with those of the other capture buffer. Any current contents in this capture 
+        buffer are lost. The operator= method may be used for this action as well.
+    </p>
+
+    <!-- GetBufferSize details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetBufferSize"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetBufferSize</h3>
+    <p class="onlyG">Returns the number of bytes that the buffer holds.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetBufferSize() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Returns the number of bytes in this capture buffer.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the number of bytes that the buffer holds. This is the same as the
+        GetCapacity method. Note that the size of the capture buffer is fixed.
+    </p>
+
+    <!-- GetCapacity details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetCapacity"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetCapacity</h3>
+    <p class="onlyG">Returns the number of bytes that the buffer holds.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetCapacity() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The number of bytes of capacity of the capture buffer.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the number of bytes that the buffer holds. This is the same 
+        as the GetBufferSize method. Note that the size of the capture buffer is fixed.
+    </p>
+
+    <!-- GetCapacityAvailable details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetCapacityAvailable"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetCapacityAvailable</h3>
+    <p class="onlyG">Returns the number of bytes available in the capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetCapacityAvailable() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">The number of bytes available in the buffer to hold more packets.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the number of bytes available in the buffer to accomodate more packets. Since
+        the buffer size is fixed, it can become full and not receive any more packets.
+    </p>
+
+    <!-- GetCapacityUsed details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetCapacityUsed"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetCapacityUsed</h3>
+    <p class="onlyG">Returns the number of bytes currently used to hold packets.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetCapacityUsed() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">The number of bytes currently used holding packets.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the capacity that has been used, i.e. the number of bytes that have been
+        filled with packets. The capacity used plus the capacity available equals the total capacity.
+    </p>
+
+    <!-- GetCount details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetCount"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetCount</h3>
+    <p class="onlyG">Returns the number of packets in the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void GetCount() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">The number of packets currently in the buffer.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the number of packets currently held in the buffer.
+    </p>
+
+    <!-- GetCurFile details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetCurFile"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetCurFile</h3>
+    <p class="onlyG">Returns the current save to disk file name.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CString GetCurFile() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The name of the file that packets will be saved into.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the name of the file on disk that the packets will be saved to
+        on a Save operation. Note that this is not actually set until the first write to disk
+        is performed.
+    </p>
+
+    <!-- GetDuration details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetDuration"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetDuration</h3>
+    <p class="onlyG">Returns the length of time that the capture has been active (capturing).</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">SInt64 GetDuration() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The length of time in seconds since the capture was started.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the length of time in seconds since the capture was 
+        started. The duration will be zero (0) if the capture has not been 
+        started or has been reset.
+    </p>
+
+    <!-- GetFirstPacketIndex details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetFirstPacketIndex"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetFirstPacketIndex</h3>
+    <p class="onlyG">Returns the index of the first packet in the capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetFirstPacketIndex() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The index of the first packet in the capture buffer.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the index of the first, i.e. the oldest, packet in the 
+        capture buffer. Indeces are zero-based, so the first packet index will be zero.
+    </p>
+
+    <!-- GetFirstPacketNumber details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetFirstPacketNumber"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetFirstPacketNumber</h3>
+    <p class="onlyG">Returns the packet number of the first packet in the capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetFirstPacketNumber() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The packet number of the first packet in the capture buffer.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the number of the first, i.e. the oldest, packet in the 
+        capture buffer. The first packet will have a number of one.
+    </p>
+
+    <!-- GetLinkSpeed details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetLinkSpeed"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetLinkSpeed</h3>
+    <p class="onlyG">Returns the link speed associated with the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetLinkSpeed() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Link speed associated with the buffer.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the link speed associated with the capture buffer. Because 
+        this class is not used inside the engine for live captures, the value is not 
+        set by default. It must be explicitely set with the 
+        <a href="#CCaptureBuffer::SetLinkSpeed">SetLinkSpeed</a> 
+        method, or
+        <a href="#CCaptureBuffer::CopyFootnote">
+            implicitely set by copying the capture buffer
+        </a>.
+    </p>
+
+    <!-- GetMediaSubType details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetMediaSubType"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetMediaSubType</h3>
+    <p class="onlyG">Returns the media subtype associated with the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">TMediaSubType GetMediaSubType() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">The media type associated with the buffer.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the media subtype associated with the capture buffer. 
+        Because this class is not used inside the engine for live captures, the 
+        value is not set by default. It must be explicitely set with the 
+        <a href="#CCaptureBuffer::SetMediaSubType">SetMediaSubType</a> method, or
+        <a href="#CCaptureBuffer::CopyFootnote">implicitely set by copying the capture buffer</a>.
+    </p>
+
+    <!-- GetMediaType details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetMediaType"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetMediaType</h3>
+    <p class="onlyG">Returns the media type associated with the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">TMediaType GetMediaType() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">The media type associated with the buffer.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns the media type associated with the capture buffer. 
+        Because this class is not used inside the engine for live captures, 
+        the value is not set by default. It must be explicitely set with the 
+        <a href="#CCaptureBuffer::SetMediaType">SetMediaType</a> method, or
+        <a href="#CCaptureBuffer::CopyFootnote">implicitely set by copying the capture buffer</a>.
+    </p>
+
+    <!-- GetPacket details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacket"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacket</h3>
+    <p class="onlyG">Returns an attached CPacket from the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">CPacket GetPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet to be retrieved from the buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">An attached CPacket.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a CPacket from the buffer according to the index 
+        value specified. Note that the CPacket will be an 
+        <a href="#CCaptureBuffer::attached">attached</a> packet. To get a 
+        <a href="#CCaptureBuffer::detached">detached</a> packet, use the 
+        <a href="#CCaptureBuffer::ReadPacket">
+            ReadPacket 
+        </a>
+        method.
+    </p>
+
+    <!-- GetPacketData details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacketData"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacketData</h3>
+    <p class="onlyG">Returns a pointer to the data referenced by the input packet index.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">const UInt8* GetPacketData(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet whose data pointer is to be retrieved.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        A pointer to the data of the packet referenced by inIndex.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a pointer to a packet's data. The input parameter 
+        inIndex refers to the zero-based index of the packet in the buffer. The 
+        returned pointer references the data inside the buffer.
+    </p>
+
+    <!-- GetPacketHeader details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacketHeader"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacketHeader</h3>
+    <p class="onlyG">Returns a pointer to the header of a packet in the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">const PeekPacket* GetPacketHeader(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet whose header is to be retrieved.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Pointer to a PeekPacket header.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a pointer to a packet's header. The input parameter inIndex
+        refers to the zero-based index of the packet in the buffer. The returned pointer
+        references a PeekPacket header structure, whose elements contain information about
+        the packet.
+    </p>
+
+    <!-- GetPacketIndex details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacketIndex"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacketIndex</h3>
+    <p class="onlyG">Returns the packet index corresponding to a packet's number in the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt32 GetPacketIndex(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inPacketNumber</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPacketNumber</em></dt>
+        <dd>Packet number of the packet whose index is to be retrieved.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The packet index corresponding to the inPacketNumber parameter.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a packet's index value corresponding to it's number 
+        in the buffer. Packet numbers are one-based while packet indices are 
+        zero-based. Thus a packet number of three will have an index value of 
+        two. Note also that packet numbers are UInt64 values while packet indices 
+        are UInt32 values. Thus this function will only return a valid index if 
+        the packet number is less than the maximum UInt32 value.
+    </p>
+
+    <!-- GetPacketMetaData details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacketMetaData"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacketMetaData</h3>
+    <p class="onlyG">Returns a pointer to the meta data of a packet in the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">const void* GetPacketMetaData(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet whose meta data is to be retrieved.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Pointer to a void, corresponding to the packet's meta data.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a pointer to a packet's metadata. The metadata is 
+        really some internal information about a packet including a ref count 
+        and offset value. This normally is not needed by a method that uses 
+        packets. The input parameter inIndex refers to the zero-based index 
+        of the packet in the buffer. The returned pointer to void indicates 
+        the location of the meta data.
+    </p>
+
+    <!-- GetPacketNumber details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetPacketNumber"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetPacketNumber</h3>
+    <p class="onlyG">
+        Returns the packet number corresponding to the index value of a packet in the buffer.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetPacketNumber(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet whose packet number is to be retrieved.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        The packet number value corresponding to the inIndex parameter.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method retrieves a packet's number in the buffer corresponding to it's 
+        index value. Packet indices are zero-based while packet numbers are one-based. 
+        Thus a packet index of two will correspond to a packet number of three. Note 
+        also that packet numbers are UInt64 values while packet indices are
+        UInt32 values. Thus this function will always return a valid packet number 
+        for any inIndex value; however, it is conceivable that a huge buffer will 
+        have more packets than indices can reference.
+    </p>
+
+    <!-- GetStartDateTime details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetStartDateTime"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetStartDateTime</h3>
+    <p class="onlyG">
+        Returns the timestamp indicating when the capture associated with a buffer started.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetStartDateTime() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Timestamp indicating when the capture associated with
+        a buffer started.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a timestamp as a UInt64 indicating when the capture associated 
+        with a buffer started. Typically a capture buffer used for caching packets is not 
+        directly associated with a live capture, so this value would be zero. However, it 
+        can be explicitely set with the
+        <a href="#CCaptureBuffer::SetStartDateTime">SetStartDateTime</a> method, and will be
+        <a href="#CCaptureBuffer::CopyFootnote">
+            implicitely set by copying the capture buffer
+        </a>
+        that is associated with the live capture.
+    </p>
+
+    <!-- GetStopDateTime details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::GetStopDateTime"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::GetStopDateTime</h3>
+    <p class="onlyG">
+        Returns the timestamp indicating when the capture associated with a buffer ended.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">UInt64 GetStopDateTime() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        Timestamp indicating when the capture associated with
+        a buffer ended.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a timestamp as a UInt64 indicating when the capture 
+        associated with a buffer ended. Typically a capture buffer used for 
+        caching packets is not directly associated with a live capture, so this 
+        value would be zero. However, it can be explicitely set with the
+        <a href="#CCaptureBuffer::SetStopDateTime">SetStopDateTime</a> method, and will be
+        <a href="#CCaptureBuffer::CopyFootnote">implicitely set by copying the capture buffer</a>
+        that is associated with the live capture.
+    </p>
+
+    <!-- IsDirty details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::IsDirty"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::IsDirty</h3>
+    <p class="onlyG">
+        Returns true if a packet has been added to the buffer since the buffer was
+        saved to disk.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsDirty() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the buffer contains packets not yet saved to disk,
+        false if all buffered packets have been saved to disk.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a boolean value indicating whether or not there are 
+        packets in the buffer that have not yet been saved to disk file.
+    </p>
+
+    <!-- IsFull details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::IsFull"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::IsFull</h3>
+    <p class="onlyG">Returns true if the buffer is full.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsFull() const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if the buffer is full, false if not yet full.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a boolean value indicating whether or not the buffer is full. If full,
+        it cannot accept any more packets.
+    </p>
+
+    <!-- IsValidPacketIndex details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::IsValidPacketIndex"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::IsValidPacketIndex</h3>
+    <p class="onlyG">Returns true if an index value properly references a packet in the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool IsValidPacketIndex(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">) const;</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet presumed to be in the buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if inIndex references a packet in the buffer and false if not.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method returns a boolean value indicating whether or not an index value
+        properly references a packet in the buffer.
+    </p>
+
+    <!-- LoadFromFile details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::LoadFromFile"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::LoadFromFile</h3>
+    <p class="onlyG">Loads a packet file into the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool LoadFromFile(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>const CString&</td>
+            <td><em>inFilePath</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inFilePath</em></dt>
+        <dd>Fully qualified path of the file to load from disk.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">True if the load was successful, false if not.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method loads a packet file (a file with the suffix ".pkt") into the buffer. Any former
+        contents of the buffer will be lost when the new packets are loaded.
+    </p>
+
+    <!-- ReadPacket details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::ReadPacket"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::ReadPacket</h3>
+    <p class="onlyG">Returns a detached packet from the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">bool ReadPacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inIndex</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket&</td>
+            <td><em>outPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inIndex</em></dt>
+        <dd>Index value of the packet to be read.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>outPacket</em></dt>
+        <dd>Reference to a CPacket to receive the packet read from the buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">
+        True if successful in reading the packet, false if not.
+    </p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method reads out a packet from the buffer. Note that a packet returned 
+        from ReadPacket will be a 
+        <a href="#CCaptureBuffer::detached">detached packet</a>, whereas a packet returned from
+        <a href="#CCaptureBuffer::GetPacket">GetPacket</a> will be an 
+        <a href="#CCaptureBuffer::attached">
+            attached packet
+        </a>.
+    </p>
+
+    <!-- Reset details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::Reset"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::Reset</h3>
+    <p class="onlyG">
+        Resets the buffer: deletes all packets from the buffer, clears the start and
+        stop timestamps, etc.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void Reset();</td>
+        </tr>
+    </table>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method resets the capture buffer. To reset the buffer means that it is cleared of all
+        packets; any associated meta data is cleared as well.
+    </p>
+
+    <!-- Save details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::Save"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::Save</h3>
+    <p class="onlyG">Saves the buffer contents to file.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void Save(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inFilePath</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inFilePath</em></dt>
+        <dd>The fully qualified path of the file to save buffer contents into.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method saves all packets in the buffer to disk file. The inFilePath
+        parameter specifies the file path. If the destination file already exists, its
+        contents will be overwritten.
+    </p>
+
+    <!-- SaveSelected details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SaveSelected"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SaveSelected</h3>
+    <p class="onlyG">Saves a specifed range of packets to the file indicated.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SaveSelected(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CString</td>
+            <td><em>inPath</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inRangeCount</em></td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64*</td>
+            <td><em>inRanges</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameters</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPath</em></dt>
+        <dd>The fully qualified path of the file to save the selected packets into.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRangeCount</em></dt>
+        <dd>The number of range values that are included in the inRanges array.</dd>
+    </dl>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inRanges</em></dt>
+        <dd>An array of range pairs, each pair being the first and last packet number to be selected.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method saves "selected" packets to disk file. The parameters specify the 
+        file path as well as ranges of consequtive packets to be saved. For example, if 
+        three ranges of packet numbers are to be saved to the file C:\mytest\test.pkt, 
+        then the inPath value (in C: code) would be 
+        L"C:\\mytest<a href="file://test.pkt">\\test.pkt</a>". If the ranges were to 
+        consist of packets 2-4, 50-100, and 200-220, then the inRangeCount value would be
+        6 (specifying that there are 6 range values), and the inRanges array would 
+        be: {2,4,50,100,200,210}.
+    </p>
+
+    <!-- SetCapacity details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetCapacity"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetCapacity</h3>
+    <p class="onlyG">
+        Sets the capacity of the buffer in bytes. This action also resets the buffer in that
+        any current contents are destroyed.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetCapacity(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt32</td>
+            <td><em>inCapacity</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inCapacity</em></dt>
+        <dd>Number of bytes to set the buffer capacity to.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the buffer capacity. The buffer capacity is the same as 
+        the buffer size, i.e. the number of bytes that this buffer can hold. The 
+        method should be used with caution in that it will delete any current 
+        contents.
+    </p>
+
+    <!-- SetLinkSpeed details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetLinkSpeed"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetLinkSpeed</h3>
+    <p class="onlyG">Sets the link speed associated with the buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetLinkSpeed(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inSpeed</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inSpeed</em></dt>
+        <dd>Link speed to set the buffer to.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Return Value</b></p>
+    <p class="onlyG" style="margin-left:25px">Link speed associated with the buffer.</p>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the link speed for the capture buffer. This value has no 
+        actual effect, since the buffer is not associated with a running capture.
+    </p>
+
+    <!-- SetMediaSubType details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetMediaSubType"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetMediaSubType</h3>
+    <p class="onlyG">Sets the Media subtype associated with the capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetMediaSubType(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>TMediaSubType</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inType</em></dt>
+        <dd>The media subtype to associate with this buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the media subtype for the capture buffer. This value has no 
+        actual effect, since the capture buffer is not associated with a running 
+        capture. TMediaSubType is an enum: the possible media subtypes can be found 
+        in the file MediaTypes.h.
+    </p>
+
+    <!-- SetMediaType details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetMediaType"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetMediaType</h3>
+    <p class="onlyG">Sets the Media type associated with the capture buffer.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetMediaType(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>TMediaType</td>
+            <td><em>inType</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inType</em></dt>
+        <dd>The media type to associate with this buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the media type for the capture buffer. This value has no 
+        actual effect, since the capture buffer is not associated with a running 
+        capture. TMediaType is an enum: the possible media types can be found in 
+        the file MediaTypes.h.
+    </p>
+
+    <!-- SetStartDateTime details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetStartDateTime"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetStartDateTime</h3>
+    <p class="onlyG">Sets the timestamp indicating when the capture was started.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetStartDateTime(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inTime</em></dt>
+        <dd>The capture start timestamp value to associate with this buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the capture start timestamp (i.e. date-time stamp) to 
+        associate with this capture buffer. Note that the buffer is not associated 
+        with an actual running capture, so the timestamp has no effect other than 
+        that coded by the developer implementing this capture buffer.
+    </p>
+
+    <!-- SetStopDateTime details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::SetStopDateTime"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::SetStopDateTime</h3>
+    <p class="onlyG">Sets the timestamp indicating when the capture was stopped.</p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void SetStopDateTime(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>UInt64</td>
+            <td><em>inTime</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inTime</em></dt>
+        <dd>The capture stop timestamp value to associate with this buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method sets the capture stop timestamp (i.e. date-time stamp) to associate 
+        with this capture buffer. Note that the buffer is not associated with an actual 
+        running capture, so the timestamp has no effect other than that coded by the 
+        developer implementing this capture buffer.
+    </p>
+
+    <!-- WritePacket details -->
+    <hr style="color: #4d92a8" />
+    <a name="CCaptureBuffer::WritePacket"></a>
+    <h3 style="margin-top:12px;">CCaptureBuffer::WritePacket</h3>
+    <p class="onlyG">
+        Adds a packet to the buffer. The packet's header and packet data are
+        written into the buffer.
+    </p>
+    <table class="codeG">
+        <tr>
+            <td colspan="3">void WritePacket(</td>
+        </tr>
+        <tr>
+            <td style="width: 40px;">&nbsp;</td>
+            <td>CPacket&</td>
+            <td><em>inPacket</em></td>
+        </tr>
+        <tr>
+            <td colspan="3">);</td>
+        </tr>
+    </table>
+    <p class="breakBeforeS" style="color:#000000"><b>Parameter</b></p>
+    <dl class="breakNone" style="margin-left:25px">
+        <dt><em>inPacket</em></dt>
+        <dd>Reference to a CPacket to write into the buffer.</dd>
+    </dl>
+    <p class="breakBeforeL" style="color:#000000"><b>Remarks</b></p>
+    <p class="onlyG" style="margin-bottom:20px">
+        This method writes a CPacket into the capture buffer. This is a packet copy 
+        in that that CPacket's data as well as header are written into the buffer, 
+        not just referenced. Meta data is also maintained for the packet.
+    </p>
+    <hr style="color: #4d92a8" />
+
+    <!-- Supplemental Information -->
+    <br>
+    <h2>Supplemental Information</h2>
+
+    <!-- Attached packet details -->
+    <h3 class="breakBeforeL">
+        <a name="CCaptureBuffer::attached">Attached packet</a>
+    </h3>
+    <p class="breakNone" style:"onlyG">
+        An attached packet is one whose data is owned by (i.e. lives in) a packet 
+        buffer. More information can be found 
+        <a href="PacketBuffers.html#PacketBuffers::AttachedDetached">here</a>.
+    </p>
+
+    <!-- Detached packet details -->
+    <h3 class="breakBeforeL">
+        <a name="CCaptureBuffer::detached">Detached packet</a>
+    </h3>
+    <p class="breakNone" style:"onlyG">
+        A detached packet is one whose data is owned by the packet, i.e. the data 
+        is not associated with a buffer. Detached packets have a data pointer that 
+        is reference counted, so multiply detaching packet data will not result in 
+        multiple instances of the data. More information can be found 
+        <a href="PacketBuffers.html#PacketBuffers::AttachedDetached">here</a>.
+    </p>
+
+    <!-- CopyFootnote details -->
+    <h3 class="breakBeforeL">
+        <a name="CCaptureBuffer::CopyFootnote">Copying One Buffer To Another</a>
+    </h3>
+    <p class="breakNone" style:"onlyG">
+        When copying one buffer to another using either the Copy method or the operator=
+        method, the link speed, media type, media subtype, and start and stop
+        date time are also copied. This might be useful if copying the capture buffer
+        associated with the current capture into the new (calling) buffer.
+    </p>
+
+    <!-- Padding so following last method's link its details appears at top of page.-->
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+    <p>&nbsp;</p>
+</body>
+</html>

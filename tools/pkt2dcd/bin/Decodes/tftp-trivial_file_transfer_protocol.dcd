@@ -1,0 +1,56 @@
+* TFTP - Trivial File Transfer Protocol
+
+void Trivial File Transfer;
+	LABL 0 0 0 b1 TFTP - Trivial File Transfer Protocol\TFTP:;
+	DWRD 0 1 70 c2 Opcode:;
+	CST# 0 1 0 14 TFTP Opcodes;
+	TST# 0 1 0 0 TFTP Opcodes;
+	LABL 0 0 0 14 ERROR - Unrecognized Opcode;
+	DUMP 0 10 70 c2 Unrecognized TFTP Data:;
+
+void RRQ - Read Request;
+	CSTR 0 1 70 c2 Filename:;
+	CSTR 0 0 70 c2 Mode:;
+	CSTR 0 1 70 c2 Option:;
+	LABL( 0, 0, 0x70, 0, " = ");
+	CSTR 0 1 70 14;
+
+void WRQ - Write Request;
+	CSTR 0 0 70 c2 Filename:;
+	CSTR 0 0 70 c2 Mode:;
+
+void DATA - Data Transfer;
+	DWRD 0 1 70 c2 Block Number:;
+	DUMP 0 10 70 c2 TFTP Data:;
+
+void ACK - Acknowledgment;
+	DWRD 0 1 70 c2 Block Number:;
+
+void ERROR - Error;
+	DWRD 0 1 70 c2 Error Code:;
+	CST# ffffffff 1 0 14 TFTP Error Codes;
+	CSTR 0 0 70 c2 Message:;
+
+void Option Acknowledgement;
+	CSTR 0 1 70 c2 Option:;
+	LABL( 0, 0, 0x70, 0, " = ");
+	CSTR 0 1 70 14;
+	
+str# TFTP Opcodes;
+	RRQ - Read Request;
+	WRQ - Write Request;
+	DATA - Data Transfer;
+	ACK - Acknowledgment;
+	ERROR - Error;
+	
+	Option Acknowledgement;
+
+str# TFTP Error Codes;
+	Not defined, see error message (if any);
+	File not found;
+	Access violation;
+	Disk full or allocation exceeded;
+	Illegal TFTP operation;
+	Unknown transfer ID;
+	File already exists;
+	No such user;

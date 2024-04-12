@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Classes">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>html;htm</Extensions>
+    </Filter>
+    <Filter Include="Stylesheets">
+      <UniqueIdentifier>{5bae7dfd-635a-48b4-9336-0a8cf3ee1405}</UniqueIdentifier>
+      <Extensions>css</Extensions>
+    </Filter>
+    <Filter Include="Guides">
+      <UniqueIdentifier>{0e3f8af7-a103-49e2-895e-95034dce251a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="framework\CByteVectRef.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CCaptureBuffer.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CFileCaptureBuffer.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CGlobalId.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CLayer.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CLayerEthernet.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CLayerIP.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CLayerTCP.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CLayerUDP.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\COmniStream.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPacket.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPacketArray.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPeekConsoleContext.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPeekContext.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPeekEngineContext.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPeekString.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CPeekTime.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\CRefreshFile.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\mypeek_menus.css">
+      <Filter>Stylesheets</Filter>
+    </None>
+    <None Include="framework\mypeek_site_styles.css">
+      <Filter>Stylesheets</Filter>
+    </None>
+    <None Include="framework\about.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\DataModeling.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\install.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\MessageSending.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\OptionsSetting.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\PacketBuffers.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\Template-Guide.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\using.html">
+      <Filter>Guides</Filter>
+    </None>
+    <None Include="framework\Template-Class.html">
+      <Filter>Classes</Filter>
+    </None>
+    <None Include="framework\index.html" />
+    <None Include="framework\navindex.html" />
+  </ItemGroup>
+</Project>

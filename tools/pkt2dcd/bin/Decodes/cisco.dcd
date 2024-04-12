@@ -1,0 +1,2797 @@
+// ------------------------------------------------------
+// CISCO DISCOVERY PROTOCOL
+// 01/06/2012 Updated: 2016
+// ------------------------------------------------------
+//
+str# IP::Ports_Str;
+	9994  | Cisco::Netflow;
+	9995  | Cisco::Netflow;
+	9996  | Cisco::Netflow;
+  32903	|	 Cisco::Netflow;
+void Cisco Discovery Protocol()
+{
+	LABL( 0, 0,		0x0, 0xb1, "CDP - Cisco Discovery Protocol\CDP:");
+	DBYT( 0, g[1],	0x90, 0xc2, "Version:\Ver:");
+	DBYT( 0, g[1],	0x90, 0xc2 "Time to live:\TTL:");
+	LABL( 0, 0,		0x0, 0x14, "seconds");
+	HWRD( 0, 0,		0x90, 0xc2, "Checksum:\Chksm:");
+	TNXT -CDP::Main;
+}
+
+void CDP::Main()
+{
+	TGTE( 0, g[16],	0x0,  0x0, "RETURN");
+	GWRD( 0, g[5],	0x90, 0xc2, "Type:");
+	TST#( 0, g[5],	0x0,  0x0, "CDP::TypeFunc");
+	TLSE( 0, 0,		0x0,  0x0, "CDP::Unknown");
+	TRTS;
+}
+
+str# CDP::TypeFunc;
+	0x01 | CDP::Dev-ID;
+	0x02 | CDP::Address;
+	0x03 | CDP::Port-ID;
+	0x04 | CDP::Cap;
+	0x05 | CDP::Ver;
+	0x06 | CDP::Plat;
+	0x07 | CDP::IP_Net;
+	0x08 | CDP::Protocol_Hello;
+	0x09 | CDP::VTP_Management_Domain;
+	0x0a | CDP::Native_VLAN;
+	0x0b | CDP::Duplex;
+	0x0e | CDP::Type0e;
+	0x12 | CDP::Trust_Bitmap;
+	0x13 | CDP::Untrusted_Ports_CoS;
+	0x14 | CDP::Type14;
+	0x15 | CDP::Type15;
+	0x16 | CDP::Type16;
+	0x17 | CDP::Type17;
+	0x1a	|	CDP::Type1a;
+
+str# CDP::TypeList;
+	0x01 | Device ID;
+	0x02 | Addresses;
+	0x03 | Port-ID;
+	0x04 | Capabilities;
+	0x05 | Version;
+	0x06 | Platform;
+	0x07 | IP Net;
+	0x08 | Protocol Hello;
+	0x09 | VTP Management Domain;
+	0x0a | Native VLAN;
+	0x0b | Duplex;
+	0x0e | ATA-186 VoIP VLAN Request;
+	0x0f | ATA-186 VoIP VLAN Assignment;
+	0x10 | Power Consumption;
+	0x11 | MTU;
+	0x12 | Trust Bitmap;
+	0x13 | Untrusted Ports CoS;
+	0x14 | System Name;
+	0x15 | System Object ID;
+	0x16	|	Management Addresses;
+	0x17 | Physical Location;
+	0x18	|	External Port-ID;
+	0x19	|	Power Requested;
+	0x1a	|	Power Available;
+	0x1b	|	Port Unidirectional;
+	0x1d	|	EnergyWise;
+	0x1f	|	Spare PoE;
+	
+void CDP::Unknown()
+{
+	LABL( 0, 0,		0, 0xb7, "Unknown Type");
+	DWRD( 0, g[5],	0x90, 0xc2, "Type:");
+	CST#( 0, g[5],	0x00, 0x14, "CDP::TypeList");
+	DWRD( 0, g[9],	0x90, 0xc2, "Length:");
+	SUBG( 4, g[9]);
+	DUMP( 0, g[9],	0x90, 0xc2, "Value:");
+	LABL( 0, 0, 0,	0xb8); 
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 1
+void CDP::Dev-ID()
+{
+	LABL( 0, 0, 0, 0xb7, "Device ID");
+	DWRD( 0, g[5], 0x90, 0xc2, "Type:\");
+	CST#( 0, g[5],	0x00, 0x14, "CDP::TypeList");
+	DWRD( 0, g[9], 0x90, 0xc2, "Length:\");
+	SUBG( 4, g[9]);
+	CHR#( 0, g[9], 0x90, 0xc2, "Device ID:\ID:");
+	LABL( 0, 0, 0, 0xb8); 
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 2
+void CDP::Address()
+{
+	LABL( 0, 0, 0, 0xb7, "Address");
+	DWRD( 0, g[5], 0x90, 0xc2, "Type:\");
+	CST#( 0, g[5],	0x00, 0x14, "CDP::TypeList");
+	DWRD( 0, g[1], 0x90, 0xc2, "Length:\");
+	DLNG( 0, g[4], 0x90, 0xc2, "Addresses:");
+	MOVE( 0, g[3]);
+	CDP::Address_Loop;
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -CDP::Main;
+}
+
+void CDP::Address_Loop()
+{
+	TEQU( 0, g[4], 0, 0, RETURN;
+	SUBG( 1, g[4]);
+	ADDG( 1, g[3]);
+	DGLB( 0, g[3], 0, 0xb7, "Address #");
+	DBYT( 0, g[1], 0x90, 0xc2, "Protocol Type:\");
+	CST#( 0, g[1], 0x00, 0x14, "CDP::Address_Loop::ProtocolTypeList");
+	DBYT( 0, g[1], 0x90, 0xc2, "Protocol Length:\");
+	l[1] = pb[0];
+	l[2] = pw[6];
+	HEX#( 0, g[1], 0x90, 0xc2, "Protocol Value:\");
+	if (l[1] == 0xaa)
+	{
+		CST#( 0, l[2], 0x00, 0x14, "CDP::Address_Loop::ProtocolValueList1");
+	}
+	if (l[1] != 0xaa)
+	{
+		CST#( 0, l[1], 0x00, 0x14, "CDP::Address_Loop::ProtocolValueList2");
+	}
+	DWRD( 0, l[1], 0x90, 0xc2, "Address Length:\");
+	if (l[1] == 4)
+	{
+		IPLG( 0, g[1], 0x90, 0xc2, "IP Address:\IP Addr:");
+	}
+	if (l[1] != 4)
+	{
+		HEX#( 0, l[1], 0x90, 0xc2, "Address:\");
+	}
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -CDP::Address_Loop;
+}
+
+str# CDP::Address_Loop::ProtocolTypeList;
+	1 | NLPID;
+	2 | 802.2;
+
+// si: you expect these in the format of 0xaaaa03000000ZZZZ, where ZZZZ is the value you check against
+str# CDP::Address_Loop::ProtocolValueList1;
+	0x0600 | XNS;
+	0x0800 | IPv6;
+	0x6003 | DECNET Phase IV;
+	0x8019 | Apollo Domain;
+	0x809B | AppleTalk;
+	0x80c4 | Banyan VINES;
+	0x8137 | Novell IPX;
+
+str# CDP::Address_Loop::ProtocolValueList2;
+	0x81 | ISO CLNS;
+	0xCC | IP;
+
+// CDP TYPE 3
+void CDP::Port-ID()
+{
+	LABL( 0, 0, 0, 0xb7 "Port ID");
+	DWRD( 0, g[5], 0x90, 0xc2 "Type:\");
+	CST#( 0, g[5], 0x00, 0x14, "CDP::TypeList");
+	DWRD( 0, g[9], 0x90, 0xc2 "Length:\");
+	SUBG( 4, g[9]);
+	CHR#( 0, g[9], 0x90, 0xc2 "Port ID:\Port:");
+	LABL( 0, 0, 0, 0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 4
+void CDP::Cap()
+{
+	LABL( 0,	0,		0,		0xb7, "Capabilities");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	HLNG( 0,	g[6],	0x90,	0xc2, "Capabilities:");
+	CBIT( 0,	g[6],	0,		0x14, "Router");
+	CBIT( 1,	g[6],	0,		0x14, "Bridge");
+	CBIT( 2,	g[6],	0,		0x14, "SRB");
+	CBIT( 3,	g[6],	0,		0x14, "Switch");
+	CBIT( 4,	g[6],	0,		0x14, "Host");
+	CBIT( 5,	g[6],	0,		0x14, "IGMP");
+	CBIT( 6,	g[6],	0,		0x14, "Repeater");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 5
+void CDP::Ver()
+{
+	LABL( 0,	0,		0,		0xb7, "Version");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	CHR#( 0,	g[9],	0x90,	0xc2, "Version:\Ver:");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 6
+void CDP::Plat()
+{
+	LABL( 0,	0,		0,		0xb7, "Platform");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	CHR#( 0,	g[9],	0x90,	0xc2, "Platform:");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 7
+void CDP::IP_Net()
+{
+	LABL( 0,	0,		0,		0xb7, "IP Networks");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	HEX#( 0,	g[9],	0x90,	0xc2, "IP Networks:");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 8			-- si: this is so stupid...we don't even know where this came from 
+void CDP::Protocol_Hello()
+{
+	LABL( 0,	0,		0,		0xb7, "Protocol Hello");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	g[9] -= 4;
+	HEX# 80000001 0 90 c2 OUI:;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	HWRD		0 2 90 c2 Protocol ID:;
+	g[9] -= 5;
+	if (g[2] == 0x0112)
+	{
+		LABL 0 0 00 14 Cluster Management;
+		IPLG 0 0 90 c2 Cluster Master IP:;
+		IPLG 0 0 90 c2 Unknown:;
+		HBYT 0 0 90 c2 Version:;
+		HBYT 0 0 90 c2 Sub Version:;
+		HBYT 0 0 90 c2 Status:;
+		HBYT 0 0 90 c2 Reserved:;
+		ETHR 0 0 90 c2 Cluster Cmdr MAC:;
+		ETHR 0 0 90 c2 Switch MAC:;
+		HBYT 0 0 90 c2 Reserved:;
+		HWRD 0 0 90 c2 Management VLAN:;
+	}
+	if (g[2] != 0x0112)
+	{
+		DUMP( 0,	g[9],	0x90,	0xc2, "Undocumented:\");
+	}
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 9
+void CDP::VTP_Management_Domain()
+{
+	LABL( 0,	0,		0,		0xb7, "VTP Management Domain");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	CHR#( 0,	g[9],	0x90,	0xc2, "Domain Msg:");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 10 or 0x0a
+void CDP::Native_VLAN()
+{
+	LABL( 0,	0,		0,		0xb7, "Native VLAN");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	if (g[9] == 1)
+	{
+		DBYT( 0,	0,	0x90,	0xc2, "Native VLAN:");
+		g[9] -= 1;
+	}
+	if (g[9] == 2)
+	{
+		DWRD( 0,	0,	0x90,	0xc2, "Native VLAN:");
+		g[9] -= 2;
+	}
+	if (g[9] == 4)
+	{
+		DLNG( 0,	0,	0x90,	0xc2, "Native VLAN:");
+		g[9] -= 4;
+	}
+	if (g[9] != 0)
+	{
+		if (g[9] != 1)
+		{
+			if (g[9] != 2)
+			{
+				if (g[9] != 4)
+				{
+					DUMP( 0, g[9], 0x90, 0xc2, "Native VLAN:");
+				}
+			}
+		}
+	}
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 11 or 0xb
+void CDP::Duplex()
+{
+	LABL( 0,	0,		0,		0xb7, "Duplex");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	HEX#( 0,	g[9],	0x90,	0xc2, "Duplex:");
+	CEQU( 1,	g[9],	0,		0x14, "Full");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+void CDP::Type0e;
+	LABL 0 0 00 b7 VOIP VLAN Reply;
+	DWRD 0 5 90 c2 Type:;
+	CST# 0 5 00 14 CDP::TypeList;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+	if (g[9] > 0)
+	{
+		HEX# 0 9 90 c2 Data:;
+	}
+	LABL 0 0 00 b8;
+	TNXT -CDP::Main;
+
+// CDP TYPE 18 or 0x12
+void CDP::Trust_Bitmap;
+{
+	LABL( 0,	0,		0,		0xb7, "Trust Bitmap");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	HEX#( 0,	g[9],	0x90,	0xc2, "Trust Bitmap:");
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+// CDP TYPE 19 or 0x13
+void CDP::Untrusted_Ports_CoS;
+{
+	LABL( 0,	0,		0,		0xb7, "Untrusted Ports CoS");
+	DWRD( 0,	g[5],	0x90,	0xc2, "Type:\");
+	CST#( 0,	g[5],	0x00,	0x14, "CDP::TypeList");
+	DWRD( 0,	g[9],	0x90,	0xc2, "Length:\");
+	SUBG( 4,	g[9]);
+	if (g[9] == 1)
+	{
+		DBYT( 0,	0,	0x90,	0xc2, "Untrusted Port:");
+		g[9] -= 1;
+	}
+	if (g[9] == 2)
+	{
+		DWRD( 0,	0,	0x90,	0xc2, "Untrusted Port:");
+		g[9] -= 2;
+	}
+	if (g[9] == 4)
+	{
+		DLNG( 0,	0,	0x90,	0xc2, "Untrusted Port:");
+		g[9] -= 4;
+	}
+	if (g[9] != 0)
+	{
+		if (g[9] != 1)
+		{
+			if (g[9] != 2)
+			{
+				if (g[9] != 4)
+				{
+					DUMP( 0, g[9], 0x90, 0xc2, "Native VLAN:");
+				}
+			}
+		}
+	}
+	LABL( 0,	0,		0,		0xb8);
+	TNXT -CDP::Main;
+}
+
+void CDP::Type14;
+	LABL 0 0 00 b7 System Name;
+	DWRD 0 5 90 c2 Type:;
+	CST# 0 5 00 14 CDP::TypeList;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+	CHR# 0 9 90 c2 System Name:;
+	LABL 0 0 00 b8;
+	TNXT -CDP::Main;
+
+void CDP::Type15;
+	LABL 0 0 00 b7 System Object Identifier;
+	DWRD 0 5 90 c2 Type:;
+	CST# 0 5 00 14 CDP::TypeList;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+	HEX# 0 9 90 c2 System Object ID:;
+	LABL 0 0 00 b8;
+	TNXT -CDP::Main;
+
+void CDP::Type16;
+	LABL 0 0 00 b7 Management Addresses;
+	DWRD 0 5 90 c2 Type:;
+	CST# 0 5 00 14 CDP::TypeList;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+	DLNG 0 4 90 c2 Addresses:;
+	MOVE 0 3;
+	CDP::Address_Loop;
+	LABL 0 0 00 b8;
+	TNXT -CDP::Main;
+
+void CDP::Type17;
+	LABL 0 0 00 b7 Physical Location;
+	DWRD 0 5 90 c2 Type:;
+	CST# 0 5 00 14 CDP::TypeList;
+	DWRD 0 9 90 c2 Length:;
+	g[9] -= 4;
+	HEX# 0 9 90 c2 Location:;
+	LABL 0 0 00 b8;
+	TNXT -CDP::Main;
+
+void CDP::Type1a()
+{
+	LABL( 0, 0,		0, 0xb7, "Power Available");
+	DWRD( 0, g[5],	0x90, 0xc2, "Type:");
+	CST#( 0, g[5],	0x00, 0x14, "CDP::TypeList");
+	DWRD( 0, g[9],	0x90, 0xc2, "Length:");
+	DWRD 0 0 90 c2 Request-ID:;
+	DWRD 0 0 90 c2 Management-ID:;
+	DLNG 0 0 90 c2 Power Available:;
+	LABL 0 0 0 14 mW;
+	DLNG 0 0 90 c2 Power Available:;
+	LABL 0 0 0 14 mW;
+	LABL( 0, 0, 0,	0xb8); 
+	TNXT -CDP::Main;
+}
+
+//--------------------------------------------------
+//	CISCO DYNAMIC INTER-SWITCH LINK - DISL
+//--------------------------------------------------
+
+void Cisco::DISL;
+	LABL 0 0 0 b1 Cisco Dynamic Inter-Switch Link\Cisco DISL:;
+	DBYT 0 1 90 c2 Version:\V:;
+	TNXT -Cisco::DISL::Header_Loop;
+
+void Cisco::DISL::Header_Loop;
+	TGTX 4 10 0 0 RETURN;
+	GWRD 0 1;						//si: message type
+	CST# 0 1 00 b7 Cisco::DISL::Msg_Types::Name;
+	SKIP;
+		l[1] = pw[0];
+		TEQU 0 41 0 0 RETURN;		//si: if it's zero, jump out
+		if (g[16] > 4)
+		{
+			Cisco::DISL::Unknown;
+			TNXT -Cisco::DISL::Header_Loop;
+		}
+		TRTS;
+	ENDS;
+	TSB# 0 1 0 0 Cisco::DISL::Msg_Types::Func;
+	LABL 0 0 0 b8;
+	TNXT -Cisco::DISL::Header_Loop;
+
+str# Cisco::DISL::Msg_Types::Name;
+	Domain Name;
+	Status;
+	Type;
+	Sender ID;
+	
+str# Cisco::DISL::Msg_Types::Func;
+	Cisco::DISL::Domain_Name;
+	Cisco::DISL::Status;
+	Cisco::DISL::Type;
+	Cisco::DISL::Sender_ID;
+
+void Cisco::DISL::Domain_Name;
+	HWRD 0 1 90 c2 Message Type:\;
+	CST# 0 1 00 14 Cisco::DISL::Msg_Types::Name;
+	DWRD 0 1 90 c2 Message Length:\;
+	g[1] -= 4;
+	g[1] -= 1; //TT33081: Avoid extra "." at the end
+	CHR# 0 1 90 c2 Mngmnt Domain Name:\D_Name:;
+	BBYT 0 0 05 05 .;
+	TRTS;
+
+void Cisco::DISL::Status;
+	HWRD 0 1 90 c2 Message Type:\;
+	CST# 0 1 00 14 Cisco::DISL::Msg_Types::Name;
+	DWRD 0 1 90 c2 Message Length:\;
+	BBYT 0 1 90 c9 Status Flags:\F:;
+	 CBIT 7 1 0 d4 1... .... Operational State Is Trunk;
+	 CLSE 0 0 0 d4 0... .... Operational State Is Not Trunk;
+	 ANDG 7 1;
+	 //CEQU 0 1 0 d4 .... .000 Configured State:;
+	 CEQU 1 1 0 d4 .... .001 Configured State: Port permanently forced to be trunk;
+	 //CEQU 2 1 0 d4 .... .010 Configured State:;
+	 //CEQU 3 1 0 d4 .... .011 Configured State:;
+	 CEQU 4 1 0 d4 .... .100 Configured State: Port in default auto mode;
+	 //CEQU 5 1 0 d4 .... .101 Configured State:;
+	 //CEQU 6 1 0 d4 .... .110 Configured State:;
+	 //CEQU 7 1 0 d4 .... .111 Configured State:;
+	 LABL 0 0 0 c8;
+	TRTS;
+	
+void Cisco::DISL::Type()
+{
+	HWRD 0 1 90 c2 Message Type:\MT:;
+	CST# 0 1 00 14 Cisco::DISL::Msg_Types::Name;
+	DWRD 0 1 90 c2 Message Length:\ML:;
+	BBYT 0 1 90 c9 Value:\V:;
+		CBIT 7 1 0 d4 1... .... Operational State Is Trunk;
+		CLSE 0 0 0 d4 0... .... Operational State Is Not Trunk;
+		ANDG 7 1;
+		CEQU 0 1 0 d4 .... .000 Trunk Adminstrative Type: Negotiated;
+		CEQU 1 1 0 d4 .... .001 Trunk Adminstrative Type: Native;
+		CEQU 2 1 0 d4 .... .010 Trunk Adminstrative Type: ISL;
+		CEQU 5 1 0 d4 .... .101 Trunk Adminstrative Type: 802.1Q;
+	LABL 0 0 0 c8;
+	TRTS;
+}
+void Cisco::DISL::Sender_ID()
+{
+	HWRD 0 1 90 c2 Message Type:\MT:;
+	CST# 0 1 00 14 Cisco::DISL::Msg_Types::Name;
+	DWRD 0 1 90 c2 Message Length:\ML:;
+	ETHR 0 1 90 c9 Sender ID:\S-ID:;
+	LABL 0 0 0 c8;
+	TRTS;
+}
+void Cisco::DISL::Unknown;
+	LABL 0 0 0 b7 Unknown;
+	HWRD 0 1 90 c2 Message Type:\;
+	LABL 0 0 00 14 Unknown;
+	DWRD 0 1 90 c2 Message Length:\;
+	g[1] -= 4;
+	HEX# 0 1 90 c2 Message Data:\Data;
+	LABL 0 0 0 b8;
+	TRTS;
+
+
+//--------------------------------------------------
+//	CISCO VIRTUAL TRUNKING PROTOCOL - VTP
+//--------------------------------------------------
+str# EProto::Names_Str;
+0x2003	|	Cisco Virtual Trunking Protocol;
+
+void Cisco::VTP;
+	LABL 0 0 00 b1 Cisco Virtual Trunking Protocol\Cisco VTP;
+	HBYT 0 1 90 c2 Version:\V:;
+		CEQU 1 1 0 14 Version 1;
+		CEQU 2 1 0 14 Version 2;
+		CEQU 3 1 0 14 Version 3;
+	HBYT 0 1 90 c2 Code:\C:;
+	CST# 0 1 00 14 Cisco::VTP::Codes::Name;
+	TST# 0 1 00 00 Cisco::VTP::Codes::Func;
+
+str# Cisco::VTP::Codes::Name;
+	1 | Summary Advert;
+	2 | Subset Advert;
+	3 | Advertisement Request;
+	4 | VTP Join Message;
+
+str# Cisco::VTP::Codes::Func;
+	1 | Cisco::VTP::Summary_Advert;
+	2 | Cisco::VTP::Subset_Advert;
+	3 | Cisco::VTP::Advert_Request;
+	4 | Cisco::VTP::VTP_Join;
+//--------------------------------------------------
+
+void Cisco::VTP::VTP_Join()
+{
+	DBYT 0 1 90 c2 Management Dom Len:\;
+	CHR# 20 0 90 c2 Management Domain:\M_Domain:;
+	DBYT 0 0 90 c2 Unknown:\;
+	DWRD 0 41 90 c2 First VLAN ID:\ID:;
+	DWRD 0 42 90 c2 Last VLAN ID:\ID:;
+	l[4] = 0;
+	while (g[16] != 0)
+	{
+		BBIT 1 43 5 5;
+		if (l[3] != 0)
+		{
+			LABL 0 43 90 c2 VLAN ID #;
+			DGLB 0 44 2 0;
+			LABL 0 0 0 2 :;
+			
+			CEQU 0 43 0 14 Not advertised;
+			CEQU 1 43 0 14 Advertised active;
+		}
+		if (l[3] == 0)
+		{
+			//BBIT 1 43 5 5;
+		}
+		l[4] += 1;
+	}
+}
+
+//--------------------------------------------------
+
+void Cisco::VTP::Summary_Advert;
+	DBYT 0 1 90 c2 Followers:\;
+	DBYT 0 1 90 c2 Management Dom Len:\;
+	CHR# 20 0 90 c2 Management Domain:\M_Domain:;
+	DLNG 0 1 90 c2 Config Rev Num:;
+	IPLG 0 1 90 c2 Updater Identity:;
+	LABL 0 0 00 c2 Update Timestamp:;
+	CHR# c 0 90 00;
+	HEX# 10 0 90 c2 MD5 Digest:;
+	TRTS;
+
+//--------------------------------------------------
+
+void Cisco::VTP::Subset_Advert;
+	DBYT 0 1 90 c2 Sequence Num:\SeqNum:;
+	DBYT 0 1 90 c2 Management Dom Len:\;
+	CHR# 20 0 90 c2 Management Domain:\M_Dom:;
+	DLNG 0 1 90 c2 Config Rev Num:\;
+	while (g[16] > 0)
+	{
+		Cisco::VTP::Subset_Advert::VLAN_Info_Field;
+	}
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_Info_Field;
+	LABL 0 0  0 b7 VLAN Info Field;
+	DBYT 0 5 90 c2 VLAN Info Len:\;
+	BBYT 0 1 90 c9 Status:\;
+	 LABL 0 0 0 d4 xxxx xxx. Reserved;
+	 CBIT 0 1 0 d4 .... ...1 VLAN Suspended;
+	 CLSE 0 0 0 d4 .... ...0 VLAN Not Suspended;
+	 LABL 0 0 0 c8;
+	HBYT 0 1 90 c2 VLAN Type:\VType:;
+	CST# 0 1 00 14 Cisco::VTP::Subset_Advert::VLAN_Info_Field::VLAN_Type::Name;
+	DBYT 0 2 90 c2 VLAN Name Len:\;
+	HWRD 0 1 90 c2 ISL VLAN ID:\ID:;
+	DWRD 0 1 90 c2 MTU Size:\;
+	HLNG 0 1 90 c2 802.10 Index:\;
+	g[5] -= 12;
+	CHR# 0 2 90 c2 VLAN Name:\VName:;
+	g[5] -= g[2];
+	if (g[5] > 0)
+	{
+		l[1] = pb[0];
+		l[2] = 0;
+		l[3] = 0;
+		while (l[1] == 0)
+		{
+			if (g[5] <= 0)
+			{
+				DECR 0 42;
+				DUMP 0 42 90 c2 Extra Bytes:\;
+				l[3] = 1;
+				l[1] = 1;
+			}
+			if (l[3] != 1)
+			{
+				INCR 1;
+				l[1] = pb[0];
+				l[2] += 1;
+				g[5] -= 1;
+			}
+		}
+		if (l[2] > 0)
+		{
+			DECR 0 42;
+			DUMP 0 42 90 c2 Extra Bytes:\;
+		}
+	}
+	if (g[5] > 0)
+	{
+		l[1] = pb[0];
+		if (l[1] > 0)
+		{
+			if (l[1] < 9)
+			{
+				Cisco::VTP::Subset_Advert::VLAN_TLV;
+			}
+		}
+		if (l[1] <= 0)
+		{
+			DUMP 0 5 90 c2 Extra Bytes:\;
+		}
+		if (l[1] >= 9)
+		{
+			DUMP 0 5 90 c2 Extra Bytes:\;
+		}
+	}
+	LABL 0 0  0 b8;
+	TRTS;
+
+str# Cisco::VTP::Subset_Advert::VLAN_Info_Field::VLAN_Type::Name;
+	0x01 | Ethernet;
+	0x02 | FDDI;
+	0x03 | TrCRF;
+	0x04 | FDDI-net;
+	0x05 | TrBRF;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV;
+	while (g[5] > 0)
+	{
+		g[1] = pb[0];
+		CST# 0 1 0 b7 Cisco::VTP::Subset_Advert::VLAN_TLV::Type::Name;
+		CLSE 0 1 0 b7 Unknown TLV Type;
+		HBYT 0 1 90 c2 Type:\Type;
+		CST# 0 1 00 14 Cisco::VTP::Subset_Advert::VLAN_TLV::Type::Name;
+		DBYT 0 2 90 c2 Length:\;
+		g[5] -= 2;
+		TSB# 0 1 0 0 Cisco::VTP::Subset_Advert::VLAN_TLV::Type::Func;
+		LABL 0 0 0 b8;
+	}
+
+str# Cisco::VTP::Subset_Advert::VLAN_TLV::Type::Name;
+	0x01 | Source-Routing Ring Number;
+	0x02 | Source-Routing Bridge Number;
+	0x03 | STP Type;
+	0x04 | Parent VLAN;
+	0x05 | Translationally bridged VLANs;
+	0x06 | Pruning;
+	0x07 | Bridge Type;
+	0x08 | Max ARP Hop Count;
+	0x09 | Max STE Hop Count;
+	0x0A | Backup CRF Mode;
+
+str# Cisco::VTP::Subset_Advert::VLAN_TLV::Type::Func;
+	0x01 | Cisco::VTP::Subset_Advert::VLAN_TLV::01;
+	0x02 | Cisco::VTP::Subset_Advert::VLAN_TLV::02;
+	0x03 | Cisco::VTP::Subset_Advert::VLAN_TLV::03;
+	0x04 | Cisco::VTP::Subset_Advert::VLAN_TLV::04;
+	0x05 | Cisco::VTP::Subset_Advert::VLAN_TLV::05;
+	0x06 | Cisco::VTP::Subset_Advert::VLAN_TLV::06;
+	0x07 | Cisco::VTP::Subset_Advert::VLAN_TLV::07;
+	0x08 | Cisco::VTP::Subset_Advert::VLAN_TLV::08;
+	0x09 | Cisco::VTP::Subset_Advert::VLAN_TLV::09;
+	0x0A | Cisco::VTP::Subset_Advert::VLAN_TLV::0A;
+
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::01;
+	HWRD 0 1 90 c2 Srce Rting Ring Num:;
+	g[5] -= 2;
+	TRTS;
+	
+void Cisco::VTP::Subset_Advert::VLAN_TLV::02;
+	HWRD 0 1 90 c2 Srce Rting Bridge Num:;
+	g[5] -= 2;
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::03;
+	DWRD 0 1 90 c2 STP Type:;
+	CEQU 1 1 0 14 SRT;
+	CEQU 2 1 0 14 SRB;
+	CEQU 3 1 0 14 Auto;
+	g[5] -= 2;
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::04;
+	if (g[2] == 1)
+	{
+		HWRD 0 1 90 c2 Parent VLAN:;
+		g[5] -= 2;
+	}
+	if (g[2] != 1)
+	{
+		g[2] *= 2;
+		DUMP 0 2 90 c2 Parent VLAN:;
+		g[5] -= g[2];
+	}
+	TRTS;
+void Cisco::VTP::Subset_Advert::VLAN_TLV::05;
+	// WTF?!?!?!?!?
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::06;
+	HWRD 0 1 90 c2 Pruning:;
+	CEQU 1 1 0 14 Enabled;
+	CEQU 2 1 0 14 Disabled;
+	g[5] -= 2;
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::07;
+	DWRD 0 1 90 c2 Bridge Type:;
+	CEQU 1 1 0 14 SRT;
+	CEQU 2 1 0 14 SRB;
+	g[5] -= 2;
+	TRTS;	
+	
+void Cisco::VTP::Subset_Advert::VLAN_TLV::08;
+	DWRD 0 1 90 c2 Max ARP Hop Count:;
+	g[5] -= 2;
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::09;
+	DWRD 0 1 90 c2 Max STE Hop Count:;
+	g[5] -= 2;
+	TRTS;
+
+void Cisco::VTP::Subset_Advert::VLAN_TLV::0A;
+	HWRD 0 1 90 c2 TrCRF:;
+	CEQU 1 1 0 14 Configured as Backup;
+	CEQU 2 1 0 14 Not Configured as Backup;
+	g[5] -= 2;
+	TRTS;
+
+
+//--------------------------------------------------
+
+void Cisco::VTP::Advert_Request;
+	DBYT 0 1 90 c2 Reserved:\;
+	DBYT 0 1 90 c2 Management Dom Len:\;
+	CHR# 20 0 90 c2 Management Domain:\M_Dom:;
+	DLNG 0 1 90 c2 Start Value:\Start:;
+	TRTS;
+
+
+//--------------------------------------------------
+//	CISCO ISL PACKET FORMAT
+//--------------------------------------------------
+	
+void Cisco::ISL;
+	LABL 0 0 00 b1 ISL;
+	ETHR 0 0 90 c2 Destination:\D:;
+	DECR 1;
+	BBYT 1 0 90 c9 Flags:;
+	DECR 1;
+	 BBIT 4 1 90 c2 Frame Type:;
+	  CEQU 0 1 00 14 Ethernet;
+	  CEQU 1 1 00 14 Token Ring;
+	 BBIT 4 1 90 c2 User:;
+	LABL 0 0 00 c8;
+	ETHR 0 0 90 c2 Source:\S:;
+	DWRD 0 a 90 c2 Length:;
+	HBYT 0 1 90 c2 Dest SAP:;
+	HBYT 0 1 90 c2 Srce SAP:;
+	HBYT 0 1 90 c2 Command:;
+	HEX# 3 0 90 c2 HSA:;
+	HWRD 0 1 90 c2 VLAN:;
+	//HWRD 0 1 90 c2 BPDU:;
+	DWRD 0 1 90 c2 Index:;
+	HWRD 0 1 90 c2 Res:;
+	
+	CBIT 7 b 0 b1 802.3 Header\802.3;
+	CLSE 0 0 0 b1 Ethernet Header\Ethernet:;
+	ETHR 0 0 90 c2 Destination:\D:;
+	ETHR 0 0 90 c2 Source:\S:;
+	TNXT -802_2;
+
+
+// -------------------------------------------------------------------------------------
+//	Cisco Netflow
+//
+//	globals i use:
+//		g[3] = tot count of flow records
+//		g[4] = incr count of flow records
+//	notes:
+//		si: we support vers 1, 5, 7, 8, 9
+//			8 not fully... 1,5,7,9 fully
+// -------------------------------------------------------------------------------------
+
+void Cisco::Netflow_PortCheck()
+{
+	DECR 6;
+	g[5] = pw[0];		//UDP Port Number
+	INCR 6;
+}
+
+void Cisco::Netflow;
+	Cisco::Netflow_PortCheck();
+	g[1] = pw[0];
+	TST# 0 1 0 0 Cisco::Netflow::VersList;
+	// si: unknown version
+	LABL 0 0 00 b1 Cisco Netflow;
+	DUMP 0 10 90 c2 Unknown Vers:;
+	TRTS;
+
+str# Cisco::Netflow::VersList;
+	1 | Cisco::Netflow::v1;
+	5 | Cisco::Netflow::v5;
+	7 | Cisco::Netflow::v7;
+	8 | Cisco::Netflow::v8;
+	9 | Cisco::Netflow::v9;
+
+
+// -------------------------------------------------------------------------------------
+
+void Cisco::Netflow::v1;
+	LABL 0 0 00 b1 Cisco Netflow - version 1;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 3 90 c2 Count:;
+	DLNG 0 0 90 c2 SysUptime:;
+	DLNG 0 0 90 c2 UNIX Seconds:;
+	DLNG 0 0 90 c2 UNIX NSeconds:;
+	g[4] = 1;
+	while (g[3] > 0)
+	{
+		Cisco::Netflow::v1::FlowRecord;
+		g[3] -= 1;
+		g[4] += 1;
+	}
+	TRTS;
+
+void Cisco::Netflow::v1::FlowRecord;
+	DGLB 0 4 7 b7 Flow Record - ;
+	IPLG 0 0 90 c2 Source IP Addr:;
+	IPLG 0 0 90 c2 Dest IP Addr:;
+	IPLG 0 0 90 c2 Next Hop:;
+	DWRD 0 0 90 c2 Input:;
+	LABL 0 0 00 14 SNMP Input Index;
+	DWRD 0 0 90 c2 Output:;
+	LABL 0 0 00 14 SNMP Output Index;
+	DLNG 0 0 90 c2 Packets in Flow:;
+	DLNG 0 0 90 c2 dOctets;
+	LABL 0 0 00 14 Tot num of Layer 3 bytes in the pkts of the flow;
+	DLNG 0 0 90 c2 First:;
+	DLNG 0 0 90 c2 Last:;
+	DWRD 0 0 90 c2 Src Port:;
+	DWRD 0 0 90 c2 Dst Port:;
+	HWRD 0 0 90 c2 Padding1:;
+	DBYT 0 1 90 c2 IP Protocol:;
+	CST# 0 1 00 14 IP::Common_Str;
+	BBYT 0 0 90 c2 IP ToS:;
+	BBYT 0 0 90 c2 Flags:;
+	HEX# 3 0 90 c2 Reserved:;
+	HLNG 0 0 90 c2 Reserved:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// -------------------------------------------------------------------------------------
+
+void Cisco::Netflow::v5;
+	LABL 0 0 00 b1 Cisco Netflow - version 5;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 3 90 c2 Count:;
+	DLNG 0 0 90 c2 SysUptime:;
+	DLNG 0 0 90 c2 UNIX Seconds:;
+	DLNG 0 0 90 c2 UNIX NSeconds:;
+	DLNG 0 0 90 c2 Flow Sequence:;
+	DBYT 0 0 90 c2 Engine Type:;
+	DBYT 0 0 90 c2 Engine Id:;
+	// HWRD 0 0 90 c2 Reserved:;			--> si: depends...but netflow uses this for sampling interval
+	LABL 0 0 90 c9 Sampling Interval;
+	BBIT 2 1 90 c2 Sampling Mode:;
+	LABL 0 0 90 00 "..............";
+	CEQU 0 1 0 14 No sampling mode configured;
+	CEQU 1 1 0 14 Packet Interval sampling mode configured;
+	CEQU 2 1 0 14 Reserved;
+	CEQU 3 1 0 14 Reserved;
+	LABL 0 0 00 c2 Sampling Interval:;
+	LABL 0 0 00 50 "..";
+	BBIT E 0 90 00;
+	LABL 0 0 00 c8;
+	
+	g[4] = 1;
+	while (g[3] > 0)
+	{
+		Cisco::Netflow::v5::FlowRecord;
+		g[3] -= 1;
+		g[4] += 1;
+	}
+	TRTS;
+
+void Cisco::Netflow::v5::FlowRecord;
+	DGLB 0 4 7 b7 Flow Record - ;
+	IPLG 0 0 90 c2 Source IP Addr:;
+	IPLG 0 0 90 c2 Dest IP Addr:;
+	IPLG 0 0 90 c2 Next Hop:;
+	DWRD 0 0 90 c2 Input:;
+	LABL 0 0 00 14 SNMP Input Index;
+	DWRD 0 0 90 c2 Output:;
+	LABL 0 0 00 14 SNMP Output Index;
+	DLNG 0 0 90 c2 Packets in Flow:;
+	DLNG 0 0 90 c2 dOctets;
+	LABL 0 0 00 14 Tot num of Layer 3 bytes in the pkts of the flow;
+	GLNG 0 1;
+	MODG 3E8 1;
+	GLNG 0 2;
+	LABL 0 0 00 c2 First:;
+	g[2] -= g[1];
+	g[2] /= 1000; 
+	DGLB 0 2 90 00;
+	DGLB 0 1 90 50 .; 
+	DLNG 0 2 05 14 seconds;
+	GLNG 0 1;
+	MODG 3E8 1;
+	GLNG 0 2;
+	LABL 0 0 00 c2 Last:;
+	g[2] -= g[1];
+	g[2] /= 1000; 
+	DGLB 0 2 90 00;
+	DGLB 0 1 90 50 .; 
+	DLNG 0 2 05 14 seconds;
+	DWRD 0 0 90 c2 Src Port:;
+	DWRD 0 0 90 c2 Dst Port:;
+	HBYT 0 0 90 c2 Padding1:;
+	BBYT 0 0 90 c2 TCP Flags:;			//!@#
+	DBYT 0 1 90 c2 IP Protocol:;
+	CST# 0 1 00 14 IP::Common_Str;
+	DBYT 0 0 90 c2 IP ToS:;
+	DWRD 0 0 90 c2 Autonomous Sys Num [src]:;
+	DWRD 0 0 90 c2 Autonomous Sys Num [dst]:;
+	DBYT 0 0 90 c2 Src Addr Prefix:;
+	DBYT 0 0 90 c2 Dst Addr Prefix:;
+	HWRD 0 0 90 c2 Padding2:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+
+void Cisco::Netflow::v7;
+	LABL 0 0 00 b1 Cisco Netflow - version 7;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 3 90 c2 Count:;
+	DLNG 0 0 90 c2 SysUptime:;
+	DLNG 0 0 90 c2 UNIX Seconds:;
+	DLNG 0 0 90 c2 UNIX NSeconds:;
+	DLNG 0 0 90 c2 Flow Sequence:;
+	HLNG 0 0 90 c2 Reserved:;
+	g[4] = 1;
+	while (g[3] > 0)
+	{
+		Cisco::Netflow::v7::FlowRecord;
+		g[3] -= 1;
+		g[4] += 1;
+	}
+	TRTS;
+
+void Cisco::Netflow::v7::FlowRecord;
+	DGLB 0 4 7 b7 Flow Record - ;
+	IPLG 0 0 90 c2 Source IP Addr:;
+	IPLG 0 0 90 c2 Dest IP Addr:;
+	IPLG 0 0 90 c2 Next Hop Rtr:;
+	DWRD 0 0 90 c2 Input:;
+	LABL 0 0 00 14 SNMP Input Index;
+	DWRD 0 0 90 c2 Output:;
+	LABL 0 0 00 14 SNMP Output Index;
+	DLNG 0 0 90 c2 Packets in Flow:;
+	DLNG 0 0 90 c2 dOctets;
+	LABL 0 0 00 14 Tot num of Layer 3 bytes in the pkts of the flow;
+	DLNG 0 0 90 c2 First:;
+	DLNG 0 0 90 c2 Last:;
+	DWRD 0 0 90 c2 Src Port:;
+	DWRD 0 0 90 c2 Dst Port:;
+	HBYT 0 0 90 c2 Padding1:;
+	BBYT 0 0 90 c2 TCP Flags:;			//!@#
+	DBYT 0 1 90 c2 IP Protocol:;
+	CST# 0 1 00 14 IP::Common_Str;
+	DBYT 0 0 90 c2 IP ToS:;
+	DWRD 0 0 90 c2 Autonomous Sys Num [src]:;
+	DWRD 0 0 90 c2 Autonomous Sys Num [dst]:;
+	DBYT 0 0 90 c2 Src Mask:;
+	DBYT 0 0 90 c2 Dst Mask:;
+	HWRD 0 0 90 c2 Flags:;
+	IPLG 0 0 90 c2 Router Sc:;
+	LABL 0 0 00 b8;
+	TRTS;
+
+// -------------------------------------------------------------------------------------
+
+void Cisco::Netflow::v8;
+	LABL 0 0 00 b1 Cisco Netflow - version 8;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 3 90 c2 Count:;
+	DLNG 0 0 90 c2 SysUptime:;
+	DLNG 0 0 90 c2 UNIX Seconds:;
+	DLNG 0 0 90 c2 UNIX NSeconds:;
+	DLNG 0 0 90 c2 Flow Sequence:;
+	DBYT 0 0 90 c2 Engine Type:;
+	DBYT 0 0 90 c2 Engine ID:;
+	DBYT 0 0 90 c2 Aggregation:;
+	DBYT 0 0 90 c2 Agg Vers:;
+	HLNG 0 0 90 c2 Reserved:;
+	g[4] = 1;
+	//
+	//while (g[3] > 0)
+	//{
+	//	Cisco::Netflow::v8::FlowRecord;
+	//	g[3] -= 1;
+	//	g[4] += 1;
+	//}
+	//
+	TRTS;
+
+void Cisco::Netflow::v8::FlowRecord;
+	DGLB 0 4 7 b7 Flow Record - ;
+
+// ------------------------------UDP Ports ----------------------------------------------
+str# UDP::Ports_Str;
+32903	|	Cisco::Netflow;
+10445	|	Cisco::Netflow;						//to outline later
+2055	|	Cisco::Netflow;
+9996	|	Cisco::Netflow;
+
+// -----------------------------------------HDR-----------------------------------------
+void Cisco::Netflow::v9;
+	LABL 0 0 00 b1 Cisco Netflow - version 9;
+	DWRD 0 0 90 c2 Version:;
+	DWRD 0 3 90 c2 Count:;						//SUM of Runs through Flows
+	DLNG 0 0 90 c2 System Uptime:;
+	DLNG 0 0 90 c2 UNIX Seconds:;
+	DLNG 0 0 90 c2 Sequence Number:;
+	HLNG 0 0 90 c2 Source ID:;
+	Cisco::Netflow::v9::FlowSetIDCheck;
+	LABL 0 0 00 b8;
+	TRTS;
+// --------------------------------------eof---HDR-----------------------------------------
+
+// -----------------------------------------Check---------------------------------------
+void Cisco::Netflow::v9::FlowSetIDCheck( )
+{
+	l[1] = pw[0]; // FlowSet ID
+	l[2] = pw[2]; // FlowSet Length
+	if ( l[1] == 0x00 )
+	{
+		Cisco::Netflow::v9::FlowSet::Template;
+	}
+	if ( l[1] != 0x00 )
+	{
+		s[1] = 256;
+		DWRD 0 44 90 c2 Flow Set ID:;
+		//LABL 0 0 0 14 data record;
+		DWRD 0 15 90 c2 Flow Set Length:;
+		g[21] -= 4;
+		g[3] -= 1;
+		DGLB( 0, s[1], 0x90, 0xc2, "s1:" );
+		if ( s[1] == 0 )
+		{
+			DUMP( 0, g[21], 0x90, 0xc2, "Flowset:" );
+			LABL( 0, 0, 0, 0x14, "Reason for Dump: no Flowset Template Data to decode. Solution: Start again from template packet");
+		}
+		if ( s[1] != 0 )
+		{
+			while (g[21] > 4)
+				{
+					LABL 0 0 00 b7 Flow;
+					l[60] = s[26];
+					l[61] = 1;
+					Cisco::Netflow::v9::TemplateRun;
+					LABL 0 0 00 c8;
+				}
+				if (g[21] < 4)
+				{
+					DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+				}
+		}
+		if ( s[49] != 0 )
+		{
+			while (g[21] > 4)
+				{
+					LABL 0 0 00 b7 Flow;
+					l[60] = s[26];
+					l[61] = 1;
+					Cisco::Netflow::v9::Template2Run;
+					LABL 0 0 00 c8;
+				}
+				if (g[21] < 4)
+				{
+					DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+				}
+		}
+	}
+	
+}
+
+// -------------------------------------eof Check------------------------------------------
+
+void Cisco::Netflow::v9::FlowSet::Template( )
+{
+	//Template ID to save to == S[24]
+	LABL 0 0 0 b7 template flow record;
+	DWRD 0 0 90 c2 FlowSet ID:;
+		LABL 0 0 0 14 template record;
+		DWRD 0 6 90 c2 Length:;
+		DWRD( 0, s[24], 0x90, 0xc2, "Template ID:");
+		DWRD 0 43 90 c2 Field Count:;
+		// save field count in s[26]
+		s[26] = l[3];
+		l[20] = 1;
+		g[3] -= 1;
+		g[6] -= 8;
+		while (l[3] > 0)
+		{
+			LABL 0 0 00 c9 Field;
+			DWRD 0 41 90 c2 Type:;
+			CST# 0 41 00 14 Cisco::Netflow::v9::FieldType_Str;
+			DWRD 0 45 90 c2 Length:;
+			// to save the TLV Values in s[1] to s[22]
+			if (l[20] == 1)		{	s[1] = l[1];	SHFL(16,s[1]);	s[1] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 2)		{	s[2] = l[1];	SHFL(16,s[2]);	s[2] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 3)		{	s[3] = l[1];	SHFL(16,s[3]);	s[3] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 4)		{	s[4] = l[1];	SHFL(16,s[4]);	s[4] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 5)		{	s[5] = l[1];	SHFL(16,s[5]);	s[5] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 6)		{	s[6] = l[1];	SHFL(16,s[6]);	s[6] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 7)		{	s[7] = l[1];	SHFL(16,s[7]);	s[7] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 8)		{	s[8] = l[1];	SHFL(16,s[8]);	s[8] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 9)		{	s[9] = l[1];	SHFL(16,s[9]);	s[9] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 10)	{	s[10] = l[1];	SHFL(16,s[10]);	s[10] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 11)	{	s[11] = l[1];	SHFL(16,s[11]);	s[11] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 12)	{	s[12] = l[1];	SHFL(16,s[12]);	s[12] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 13)	{	s[13] = l[1];	SHFL(16,s[13]);	s[13] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 14)	{	s[14] = l[1];	SHFL(16,s[14]);	s[14] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 15)	{	s[15] = l[1];	SHFL(16,s[15]);	s[15] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 16)	{	s[16] = l[1];	SHFL(16,s[16]);	s[16] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 17)	{	s[17] = l[1];	SHFL(16,s[17]);	s[17] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 18)	{	s[18] = l[1];	SHFL(16,s[18]);	s[18] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 19)	{	s[19] = l[1];	SHFL(16,s[19]);	s[19] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 20)	{	s[20] = l[1];	SHFL(16,s[20]);	s[20] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 21)	{	s[21] = l[1];	SHFL(16,s[21]);	s[21] += l[5];	s[23]	+= l[5];	}
+			if (l[20] == 22)	{	s[22] = l[1];	SHFL(16,s[22]);	s[22] += l[5];	s[23]	+= l[5];	}
+			LABL 0 0 00 c8;
+			g[6] -= 4;
+			l[3] -= 1;
+			l[20] += 1;
+		}
+		LABL 0 0 00 c8;
+		//secondary template
+		l[6] = pw[0]; // FlowSet ID
+		if ( l [6] == 0)
+		{
+			LABL 0 0 0 b7 template flow record;
+			DWRD 0 0 90 c2 FlowSet ID:;
+			LABL 0 0 0 14 template record;
+			DWRD 0 6 90 c2 Length:;
+			DWRD( 0, s[49], 0x90, 0xc2, "Template ID:");
+			DWRD( 0x00, l[48], 0x90, 0xc2, "Field Count:");
+			// save field count in s[52]
+			s[52]  = l[48];
+			l[47] = 1;
+			g[3] -= 1;
+			g[6] -= 8;
+			while (l[48] > 0)
+			{
+				
+				LABL 0 0 00 c9 Field;
+				DWRD 0 41 90 c2 Type:;
+				CST# 0 41 00 14 Cisco::Netflow::v9::FieldType_Str;
+				DWRD 0 45 90 c2 Length:;
+				g[21] -= 4;
+				// to save the TLV Values in s[1] to s[22]
+				if (l[47] == 1)		{	s[27] = l[1];	SHFL(16,s[27]);	s[27] += l[5];	s[50] += l[5];	}
+				if (l[47] == 2)		{	s[28] = l[1];	SHFL(16,s[28]);	s[28] += l[5];	s[50] += l[5];	}
+				if (l[47] == 3)		{	s[29] = l[1];	SHFL(16,s[29]);	s[29] += l[5];	s[50] += l[5];	}
+				if (l[47] == 4)		{	s[30] = l[1];	SHFL(16,s[30]);	s[30] += l[5];	s[50] += l[5];	}
+				if (l[47] == 5)		{	s[31] = l[1];	SHFL(16,s[31]);	s[31] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 6)		{	s[32] = l[1];	SHFL(16,s[32]);	s[32] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 7)		{	s[33] = l[1];	SHFL(16,s[33]);	s[33] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 8)		{	s[34] = l[1];	SHFL(16,s[34]);	s[34] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 9)		{	s[35] = l[1];	SHFL(16,s[35]);	s[35] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 10)	{	s[36] = l[1];	SHFL(16,s[36]);	s[36] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 11)	{	s[37] = l[1];	SHFL(16,s[37]);	s[37] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 12)	{	s[38] = l[1];	SHFL(16,s[38]);	s[38] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 13)	{	s[39] = l[1];	SHFL(16,s[39]);	s[39] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 14)	{	s[40] = l[1];	SHFL(16,s[40]);	s[40] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 15)	{	s[41] = l[1];	SHFL(16,s[41]);	s[41] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 16)	{	s[42] = l[1];	SHFL(16,s[42]);	s[42] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 17)	{	s[43] = l[1];	SHFL(16,s[43]);	s[43] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 18)	{	s[44] = l[1];	SHFL(16,s[44]);	s[44] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 19)	{	s[45] = l[1];	SHFL(16,s[45]);	s[45] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 20)	{	s[46] = l[1];	SHFL(16,s[46]);	s[46] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 21)	{	s[47] = l[1];	SHFL(16,s[47]);	s[47] += l[5];	s[50]	+= l[5];	}
+				if (l[47] == 22)	{	s[48] = l[1];	SHFL(16,s[48]);	s[48] += l[5];	s[50]	+= l[5];	}
+				LABL 0 0 00 c8;
+				g[6] -= 4;
+				l[47] += 1;
+				l[48] -= 1;
+			}
+			LABL 0 0 00 c8;
+			l[9] = pw[0];
+		}
+		l[6] = pw[0]; // FlowSet ID
+		if ( l [6] != 0)
+		{
+			if ( l[6] == s[24])
+			{
+				LABL 0 0 00 b7 FlowSet;
+				DWRD 0 44 90 c2 Flow Set ID:;
+				DWRD( 0, g[21], 0x90, 0xc2, "Flow Set Length:");
+				DGLB( 0, s[26], 0x90, 0xc2, "Flow Set Field Count:");
+				g[21] -= 4;
+				g[3] -= 1;
+				while (g[21] > 4)
+				{
+					LABL 0 0 00 b7 Flow;
+					l[60] = s[26];
+					l[61] = 1;
+					Cisco::Netflow::v9::TemplateRun;
+					LABL 0 0 00 c8;
+				}
+				if (g[21] < 4)
+				{
+					DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+					g[21] -= g[21];
+				}
+			}
+			if ( l[6] != s[24])
+			{
+				LABL 0 0 0 b7 template record;
+				DWRD( 0, s[49], 0x90, 0xc2, "Template ID:");
+				DWRD( 0x00, l[48], 0x90, 0xc2, "Field Count:");
+				// save field count in s[52]
+				s[52]  = l[48];
+				l[47] = 1;
+				g[3] -= 1;
+				g[6] -= 4;
+				while (l[48] > 0)
+				{
+					
+					LABL 0 0 00 c9 Field;
+					DWRD 0 41 90 c2 Type:;
+					CST# 0 41 00 14 Cisco::Netflow::v9::FieldType_Str;
+					DWRD 0 45 90 c2 Length:;
+					g[21] -= 4;
+					// to save the TLV Values in s[1] to s[22]
+					if (l[47] == 1)		{	s[27] = l[1];	SHFL(16,s[27]);	s[27] += l[5];	s[50] += l[5];	}
+					if (l[47] == 2)		{	s[28] = l[1];	SHFL(16,s[28]);	s[28] += l[5];	s[50] += l[5];	}
+					if (l[47] == 3)		{	s[29] = l[1];	SHFL(16,s[29]);	s[29] += l[5];	s[50] += l[5];	}
+					if (l[47] == 4)		{	s[30] = l[1];	SHFL(16,s[30]);	s[30] += l[5];	s[50] += l[5];	}
+					if (l[47] == 5)		{	s[31] = l[1];	SHFL(16,s[31]);	s[31] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 6)		{	s[32] = l[1];	SHFL(16,s[32]);	s[32] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 7)		{	s[33] = l[1];	SHFL(16,s[33]);	s[33] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 8)		{	s[34] = l[1];	SHFL(16,s[34]);	s[34] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 9)		{	s[35] = l[1];	SHFL(16,s[35]);	s[35] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 10)	{	s[36] = l[1];	SHFL(16,s[36]);	s[36] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 11)	{	s[37] = l[1];	SHFL(16,s[37]);	s[37] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 12)	{	s[38] = l[1];	SHFL(16,s[38]);	s[38] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 13)	{	s[39] = l[1];	SHFL(16,s[39]);	s[39] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 14)	{	s[40] = l[1];	SHFL(16,s[40]);	s[40] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 15)	{	s[41] = l[1];	SHFL(16,s[41]);	s[41] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 16)	{	s[42] = l[1];	SHFL(16,s[42]);	s[42] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 17)	{	s[43] = l[1];	SHFL(16,s[43]);	s[43] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 18)	{	s[44] = l[1];	SHFL(16,s[44]);	s[44] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 19)	{	s[45] = l[1];	SHFL(16,s[45]);	s[45] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 20)	{	s[46] = l[1];	SHFL(16,s[46]);	s[46] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 21)	{	s[47] = l[1];	SHFL(16,s[47]);	s[47] += l[5];	s[50]	+= l[5];	}
+					if (l[47] == 22)	{	s[48] = l[1];	SHFL(16,s[48]);	s[48] += l[5];	s[50]	+= l[5];	}
+					LABL 0 0 00 c8;
+					g[6] -= 4;
+					l[47] += 1;
+					l[48] -= 1;
+				}
+				LABL 0 0 00 c8;
+				l[9] = pw[0]; // FlowSet ID
+				if ( l[9] == s[24])
+				{
+					LABL 0 0 00 b7 FlowSet;
+					DWRD 0 44 90 c2 Flow Set ID:;
+					DWRD( 0, g[21], 0x90, 0xc2, "Flow Set Length:");
+					DGLB( 0, s[26], 0x90, 0xc2, "Field Count:");
+					g[21] -= 4;
+					g[3] -= 1;
+					 while(g[21] > 4)
+					{
+						LABL 0 0 00 b7 Flow;
+						//DGLB( 0, s[23], 0x90, 0xc2, "s23 stored length:");
+						//DUMP( 0, s[23], 0x90, 0xc2, "Flow Set Dump:");
+						//g[21] -= s[23];
+						Cisco::Netflow::v9::TemplateRun;
+						LABL 0 0 00 c8;
+					} 
+					if (g[21] < 4)
+					{
+						DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+						g[21] -= g[21];
+					}
+				
+				}
+				if ( l[9] == s[49])
+				{
+					LABL 0 0 00 b7 FlowSet;
+					DWRD 0 44 90 c2 Flow Set ID:;
+					DWRD( 0, g[21], 0x90, 0xc2, "Flow Set Length:");
+					g[21] -= 4;
+					g[3] -= 1;
+					while (g[21] > 4)
+					 {
+						LABL 0 0 00 b7 Flow;
+						l[60] = s[26];
+						l[61] = 1;
+						Cisco::Netflow::v9::Template2Run;
+						LABL 0 0 00 c8;
+					 }
+					if (g[21] < 4)
+					{
+						DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+						g[21] -= g[21];
+					}
+				}
+				LABL 0 00 00 b8;
+			}
+			
+			l[6] = pw[0];
+			if ( l[6] == s[49])
+			{
+					LABL 0 0 00 b7 FlowSet;
+					DWRD 0 44 90 c2 Flow Set ID:;
+					DWRD( 0, g[21], 0x90, 0xc2, "Flow Set Length:");
+					DGLB( 0, s[52], 0x90, 0xc2, "Field Count:");
+					g[21] -= 4;
+					g[3] -= 1;
+					 while (g[21] > 4)
+					{
+						LABL 0 0 00 b7 Flow;
+						Cisco::Netflow::v9::Template2Run;
+						LABL 0 0 00 c8;
+					} 
+					if (g[21] < 4)
+					{
+						DUMP( 0, g[21], 0x90, 0xc2, "Padding:");
+						g[21] -= g[21];
+					}
+			}
+		}
+}
+
+void Cisco::Netflow::v9::TLVCHECK( )
+{
+	CST#( 0x00, g[23], 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Str );
+	DUMP( 0x00, g[22], 0x90, 0x22, );
+}
+
+void Cisco::Netflow::v9::TemplateRun( )
+{
+		g[33] = s[26];	g[34] = 1;
+		while(g[33] != 0)
+		{
+			g[33] -= 1;
+			// DGLB( 0, g[33], 0x90, 0xc2, "g33:");
+			// DGLB( 0, g[21], 0x90, 0xc2, "g321:");
+			if (g[34] == 1)
+			{
+				l[2] = s[1];			SHFR(16,l[2]);	l[3] = s[1];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 2)
+			{
+				l[2] = s[2];			SHFR(16,l[2]);	l[3] = s[2];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 3)
+			{
+				l[2] = s[3];			SHFR(16,l[2]);	l[3] = s[3];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 4)
+			{
+				l[2] = s[4];			SHFR(16,l[2]);	l[3] = s[4];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 5)
+			{
+				l[2] = s[5];			SHFR(16,l[2]);	l[3] = s[5];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 6)
+			{
+				l[2] = s[6];			SHFR(16,l[2]);	l[3] = s[6];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4]; g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 7)
+			{
+				l[2] = s[7];			SHFR(16,l[2]);	l[3] = s[7];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 8)
+			{
+				l[2] = s[8];			SHFR(16,l[2]);	l[3] = s[8];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 9)
+			{
+				l[2] = s[9];			SHFR(16,l[2]);	l[3] = s[9];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 10)
+			{
+				l[2] = s[10];			SHFR(16,l[2]);	l[3] = s[10];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 11)
+			{
+				l[2] = s[11];			SHFR(16,l[2]);	l[3] = s[11];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 12)
+			{
+				l[2] = s[12];			SHFR(16,l[2]);	l[3] = s[12];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 13)
+			{
+				l[2] = s[13];			SHFR(16,l[2]);	l[3] = s[13];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 14)
+			{
+				l[2] = s[14];			SHFR(16,l[2]);	l[3] = s[14];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 15)
+			{
+				l[2] = s[15];			SHFR(16,l[2]);	l[3] = s[15];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 16)
+			{
+				l[2] = s[16];			SHFR(16,l[2]);	l[3] = s[16];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 17)
+			{
+				l[2] = s[17];			SHFR(16,l[2]);	l[3] = s[17];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 18)
+			{
+				l[2] = s[18];			SHFR(16,l[2]);	l[3] = s[18];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= g[22];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 19)
+			{
+				l[2] = s[19];			SHFR(16,l[2]);	l[3] = s[19];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= g[22];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 20)
+			{
+				l[2] = s[20];			SHFR(16,l[2]);	l[3] = s[20];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 21)
+			{
+				l[2] = s[21];			SHFR(16,l[2]);	l[3] = s[21];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+			if (g[34] == 22)
+			{
+				l[2] = s[22];			SHFR(16,l[2]);	l[3] = s[22];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+			}
+		g[34] += 1;
+		
+		}
+
+}
+
+void Cisco::Netflow::v9::Template2Run( )
+{
+	g[33] = s[52];
+	g[34] = 1;
+	while(g[33] != 0)
+	{
+		g[33] -= 1;
+		// DGLB( 0, g[33], 0x90, 0xc2, "g33:");
+		// DGLB( 0, g[34], 0x90, 0xc2, "g34:");
+		// DGLB( 0, g[21], 0x90, 0xc2, "g21:");
+		// l[2]=Type; XLSE( 0, 0 , 0x90, 0xc2, Cisco::Netflow::v9::TLVCHECK );
+		if (g[34] == 1)
+		{
+			l[2] = s[27];	SHFR(16,l[2]);	l[3] = s[27];	l[4] = l[2];	SHFL(16, l[4]);	l[3] -= l[4]; 	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+		}
+		if (g[34] == 2)
+		{
+			l[2] = s[28];	SHFR(16,l[2]);	l[3] = s[28];	l[4] = l[2];	SHFL(16, l[4]);	l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+		}
+		if (g[34] == 3)
+		{
+			l[2] = s[29];	SHFR(16,l[2]);	l[3] = s[29];	l[4] = l[2];	SHFL(16, l[4]);	l[3] -= l[4];	g[22] = l[3];	g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );
+		}
+		if (g[34] == 4)
+		{
+			l[2] = s[30];			SHFR(16,l[2]);	l[3] = s[30];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 5)
+		{
+			l[2] = s[31];			SHFR(16,l[2]); 	l[3] = s[31];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 6)
+		{
+			l[2] = s[32];			SHFR(16,l[2]);	l[3] = s[32];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 7)
+		{
+			l[2] = s[33];			SHFR(16,l[2]);	l[3] = s[33];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 8)
+		{
+			l[2] = s[34];			SHFR(16,l[2]);	l[3] = s[34];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 9)
+		{
+			l[2] = s[35];			SHFR(16,l[2]);	l[3] = s[35];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 10)
+		{
+			l[2] = s[36];			SHFR(16,l[2]);	l[3] = s[36];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 11)
+		{
+			l[2] = s[37];			SHFR(16,l[2]);	l[3] = s[37];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 12)
+		{
+			l[2] = s[38];			SHFR(16,l[2]);	l[3] = s[38];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 13)
+		{
+			l[2] = s[39];			SHFR(16,l[2]);	l[3] = s[39];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 14)
+		{
+			l[2] = s[40];			SHFR(16,l[2]);	l[3] = s[40];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 15)
+		{
+			l[2] = s[41];			SHFR(16,l[2]);	l[3] = s[41];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 16)
+		{
+			l[2] = s[42];			SHFR(16,l[2]);	l[3] = s[42];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 17)
+		{
+			l[2] = s[43];			SHFR(16,l[2]);	l[3] = s[43];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 18)
+		{
+			l[2] = s[44];			SHFR(16,l[2]);	l[3] = s[44];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 19)
+		{
+			l[2] = s[45];			SHFR(16,l[2]);	l[3] = s[45];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 20)
+		{
+			l[2] = s[46];			SHFR(16,l[2]);	l[3] = s[46];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 21)
+		{
+			l[2] = s[47];			SHFR(16,l[2]);	l[3] = s[47];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		if (g[34] == 22)
+		{
+			l[2] = s[48];			SHFR(16,l[2]);	l[3] = s[48];			l[4] = l[2];			SHFL(16, l[4]);			l[3] -= l[4];	g[22] = l[3];			g[21] -= l[3];	g[23] = l[2];	TSB#( 0, l[2] , 0x90, 0xc2, Cisco::Netflow::v9::FieldType_Ldr );	
+		}
+		g[34] += 1;
+	}	
+}
+
+
+// -------------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------------
+void Cisco::Netflow::v9::FieldType_Ldr::IN_BYTES( )
+{
+	// Length = N
+	if ( g[22] == 1 )
+	{
+		DBYT 0 0 90 c2 In Bytes:;
+	}
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 In Bytes:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 In Bytes:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 In Bytes:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "In Bytes:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IN_PKTS( )
+{
+	// Length = N
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 In Packets:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 In Packets:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 In Packets:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "In Packets:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOWS( )
+{
+	// Length = N
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 FLOWS:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 FLOWS:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 FLOWS:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "FLOWS:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::PROTOCOL( )
+{
+	DBYT 0 0 90 c2 Protocol:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SRC_TOS( )
+{
+	HBYT 0 0 90 c2 Src TOS:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::TCP_FLAGS( )
+{
+	BBYT 0 41 90 c2 TCP FLAGS:;
+	CBIT( 7, l[1], 0, 0x14, "C");
+	CLSE( 0,0,0,0x14,".");
+	CBIT( 6, l[1], 0, 0x14, "E");
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 5, l[1], 0, 0x14, "U" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 4, l[1], 0, 0x04, "A" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 3, l[1], 0, 0x04, "P" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 2, l[1], 0, 0x04, "R" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 1, l[1], 0, 0x04, "S" );
+	CLSE( 0,0,0,0x04,".");
+	CBIT( 0, l[1], 0, 0x04, "F" );	
+	CLSE( 0,0,0,0x04,".");
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::L4_SRC_PORT( )
+{
+	DWRD 0 0 90 c2 L4 Src Port:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_SRC_ADDR( )
+{
+	IPLG 0 0 90 c2 IPv4 Src Address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::INPUT_SNMP( ) 
+{
+	// Length = N
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Input SNMP:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Input SNMP:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Output SNMP:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Input SNMP:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::L4_DST_PORT( )
+{
+	DWRD 0 0 90 c2 L4 Dst Port:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_DST_ADDR( )
+{
+	IPLG 0 0 90 c2 IPv4 Dest Address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DST_MASK( )
+{
+	HBYT 0 0 90 c2 DST MASK:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SRC_MASK( )
+{
+	HBYT 0 0 90 c2 SRC MASK:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::OUTPUT_SNMP( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Output SNMP:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Output SNMP:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Output SNMP:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Output SNMP:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_NEXT_HOP( )
+{
+	IPLG 0 0 90 c2 IPv4 Next Hop:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SRC_AS( )
+{
+	if ( g[22] == 1 )
+	{
+		DBYT 0 0 90 c2 SRC_AS:;
+	}
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 SRC_AS:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 SRC_AS:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 SRC_AS:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "SRC_AS:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DST_AS( )
+{
+	if ( g[22] == 1 )
+	{
+		DBYT 0 0 90 c2 DST AS:;
+	}
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 DST AS:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 DST AS:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 DST AS:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "DST AS:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::BGP_IPV4_NEXT_HOP( )
+{
+	IPLG 0 0 90 c2 BGP IPv4 Next Hop:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FIRST_SWITCHED( )
+{
+	DLNG 0 0 90 c2 First Switched:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::LAST_SWITCHED( )
+{
+	DLNG 0 0 90 c2 Last Switched:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::OUT_BYTES( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Out BYTES:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Out BYTES:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Out BYTES:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Out BYTES:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::OUT_PKTS( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Out Packets:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Out Packets:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Out Packets:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Out Packets:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_ID( )
+{
+	DBYT 0 0 90 c2 Sampler ID:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IP_PROTOCOL_VERSION( )
+{
+	DBYT 0 01 90 c2 IP Protocol Version:;
+		CEQU 04 01 00 14 IPv4;
+		CEQU 06 01 00 14 IPv6;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MUL_DST_PKTS( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 IP multicast outgoing packet counter:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 IP multicast outgoing packet counter:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 IP multicast outgoing packet counter:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "IP multicast outgoing packet counter:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MUL_DST_BYTES( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 IP multicast outgoing byte counter:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 IP multicast outgoing byte counter:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 IP multicast outgoing byte counter:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "IP multicast outgoing byte counter:" );
+				}
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MIN_PKT_LNGTH( )
+{
+	DWRD 0 0 90 c2 Minimum IP packet length on incoming packets:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MAX_PKT_LNGTH( )
+{
+	DWRD 0 0 90 c2 Maximum IP packet length on incoming packets:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_SRC_ADDR( )
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 Source Address:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_DST_ADDR( )
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 Destination Address:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_SRC_MASK( )
+{
+	DBYT 0 0 90 c2 Length of the IPv6 source mask:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_DST_MASK( )
+{
+	DBYT 0 0 90 c2 Length of the IPv6 destination mask:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MUL_IGMP_TYPE( )
+{
+	DBYT 0 0 90 c2 IGMP packet type:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SAMPLING_INTERVAL( )
+{
+	DLNG 0 0 90 c2 SAMPLING INTERVAL:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SAMPLING_ALGORITHM( )
+{
+	HBYT 0 01 90 c2 SAMPLING ALGORITHM:;
+		CEQU 01 01 00 14 Deterministic Sampling;
+		CEQU 02 01 00 14 Random Sampling;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOW_ACTIVE_TIMEOUT( )
+{
+	DWRD 0 0 90 c2 Timeout value for active flow entries (in seconds):;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOW_INACTIVE_TIMEOUT( )
+{
+	DWRD 0 0 90 c2 Timeout value for inactive flow entries (in seconds):;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::ENGINE_TYPE( )
+{
+	HBYT 0 01 90 c2 SAMPLING ALGORITHM:;
+		CEQU 00 01 00 14 RP;
+		CEQU 01 01 00 14 VIP/Linecard;
+		CEQU 02 01 00 14 PFC/DFC;
+
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::ENGINE_ID( )
+{
+		DLNG 0 0 90 c2 ID number of the flow switching engine:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Vendor Proprietary:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Vendor Proprietary:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Vendor Proprietary:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Vendor Proprietary:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_TOP_LABEL_TYPE( )
+{
+	HBYT 0 01 90 c2 MPLS Top Label Type:;
+		CEQU 00 01 00 14 UNKNOWN;
+		CEQU 01 01 00 14 TE-MIDPT;
+		CEQU 02 01 00 14 ATOM;
+		CEQU 03 01 00 14 VPN;
+		CEQU 04 01 00 14 BGP;
+		CEQU 05 01 00 14 LDP;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MIN_TTL( )
+{
+	DBYT 0 0 90 c2 Minimum TTL on incoming packets:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MAX_TTL( )
+{
+	DBYT 0 0 90 c2 Maximum TTL on incoming packets:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DST_TOS( )
+{
+	DBYT 0 0 90 c2 Desination Type of Service:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DIRECTION( )
+{
+	DBYT 0 0 90 c2 Direction:;
+		CEQU 00 01 00 14 ingress flow;
+		CEQU 01 01 00 14 egress flow;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS PREFIX LEN( )
+{
+	DBYT 0 0 90 c2  consecutive bits in the MPLS prefix length:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::postipDiffServCodePoint( )
+{
+	DBYT 0 0 90 c2  DSCP coded:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_MODE( )
+{
+	DBYT 0 0 90 c2  algorithm used for sampling data:;
+		CEQU 00 02 00 14 random sampling;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::TOTAL_BYTES_EXP( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Total Bytes Exported:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Total Bytes Exported:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Total Bytes Exported:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Total Bytes Exported:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::TOTAL_PKTS_EXP( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Total Packets Exported:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Total Packets Exported:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Total Packets Exported:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Total Packets Exported:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::TOTAL_FLOWS_EXP( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Total Flows Exported:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Total Flows Exported:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Total Flows Exported:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Total Flows Exported:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_IDENT( )
+{
+	DWRD 0 0 90 c2 IP v4 id field:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SRC_VLAN( )
+{
+	DWRD 0 0 90 c2 Virtual LAN identifier associated with ingress interface:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DST_VLAN( )
+{
+	DWRD 0 0 90 c2 Virtual LAN identifier associated with egress interface:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FRAGMENT_OFFSET( )
+{
+	DWRD 0 0 90 c2 Fragment.- Offset from fragment. Packets:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IN_SRC_MAC( )
+{
+	ETHR 0 0 90 c2 Incoming source MAC address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::OUT_DST_MAC( )
+{
+	ETHR 0 0 90 c2 Outgoing source MAC address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IN_DST_MAC( )
+{
+	ETHR 0 0 90 c2 Incoming source MAC address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::OUT_SRC_MAC( )
+{
+	ETHR 0 0 90 c2 Outgoing source MAC address:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_NEXT_HOP( )
+{
+	IPV6( 0, 0, 0x90, 0xc2, "IPv6 address of the next-hop router:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::BPG_IPV6_NEXT_HOP( )
+{
+	IPV6( 0, 0, 0x90, 0xc2, "Next-hop router in the BGP domain:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_OPTION_HEADERS( )
+{
+	DLNG 0 0 90 c2 IPv6 option headers:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IN_PERMANENT_BYTES( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Running byte counter for a permanent flow:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Running byte counter for a permanent flow:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Running byte counter for a permanent flow:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Running byte counter for a permanent flow:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IN_ PERMANENT_PKTS( )
+{
+	if ( g[22] == 2 )
+	{
+		DWRD 0 0 90 c2 Running packet counter for a permanent flow:;
+	}
+	if ( g[22] == 4 )
+	{
+		DLNG 0 0 90 c2 Running packet counter for a permanent flow:;
+	}
+	if ( g[22] == 8 )
+	{
+		D64B 0 0 90 c2 Running packet counter for a permanent flow:;
+	}
+	if ( g[22] != 1 )
+	{
+		if ( g[22] != 2 )
+		{
+			if ( g[22] != 4 )
+			{	
+				if ( g[22] != 8 )
+				{	
+					CHR#( 0, g[22], 0x90, 0xc2, "Running packet counter for a permanent flow:" );
+				}
+				
+			}
+		}
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::replication factor( )
+{
+	DLNG 0 0 90 c2 Multicast replication factor:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IF_NAME( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "Shortened interface name:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IF_DESC( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "Full interface name:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SAMPLER_NAME( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "Name of the flow sampler:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_TOP_LABEL_IP_ADDR( )
+{
+	DLNG 0 0 90 c2 Forwarding Equivalent Class for MPLS Top Label:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_RANDOM_INTERVAL( )
+{
+	DLNG 0 0 90 c2 Packet interval at which to sample:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_1( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 1:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_2( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 2:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_3( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 3:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_4( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 4:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_5( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 5:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_6( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 6:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_7( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 7:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_8( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 8:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_9( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 9:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_10( )
+{
+	BBIT 18 0 90 c2 MPLS label at position 10:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::MPLS PAL RD( )
+{
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 1:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 2:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 3:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 4:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 5:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 6:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 7:;
+	BBYT 0 0 90 c2 MPLS PAL Route Distinguisher 8:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_SRC_PREFIX( )
+{
+	DLNG 0 0 90 c2 IPv4 source address prefix:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV4_DST_PREFIX( )
+{
+	DLNG 0 0 90 c2 IPv4 destination address prefix:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::SRC TRAFFIC INDEX( )
+{
+	DLNG 0 0 90 c2 BGP Policy Accounting Source Traffic Index:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DST TRAFFIC INDEX( )
+{
+	DLNG 0 0 90 c2 BGP Policy Accounting Destination Traffic Index:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::APPLICATION NAME( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "Name associated with a classification:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::APPLICATION DESCRIPTION( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "Application description:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::DEPRECATED( )
+{
+	CHR#( 0, g[22], 0x90, 0xc2, "DEPRECATED:" );
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::APPLICATION TAG( )
+{
+	BBYT( 0, 0, 0x90, 0xc2, "engine ID:" );
+	while(g[22] > 0)
+	{
+		BBYT( 0, 0, 0x90, 0xc2, "bits of classification:" );
+		g[22] -= 1;
+	}
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::IPV6_FLOW_LABEL( )
+{
+	BBIT 18 0 90 c2 IPv6 flow label:;
+}
+
+void Cisco::Netflow::v9::FieldType_Ldr::ICMP_TYPE( )
+{
+	DWRD 18 0 90 c2 ICMP packet type:;
+}
+
+
+//---------------------------------------------------------------------------------------------------
+str# Cisco::Netflow::v9::FieldType_Str;
+	1	|	IN_BYTES;
+	2	|	IN_PKTS;
+	3	|	FLOWS;
+	4	|	PROTOCOL;
+	5	|	SRC_TOS;
+	6	|	TCP_FLAGS;
+	7	|	L4_SRC_PORT;
+	8	|	IPV4_SRC_ADDR;
+	9	|	SRC_MASK;
+	10	|	INPUT_SNMP;
+	11	|	L4_DST_PORT;
+	12	|	IPV4_DST_ADDR;
+	13	|	DST_MASK;
+	14	|	OUTPUT_SNMP;
+	15	|	IPV4_NEXT_HOP;
+	16	|	SRC_AS;
+	17	|	DST_AS;
+	18	|	BGP_IPV4_NEXT_HOP;
+	19	|	MUL_DST_PKTS;
+	20	|	MUL_DST_BYTES;
+	21	|	LAST_SWITCHED;
+	22	|	FIRST_SWITCHED;
+	23	|	OUT_BYTES;
+	24	|	OUT_PKTS;
+	25	|	MIN_PKT_LNGTH;
+	26	|	MAX_PKT_LNGTH;
+	27	|	IPV6_SRC_ADDR;
+	28	|	IPV6_DST_ADDR;
+	29	|	IPV6_SRC_MASK;
+	30	|	IPV6_DST_MASK;
+	31	|	IPV6_FLOW_LABEL;
+	32	|	ICMP_TYPE;
+	33	|	MUL_IGMP_TYPE;
+	34	|	SAMPLING_INTERVAL;
+	35	|	SAMPLING_ALGORITHM;
+	36	|	FLOW_ACTIVE_TIMEOUT;
+	37	|	FLOW_INACTIVE_TIMEOUT;
+	38	|	ENGINE_TYPE;
+	39	|	ENGINE_ID;
+	40	|	TOTAL_BYTES_EXP;
+	41	|	TOTAL_PKTS_EXP;
+	42	|	TOTAL_FLOWS_EXP;
+	43	|	Vendor Proprietary;
+	44	|	IPV4_SRC_PREFIX;
+	45	|	IPV4_DST_PREFIX;
+	46	|	MPLS_TOP_LABEL_TYPE;
+	47	|	MPLS_TOP_LABEL_IP_ADDR;
+	48	|	FLOW_SAMPLER_ID;
+	49	|	FLOW_SAMPLER_MODE;
+	50	|	FLOW_SAMPLER_RANDOM_INTERVAL;
+	51	|	Vendor Proprietary;
+	52	|	MIN_TTL;
+	53	|	MAX_TTL;
+	54	|	IPV4_IDENT;
+	55	|	DST_TOS;
+	56	|	IN_SRC_MAC;
+	57	|	OUT_DST_MAC;
+	58	|	SRC_VLAN;
+	59	|	DST_VLAN;
+	60	|	IP_PROTOCOL_VERSION;
+	61	|	DIRECTION;
+	62	|	IPV6_NEXT_HOP;
+	63	|	BPG_IPV6_NEXT_HOP;
+	64	|	IPV6_OPTION_HEADERS;
+	65	|	Vendor Proprietary;
+	66	|	Vendor Proprietary;
+	67	|	Vendor Proprietary;
+	68	|	Vendor Proprietary;
+	69	|	Vendor Proprietary;
+	70	|	MPLS_LABEL_1;
+	71	|	MPLS_LABEL_2;
+	72	|	MPLS_LABEL_3;
+	73	|	MPLS_LABEL_4;
+	74	|	MPLS_LABEL_5;
+	75	|	MPLS_LABEL_6;
+	76	|	MPLS_LABEL_7;
+	77	|	MPLS_LABEL_8;
+	78	|	MPLS_LABEL_9;
+	79	|	MPLS_LABEL_10;
+	80	|	IN_DST_MAC;
+	81	|	OUT_SRC_MAC;
+	82	|	IF_NAME;
+	83	|	IF_DESC;
+	84	|	SAMPLER_NAME;
+	85	|	IN_PERMANENT_BYTES;
+	86	|	IN_PERMANENT_PKTS;
+	87	|	Vendor Proprietary;
+	88	|	FRAGMENT_OFFSET;
+	89	|	FORWARDING STATUS;
+	90	|	MPLS PAL RD;
+	91	|	MPLS PREFIX LEN;
+	92	|	SRC TRAFFIC INDEX;
+	93	|	DST TRAFFIC INDEX;
+	94	|	APPLICATION DESCRIPTION;
+	95	|	APPLICATION TAG;
+	96	|	APPLICATION NAME;
+	98	|	postipDiffServCodePoint;
+	99	|	replication factor;
+	100	|	DEPRECATED;
+	102	|	layer2packetSectionOffset;
+	103	|	layer2packetSectionSize;
+	104	|	layer2packetSectionData;
+
+str# Cisco::Netflow::v9::FieldType_Ldr;
+	1	|	Cisco::Netflow::v9::FieldType_Ldr::IN_BYTES;
+	2	|	Cisco::Netflow::v9::FieldType_Ldr::IN_PKTS;
+	3	|	Cisco::Netflow::v9::FieldType_Ldr::FLOWS;
+	4	|	Cisco::Netflow::v9::FieldType_Ldr::PROTOCOL;
+	5	|	Cisco::Netflow::v9::FieldType_Ldr::SRC_TOS;
+	6	|	Cisco::Netflow::v9::FieldType_Ldr::TCP_FLAGS;
+	7	|	Cisco::Netflow::v9::FieldType_Ldr::L4_SRC_PORT;
+	8	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_SRC_ADDR;
+	9	|	Cisco::Netflow::v9::FieldType_Ldr::SRC_MASK;
+	10	|	Cisco::Netflow::v9::FieldType_Ldr::INPUT_SNMP;
+	11	|	Cisco::Netflow::v9::FieldType_Ldr::L4_DST_PORT;
+	12	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_DST_ADDR;
+	13	|	Cisco::Netflow::v9::FieldType_Ldr::DST_MASK;
+	14	|	Cisco::Netflow::v9::FieldType_Ldr::OUTPUT_SNMP;
+	15	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_NEXT_HOP;
+	16	|	Cisco::Netflow::v9::FieldType_Ldr::SRC_AS;
+	17	|	Cisco::Netflow::v9::FieldType_Ldr::DST_AS;
+	18	|	Cisco::Netflow::v9::FieldType_Ldr::BGP_IPV4_NEXT_HOP;
+	19	|	Cisco::Netflow::v9::FieldType_Ldr::MUL_DST_PKTS;
+	20	|	Cisco::Netflow::v9::FieldType_Ldr::MUL_DST_BYTES;
+	21	|	Cisco::Netflow::v9::FieldType_Ldr::LAST_SWITCHED;
+	22	|	Cisco::Netflow::v9::FieldType_Ldr::FIRST_SWITCHED;
+	23	|	Cisco::Netflow::v9::FieldType_Ldr::OUT_BYTES;
+	24	|	Cisco::Netflow::v9::FieldType_Ldr::OUT_PKTS;
+	25	|	Cisco::Netflow::v9::FieldType_Ldr::MIN_PKT_LNGTH;
+	26	|	Cisco::Netflow::v9::FieldType_Ldr::MAX_PKT_LNGTH;
+	27	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_SRC_ADDR;
+	28	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_DST_ADDR;
+	29	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_SRC_MASK;
+	30	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_DST_MASK;
+	31	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_FLOW_LABEL;
+	32	|	Cisco::Netflow::v9::FieldType_Ldr::ICMP_TYPE;
+	33	|	Cisco::Netflow::v9::FieldType_Ldr::MUL_IGMP_TYPE;
+	34	|	Cisco::Netflow::v9::FieldType_Ldr::SAMPLING_INTERVAL;
+	35	|	Cisco::Netflow::v9::FieldType_Ldr::SAMPLING_ALGORITHM;
+	36	|	Cisco::Netflow::v9::FieldType_Ldr::FLOW_ACTIVE_TIMEOUT;
+	37	|	Cisco::Netflow::v9::FieldType_Ldr::FLOW_INACTIVE_TIMEOUT;
+	38	|	Cisco::Netflow::v9::FieldType_Ldr::ENGINE_TYPE;
+	39	|	Cisco::Netflow::v9::FieldType_Ldr::ENGINE_ID;
+	40	|	Cisco::Netflow::v9::FieldType_Ldr::TOTAL_BYTES_EXP;
+	41	|	Cisco::Netflow::v9::FieldType_Ldr::TOTAL_PKTS_EXP;
+	42	|	Cisco::Netflow::v9::FieldType_Ldr::TOTAL_FLOWS_EXP;
+	43	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	44	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_SRC_PREFIX;
+	45	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_DST_PREFIX;
+	46	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_TOP_LABEL_TYPE;
+	47	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_TOP_LABEL_IP_ADDR;
+	48	|	Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_ID;
+	49	|	Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_MODE;
+	50	|	Cisco::Netflow::v9::FieldType_Ldr::FLOW_SAMPLER_RANDOM_INTERVAL;
+	51	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	52	|	Cisco::Netflow::v9::FieldType_Ldr::MIN_TTL;
+	53	|	Cisco::Netflow::v9::FieldType_Ldr::MAX_TTL;
+	54	|	Cisco::Netflow::v9::FieldType_Ldr::IPV4_IDENT;
+	55	|	Cisco::Netflow::v9::FieldType_Ldr::DST_TOS;
+	56	|	Cisco::Netflow::v9::FieldType_Ldr::IN_SRC_MAC;
+	57	|	Cisco::Netflow::v9::FieldType_Ldr::OUT_DST_MAC;
+	58	|	Cisco::Netflow::v9::FieldType_Ldr::SRC_VLAN;
+	59	|	Cisco::Netflow::v9::FieldType_Ldr::DST_VLAN;
+	60	|	Cisco::Netflow::v9::FieldType_Ldr::IP_PROTOCOL_VERSION;
+	61	|	Cisco::Netflow::v9::FieldType_Ldr::DIRECTION;
+	62	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_NEXT_HOP;
+	63	|	Cisco::Netflow::v9::FieldType_Ldr::BPG_IPV6_NEXT_HOP;
+	64	|	Cisco::Netflow::v9::FieldType_Ldr::IPV6_OPTION_HEADERS;
+	65	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	66	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	67	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	68	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	69	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	70	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_1;
+	71	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_2;
+	72	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_3;
+	73	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_4;
+	74	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_5;
+	75	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_6;
+	76	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_7;
+	77	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_8;
+	78	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_9;
+	79	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS_LABEL_10;
+	80	|	Cisco::Netflow::v9::FieldType_Ldr::IN_DST_MAC;
+	81	|	Cisco::Netflow::v9::FieldType_Ldr::OUT_SRC_MAC;
+	82	|	Cisco::Netflow::v9::FieldType_Ldr::IF_NAME;
+	83	|	Cisco::Netflow::v9::FieldType_Ldr::IF_DESC;
+	84	|	Cisco::Netflow::v9::FieldType_Ldr::SAMPLER_NAME;
+	85	|	Cisco::Netflow::v9::FieldType_Ldr::IN_PERMANENT_BYTES;
+	86	|	Cisco::Netflow::v9::FieldType_Ldr::IN_PERMANENT_PKTS;
+	87	|	Cisco::Netflow::v9::FieldType_Ldr::Vendor Proprietary;
+	88	|	Cisco::Netflow::v9::FieldType_Ldr::FRAGMENT_OFFSET;
+	89	|	Cisco::Netflow::v9::FieldType_Ldr::FORWARDING STATUS;
+	90	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS PAL RD;
+	91	|	Cisco::Netflow::v9::FieldType_Ldr::MPLS PREFIX LEN;
+	92	|	Cisco::Netflow::v9::FieldType_Ldr::SRC TRAFFIC INDEX;
+	93	|	Cisco::Netflow::v9::FieldType_Ldr::DST TRAFFIC INDEX;
+	94	|	Cisco::Netflow::v9::FieldType_Ldr::APPLICATION DESCRIPTION;
+	95	|	Cisco::Netflow::v9::FieldType_Ldr::APPLICATION TAG;
+	96	|	Cisco::Netflow::v9::FieldType_Ldr::APPLICATION NAME;
+	98	|	Cisco::Netflow::v9::FieldType_Ldr::postipDiffServCodePoint;
+	99	|	Cisco::Netflow::v9::FieldType_Ldr::replication factor;
+	100	|	Cisco::Netflow::v9::FieldType_Ldr::DEPRECATED;
+	102	|	Cisco::Netflow::v9::FieldType_Ldr::layer2packetSectionOffset;
+	103	|	Cisco::Netflow::v9::FieldType_Ldr::layer2packetSectionSize;
+	104	|	Cisco::Netflow::v9::FieldType_Ldr::layer2packetSectionData; 
+	//--------------------------------------------------------------------------------------------

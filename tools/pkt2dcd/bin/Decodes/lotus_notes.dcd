@@ -1,0 +1,8 @@
+* Lotus Notes
+
+void Lotus_Notes;
+	LABL 0  0 0 b1 Lotus Notes;
+	DUMP 0 10 90 c2 Data:;
+	TRTS;
+
+

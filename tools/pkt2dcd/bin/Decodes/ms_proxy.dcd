@@ -1,0 +1,183 @@
+// MS PROXY PROTOCOL
+
+// si: from what i found, it runs on udp port 1745
+//  the only information that i really have is from ethereal... 
+//  so i'll just take from them
+
+void MS_Proxy()
+{
+	DECR 8;
+	g[5] = pw[0];				// si: grab the source port
+	INCR 8;
+	TNXT -MS_Proxy::Main;
+}
+
+void MS_Proxy::Main()
+{
+	LABL 0 0 00 b1 MS Proxy Protocol;
+	HLNG 40000000 0 90 c2 Client ID:;
+	HLNG 40000000 0 90 c2 Version:;
+	HLNG 40000000 0 90 c2 Server ID:;
+	if (g[5] == 1745)
+	{
+		HBYT 0 0 90 c2 Client Ack:;
+	}
+	if (g[5] != 1745)
+	{
+		HBYT 0 0 90 c2 Server Ack:;
+	}
+	HEX# 3 0 90 c2 Reserved:;
+	DLNG 40000000 1 90 c2 Sequence Number:;
+	HEX# 40000004 0 90 c2 Reserved:;
+	CHR# 4 0 90 c2 RWSP Signature:;
+	HEX# 40000008 0 90 c2 Reserved:;
+	HWRD 0 1 90 c2 Command:;
+	CST# 0 1 00 14 MS_Proxy::Command::List;
+	TST# 0 1 00 14 MS_Proxy::Command::Func;
+	// si: yeah, here is where we should branch off to where the actual information is
+}
+
+
+str# MS_Proxy::Command::List;
+	0x04	| User Info Acknowledge;
+	0x05	| Hello;
+	0x10	| Ack;
+	0x47	| Authentication;
+	0x07	| Resolve;
+	0x0500	| Hello;
+	0x05ff	| Hello 2;
+	0x1000	| Hello Acknowledge;
+	0x1000	| User Info;
+	0x0400	| User Info Acknowledge;
+	0x4700	| Authentication;
+	0x4714	| Authentication Acknowledge;
+	0x4701	| Authentication 2;
+	0x4715	| Authentication 2 Acknowledge;
+	0x4716	| Authentication 2 Acknowledge 2;
+	0x070d	| Resolve;
+	0x070f	| Resolve Acknowledge;
+	0x0704	| Bind;
+	0x0706	| Bind Acknowledge;
+	0x0707	| TCP Bind;
+	0x0708	| TCP Bind Acknowledge;
+	0x0406	| Listen;
+	0x0709	| Bind Info;
+	0x070a	| Bind Info Acknowledge;
+	0x071e	| Connect;
+	0x0703	| Connect Acknowledge;
+	0x0705	| UDP Associate;
+	0x0706	| Bind or Associate Acknowledge;
+	0x070b	| UDP Bind;
+	0x042c	| Connected;
+	0x251e	| Session End;
+
+str# MS_Proxy::Command::Func;
+	0x0400	| MS_Proxy::User_Info_Ack;
+	0x0500	| MS_Proxy::Hello;
+	0x1000	| MS_Proxy::Hello_Ack;
+	0x070d	| MS_Proxy::Resolve;
+	0x070f	| MS_Proxy::Resolve_Ack;
+	0x071e	| MS_Proxy::Connect;
+	0x0703	| MS_Proxy::Connect_Ack;
+
+
+void MS_Proxy::User_Info_Ack()
+{
+	DUMP 0 10 90 c2 Extra Bytes:;
+	TRTS;
+}
+
+void MS_Proxy::Hello()
+{
+	// si: i do NOT know why the amount is 182... sigh...took it off ethereal
+	if (g[16] < 182)
+	{
+		TRTS;
+	}
+	if (g[16] > 182)
+	{
+		INCR b6;
+	}
+	LABL 0 0 0 b7 Hello;
+	CSTR 0 1 90 c2 User Name:;
+	g[1] = pb[0];
+	if (g[1] == 0)
+	{
+		INCR 1;			//si: no idea why this is here...was there supposed to be another string?
+	}
+	CSTR 0 1 90 c2 Application Name:;
+	CSTR 0 1 90 c2 Client Computer Name:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void MS_Proxy::Hello_Ack()
+{
+	if (g[16] < 60)
+	{
+		TRTS;
+	}
+	if (g[16] > 60)
+	{
+		INCR 3c;
+	}
+	LABL 0 0 0 b7 Hello Acknowledge;
+	DWRD 0 1 90 c2 Server Port:;
+	IPLG 0 1 90 c2 Server Address:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void MS_Proxy::Resolve()
+{
+	LABL 0 0 0 b7 Resolve;
+	DBYT 0 1 90 c2 String Length:;
+	INCR 11;
+	CHR# 0 1 90 c2 String:;
+	//INCR 50;
+	//CSTR 0 1 90 c2 Application Name:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void MS_Proxy::Resolve_Ack()
+{
+	LABL 0 0 0 b7 Resolve Acknowledge;
+	DBYT 0 1 90 c2 Address Offset:;
+	g[1] += 13;
+	INCR 0 1;
+	IPLG 0 1 90 c2 Address:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void MS_Proxy::Connect()
+{
+	LABL 0 0 0 b7 Connect;
+	INCR 14;
+	DWRD 0 1 90 c2 Destination Port:;
+	IPLG 0 1 90 c2 Destination Address:;
+	INCR 8;
+	DWRD 0 1 90 c2 Client Port:;
+	INCR 52;
+	CSTR 0 1 90 c2 Application Name:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+void MS_Proxy::Connect_Ack()
+{
+	LABL 0 0 0 b7 Connect Acknowledge;
+	INCR 14;
+	DWRD 0 1 90 c2 Srvr Internal Port:;
+	IPLG 0 1 90 c2 Srvr Internal Address:;
+	INCR a;
+	DWRD 0 1 90 c2 Srvr External Port:;
+	IPLG 0 1 90 c2 Srvr External Address:;
+	INCR 4c;
+	CSTR 0 1 90 c2 Application Name:;
+	LABL 0 0 0 b8;
+	TRTS;
+}
+
+

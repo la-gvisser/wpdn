@@ -1,0 +1,413 @@
+//1905.1 CMDU
+//The EtherType value assigned to 1905.1 CMDU is 0x893a
+//g[30] : TLV Length
+
+
+str# Ether::Branching_3_Str;
+0x893A	|	19051CMDU;
+
+str# EProto::Names_Str;
+0x893A	|	1905.1 CMDU;
+0x88CC	|	IEEE 802.1 bridge discovery message;
+
+void 19051CMDU()
+{
+	LABL( 0, 0, 0, 0xb1, "1905.1 CMDU" );
+	DBYT( 0, l[1], 0x90, 0xc2, "1905.1 CMDU protocol Version:" );
+	HBYT( 0, l[2], 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[3], 0x90, 0xc2, "messageType:" );
+	CST#( 0, l[3], 0, 0x14, 19051CMDU::Messages );
+	DWRD( 0, l[4], 0x90, 0xc2, "message Id :" );
+	BBYT( 0, l[5], 0x90, 0xc2, "fragmentId:" );
+	BBIT( 1, l[6], 0x90, 0xc2, "lastFragmentIndicator:" );
+	BBIT( 1, l[7], 0x90, 0xc2, "relayIndicator:" );
+	BBIT( 6, l[8], 0x90, 0xc2, "reservedField:" );	
+	while (g[16] != 3)
+	{
+		l[10] = pb[0];		
+		l[11] = pw[1];
+		BREM( 0, g[31] );
+		LABL( 0, 0, 0, 0xc7, "1905.1 TLV: " );
+		CST#( 0, l[10], 0, 0x07, 19051CMDU::TLVstr );
+		CLSE( 0, 0, 0, 0x07, "Reserved" );
+		HBYT( 0, l[2], 0x90, 0xc2, "TLVType:" );
+		CST#( 0, l[10], 0, 0x14, 19051CMDU::TLVstr );
+		CLSE( 0, 0, 0, 0x14, "Reserved" );
+		DWRD( 0, g[30], 0x90, 0xc2, "Length:" );
+		
+		if (l[10] != 0)
+		{
+			TSB#( 0, l[10], 0, 0x14, 19051CMDU::TLV );
+			XLSE( 0, l[10], 0, 0x14, 19051CMDU::TLVnod );
+			BREM( 0, l[21] );
+		}
+		if (l[10] == 0)
+		{
+				if (g[30] == 0)
+				{
+					LABL( 0, 0, 0, 0x14, "Correct Length of eom TLV" );
+					LABL( 0, 0, 0, 0xb8 );
+					LABL( 0, 0, 0, 0xb8 );
+					TRTS;
+				}
+				if (g[30] != 0)
+				{
+					LABL( 0, 0, 0, 0x14, "Not Correct Length of eom TLV" );
+					19051CMDU::TLVnod;
+				}
+		}
+		LABL( 0, 0, 0, 0xb8 );
+	}
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+str# 19051CMDU::Messages;
+0x0000 	|	Topology discovery message;
+0x0001 	|	Topology notification message;
+0x0002 	|	Topology query message;
+0x0003 	|	Topology response message;
+0x0004 	|	Vendor specific message;
+0x0005 	|	Link metric query message;
+0x0006 	|	Link metric response message;
+0x0007 	|	AP-autoconfiguration search message;
+0x0008 	|	AP-autoconfiguration response message;
+0x0009 	|	AP-autoconfiguration Wi-Fi simple configuration (WSC) message;
+0x000a 	|	AP-autoconfiguration renew message;
+0x000b 	|	1905.1 push button event notification message;
+0x000c 	|	1905.1 push button join notification message;
+
+str# 19051CMDU::TLVstr;
+0x0000 	|	End of message;
+0x0001 	|	1905.1 ALMAC address type;
+0x0002 	|	MAC address;
+0x0003 	|	Device information type;
+0x0004 	|	Device bridging capability;
+0x0006 	|	List of connected non-1905 neighbor devices;
+0x0007 	|	Information on 1905.1 neighbor device;
+0x0008 	|	Link metric;
+0x0009 	|	Transmitter link metric;
+0x000a 	|	Receiver link metric;
+0x000b	|	Vendor specific;
+0x000c 	|	905.1 link metric result code;
+0x000d	|	SearchedRole;
+0x000e	|	AutoconfigFreqBand;
+0x000f	|	SupportedRole;
+0x0010	|	Supported frequency band;
+0x0011	|	WSC Type;
+0x0012	|	Push button event notification;
+0x0013	|	Push button join notification;
+
+str# 19051CMDU::TLV;
+0x0000 	|	End of message;
+0x0001 	|	19051CMDU::eui48;
+0x0002 	|	19051CMDU::Mac;
+0x0003 	|	19051CMDU::Deviceinformationtype;
+0x0004 	|	19051CMDU::Devicebridgingcapability;
+0x0006 	|	19051CMDU::Non-1905neighbordevicelist;
+0x0007 	|	19051CMDU::1905.1neighbordevice;
+0x0008 	|	19051CMDU::Linkmetricquery;
+0x0009 	|	19051CMDU::1905.1transmitterlinkmetric;
+0x000a 	|	19051CMDU::1905.1receiverlinkmetric;
+0x000b	|	19051CMDU::Vendorspecific;
+0x000c 	|	19051CMDU::1905.1linkmetricresultcode;
+0x000d	|	19051CMDU::SearchedRole;
+0x000e	|	19051CMDU::AutoconfigFreqBand;
+0x000f	|	19051CMDU::SupportedRole;
+0x0010	|	19051CMDU::SupportedFreqBand;
+0x0011	|	19051CMDU::WSC;
+0x0012	|	19051CMDU::Push_Button_Eventnotification;
+0x0013	|	19051CMDU::Push_Button_Joinnotification;
+0x000b	|	19051CMDU::Vendorspecific;
+
+
+void 19051CMDU::Deviceinformationtype()
+{
+	19051CMDU::eui48;
+	DBYT( 0, l[1], 0x90, 0xc2, "Number of local interfaces:" );
+	while (l[1] != 0)
+	{
+		19051CMDU::Mac;	
+		DWRD( 0, l[2], 0x90, 0xc2, "Media type of the local interface:" );
+			CST#( 0, l[2], 0, 0x14, 19051CMDU::Deviceinformationtype::Mediatype );
+			CLSE( 0, 0, 0, 0x14, "reserved" );
+		DBYT( 0, l[3], 0x90, 0xc2, "Number of octets in ensuing field:" );	
+		if (l[3] >= 6)
+		{
+			ETHR 0 0 90 c2 networkMembership:;
+			l[3] -= 6;
+		}
+		if (l[3] >= 1)
+		{
+			BBIT 4 44 90 c2 role:;
+			BBIT 4 0 90 c2 reserved:;
+			l[3] -= 1;
+		}
+		if (l[3] >= 1)
+		{
+			HBYT 0 0 90 c2 apChannelBand:;
+			l[3] -= 1;
+		}
+		if (l[3] >= 1)
+		{
+			HBYT 0 0 90 c2 apChannelCenterFrequencyIndex1:;
+			l[3] -= 1;
+		}
+		if (l[3] >= 1)
+		{
+			HBYT 0 0 90 c2 apChannelCenterFrequencyIndex2:;
+			l[3] -= 1;
+		}
+		l[1] -= 1;
+	}
+}
+
+str# 19051CMDU::Deviceinformationtype::Mediatype;
+0x00000000	|	IEEE 802.3u fast Ethernet;
+0x00000001	|	IEEE 802.3ab gigabit Ethernet;
+0x00010000	|	IEEE 802.11b (2.4 GHz);
+0x00010001	|	IEEE 802.11g (2.4 GHz);
+0x00010002	|	IEEE 802.11a (5 GHz);
+0x00010003	|	IEEE 802.11n (2.4 GHz);
+0x00010004	|	IEEE 802.11n (5 GHz);
+0x00010005	|	IEEE 802.11ac (5 GHz);
+0x00010006	|	IEEE 802.11ad (60 GHz);
+0x00010007	|	IEEE 802.11af (whitespace);
+0x00020000	|	IEEE 1901 wavelet;
+0x00020001	|	IEEE 1901 FFT;
+0x00030000	|	MoCA v1.1;
+0xffffffff	|	Unknown media;
+
+void 19051CMDU::Devicebridgingcapability()
+{	
+	DBYT( 0, l[1], 0x90, 0xc2, "bridging tuples:" );
+	while (l[1] != 0)
+	{
+		DBYT( 0, l[2], 0x90, 0xc2, "Number of MAC addresses in this bridging tuple:" );
+		while (l[2] != 0)
+		{
+			19051CMDU::Mac;
+			l[2] -= 1;
+		}
+		l[1] -= 1;
+	}
+}
+
+void 19051CMDU::Non-1905neighbordevicelist()
+{
+	while (g[30] != 0)
+	{
+		ETHR 0 0 90 c2 MAC address of the local interface:;
+		ETHR 0 0 90 c2 MAC address of the non-1905 neighbor interface:;
+		g[30] -= 12;
+	}
+}
+
+void 19051CMDU::1905.1neighbordevice()
+{
+	while (g[30] != 0)
+	{
+		ETHR 0 0 90 c2 MAC address of the local interface:;
+		ETHR 0 0 90 c2 1905.1 AL MAC address of 1905.1 neighbor:;
+		BBIT( 1, l[1], 0x90, 0xc2, "Existence of IEEE 802.1 bridges:" );
+			CEQU( 0, l[1], 0, 0x14, "no IEEE 802.1 bridges exists" );
+			CEQU( 1, l[1], 0, 0x14, "at least one IEEE 802.1 bridgeexists between this device and the neighbor" );
+		BBIT( 7, l[2], 0x90, 0xc2, "reserved" );
+		g[30] -= 13;
+	}
+}
+
+void 19051CMDU::Linkmetricquery()
+{
+	if (g[30] == 8)
+	{
+		HBYT( 0, l[1], 0x90, 0xc2, "Neighbor type:" );
+			CEQU( 0, l[1], 0, 0x14, "All neighbors" );
+			CEQU( 1, l[1], 0, 0x14, "Specific neighbor " );
+			CLSE( 0, l[1], 0, 0x14, "reserved " );
+		ETHR 0 0 90 c2 1905.1 AL MAC address of a neighbor of the receiving device:;
+		HBYT( 0, l[2], 0x90, 0xc2, "Requested link metric:" );
+			CEQU( 0, l[2], 0, 0x14, "Tx link metrics only" );
+			CEQU( 1, l[2], 0, 0x14, "Rx link metrics only" );
+			CEQU( 2, l[2], 0, 0x14, "Both Tx and Rx link metrics" );
+			CLSE( 0, l[2], 0, 0x14, "reserved " );
+	}
+	if (g[30] != 8)
+	{
+		DUMP( 0, g[30], 0x90, 0xc2, "TLV Data:" );
+	}
+}
+
+void 19051CMDU::1905.1transmitterlinkmetric()
+{
+	while (g[30] != 0)
+	{
+		ETHR 0 0 90 c2 MAC address of the local interface:;
+		ETHR 0 0 90 c2 1905.1 AL MAC address of 1905.1 neighbor:;
+		g[30] -= 12;
+		if (g[30] >= 0)
+		{
+			while (g[30] != 0)
+			{
+				ETHR 0 0 90 c2 MAC address of an interface in the receiving 1905.1 AL:;
+				ETHR 0 0 90 c2 MAC address of a 1905.1 interface in a neighbor 1905.1 device:;
+				HWRD( 0, l[2], 0x90, 0xc2, "intfType:" );
+					CST#( 0, l[2], 0, 0x14, 19051CMDU::Deviceinformationtype::Mediatype );
+					CLSE( 0, 0, 0, 0x14, "reserved" );
+				BBYT( 0, 0, 0x90, 0xc2, "IEEE802.1BridgeFlag:" );
+				DLNG( 0, 0, 0x90, 0xc2, "packetErrors:" );
+				DLNG( 0, 0, 0x90, 0xc2, "transmittedPackets:" );
+				DWRD( 0, 0, 0x90, 0xc2, "macThroughputCapacity:" );
+				DWRD( 0, 0, 0x90, 0xc2, "linkAvailability:" );
+				DWRD( 0, 0, 0x90, 0xc2, "phyRate:" );
+			g[30] -= 29;
+			}
+		}
+	}
+}
+
+void 19051CMDU::1905.1receiverlinkmetric()
+{
+	while (g[30] != 0)
+	{
+		ETHR 0 0 90 c2 1905.1 AL MAC address of the device that transmits the response message:;
+		ETHR 0 0 90 c2 1905.1 AL MAC address of a neighbor of the neighbor:;
+		g[30] -= 12;
+		if (g[30] >= 0)
+		{
+			while (g[30] != 0)
+			{
+				ETHR 0 0 90 c2 MAC address of an interface in the receiving 1905.1 AL:;
+				ETHR 0 0 90 c2 MAC address of a 1905.1 interface in a neighbor 1905.1 device:;
+				HWRD( 0, l[2], 0x90, 0xc2, "intfType:" );
+					CST#( 0, l[2], 0, 0x14, 19051CMDU::Deviceinformationtype::Mediatype );
+					CLSE( 0, 0, 0, 0x14, "reserved" );
+				DLNG( 0, 0, 0x90, 0xc2, "packetErrors:" );
+				DLNG( 0, 0, 0x90, 0xc2, "packetsReceived:" );
+				DBYT( 0, 0, 0x90, 0xc2, "rssi:" );
+			g[30] -= 23;
+			}
+		}
+	}
+}
+
+void 19051CMDU::1905.1linkmetricresultcode()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Result Code:" );
+		CEQU( 1, l[1], 0, 0x14, "Invalid neighbor" );
+		CLSE( 0, l[1], 0, 0x14, "reserved " );
+}
+
+void 19051CMDU::SearchedRole()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Type of Role:" );
+		CEQU( 1, l[1], 0, 0x14, "Registrar" );
+		CLSE( 0, l[1], 0, 0x14, "reserved " );
+}
+
+void 19051CMDU::AutoconfigFreqBand()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "AutoconfigFreqBand:" );
+		CEQU( 0, l[1], 0, 0x14, "802.11 2.4 GHz" );
+		CEQU( 1, l[1], 0, 0x14, "802.11 5 GHz" );
+		CEQU( 2, l[1], 0, 0x14, "802.11 60 GHz" );
+		CLSE( 0, l[1], 0, 0x14, "reserved " );
+}
+
+void 19051CMDU::SupportedRole()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "Type of Role:" );
+		CEQU( 1, l[1], 0, 0x14, "Registrar" );
+		CLSE( 0, l[1], 0, 0x14, "reserved " );
+}
+
+void 19051CMDU::SupportedFreqBand()
+{
+	HBYT( 0, l[1], 0x90, 0xc2, "SupportedFreqBand:" );
+		CEQU( 0, l[1], 0, 0x14, "802.11 2.4 GHz" );
+		CEQU( 1, l[1], 0, 0x14, "802.11 5 GHz" );
+		CEQU( 2, l[1], 0, 0x14, "802.11 60 GHz" );
+		CLSE( 0, l[1], 0, 0x14, "reserved " );
+}
+
+void 19051CMDU::WSC()
+{
+	DUMP( 0, g[30], 0x90, 0xc2, "WSC frame:" );
+	g[30] -= g[30];
+}
+
+
+void 19051CMDU::Push_Button_Eventnotification()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Number of media types:" );
+	if (l[1] != 0)
+	{
+		while (l[3] != 0)
+		{
+			HWRD( 0, l[2], 0x90, 0xc2, "intfType:" );
+				CST#( 0, l[2], 0, 0x14, 19051CMDU::Deviceinformationtype::Mediatype );
+				CLSE( 0, 0, 0, 0x14, "reserved" );
+			DBYT( 0, l[3], 0x90, 0xc2, "Number of media types:" );
+				if (l[3] != 0)
+				{
+					while (l[3] != 0)
+					{
+						HWRD( 0, l[2], 0x90, 0xc2, "Media-specific information:" );
+							CST#( 0, l[2], 0, 0x14, 19051CMDU::Deviceinformationtype::Mediatype );
+							CLSE( 0, 0, 0, 0x14, "reserved" );
+						l[3] -= 1;
+					}
+				}
+		l[1] -= 1;
+		}
+	}
+}
+
+void 19051CMDU::Push_Button_Joinnotification()
+{
+	ETHR 0 0 90 c2 AL ID:;
+	DWRD 0 0 90 c2 MID:;
+	ETHR 0 0 90 c2 MAC address:;
+	ETHR 0 0 90 c2 MAC address:;
+}
+
+void 19051CMDU::Vendorspecific()
+{
+	GLNG 0 41 5 5;
+	HEX# 80000001 0 90 c2 OUI:;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	SHFR 8 41;
+	CST# 0 41 0 14 802_11::OUI_Strings;
+	g[30]  -= 3;
+	19051CMDU::TLVnod;
+}
+
+void 19051CMDU::TLVnod()
+{
+	DUMP( 0, g[30], 0x90, 0xc2, "TLV Data:" );
+}
+
+void 19051CMDU::eui48()
+{
+	ETHR 0 0 90 c9 AL Mac Adress:;
+	DECR 6;
+	GLNG 0 41 5 5;
+	HEX# 80000001 0 90 c2 OUI:;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	SHFR 8 41;
+	CST# 0 41 0 14 802_11::OUI_Strings;
+	GLNG 0 42 5 5;
+	HEX# 80000001 0 90 c2  extension identifier:;
+	HEX# 80000001 0 90 00 -;
+	HEX# 80000001 0 90 00 -;
+	SHFR 8 42;
+	LABL( 0, 0, 0, 0xb8 );
+}
+
+void 19051CMDU::Mac()
+{
+	ETHR 0 0 90 c2 Mac Adress:;
+}
+
+

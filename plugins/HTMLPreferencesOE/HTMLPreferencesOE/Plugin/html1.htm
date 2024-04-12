@@ -1,0 +1,62 @@
+<html>
+<head>
+	<title>HTML Preferences OE</title>
+    <script src="jquery-1.7.2.min.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    	function PutPreferences(inXml) {
+    		var xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+    		xmlDoc.loadXML(inXml);
+    		var xml = xmlDoc;
+
+    		var oForm = document.forms['prefs_form'];
+
+    		var cnt = 0;
+    		var caseid = "-";
+    		var name = "none";
+    		var email = "@blank.com";
+    		var phone = "xxx-xxxx";
+    		$(xml).find('case').each(function() {
+    			var theCase = $(this);
+    			caseid = theCase.attr("id");
+    			name = theCase.find("name").text();
+    			email = theCase.find("email").text();
+    			phone = theCase.find("phone").text();
+    			cnt = cnt + 1;
+    		});
+    		oForm.elements["cnt"].value = cnt;
+    		oForm.elements["caseid"].value = caseid;
+    		oForm.elements["name"].value = name;
+    		oForm.elements["email"].value = email;
+    		oForm.elements["phone"].value = phone;
+    	}
+	</script>
+</head>
+<body>
+<bold>HTML Preferences 3</bold> <br /><br />
+
+<div id="preferences_form">
+<form id="prefs_form" name="preferences" action="">
+  <fieldset>
+      <label for="cnt" id="cnt_label">Count&nbsp;</label>
+      <input type="text" name="cnt" id="cnt" size="10" value="" class="text-input" /><br />
+
+      <label for="caseid" id="caseid_label">Case Id&nbsp;</label>
+      <input type="text" name="caseid" id="caseid" size="10" value="" class="text-input" /><br />
+
+      <label for="name" id="name_label">Name&nbsp;&nbsp;</label>
+      <input type="text" name="name" id="name" size="30" value="" class="text-input" /><br />
+
+      <label for="email" id="email_label">Email&nbsp;</label>
+      <input type="text" name="email" id="email" size="30" value="" class="text-input" /><br />
+
+      <label for="phone" id="phone_label">Phone&nbsp;</label>
+      <input type="text" name="phone" id="phone" size="30" value="" class="text-input" /><br />
+
+      <br />
+	  <img src="wpbanner.jpg" width="236" height="80" border="0" alt="">
+  </fieldset>
+</form>
+</div>
+
+</body>
+</html>

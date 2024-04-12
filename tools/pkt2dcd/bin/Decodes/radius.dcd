@@ -1,0 +1,1423 @@
+// Radius
+// last update: June 2016
+// updated with RADIUS DYNAUTH SERVICE
+
+str# UDP::Ports_Str;
+3799	|	RADIUS::NEW;
+
+str# TCP::Ports_Str;
+3799	|	RADIUS::NEW;
+
+
+void RADIUS::NEW()
+{
+	//check against zeros which is no Radius
+	GBYT 0 41;
+	GBYT 1 42;
+	GBYT 2 43;
+	if (l[1] == 0)
+	{
+		if (l[2] == 0)
+		{
+			if (l[3] == 0)
+			{
+				TRTS;
+			}
+		}
+	}	
+	LABL  0  0 90 c1 Radius - ;
+		GBYT 0 41;
+			CST#  0  41  0 01 RADIUS::PACKETTYPES;
+			CLSE 0 0 0 01 Unknown Packet Type;
+		DBYT  0  41 90 c2 Code:;
+			CST#  0  41  0 14 RADIUS::PACKETTYPES;
+			CLSE 0 0 0 14 Unknown Packet Type;
+		DBYT  0  42 90 c2 Identifier:;
+		DWRD  0  6 90 c2 Length:;
+		HEX# 10  0 90 c2 Authenticator:;
+		g[6] -= 20;
+		//DGLB 0  43 90 c2 Length:;
+		g[19] = 1;
+	while(g[6] > 0)
+	{
+		LABL  0 0  0 c7 Radius Attribute # ;
+		DGLB 0 13 7 7  ;
+		g[19] += 1;
+		LABL( 0, 0, 0, 0x07, " - " );
+		GBYT 0 41;
+			CST#  0  41  0 07 Radius Types;
+		SKIP  1;
+			LABL  0  0  0 07  Unknown Attribute;
+			DBYT  0  44 90 c2 Type:;
+				CST#  0  44  0 14 Radius Types;
+				CLSE 0 0 0 14 Unknown Attribue Type;
+			DBYT  0  1a 90 c2 Length:;
+			BREM 0 c;
+			g[11] = g[26];
+			g[11] -= 2;
+			TSB# 0 44 0 0 Radius Switch;
+			BREM 0 d;
+			//DUMP if no Bytes consumed
+			if ( g[12] == g[13])
+			{
+				BREM 0 c;
+				DUMP 0 b 90 c2 Value:;
+				BREM 0 d;
+			}
+			//DUMP if sth else went wrong
+			//compare Length consumed vs Length it should consume
+			if ( g[12] != g[13])
+			{
+				l[10] = g[12];
+				l[11] = g[13];
+				l[10] -= l[11];
+				l[14] = g[26];
+				l[14] -= 2;
+				//Length is not right compare Length consumed l[10] vs Length it should consume l[14]
+				if ( l[10] != l[14])
+				{
+					//Length consumed is smaller than it should
+					if (l[10] < l[14])
+					{
+						l[14] -= l[10];
+						HEX#( 0, l[14], 0x90, 0xc2, "Value:" );
+						l[10] = 0;
+						l[14] = 0;
+					}
+					//Length consumed is greater than it should (this is very RARE!!)somehow it happens  while using CHR# 
+					if (l[10] > l[14])
+					{
+						LABL 0 0 0 c2 DECODE WENT WRONG, DECREASING BYTE POINTER by ;
+							l[10] -= l[14];
+							DGLB 0 4a 02 02  ;
+							LABL( 0, 0, 0, 0x2, " Bytes!" );
+							DECR( 0 , l[10]);
+							LABL 0 0 0 14 Please send this packet or capture to your SAVVIUS.INC Support to correct that behaviour!;
+						//LABL 0 0 0 b8;
+					}
+				}
+			}
+			g[6] -= g[26];
+		LABL 0 0 0 b8;
+	}
+	LABL 0 0 0 b8;
+}
+
+void Radius Auth;
+	RADIUS::NEW;
+
+void Radius Unknown Code;
+	LABL  0  0  0 A4 -- Stopping --;
+	Dump Data;
+
+void Radius Acc;
+	RADIUS::NEW;
+
+void Radius CHR;
+	CHR# 0 b 90 c2 Value:;
+	TRTS;
+
+//in params: g[b]=length
+
+void Radius EAP;
+	DBYT 0 a 90 c2 Code:;
+	SUBG 1 b;						// track the remaining RADIUS length
+	 CEQU 1 a 0 14 Request;
+	 CEQU 2 a 0 14 Response;
+	 CEQU 3 a 0 14 Success;
+	 CEQU 4 a 0 14 Failure;
+	 CLTE 5 a 0 14 Unknown;
+	TGTE 0 b 0 0 RETURN;
+
+	//adjust length if necessary
+	SLTE b 90;
+	SKIP 1;
+	MOVE 10 8b;
+
+	//if unknown then dump and leave
+	SGTE 5 a;
+	SKIP 2;
+	DUMP 0 b 90 c2 Remaining EAP Data:;
+	TRTS;
+
+	DBYT 0 e 90 c2 ID:;
+	SUBG 1 b;						// track the remaining RADIUS length
+	TGTE 0 b 0 0 RETURN;
+	DWRD 0 c 90 c2 Length:;
+	SUBG 2 b;						// track the remaining RADIUS length
+	TGTE 0 b 0 0 RETURN;
+
+	//make sure g[c] == (g[b]+4)
+	MOVE b 91;
+	ADDG 4 11;
+	SEQU c 91;
+	SKIP 1;
+	 LABL 0 0 0 14 Length is suspicious;
+
+	SUBG 4 c;						// track the remaining EAP length
+
+	// if it is not a Request or Response then return
+	SGTE 3 a;
+	SKIP 2;
+	DUMP 0 b 90 c2 Remaining EAP Data:;
+	TRTS;
+
+	DBYT 0 d 90 c2 Type:;
+	SUBG 1 c;						// track the remaining EAP length
+	SUBG 1 b;						// track the remaining RADIUS length
+	CEQU  1 d 0 14 Identity;
+	CEQU  2 d 0 14 Notification;
+	CEQU  3 d 0 14 Nak (Response only);
+	CEQU  4 d 0 14 MD5-Challenge;
+	CEQU  5 d 0 14 One-Time Password (OTP);
+	CEQU  6 d 0 14 Generic Token Card;
+	CEQU 15 d 0 14 EAP_TTLS;
+	CEQU 19 d 0 14 PEAP;
+	CEQU 2b d 0 14 EAP-FAST;
+	//CLTE 7 d 0 14 Unknown;
+
+	TEQU  1 d 0 0 EAP_Identity;
+	TEQU  2 d 0 0 EAP_Notification;
+	TEQU  3 d 0 0 EAP_Nak;
+	TEQU  4 d 0 0 EAP_MD5-Challenge;
+	TEQU 15 d 0 0 EAP_TTLS;
+	TEQU 19 d 0 0 Radius Peap;
+	TSUB 2b d 0 0 Radius EAP-FAST;
+
+	DUMP 0 b 90 c2 Remaining EAP Data:;
+
+	TRTS;
+
+void EAP_Identity;
+	CHR# 0 c 90 c2 Identity:;
+	TRTS;
+
+void EAP_Notification;
+	if g[0xc] > g[0xb]
+	{
+		DUMP 0 b 90 c2 Data:;
+		LABL 0 0  0 14 Possibly EAP Fragment;
+		TRTS;
+	}
+	HEX# 0 c 90 c2 Data:;
+	TRTS;
+
+void EAP_Nak;
+	DBYT 0 1 90 c2 Auth Type:;
+	 CEQU 2b 1 0 14 EAP-FAST;
+	TRTS;
+
+void EAP_MD5-Challenge;
+	DBYT 0 1 90 c2 Value Size:;
+	SUBG 1 c;						// track the remaining length
+	HEX# 0 1 90 c2 Value:;
+	SUBG 1 8c;						// track the remaining length
+	CHR# 0 c 90 c2 Name:;			//si: this isn't necessarily ascii but usually it will be [rfc 1994]
+	TRTS;
+
+void EAP_TTLS;
+	DUMP 0 b 90 c2 EAP Data:;
+	TRTS;
+
+void Radius Peap;
+	DBIT 4 1 90 c2 Flags:;
+	  CEQU 2 1 0 14 Start;
+	DBIT 4 1 90 c2 PEAP Version:;	
+	TRTS;
+	
+void Radius EAP-FAST;
+	DBIT 4 1 90 c2 Flags:;
+	  CEQU 2 1 0 14 Start;
+	DBIT 4 1 90 c2 FAST Version:;
+	g[0xb] -= 1;
+	TRTS;
+
+void Radius TPGI;					// 81 tunnel private group id
+	l[1] = pb[0];
+	if (l[1] == 1)
+	{
+		HBYT 0 e 90 c2 Tag: ;
+		g[0xb] -= 1;
+		CHR# 0 b 90 c2 Value:;
+		TRTS;
+	}
+	g[0xb] -= 1;		// reduce length by one to hide null term in string
+	CHR# 80000000 b 90 c2 Value:;
+	INCR 1;				//skip null term byte
+	TRTS;
+
+void Radius IP;
+	IPLG 0 e 90 c2 Value:;
+	TRTS;
+	
+void Radius WRD;
+	DLNG 0 e 90 c2 Value:;
+	TRTS;
+	
+void Radius NUM;
+	DLNG 0 e 90 c2 Value:;
+	TRTS;
+
+void Radius HEX;
+	HEX# 0 b 90 c2 Value:;
+	TRTS;
+
+void Radius APWD;
+	HEX# 8 0 90 c2 Challenge:;
+	HEX# 8 0 90 c2 Response:;
+	TRTS;
+
+void Radius AFTR;
+	DBYT 1 0 90 c2 Password Changes:;
+	DECR 1;
+	GBYT 0 e;
+	INCR 1;
+	CEQU 0 e 0 14 not allowed;
+	CNEQ 0 e 0 14 allowed;
+	DBYT 1 0 90 c2 Min Password Length:;
+	TIME 1 e 90 c2 Password Creation Date:;
+	HEX# 4 0 90 c2 Password Expiration Delta:;
+	TIME 1 e 90 c2 Current Radius Time:;
+	TRTS;
+
+void Radius TIME;
+	TIME 0  e 90 c2 Value:;
+	TRTS;
+
+void Radius TUNL;
+	INCR 1;
+	GBIT 18 41;
+	DECR 1;
+	HLNG 0 e 90 c2 Value:;
+	// load the value into a global
+	//  the value is 3 bytes, and we can't do that
+	//  so back up one and then mask off the first 8 bits
+	//MOVE e 8f;
+	//ANDG ff000000 f;
+	//DIVG 01000000 f;
+	DGLB 0 41 4 14 tag = ;
+	LABL 0 0 0 04 , ;
+	ANDG 00ffffff e;	
+	CST# 0 e 0 14 Radius Tunnel;
+	TRTS;
+
+void Radius TMED;
+	INCR 1;
+	GBIT 18 41;
+	DECR 1;
+	HLNG 0 e 90 c2 Value:;
+	//  load the value into a global
+	//  the value is 3 bytes, and we can't do that
+	//  so back up one and then mask off the first 8 bits
+	//MOVE e 8f;
+	//ANDG ff000000 f;
+	//DIVG 01000000 f;
+	DGLB 0 41 4 14 tag = ;
+	LABL 0 0 0 04 , ;
+	ANDG 00ffffff e;	
+	CST# 0 e 0 14 Radius Tunnel Medium;
+	TRTS;
+
+void Radius TSTR;
+	HBYT 0 e 90 c2 Tag: ;
+	g[0xb] -= 1;
+	// the rest is a string
+	Radius CHR;
+	TRTS;
+
+void Radius TSLT;
+	HBYT 0 e 90 c2 Tag: ;
+	HWRD 0 e 90 c2 Salt: ;
+	g[0xb] -= 3;
+	// the rest is a string
+	Radius CHR;
+	TRTS;
+
+void Radius THEX;
+	HLNG 0 e 90 c2 Value:;
+	// load the value into a global
+	//  the value is 3 bytes, and we can't do that
+	//  so back up one and then mask off the first 8 bits
+	MOVE e 8f;
+	ANDG ff000000 f;
+	DIVG 01000000 f;
+	DGLB 0 f 4 14 tag = ;
+	LABL 0 0 0 04 , ;
+	ANDG 00ffffff e;	
+	HGLB 0 e 4 14 value = ;
+	TRTS;
+
+void Radius AZON;
+	DLNG 0 e 90 c2 Value:;
+	CEQU 1 e 4 14 Only allow access to default zone;
+    CEQU 2 e 4 14 Use zone filter inclusively;
+    CEQU 3 e 4 14 Not used;
+	CEQU 4 e 4 14 Use zone filter exclusively;
+	CLSE 0 0 0 14 Not Known;
+	TRTS;
+
+void Radius ECHO;
+	DLNG 0 e 90 c2 Value:;
+	CEQU 0 e 4 14 No Echo;
+	CEQU 1 e 4 14 Echo;
+	TRTS;
+
+void Radius Port Type;
+	DLNG 0 e 90 c2 Value:;
+	CST# 0 e 0 14 RADIUS_Port_Type_str;
+	CLSE 0 e 0 14 Unknown;
+	TRTS;
+	
+str# RADIUS_Port_Type_str;
+0 | Async;
+1 | Sync;
+2 | ISDN Sync;
+3 | ISDN Async V.120;
+4 | ISDN Async V.110;
+5 | Virtual;
+6 | PIAFS;
+7 | HDLC Clear Channel;
+8 | X.25;
+9 | X.75;
+10 | G.3 Fax;
+11 | SDSL - Symmetric DSL;
+12 | ADSL-CAP - Asymmetric DSL, Carrierless Amplitude Phase Modulation;
+13 | ADSL-DMT - Asymmetric DSL, Discrete Multi-Tone;
+14 | IDSL - ISDN Digital Subscriber Line;
+15 | Ethernet;
+16 | xDSL - Digital Subscriber Line of unknown type;
+17 | Cable;
+18 | Wireless - Other;
+19 | Wireless - IEEE 802.11;
+20 | Token-Ring;
+21 | FDDI;
+22 | Wireless - CDMA2000;
+23 | Wireless - UMTS;
+24 | Wireless - 1X-EV;
+25 | IAPP;
+26 | FTTP - Fiber to the Premises;
+27 | Wireless - IEEE 802.16;
+28 | Wireless - IEEE 802.20;
+29 | Wireless - IEEE 802.22;
+30 | PPPoA - PPP over ATM;
+31 | PPPoEoA - PPP over Ethernet over ATM;
+32 | PPPoEoE - PPP over Ethernet over Ethernet;
+33 | PPPoEoVLAN - PPP over Ethernet over VLAN;
+34 | PPPoEoQinQ - PPP over Ethernet over IEEE 802.1QinQ;
+35 | xPON - Passive Optical Network;
+36 | Wireless - XGP;
+37 | WiMAX Pre-Release 8 IWK Function;
+38 | WIMAX-WIFI-IWK: WiMAX WIFI Interworking;
+39 | WIMAX-SFF: Signaling Forwarding Function for LTE/3GPP2;
+40 | WIMAX-HA-LMA: WiMAX HA and or LMA function;
+41 | WIMAX-DHCP: WIMAX DCHP service;
+42 | WIMAX-LBS: WiMAX location based service;
+43 | WIMAX-WVS: WiMAX voice service;
+
+void Radius Loop;
+	LSTS  0 10  0 b1 Radius Attribute #;
+	Radius Skip;
+	DBYT  0  c 90 c2 Type:;
+	CST#  0  c  0 14 Radius Types;
+	SKIP  1;
+	LABL  0  0  0 14 Unknown attribute;
+	DBYT  0  b 90 c2 Length:;
+	g[0xb] -= 2;
+	
+	// if there is no data then skip to next
+	if (g[0xb] > 0)
+	{
+		g[10] = g[16];							// remember current g[16]
+		TSB#  0  c 0 0 Radius Switch;
+		// if (g[16] != g[10]) then skip  (ie if we consumed something)
+		if (g[16] == g[10])
+		{
+			if (g[0xb] > 0)
+			{
+				INCR 0 b;
+			}
+		}
+	}
+
+	// si: check for loops	
+	l[1] += 1;
+	if (l[1] > 100)
+	{
+		TRTS;
+	}
+
+	LSTZ  0 10;
+
+void Radius ST;									// type 6 service type
+	DLNG 0 e 90 c2 Value:;
+	  CEQU 2 e 0 14 Framed-User;
+	TRTS;
+	
+void Radius FP;									// type 7 framed protocol
+	DLNG 0 e 90 c2 Value:;
+	  CEQU 1 e 0 14 PPP;
+	TRTS;
+
+void Radius VS;									// type 26 vendor specific
+	l[1] = pl[0];
+	if (l[1] == 9)
+	{
+		DLNG 0 41 90 c2 Value:;
+		CST# 0 41 0 14 Radius VS Str;
+		DBYT 0 41 90 c2 Type:;
+		CST# 0 41 0 14 Radius VS Cisco Str;
+		INCR 1;   // length byte
+		g[0xb] -= 6;
+	}
+	if (l[1] == 311)
+	{
+		DLNG 0 41 90 c2 Value:;
+		CST# 0 41 0 14 Radius VS Str;
+		DBYT 0 41 90 c2 Type:;
+		CST# 0 41 0 14 Radius VS Microsoft Str;
+		INCR 1;   // length byte
+		g[0xb] -= 6;
+		TSB# 0 41 0 0 Radius VS Microsoft;
+		TRTS;
+	}
+	
+	//CHR# 0 b 90 c2 Value:;
+	TRTS;
+
+str# Radius VS Str;
+	  9	|	Cisco;
+	311	|	Microsoft;
+
+str# Radius VS Microsoft;
+	10	|	Radius CHR;
+	16	|	Radius MS Hex;
+	17	|	Radius MS Hex;
+	26	|	Radius MS Hex;
+	
+str# Radius VS Cisco Str;
+	1	|	Cisco-AVPair;
+	2	|	Cisco-NAS-Port;
+
+str# Radius VS Microsoft Str;
+	10	|	MS-CHAP-Domain;
+	16	|	MS-MPPE-Send-Key;
+	17	|	MS-MPPE-Recv-Key;
+	26	|	MS-CHAP2-Success;
+	
+void Radius MS Hex;
+	HEX# 80000000 b 90 c2 Value:;
+	TRTS;
+
+void Radius TA;									// type 29 termination action
+	DLNG 0 e 90 c2 Value:;
+	  CEQU 0 e 0 14 Default;
+	  CEQU 1 e 0 14 RADIUS-Request;
+	TRTS;
+
+void Radius_Acct_Status_Type;					// type 40		-si: added this for tt6096 ...yeah i know it messes up the flow...sorry!
+	DLNG 0 e 90 c2 Value:;
+	CST# 0 e  0 14 Radius_Acct_Status_Type_String;
+	TRTS;
+
+str# Radius_Acct_Status_Type_String;
+1	|	Start;
+2	|	Stop;
+3	|	Interim-Update;
+4	|	;
+5	|	;
+6	|	;
+7	|	Accounting-On;
+8	|	Accounting-Off;
+9	|	Tunnel-Start;
+10	|	Tunnel-Stop;
+11	|	Tunnel-Reject;
+12	|	Tunnel-Link-Start;
+13	|	Tunnel-Link-Stop;
+14	|	Tunnel-Link-Reject;
+15	|	Failed;
+
+void Radius_Acct_Terminate_Cause;				// type 49		-si: added for tt6598
+	DLNG 0 e 90 c2 Value:;
+	CST# 0 e  0 14 Radius_Acct_Terminate_Cause_String;
+	TRTS;
+
+str# Radius_Acct_Terminate_Cause_String;
+	User Request;
+    Lost Carrier;
+    Lost Service;
+	Idle Timeout;
+	Session Timeout;
+	Admin Reset;
+	Admin Reboot;
+	Port Error;
+	NAS Error;
+	NAS Request;
+	NAS Reboot;
+	Port Unneeded;
+	Port Preempted;
+	Port Suspended;
+	Service Unavailable;
+	Callback;
+	User Error;
+	Host Request;
+
+
+// skip radius types that are 0
+void Radius Skip;
+	GBYT  0  1;						//Type;
+	SEQU  0  1;
+	SKIP  1;
+	TRTS;
+	INCR  2;
+	Radius Skip;
+	
+void Radius TAGCHR()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Tag Indic.:" );
+		CEQU( 0x31, l[1], 0, 0x14, "ASCII '1'" );
+		CEQU( 0x32, l[1], 0, 0x14, "ASCII '2'" );
+		CLSE( 0x32, l[1], 0, 0x14, "unknown" );
+	g[11] -= 1;
+	CHR# 0 b 90 c2 Value:;
+	TRTS;	
+}
+
+void Radius ENDISABLE()
+{
+	DLNG 0 41 90 c2 Value:;
+		CEQU 1 41 0 14 Enabled;
+		CEQU 2 41 0 14 Disabled;
+		CLSE 0 41 0 14 Undefined Value;
+	TRTS;
+
+}
+
+void Radius_VLAN_ID()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Tag Indic.:" );
+		CEQU( 0x31, l[1], 0, 0x14, "tagged" );
+		CEQU( 0x32, l[1], 0, 0x14, "untagged" );
+		CLSE( 0x32, l[1], 0, 0x14, "unknown" );
+	BBIT( 6, l[2], 0x90, 0xc2, "Pad:" );
+	BBIT( 12, l[3], 0x90, 0xc2, "VLANID:" );
+	TRTS;
+}
+
+void Radius_IPv6()
+{
+	IPV6( 0, 0, 0x90, 0xc2, "Value:" );
+	TRTS;
+}
+
+void Radius_D64B()
+{
+	D64B( 0, 0, 0x90, 0xc2, "Value:" );
+	TRTS;
+}
+
+void Radius_Error_Cause_Attribute()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Value:" );
+		CST#( 0x32, l[1], 0, 0x14, Radius_Error_Cause_Attribute_Str );
+		CLSE( 0x32, l[1], 0, 0x14, "unknown" );
+		g[11] -= 2;
+	DUMP( 0, g[11], 0x90, 0xc2, "Cause:" );
+	TRTS;
+}
+
+void Radius_Prefix()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Prefix Length:" );
+	g[11] -= 2;
+		HEX# 0 b 90 c2 Value:;
+	TRTS;
+}
+
+void Radius_Operator_Name()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "Namespace ID:" );
+	g[11] -= 1;
+		if ( l[1] == 0x30)
+		{
+			LABL( 0, 0, 0, 0x14, "TADIG" );
+			CHR#( 0, g[11], 0x90, 0xc2, "Value:" );
+		}
+		if ( l[1] == 0x31)
+		{
+			LABL( 0, 0, 0, 0x14, "REALM" );
+			CHR#( 0, g[11], 0x90, 0xc2, "Value:" );
+		}
+		if ( l[1] == 0x32)
+		{
+			LABL( 0, 0, 0, 0x14, "E212" );
+			CHR#( 0, g[11], 0x90, 0xc2, "Value:" );
+		}
+		if ( l[1] == 0x33)
+		{
+			LABL( 0, 0, 0, 0x14, "ICC" );
+			CHR#( 0, g[11], 0x90, 0xc2, "Value:" );
+		}
+		if ( l[1] >= 0x34)
+		{
+			LABL( 0, 0, 0, 0x14, "Unknwon" );
+			CHR#( 0, g[11], 0x90, 0xc2, "Value:" );
+			
+		}
+		TRTS;
+}
+
+void Radius_Location_Information()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Index:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Code:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Entity:" );
+	D64B( 0, 0, 0x90, 0xc2, "Sighting Time:" );
+	D64B( 0, 0, 0x90, 0xc2, "Time-to-Live:" );
+	g[11] -= 20;
+	HEX#( 0, g[11], 0x90, 0xc2, "Method:" );
+	TRTS;
+}
+
+void Radius_Location_Data()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Index:" );
+	g[11] -= 2;
+	HEX#( 0, g[11], 0x90, 0xc2, "Location:" );
+	TRTS;
+}
+
+void Radius_BLPR()
+{
+	DWRD( 0, l[1], 0x90, 0xc2, "Flags:" );
+	CBIT( 15, l[1], 0x90, 0xc2, "Retransmission Allowed: yes");
+	CLSE( 0, l[1], 0x90, 0xc2, "Retransmission Allowed: no");
+	D64B( 0, 0, 0x90, 0xc2, "Retention Expires:" );
+	g[11] -= 10;
+	CHR#( 0, g[11], 0x90, 0xc2, "Note Well:" );
+	TRTS;
+}
+
+void Radius_FMNGNTP()
+{
+	DLNG 0 41 90 c2 Value:;
+		CST#( 0x32, l[1], 0, 0x14, Radius_FMNGNTP_Str );
+		CLSE( 0x32, l[1], 0, 0x14, "unknown" );
+	TRTS;
+}
+str# Radius_FMNGNTP_Str;
+1	| SNMP;
+2	| Web-based;
+3	| NETCONF;
+4	| FTP;
+5	| TFTP;
+6	| SFTP;
+7	| RCP;
+8	| SCP;
+
+void Radius_MNGTTP()
+{
+	DLNG 0 41 90 c2 Value:;
+		CST#( 0x32, l[1], 0, 0x14, Radius_MNGTTP_Str );
+		CLSE( 0x32, l[1], 0, 0x14, "unknown" );
+	TRTS;
+}
+str# Radius_MNGTTP_Str;
+1	| No-Protection;
+2	| Integrity-Protction;
+3	| Integrity-Confidentiality-Protection;
+
+void Radius_PKMCFGSET()
+{
+	DLNG 0 41 90 c2 Auth Wait Timeout:;
+	DLNG 0 42 90 c2 Reauth Wait Timeout:;
+	DLNG 0 43 90 c2 Auth Grace Time:;
+	DLNG 0 44 90 c2 Op Wait Timeout:;
+	DLNG 0 45 90 c2 Rekey Wait Timeout:;
+	DLNG 0 46 90 c2 TEK Grace Time:;	 
+	DLNG 0 47 90 c2 Auth Rej Wait Timeout:;
+	TRTS;
+}
+
+void Radius_PKMSADISC()
+{
+	DWRD 0 41 90 c2 SAID:;
+	DBYT 0 42 90 c2 SA Type:;
+	HEX#( 3, 0, 0x90, 0xc2, "Cryptosuite:" );
+	TRTS;
+}
+
+void Radius_PKMAUTHKEY()
+{
+	DLNG 0 41 90 c2 Lifetime:;
+	DBYT 0 42 90 c2 Sequence:;
+	g[11] -= 5;
+	HEX#( 0, g[11], 0x90, 0xc2, "KEY:" );
+	TRTS;
+}
+
+void Radius_IPv4HOA()
+{
+	DBYT 0 41 90 c2 Prefix-Len:;
+	g[11] -= 1;
+	HEX#( 0, g[11], 0x90, 0xc2, "Home IPv4 HoA:" );
+	TRTS;
+}
+
+void Radius_IPv6ConfAttr()
+{
+	DBYT( 0, l[1], 0x90, 0xc2, "SubType1:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "SubLen1:" );
+	HLNG( 0, l[3], 0x90, 0xc2, "IPv4MaskLen:" );
+	DBYT( 0, l[4], 0x90, 0xc2, "SubType2:" );
+	DBYT( 0, l[5], 0x90, 0xc2, "SubLen2:" );
+	DBYT( 0, l[6], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[7], 0x90, 0xc2, "6rdPrefixLen:" );
+	IPV6( 0, 0, 0x90, 0xc2, "6rdPrefix:" );
+	DBYT( 0, l[8], 0x90, 0xc2, "SubType3:" );
+	DBYT( 0, l[9], 0x90, 0xc2, "SubLen3:" );
+	IPLG( 0, l[10], 0x90, 0xc2, "6rdBRIPv4Address:" );
+	TRTS;
+}
+
+void Radius_MDID()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	DWRD( 0, l[2], 0x90, 0xc2, "Mobility Domain Identifier:" );
+	TRTS;
+}
+
+void Radius_Venue_Info()
+{
+	HWRD( 0, l[1], 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[2], 0x90, 0xc2, "Venue Group:" );
+	DBYT( 0, l[3], 0x90, 0xc2, "Venue Type:" );
+	TRTS;
+}
+
+void Radius_PairW_Cipher()
+{
+	HEX#( 3, 0, 0x90, 0xc2, "OUI:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "Suite Type:" );
+	TRTS;
+}
+
+void Radius_RF_Band()
+{
+	HEX#( 3, 0, 0x90, 0xc2, "Reserved:" );
+	DBYT( 0, l[1], 0x90, 0xc2, "RF Band:" );
+	TRTS;
+}
+
+str# Radius Switch;
+1	| Radius CHR;					// 1 user name
+2	| Radius CHR;					// 2 user password
+3	| Radius CHR;					// 3 chap password
+4	| Radius IP;					// 4 nas ip address
+5	| Radius NUM;					// 5 nas port
+6	| Radius ST;					// 6 service type
+7	| Radius FP;					// 7 framed protocol
+8	| Radius IP;					// 8 framed ip address
+9	| Radius IP;					// 9 framed ip netmask
+10	| Radius NUM;					// 10 framed routing;
+11	| Radius CHR;					// 11 filter id;
+12	| Radius NUM;					// 12 framed mtu
+13	| Radius NUM;					// 13 framed compression
+14	| Radius IP;					// 14 login ip host
+15	| Radius NUM;					// 15 login service
+16	| Radius NUM;					// 16 login tcp port
+17	| Radius HEX;					// 17 unused
+18	| Radius CHR;					// 18 reply message
+19	| Radius CHR;					// 19 callback number
+20	| Radius CHR;					// 20 callback id
+21	| Radius HEX;					// 21 unused
+22	| Radius CHR;					// 22 framed route
+23	| Radius NUM;					// 23 framed ipx network
+24	| Radius CHR;					// 24 state
+25	| Radius CHR;					// 25 class
+26	| Radius VS;					// 26 vendor specific
+27	| Radius NUM;					// 27 session timeout
+28	| Radius NUM;					// 28 idle timeout
+29	| Radius TA;					// 29 termination action
+30	| Radius CHR;					// 30 called station id
+31	| Radius CHR;					// 31 calling station id
+32	| Radius CHR;					// 32 nas identifier
+33	| Radius CHR;					// 33 proxy state
+34	| Radius CHR;					// 34 login lat service
+35	| Radius CHR;					// 35 login lat node
+36	| Radius CHR;					// 36 login lat group
+37	| Radius NUM;					// 37 framed appletalk link
+38	| Radius NUM;					// 38 framed appletalk network
+39	| Radius CHR;					// 39 framed appletalk zone
+40	| Radius_Acct_Status_Type;		// 40 acct status type
+41	| Radius NUM;					// 41 acct delay time
+42	| Radius NUM;					// 42 acct input octets
+43	| Radius NUM;					// 43 acct output octets
+44	| Radius CHR;					// 44 acct session id
+45	| Radius NUM;					// 45 acct authentic
+46	| Radius NUM;					// 46 acct session time
+47	| Radius NUM;					// 47 acct input packets
+48	| Radius NUM;					// 48 acct output packets
+49	| Radius_Acct_Terminate_Cause;	// 49 acct terminate cause
+50	| Radius CHR;					// 50 acct status type
+51	| Radius NUM;					// 51 acct link count
+52	| Radius NUM;					// 52 acct input gigawords
+53	| Radius NUM;					// 53 acct output gigawords
+54	| Radius NUM;					// 54 unused
+55	| Radius TIME;					// 55 event timestamp
+56	| Radius_VLAN_ID;				// 56 Egress-VLANID
+57	| Radius ENDISABLE;				// 57 Ingress-Filters 
+58	| Radius TAGCHR;				// 58 Egress-VLAN-Name
+59	| Radius HEX;					// 59 User-Priority-Table
+60	| Radius CHR;					// 60 chap challenge
+61	| Radius Port Type;				// 61 nas port type
+62	| Radius NUM;					// 62 port limit
+63	| Radius CHR;					// 63 login lat port
+64	| Radius TUNL;					// 64 tunnel type
+65	| Radius TMED;					// 65 tunnel medium
+66	| Radius TSTR;					// 66 tunnel client endp
+67	| Radius TSTR;					// 67 tunnel server endpt
+68	| Radius HEX;					// 68 Acct-Tunnel-Connection
+69	| Radius TSLT;					// 69 tunnel password
+70	| Radius APWD;					// 70 arap password
+71	| Radius AFTR;					// 71 arap features
+72	| Radius AZON;					// 72 arap zone access
+73	| Radius HEX;					// 73 arap security
+74	| Radius CHR;					// 74 arap security data
+75	| Radius NUM;					// 75 arap password retry
+76	| Radius ECHO;					// 76 prompt
+77	| Radius CHR;					// 77 connect info
+78	| Radius CHR;					// 78 config token
+79	| Radius EAP;					// 79 eap message
+80	| Radius HEX;					// 80 message auth
+81	| Radius TPGI;					// 81 tunnel private group id
+82	| Radius TSTR;					// 82 tunnel assignment id
+83	| Radius THEX;					// 83 tunnel perference
+84	| Radius HEX;					// 84 arap challenge response
+85	| Radius HEX;					// 85 acct interim interval
+86	| Radius NUM;					// 86 acct tunnel packets lost
+87	| Radius CHR;					// 87 nas port id
+88	| Radius CHR;					// 88 framed pool
+89	| Radius CHR;					// 89 Chargeable-User-Identity
+90	| Radius TSTR;					// 90 Tunnel-client-Auth-ID
+91	| Radius TSTR;					// 91 Tunnel-Server-Auth-ID
+92	| Radius CHR;					// 92 NAS-Filter-Rule Attribute
+93  | Radius_HEX;					//Unassigned
+94  | Radius_HEX;					//Originating-Line-Info
+95  | Radius_IPv6;					//NAS-IPv6-Address
+96  | Radius_D64B;					//Framed-Interface-Id
+97  | Radius_HEX;					//Framed-IPv6-Prefix
+98  | Radius_HEX;					//Login-IPv6-Host
+99  | Radius CHR;					//Framed-IPv6-Route
+100  |  Radius CHR;							//Framed-IPv6-Pool
+101  |  Radius_Error_Cause_Attribute;		//Error-Cause Attribute
+102  |  Radius_HEX;							//EAP-Key-Name
+103  |  Radius CHR;							//Digest-Response
+104  |  Radius CHR;					//Digest-Realm
+105  |  Radius CHR;					//Digest-Nonce
+106  |  Radius CHR;					//Digest-Response-Auth
+107  |  Radius CHR;					//Digest-Nextnonce
+108  |  Radius CHR;					//Digest-Method
+109  |  Radius CHR;					//Digest-URI
+110  |  Radius CHR;					//Digest-Qop
+111  |  Radius CHR;					//Digest-Algorithm
+112  |  Radius CHR;					//Digest-Entity-Body-Hash
+113  |  Radius CHR;					//Digest-CNonce
+114  |  Radius CHR;					//Digest-Nonce-Count
+115  |  Radius CHR;					//Digest-Username
+116  |  Radius CHR;					//Digest-Opaque
+117  |  Radius CHR;					//Digest-Auth-Param
+118  |  Radius CHR;					//Digest-AKA-Auts
+119  |  Radius CHR;					//Digest-Domain
+120  |  Radius CHR;					//Digest-Stale
+121  |  Radius CHR;					//Digest-HA1
+122  |  Radius CHR;					//SIP-AOR
+123  |  Radius_Prefix;				//Delegated-IPv6-Prefix
+124  |  Radius_D64B;				//MIP6-Feature-Vector
+125  |  Radius_HEX;					//MIP6-Home-Link-Prefix
+126  |  Radius_Operator_Name;		//Operator-Name
+127  |  Radius_Location_Information;//Location-Information
+128  |  Radius_Location_Data;		//Location-Data
+129  |  Radius_BLPR;				//Basic-Location-Policy-Rules
+130  |  Radius CHR;					//Extended-Location-Policy-Rules
+131  |  Radius NUM;					//Location-Capable
+132  |  Radius NUM;					//Requested-Location-Info
+133  |  Radius_FMNGNTP;				//Framed-Management-Protocol
+134  |  Radius_MNGTTP;				//Management-Transport-Protection
+135  |	Radius CHR;					//Management-Policy-Id
+136  |  Radius NUM;					//Management-Privilege-Level
+137  |  Radius_HEX;					//PKM-SS-Cert
+138  |  Radius_HEX;					//PKM-CA-Cert
+139  |  Radius_PKMCFGSET;			//PKM-Config-Settings
+140  |  Radius_HEX;					//PKM-Cryptosuite-List
+141  |  Radius WRD;					//PKM-SAID
+142  |  Radius_PKMSADISC;			//PKM-SA-Descriptor
+143  |  Radius_PKMAUTHKEY;			//PKM-Auth-Key
+144  |	Radius CHR;					//DS-Lite-Tunnel-Name
+145  |  Radius CHR;						//Mobile-Node-Identifier
+146  |  Radius_HEX;						//Service-Selection
+147  |  Radius_IPv6;					//PMIP6-Home-LMA-IPv6-Address
+148  |  Radius_IPv6;					//PMIP6-Visited-LMA-IPv6-Address
+149  |  Radius IP;						//PMIP6-Home-LMA-IPv4-Address
+150  |  Radius IP;						//PMIP6-Visited-LMA-IPv4-Address
+151  |  Radius_Prefix;					//PMIP6-Home-HN-Prefix
+152  |  Radius_Prefix;					//PMIP6-Visited-HN-Prefix
+153  |  Radius_D64B;					//PMIP6-Home-Interface-ID
+154  |  Radius_D64B;					//PMIP6-Visited-Interface-ID
+155  |  Radius_IPv4HOA;					//PMIP6-Home-IPv4-HoA
+156  |  Radius_IPv4HOA;					//PMIP6-Visited-IPv4-HoA
+157  |  Radius IP;						//PMIP6-Home-DHCP4-Server-Address
+158  |  Radius IP;						//PMIP6-Visited-DHCP4-Server-Address
+159  |  Radius_IPv6;					//PMIP6-Home-DHCP6-Server-Address
+160  |  Radius_IPv6;					//PMIP6-Visited-DHCP6-Server-Address
+161  |  Radius IP;						//PMIP6-Home-IPv4-Gateway
+162  |  Radius IP;						//PMIP6-Visited-IPv4-Gateway
+163  |  Radius_HEX;						//EAP-Lower-Layer
+164  |  Radius_HEX;						//GSS-Acceptor-Service-Name
+165  |  Radius_HEX;						//GSS-Acceptor-Host-Name
+166  |  Radius_HEX;						//GSS-Acceptor-Service-Specifics
+167  |  Radius_HEX;						//GSS-Acceptor-Realm-Name
+168  |  Radius_IPv6;					//Framed-IPv6-Address
+169  |  Radius_IPv6;					//DNS-Server-IPv6-Address
+170  |  Radius_IPv6;					//Route-IPv6-Information
+171  |  Radius_HEX;						//Delegated-IPv6-Prefix-Pool
+172  |  Radius_HEX;						//Stateful-IPv6-Address-Pool
+173  |  Radius_IPv6ConfAttr;			//IPv6-6rd-Configuration
+174  |	Radius CHR;						//Allowed-Called-Station-Id
+175  |  Radius CHR;						//EAP-Peer-Id
+176  |  Radius CHR;						//EAP-Server-Id
+177  |  Radius_MDID;					//Mobility-Domain-Id
+178  |  Radius NUM;						//Preauth-Timeout
+179  |  Radius CHR;						//Network-Id-Name
+180  |  Radius CHR;						//EAPoL-Announcement
+181  |  Radius_HEX;						//WLAN-HESSID
+182  |  Radius_Venue_Info;				//WLAN-Venue-Info
+183  |  Radius CHR;						//WLAN-Venue-Language
+184  |  Radius CHR;						//WLAN-Venue-Name
+185  |  Radius NUM;						//WLAN-Reason-Code
+186  |  Radius_PairW_Cipher;			//WLAN-Pairwise-Cipher
+187  |  Radius_PairW_Cipher;			//WLAN-Group-Cipher
+188  |  Radius_PairW_Cipher;			//WLAN-AKM-Suite
+189  |  Radius_PairW_Cipher;			//WLAN-Group-Mgmt-Cipher
+190  |  Radius_RF_Band;					//WLAN-RF-Band
+191  |  Radius_HEX;					//Unassigned
+192  |  Radius_HEX;					//Experimental Use
+193  |  Radius_HEX;					//Experimental Use
+194  |  Radius_HEX;					//Experimental Use
+195  |  Radius_HEX;					//Experimental Use
+196  |  Radius_HEX;					//Experimental Use
+197  |  Radius_HEX;					//Experimental Use
+198  |  Radius_HEX;					//Experimental Use
+199  |  Radius_HEX;					//Experimental Use
+200  |  Radius_HEX;					//Experimental Use
+201  |  Radius_HEX;					//Experimental Use
+202  |  Radius_HEX;					//Experimental Use
+203  |  Radius_HEX;					//Experimental Use
+204  |  Radius_HEX;					//Experimental Use
+205  |  Radius_HEX;					//Experimental Use
+206  |  Radius_HEX;					//Experimental Use
+207  |  Radius_HEX;					//Experimental Use
+208  |  Radius_HEX;					//Experimental Use
+209  |  Radius_HEX;					//Experimental Use
+210  |  Radius_HEX;					//Experimental Use
+211  |  Radius_HEX;					//Experimental Use
+212  |  Radius_HEX;					//Experimental Use
+213  |  Radius_HEX;					//Experimental Use
+214  |  Radius_HEX;					//Experimental Use
+215  |  Radius_HEX;					//Experimental Use
+216  |  Radius_HEX;					//Experimental Use
+217  |  Radius_HEX;					//Experimental Use
+218  |  Radius_HEX;					//Experimental Use
+219  |  Radius_HEX;					//Experimental Use
+220  |  Radius_HEX;					//Experimental Use
+221  |  Radius_HEX;					//Experimental Use
+222  |  Radius_HEX;					//Experimental Use
+223  |  Radius_HEX;					//Experimental Use
+224  |  Radius_HEX;					//Implementation Specific
+225  |  Radius_HEX;					//Implementation Specific
+226  |  Radius_HEX;					//Implementation Specific
+227  |  Radius_HEX;					//Implementation Specific
+228  |  Radius_HEX;					//Implementation Specific
+229  |  Radius_HEX;					//Implementation Specific
+230  |  Radius_HEX;					//Implementation Specific
+231  |  Radius_HEX;					//Implementation Specific
+232  |  Radius_HEX;					//Implementation Specific
+233  |  Radius_HEX;					//Implementation Specific
+234  |  Radius_HEX;					//Implementation Specific
+235  |  Radius_HEX;					//Implementation Specific
+236  |  Radius_HEX;					//Implementation Specific
+237  |  Radius_HEX;					//Implementation Specific
+238  |  Radius_HEX;					//Implementation Specific
+239  |  Radius_HEX;					//Implementation Specific
+240  |  Radius_HEX;					//Implementation Specific
+241  |  Radius_HEX;					//241  |  Extended-Attribute-1;
+242  |  Radius_HEX;					//242  |  Extended-Attribute-2;
+243  |  Radius_HEX;					//243  |  Extended-Attribute-3;
+244  |  Radius_HEX;					//244  |  Extended-Attribute-4;
+245  |  Radius_HEX;					//245  |  Extended-Attribute-5;
+246  |  Radius_HEX;					//246  |  Extended-Attribute-6;
+247  |  Radius_HEX;					//247  |  Reserved;
+248  |  Radius_HEX;					//248  |  Reserved;
+249  |  Radius_HEX;					//249  |  Reserved;
+250  |  Radius_HEX;					//250  |  Reserved;
+251  |  Radius_HEX;					//251  |  Reserved;
+252  |  Radius_HEX;					//252  |  Reserved;
+253  |  Radius_HEX;					//253  |  Reserved;
+254  |  Radius_HEX;					//254  |  Reserved;
+255  |  Radius_HEX;					//255  |  Reserved;
+
+str# Radius Types;
+1  |  User-Name;
+2  |  User-Password;
+3  |  CHAP-Password;
+4  |  NAS-IP-Address;
+5  |  NAS-Port;
+6  |  Service-Type;
+7  |  Framed-Protocol;
+8  |  Framed-IP-Address;
+9  |  Framed-IP-Netmask;
+10  |  Framed-Routing;
+11  |  Filter-Id;
+12  |  Framed-MTU;
+13  |  Framed-Compression;
+14  |  Login-IP-Host;
+15  |  Login-Service;
+16  |  Login-TCP-Port;
+17  |  Unassigned;
+18  |  Reply-Message;
+19  |  Callback-Number;
+20  |  Callback-Id;
+21  |  Unassigned;
+22  |  Framed-Route;
+23  |  Framed-IPX-Network;
+24  |  State;
+25  |  Class;
+26  |  Vendor-Specific;
+27  |  Session-Timeout;
+28  |  Idle-Timeout;
+29  |  Termination-Action;
+30  |  Called-Station-Id;
+31  |  Calling-Station-Id;
+32  |  NAS-Identifier;
+33  |  Proxy-State;
+34  |  Login-LAT-Service;
+35  |  Login-LAT-Node;
+36  |  Login-LAT-Group;
+37  |  Framed-AppleTalk-Link;
+38  |  Framed-AppleTalk-Network;
+39  |  Framed-AppleTalk-Zone;
+40  |  Acct-Status-Type;
+41  |  Acct-Delay-Time;
+42  |  Acct-Input-Octets;
+43  |  Acct-Output-Octets;
+44  |  Acct-Session-Id;
+45  |  Acct-Authentic;
+46  |  Acct-Session-Time;
+47  |  Acct-Input-Packets;
+48  |  Acct-Output-Packets;
+49  |  Acct-Terminate-Cause;
+50  |  Acct-Multi-Session-Id;
+51  |  Acct-Link-Count;
+52  |  Acct-Input-Gigawords;
+53  |  Acct-Output-Gigawords;
+54  |  Unassigned;
+55  |  Event-Timestamp;
+56  |  Egress-VLANID;
+57  |  Ingress-Filters;
+58  |  Egress-VLAN-Name;
+59  |  User-Priority-Table;
+60  |  CHAP-Challenge;
+61  |  NAS-Port-Type;
+62  |  Port-Limit;
+63  |  Login-LAT-Port;
+64  |  Tunnel-Type;
+65  |  Tunnel-Medium-Type;
+66  |  Tunnel-Client-Endpoint;
+67  |  Tunnel-Server-Endpoint;
+68  |  Acct-Tunnel-Connection;
+69  |  Tunnel-Password;
+70  |  ARAP-Password;
+71  |  ARAP-Features;
+72  |  ARAP-Zone-Access;
+73  |  ARAP-Security;
+74  |  ARAP-Security-Data;
+75  |  Password-Retry;
+76  |  Prompt;
+77  |  Connect-Info;
+78  |  Configuration-Token;
+79  |  EAP-Message;
+80  |  Message-Authenticator;
+81  |  Tunnel-Private-Group-ID;
+82  |  Tunnel-Assignment-ID;
+83  |  Tunnel-Preference;
+84  |  ARAP-Challenge-Response;
+85  |  Acct-Interim-Interval;
+86  |  Acct-Tunnel-Packets-Lost;
+87  |  NAS-Port-Id;
+88  |  Framed-Pool;
+89  |  Chargeable-User-Identity;
+90  |  Tunnel-Client-Auth-ID;
+91  |  Tunnel-Server-Auth-ID;
+92  |  NAS-Filter-Rule;
+93  |  Unassigned;
+94  |  Originating-Line-Info;
+95  |  NAS-IPv6-Address;
+96  |  Framed-Interface-Id;
+97  |  Framed-IPv6-Prefix;
+98  |  Login-IPv6-Host;
+99  |  Framed-IPv6-Route;
+100  |  Framed-IPv6-Pool;
+101  |  Error-Cause Attribute;
+102  |  EAP-Key-Name;
+103  |  Digest-Response;
+104  |  Digest-Realm;
+105  |  Digest-Nonce;
+106  |  Digest-Response-Auth;
+107  |  Digest-Nextnonce;
+108  |  Digest-Method;
+109  |  Digest-URI;
+110  |  Digest-Qop;
+111  |  Digest-Algorithm;
+112  |  Digest-Entity-Body-Hash;
+113  |  Digest-CNonce;
+114  |  Digest-Nonce-Count;
+115  |  Digest-Username;
+116  |  Digest-Opaque;
+117  |  Digest-Auth-Param;
+118  |  Digest-AKA-Auts;
+119  |  Digest-Domain;
+120  |  Digest-Stale;
+121  |  Digest-HA1;
+122  |  SIP-AOR;
+123  |  Delegated-IPv6-Prefix;
+124  |  MIP6-Feature-Vector;
+125  |  MIP6-Home-Link-Prefix;
+126  |  Operator-Name;
+127  |  Location-Information;
+128  |  Location-Data;
+129  |  Basic-Location-Policy-Rules;
+130  |  Extended-Location-Policy-Rules;
+131  |  Location-Capable;
+132  |  Requested-Location-Info;
+133  |  Framed-Management-Protocol;
+134  |  Management-Transport-Protection;
+135  |  Management-Policy-Id;
+136  |  Management-Privilege-Level;
+137  |  PKM-SS-Cert;
+138  |  PKM-CA-Cert;
+139  |  PKM-Config-Settings;
+140  |  PKM-Cryptosuite-List;
+141  |  PKM-SAID;
+142  |  PKM-SA-Descriptor;
+143  |  PKM-Auth-Key;
+144  |  DS-Lite-Tunnel-Name;
+145  |  Mobile-Node-Identifier;
+146  |  Service-Selection;
+147  |  PMIP6-Home-LMA-IPv6-Address;
+148  |  PMIP6-Visited-LMA-IPv6-Address;
+149  |  PMIP6-Home-LMA-IPv4-Address;
+150  |  PMIP6-Visited-LMA-IPv4-Address;
+151  |  PMIP6-Home-HN-Prefix;
+152  |  PMIP6-Visited-HN-Prefix;
+153  |  PMIP6-Home-Interface-ID;
+154  |  PMIP6-Visited-Interface-ID;
+155  |  PMIP6-Home-IPv4-HoA;
+156  |  PMIP6-Visited-IPv4-HoA;
+157  |  PMIP6-Home-DHCP4-Server-Address;
+158  |  PMIP6-Visited-DHCP4-Server-Address;
+159  |  PMIP6-Home-DHCP6-Server-Address;
+160  |  PMIP6-Visited-DHCP6-Server-Address;
+161  |  PMIP6-Home-IPv4-Gateway;
+162  |  PMIP6-Visited-IPv4-Gateway;
+163  |  EAP-Lower-Layer;
+164  |  GSS-Acceptor-Service-Name;
+165  |  GSS-Acceptor-Host-Name;
+166  |  GSS-Acceptor-Service-Specifics;
+167  |  GSS-Acceptor-Realm-Name;
+168  |  Framed-IPv6-Address;
+169  |  DNS-Server-IPv6-Address;
+170  |  Route-IPv6-Information;
+171  |  Delegated-IPv6-Prefix-Pool;
+172  |  Stateful-IPv6-Address-Pool;
+173  |  IPv6-6rd-Configuration;
+174  |  Allowed-Called-Station-Id;
+175  |  EAP-Peer-Id;
+176  |  EAP-Server-Id;
+177  |  Mobility-Domain-Id;
+178  |  Preauth-Timeout;
+179  |  Network-Id-Name;
+180  |  EAPoL-Announcement;
+181  |  WLAN-HESSID;
+182  |  WLAN-Venue-Info;
+183  |  WLAN-Venue-Language;
+184  |  WLAN-Venue-Name;
+185  |  WLAN-Reason-Code;
+186  |  WLAN-Pairwise-Cipher;
+187  |  WLAN-Group-Cipher;
+188  |  WLAN-AKM-Suite;
+189  |  WLAN-Group-Mgmt-Cipher;
+190  |  WLAN-RF-Band;
+191  |  Unassigned;
+192  |  Experimental Use;
+193  |  Experimental Use;
+194  |  Experimental Use;
+195  |  Experimental Use;
+196  |  Experimental Use;
+197  |  Experimental Use;
+198  |  Experimental Use;
+199  |  Experimental Use;
+200  |  Experimental Use;
+201  |  Experimental Use;
+202  |  Experimental Use;
+203  |  Experimental Use;
+204  |  Experimental Use;
+205  |  Experimental Use;
+206  |  Experimental Use;
+207  |  Experimental Use;
+208  |  Experimental Use;
+209  |  Experimental Use;
+210  |  Experimental Use;
+211  |  Experimental Use;
+212  |  Experimental Use;
+213  |  Experimental Use;
+214  |  Experimental Use;
+215  |  Experimental Use;
+216  |  Experimental Use;
+217  |  Experimental Use;
+218  |  Experimental Use;
+219  |  Experimental Use;
+220  |  Experimental Use;
+221  |  Experimental Use;
+222  |  Experimental Use;
+223  |  Experimental Use;
+224  |  Implementation Specific;
+225  |  Implementation Specific;
+226  |  Implementation Specific;
+227  |  Implementation Specific;
+228  |  Implementation Specific;
+229  |  Implementation Specific;
+230  |  Implementation Specific;
+231  |  Implementation Specific;
+232  |  Implementation Specific;
+233  |  Implementation Specific;
+234  |  Implementation Specific;
+235  |  Implementation Specific;
+236  |  Implementation Specific;
+237  |  Implementation Specific;
+238  |  Implementation Specific;
+239  |  Implementation Specific;
+240  |  Implementation Specific;
+241  |  Extended-Attribute-1;
+242  |  Extended-Attribute-2;
+243  |  Extended-Attribute-3;
+244  |  Extended-Attribute-4;
+245  |  Extended-Attribute-5;
+246  |  Extended-Attribute-6;
+247  |  Reserved;
+248  |  Reserved;
+249  |  Reserved;
+250  |  Reserved;
+251  |  Reserved;
+252  |  Reserved;
+253  |  Reserved;
+254  |  Reserved;
+255  |  Reserved;
+
+
+
+str# Radius Tunnel Medium;
+	IPv4 (IP version 4);
+	IPv6 (IP version 6);
+	NSAP;
+	HDLC (8-bit multidrop);
+	BBN 1822;
+	IEEE-802;
+	E.163 (POTS);
+	E.164 (SMDS, Frame Relay, ATM);
+	F.69 (Telex);
+	X.121 (X.25, Frame Relay);
+	IPX;
+	Appletalk;
+	Decnet IV;
+	Banyan Vines;
+	E.164 with NSAP format subaddress;
+
+str# Radius Tunnel;
+	Point-to-Point Tunneling Protocol (PPTP);
+	Layer Two Forwarding (L2F);
+	Layer Two Tunneling Protocol (L2TP);
+	Ascend Tunnel Management Protocol (ATMP);
+	Virtual Tunneling Protocol (VTP);
+	IP Authentication Header in the Tunnel-mode (AH);
+	IP-in-IP Encapsulation (IP-IP);
+	Minimal IP-in-IP Encapsulation (MIN-IP-IP);
+	IP Encapsulating Security Payload in the Tunnel-mode (ESP);
+	Generic Route Encapsulation (GRE);
+	Bay Dial Virtual Services (DVS);
+	IP-in-IP Tunneling;
+	VLAN;
+	
+	
+str# RADIUS::PACKETTYPES; 
+1 | Access-Request;
+2 | Access-Accept;
+3 | Access-Reject;
+4 | Accounting-Request;
+5 | Accounting-Response;
+6 | Accounting-Status (now Interim Accounting);
+7 | Password-Request;
+8 | Password-Ack;
+9 | Password-Reject;
+10 | Accounting-Message;
+11 | Access-Challenge;
+12 | Status-Server (experimental);
+13 | Status-Client (experimental);
+21 | Resource-Free-Request;
+22 | Resource-Free-Response;
+23 | Resource-Query-Request;
+24 | Resource-Query-Response;
+25 | Alternate-Resource-Reclaim-Request;
+26 | NAS-Reboot-Request;
+27 | NAS-Reboot-Response;
+28 | Reserved;
+29 | Next-Passcode;
+30 | New-Pin;
+31 | Terminate-Session;
+32 | Password-Expired;
+33 | Event-Request;
+34 | Event-Response;
+//35-39 | Unassigned;
+40 | Disconnect-Request;
+41 | Disconnect-ACK;
+42 | Disconnect-NAK;
+43 | CoA-Request;
+44 | CoA-ACK;
+45 | CoA-NAK;
+//46-49 | Unassigned;
+50 | IP-Address-Allocate;
+51 | IP-Address-Release;
+//52-249 | Unassigned;
+//250-253 | Experimental Use;
+254 | Reserved;
+255 | Reserved;
+
+str# Radius_Error_Cause_Attribute_Str;
+201 | Residual Session Context Removed;
+202 | Invalid EAP Packet (Ignored);
+401 | Unsupported Attribute;
+402 | Missing Attribute;
+403 | NAS Identification Mismatch;
+404 | Invalid Request;
+405 | Unsupported Service;
+406 | Unsupported Extension;
+407 | Invalid Attribute Value;
+501 | Administratively Prohibited;
+502 | Request Not Routable (Proxy);
+503 | Session Context Not Found;
+504 | Session Context Not Removable;
+505 | Other Proxy Processing Error;
+506 | Resources Unavailable;
+507 | Request Initiated;
+508 | Multiple Session Selection Unsupported;
+509 | Location-Info-Required;
+

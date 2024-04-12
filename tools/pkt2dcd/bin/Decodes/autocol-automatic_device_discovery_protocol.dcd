@@ -1,0 +1,94 @@
+// autocol - AUTOmatic device discovery protoCOL
+//Requests are sent to destination port 44033 (0xAC01)
+
+// globals:
+// g[1] - anything
+// g[a] - command 
+
+void Autocol;
+	LABL 0 0  0 b1 AUTOCOL - Automatic Device Discovery Protocol\Autocol;
+	GBYT 0 a;
+	CHR# 1 0 90 c2 Command:;
+	 CST# 0 a 0 14 Autocol::Command_List;
+	ETHR 0 1 90 c2 Source Address:;
+	ETHR 0 1 90 c2 Destination Address:;
+	TST# 0 a 0 0 Autocol::Comand_List_Func;
+	TRTS;
+
+str# Autocol::Command_List;	
+	0x31 | Discover request;
+	0x32 | Set log host;
+	0x33 | Acknowledgement;
+	0x34 | Discover reply;
+	0x35 | Event;
+	0x36 | Ping;
+	0x37 | Application command;
+	0x38 | Set IP address;
+
+str# Autocol::Comand_List_Func;
+	0x33 | Autocol::Acknowledgement;
+	0x34 | Autocol::Discover_Reply;
+	0x38 | Autocol::Set_IP;
+
+
+void Autocol::Acknowledgement;
+	GBYT 0 1;
+	CHR# 1 0 90 c2 Acknowledged Cmd:;
+	 CEQU 32 1 0 14 Ack by Set Log Host;
+	 CEQU 36 1 0 14 Ack by Ping;
+	 CEQU 38 1 0 14 Ack by Set IP;
+	TRTS;
+
+void Autocol::Discover_Reply;
+	DBYT 0 1 90 c2 Device Type:;
+	 CEQU 1 1 0 14 WLAN_SNIFFER;
+	DBYT 0 1 90 c2 DHCP State:;
+	 CEQU 0 1 0 14 Static IP Address Used;
+	 CEQU 1 1 0 14 Using DHCP;
+	IPLG 0 1 90 c2 IP Address:;
+	IPLG 0 1 90 c2 Subnet Mask:;
+	IPLG 0 1 90 c2 Gateway Address:;
+	CHR# 1e 0 90 c2 Device Type Name:;
+	if (g[0x10] == 60)						//si: this is jacked up... cuz the spec says device name follows the device type name
+	{										//	  but i found that there's a 30 byte padding in there
+	 INCR 1e;
+	}
+	CHR# 1e 0 90 c2 Device Name:;
+	TRTS;
+
+void Autocol::Set_IP;
+	DBYT 0 1 90 c2 DHCP State:;
+	 CEQU 0 1 0 14 Static IP Address Used;
+	 CEQU 1 1 0 14 Using DHCP;
+	IPLG 0 1 90 c2 IP Address:;
+	IPLG 0 1 90 c2 Subnet Mask:;
+	IPLG 0 1 90 c2 Gateway Address:;
+	TRTS;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

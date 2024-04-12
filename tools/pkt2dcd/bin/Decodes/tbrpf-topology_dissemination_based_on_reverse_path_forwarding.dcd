@@ -1,0 +1,262 @@
+// ------------------------------------------------------------------
+// TBRPF - Topology Dissemination Based on Reverse-Path Forwarding
+//	RFC3684 :: udp/tcp port 712
+//
+// globals i use:
+//	g[5] = length
+//	g[6] = body type
+//
+// ------------------------------------------------------------------
+
+
+void TBRPF;
+	TBRPF::Header;
+	TBRPF::Type;
+
+// ------------------------------------------------------------------
+
+void TBRPF::Header;
+	DBIT 4 0 90 c2 Version:;							// version 4
+	g[1] = 4; 
+	BBIT 4 1 90 c2 Flags:;
+	CBIT 3 1 00 d4 .... 1... Length Included;
+	CLSE 0 0 00 d4 .... 0... Length Not Included;
+	CBIT 2 1 00 d4 .... .1.. Router ID Included;
+	CLSE 0 0 00 d4 .... .0.. Router ID Not Included;
+	CBIT 1 0 00 d4 .... ..1. Reserved;
+	CLSE 0 0 00 d4 .... ..0. Reserved;
+	CBIT 0 0 00 d4 .... ...1 Reserved;
+	CLSE 0 0 00 d4 .... ...0 Reserved;
+	HBYT 0 0 90 c2 Reserved:;
+	if (g[1] != 0)
+	{
+		l[1] = g[1];
+		l[1] &= 8;
+		if (l[1] == 1)
+		{
+			DWRD 0 5 90 c2 Length:;
+		}
+		l[1] = g[1];
+		l[1] &= 4;
+		if (l[1] == 1)
+		{
+			IPLG 0 0 90 c2 Router ID:;
+		}
+	}
+	TRTS;
+
+// ------------------------------------------------------------------
+
+void TBRPF::Type;
+	g[6] = pb[0];
+	g[6] &= 0xf;		// si: type is in the last 4 bits
+	
+	TST# 0 6 0 0 TBRPF::Type::FuncList;
+
+str# TBRPF::Type::FuncList;
+	0x0 | TBRPF::Type::Pad1;
+	0x1 | TBRPF::Type::PadN;
+	0x2 | TBRPF::Type::Hello;
+	0x3 | TBRPF::Type::Hello;
+	0x4 | TBRPF::Type::Hello;
+	0x5 | TBRPF::Type::TopologyUpdate;
+	0x6 | TBRPF::Type::TopologyUpdate;
+	0x7 | TBRPF::Type::TopologyUpdate;
+	0x8 | TBRPF::Type::Association;
+	0x9 | TBRPF::Type::Association;
+	0xa | TBRPF::Type::Association::NetworkPrefix;
+
+str# TBRPF::Type::TypeList;
+	0x2 | HELLO - Neighbor Request;
+	0x3 | HELLO - Neighbor Reply;
+	0x4 | HELLO - Neighbor Lost;
+	0x5 | Topology Update - Full;
+	0x6 | Topology Update - Add;
+	0x7 | Topology Update - Delete;
+	0x8 | Interface Association;
+	0x9 | Host Association;
+	0xa | Network Prefix Association;
+
+// ------------------------------------------------------------------
+void TBRPF::Type::Pad1;
+	LABL 0 0 00 b7 Pad1;
+	BBIT 4 0 90 c2 Options:;
+	DBIT 4 6 90 c2 Type:;
+	LABL 0 0 00 14 Pad1;
+	LABL 0 0 00 b8; 
+	TRTS;
+
+// ------------------------------------------------------------------
+void TBRPF::Type::PadN;
+	LABL 0 0 00 b7 PadN;
+	BBIT 4 0 90 c2 Options:;
+	DBIT 4 6 90 c2 Type:;
+	LABL 0 0 00 14 PadN;
+	DBYT 0 1 90 c2 Length:;
+	if (g[1] > 0)
+	{
+		DUMP 0 1 90 c2 Padding:;
+	}
+	LABL 0 0 00 b8; 
+	TRTS;
+
+// ------------------------------------------------------------------
+void TBRPF::Type::Hello;
+	CST# 0 6 00 b7 TBRPF::Type::TypeList;
+	BBIT 4 0 90 c2 Options:;
+	DBIT 4 6 90 c2 Type:;
+	CST# 0 6 00 14 TBRPF::Type::TypeList;
+	DBYT 0 0 90 c2 HELLO Seq Num:;
+	DBIT 4 1 90 c2 Relay Priority:;
+	CEQU 0 1 00 14 Non-Relay Node;
+	CEQU 7 1 00 14 Normal Operation;
+	DBIT c 1 90 c2 Num of Neighbor Addr:;
+	while (g[1] > 0)
+	{
+		IPLG 0 0 90 c2 Neighbor Interface Addr:;
+		g[1] -= 1;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+// ------------------------------------------------------------------
+void TBRPF::Type::TopologyUpdate;
+	CST# 0 6 00 b7 TBRPF::Type::TypeList;
+	BBIT 4 2 90 c9 Options:;
+		CBIT 3 2 00 d4 1... .... Link Metrics Included;
+		CLSE 0 0 00 d4 0... .... Link Metrics Not Included;
+		CBIT 2 2 00 d4 .1.. .... Implicit Deletion Used;
+		CLSE 0 0 00 d4 .0.. .... Implicit Deletion Not Used;
+		CBIT 1 2 00 d4 ..1. .... Long Format Used;
+		CLSE 0 0 00 d4 ..0. .... Short Format Used;
+		CBIT 0 2 00 d4 ...1 .... Reserved;
+		CLSE 0 0 00 d4 ...0 .... Reserved;
+		LABL 0 0 00 c8;
+	DBIT 4 6 90 c2 Type:;
+	CST# 0 6 00 14 TBRPF::Type::TypeList;
+	g[2] &= 2;
+	
+	// si: short format
+	if (g[2] == 0)
+	{
+		DBYT 0 a 90 c2 Num of Nodes:;
+		DBYT 0 b 90 c2 NRL Nodes:;
+		DBYT 0 c 90 c2 NRNL Nodes:;
+	}
+	// si: long format
+	if (g[2] == 1)
+	{
+		HBYT 0 0 90 c2 Reserved:;
+		DWRD 0 a 90 c2 Num of Nodes:;
+		DWRD 0 b 90 c2 NRL Nodes:;
+		DWRD 0 c 90 c2 NRNL Nodes:;
+	}
+	IPLG 0 0 90 c2 Router ID [u]:;
+	l[1] = g[0xa];
+	l[2] = g[0xb];
+	l[3] = g[0xc];
+	l[4] = 1;
+	if (g[0xb] > 0)
+	{
+		LABL 0 0 0 b7 Leaf Nodes:;
+		while (g[0xb] > 0)
+		{
+			IPLG 0 0 90 c2 Router ID:;
+			DGLB 0 44 04 14 "#";				//si: ????
+			g[0xb] -= 1;
+			l[4] += 1;
+		}
+		LABL 0 0 0 b8;
+	}
+	if (g[0xc] > 0)
+	{
+		LABL 0 0 0 b7 Non-Leaf Nodes:;
+		while (g[0xc] > 0)
+		{
+			IPLG 0 0 90 c2 Router ID:;
+			DGLB 0 44 04 14 "#";				//si: ????
+			g[0xc] -= 1;
+			l[4] += 1;
+		}
+		LABL 0 0 0 b8;
+	}
+	g[0xa] -= l[0xb];
+	g[0xa] -= l[0xc];
+	if (g[0xa] > 0)
+	{
+		LABL 0 0 0 b7 Not Reported Nodes:;
+		while (g[0xc] > 0)
+		{
+			IPLG 0 0 90 c2 Router ID:;
+			DGLB 0 44 04 14 "#";				//si: ????
+			g[0xc] -= 1;
+			l[4] += 1;
+		}
+		LABL 0 0 0 b8;
+	}
+	l[4] = 1;
+	while (l[0xa] > 0)
+	{
+		DBYT 0 00 90 c2 Metric:;
+		DGLB 0 44 04 14 "#";				//si: ????
+		l[0xa] -= 1;
+		l[4] += 1;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+
+// ------------------------------------------------------------------
+void TBRPF::Type::Association;
+	CST# 0 6 00 b7 TBRPF::Type::TypeList;
+	DBIT 4 2 90 c2 SubType:;
+	CST# 0 2 00 14 TBRPF::Type::Assoc::SubTypeList;
+	DBIT 4 6 90 c2 Type:;
+	CST# 0 6 00 14 TBRPF::Type::TypeList;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 4 90 c2 Num of IP Addr:;
+	IPLG 0 0 90 c2 Router ID:;
+	while (g[4] > 0)
+	{
+		IPLG 0 0 90 c2 IP Address:;
+		g[4] -= 1;
+	}
+	LABL 0 0 00 b8;
+	TRTS;
+
+str# TBRPF::Type::Assoc::SubTypeList;
+	0 | Full;
+	1 | Add;
+	2 | Delete;
+
+// ------------------------------------------------------------------
+void TBRPF::Type::Association::NetworkPrefix;
+	CST# 0 6 00 b7 TBRPF::Type::TypeList;
+	DBIT 4 2 90 c2 SubType:;
+	CST# 0 2 00 14 TBRPF::Type::Assoc::SubTypeList;
+	DBIT 4 6 90 c2 Type:;
+	CST# 0 6 00 14 TBRPF::Type::TypeList;
+	HBYT 0 0 90 c2 Reserved:;
+	DWRD 0 4 90 c2 Num of Prefixes:;
+	IPLG 0 0 90 c2 Router ID:;
+	while (g[4] > 0)
+	{
+		DBYT 0 1 90 c2 Prefix Length:;
+		DUMP 0 1 90 c2 Prefix:;
+		g[4] -= 1;
+	}
+	TRTS;
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
