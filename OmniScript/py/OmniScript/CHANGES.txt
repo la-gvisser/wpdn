@@ -1,0 +1,17 @@
+v0.6.4, 2022-12-09 -- CaptureTemplate reads Filter mode from xml. Default mode is now
+                      FILTER_MODE_NONE (0). Added new Access Control permission.
+v0.6.3, 2021-07-08 -- Add ability to set multistream in capture template.
+v0.6.2, 2021-04-20 -- Add data_start_time and data_stop_time properties to Capture.
+v0.6.1, 2021-03-30 -- Add flows_dropped property to Capture.
+v0.5.0, 2014-07-04 -- All data processing in Python. Switch to OmniAPI support
+                      library.
+v0.4.0, 2013-12-14 -- PEP-8 compliance. Sphinx documentation generation.
+                      Added OmniId (a guid wrapper), used in Capture, CaptureTemplate,
+                      OmniEngine...
+                      Added to OmniEngine add_forensic_file and sync_forensic_database,
+                      To CaptureTemplate added Start and Stop triggers.
+v0.3.0, 2013-11-13 -- Added ForensicSearch, ForensicTemplate.
+                      Added to OmniEngine createForensicSearch, deleteForensicSearch,
+                      findForensicSearch, getForensicSearchList.
+v0.2.0, 2012-6-12 -- Added OmniEngine.DeleteAllCaptureSessions and PeekTime.
+v0.1.0, 2012-5-16 -- Initial release.

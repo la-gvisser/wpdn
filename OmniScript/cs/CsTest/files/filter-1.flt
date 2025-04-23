@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<filters>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="148" name=" test " comment="This is an advanced filter test with lots of nodes" color="0" group="">
+			<rootnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+				<filternode inverted="0" comment="">
+					<addr1 class="2" type="21" data="C0A80132"/>
+					<addr2 class="2" type="21" mask="0" data="00000000"/>
+					<accept1to2 data="1"/>
+					<accept2to1 data="1"/>
+				</filternode>
+				<andnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+					<filternode inverted="0" comment="">
+						<addr1 class="2" type="21" data="0A0A010A"/>
+						<addr2 class="2" type="21" mask="0" data="00000000"/>
+						<accept1to2 data="0"/>
+						<accept2to1 data="1"/>
+					</filternode>
+					<andnode clsid="{F4342DAD-4A56-4ABA-9436-6E3C30DAB1C8}">
+						<filternode inverted="0" comment="">
+							<protocol class="1" type="9" data="78050000" slicetoheader="0"/>
+						</filternode>
+						<andnode clsid="{D0329C21-8B27-489F-84D7-C7B783634A6A}">
+							<filternode inverted="0" comment="">
+								<id data="{F21AA6CB-D419-4B0D-B64E-877BECE972A8}"/>
+							</filternode>
+						</andnode>
+						<ornode clsid="{F4342DAD-4A56-4ABA-9436-6E3C30DAB1C8}">
+							<filternode inverted="0" comment="">
+								<protocol class="1" type="9" data="DC050000" slicetoheader="0"/>
+							</filternode>
+						</ornode>
+					</andnode>
+					<ornode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+						<filternode inverted="0" comment="">
+							<saddr1 type="21" data="10.10.1.55,10.10.1.56,10.10.1.60"/>
+							<saddr2 type="21" data=""/>
+							<accept1to2 data="1"/>
+							<accept2to1 data="1"/>
+						</filternode>
+						<andnode clsid="{D0329C21-8B27-489F-84D7-C7B783634A6A}">
+							<filternode inverted="0" comment="">
+								<id data="{F21AA6CB-D419-4B0D-B64E-877BECE972A8}"/>
+							</filternode>
+						</andnode>
+						<ornode clsid="{297D404D-3610-4A18-95A2-22768B554BED}">
+							<filternode inverted="0" comment="">
+								<Sport1 class="3" type="34" mask="3221225472" data="20000-30000"/>
+								<Sport2 class="3" type="34" mask="3221225472" data=""/>
+								<accept1to2 data="1"/>
+								<accept2to1 data="1"/>
+							</filternode>
+						</ornode>
+					</ornode>
+				</andnode>
+			</rootnode>
+		</filter>
+	</filterobj>
+</filters>
+

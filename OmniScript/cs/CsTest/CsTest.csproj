@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>Perforce Project</SccProjectName>
+    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+    <SccAuxPath />
+    <SccLocalPath>.</SccLocalPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Version>2.7.0</Version>
+    <Authors>LiveAction, Inc.</Authors>
+    <Company>LiveAction, Inc.</Company>
+    <Description>LiveAction OmniScript 2.0 .Net test script.</Description>
+    <Copyright>Copyright LiveAction, Inc. All rights reserved.</Copyright>
+    <PackageProjectUrl>https://www.liveaction.com</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+      <PropertyGroup>
+        <PlatformTarget>x64</PlatformTarget>
+      </PropertyGroup>
+    </When>
+
+    <When Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+      <PropertyGroup>
+        <PlatformTarget>x64</PlatformTarget>
+      </PropertyGroup>
+    </When>
+
+    <Otherwise>
+      <PropertyGroup>
+        <PlatformTarget>x64</PlatformTarget>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <ItemGroup>
+    <ProjectReference Include="../unix/OmniScript/OmniScript.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly>
+  <file name="peekutil">
+    <comClass clsid="{53BA4848-8FE0-4F35-91FA-779161B040E6}" progid="PeekUtil.DataTable" />
+    <comClass clsid="{09C94936-B7C4-42CA-AD6A-06E71E2194A4}" progid="PeekUtil.FileStream" />
+    <comClass clsid="{C150D8A1-B3F1-4BA7-930D-CF78A4F586D3}" progid="PeekUtil.MemoryStream" />
+    <comClass clsid="{00CC3ED1-47B7-478B-B282-CD020A2E9B72}" progid="PeekUtil.ObjectCollection" />
+    <comClass clsid="{4296D1D9-A405-4689-B1A9-70A7A5AC8B85}" progid="PeekUtil.OptionsList" />
+    <comClass clsid="{99403F22-0933-41E0-A0B8-9F626083F52F}" progid="PeekUtil.PropertyList" />
+    <comClass clsid="{E5D631AD-4475-4B22-9DEC-653B72D19DFE}" progid="PeekUtil.ServiceContainer" />
+    <comClass clsid="{CDA20BF4-F1C0-4B1F-97B0-1ED42F17A51E}" progid="PeekUtil.ServiceContainerChained" />
+    <comClass clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}" progid="PeekUtil.SimplePropBag" />
+  </file>
+  <file name="wpxml">
+    <comClass clsid="{F6D90F11-9C73-11D3-B32E-00C04F990BB4}" progid="WPXML.Document" />
+  </file>
+</assembly>

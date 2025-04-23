@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<autorestart version="2.0">
+	<UserID></UserID>
+	<UserName>johndoe</UserName>
+	<UserDomain>testdomain</UserDomain>
+	<CaptureState>0</CaptureState>
+	<CaptureTemplate clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}">
+		<properties>
+			<obj name="AdapterSettings" clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}">
+				<properties>
+					<prop name="Enumerator" type="8">0003</prop>
+					<prop name="Name" type="8">DS3-SPAN</prop>
+					<prop name="Type" type="3">1</prop>
+				</properties>
+			</obj>
+			<obj name="AlarmConfig" clsid="{E18AF1CF-7F83-45A7-95CB-410138FBC3E3}">
+				<Alarmconfig>
+					<Alarms />
+				</Alarmconfig>
+			</obj>
+			<obj name="FilterConfig" clsid="{84D2EAC7-3B74-420E-8EEE-85C7165BB471}">
+				<filterconfig mode="1">
+					<filters>
+						<filter id="{2B0C2BD9-F37C-48EF-A90E-6A0C3AD40C01}" />
+					</filters>
+				</filterconfig>
+			</obj>
+			<obj name="GeneralSettings" clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}">
+				<properties>
+					<prop name="BufferSize" type="21">16777216</prop>
+					<prop name="CaptureID" type="8">{0D6C60D4-4F09-4675-82D4-24087312A908}</prop>
+					<prop name="CaptureToDisk" type="11">0</prop>
+					<prop name="Comment" type="8">This is a test Capture 4</prop>
+					<prop name="ContinuousCapture" type="11">-1</prop>
+					<prop name="CtdDir" type="8"></prop>
+					<prop name="CtdFilePattern" type="8">test_.pcap</prop>
+					<prop name="CtdFileSize" type="21">83886080</prop>
+					<prop name="CtdKeepLastFiles" type="11">0</prop>
+					<prop name="CtdKeepLastFilesCount" type="19">10</prop>
+					<prop name="CtdMaxFileAge" type="21">21600</prop>
+					<prop name="CtdMaxTotalFileSize" type="21">1048576000</prop>
+					<prop name="CtdPriority" type="11">-1</prop>
+					<prop name="CtdUseMaxFileAge" type="11">-1</prop>
+					<prop name="CtdUseMaxTotalFileSize" type="11">0</prop>
+					<prop name="Deduplicate" type="11">0</prop>
+					<prop name="EnableAppStats" type="11">-1</prop>
+					<prop name="EnableTimelineStats" type="11">0</prop>
+					<prop name="EnableTopStats" type="11">0</prop>
+					<prop name="EnableVoIPStats" type="11">0</prop>
+					<prop name="GroupID" type="8">{0D6C60D4-4F09-4675-82D4-24087312A908}</prop>
+					<prop name="GroupName" type="8"></prop>
+					<prop name="Name" type="8">test</prop>
+					<prop name="Owner" type="8">FALCON\eric.rix</prop>
+					<prop name="SaveAsTemplate" type="11">0</prop>
+					<prop name="SliceLength" type="19">128</prop>
+					<prop name="Slicing" type="11">0</prop>
+					<prop name="StartCapture" type="11">0</prop>
+					<prop name="TapTimestamps" type="3">0</prop>
+				</properties>
+			</obj>
+			<obj name="GraphSettings" clsid="{3E3D84CE-563C-486C-8E6E-AADDD29786F8}">
+				<graphdata Enabled="0" Interval="15" IntervalUnit="1" FileCnt="2" FileBufferSize="50" PreserveFiles="0" memory="1">
+					<templates />
+				</graphdata>
+			</obj>
+			<obj name="PerfConfig" clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}">
+				<properties>
+					<prop name="Alarms" type="3">0</prop>
+					<prop name="Analysis Modules" type="3">1</prop>
+					<prop name="Application Statistics" type="3">0</prop>
+					<prop name="Error Statistics" type="3">0</prop>
+					<prop name="Expert Analysis" type="3">0</prop>
+					<prop name="Network Statistics" type="3">1</prop>
+					<prop name="Node Statistics" type="3">0</prop>
+					<prop name="Node/Protocol Detail Statistics" type="3">0</prop>
+					<prop name="Protocol Statistics" type="3">0</prop>
+					<prop name="Size Statistics" type="3">0</prop>
+					<prop name="Summary Statistics" type="3">1</prop>
+					<prop name="Top Talker Statistics" type="11">0</prop>
+					<prop name="Traffic History Statistics" type="3">0</prop>
+					<prop name="Voice and Video Analysis" type="3">0</prop>
+					<prop name="Wireless Channel Statistics" type="2">-1</prop>
+					<prop name="Wireless Node Statistics" type="2">-1</prop>
+				</properties>
+			</obj>
+			<obj name="PluginsConfig" clsid="{862E83A1-BC76-479A-A7FD-06CD6451815A}">
+				<plugins>
+					<plugin name="IPListOE" clsid="{D2C418FF-3B3D-4A03-BF9A-9329B1C1E6B4}">
+						<IpList>
+							<Ip>3.3.3.3
+3.3.3.4
+3.3.3.5</Ip>
+						</IpList>
+						<CidrList>
+							<Cidr>1.2.3.0/29
+4.5.0.0/21</Cidr>
+						</CidrList>
+					</plugin>
+					<plugin name="IpPenRegisterOE" clsid="{F21AA6CB-D419-4B0D-B64E-877BECE972A8}" />
+					<plugin name="PatternSearchOE" clsid="{5A3C7394-2659-4AAF-9220-62C9475FD85B}">
+						<CriteriaInformation>
+							<CaptureOptions>
+								<opt_strOutputDirectory>c:\data\PatternSearchOE</opt_strOutputDirectory>
+								<opt_strCaseFileNamePrefix>_</opt_strCaseFileNamePrefix>
+								<opt_strFileFormat>PKT</opt_strFileFormat>
+								<opt_strMaxFileSize>10</opt_strMaxFileSize>
+								<opt_boolEnableMaxFileSize>1</opt_boolEnableMaxFileSize>
+								<opt_strMaxFileDuration>10</opt_strMaxFileDuration>
+								<opt_strMaxFileDurationUnits>Minutes</opt_strMaxFileDurationUnits>
+								<opt_boolEnableMaxFileDuration>1</opt_boolEnableMaxFileDuration>
+								<opt_strInactiveFlowTimeOut>10</opt_strInactiveFlowTimeOut>
+								<opt_boolDisableCaptureWindow>0</opt_boolDisableCaptureWindow>
+								<opt_boolDisableSingleFlowFile>0</opt_boolDisableSingleFlowFile>
+								<opt_strFlowPendingPacketLimit>10</opt_strFlowPendingPacketLimit>
+								<opt_boolEnableFlowPendingPacketLimit>1</opt_boolEnableFlowPendingPacketLimit>
+								<opt_Criteriapatternfilename>c:\data\PatternSearchOEPatterns.txt</opt_Criteriapatternfilename>
+								<opt_boolDisableFileOutput>1</opt_boolDisableFileOutput>
+							</CaptureOptions>
+						</CriteriaInformation>
+					</plugin>
+				</plugins>
+			</obj>
+			<obj name="PluginsList" clsid="{99403F22-0933-41E0-A0B8-9F626083F52F}">
+				<properties>
+					<prop type="8">{D2C418FF-3B3D-4A03-BF9A-9329B1C1E6B4}</prop>
+					<prop type="8">{F21AA6CB-D419-4B0D-B64E-877BECE972A8}</prop>
+					<prop type="8">{5A3C7394-2659-4AAF-9220-62C9475FD85B}</prop>
+				</properties>
+			</obj>
+			<prop name="RepeatTrigger" type="3">0</prop>
+			<obj name="StartTrigger" clsid="{E801FFF9-AE26-4DD7-A349-4506CF3D090E}">
+				<trigger enabled="0" notify="1" severity="0" togglecapture="1">
+					<triggerevents>
+						<triggereventobj clsid="{EC5E8097-B3D5-4B8D-AA64-F6C6B13ECB37}">
+							<triggerevent usedate="0" useelapsedtime="0" time="0" enabled="0" />
+						</triggereventobj>
+						<triggereventobj clsid="{505A9EAB-78BD-461A-9DC0-203BDF0E8837}">
+							<triggerevent mode="0" enabled="0">
+								<packetfilterobj clsid="{0B5343D2-F8E2-44E4-9CC5-15D9B3A8A788}">
+									<filterpack />
+								</packetfilterobj>
+							</triggerevent>
+						</triggereventobj>
+						<triggereventobj clsid="{1945F627-3E8F-462F-96D9-99FB75454F9C}">
+							<triggerevent bytescaptured="0" enabled="0" />
+						</triggereventobj>
+					</triggerevents>
+				</trigger>
+			</obj>
+			<obj name="StatsOutput" null="1" />
+			<obj name="StatsOutputPrefs" clsid="{32E7B964-8B8D-4923-A75B-9D3B9E7C4BCE}">
+				<StatsOutputPrefs ReportType="3">
+					<NodeStats OutputNodeStats="1" OutputNodeDetails="1" OutputNodeHierarchy="1" NodeName="1" NodePackets="1" NodeFirstTime="1" NodeLastTime="1" NodeBroadBytes="1" NodeBroadPackets="1" NodeMultiBytes="1" NodeMultiPackets="1" NodeMinSize="1" NodeMaxSize="1" NodeTypePhysical="1" NodeTypeIP="1" NodeTypeIPv6="1" NodeTypeDEC="1" NodeTypeApple="1" NodeTypeIPX="1" />
+					<ProtocolStats OutputProtocolStats="1" ProtoPackets="1" ProtoPath="1" />
+					<SummaryStats SumPackets="1" SumPctPackets="1" SumPctBytes="1" SumPacketspSec="1" SumBytespSec="1" OutputSnapshots="1" />
+					<ExpertStats OutputExpertStats="1" ExpertFlows="1" ExpertApplications="1" />
+					<WLANStats OutputWLANStats="1" WLANName="1" WLANType="1" WLANFirstTimeSent="1" WLANLastTimeSent="1" WLANFirstTimeReceived="1" WLANLastTimeReceived="1" WLANPacketsSent="1" WLANPacketsReceived="1" WLANBroadcastPackets="1" WLANBroadcastBytes="1" WLANMulticastPackets="1" WLANMulticastBytes="1" WLANMinSizeSent="1" WLANMaxSizeSent="1" WLANAvgSizeSent="1" WLANMaxSizeReceived="1" WLANMinSizeReceived="1" WLANAvgSizeReceived="1" WLANRetryPackets="1" WLANBeaconPackets="1" WLANWEPPackets="1" WLANICVErrorPackets="1" WLANESSID="1" WLANChannel="1" WLANWEPKey="1" WLANSignalMin="1" WLANSignalMax="1" WLANSignalCur="1" WLANSignalMindBm="1" WLANSignalMaxdBm="1" WLANSignalCurdBm="1" WLANNoiseMin="1" WLANNoiseMax="1" WLANNoiseCur="1" WLANNoiseMindBm="1" WLANNoiseMaxdBm="1" WLANNoiseCurdBm="1" WLANDuration="1" WLANEncryption="1" WLANAuth="1" WLANPrivacy="1" WLANBeaconESSID="1" WLANAssociations="1" WLANTrust="1" />
+					<WChannelsStats OutputWChannelsStats="1" WChannelFrequency="1" WChannelBand="1" WChannelDataPackets="1" WChannelDataBytes="1" WChannelMngtPackets="1" WChannelMngtBytes="1" WChannelCtrlPackets="1" WChannelCtrlBytes="1" WChannelLocalPackets="1" WChannelLocalBytes="1" WChannelFromDSPackets="1" WChannelFromDSBytes="1" WChannelToDSPackets="1" WChannelToDSBytes="1" WChannelDS2DSPackets="1" WChannelDS2DSBytes="1" WChannelRetryPackets="1" WChannelRetryBytes="1" WChannelProtectedPackets="1" WChannelProtectedBytes="1" WChannelOrderPackets="1" WChannelOrderBytes="1" WChannelCRCPackets="1" WChannelICVErrorPackets="1" WChannelSignalMin="1" WChannelSignalMax="1" WChannelSignalCur="1" WChannelSignalAvg="1" WChannelSignaldBmMin="1" WChannelSignaldBmMax="1" WChannelSignaldBmCur="1" WChannelSignaldBmAvg="1" WChannelNoiseMin="1" WChannelNoiseMax="1" WChannelNoiseCur="1" WChannelNoiseAvg="1" WChannelNoisedBmMin="1" WChannelNoisedBmMax="1" WChannelNoisedBmCur="1" WChannelNoisedBmAvg="1" />
+					<WirelessDataRates OutputDataRates="1" DataRatesPackets="1" DataRatesBytes="1" />
+					<Graphs OutputGraphs="1" />
+					<AdditionalReports OutputAdditionalNode="0" OutputConversationsOnly="0" OutputExpertLog="1" OutputVoIP="1" OutputExpertSummary="0" OutputExecutiveSummary="0" />
+				</StatsOutputPrefs>
+			</obj>
+			<obj name="StopTrigger" clsid="{E801FFF9-AE26-4DD7-A349-4506CF3D090E}">
+				<trigger enabled="0" notify="1" severity="0" togglecapture="1">
+					<triggerevents>
+						<triggereventobj clsid="{EC5E8097-B3D5-4B8D-AA64-F6C6B13ECB37}">
+							<triggerevent usedate="0" useelapsedtime="0" time="0" enabled="0" />
+						</triggereventobj>
+						<triggereventobj clsid="{505A9EAB-78BD-461A-9DC0-203BDF0E8837}">
+							<triggerevent mode="0" enabled="0">
+								<packetfilterobj clsid="{0B5343D2-F8E2-44E4-9CC5-15D9B3A8A788}">
+									<filterpack />
+								</packetfilterobj>
+							</triggerevent>
+						</triggereventobj>
+						<triggereventobj clsid="{1945F627-3E8F-462F-96D9-99FB75454F9C}">
+							<triggerevent bytescaptured="0" enabled="0" />
+						</triggereventobj>
+					</triggerevents>
+				</trigger>
+			</obj>
+			<obj name="VoIPConfig" clsid="{6F6FBFC1-3F14-46CA-A269-7664A41FC709}">
+				<properties>
+					<prop name="MaxCalls" type="19">2000</prop>
+					<prop name="Notify" type="3">1</prop>
+					<prop name="Severity" type="19">3</prop>
+					<prop name="StopAnalysis" type="3">1</prop>
+				</properties>
+			</obj>
+		</properties>
+	</CaptureTemplate>
+</autorestart>
+

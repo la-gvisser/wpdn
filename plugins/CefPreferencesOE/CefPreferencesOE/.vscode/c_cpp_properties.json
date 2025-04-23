@@ -1,0 +1,78 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}",
+                "/usr/include/c++/11",
+                "/usr/include/x86_64-linux-gnu/c++/11",
+                "/usr/include/c++/11/backward",
+                "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+                "/usr/local/include",
+                "/usr/include/x86_64-linux-gnu",
+                "/usr/include",
+                "${workspaceRoot}",
+                "${workspaceRoot}/Helium",
+                "${workspaceRoot}/Framework",
+                "${workspaceRoot}/Plugin"
+            ],
+            "defines": [
+                "__GNUC__",
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "TARGET_OS_LINUX",
+                "_NPROTOSPECS"
+            ],
+            "intelliSenseMode": "clang-x64",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}",
+                    "/usr/include/c++/11",
+                    "/usr/include/x86_64-linux-gnu/c++/11",
+                    "/usr/include/c++/11/backward",
+                    "/usr/lib/gcc/x86_64-linux-gnu/11/include",
+                    "/usr/local/include",
+                    "/usr/include/x86_64-linux-gnu",
+                    "/usr/include",
+                    "${workspaceRoot}",
+                    "${workspaceRoot}/Helium",
+                    "${workspaceRoot}/Framework",
+                    "${workspaceRoot}/Plugin"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "compilerPath": "/usr/bin/g++",
+            "cStandard": "c11",
+            "cppStandard": "c++11"
+        },
+        {
+            "name": "Win32",
+            "includePath": [
+                "C:/Program Files (x86)/Microsoft Visual Studio 20.0/VC/include",
+                "${workspaceFolder}",
+                "${workspaceFolder}/Framework",
+                "${workspaceFolder}/Helium"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "intelliSenseMode": "msvc-x64",
+            "browse": {
+                "path": [
+                    "C:/Program Files (x86)/Microsoft Visual Studio 20.0/VC/include/*",
+                    "${workspaceFolder}"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

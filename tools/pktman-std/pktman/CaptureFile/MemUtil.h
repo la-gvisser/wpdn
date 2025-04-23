@@ -29,13 +29,16 @@
 // Set up bswap_16, bswap_32 and bswap_64
 #include <stdlib.h>
 #ifndef bswap_16
-#define bswap_16(x)		_byteswap_ushort(x)
+// #define bswap_16(x)		_byteswap_ushort(x)
+#define bswap_16(x)		__bswap_16(x)
 #endif
 #ifndef bswap_32
-#define bswap_32(x)		_byteswap_ulong(x)
+// #define bswap_32(x)		_byteswap_ulong(x)
+#define bswap_32(x)		__bswap_32(x)
 #endif
 #ifndef bswap_64
-#define bswap_64(x)		_byteswap_uint64(x)
+// #define bswap_64(x)		_byteswap_uint64(x)
+#define bswap_64(x)		__bswap_64(x)
 #endif
 
 // #pragma intrinsic(_byteswap_ushort,_byteswap_ulong,_byteswap_uint64)

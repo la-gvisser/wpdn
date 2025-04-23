@@ -1,0 +1,187 @@
+OmniScript:
+    def connect(self,
+                host = 'localhost',
+                port = 6367,
+                auth = 'Default',
+                domain = '',
+                user = '',
+                password = '',
+                timeout = 30000):
+    def isConnected(self):
+    def issueXmlCommand(self, command_id, request):
+    def setLoggingLevel(self, level):
+
+
+OmniEngine:
+    def addFilter(self, filter):
+    def convertCaptureFile(self, source, destination, format):
+    def createCapture(self, template):
+    def createForensicSearch(self, template):
+    def deleteAllCaptureSessions(self):
+    def deleteCapture(self, capture):
+    def deleteFilter(self, filter):
+    def deleteForensicSearch(self, forensic):
+    def disconnect(self):
+    def findAdapter(self, value):
+    def findAdapterByDeviceName(self, value):
+    def findCapture(self, obj, key = findCaptureKeys[0]):
+    def findFilter(self, name):
+    def findForensicSearch(self, obj, key = findCaptureKeys[0]):
+    def getAdapterList(self):
+    def getCaptureList(self):
+    def getFilterList(self):
+    def getForensicSearchList(self):
+    def isConnected(self):
+    def newFilter(self, name):
+    def startCapture(self, capture):
+    def stopCapture(self, capture):
+
+
+OmniCapture()
+    def formatStatus(self):
+    def getNodeStats(self):
+    def getProtocolStats(self):
+    def getStatus(self):
+    def getSummaryStats(self):
+    def isCapturing(self):
+    def refresh(self):
+    def savePackets(self, filename):
+    def start(self):
+    def stop(self):
+
+
+OmniAdapter():
+    def name(self):
+
+
+StatsLimit():
+	self._name = name
+	self._enabled = True
+	self.limit = 100000
+	self.reset = False
+	self.notify = True
+	self.severity = SEVERITY_SEVERE
+
+
+ForensicTemplate():
+        self.name = ""
+        self.session_id = -1
+        self.media_type = MEDIATYPE_802_3
+        self.media_sub_type = MEDIASUBTYPE_NATIVE
+        self.start_time = 0
+        self.end_time = 0
+        self.files = []
+        self.capture_name = ''
+        self.adapter_name = ''
+        self.filter_mode = MODE_ACCEPT_ALL
+        self.filters = []
+        self.graph_interval = 0
+        self.limit = LIMIT_TYPE_NONE
+        self.limit_size = 0
+        self.options = {
+            'break_out':True,
+            'capture':False,
+            'node_protocol_detail':False,
+            'error':False,
+            'expert':False,
+            'graphs':False,
+            'history':False,
+            'log':False,
+            'network':False,
+            'node':False,
+            'packets':False,
+            'plugins':False,
+            'protocol':False,
+            'size':False,
+            'summary':False,
+            'top_talkers':False,
+            'voice':False,
+            'web':False,
+            'wireless_channel':False,
+            'wireless_node':False
+            }
+        self.node_limits = StatsLimit('NodeStatsLimitSettings')
+        self.protocol_limits = StatsLimit('ProtocolStatsLimitSettings')
+        self.node_protocol_detail_limits = StatsLimit('ConversationStatsLimitSettings')
+    def add_filter(self):
+    def set_limit(self, limit, limit_size):
+
+
+MediaInfo():
+	self.type = 0
+	self.sub_type = 0
+	self.domain = 0
+	self.link_speed = 0
+
+
+ForensicSearch():
+	self.__dict__['id'] = ''
+	self.__dict__['name'] = ''
+	self.__dict__['adapter'] = ''
+	self.__dict__['capture_name'] = ''
+	self.__dict__['session_id'] = ''
+	self.__dict__['creator'] = ''
+	self.__dict__['creator_sid'] = ''
+	self.__dict__['duration'] = 0
+	self.__dict__['status'] = 0
+	self.__dict__['first_packet'] = 0
+	self.__dict__['link_speed'] = 0
+	self.__dict__['load_progress'] = 'unknown'
+	self.__dict__['load_percent'] = 0
+	self.__dict__['media_type'] = MEDIATYPE_802_3
+	self.__dict__['media_sub_type'] = MEDIASUBTYPE_NATIVE
+	self.__dict__['modified_by'] = ''
+	self.__dict__['modification_type'] = ''
+	self.__dict__['open_result'] = 0
+	self.__dict__['packet_count'] = 0
+	self.__dict__['percent_progress'] = 0
+	self.__dict__['process_percent_progress'] = 0
+	self.__dict__['process_progress'] = 'unknown'
+	self.__dict__['progress'] = 'unknown'
+	self.__dict__['start_time'] = 0
+	self.__dict__['stop_time'] = 0
+	self.__dict__['media_info'] = MediaInfo()
+	self.__dict__['option_expert'] = False
+	self.__dict__['option_graphs'] = False
+	self.__dict__['option_log'] = False
+	self.__dict__['option_packet_buffer'] = False
+	self.__dict__['option_voice'] = False
+	self.__dict__['option_web'] = False
+
+
+CaptureTemplate():
+	self.templateName = filename
+	if self.templateName is not None and len(self.templateName) == 0:
+		self.templateName = None
+	self.__init_adapter()
+	self.__init_general()
+	self.__init_filter()
+	if self.templateName is not None:
+		template = ET.parse(filename)
+		props = template.find('properties')
+		for obj in props.findall('obj'):
+			objName = obj.attrib['name']
+			if objName == 'AdapterSettings':
+				self._load_adapter(obj)
+			elif objName == 'FilterConfig':
+				self._load_filter(obj)
+			elif objName == 'GeneralSettings':
+				self._load_general(obj)
+
+    def name(self):
+    def adapter(self):
+    def addFilters(self, filterList):
+    def save(self, filename):
+    def setFilters(self, filterList):
+    def xml(self, engine, pretty = False):
+
+
+PeekTime():
+    def time(self):
+    def ctime(self):
+
+
+OmniFilter():
+    def id(self):
+    @property
+    def xml(self):

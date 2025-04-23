@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    
+    <title>Creating a Package &mdash; The Hitchhiker&#39;s Guide to Packaging 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="http://guide.python-distribute.org/_static/I.default.css+pygments.css,Mcc.rRDV-8qCEb.css.pagespeed.cf.yOSNIJwgee.css" type="text/css"/>
+    
+    
+    <script type="text/javascript">var DOCUMENTATION_OPTIONS={URL_ROOT:'',VERSION:'1.0',COLLAPSE_INDEX:false,FILE_SUFFIX:'.html',HAS_SOURCE:true};</script>
+    <script type="text/javascript" src="http://guide.python-distribute.org/_static/jquery.js.pagespeed.jm.GHSJPiCHAi.js"></script>
+    <script type="text/javascript" src="http://guide.python-distribute.org/_static/underscore.js.pagespeed.jm.uwq625dguj.js"></script>
+    <script type="text/javascript" src="http://guide.python-distribute.org/_static/doctools.js.pagespeed.jm._D98Q_r_EA.js"></script>
+    <link rel="top" title="The Hitchhiker&#39;s Guide to Packaging 1.0 documentation" href="index.html"/>
+    <link rel="next" title="Contribute Your Package to the World" href="contributing.html"/>
+    <link rel="prev" title="Using Packages" href="usage.html"/> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index" accesskey="I">index</a></li>
+        <li class="right">
+          <a href="contributing.html" title="Contribute Your Package to the World" accesskey="N">next</a> |</li>
+        <li class="right">
+          <a href="usage.html" title="Using Packages" accesskey="P">previous</a> |</li>
+        <li><a href="index.html">The Hitchhiker&#39;s Guide to Packaging 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="creating-a-package">
+<h1>Creating a Package<a class="headerlink" href="#creating-a-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basics-creating-and-distributing-distributions">
+<h2>Basics: Creating and Distributing Distributions<a class="headerlink" href="#basics-creating-and-distributing-distributions" title="Permalink to this headline">¶</a></h2>
+<p>If you have some useful Python <a class="reference internal" href="glossary.html#term-module"><em class="xref std std-term">modules</em></a> that you think
+others might benefit from, but aren&#8217;t sure how to go about packaging
+them up and distributing them, then this short document is for you. By
+the end of it, you&#8217;ll be a contributor to the <a class="reference internal" href="contributing.html#pypi-info"><em>The Python Package Index (PyPI)</em></a>.</p>
+<p>For a more detailed look at packaging a larger project, see this
+<a class="reference internal" href="example.html"><em>example</em></a>.</p>
+<p>Let&#8217;s begin.</p>
+<div class="section" id="background">
+<h3>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h3>
+<p>Suppose you&#8217;ve written a couple modules to help you keep track of your
+towel (<tt class="docutils literal"><span class="pre">location.py</span></tt> and <tt class="docutils literal"><span class="pre">utils.py</span></tt>), and you&#8217;d like to share
+them.  First thing to do is come up with a CamelCase project name for
+them. Let&#8217;s go with &#8220;TowelStuff&#8221; since it seems appropriate and also
+it has not yet been used on the <a class="reference internal" href="contributing.html#pypi-info"><em>The Python Package Index (PyPI)</em></a>.</p>
+</div>
+<div class="section" id="arranging-your-file-and-directory-structure">
+<span id="directory-layout"></span><h3>Arranging your file and directory structure<a class="headerlink" href="#arranging-your-file-and-directory-structure" title="Permalink to this headline">¶</a></h3>
+<p>&#8220;TowelStuff&#8221; will be the name of our project as well as the name of our
+<a class="reference internal" href="glossary.html#term-distribution"><em class="xref std std-term">distribution</em></a>. We should also come up with a <a class="reference internal" href="glossary.html#term-package"><em class="xref std std-term">package</em></a>
+name within which our modules will reside (to avoid naming conflicts
+with other modules). For this example, there&#8217;s only one package, so
+let&#8217;s reuse the project name and go with &#8220;towelstuff&#8221;.  Make the
+layout of your project directory (described below) look like this:</p>
+<div class="highlight-python"><pre>TowelStuff/
+    bin/
+    CHANGES.txt
+    docs/
+    LICENSE.txt
+    MANIFEST.in
+    README.txt
+    setup.py
+    towelstuff/
+        __init__.py
+        location.py
+        utils.py
+        test/
+            __init__.py
+            test_location.py
+            test_utils.py</pre>
+</div>
+<p>Here&#8217;s what you should do for each of those listed above:</p>
+<ul class="simple" id="bin-description">
+<li>Put into <tt class="docutils literal"><span class="pre">bin</span></tt> any scripts you&#8217;ve written that use your
+<tt class="docutils literal"><span class="pre">towelstuff</span></tt> package and which you think would be useful for your
+users. If you don&#8217;t have any, then remove the <tt class="docutils literal"><span class="pre">bin</span></tt> directory.</li>
+</ul>
+<ul id="changes-txt-description">
+<li><p class="first">For now, the <tt class="docutils literal"><span class="pre">CHANGES.txt</span></tt> file should only contain:</p>
+<div class="highlight-python"><pre>v&lt;version&gt;, &lt;date&gt; -- Initial release.</pre>
+</div>
+<p>since this is your very first version (version number will be
+described below) and there are no changes to report.</p>
+</li>
+</ul>
+<ul class="simple" id="docs-description">
+<li>The <tt class="docutils literal"><span class="pre">docs</span></tt> dir should contain any design docs, implementation notes, a
+FAQ, or any other docs you&#8217;ve written. For now, stick to plain text
+files ending in &#8221;.txt&#8221;. This author (JohnMG) likes to use <a class="reference external" href="http://johnmacfarlane.net/pandoc/">Pandoc&#8217;s
+Markdown</a>, but many Pythoneers
+use <a class="reference internal" href="glossary.html#term-restructuredtext"><em class="xref std std-term">reStructuredText</em></a>.</li>
+</ul>
+<ul class="simple" id="license-txt-description">
+<li>The <tt class="docutils literal"><span class="pre">LICENSE.txt</span></tt> file is often just a copy/paste of your license
+of choice.  We recommend going with a commonly-used license, such as
+the GPL, BSD, or MIT.</li>
+</ul>
+<ul id="manifest-in-description">
+<li><p class="first">The <tt class="docutils literal"><span class="pre">MANIFEST.in</span></tt> file should contain this:</p>
+<div class="highlight-python"><pre>include *.txt
+recursive-include docs *.txt</pre>
+</div>
+</li>
+</ul>
+<ul id="readme-txt-description">
+<li><p class="first">The <tt class="docutils literal"><span class="pre">README.txt</span></tt> file should be written in <a class="reference internal" href="glossary.html#term-restructuredtext"><em class="xref std std-term">reST</em></a>
+so that the PyPI can use it to generate your project&#8217;s PyPI page. Here&#8217;s a
+10-second intro to reST that you might use to start with:</p>
+<div class="highlight-python"><pre>===========
+Towel Stuff
+===========
+
+Towel Stuff provides such and such and so and so. You might find
+it most useful for tasks involving &lt;x&gt; and also &lt;y&gt;. Typical usage
+often looks like this::
+
+    #!/usr/bin/env python
+
+    from towelstuff import location
+    from towelstuff import utils
+
+    if utils.has_towel():
+        print "Your towel is located:", location.where_is_my_towel()
+
+(Note the double-colon and 4-space indent formatting above.)
+
+Paragraphs are separated by blank lines. *Italics*, **bold**,
+and ``monospace`` look like this.
+
+
+A Section
+=========
+
+Lists look like this:
+
+* First
+
+* Second. Can be multiple lines
+  but must be indented properly.
+
+A Sub-Section
+-------------
+
+Numbered lists look like you'd expect:
+
+1. hi there
+
+2. must be going
+
+Urls are http://like.this and links can be
+written `like this &lt;http://www.example.com/foo/bar&gt;`_.</pre>
+</div>
+<p>You might also consider adding a &#8220;Contributors&#8221; section and/or a
+&#8220;Thanks also to&#8221; section to list the names of people who&#8217;ve helped.</p>
+<p>By the way, to see how the above <tt class="docutils literal"><span class="pre">README.txt</span></tt> looks rendered in
+html, see the <a class="reference external" href="http://pypi.python.org/pypi/TowelStuff/">TowelStuff project</a> at the PyPI.</p>
+</li>
+</ul>
+<ul id="setup-py-description">
+<li><p class="first"><tt class="docutils literal"><span class="pre">setup.py</span></tt> &#8211; Create this file and make it look like this:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">distutils.core</span> <span class="kn">import</span> <span class="n">setup</span>
+
+<span class="n">setup</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s">&#39;TowelStuff&#39;</span><span class="p">,</span>
+    <span class="n">version</span><span class="o">=</span><span class="s">&#39;0.1.0&#39;</span><span class="p">,</span>
+    <span class="n">author</span><span class="o">=</span><span class="s">&#39;J. Random Hacker&#39;</span><span class="p">,</span>
+    <span class="n">author_email</span><span class="o">=</span><span class="s">&#39;jrh@example.com&#39;</span><span class="p">,</span>
+    <span class="n">packages</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;towelstuff&#39;</span><span class="p">,</span> <span class="s">&#39;towelstuff.test&#39;</span><span class="p">],</span>
+    <span class="n">scripts</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;bin/stowe-towels.py&#39;</span><span class="p">,</span><span class="s">&#39;bin/wash-towels.py&#39;</span><span class="p">],</span>
+    <span class="n">url</span><span class="o">=</span><span class="s">&#39;http://pypi.python.org/pypi/TowelStuff/&#39;</span><span class="p">,</span>
+    <span class="n">license</span><span class="o">=</span><span class="s">&#39;LICENSE.txt&#39;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s">&#39;Useful towel-related stuff.&#39;</span><span class="p">,</span>
+    <span class="n">long_description</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="s">&#39;README.txt&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">(),</span>
+    <span class="n">install_requires</span><span class="o">=</span><span class="p">[</span>
+        <span class="s">&quot;Django &gt;= 1.1.1&quot;</span><span class="p">,</span>
+        <span class="s">&quot;caldav == 0.1.4&quot;</span><span class="p">,</span>
+    <span class="p">],</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>but, of course, replace the towel stuff with your own project and
+package names. For more details about picking version numbers, see
+<tt class="xref doc docutils literal"><span class="pre">versioning</span></tt>, but &#8216;0.1.0&#8217; will work just fine for a first
+release (this is using the common &#8220;major.minor.micro&#8221; numbering
+convention).</p>
+<p>Use the install_requires argument to automatically install dependencies
+when your package will be installed and include information about
+dependencies (so that package management tools like Pip can use the information).
+It takes a string or list of strings containing requirement specifiers.</p>
+<p>The syntax consists of a project&#8217;s PyPI name, optionally followed by a
+comma-separated list of version specifiers. Modern packaging tools
+implement version specifiers syntax described in <a class="reference external" href="http://www.python.org/dev/peps/pep-0345/#version-specifiers">PEP 345</a> and
+resolve version comparison in compliance with <a class="reference external" href="http://www.python.org/dev/peps/pep-0386/">PEP 386</a>.</p>
+</li>
+</ul>
+<blockquote>
+<div>If you have no scripts to distribute (and thus no <tt class="docutils literal"><span class="pre">bin</span></tt> dir), you
+can remove the above line which begins with &#8220;scripts&#8221;.</div></blockquote>
+<ul class="simple" id="towelstuff-description">
+<li>Inside the <tt class="docutils literal"><span class="pre">towelstuff</span></tt> directory, <tt class="docutils literal"><span class="pre">__init__.py</span></tt> can be
+empty. Likewise, inside <tt class="docutils literal"><span class="pre">towelstuff/test</span></tt>, <em>that</em> <tt class="docutils literal"><span class="pre">__init__.py</span></tt>
+can be empty as well. If you have no tests written yet, you can
+leave the two other module files in <tt class="docutils literal"><span class="pre">towelstuff/test</span></tt> empty for
+now too. When writing your tests, use the standard <tt class="docutils literal"><span class="pre">unittest</span></tt>
+module.</li>
+</ul>
+<p>For our example, TowelStuff does not depend upon any other
+distributions (it only depends upon what&#8217;s already in the Python
+standard library). To specify dependencies upon other distributions,
+see the more detailed <a class="reference internal" href="example.html"><em>Project example</em></a>.</p>
+</div>
+<div class="section" id="creating-your-distribution-file">
+<h3>Creating your distribution file<a class="headerlink" href="#creating-your-distribution-file" title="Permalink to this headline">¶</a></h3>
+<p>Create your distribution file like so:</p>
+<div class="highlight-python"><pre>$ cd path/to/TowelStuff
+$ python setup.py sdist</pre>
+</div>
+<p>Running that last command will create a <tt class="docutils literal"><span class="pre">MANIFEST</span></tt> file in your
+project directory, and also a <tt class="docutils literal"><span class="pre">dist</span></tt> and <tt class="docutils literal"><span class="pre">build</span></tt> directory. Inside
+that <tt class="docutils literal"><span class="pre">dist</span></tt> directory is the distribution that you&#8217;ll be uploading
+to the PyPI. In our case, the distribution file will be named
+<tt class="docutils literal"><span class="pre">TowelStuff-0.1.0.tgz</span></tt>. Feel free to poke around in the <tt class="docutils literal"><span class="pre">dist</span></tt>
+directory to look at your distribution.</p>
+</div>
+<div class="section" id="uploading-your-distribution-file">
+<h3>Uploading your distribution file<a class="headerlink" href="#uploading-your-distribution-file" title="Permalink to this headline">¶</a></h3>
+<p>Before uploading you first need to create an account at
+<a class="reference external" href="http://pypi.python.org/pypi">http://pypi.python.org/pypi</a> . Once that&#8217;s complete, register your
+distribution at the PyPI like so:</p>
+<div class="highlight-python"><pre>$ cd path/to/TowelStuff
+$ python setup.py register</pre>
+</div>
+<p>Use your existing login (choice #1). It will prompt you to save the
+login info for future use (to which I agree). Then upload:</p>
+<div class="highlight-python"><pre>$ python setup.py sdist upload</pre>
+</div>
+<p>This builds the distribution one last time and then uploads it.</p>
+<p>Thanks for your contribution!</p>
+</div>
+<div class="section" id="updating-your-distribution">
+<h3>Updating your distribution<a class="headerlink" href="#updating-your-distribution" title="Permalink to this headline">¶</a></h3>
+<p>Down the road, after you&#8217;ve made updates to your distribution and wish
+to make a new release:</p>
+<ol class="arabic simple">
+<li>increment the version number in your <tt class="docutils literal"><span class="pre">setup.py</span></tt> file,</li>
+<li>update your <tt class="docutils literal"><span class="pre">CHANGES.txt</span></tt> file,</li>
+<li>if necessary, update the &#8220;Contributors&#8221; and &#8220;Thanks also to&#8221; sections
+of your <tt class="docutils literal"><span class="pre">README.txt</span></tt> file.</li>
+<li>run <tt class="docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">sdist</span> <span class="pre">upload</span></tt> again.</li>
+</ol>
+</div>
+<div class="section" id="entry-points">
+<h3>Entry points<a class="headerlink" href="#entry-points" title="Permalink to this headline">¶</a></h3>
+<p>Entry points are a Setuptools/Distribute feature that’s really handy in one
+specific case: register something under a specific key in package A that
+package B can query for.</p>
+<p>Distribute itself uses it. If you’re packaging your project up properly, you&#8217;ve
+probably used the <tt class="docutils literal"><span class="pre">console_scripts</span></tt> entry point:</p>
+<div class="highlight-python"><pre>setup(name='zest.releaser',
+      ...
+      entry_points={
+          'console_scripts':
+              ['release = zest.releaser.release:main',
+               'prerelease = zest.releaser.prerelease:main',
+               ]}
+      )</pre>
+</div>
+<p><tt class="docutils literal"><span class="pre">console_scripts</span></tt> is an entry point that Setuptools looks up. It looks up all
+entry points registered under the name console_scripts and uses that
+information to generate scripts. In the above example that’d be a bin/release
+script that runs the main() method in zest/releaser/release.py.</p>
+<p>You can use that for your own extension mechanism. For <tt class="docutils literal"><span class="pre">zest.releaser</span></tt> I
+needed some extension mechanism. I wanted to be able to do extra things on
+prerelease/release/postrelease time.</p>
+<ul class="simple">
+<li>Downloading an external javascript library into a package that cannot be
+stored in (zope&#8217;s) svn repository directly due to licensing issues. Before
+packaging and releasing it, that is. Automatically so you don’t forget it.</li>
+<li>Uploading a version.cfg to
+<tt class="docutils literal"><span class="pre">scp://somewhere/kgs/ourmainproduct-version.cfg</span></tt>
+after making a release to use it as a so-called “known good set” (KGS).</li>
+<li>Possibly modifying values (like a commit message) inside zest.releaser itself
+while doing a release. (I do get modification requests from time to time “hey,
+can you make x and y configurable”). So now every zest.releaser step
+(prerelease, release, postrelease) is splitted in two: a calculation phase
+and a “doing” phase. The results of the first phase are stored in a dict
+that gets used in the second phase. And you can register an entry point that
+gets passed that dict so you can modify it. See the entry point documentation
+of zest.releaser for details.</li>
+</ul>
+<p>An entry point for zest.releaser is configured like this in your setup.py:</p>
+<div class="highlight-python"><pre>entry_points={
+    'console_scripts':
+        ['myscript = my.package.scripts:main'],
+    'zest.releaser.prereleaser.middle':
+        ['dosomething = my.package.some:some_entrypoint, ]
+}</pre>
+</div>
+<p>Replace prereleaser and middle in zest.releaser.prereleaser.middle with
+prerelease/release/postrelease and before/middle/after where needed. (For this
+specific zest.releaser example).</p>
+<p>Now, how to use this in your program? The best way is to show a quick example
+from zest.releaser where we query and use one of our entry points:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pkg_resources</span>
+
+<span class="o">...</span>
+<span class="k">def</span> <span class="nf">run_entry_point</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="c"># Note: data is zest.releaser specific: we want to pass</span>
+    <span class="c"># something to the plugin group = &#39;zest.releaser.prerelease.middle&#39;</span>
+
+    <span class="k">for</span> <span class="n">entrypoint</span> <span class="ow">in</span> <span class="n">pkg_resources</span><span class="o">.</span><span class="n">iter_entry_points</span><span class="p">(</span><span class="n">group</span><span class="o">=</span><span class="n">group</span><span class="p">):</span>
+        <span class="c"># Grab the function that is the actual plugin.</span>
+        <span class="n">plugin</span> <span class="o">=</span> <span class="n">entrypoint</span><span class="o">.</span><span class="n">load</span><span class="p">()</span> <span class="c"># Call the plugin</span>
+        <span class="n">plugin</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>So: pretty easy and simple way to allow other packages to register something
+that you want to know. Extra plugins, extra render methods, extra functionality
+you want to register in your web application, etcetera.</p>
+</div>
+</div>
+<div class="section" id="packaging-for-a-particular-operating-system-os">
+<h2>Packaging for a Particular Operating System (OS)<a class="headerlink" href="#packaging-for-a-particular-operating-system-os" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="general-packaging-guidelines-for-unix">
+<h3>General Packaging Guidelines for Unix<a class="headerlink" href="#general-packaging-guidelines-for-unix" title="Permalink to this headline">¶</a></h3>
+</div>
+<div class="section" id="general-packaging-guidelines-for-windows">
+<h3>General Packaging Guidelines for Windows<a class="headerlink" href="#general-packaging-guidelines-for-windows" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Creating a Package</a><ul>
+<li><a class="reference internal" href="#basics-creating-and-distributing-distributions">Basics: Creating and Distributing Distributions</a><ul>
+<li><a class="reference internal" href="#background">Background</a></li>
+<li><a class="reference internal" href="#arranging-your-file-and-directory-structure">Arranging your file and directory structure</a></li>
+<li><a class="reference internal" href="#creating-your-distribution-file">Creating your distribution file</a></li>
+<li><a class="reference internal" href="#uploading-your-distribution-file">Uploading your distribution file</a></li>
+<li><a class="reference internal" href="#updating-your-distribution">Updating your distribution</a></li>
+<li><a class="reference internal" href="#entry-points">Entry points</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#packaging-for-a-particular-operating-system-os">Packaging for a Particular Operating System (OS)</a><ul>
+<li><a class="reference internal" href="#general-packaging-guidelines-for-unix">General Packaging Guidelines for Unix</a></li>
+<li><a class="reference internal" href="#general-packaging-guidelines-for-windows">General Packaging Guidelines for Windows</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html" title="previous chapter">Using Packages</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="contributing.html" title="next chapter">Contribute Your Package to the World</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/creation.txt" rel="nofollow">Show Source</a></li>
+  </ul><div>
+<h3>Feedback</h3>
+
+
+<ul>
+ <li><a href="http://bitbucket.org/tarek/hitchhiker-guide-packaging/">Become a writer or a reviewer</a></li>
+ <li>Help us by opening <a href="http://bitbucket.org/tarek/hitchhiker-guide-packaging/issues/">issues</a> 
+ on the content you would like to see in the guide</li>
+ <li>Join the <a href="http://groups.google.com/group/packaging-guide">Mailing List</a></li>
+</ul> 
+
+</div>
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q"/>
+      <input type="submit" value="Go"/>
+      <input type="hidden" name="check_keywords" value="yes"/>
+      <input type="hidden" name="area" value="default"/>
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index">index</a></li>
+        <li class="right">
+          <a href="contributing.html" title="Contribute Your Package to the World">next</a> |</li>
+        <li class="right">
+          <a href="usage.html" title="Using Packages">previous</a> |</li>
+        <li><a href="index.html">The Hitchhiker&#39;s Guide to Packaging 1.0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2009, Tarek Ziadé.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>

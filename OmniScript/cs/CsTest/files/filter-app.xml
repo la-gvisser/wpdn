@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<filters>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="175" name="_TimeRange" comment="" color="0" group="">
+			<rootnode clsid="{8C7C9172-82B2-43DC-AAF1-41ED80CE828F}">
+				<filternode inverted="0" comment="">
+					<application class="1" type="8" data="594F555455424500"/>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+</filters>
+

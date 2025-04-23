@@ -1,0 +1,33 @@
+from setuptools import setup, find_packages
+
+setup(
+    name='OmniScript',
+    version='0.6.3',
+    author='Savvius, Inc.',
+    author_email='wpdn@savvius.com',
+    packages=find_packages(),
+    package_data={'omniscript':
+                  ['omniapi.he',
+                   'libeay32.so',
+                   'libheruntime.so',
+                   'libomniapi.so',
+                   'libwpz.so',
+                   'omniapi.so',
+                   'peekutil.so',
+                   'wpxml.so',
+                   'Decodes/decodes.bin',
+                   '_class_ids.txt',
+                   '_co_codes.txt',
+                   '_stat_ids.txt',
+                   '_capture_template.xml',
+                   '_capture_template_linux.xml',
+                   '_capture_template_windows.xml',
+                   'expertdescriptions.xml',
+                   'pspecs.xml']},
+    scripts=['bin/RCapture.py', 'bin/Forensics.py'],
+    url='http://pypi.python.org/pypi/OmniScript/',
+    license='LICENSE.txt',
+    description='Savvius Engine interface module.',
+    long_description=open('README.txt').read(),
+    install_requires=[],
+)

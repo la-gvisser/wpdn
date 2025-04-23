@@ -76,7 +76,7 @@ int				COmniPlugin::s_nOptionsId( IDR_ZIP_OPTIONS );
 
 CGlobalId		COmniPlugin::s_idClass( g_PluginId );
 CPeekString		COmniPlugin::s_strPublisher( L"LiveAction, Inc." );
-CVersion		COmniPlugin::s_Version( 2, 0, 1, 0 );
+CVersion		COmniPlugin::s_Version( 2, 1, 0, 0 );
 
 // GUID			g_idDlgHandler = DlgPreferencesHandler_ID;
 // GUID			g_idHTMLHandler = HTMLPreferencesHandler_ID;

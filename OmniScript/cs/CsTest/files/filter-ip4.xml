@@ -1,0 +1,56 @@
+<doc version="1.0">
+	<filters>
+		<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+			<filter	color="0"
+              id="{00000000-0000-0000-0000-000000000000}"
+              name="Address 1 to any">
+				<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+					<filternode	inverted="0">
+						<addr1 class="2" data="01020304" type="21" />
+						<addr2 class="2" data="00000000" mask="0" type="21"	/>
+						<accept1to2	data="1" />
+						<accept2to1	data="1" />
+					</filternode>
+				</rootnode>
+			</filter>
+		</filterobj>
+		<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+			<filter	color="0"
+              id="{00000000-0000-0000-0000-000000000000}"
+              name="Double Mask">
+				<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+					<filternode	inverted="0">
+					<addr1 class="2" type="21" mask="4294967040" data="0A141E00"/>
+					<addr2 class="2" type="21" mask="4294901760" data="C0A80000"/>
+						<accept1to2	data="1" />
+						<accept2to1	data="1" />
+					</filternode>
+				</rootnode>
+			</filter>
+		</filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="138" name="Two addresses to any" comment="Multiple Addresses" color="0" group="">
+        <rootnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+          <filternode inverted="0" comment="">
+            <saddr1 type="21" data="11.22.33.44 22.44.66.0/24"/>
+            <saddr2 type="21" data=""/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="138" name="Two addresses to two addresses" comment="Multiple Addresses" color="0" group="">
+        <rootnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+          <filternode inverted="0" comment="">
+            <saddr1 type="21" data="3.5.7.9 20.40.60.0/24"/>
+            <saddr2 type="21" data="10.11.12.13 192.168.0.0/16"/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+	</filters>
+</doc>

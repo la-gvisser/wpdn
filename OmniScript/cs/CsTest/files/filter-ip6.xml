@@ -1,0 +1,56 @@
+<doc version="1.0">
+	<filters>
+		<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+			<filter	color="0"
+              id="{00000000-0000-0000-0000-000000000000}"
+              name="Address 1 to any">
+				<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+					<filternode	inverted="0">
+					<addr1 class="2" type="24" data="00010002000300040005000600070008"/>
+					<addr2 class="2" type="24" mask="0" data="00000000000000000000000000000000"/>
+						<accept1to2	data="1" />
+						<accept2to1	data="1" />
+					</filternode>
+				</rootnode>
+			</filter>
+		</filterobj>
+		<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+			<filter	color="0"
+              id="{00000000-0000-0000-0000-000000000000}"
+              name="Double Mask">
+				<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+					<filternode	inverted="0">
+					<addr1 class="2" type="24" mask="4294705152" data="00010002000300040005000600070000"/>
+					<addr2 class="2" type="24" mask="4278190080" data="00020004000600080000000000000000"/>
+						<accept1to2	data="1" />
+						<accept2to1	data="1" />
+					</filternode>
+				</rootnode>
+			</filter>
+		</filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="138" name="Two addresses to any" comment="Multiple Addresses" color="0" group="">
+        <rootnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+          <filternode inverted="0" comment="">
+					<saddr1 type="24" data="88:77:66:55:44:33:22:11 123:456:789:abc:*:*:*:*"/>
+					<saddr2 type="24" data=""/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="138" name="Two addresses to two addresses" comment="Multiple Addresses" color="0" group="">
+        <rootnode clsid="{2D2D9B91-08BF-44CF-B240-F0BBADBF21B5}">
+          <filternode inverted="0" comment="">
+					<saddr1 type="24" data="11:22:33:44:55:66:77:88 22:44:66:88:*:*:*:*"/>
+					<saddr2 type="24" data="8:7:6:5:4:3:2:1 33:55:77:99:11:0:*:*"/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+	</filters>
+</doc>

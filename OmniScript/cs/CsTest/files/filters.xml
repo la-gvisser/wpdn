@@ -1,0 +1,2674 @@
+<?xml version="1.0" encoding="utf-8"?>
+<filters>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{69FE4170-443C-47AA-AB5F-F0E66F5E98ED}" name="Broadcast" comment="Physical layer broadcasts" color="8388736" created="12950829983264524700" modified="12950829983264524700">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="10" data="FFFFFFFFFFFF" />
+					<addr2 class="2" type="10" mask="0" data="000000000000" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{1487D560-F2FA-4126-8D65-2719EB7BAC6F}" name="DHCP" comment="DHCP packets" color="5603072" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="91050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{E7430275-576B-4BDF-85DD-F1B51D623D70}" name="DNS" comment="DNS packets" color="5578538" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="85050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{4DADEB17-654D-4B1C-99F2-C4F8A3CC70BD}" name="FTP" comment="FTP data or control packets" color="16744448" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="7A050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5CDD3877-807B-42E8-AB62-D211B2560592}" name="ICMP" comment="ICMP packets" color="5570645" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="4C040000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F0CE9E10-1843-4FB1-B0FC-59803813DB1B}" name="IP" comment="IPv4, ARP, or RARP packets" color="16255" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="E8030000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="F4010000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="FE010000" slicetoheader="0" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{FAB518B6-8C65-4F94-AB0D-FCD14F426704}" name="UDP" comment="UDP packets" color="7093267" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="DC050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{523BB508-0932-4755-AC64-11E01A7A5A03}" name="Multicast" comment="Physical layer multicast packets" color="32724" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="1" />
+					<mask type="0" data="1" />
+					<offset data="0" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="10" data="FFFFFFFFFFFF" />
+							<addr2 class="2" type="10" mask="0" data="000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{8AC9E204-9845-4B53-B3D1-E3298EC09034}" name="HTTP" comment="HTTP packets (Web)" color="168" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="8A050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="93050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="AE050000" slicetoheader="0" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{FE60441E-818D-4F31-98CF-8AE4613BD045}" name="Error" comment="Error packets" color="255" created="12950829983265524800" modified="12950829983265524800">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="0">
+					<errorflags data="54" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{BFF3609B-7D03-4FB5-BAEC-9C27EE8A086E}" name="802.11 Data" comment="Data packets" color="40704" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="CA000000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{661B53AF-0E1E-493E-9F4E-335C5DFAD312}" name="802.11 Management" comment="Management packets" color="212" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="C9000000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{0ACBFA42-7CA8-497E-B7AB-7A85AEC2FC06}" name="802.11 No Beacons" comment="Exclude beacon packets" color="5603072" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="1">
+					<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F5AAD818-5C92-4F12-8205-329BAC580F08}" name="802.11 Protected Packets" comment="Protected packets" color="32768" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="0" data="64" />
+							<mask type="0" data="64" />
+							<offset data="1" />
+							<op data="1" />
+							<flags data="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{0E750DD8-E4D8-42C1-8DE1-7F81C2451650}" name="802.11 To DS" comment="Packets to DS" color="11190016" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="1" />
+					<mask type="0" data="1" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{DF5F2F22-19DC-40FB-858B-6CECB1933369}" name="802.11 From DS" comment="Packets from DS" color="32724" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="2" />
+					<mask type="0" data="2" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" protospecpath="5" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{7D40E0F2-2C95-4F49-9DD6-8AA23E9921A3}" name="802.11 More Fragments" comment="More fragments bit on" color="5570645" created="12950829983266524800" modified="12950829983266524800" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="4" />
+					<mask type="0" data="4" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{96576557-17A5-475F-BDE4-51097777AA02}" name="802.11 Retry" comment="Retry bit on" color="32724" created="12950829983267524900" modified="12950829983267524900" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="8" />
+					<mask type="0" data="8" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{FABF82BB-33BF-4494-909D-4054D4051447}" name="802.11 Order" comment="Order bit on" color="85" created="12950829983267524900" modified="12950829983267524900" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="128" />
+					<mask type="0" data="128" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{34A8AECC-C53B-4FF0-BDC8-42C4BA31C0F4}" name="802.11 More Data" comment="More data bit on" color="40704" created="12950829983267524900" modified="12950829983267524900" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="32" />
+					<mask type="0" data="32" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{3F50AA6B-6269-468F-957A-32A48143C286}" name="802.11 Control" comment="Control packets" color="8388608" created="12950829983267524900" modified="12950829983267524900" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="C8000000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F4B7830A-7D3E-4338-B019-561E2933E03A}" name="802.11 Beacons" comment="Beacon packets" color="5570645" created="12950829983267524900" modified="12950829983267524900" group="Wireless">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5B218F49-00D0-4C36-A2C3-FD6A4080FC89}" name="NetBIOS" comment="NetBIOS packets" color="128" created="12950829983267524900" modified="12950829983267524900">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="95050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{DE83939E-4A30-40DB-8186-8A16FE8F7506}" name="POP" comment="POP packets (email)" color="32896" created="12950829983267524900" modified="12950829983267524900">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="7D050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="8E050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="2D1A0000" slicetoheader="0" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{1911E760-CF2C-48FA-886C-988745961F26}" name="SMB" comment="SMB packets" color="8388608" created="12950829983268524900" modified="12950829983268524900">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="D4170000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{FF2A6DB1-6DAC-4644-9A86-5B2072B1740F}" name="SMTP" comment="SMTP packets (Email)" color="8421376" created="12950829983268524900" modified="12950829983268524900">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="81050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{830BB1E5-4719-4D3F-A92F-0F996E9D55BD}" name="TCP" comment="TCP packets" color="12582912" created="12950829983268524900" modified="12950829983268524900">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="78050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{23EE0117-8A99-458C-B0AA-040C81C0E470}" name="802.11 Ad-Hoc Network" comment="Beacon frames with IBSS = 1" color="192" created="12950829983268524900" modified="12950829983268524900" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="2" />
+					<mask type="2" data="2" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{7E25A31F-22B1-40F9-B4AF-D135A1BEEB0F}" name="Wireless Error" comment="Wireless Error packets" color="255" created="12950829983269525000" modified="12950829983269525000" group="Wireless">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="0">
+					<errorflags data="2" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{8F6FC0D9-5D2B-467C-982C-DB731A7CD718}" name="SSH" comment="Secure shell protocol" color="19948" created="12950829983269525000" modified="12950829983269525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="B3050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B432A68B-6FB2-4A01-91BF-09BAD3F01DB9}" name="Instant Messaging" comment="AOL, MSN, or Yahoo Messenger" color="4210688" created="12950829983270525000" modified="12950829983270525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="B4050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="BF050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="BE050000" slicetoheader="0" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{579BAFDF-F58F-4CE2-89B0-21D149D93A35}" name="RDP" comment="Microsoft Remote Desktop Protocol" color="8519755" created="12950829983270525000" modified="12950829983270525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="321A0000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5EDD350A-65C0-494E-847D-71E7E848115D}" name="No RDP" comment="Reject Microsoft Remote Desktop Protocol" color="13009738" created="12950829983270525000" modified="12950829983270525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="1">
+					<protocol class="1" type="9" data="321A0000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5E857170-2CC1-44C9-92D2-AEC183F494F1}" name="ARP" comment="IP address resolution protocol" color="4718664" created="12950829983270525000" modified="12950829983270525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="F4010000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F3A28625-DA00-4C5F-B23D-174BE003D6DA}" name="BitTorrent" comment="Peer-to-peer file sharing" color="4159392" created="12950829983270525000" modified="12950829983270525000">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="C2050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{7EACA46E-D4E0-4F1A-9184-C8D052CFFADC}" name="LDAP" comment="Lightweight directory access protocol" color="5538861" created="12950829983271525100" modified="12950829983271525100">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="C1050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="BD090000" slicetoheader="0" />
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B3E0E05F-0FF1-4683-8556-6DF9BF3F3651}" name="Authentication" comment="RADIUS, TACACS, Kerberos, or 802.1X" color="16744448" created="12950829983271525100" modified="12950829983271525100">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="B5050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="C6050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="A9050000" slicetoheader="0" />
+									<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="B0360000" slicetoheader="0" />
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{6B254274-65D7-4584-8F1F-C2C801688393}" name="Private IP Addresses" comment="IPv4 addresses in the ranges 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16" color="3487903" created="12950829983271525100" modified="12950829983271525100">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" mask="4278190080" data="0A000000" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" mask="4293918720" data="AC100000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" mask="4294901760" data="C0A80000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{1B84ABE9-609F-47CD-9116-522AEF2BBDAA}" name="No Private IP Addresses" comment="Reject IPv4 addresses in the ranges 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16" color="4426868" created="12950829983271525100" modified="12950829983271525100">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="1">
+					<addr1 class="2" type="21" mask="4278190080" data="0A000000" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" mask="4293918720" data="AC100000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="21" mask="4294901760" data="C0A80000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B321EB9B-3DBA-4B7A-ADFC-2148073B16F2}" name="IMAP" comment="IMAP packets (email)" color="9306291" created="12950829983272525200" modified="12950829983272525200">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="AA050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="AC050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="BE090000" slicetoheader="0" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{BEAC4219-4F68-4502-A88A-62C72626F6E1}" name="LLMNR Multicast" comment="Well-known multicast address for LLMNR (Link-Local Multicast Name Resolution)" color="5578538" created="12950829983272525200" modified="12950829983272525200">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="E00000FC" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="24" data="FF020000000000000000000000010003" />
+							<addr2 class="2" type="24" mask="0" data="00000000000000000000000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B88193BC-B268-4E0D-A155-64A8C257EF6F}" name="Service Discovery" comment="Various service discovery protocols" color="24362" created="12950829983272525200" modified="12950829983272525200">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="A5090000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="921A0000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="6D0A0000" slicetoheader="0" />
+									<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="0D000000" slicetoheader="0" />
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{CE166D51-6D50-4EA3-A2B4-11D00CCF86FF}" name="mDNS Multicast" comment="Well-known multicast address for mDNS (mulitcast DNS)" color="5570687" created="12950829983272525200" modified="12950829983272525200">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="E00000FB" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="24" data="FF0200000000000000000000000000FB" />
+							<addr2 class="2" type="24" mask="0" data="00000000000000000000000000000000" />
+							<accept1to2 data="0" />
+							<accept2to1 data="1" />
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F7AE592D-9222-464C-A15A-4904188EDD2C}" name="SNMP" comment="SNMP packets" color="24362" created="12950829983273525200" modified="12950829983273525200">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="EF050000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{94C1BE11-D2EC-4AC0-94CE-E9EEEA4C7D3B}" name="IPv6" comment="IPv6 packets" color="5570687" created="12950829983273525200" modified="12950829983273525200">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="6C200000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{1136312C-2618-4C2F-AF1E-59E0F5DC0C91}" name="IGMP" comment="IGMP packets" color="3239368" created="12950829983273525200" modified="12950829983273525200">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="7E040000" slicetoheader="0" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{125B6806-B2B0-4920-A9F7-900EAE6573B0}" name="Infrastructure - Access Points" comment="{CHANGEME} To find any Access Points that are on different channel" color="5603072" created="12950829983274525300" modified="12950829983274525300" group="Infrastructure">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="13" data="000000000000" />
+					<addr2 class="2" type="13" mask="0" data="000000000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{5C1006D4-BA1E-4F28-88E6-765BE71D2CD9}">
+						<filternode inverted="1">
+							<channel channelnumber="1" channelfrequency="0" channelband="0" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="13" data="000000000000" />
+							<addr2 class="2" type="13" mask="0" data="000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<andnode clsid="{5C1006D4-BA1E-4F28-88E6-765BE71D2CD9}">
+								<filternode inverted="1">
+									<channel channelnumber="6" channelfrequency="0" channelband="0" />
+								</filternode>
+							</andnode>
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="13" data="000000000000" />
+									<addr2 class="2" type="13" mask="0" data="000000000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+									<andnode clsid="{5C1006D4-BA1E-4F28-88E6-765BE71D2CD9}">
+										<filternode inverted="1">
+											<channel channelnumber="11" channelfrequency="0" channelband="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B8BC7C27-CB26-4E4C-A3F0-81B394F09B16}" name="Infrastructure - DHCP" comment="{CHANGEME} To validate only correct DHCP servers exist" color="5603072" created="12950829983274525300" modified="12950829983274525300" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="9105C200" slicetoheader="0" protospecpath="2\65535\1000\65535\1500\65535\1414\1425" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="0" data="2" />
+							<mask type="0" data="255" />
+							<offset data="284" />
+							<op data="1" />
+							<flags data="1" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" data="00000000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+									<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="0">
+											<addr1 class="2" type="21" data="00000000" />
+											<addr2 class="2" type="21" mask="0" data="00000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="1" />
+											<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+												<filternode inverted="0">
+													<addr1 class="2" type="10" data="000000000000" />
+													<addr2 class="2" type="10" mask="0" data="000000000000" />
+													<accept1to2 data="1" />
+													<accept2to1 data="1" />
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{527433E6-501E-46D5-9440-32E2B4D07B95}" name="Infrastructure - DNS Queries" comment="{CHANGEME} To validate that DNS queries are only being sent to valid DNS servers" color="5603072" created="12950829983275525300" modified="12950829983275525300" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="8505C200" slicetoheader="0" protospecpath="2\65535\1000\65535\1500\65535\1413" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" data="00000000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" data="00000000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+									<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="0">
+											<addr1 class="2" type="10" data="000000000000" />
+											<addr2 class="2" type="10" mask="0" data="000000000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="1" />
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{C3051843-840B-4409-8B14-26D904968D1D}" name="Infrastructure - FW validation" comment="{CHANGEME} To validate firewall rules based on traffic  " color="5603072" created="12950829983275525300" modified="12950829983275525300" group="Infrastructure">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="00000000" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="4C046100" slicetoheader="0" protospecpath="2\65535\1000\65535\1100" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" data="00000000" />
+							<addr2 class="2" type="21" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="7A056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1402" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F18F50EB-AB14-4024-B8A3-2254D34105E6}" name="Infrastructure - Gateway" comment="{CHANGEME} To validate all external traffic is destined for the correct Gateway" color="5603072" created="12950829983275525300" modified="12950829983275525300" group="Infrastructure">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="00000000" />
+					<addr2 class="2" type="21" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{E6A38752-DF32-43CB-A144-40A90270E9B8}" name="Infrastructure - Listeners" comment="{CHANGEME} To validate that devices that only listen, never talk (e.g., printers)" color="5603072" created="12950829983276525400" modified="12950829983276525400" group="Infrastructure">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="00000000" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="78056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400" />
+							<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="0">
+									<value type="0" data="0" />
+									<mask type="0" data="255" />
+									<offset data="47" />
+									<op data="1" />
+									<flags data="1" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{992F913E-9B0D-416F-A2C3-072443348DA3}" name="Infrastructure - MAC to IP" comment="{CHANGEME} To validate that traffic from a particular IP has the correct MAC address" color="5603072" created="12950829983276525400" modified="12950829983276525400" group="Infrastructure">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="00000000" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="10" data="000000000000" />
+							<addr2 class="2" type="10" mask="0" data="000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" data="00000000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="10" data="000000000000" />
+									<addr2 class="2" type="10" mask="0" data="000000000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+								</filternode>
+							</andnode>
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" data="00000000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+									<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="1">
+											<addr1 class="2" type="10" data="000000000000" />
+											<addr2 class="2" type="10" mask="0" data="000000000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="1" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{BEE928E2-9AE9-49E4-B1D6-A82B34D7F2CF}" name="Infrastructure - Mail" comment="{CHANGEME} To validate that the Mail servers are the only ones being used" color="5603072" created="12950829983276525400" modified="12950829983276525400" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="81056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1409" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" data="00000000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="0" />
+							<accept2to1 data="1" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{366FD51B-025E-4C10-A7D3-BB8DFCE5A605}" name="Infrastructure - Peer to Peer" comment="Find common Peer to Peer traffic" color="5603072" created="12950829983277525400" modified="12950829983277525400" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="C0090000" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\2496" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="C2050000" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1474" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="54060000" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1620" />
+									<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="C4050000" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1476" />
+											<ornode clsid="{B3279AE9-91E1-4D0A-8ABD-6D1BDC5471A9}">
+												<filternode inverted="0">
+													<Sport1 class="3" type="34" mask="3221225472" data="4662 4672" />
+													<Sport2 class="3" type="34" mask="3221225472" data="" />
+													<accept1to2 data="1" />
+													<accept2to1 data="1" />
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{7CCB25C0-7DA6-4E01-90E2-92D837D94208}" name="Infrastructure - Proxy" comment="{CHANGEME} To validate that all outbound HTTP traffic is destined for the Proxies" color="5603072" created="12950829983277525400" modified="12950829983277525400" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="8A056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1418" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" mask="4294901760" data="0A000000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="AE05C100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400\65535\1454" />
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{CCD08FEE-8DD8-4ABA-9887-2D4041C848D2}" name="Infrastructure - SNMP" comment="{CHANGEME} To validate that all SNMP is to/from the correct SNMP servers" color="5603072" created="12950829983277525400" modified="12950829983277525400" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="EF056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1500\65535\1519" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" data="00000000" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="1" />
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="21" data="00000000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="1" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5CEFD2ED-3CF2-4E61-AF2D-479B67855D53}" name="Infrastructure - Unexpected behavior" comment="{CHANGEME} To find any unexpected behavior like odd TCP flags or unusual ICMP" color="5603072" created="12950829983278525500" modified="12950829983278525500" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="4C046100" slicetoheader="0" protospecpath="2\65535\1000\65535\1100" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="78056100" slicetoheader="0" protospecpath="2\65535\1000\65535\1400" />
+							<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="0">
+									<value type="0" data="0" />
+									<mask type="0" data="255" />
+									<offset data="47" />
+									<op data="1" />
+									<flags data="1" />
+									<ornode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="0">
+											<value type="0" data="0" />
+											<mask type="0" data="255" />
+											<offset data="47" />
+											<op data="1" />
+											<flags data="1" />
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{9A120684-5BF9-4FE1-B97E-0D81A757A81C}" name="Infrastructure - VLAN ID" comment="{CHANGEME} To find or verify specific VLANS (Modify VLAN values from 0-8191). Add as many VLAN IDs as you wish." color="5603072" created="12950829983278525500" modified="12950829983278525500" group="Infrastructure">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="1" data="8100" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="2" data="82" />
+							<mask type="2" data="4095" />
+							<offset data="14" />
+							<op data="1" />
+							<flags data="1" />
+							<ornode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="0">
+									<value type="2" data="0" />
+									<mask type="2" data="4095" />
+									<offset data="14" />
+									<op data="1" />
+									<flags data="1" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{AC7AFDE4-59F2-412F-8CD7-44938011172B}" name="Security - SNMP Wrong Password" comment="{CHANGEME} Change to your SNMP passwords" color="192" created="12950829983279525600" modified="12950829983279525600" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="EF050000" slicetoheader="0" />
+					<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+						<filternode inverted="1">
+							<patterntype data="0" />
+							<patterndata data="6D7970617373776F7264" />
+							<startoffset data="49" />
+							<endoffset data="65535" />
+							<casesensitive data="1" />
+							<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="1">
+									<patterntype data="0" />
+									<patterndata data="7061737332" />
+									<startoffset data="49" />
+									<endoffset data="65535" />
+									<casesensitive data="1" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{CB124D7A-EA0A-4E23-9CB0-0AC2FEC5BEC3}" name="802.11 Ad-Hoc Station" comment="A station is sending Beacon frames that indicate that it is in ad-hoc mode (IBSS bit = 1)" color="192" created="12950829983281525700" modified="12950829983281525700" group="Wireless">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="1">
+					<value type="0" data="0" />
+					<mask type="0" data="2" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="E2000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{64B04641-05D6-47D8-9A69-B1591788587C}" name="Wireless Performance - Order Bit Set" comment="Order bit is set. Possible performance impacts." color="16744448" created="12950829983281525700" modified="12950829983281525700" group="Wireless Performance">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="128" />
+					<mask type="0" data="128" />
+					<offset data="1" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{56434C34-1439-4DB4-8DEE-3244B85F1F69}" name="Wireless Policy - Ad-Hoc Network" comment="Beacon frames with ESS != 1" color="16711680" created="12950829983282525700" modified="12950829983282525700" group="Wireless Policy">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="1">
+					<value type="0" data="1" />
+					<mask type="0" data="1" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{E03D2C5B-A925-40C8-8275-BA94D0219B73}" name="Wireless Policy - Default ESSID" comment="Packets with default ESSID" color="16711680" created="12950829983282525700" modified="12950829983282525700" group="Wireless Policy">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="0">
+									<value type="0" data="0" />
+									<mask type="0" data="255" />
+									<offset data="36" />
+									<op data="1" />
+									<flags data="1" />
+									<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="313031" />
+											<startoffset data="38" />
+											<endoffset data="41" />
+											<casesensitive data="0" />
+											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+												<filternode inverted="0">
+													<patterntype data="0" />
+													<patterndata data="313035" />
+													<startoffset data="38" />
+													<endoffset data="41" />
+													<casesensitive data="1" />
+													<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+														<filternode inverted="0">
+															<patterntype data="0" />
+															<patterndata data="7473756E616D69" />
+															<startoffset data="38" />
+															<endoffset data="45" />
+															<casesensitive data="0" />
+															<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																<filternode inverted="0">
+																	<patterntype data="0" />
+																	<patterndata data="436F6D706171" />
+																	<startoffset data="38" />
+																	<endoffset data="44" />
+																	<casesensitive data="0" />
+																	<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																		<filternode inverted="0">
+																			<patterntype data="0" />
+																			<patterndata data="636F6D636F6D636F6D" />
+																			<startoffset data="38" />
+																			<endoffset data="47" />
+																			<casesensitive data="1" />
+																			<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																				<filternode inverted="0">
+																					<patterntype data="0" />
+																					<patterndata data="44656661756C742053534944" />
+																					<startoffset data="38" />
+																					<endoffset data="50" />
+																					<casesensitive data="0" />
+																					<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																						<filternode inverted="0">
+																							<patterntype data="0" />
+																							<patterndata data="496E74656C" />
+																							<startoffset data="38" />
+																							<endoffset data="43" />
+																							<casesensitive data="1" />
+																							<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																								<filternode inverted="0">
+																									<patterntype data="0" />
+																									<patterndata data="786C616E" />
+																									<startoffset data="38" />
+																									<endoffset data="42" />
+																									<casesensitive data="0" />
+																									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																										<filternode inverted="0">
+																											<patterntype data="0" />
+																											<patterndata data="6C696E6B737973" />
+																											<startoffset data="38" />
+																											<endoffset data="45" />
+																											<casesensitive data="0" />
+																											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																												<filternode inverted="0">
+																													<patterntype data="0" />
+																													<patterndata data="526F616D41626F75742044656661756C74204E6574776F726B204E616D65" />
+																													<startoffset data="38" />
+																													<endoffset data="68" />
+																													<casesensitive data="0" />
+																													<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																														<filternode inverted="0">
+																															<patterntype data="0" />
+																															<patterndata data="576972656C657373" />
+																															<startoffset data="38" />
+																															<endoffset data="46" />
+																															<casesensitive data="0" />
+																															<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																<filternode inverted="0">
+																																	<patterntype data="0" />
+																																	<patterndata data="574C414E" />
+																																	<startoffset data="38" />
+																																	<endoffset data="42" />
+																																	<casesensitive data="0" />
+																																	<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																		<filternode inverted="0">
+																																			<patterntype data="0" />
+																																			<patterndata data="616E79" />
+																																			<startoffset data="38" />
+																																			<endoffset data="41" />
+																																			<casesensitive data="1" />
+																																			<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																				<filternode inverted="0">
+																																					<patterntype data="0" />
+																																					<patterndata data="6C696E6B7379732D67" />
+																																					<startoffset data="38" />
+																																					<endoffset data="47" />
+																																					<casesensitive data="0" />
+																																					<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																						<filternode inverted="0">
+																																							<patterntype data="0" />
+																																							<patterndata data="4E455447454152" />
+																																							<startoffset data="38" />
+																																							<endoffset data="45" />
+																																							<casesensitive data="1" />
+																																							<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																								<filternode inverted="0">
+																																									<patterntype data="0" />
+																																									<patterndata data="4D534E484F4D45" />
+																																									<startoffset data="38" />
+																																									<endoffset data="45" />
+																																									<casesensitive data="1" />
+																																									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																										<filternode inverted="0">
+																																											<patterntype data="0" />
+																																											<patterndata data="62656C6B696E" />
+																																											<startoffset data="38" />
+																																											<endoffset data="44" />
+																																											<casesensitive data="0" />
+																																											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																												<filternode inverted="0">
+																																													<patterntype data="0" />
+																																													<patterndata data="3277697265" />
+																																													<startoffset data="38" />
+																																													<endoffset data="43" />
+																																													<casesensitive data="0" />
+																																													<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																														<filternode inverted="0">
+																																															<patterntype data="0" />
+																																															<patterndata data="74657374" />
+																																															<startoffset data="38" />
+																																															<endoffset data="42" />
+																																															<casesensitive data="0" />
+																																															<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																																<filternode inverted="0">
+																																																	<patterntype data="0" />
+																																																	<patterndata data="425249444745" />
+																																																	<startoffset data="38" />
+																																																	<endoffset data="44" />
+																																																	<casesensitive data="1" />
+																																																	<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																																																		<filternode inverted="0">
+																																																			<patterntype data="0" />
+																																																			<patterndata data="576176654C414E204E6574776F726B" />
+																																																			<startoffset data="38" />
+																																																			<endoffset data="53" />
+																																																			<casesensitive data="1" />
+																																																		</filternode>
+																																																	</ornode>
+																																																</filternode>
+																																															</ornode>
+																																														</filternode>
+																																													</ornode>
+																																												</filternode>
+																																											</ornode>
+																																										</filternode>
+																																									</ornode>
+																																								</filternode>
+																																							</ornode>
+																																						</filternode>
+																																					</ornode>
+																																				</filternode>
+																																			</ornode>
+																																		</filternode>
+																																	</ornode>
+																																</filternode>
+																															</ornode>
+																														</filternode>
+																													</ornode>
+																												</filternode>
+																											</ornode>
+																										</filternode>
+																									</ornode>
+																								</filternode>
+																							</ornode>
+																						</filternode>
+																					</ornode>
+																				</filternode>
+																			</ornode>
+																		</filternode>
+																	</ornode>
+																</filternode>
+															</ornode>
+														</filternode>
+													</ornode>
+												</filternode>
+											</ornode>
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{BB933C88-12B5-438B-B1CD-30AB8A01E746}" name="Wireless Performance - RTS" comment="The Request To Send mechanism is implemented on this network" color="16744448" created="12950829983283525800" modified="12950829983283525800" group="Wireless Performance">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" mask="192" data="D3000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{67145B21-275D-41B5-B089-2D8936A787BF}" name="Wireless Performance - Contention Free" comment="Contention Free mode is in use on the network" color="16744448" created="12950829983283525800" modified="12950829983283525800" group="Wireless Performance">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" mask="192" data="D6000000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{4FA31B05-96DD-49A5-B66C-3843A47EF6D7}" name="Wireless Security - Spanning Tree" comment="Spanning Tree Algorithm is operating across the WLAN" color="212" created="12950829983284525800" modified="12950829983284525800" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="0C000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{DD124547-FA20-4887-B919-2E37B4D37BFC}" name="Wireless Security - IGRP" comment="Cisco IGRP is operating across the WLAN" color="212" created="12950829983284525800" modified="12950829983284525800" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="46050000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{5846EB85-E658-467D-AD0B-18C567E0623A}" name="Wireless Security - SNMP" comment="SNMP is operating across the WLAN" color="212" created="12950829983284525800" modified="12950829983284525800" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="EF050000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{D1894580-AF67-4092-80C7-E053B17E8BDC}" name="Wireless Security - HSRP" comment="Cisco HSRP routing operating across the WLAN" color="212" created="12950829983285525900" modified="12950829983285525900" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="B2050000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{2177990B-9E50-4DD9-9874-9BC4B4F5370D}" name="Wireless Security - OSPF" comment="OSPF routing is operating across the WLAN" color="212" created="12950829983285525900" modified="12950829983285525900" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="B0040000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{59C54079-0494-48CB-A4B3-69B59B791875}" name="Wireless Policy - Unencrypted Data" comment="Unencrypted data is present on the WLAN" color="16711680" created="12950829983286526000" modified="12950829983286526000" group="Wireless Policy">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{5C1006D4-BA1E-4F28-88E6-765BE71D2CD9}">
+						<filternode inverted="0">
+							<encryption data="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="CA000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{0AA5B05A-1C21-4422-B125-6F6D17056808}" name="Wireless Security - DHCP" comment="An unfamiliar host is requesting a DHCP address assignment" color="212" created="12950829983286526000" modified="12950829983286526000" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="91050000" slicetoheader="0" />
+									<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="0">
+											<value type="4" data="889258240" />
+											<mask type="4" data="4294967040" />
+											<offset data="300" />
+											<op data="1" />
+											<flags data="5" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{35EC7757-C25C-49D5-A4F8-674642092196}" name="Wireless Policy - Ad-Hoc Station" comment="A station is sending Beacon frames that indicate that it is in ad-hoc mode (IBSS bit = 1)" color="16711680" created="12950829983286526000" modified="12950829983286526000" group="Wireless Policy">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="1">
+					<value type="0" data="0" />
+					<mask type="0" data="2" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="E2000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{3D2DBF08-D165-4DD4-82ED-EAF1A5E0ADC8}" name="Wireless Policy - Non-WEP Access Point" comment="Access Point indicates that it does not use WEP (Privacy bit equals zero)" color="16711680" created="12950829983287526000" modified="12950829983287526000" group="Wireless Policy">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="0" />
+					<mask type="0" data="16" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" mask="192" data="E2000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{8CCC74B5-41C9-438B-9F20-AEE61B5DFE1C}" name="Wireless Security - MAC Address Spoofing" comment="{CHANGEME} This filter requires modification to match your main APs&apos; IP and MAC addresses. Possible Wi-Phishing." color="212" created="12950829983287526000" modified="12950829983287526000" group="Wireless Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="0A010105" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="0" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="10" data="006037000001" />
+							<addr2 class="2" type="10" mask="0" data="000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="0" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" data="0A010107" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="0" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="10" data="008060701284" />
+									<addr2 class="2" type="10" mask="0" data="000000000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="0" />
+								</filternode>
+							</andnode>
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" data="0A01010C" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="0" />
+									<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="1">
+											<addr1 class="2" type="10" data="008060703467" />
+											<addr2 class="2" type="10" mask="0" data="000000000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{4F1D5320-FF6C-4B18-9EC2-A65DC5E88C9E}" name="Wireless Security - Access Point Impersonation" comment="{CHANGEME} Modify the Source MAC and ESSID string to match your AP&apos;s. Detects the presence of possible rogue devices." color="212" created="12950829983288526100" modified="12950829983288526100" group="Wireless Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="13" mask="3758096384" data="004096000000" />
+									<addr2 class="2" type="13" data="FFFFFFFFFFFF" />
+									<accept1to2 data="1" />
+									<accept2to1 data="0" />
+									<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="4D595F4553534944" />
+											<startoffset data="65535" />
+											<endoffset data="65535" />
+											<casesensitive data="0" />
+										</filternode>
+									</andnode>
+									<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="1">
+											<addr1 class="2" type="13" mask="3758096384" data="000000000000" />
+											<addr2 class="2" type="13" mask="0" data="000000000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="0" />
+											<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+												<filternode inverted="0">
+													<patterntype data="0" />
+													<patterndata data="434F52505F574C414E5F4553534944" />
+													<startoffset data="65535" />
+													<endoffset data="65535" />
+													<casesensitive data="0" />
+												</filternode>
+											</andnode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{A308622C-0909-406B-91E7-56B619A67ED3}" name="Wireless Performance - Barker Preamble Mode" comment="{CHANGEME} Current filter works with Cisco Aironet Only due to variable offset. Possible Mixed Mode operation" color="16744448" created="12950829983288526100" modified="12950829983288526100" group="Wireless Performance">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="4" />
+					<mask type="0" data="255" />
+					<offset data="77" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="C9000000" slicetoheader="0" />
+									<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F827AD38-07A0-4BAF-A6E6-89A28F73C7EF}" name="Wireless Policy - Shared Key Authentication" comment="Shared Key Authentication in use. This method is vulnerable to attacks." color="16711680" created="12950829983289526100" modified="12950829983289526100" group="Wireless Policy">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="1" />
+					<mask type="2" data="65535" />
+					<offset data="24" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E5000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{4D8CD099-EBB3-456B-BF27-5F25CE83B148}" name="Wireless Policy - Open System Authentication" comment="Open System Authentcation in use. This is the recommended practice, but in conjunction with higher level implementations like 802.1x or VPN." color="16711680" created="12950829983289526100" modified="12950829983289526100" group="Wireless Policy">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="0" />
+					<mask type="2" data="65535" />
+					<offset data="24" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E5000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{014939EF-EE81-4A7B-A2AA-40AB3208B2F7}" name="Wireless Performance - Fragmentation" comment="Fragmentation in use. Filter based on Fragment Number bit. Possible performance impacts." color="16744448" created="12950829983290526200" modified="12950829983290526200" group="Wireless Performance">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="0" data="2" />
+					<mask type="0" data="15" />
+					<offset data="22" />
+					<op data="2" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="F1000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{3252E254-0DC5-43C5-B6FF-2517C254E8FD}" name="Wireless Security - Rogue DHCP Server" comment="DHCP Offer from unknown devices. Possible Wi-Phishing attempts" color="212" created="12950829983290526200" modified="12950829983290526200" group="Wireless Security">
+			<rootnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+				<filternode inverted="1">
+					<errorflags data="2" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="21" data="0A010203" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="91050000" slicetoheader="0" />
+									<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="0">
+											<value type="0" data="2" />
+											<mask type="0" data="255" />
+											<offset data="302" />
+											<op data="1" />
+											<flags data="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F6AF2A36-9BFE-411C-A724-7C755656078F}" name="Wireless Security - DoS/MiTM Attack (fata_jack)" comment="{CHANGEME} Change MAC address to reflect your AP. Spoofed malformed authentication frame attack resulting in status code 2 or 14 (auth transaction sequence number out of expected sequence)" color="212" created="12950829983291526200" modified="12950829983291526200" group="Wireless Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="13" data="004096000000" />
+					<addr2 class="2" type="13" mask="0" data="000000000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="E5000000" slicetoheader="0" />
+									<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="0">
+											<value type="2" data="14" />
+											<mask type="2" data="65535" />
+											<offset data="28" />
+											<op data="1" />
+											<flags data="0" />
+											<ornode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+												<filternode inverted="0">
+													<value type="2" data="2" />
+													<mask type="2" data="65535" />
+													<offset data="24" />
+													<op data="1" />
+													<flags data="0" />
+												</filternode>
+											</ornode>
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{F94A5BBF-0F37-420D-B4E3-E8341109CBB9}" name="Wireless Security - DoS/MiTM Attack (Spoofed Deauthentication Frames)" comment="{CHANGEME} Change to reflect your AP&apos;s MAC Address. Identifies deauthentication frames from unknown devices." color="212" created="12950829983292526300" modified="12950829983292526300" group="Wireless Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="1">
+					<addr1 class="2" type="13" data="004096000000" />
+					<addr2 class="2" type="13" mask="0" data="000000000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="E6000000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{7005D007-C6BC-44F4-94BE-9BBD91F71FE1}" name="Wireless Security - Ad-Hoc Network using AP&apos;s SSID" comment="{CHANGEME} Ad-Hoc Network using AP&apos;s SSID" color="212" created="12950829983299526700" modified="12950829983299526700" group="Wireless Security">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="1">
+					<value type="0" data="1" />
+					<mask type="0" data="1" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+							<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="0">
+									<patterntype data="0" />
+									<patterndata data="594F55525F4553534944" />
+									<startoffset data="65535" />
+									<endoffset data="65535" />
+									<casesensitive data="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{C6DF3654-0E58-4047-A14A-0B5D5AA34F08}" name="Wireless Security - DoS/MiTM Attack (Deauthentication Flood)" comment="Deauthentication frames sent to broadcast address causing disruption of service" color="212" created="12950829983299526700" modified="12950829983299526700" group="Wireless Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="13" data="FFFFFFFFFFFF" />
+					<addr2 class="2" type="13" mask="0" data="000000000000" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E6000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{D46C5532-6032-4ABF-AA51-13237F83B4AF}" name="Wireless Security - DoS/MiTM Attack (Disassociation Flood)" comment="Disassociation frames sent to broadcast address causing disruption of service" color="212" created="12950829983300526800" modified="12950829983300526800" group="Wireless Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="13" data="FFFFFFFFFFFF" />
+					<addr2 class="2" type="13" mask="0" data="000000000000" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E4000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{E105CD16-02C4-4039-A4BD-378CAD2FACFF}" name="Wireless Performance - Short Time Slot" comment="Possible performance issues in mixed b/g networks" color="16744448" created="12950829983301526800" modified="12950829983301526800" group="Wireless Performance">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="1024" />
+					<mask type="2" data="3840" />
+					<offset data="34" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{D9630CDC-FAEB-4DA3-A3DE-566913FA91EC}" name="Wireless Performance - Uncommon Beacon Interval" comment="Non-standard value for the beacon interval field. Beacon interval is usually set to 100 milliseconds. " color="16744448" created="12950829983301526800" modified="12950829983301526800" group="Wireless Performance">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="100" />
+					<mask type="2" data="65535" />
+					<offset data="32" />
+					<op data="6" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E2000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{9C5472F9-37FA-4C83-A350-505EC0AC89A5}" name="Wireless Security - Duration Attack (Denial of Silence)" comment="Duration field in the MAC header is set too high making the network appear &quot;occupied&quot; (This filter considers 5ms)" color="212" created="12950829983302526900" modified="12950829983302526900" group="Wireless Security">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="5120" />
+					<mask type="2" data="65535" />
+					<offset data="2" />
+					<op data="2" />
+					<flags data="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="1">
+									<protocol class="1" type="9" data="D2000000" slicetoheader="0" />
+									<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="05000000" slicetoheader="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{6B85C6F0-F5F7-4C79-AA26-B2512D385E0D}" name="Wireless Security - DoS (High Listen Interval)" comment="Listen interval set to a high value causing service disruptions" color="212" created="12950829983303526900" modified="12950829983303526900" group="Wireless Security">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="10000" />
+					<mask type="2" data="65535" />
+					<offset data="26" />
+					<op data="1" />
+					<flags data="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="DC000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{D535F53F-EE9A-445B-9224-C254F3402025}" name="Wireless Policy - 802.1x Presence" comment="This filter is detects the presence of 802.1x" color="16711680" created="12950829983303526900" modified="12950829983303526900" group="Wireless Policy">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="B0360000" slicetoheader="0" />
+					<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+						<filternode inverted="1">
+							<errorflags data="2" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{51E6408F-4B62-4EFF-8CCD-004E0A3CBD6B}" name="Wireless Policy - TKIP Present" comment="802.11 Data is protected by TKIP. Enable/disable this filter based on your organizational policies." color="16711680" created="12950829983304527000" modified="12950829983304527000" group="Wireless Policy">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="CA000000" slicetoheader="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="F3000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{A7A41FB0-003F-47DE-ACF9-398F71D4DDC6}" name="Wireless Policy - WEP present" comment="802.11 Data is protected by WEP. Enable/disable this filter based on your organizational policies." color="16711680" created="12950829983305527000" modified="12950829983305527000" group="Wireless Policy">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="CA000000" slicetoheader="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="F0000000" slicetoheader="0" />
+							<andnode clsid="{F4818ADB-0AA8-428B-A611-D31685E23DE8}">
+								<filternode inverted="1">
+									<errorflags data="2" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{A49E5695-2C4E-4565-BB13-B84E0590999D}" name="Security - IP Addresses from wrong MAC" comment="{CHANGEME} This filter must be modified to match your main servers&apos; IP and MAC addresses" color="192" created="12950829983305527000" modified="12950829983305527000" group="Security">
+			<rootnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+				<filternode inverted="0">
+					<addr1 class="2" type="21" data="0A010105" />
+					<addr2 class="2" type="21" mask="0" data="00000000" />
+					<accept1to2 data="1" />
+					<accept2to1 data="0" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="1">
+							<addr1 class="2" type="10" data="006037000001" />
+							<addr2 class="2" type="10" mask="0" data="000000000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="0" />
+						</filternode>
+					</andnode>
+					<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" data="0A010107" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="1" />
+							<accept2to1 data="0" />
+							<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="1">
+									<addr1 class="2" type="10" data="008060701284" />
+									<addr2 class="2" type="10" mask="0" data="000000000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="0" />
+								</filternode>
+							</andnode>
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" data="0A01010C" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="1" />
+									<accept2to1 data="0" />
+									<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+										<filternode inverted="1">
+											<addr1 class="2" type="10" data="008060703467" />
+											<addr2 class="2" type="10" mask="0" data="000000000000" />
+											<accept1to2 data="1" />
+											<accept2to1 data="0" />
+										</filternode>
+									</andnode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{00855EB9-2FB3-4F07-9439-5B49B16D2393}" name="Security - Clear Text Protocols" comment="Common Protocols Running Clear Text" color="192" created="12950829983306527100" modified="12950829983306527100" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="AA050000" slicetoheader="0" />
+					<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="81050000" slicetoheader="0" />
+							<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="0">
+									<protocol class="1" type="9" data="7F050000" slicetoheader="0" />
+									<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="0">
+											<protocol class="1" type="9" data="8A050000" slicetoheader="0" />
+											<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+												<filternode inverted="0">
+													<protocol class="1" type="9" data="7D050000" slicetoheader="0" />
+													<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+														<filternode inverted="0">
+															<protocol class="1" type="9" data="7E050000" slicetoheader="0" />
+															<ornode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+																<filternode inverted="0">
+																	<protocol class="1" type="9" data="79050000" slicetoheader="0" />
+																</filternode>
+															</ornode>
+														</filternode>
+													</ornode>
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</ornode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{9CC341D1-A6BE-468E-B8E5-2D65D2165E80}" name="Security - Reverse DNS" comment="Reverse DNS in itself is not a major issue, but large quantities may indicate Discovery sweeps. Web servers may generate this normally." color="192" created="12950829983307527200" modified="12950829983307527200" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="85050000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="2" data="12" />
+							<mask type="2" data="65535" />
+							<offset data="77" />
+							<op data="1" />
+							<flags data="1" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{0E1A522A-AF7C-462E-94C4-257AA764EE4C}" name="Security - HTTP Common Exploits" comment="Detects common HTTP exploit scans" color="192" created="12950829983308527200" modified="12950829983308527200" group="Security">
+			<rootnode clsid="{B3279AE9-91E1-4D0A-8ABD-6D1BDC5471A9}">
+				<filternode inverted="0">
+					<Sport1 class="3" type="34" mask="3221225472" data="80" />
+					<Sport2 class="3" type="34" mask="3221225472" data="" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<andnode clsid="{76D9F2C2-20D3-463B-A3D2-50429DF3D23D}">
+						<filternode inverted="0">
+							<min data="80" />
+							<max data="1518" />
+							<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="0">
+									<patterntype data="0" />
+									<patterndata data="2F69697361646D696E" />
+									<startoffset data="57" />
+									<endoffset data="80" />
+									<casesensitive data="1" />
+									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="2F73637269707473" />
+											<startoffset data="54" />
+											<endoffset data="80" />
+											<casesensitive data="1" />
+											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+												<filternode inverted="0">
+													<patterntype data="0" />
+													<patterndata data="2F69697373616D706C65732F" />
+													<startoffset data="54" />
+													<endoffset data="80" />
+													<casesensitive data="1" />
+													<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+														<filternode inverted="0">
+															<patterntype data="0" />
+															<patterndata data="2F6D736164632F" />
+															<startoffset data="57" />
+															<endoffset data="80" />
+															<casesensitive data="1" />
+															<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																<filternode inverted="0">
+																	<patterntype data="0" />
+																	<patterndata data="2F5F7674695F62696E2F" />
+																	<startoffset data="57" />
+																	<endoffset data="80" />
+																	<casesensitive data="1" />
+																	<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																		<filternode inverted="0">
+																			<patterntype data="0" />
+																			<patterndata data="2F5F7674695F636E662F" />
+																			<startoffset data="57" />
+																			<endoffset data="80" />
+																			<casesensitive data="1" />
+																			<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																				<filternode inverted="0">
+																					<patterntype data="0" />
+																					<patterndata data="2F7368746D6C2E" />
+																					<startoffset data="60" />
+																					<endoffset data="90" />
+																					<casesensitive data="1" />
+																					<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																						<filternode inverted="0">
+																							<patterntype data="0" />
+																							<patterndata data="2F77696E6E742F73797374656D33322F636D642E657865" />
+																							<startoffset data="57" />
+																							<endoffset data="150" />
+																							<casesensitive data="1" />
+																							<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																								<filternode inverted="0">
+																									<patterntype data="0" />
+																									<patterndata data="2E2E2F2E2E2F2E2E2F2E2E" />
+																									<startoffset data="57" />
+																									<endoffset data="80" />
+																									<casesensitive data="1" />
+																									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																										<filternode inverted="0">
+																											<patterntype data="0" />
+																											<patterndata data="2F2F71756F74652E68746D6C" />
+																											<startoffset data="57" />
+																											<endoffset data="80" />
+																											<casesensitive data="1" />
+																										</filternode>
+																									</ornode>
+																								</filternode>
+																							</ornode>
+																						</filternode>
+																					</ornode>
+																				</filternode>
+																			</ornode>
+																		</filternode>
+																	</ornode>
+																</filternode>
+															</ornode>
+														</filternode>
+													</ornode>
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{648B3D04-A12E-4821-8794-D1DFDACDD088}" name="Security - HTTP Overflow Attempt" comment="Detects suspiciously long HTTP header fields, which can indicate an overflow attempt" color="192" created="12950829983309527300" modified="12950829983309527300" group="Security">
+			<rootnode clsid="{B3279AE9-91E1-4D0A-8ABD-6D1BDC5471A9}">
+				<filternode inverted="0">
+					<Sport1 class="3" type="34" mask="3221225472" data="80" />
+					<Sport2 class="3" type="34" mask="3221225472" data="" />
+					<accept1to2 data="0" />
+					<accept2to1 data="1" />
+					<andnode clsid="{76D9F2C2-20D3-463B-A3D2-50429DF3D23D}">
+						<filternode inverted="0">
+							<min data="1518" />
+							<max data="1518" />
+							<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="0">
+									<patterntype data="0" />
+									<patterndata data="534541524348" />
+									<startoffset data="54" />
+									<endoffset data="61" />
+									<casesensitive data="1" />
+									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="48454144" />
+											<startoffset data="54" />
+											<endoffset data="59" />
+											<casesensitive data="1" />
+											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+												<filternode inverted="0">
+													<patterntype data="0" />
+													<patterndata data="474554" />
+													<startoffset data="54" />
+													<endoffset data="58" />
+													<casesensitive data="1" />
+													<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+														<filternode inverted="0">
+															<patterntype data="0" />
+															<patterndata data="4F5054494F4E53" />
+															<startoffset data="54" />
+															<endoffset data="61" />
+															<casesensitive data="1" />
+														</filternode>
+													</ornode>
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{C0C58D8B-C9BC-44D2-8285-7FF2C5846CCE}" name="Security - ICMP Excess Pings" comment="Looks at the sequence number field for nodes which seem to be sending excessive pings" color="192" created="12950829983310527300" modified="12950829983310527300" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="4D040000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="0" data="1" />
+							<mask type="0" data="255" />
+							<offset data="41" />
+							<op data="3" />
+							<flags data="1" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{6A369C00-C02A-4B2F-A588-AE7128366C53}" name="Security - ICMP Suspicious Messages" comment="ICMP messages except PING, Dest Unr, TTL Exceeded" color="192" created="12950829983311527400" modified="12950829983311527400" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="4C040000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="1">
+							<value type="0" data="0" />
+							<mask type="0" data="255" />
+							<offset data="34" />
+							<op data="1" />
+							<flags data="1" />
+							<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="1">
+									<value type="0" data="3" />
+									<mask type="0" data="255" />
+									<offset data="34" />
+									<op data="1" />
+									<flags data="1" />
+									<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="1">
+											<value type="0" data="8" />
+											<mask type="0" data="255" />
+											<offset data="34" />
+											<op data="1" />
+											<flags data="1" />
+											<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+												<filternode inverted="1">
+													<value type="0" data="11" />
+													<mask type="0" data="255" />
+													<offset data="34" />
+													<op data="1" />
+													<flags data="1" />
+												</filternode>
+											</andnode>
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{64B7FFFC-ABE4-4FE1-9B1A-5AA66FF2627B}" name="Security - ICMP Smurf" comment="Catches &quot;smurf&quot; attacks. Assumes 24 bits (class C) or less of subnet mask." color="192" created="12950829983311527400" modified="12950829983311527400" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" mask="192" data="4D040000" slicetoheader="0" />
+					<andnode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+						<filternode inverted="0">
+							<addr1 class="2" type="21" mask="255" data="000000FF" />
+							<addr2 class="2" type="21" mask="0" data="00000000" />
+							<accept1to2 data="0" />
+							<accept2to1 data="1" />
+							<ornode clsid="{D2ED5346-496C-4EA0-948E-21CDDA1ED723}">
+								<filternode inverted="0">
+									<addr1 class="2" type="21" mask="4026531840" data="E0000000" />
+									<addr2 class="2" type="21" mask="0" data="00000000" />
+									<accept1to2 data="0" />
+									<accept2to1 data="1" />
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{BBBA23DB-801E-477F-B6B0-D3540A627E40}" name="Security - IP Options Present" comment="IP Options are commonly exploited few protocols use them" color="192" created="12950829983312527400" modified="12950829983312527400" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="E8030000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="1">
+							<value type="0" data="5" />
+							<mask type="0" data="15" />
+							<offset data="14" />
+							<op data="1" />
+							<flags data="1" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="1">
+									<protocol class="1" type="9" data="7E040000" slicetoheader="0" />
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{AE7568A6-0981-4156-836D-25F5D13FA388}" name="Security - Large IP Fragment" comment="Fragments larger than 16K will pass this filter" color="192" created="12950829983313527500" modified="12950829983313527500" group="Security">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="2048" />
+					<mask type="2" data="8191" />
+					<offset data="20" />
+					<op data="2" />
+					<flags data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="E8030000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{E730EB8D-B12A-4629-AC23-90E67DA803B8}" name="Security - Other Clear Text Protocols" comment="Clear text protocols other than the common protocols" color="192" created="12950829983313527500" modified="12950829983313527500" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="E8030000" slicetoheader="0" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="1">
+							<protocol class="1" type="9" data="7F050000" slicetoheader="0" />
+							<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+								<filternode inverted="1">
+									<protocol class="1" type="9" data="8A050000" slicetoheader="0" />
+									<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+										<filternode inverted="1">
+											<protocol class="1" type="9" data="AC050000" slicetoheader="0" />
+											<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+												<filternode inverted="1">
+													<protocol class="1" type="9" data="7E050000" slicetoheader="0" />
+													<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+														<filternode inverted="1">
+															<protocol class="1" type="9" data="79050000" slicetoheader="0" />
+															<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																<filternode inverted="0">
+																	<patterntype data="0" />
+																	<patterndata data="55534552" />
+																	<startoffset data="54" />
+																	<endoffset data="59" />
+																	<casesensitive data="1" />
+																	<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+																		<filternode inverted="0">
+																			<patterntype data="0" />
+																			<patterndata data="50415353" />
+																			<startoffset data="54" />
+																			<endoffset data="59" />
+																			<casesensitive data="1" />
+																		</filternode>
+																	</ornode>
+																</filternode>
+															</andnode>
+														</filternode>
+													</andnode>
+												</filternode>
+											</andnode>
+										</filternode>
+									</andnode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{96D6F11A-230A-43BA-ADB2-E3CE4A7844D6}" name="Security - Ping Of Death" comment="Ping with a fragment offset over 60k" color="192" created="12950829983314527600" modified="12950829983314527600" group="Security">
+			<rootnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+				<filternode inverted="0">
+					<value type="2" data="7000" />
+					<mask type="2" data="8191" />
+					<offset data="20" />
+					<op data="2" />
+					<flags data="1" />
+					<andnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+						<filternode inverted="0">
+							<protocol class="1" type="9" data="4C040000" slicetoheader="0" />
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{EDB35E90-849B-4FE4-8A04-F6E6CB4679D2}" name="Security - TCP Unusual Flags" comment="URG bit, SYN FIN, SYN PUSH" color="192" created="12950829983315527600" modified="12950829983315527600" group="Security">
+			<rootnode clsid="{A43DDCC0-CDD2-46B4-8114-68E5FAF35112}">
+				<filternode inverted="0">
+					<protocol class="1" type="9" data="78050000" slicetoheader="0" />
+					<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+						<filternode inverted="0">
+							<value type="0" data="69" />
+							<mask type="0" data="255" />
+							<offset data="14" />
+							<op data="1" />
+							<flags data="5" />
+							<andnode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+								<filternode inverted="0">
+									<value type="0" data="32" />
+									<mask type="0" data="32" />
+									<offset data="47" />
+									<op data="1" />
+									<flags data="5" />
+									<ornode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+										<filternode inverted="0">
+											<value type="0" data="3" />
+											<mask type="0" data="3" />
+											<offset data="47" />
+											<op data="1" />
+											<flags data="5" />
+											<ornode clsid="{019D6856-7380-4FE6-99E7-04EC78732AFB}">
+												<filternode inverted="0">
+													<value type="0" data="6" />
+													<mask type="0" data="6" />
+													<offset data="47" />
+													<op data="1" />
+													<flags data="5" />
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</andnode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{A8ABB466-837D-4A55-AF49-48A2A21FBD5E}" name="Security - Port 80 Attack Fingerprints" comment="Detects common attack fingerprints on port 80" color="192" created="12950829983330528500" modified="12950829983330528500" group="Security">
+			<rootnode clsid="{B3279AE9-91E1-4D0A-8ABD-6D1BDC5471A9}">
+				<filternode inverted="0">
+					<Sport1 class="3" type="34" mask="3221225472" data="80" />
+					<Sport2 class="3" type="34" mask="3221225472" data="" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+						<filternode inverted="0">
+							<patterntype data="0" />
+							<patterndata data="2F62696E2F6C73" />
+							<startoffset data="65535" />
+							<endoffset data="65535" />
+							<casesensitive data="1" />
+							<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="0">
+									<patterntype data="0" />
+									<patterndata data="636D642E657865" />
+									<startoffset data="65535" />
+									<endoffset data="65535" />
+									<casesensitive data="1" />
+									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="2F62696E2F6964" />
+											<startoffset data="65535" />
+											<endoffset data="65535" />
+											<casesensitive data="1" />
+											<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+												<filternode inverted="0">
+													<patterntype data="0" />
+													<patterndata data="2F62696E2F6964" />
+													<startoffset data="65535" />
+													<endoffset data="65535" />
+													<casesensitive data="1" />
+												</filternode>
+											</ornode>
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+	<filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+		<filter id="{B6D0214D-D7AA-448C-81BE-022079D4BC63}" name="Security - FTP not on port 21" comment="FTP traffic on a non-standard port" color="192" created="12950829983330528500" modified="12950829983330528500" group="Security">
+			<rootnode clsid="{B3279AE9-91E1-4D0A-8ABD-6D1BDC5471A9}">
+				<filternode inverted="1">
+					<Sport1 class="3" type="34" mask="3221225472" data="21" />
+					<Sport2 class="3" type="34" mask="3221225472" data="" />
+					<accept1to2 data="1" />
+					<accept2to1 data="1" />
+					<andnode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+						<filternode inverted="0">
+							<patterntype data="0" />
+							<patterndata data="55534552" />
+							<startoffset data="54" />
+							<endoffset data="58" />
+							<casesensitive data="1" />
+							<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+								<filternode inverted="0">
+									<patterntype data="0" />
+									<patterndata data="50415353" />
+									<startoffset data="54" />
+									<endoffset data="58" />
+									<casesensitive data="1" />
+									<ornode clsid="{D64E6090-9351-4915-97E3-067251D7546A}">
+										<filternode inverted="0">
+											<patterntype data="0" />
+											<patterndata data="4E4C5354" />
+											<startoffset data="54" />
+											<endoffset data="58" />
+											<casesensitive data="1" />
+										</filternode>
+									</ornode>
+								</filternode>
+							</ornode>
+						</filternode>
+					</andnode>
+				</filternode>
+			</rootnode>
+		</filter>
+	</filterobj>
+</filters>
+

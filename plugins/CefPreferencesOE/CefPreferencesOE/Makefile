@@ -1,6 +1,7 @@
 PLUGIN       = CefPreferencesOE
 PLUGIN_DIR   = CefPreferencesOE
 TARGZINDEX   = 0
+TARGZGUID    = 3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)
 OMNI_DIR     = /usr/lib/omni
 OUTPUT_DIR   = bin
 OUTPUT       = $(OUTPUT_DIR)/$(PLUGIN).so
@@ -53,7 +54,7 @@ $(PLUGIN): $(PLUG_OBJS) $(FRAME_OBJS) $(OUTPUT)
 	$(CPP) -o $(OUTPUT) $(LDFLAGS) $(PLUG_OBJS) $(FRAME_OBJS)
 
 
-.PHONY: zips:
+zips:
 	rm -f ./$(PLUGIN)-About.zip
 	cd $(PLUG_SRC)/About/About$(ZIPINDEX); zip ../../../$(PLUGIN)-About.zip *
 	rm -f ./$(PLUGIN)-CaptureTab.zip
@@ -63,10 +64,7 @@ $(PLUGIN): $(PLUG_OBJS) $(FRAME_OBJS) $(OUTPUT)
 	rm -f ../$(PLUGIN)-Options.zip
 	cd $(PLUG_SRC)/Options/Options$(ZIPINDEX); zip ../../../$(PLUGIN)-Options.zip *
 	rm -f ./$(PLUGIN).tar.gz
-	cd $(PLUG_SRC)/web; tar -zcf ../../$(PLUGIN).tar.gz ./C0E0F020-2468-1357-C1C4-3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)3$(TARGZINDEX)
-
-.PHONY: dist:
-	
+	cd $(PLUG_SRC)/web; tar -zcf ../../C0E0F020-2468-1357-C1C4-$(TARGZGUID).tar.gz ./C0E0F020-2468-1357-C1C4-$(TARGZGUID)
 
 
 .PHONY: prefs-1

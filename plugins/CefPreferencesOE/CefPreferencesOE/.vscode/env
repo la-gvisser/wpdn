@@ -1,0 +1,2 @@
+LD_LIBRARY_PATH=.:/usr/lib:/usr/lib/omni
+TCMALLOC_AGGRESSIVE_DECOMMIT=false

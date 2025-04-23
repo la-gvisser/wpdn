@@ -1,0 +1,2 @@
+include *.txt
+recursive-include omniscript *.dll *.he *.xml *.txt *.bin

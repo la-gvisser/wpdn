@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>OmniScript</id>
+    <version>2.7.1</version>
+    <authors>LiveAction, Inc.</authors>
+    <owners>LiveAction, Inc.</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>LiveAction OmniScript</description>
+    <copyright>Copyright 2021 LiveAction, Inc. All Rights Reserved.</copyright>
+    <dependencies>
+      <group targetFramework=".NETStandard2.0" />
+    </dependencies>
+    <contentFiles>
+      <files include="any/any/omniapi.he" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/libheruntime.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/libomniapi.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/libshimomniapi.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/libwpz.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/peekutil.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/wpxml.so" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_class_ids.txt" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_co_codes.txt" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_stat_ids.txt" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/pspecs.xml" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_capture_template.xml" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_capture_template_linux.xml" buildAction="None" copyToOutput="true" flatten="true" />
+      <files include="any/any/_capture_template_windows.xml" buildAction="None" copyToOutput="true" flatten="true" />
+    </contentFiles>
+  </metadata>
+  <files>
+    <file src="./bin/Release/netstandard2.0/OmniScript.dll" target="lib/netstandard2.0/OmniScript.dll" />
+    <file src="../../../shared/omniapi.he" target="content/omniapi.he" />
+    <file src="../../../shared/omniapi.he" target="contentFiles/any/any/omniapi.he" />
+    <file src="../../../shared/bin/libheruntime.so" target="content/libheruntime.so" />
+    <file src="../../../shared/bin/libheruntime.so" target="contentFiles/any/any/libheruntime.so" />
+    <file src="../../../shared/bin/libomniapi.so" target="content/libomniapi.so" />
+    <file src="../../../shared/bin/libomniapi.so" target="contentFiles/any/any/libomniapi.so" />
+    <file src="../../../shared/bin/libshimomniapi.so" target="content/libshimomniapi.so" />
+    <file src="../../../shared/bin/libshimomniapi.so" target="contentFiles/any/any/libshimomniapi.so" />
+    <file src="../../../shared/bin/libwpz.so" target="content/libwpz.so" />
+    <file src="../../../shared/bin/libwpz.so" target="contentFiles/any/any/libwpz.so" />
+    <file src="../../../shared/bin/peekutil.so" target="content/peekutil.so" />
+    <file src="../../../shared/bin/peekutil.so" target="contentFiles/any/any/peekutil.so" />
+    <file src="../../../shared/bin/wpxml.so" target="content/wpxml.so" />
+    <file src="../../../shared/bin/wpxml.so" target="contentFiles/any/any/wpxml.so" />
+    <file src="../../../shared/_class_ids.txt" target="content/_class_ids.txt" />
+    <file src="../../../shared/_class_ids.txt" target="contentFiles/any/any/_class_ids.txt" />
+    <file src="../../../shared/_co_codes.txt" target="content/_co_codes.txt" />
+    <file src="../../../shared/_co_codes.txt" target="contentFiles/any/any/_co_codes.txt" />
+    <file src="../../../shared/_stat_ids.txt" target="content/_stat_ids.txt" />
+    <file src="../../../shared/_stat_ids.txt" target="contentFiles/any/any/_stat_ids.txt" />
+    <file src="../../../shared/pspecs.xml" target="content/pspecs.xml" />
+    <file src="../../../shared/pspecs.xml" target="contentFiles/any/any/pspecs.xml" />
+    <file src="../../../shared/_capture_template.xml" target="content/_capture_template.xml" />
+    <file src="../../../shared/_capture_template.xml" target="contentFiles/any/any/_capture_template.xml" />
+    <file src="../../../shared/_capture_template_linux.xml" target="content/_capture_template_linux.xml" />
+    <file src="../../../shared/_capture_template_linux.xml" target="contentFiles/any/any/_capture_template_linux.xml" />
+    <file src="../../../shared/_capture_template_windows.xml" target="content/_capture_template_windows.xml" />
+    <file src="../../../shared/_capture_template_windows.xml" target="contentFiles/any/any/_capture_template_windows.xml" />
+  </files>
+</package>

@@ -573,6 +573,7 @@ main(
 					string cmd( arg.substr( 2 ) );
 					if ( cmd == "help" ) {
 						DisplayOptions();
+						return 0;
 					}
 				}
 				break;

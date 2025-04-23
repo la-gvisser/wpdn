@@ -1,0 +1,544 @@
+<p>
+<b>OmniScript</b>
+</p>
+<p>
+OmniScript is a Python module that provides access to Savvius Capture Engines. This allows programs to be written in a the Python languages that interacts, controls, and uses data from Savvius Capture Engines. 
+</p>
+<p>
+OmniScript is ideal for environments where the same set of tests need to be run over and over, such as test labs and other network environments. It is also ideal for controlling any number of Capture Engines with a single script. Imagine the time you will save! For a more detailed discussion on the ROI of automation, check out the
+<a href="https://mypeek.savvius.com/documentation/automation/index.php">Savvius Automation Primer</a>. 
+</p>
+<center><img src="files/mypeek_esm_images_preview/auto1.png"></center>
+<p>
+<b>Installing OmniScript 2 Python</b>
+</p>
+<p>
+OmniScript 2 Python is provided as a zipped Python Egg file.
+<ol>
+<li>Download and unzip the egg file.</li>
+<li>Download <a href="http://peak.telecommunity.com/dist/ez_setup.py">ez_setup.py</a></li>
+<li>Run: ez_setup.py OmniScript-0.5.2-py2.7.egg</li>
+</ol>
+</p>
+<p>
+<b>Python</b>
+</p>
+<p>
+Savvius recommends <a href="http://www.activestate.com/activepython">ActivePython</a>.)</br>
+</br>
+OmniScript requires that you use a 32-bit release of Python, even on 64-bit Windows. OmniScript is not compatible with 64-bit releases of Python.
+</p>
+<p>
+<b>OmniScript Utilities</b>
+</p>
+<p>
+OmniScript 2 Pythnon includes 2 scripts: RCapture.py and Forensics.py, and one command line utility. These utilities are useful as is, and are great starting points for enhancement or development of your own automation solution.
+</p>
+<p>
+<ul>
+<li>
+RCapture.py: This is a Python script that provides many of the basic functions to create and collect data from OmniEngine captures. 
+</li>
+<li>
+Forensics.py: This Python script is a utility that can perform a forensics search against an OmniEngine and return a packet file.</li>
+<li>
+pkt2dcd: This Windows command line utility decodes a pkt files to a decoded text files.
+</li>
+</ul>
+</p>
+<p>
+<b>Using OmniScript</b>
+</p>
+<p>
+In the following examples, the RCapture utility is used to demonstrate the various connection options. Connecting to an OmniEngine is going to be the same from any utility, except that the name of the parameters may be different.
+</p>
+<p>
+Download and install the latest version of OmniScript 2 Python from the link on this page. Then start a DOS command line and browse to Python's home directory.
+</p>
+<p>
+To view the list of adapters on an OmniEngine running on Windows enter:</br>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+rcapture -e 10.4.2.50 -u UserName -w Password -l
+</pre>
+</div>
+</p>
+If the OmniEngine is running on Linux, you must provide the Auth (-t) parameter:</br>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+rcapture -e 10.4.2.50 -t 'Third Party' -u UserName -w Password -l
+</pre>
+</div>
+</p>
+If OmniEngine is running on a system that is part of a domain, then add the domain (-d) parameter to specify the name of the domain.
+</p>
+If you have an OmniEngine installed on the same machine as OmniScript, to list the adapters you simply enter:</br>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+rcapture -l
+</pre>
+</div>
+</p>
+<p>
+<b>OmniScript Functions</b>
+</p>
+<p>
+There are two main types of OmniScript functions: Configuration and Data. Configuration functions are used to configure captures and forensic searches in different ways. Data functions are used to collect packets and statistics from existing captures and forensic searches.
+</p>
+<p>
+Below are the types of configuration and data functions that can be performed from OmniScript:
+</p>
+<p>
+<b>Configuration Functions</b>
+</p>
+<p>
+<ul>
+<li>Connect to an Capture Engines</li>
+<li>List adapters, captures and forensic searches</li>
+<li>Get and Set filters</li>
+<li>Build filters programmatically</li>
+<li>Create new captures with filters and triggers</li>
+<li>Create new captures from capture templates</li>
+<li>Create new forensic searches</li>
+<li>Bind to existing captures</li>
+<li>Open a packet file capture</li>
+<li>Start, stop, and delete captures</li>
+</ul>
+</p>
+<p>
+<b>Data Functions</b>
+</p>
+<p>
+<ul>
+<li>Get the list of, or find one of the, adapters from the engine</li>
+<li>Get the list of, or find one of the, captures from the engine</li>
+<li>Get the list of, or find one of the, forensic files from the engine</li>
+<li>Get the list of, or find one of the, forensic searches from the engine</li>
+<li>Get node statistics of a capture or forensic search</li>
+<li>Get protocol statistics or forensic search</li>
+<li>Get summary statistics or forensic search</li>
+</ul>
+</p>
+<p>
+<b>Connecting to an OmniEngine</b>
+</p>
+<p>
+The very first thing you have to do with OmniScript when you are writing an OmniScript program is create an OmniScript object. The OmniScript is used to connect to Capture Engines. The OmniEngine object is used to communicate with Capture Engines.
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+include omniscript
+
+omni=omniscript.OmniScript()
+engine=omni.connect()
+# or
+engine=omni.connect("1.2.3.4, 6367, auth, domain, user, password)
+</pre>
+</div>
+</p>
+<p>
+<br>
+Of course, auth, domain, user and password need to be defined in your program. Auth can be either 'Default' or 'Thrid Party'. Domain may be an empty string, if the OmniEngine is not in a domain.
+</p>
+<p>
+<b>Captures and Forensic Searches</b>
+</p>
+<p>
+Captures are created from CaptureTemplate objects and Forensic Searches are created from ForensicTemplate objects.
+</p>
+<p>
+To create a live capture, either specify all of the attributes of the capture or use an existing capture template to set the majority of the attributes.
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF; width:100%;"> 
+<pre>
+template=omniscript.CaptureTemplate('my_template.xml')
+template.name = 'My New Capture'
+capture = engine.create_capture(template)
+</pre>
+</div>
+</p>
+<p>
+<b>Filters</b>
+</p>
+<p>
+Use the existing Filters on the OmniEngine or create custom filters. 
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+# Create a Filter: 1.2.3.4 <-> Any AND Port 80
+simple = omniscript.Filter(‘Simple Filter’)
+# Create an Address Node: 1.2.3.4 <-> Any
+addr_node = omniscript.AddressNode()
+addr_node.address_1 = omniscript.IPv4Address('1.2.3.4')
+addr_node.accept_1_to_2 = True
+addr_node.accept_2_to_1 = True
+# Create a Port Node for port 80.
+port_node = omniscript.PortNode()
+port_node.port = 80
+# The Address node AND the Port node.
+# Each node also has an ‘or_node’ attribute.
+addr_node.and_node = port_node
+# Set the criteria of the filter.
+simple.criteria= addr_node
+# Add the filter to the engine.
+engine.add_filter(simple)
+</pre>
+</div>
+</p>
+<p>
+<b>OmniScript API</b>
+</p>
+<p>
+OmniScript uses the same underlying protocol that is used by the OmniPeek Console. This protocol is called PeekDNX, and is secure and compressed. Many of the things that can be done with the OmniPeek Console againt an OmniEngine, can also be done through OmniScript.
+<p>
+</p>
+For more detailed reference information about the OmniScript 2 Python, download the zip file from the link on this page, unzip the file and open the index.html with a Web browser.
+</p>
+<p>
+<b>Scripts that come with OmniScript</b>
+</p>
+<p>
+<b>RCapture</b>
+</p>
+<p>
+The OmniScript installation includes a command line script called RCapture.py.
+Running rcapture without any parameters displays the following usage:
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+RCapture
+ [-c <i>command</i>] : Capture command - create, start, stop, save, reset, delete.
+ [--template <i>template</i> : Capture template (optional)
+ [-e <i>engine ip=""</i>] : IP address of engine. Default is localhost.
+ [-p <i>engine port=""</i>] : default is 6367
+ [-t <i>auth</i>] : Authentication type either: 'Default' or 'Third Party'.
+ [-d <i>domain</i>] : The domain of the credentials.
+ [-u <i>username=""</i> : User account Name.
+ [-w <i>password</i>] : Account Password.
+ [-a <i>index</i>] : The adapter index. Use -l to list adapters.
+ [-q <i>description</i>] : The adapter description. -a takes precedence.
+ [--wireless_channel <i>channel</i>] : Set the wireless adapter channel by channel number. --wireless_frequency takes precedence.
+ [--wireless_frequency <i>frequency</i>] : Set the wireless adapter channel by channel frequency
+ [-n <i>capture name=""</i>] : Capture name.
+ [-o <i>filename</i>] : Filename for template or saved packets (see --format when saving capture)
+ [--format <i>format</i> : Save formats; pkt, enc, pcap, raw
+ [-b <i>size</i> : Capture buffer size in megabytes. Default is 1MB.
+ [-f <i>path</i>] : Save To Disk filename template.
+ [-r <i>hours</i> : Restart - The number of hours to start a new file. Default is 24 hours
+ [-m <i>size</i> : Save to Disk file size in megabytes. Default is Capture Buffer size or 1MB.
+ [--reserve <i>size gb=""</i>: Amount of disk space to use for capture, in GB (Timeline only)
+ [-h <i>filter name=""</i>] : Add named filter to the capture
+ [-i <i>name:ip</i>] : Create named IP address filter.
+ [-I <i>name:BPF</i>] : Create named BPF/TCP Dump filter.
+ [-j <i>filter name=""</i>] : Delete the named filter.
+ [--sec <i>seconds</i>] : Seconds between start and stop
+ [--min <i>minutes</i>] : Minutes between start and stop
+ [-l] : List the adapters.
+ [-g] : List the captures.
+ [-y] : List the filters.
+ [-s] : Statistics command - node or flow or summary or protocol, or combinations
+ separated by comma. For example: '-s node,summary,protocol'
+ [--csv] : Print the stats as csv output
+ [-v <i>level</i>] : Verbose mode.
+ [-?] : Display this message and quit.
+</pre>
+</div>
+</p>
+<p>
+<b>Forensics Script</b>
+</p>
+<p>
+The forensics script performs a forensics search across a range of time over the files captured by the OmniEngine. Below is the usage for the forensics script:
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+usage: forensics [-v] [-h <i>hostname</i>] [-d <i>domain</i>] [-a <i>authentication</i>]
+ [-u <i>username</i>] [-p <i>password</i>] [-o <i>output filename</i>]
+ [-s <i>starttime</i> (yy.mm.dd.hh.mm.ss)] [-e <i>stoptime</i> (yy.mm.dd.hh.mm.ss)]
+ [-f <i>filtername</i>] [-t <i>filename</i>] [-m <i>filemask</i>]
+
+ -v Verbose output. Chatty.
+ -h IP of the OmniEngine to connect to. Default is localhost
+ -d Domain of the OmniEngine to connect to. Only necessary if OmniEngine is part of a domain.
+ -a If OmniEngine is linux, use "Third Party"
+ -u Username (if OmniEngine is remote)
+ -p Password (if OmniEngine is remote)
+ -o Name of new packet file to put resulting packets into
+ -s Start time of search (e.g. 10.07.01.12.00.00)
+ -e End time of search (e.g. 10.07.01.12.00.01)
+ -f Name of filter to use in search (e.g. HTTP or ARP)
+ -t Name of file to search. Must use absolute path.
+ -m Mask used to select files for search.
+</pre>
+</div>
+</p>
+<p>
+<b>Statistical Reports</b>
+</p>
+<p>
+OmniScript provides functions to output node statistics, flow statistics, protocol statistics, and summary statistics. Each of these can be displayed in a pre-formatted fashion, or in .csv for loading into a spreadsheet, a database, or some other type application or integrated solution.
+</p>
+<p>
+<b>Summary Statistics</b>
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF; width:100%;"> 
+<pre>
+c:>rcapture -n "Test1" -s summary
+
+Summary Statistics for capture - Test1:
+
+General Packets Bytes Value
+-------------------------------------------------------------------------------
+Start Date 0 0 12/17/2010
+Start Time 0 0 22:25:03Z
+Duration 0 0 3d 0:29:24
+Trigger Count 0 0 0
+Trigger Wait Time 0 0 0:00:00
+Dropped Packets 0 0 0
+
+Network Packets Bytes Value
+-------------------------------------------------------------------------------
+Total Bytes 0 491563050 0
+Total Packets 2312676 0 0
+Total Broadcast 1191139 108746597 0
+Total Multicast 513064 89198439 0
+Average Utilization (percent) 0 0 0.016
+Average Utilization (bits/s) 0 0 15636
+Current Utilization (percent) 0 0 0.025
+Current Utilization (bits/s) 0 0 24576
+
+Errors Packets Bytes Value
+-------------------------------------------------------------------------------
+Total 0 0 0
+CRC 0 0 0
+Frame Alignment 0 0 0
+Runt 0 0 0
+Oversize 0 0 0
+
+Counts Packets Bytes Value
+-------------------------------------------------------------------------------
+Physical Addresses 0 0 269
+IP Addresses 0 0 1695
+IPv6 Addresses 0 0 110
+AppleTalk Addresses 0 0 4
+DECnet Addresses 0 0 0
+IPX Addresses 0 0 6
+Protocols 0 0 86
+
+Size Distribution Packets Bytes Value
+-------------------------------------------------------------------------------
+<= 64 1062681 0 0
+65-127 514080 0 0
+128-255 381445 0 0
+256-511 130065 0 0
+512-1023 47481 0 0
+1024-1517 176827 0 0
+>= 1518 97 0 0
+
+Expert Packets Bytes Value
+-------------------------------------------------------------------------------
+Flows Analyzed (Total) 0 0 26412
+Flows Analyzed (Current) 0 0 26412
+Flows Analyzed (Recycled) 0 0 0
+Node Pairs Analyzed (Total) 0 0 1876
+Node Pairs Analyzed (Current) 0 0 1876
+Node Pairs Analyzed (Recycled) 0 0 0
+Packets Dropped 0 0 0
+-- Snip --
+Spanning Tree Topology Change 0 0 0
+EAP Authentication Failure 0 0 0
+Too Many Physical Errors 0 0 0
+MAC Flooding 0 0 0
+
+Flow Tracker Packets Bytes Value
+-------------------------------------------------------------------------------
+Flows (all) 0 0 26412
+Flows (current) 0 0 26412
+Flows (recycled) 0 0 0
+Max 0 0 50000
+
+Voice & Video Packets Bytes Value
+-------------------------------------------------------------------------------
+Total Calls 0 0 78
+Current Calls 0 0 78
+Open Calls 0 0 0
+Closed Calls 0 0 78
+-- Snip --
+MOS-AV 0 0 4.670
+MOS-V 0 0 4.670
+
+AppleTalk Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+AARP Requests 1 64 0
+AARP Responses 0 0 0
+AARP Unanswered 1 0 0
+AARP Probes 40 2560 0
+AppleTalk Broadcast/Multicast 52 3382 0
+
+Email Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+SMTP Transfers Initiated 0 0 0
+SMTP Successful Transfers 0 0 0
+SMTP Failed Transfers 0 0 0
+
+FTP Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+FTP Transfers Initiated 0 0 0
+FTP Successful Transfers 0 0 0
+FTP Failed Transfers 0 0 0
+
+ICMP Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+Pings Unanswered 439 0 0
+ICMP Packets 561 57901 0
+Ping Responses 3 192 0
+Ping Requests 442 45036 0
+-- Snip --
+ICMP Host Violation 0 0 0
+ICMP Precedence Cutoff 0 0 0
+
+IP Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+TCP SYNs 28135 0 0
+TCP FINs 13993 0 0
+TCP RSTs 8556 0 0
+ARP Requests 700390 45417344 0
+ARP Responses 35415 2266642 0
+ARPs Unanswered 664976 0 0
+RARP Requests 187 11968 0
+RARP Responses 0 0 0
+RARPs Unanswered 187 0 0
+
+NetWare Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+RIP Unanswered 0 0 0
+SAP Unanswered 0 0 735
+NCP Unanswered 0 0 0
+
+Newsgroup Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+Newsgroup Accesses 0 0 0
+
+VoIP Analysis Packets Bytes Value
+-------------------------------------------------------------------------------
+H.225 RAS 0 0 0
+H.323 0 0 0
+H.225/Q.931 0 0 0
+-- Snip --
+GSM 9 1465 0
+RTP Dynamic 263 31134 0
+</pre>
+</div>
+</p>
+<p>
+<b>Protocol Statistics</b>
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+c:>rcapture -n "Test1" -s protocol
+
+Protocol Statistics for capture - Test1:
+
+Protocol Packets Bytes
+-------------------------------------------------------------------------------
+EType2 0 0
+IP 0 0
+UDP 98920 14674306
+-- Snip --
+TCP 179899 73873676
+HTTP 303911 231954424
+</pre>
+</div>
+</p>
+<p>
+<b>Node Statistics</b>
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+c:>rcapture -n "Test1" -s node | more
+
+Node Statistics for capture - Test1:
+
+Node Packets Received Packets Sent Bytes Received Bytes Sent
+-------------------------------------------------------------------------------
+10.4.58.11 0 133225 0 12992902
+10.4.255.255 418908 0 52065444 0
+10.4.2.27 0 21136 0 2040078
+-- Snip --
+10.4.7.131 0 1195 0 239803
+10.4.4.23 0 366 0 98454
+</pre>
+</div>
+</p>
+<p>
+<b>Flow Statistics</b>
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+c:>rcapture -n "Test1" -s flow | more
+
+Flow statistics for capture - Test1:
+
+Source IP Destination IP Packets In Packets Out Bytes In Bytes Out Protocol
+-------------------------------------------------------------------------------
+10.4.58.11 10.4.255.255 0 132160 0 12687360 NB Name Svc
+10.4.2.27 10.4.255.255 0 21097 0 2025744 NB Name Svc
+10.4.2.114 10.4.255.255 0 366 0 90402 SMB
+-- Snip --
+10.4.4.24 10.4.255.255 0 366 0 98454 SMB
+10.4.4.42 10.4.255.255 0 366 0 98454 SMB
+</pre>
+</div>
+</p>
+<p id="pkt2dcd">
+<b>Using pkt2dcd</b>
+</p>
+<p>pkt2dcd requires the file path and name of the pkt file, followed by the path and name of the resulting decoded file. The following example will convert "http.pkt" to a decoded text file name "decoded_http.txt"
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+pkt2dcd.exe "c:http.pkt" "c:decoded_http.txt"
+</pre>
+</div>
+</p>
+<p>
+The supported decodes that come with OmniScript are a very basic set. If you have decodes of your own you wish to use, copy your decodes.bin file from:
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+C:\Prorgam Files\Savvius\OmniPeek\decodes\decodes.bin
+</pre>
+</div>
+</p>
+<p>
+to:
+</p>
+<p>
+<div style="background-color:#C6DEFF; layer-background-color:#C6DEFF"> 
+<pre>
+C:\Program Files\Savvius\OmniScript\decodes.
+</pre>
+</div>
+</p>
+<hr>
+<p>
+<b>History</b>
+</p>
+<p>
+OmniScript 2.0 Python v0.5.2
+- Initial public release.
+</p>

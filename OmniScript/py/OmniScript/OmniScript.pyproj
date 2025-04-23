@@ -1,0 +1,131 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{a0d6a8db-ae00-4d70-a93a-0e01d9cd4928}</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>
+    </StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>OmniScript</Name>
+    <RootNamespace>OmniScript</RootNamespace>
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <CommandLineArguments />
+    <InterpreterPath />
+    <InterpreterArguments />
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="omniscript\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="omniscript\accesscontrollist.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\adapterconfiguration.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\alarm.py" />
+    <Compile Include="omniscript\applicationstatistic.py" />
+    <Compile Include="omniscript\auditlog.py" />
+    <Compile Include="omniscript\eventlog.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\callstatistic.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\capturetemplate.py" />
+    <Compile Include="omniscript\config.py" />
+    <Compile Include="omniscript\countrystatistic.py" />
+    <Compile Include="omniscript\decodedpacket.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\diagnostic.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\expertquery.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\expertresult.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\fileadapter.py" />
+    <Compile Include="omniscript\filternode.py" />
+    <Compile Include="omniscript\graphtemplate.py" />
+    <Compile Include="omniscript\hardwareoptions.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\hostplatform.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\mediainfo.py" />
+    <Compile Include="omniscript\enginestatus.py" />
+    <Compile Include="omniscript\forensicfile.py" />
+    <Compile Include="omniscript\forensicsearch.py" />
+    <Compile Include="omniscript\forensictemplate.py" />
+    <Compile Include="omniscript\adapter.py" />
+    <Compile Include="omniscript\capture.py" />
+    <Compile Include="omniscript\mediaspec.py" />
+    <Compile Include="omniscript\fileinformation.py" />
+    <Compile Include="omniscript\analysismodule.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\capturesession.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\packet.py" />
+    <Compile Include="omniscript\tcpdump.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="omniscript\readstream.py" />
+    <Compile Include="omniscript\omniaddress.py" />
+    <Compile Include="omniscript\omnidatatable.py" />
+    <Compile Include="omniscript\omnierror.py" />
+    <Compile Include="omniscript\omniid.py" />
+    <Compile Include="omniscript\omniport.py" />
+    <Compile Include="omniscript\savestatistics.py" />
+    <Compile Include="omniscript\statscontext.py" />
+    <Compile Include="omniscript\summarystatistic.py" />
+    <Compile Include="omniscript\protocolstatistic.py" />
+    <Compile Include="omniscript\nodestatistic.py" />
+    <Compile Include="omniscript\omniengine.py" />
+    <Compile Include="omniscript\filter.py" />
+    <Compile Include="omniscript\omniscript.py" />
+    <Compile Include="omniscript\peektime.py" />
+    <Compile Include="omniscript\statslimit.py" />
+    <Compile Include="omniscript\__init__.py" />
+    <Compile Include="setup.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="CHANGES.txt" />
+    <Content Include="Dcodu.dll" />
+    <Content Include="LICENSE.txt" />
+    <Content Include="make_egg.bash" />
+    <Content Include="make_egg.cmd" />
+    <Content Include="MANIFEST.in" />
+    <Content Include="omniapi.he" />
+    <Content Include="pkt2dcd.exe" />
+    <Content Include="Protospecs.dll" />
+    <Content Include="README.txt" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

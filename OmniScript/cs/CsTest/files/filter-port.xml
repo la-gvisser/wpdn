@@ -1,0 +1,52 @@
+<doc version="1.0">
+	<filters>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="187" name="A port to any" comment="" color="0" group="">
+        <rootnode clsid="{297D404D-3610-4A18-95A2-22768B554BED}">
+          <filternode inverted="0" comment="">
+            <Sport1 class="3" type="34" mask="3221225472" data="80"/>
+            <Sport2 class="3" type="34" mask="3221225472" data=""/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="187" name="Double range" comment="" color="0" group="">
+        <rootnode clsid="{297D404D-3610-4A18-95A2-22768B554BED}">
+          <filternode inverted="0" comment="">
+            <Sport1 class="3" type="34" mask="3221225472" data="80-100"/>
+            <Sport2 class="3" type="34" mask="3221225472" data="4096-65535"/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="187" name="Two Ports to any" comment="" color="0" group="">
+        <rootnode clsid="{297D404D-3610-4A18-95A2-22768B554BED}">
+          <filternode inverted="0" comment="">
+            <Sport1 class="3" type="34" mask="3221225472" data="22 222-4567"/>
+            <Sport2 class="3" type="34" mask="3221225472" data=""/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+    <filterobj clsid="{22353029-A733-4FCC-8AC0-782DA33FA464}">
+      <filter id="187" name="Two Ports to Two Ports" comment="" color="0" group="">
+        <rootnode clsid="{297D404D-3610-4A18-95A2-22768B554BED}">
+          <filternode inverted="0" comment="">
+            <Sport1 class="3" type="34" mask="3221225472" data="33 333-5678"/>
+            <Sport2 class="3" type="34" mask="3221225472" data="80 5120-65535"/>
+            <accept1to2 data="1"/>
+            <accept2to1 data="1"/>
+          </filternode>
+        </rootnode>
+      </filter>
+    </filterobj>
+	</filters>
+</doc>

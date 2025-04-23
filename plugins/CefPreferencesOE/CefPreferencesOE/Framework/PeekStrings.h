@@ -229,11 +229,11 @@ public:
 #endif
 
 	CPeekString&	MakeLower() {
-		std::transform( begin(), end(), begin(), tolower );
+		std::transform( begin(), end(), begin(), [](int c) -> wchar_t { return static_cast<wchar_t>( tolower( c ) ); } );
 		return *this;
 	}
 	CPeekString&	MakeUpper() {
-		std::transform( begin(), end(), begin(), toupper );
+		std::transform( begin(), end(), begin(), [](int c) -> wchar_t { return static_cast<wchar_t>( toupper( c ) ); });
 		return *this;
 	}
 	wchar_t		Mid( size_t inOffset ) const { return at( inOffset ); }
@@ -441,11 +441,11 @@ public:
 #endif
 
 	CPeekStringA&	MakeLower() {
-		std::transform( begin(), end(), begin(), tolower );
+		std::transform( begin(), end(), begin(), [](int c) -> char { return static_cast<char>( tolower( c ) ); });
 		return *this;
 	}
 	CPeekStringA&	MakeUpper() {
-		std::transform( begin(), end(), begin(), toupper );
+		std::transform( begin(), end(), begin(), [](int c) -> char { return static_cast<char>( toupper( c ) ); });
 		return *this;
 	}
 	char			Mid( size_t inOffset ) const { return at( inOffset ); }

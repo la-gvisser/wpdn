@@ -1,0 +1,70 @@
+    Create dotnet Projects on Linux
+== ================================= ==
+
+Install Visual Studio Code
+--------------------------
+Follow the instructions at:
+https://code.visualstudio.com/
+
+
+Install the .Net SDK
+--------------------
+Follow the instruction at:
+https://www.microsoft.com/net/download/linux-package-manager/ubuntu16-04/sdk-current
+	Copy from Firefox: Ctrl-c
+	Paste in to terminal: Shift-Insert
+
+
+Create a new Console Application
+--------------------------------
+$ mkdir script
+$ cd script
+$ dotnet new console
+
+
+Create a local repository
+-------------------------
+$ mkdir ~/packages
+$ cp OmniScript.2.5.0.nupkg ~/packages
+Add the local repository to NuGet.Config
+$ gedit ~/.nuget/NuGet/NuGet.Config
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="Local Source" value="<path>/packages" />
+  </packageSources>
+</configuration>
+
+Note: The <path> must be fully qualified: /home/user
+      Do not use a tilde '~'.
+
+
+Add a reference to OmniScript to the Script project
+---------------------------------------------------
+$ dotnet add package OmniScript
+$ dotnet restore
+
+
+Edit the console application in VS Code
+---------------------------------------
+$ code .
+Install the C# Extension when prompted.	(Reload the project)
+Allow Code to load the missing resources and restore.
+In Code edit Program.cs to be:
+Using System;
+Using Savvius.Omni.OmniScript;
+
+namespace Script
+{
+    class Program
+    {
+        static void Main(String[] args)
+	{
+	    Console.WriteLine("Hello World!");
+	    OmniScript omni = new OmniScript();
+	}
+    }
+}
+
+
+Build and run the application.

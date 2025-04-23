@@ -1,0 +1,64 @@
+Using OmniScript .Net in a console application under Linux.
+
+Create a local repository:
+$ mkdir ~/packages
+$ cp OmniScript.2.7.1.nupkg ~/packages
+$ gedit ~/.nuget/NuGet/NuGet.Config
+	<?xml version="1.0" encoding="utf-8"?>
+	<configuration>
+	  <packageSources>
+	    <add key="Local Source" value="<home>/packages" />
+	  </packageSources>
+	</configuration>
+Note: the path to the packages can not be ~/packages, this will resolve to
+      <home>/.nuget/NuGet/~/packages
+
+Create a new console application:
+$ mkdir script
+$ cd script
+$ dotnet new console
+$ dotnet add package OmniScript
+
+
+Launch VS Code and open the 'script' folder. Allow Code to load the missing resources and restore.
+Open Program.cs and edit to match:
+	using System;
+	using Savvius.Omni.OmniScript; 
+	namespace script
+	{
+	  class Program
+	  {
+	    static void Main(string[] args)
+	    {
+	      Console.WriteLine("Hello World!");
+	      OmniScript omni = new OmniScript();
+	    }
+	  }
+	}
+
+Install the C# extention.
+Build and run the console application.
+
+
+
+Connect to a Windows Engine:
+By default Windows Engines are not configured to allow 'account name' and 'password' authentication.
+To enable 'account name' and 'password' authentication:
+- Enable using authentication servers
+- Add server auth type '4'.
+Edit: C:\Program Files\Savvius\Capture Engine\engineconfig.xml.
+  <agent-settings>
+    <security-settings>
+      <authentication-servers use="true">
+        <server use="true" authtype="4" />
+      </authentication-servers>
+    </security-settings>
+  </agent-settings>
+Restart the engine.  
+
+When connecting to the engine, specify "Third Party" instead of "Default".
+Note that OmniScript will default to "Default" Authentication, so "Third Party" must be specified.
+  engine.connect("Third Party", "", "<account", "<password");
+
+
+  

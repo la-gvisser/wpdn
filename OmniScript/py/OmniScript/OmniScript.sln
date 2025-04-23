@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2000
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "OmniScript", "OmniScript.pyproj", "{A0D6A8DB-AE00-4D70-A93A-0E01D9CD4928}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PyTest", "PyTest\PyTest.pyproj", "{00824FA2-AD79-42EC-AD52-355B49FC7A16}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "RCapture", "RCapture\RCapture.pyproj", "{522CA85E-B93D-42E0-B1E2-CB7230CA42D7}"
+EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "Forensics", "Forensics\Forensics.pyproj", "{51F6BAD5-8C05-420B-B8E7-CA828A56FE19}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0D6A8DB-AE00-4D70-A93A-0E01D9CD4928}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0D6A8DB-AE00-4D70-A93A-0E01D9CD4928}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00824FA2-AD79-42EC-AD52-355B49FC7A16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00824FA2-AD79-42EC-AD52-355B49FC7A16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{522CA85E-B93D-42E0-B1E2-CB7230CA42D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{522CA85E-B93D-42E0-B1E2-CB7230CA42D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51F6BAD5-8C05-420B-B8E7-CA828A56FE19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51F6BAD5-8C05-420B-B8E7-CA828A56FE19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {75C4B7B8-FD36-4DA7-85A1-94B32ABC1B4E}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup Label="Globals">
+    <SccProjectName>Perforce Project</SccProjectName>
+    <SccProvider>MSSCCI:Perforce SCM</SccProvider>
+    <SccAuxPath />
+    <SccLocalPath>..\..\..</SccLocalPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>2.5.2</Version>
+    <Authors>Savvius, Inc.</Authors>
+    <Company>Savvius, Inc.</Company>
+    <Copyright>Copyright Savvius, Inc. All rights reserved.</Copyright>
+    <NuspecFile>OmniScript.nuspec</NuspecFile>
+    <Description>Savvius OmniScript 2.0 .Net.</Description>
+    <PackageReleaseNotes>Initial release of this package.</PackageReleaseNotes>
+    <PackageTags>Scripting OmniEngine OmniAppliance</PackageTags>
+    <PackageLicenseUrl>http://www.savvius.com</PackageLicenseUrl>
+    <PackageIconUrl>http://www.savvius.com</PackageIconUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>OmniScript</PackageId>
+    <Product>OmniScript</Product>
+    <AssemblyName>OmniScript</AssemblyName>
+    <RootNamespace>OmniScript</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>TRACE;DEBUG;_WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <PlatformTarget>x64</PlatformTarget>
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0;_WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../OmniScript/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\..\shared\bin64\*.dll" CopyToOutputDirectory="Always" />
+    <Content Include="..\..\..\shared\*.he" CopyToOutputDirectory="Always" />
+    <Content Include="..\..\..\shared\*.txt" CopyToOutputDirectory="Always" />
+    <Content Include="..\..\..\shared\*.xml" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="lib\" />
+  </ItemGroup>
+</Project>
